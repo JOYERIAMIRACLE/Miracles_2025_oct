@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "products",
+  "info": {
+    "singularName": "product",
+    "pluralName": "products",
+    "displayName": "Product"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "NombreProducto": {
+      "type": "string",
+      "default": "SinNombre"
+    },
+    "Descripcion": {
+      "type": "text"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "NombreProducto"
+    },
+    "Costo": {
+      "type": "decimal"
+    },
+    "Imagenes": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "activo": {
+      "type": "boolean",
+      "default": false
+    },
+    "TipoProducto": {
+      "type": "enumeration",
+      "enum": [
+        "Oro",
+        "Plata",
+        "Diamante"
+      ]
+    },
+    "IsFeature": {
+      "type": "boolean"
+    },
+    "product_category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product-category.product-category",
+      "inversedBy": "products"
+    },
+    "PrecioReal": {
+      "type": "json"
+    }
+  }
+}

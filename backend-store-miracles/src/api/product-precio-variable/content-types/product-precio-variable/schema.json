@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "product_precio_variables",
+  "info": {
+    "singularName": "product-precio-variable",
+    "pluralName": "product-precio-variables",
+    "displayName": "ProductPrecioVariable"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "pricegold": {
+      "type": "string"
+    }
+  }
+}
