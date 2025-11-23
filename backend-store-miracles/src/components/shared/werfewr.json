@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_shared_werfewrs",
+  "info": {
+    "displayName": "werfewr",
+    "icon": "cloud"
+  },
+  "options": {},
+  "attributes": {
+    "sdgfd": {
+      "type": "string"
+    },
+    "article_author": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::author.author"
+    },
+    "dfgdfg": {
+      "type": "json"
+    }
+  },
+  "config": {}
+}

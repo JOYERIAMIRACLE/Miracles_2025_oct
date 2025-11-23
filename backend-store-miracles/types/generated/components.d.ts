@@ -71,6 +71,19 @@ export interface SharedSlider extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedWerfewr extends Struct.ComponentSchema {
+  collectionName: 'components_shared_werfewrs';
+  info: {
+    displayName: 'werfewr';
+    icon: 'cloud';
+  };
+  attributes: {
+    article_author: Schema.Attribute.Relation<'oneToOne', 'api::author.author'>;
+    dfgdfg: Schema.Attribute.JSON;
+    sdgfd: Schema.Attribute.String;
+  };
+}
+
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
@@ -80,6 +93,7 @@ declare module '@strapi/strapi' {
       'shared.rich-text': SharedRichText;
       'shared.seo': SharedSeo;
       'shared.slider': SharedSlider;
+      'shared.werfewr': SharedWerfewr;
     }
   }
 }
