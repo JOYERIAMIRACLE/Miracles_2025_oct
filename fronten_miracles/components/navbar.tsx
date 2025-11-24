@@ -2,6 +2,7 @@
 import { Heart, ShoppingCart, ShoppingCartIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MenuList from "./menu-list";
+import ItemsMenuMobile from "./items-mobile";
 
 
 const Navbar = () =>{
@@ -11,11 +12,11 @@ const Navbar = () =>{
             <h1 className="text-3xl " onClick={()=>router.push("/")}>
                 <span className="font-bold ">Miracles</span>
             </h1>
-            <div className="items-center justify-between hidden lg:flex">
-                <p>Menu desk</p>
-            </div>
-            <div className="flex items-center lg:hidden">
+            <div className="items-center justify-between hidden md:flex">
                 <MenuList/>
+            </div>
+            <div className="flex items-center md:hidden">
+                <ItemsMenuMobile/>
             </div>
             <div className="flex items-center justify-between gap-2 sm:gap-7">
                 <ShoppingCart strokeWidth={2} className="cursor-pointer" onClick={()=>router.push("/cart")}/>

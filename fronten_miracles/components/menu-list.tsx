@@ -66,19 +66,20 @@ const MenuList = () => {
               <li className="row-span-3">
                 <NavigationMenuLink asChild>
                   <a
-                    className="from-muted/50 to-muted flex h-full w-full flex-col justify-end rounded-md bg-linear-to-b p-4 no-underline outline-hidden transition-all duration-200 select-none focus:shadow-md md:p-6"
+                    className="from-muted/50 to-muted flex h-full w-full flex-col justify-start items-start
+                 rounded-md bg-linear-to-b p-2 no-underline outline-hidden transition-all duration-200 select-none focus:shadow-md md:p-4"
                     href="/Conoce-Miracles"
                   >
-                    <div className="mb-2 text-lg  font-medium sm:mt-4">
+                    <div className="mb-2 text-lg  font-medium ">
                       Joyeria Miracles
                     </div>
                     <p>icono dinamico de ranking - Ranking y opiniones (cantidad de opiniones)</p>
                     <p className="text-muted-foreground text-sm leading-tight">
                       Oro y plata para cualqueir ocación especial 
                     </p>
-                    <a className="text-blue-500" href="/Conoce-Miracles">
+                    <p className="text-blue-500 mt-2"  href="/Conoce-Miracles">
                         Conoce Miracles...
-                    </a>
+                    </p>
                   </a>
                 </NavigationMenuLink>
               </li>
@@ -86,8 +87,17 @@ const MenuList = () => {
               <ListItem href="/Historias-de-exito-Miracles" title="Historias de exito Miracles">
                 Conoce los storytelling más relevantes para el proposito de Miracles
               </ListItem>
-              <ListItem href="/docs/primitives/typography" title="Metodos de Servicio Miracles ">
+              <ListItem href="/Metodos-de-Servicio-Miracles" title="Metodos de Servicio Miracles ">
                 Descubre todo lo que podemos hacer por ti 
+              </ListItem>
+              <ListItem className="flex flex-col " href="/Contactanos" title="Contactanos ">
+                <div  className="flex flex-col ">
+                <p className="text-blue-500" href="/callto:8641008321" >Tel:</p>
+                <p className="text-blue-500" href="/callto:8641008321" >Whatsapp:</p>
+                <p className="text-blue-500" href="/callto:8641008321" >Correo:</p>
+                <p className="text-blue-500" href="/callto:8641008321" >Formulario:</p>
+
+                </div>
               </ListItem>
             </ul>
           </NavigationMenuContent>
@@ -147,7 +157,7 @@ const MenuList = () => {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem className="hidden md:block">
-          <NavigationMenuTrigger>Simple</NavigationMenuTrigger>
+          {/* <NavigationMenuTrigger>Simple</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[200px] gap-4">
               <li>
@@ -165,7 +175,7 @@ const MenuList = () => {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem className="hidden md:block">
-          <NavigationMenuTrigger>With Icon</NavigationMenuTrigger>
+          `<NavigationMenuTrigger>With Icon</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[200px] gap-4">
               <li>
@@ -189,7 +199,7 @@ const MenuList = () => {
                 </NavigationMenuLink>
               </li>
             </ul>
-          </NavigationMenuContent>
+          </NavigationMenuContent> */}
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>

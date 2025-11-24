@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div>
        
-      <Button className="fixed">Click me madafake</Button>
+      <Button className="">Click me madafake</Button>
       <Link href="/blog">
         blog
       </Link>
