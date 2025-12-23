@@ -3,6 +3,7 @@ import { Heart, ShoppingCart, ShoppingCartIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MenuList from "./menu-list";
 import ItemsMenuMobile from "./items-mobile";
+import ModeToggle from "./toggle";
 
 
 const Navbar = () =>{
@@ -22,6 +23,7 @@ const Navbar = () =>{
                 <ShoppingCart strokeWidth={2} className="cursor-pointer" onClick={()=>router.push("/cart")}/>
                 <Heart strokeWidth={2} className="cursor-pointer" onClick={()=>router.push("/like-products")}/>
                 <User strokeWidth={2} className="cursor-pointer" onClick={()=>router.push("/Sesion")}/>
+                <ModeToggle/>
             </div>
             
         </div>
