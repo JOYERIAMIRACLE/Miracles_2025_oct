@@ -24,11 +24,9 @@
         "audios"
       ]
     },
-    "products": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::product.product",
-      "mappedBy": "product_category"
+    "slug": {
+      "type": "uid",
+      "targetField": "NombreCategoria"
     }
   }
 }

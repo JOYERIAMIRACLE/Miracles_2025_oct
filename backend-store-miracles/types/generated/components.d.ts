@@ -78,7 +78,6 @@ export interface SharedWerfewr extends Struct.ComponentSchema {
     icon: 'cloud';
   };
   attributes: {
-    article_author: Schema.Attribute.Relation<'oneToOne', 'api::author.author'>;
     dfgdfg: Schema.Attribute.JSON;
     sdgfd: Schema.Attribute.String;
   };

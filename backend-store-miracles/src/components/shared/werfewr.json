@@ -9,11 +9,6 @@
     "sdgfd": {
       "type": "string"
     },
-    "article_author": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::author.author"
-    },
     "dfgdfg": {
       "type": "json"
     }
