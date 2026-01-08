@@ -22,8 +22,7 @@ const FeatureProducts = () => {
                     )}
                     {result !== null && (
                         result.map((product: ProductType) => {
-                            const {attributes, id } = product 
-                            const { imagenes, nombreProducto, tipoProducto} = attributes
+                            const { id, imagenes, nombreProducto, tipoProducto, costo } = product; 
 
                             return(
                                 
@@ -33,7 +32,7 @@ const FeatureProducts = () => {
                                             <CardContent className="relative flex items-center justify-center px-6 py-2">
                                                 
                                                 <img 
-                                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes.data[0].attributes.url}`} 
+                                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes[0].url}`} 
                                                     alt="image feature" /> 
                                             </CardContent>
                                         </Card>
