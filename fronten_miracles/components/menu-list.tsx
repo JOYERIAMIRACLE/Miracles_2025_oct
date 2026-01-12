@@ -14,7 +14,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
+} from "@/components/Layout/navigation-menu"
 
 // MANUAL DE DATOS
 const components: { title: string; href: string; description: string }[] = [
@@ -108,10 +108,10 @@ const MenuList = () => {
               </ListItem>
               <ListItem className="flex flex-col " href="/Contactanos" title="Contactanos ">
                 <div  className="flex flex-col ">
-                <p className="text-blue-500" >Tel:</p>
-                <p className="text-blue-500" >Whatsapp:</p>
-                <p className="text-blue-500"  >Correo:</p>
-                <p className="text-blue-500"  >Formulario:</p>
+                  <div className="text-blue-500" >Tel:</div>
+                  <div className="text-blue-500" >Whatsapp:</div>
+                  <div className="text-blue-500" >Correo:</div>
+                  
 
                 </div>
               </ListItem>
@@ -201,9 +201,9 @@ function ListItem({
       <NavigationMenuLink asChild>
         <Link href={href}>
           <div className="text-sm leading-none font-medium">{title}</div>
-          <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
+          <div className="text-muted-foreground line-clamp-2 text-sm leading-snug">
             {children}
-          </p>
+          </div>
         </Link>
       </NavigationMenuLink>
     </li>
