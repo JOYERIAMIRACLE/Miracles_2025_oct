@@ -55,6 +55,10 @@ const FeatureProducts = () => {
                                                     </div>
                                                 </div> 
                                             </CardContent>
+                                            <div className="flex justify-between gap-4 px-8 ">
+                                                <h3>{nombreProducto}</h3>
+
+                                            </div>
                                         </Card>
                                     </div>
 

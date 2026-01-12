@@ -1,5 +1,6 @@
 "use client"
 
+// IMPORTACIONES
 import * as React from "react"
 import Link from "next/link"
 import { CircleCheckIcon, CircleHelpIcon, CircleIcon } from "lucide-react"
@@ -15,6 +16,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 
+// MANUAL DE DATOS
 const components: { title: string; href: string; description: string }[] = [
   {
     title: "Alert Dialog",
@@ -51,14 +53,28 @@ const components: { title: string; href: string; description: string }[] = [
     description:
       "A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
   },
+  {
+    title: "Toolti000000p",
+    href: "/docs/primitives/tooltip00000000",
+    description:
+      "00000000000A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
+  },
 ]
+
+// COMPONENTE
 
 const MenuList = () => {
 
-
+  // VISUALIZACION
   return (
+
+    // CAMPO DE MENU DE NAVEGACION
     <NavigationMenu >
+
+      {/* LISTA DE BOTONES */}
       <NavigationMenuList className="flex-wrap">
+
+        {/* BOTON 1 */}
         <NavigationMenuItem>
           <NavigationMenuTrigger>Nosotros</NavigationMenuTrigger>
           <NavigationMenuContent>
@@ -77,7 +93,7 @@ const MenuList = () => {
                     <p className="text-muted-foreground text-sm leading-tight">
                       Oro y plata para cualqueir ocación especial 
                     </p>
-                    <p className="text-blue-500 mt-2"  href="/Conoce-Miracles">
+                    <p className="text-blue-500 mt-2">
                         Conoce Miracles...
                     </p>
                   </a>
@@ -92,16 +108,19 @@ const MenuList = () => {
               </ListItem>
               <ListItem className="flex flex-col " href="/Contactanos" title="Contactanos ">
                 <div  className="flex flex-col ">
-                <p className="text-blue-500" href="/callto:8641008321" >Tel:</p>
-                <p className="text-blue-500" href="/callto:8641008321" >Whatsapp:</p>
-                <p className="text-blue-500" href="/callto:8641008321" >Correo:</p>
-                <p className="text-blue-500" href="/callto:8641008321" >Formulario:</p>
+                <p className="text-blue-500" >Tel:</p>
+                <p className="text-blue-500" >Whatsapp:</p>
+                <p className="text-blue-500"  >Correo:</p>
+                <p className="text-blue-500"  >Formulario:</p>
 
                 </div>
               </ListItem>
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
+
+
+        {/* BOTON 2 */}
         <NavigationMenuItem>
           <NavigationMenuTrigger>Components</NavigationMenuTrigger>
           <NavigationMenuContent>
@@ -118,11 +137,16 @@ const MenuList = () => {
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
+
+
+        {/* BOTON 3 */}
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
             <Link href="/docs">Docs</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
+
+        {/* BOTON 4 */}
         <NavigationMenuItem className="hidden md:block">
           <NavigationMenuTrigger>List</NavigationMenuTrigger>
           <NavigationMenuContent>
@@ -155,57 +179,17 @@ const MenuList = () => {
               </li>
             </ul>
           </NavigationMenuContent>
-        </NavigationMenuItem>
-        <NavigationMenuItem className="hidden md:block">
-          {/* <NavigationMenuTrigger>Simple</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[200px] gap-4">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link href="#">Components</Link>
-                </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link href="#">Documentation</Link>
-                </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link href="#">Blocks</Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-        <NavigationMenuItem className="hidden md:block">
-          `<NavigationMenuTrigger>With Icon</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[200px] gap-4">
-              <li>
-                <NavigationMenuLink asChild>
-                  <Link href="#" className="flex-row items-center gap-2">
-                    <CircleHelpIcon />
-                    Backlog
-                  </Link>
-                </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link href="#" className="flex-row items-center gap-2">
-                    <CircleIcon />
-                    To Do
-                  </Link>
-                </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link href="#" className="flex-row items-center gap-2">
-                    <CircleCheckIcon />
-                    Done
-                  </Link>
-                </NavigationMenuLink>
-              </li>
-            </ul>
-          </NavigationMenuContent> */}
-        </NavigationMenuItem>
+        </NavigationMenuItem> 
+
+
+      {/* CIERRE DE LISTA DE MENU */}
       </NavigationMenuList>
     </NavigationMenu>
   )
 }
 
+
+// BLOQUE DE LISTA
 function ListItem({
   title,
   children,
@@ -225,5 +209,6 @@ function ListItem({
     </li>
   )
 }
+
 
 export default MenuList 
