@@ -5,6 +5,8 @@ import { ChevronDownIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// FUNCIONES DE NAVEGACION PARA LOS BOTONES DE NAVEGACION
+
 function NavigationMenu({
   className,
   children,

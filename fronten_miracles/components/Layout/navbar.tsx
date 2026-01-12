@@ -3,9 +3,9 @@
 // IMPORTACIONES
 import { Heart, ShoppingCart, ShoppingCartIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import MenuList from "../menu-list";
-import ItemsMenuMobile from "../items-mobile";
-import ModeToggle from "../toggle";
+import MenuList from "./menu-list";
+import ItemsMenuMobile from "./items-mobile";
+import ModeToggle from "./toggle";
 
 // COMPONENTE BARRA DE NAVEGACION
 const Navbar = () =>{

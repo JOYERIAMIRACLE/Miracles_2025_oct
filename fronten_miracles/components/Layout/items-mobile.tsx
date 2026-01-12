@@ -1,10 +1,10 @@
  
 import React from 'react'
 import Link from 'next/link'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/Popover'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/Popover'
 import { Menu, MenuIcon } from 'lucide-react'
 
-
+// BOTON DESPLEGABLE MOBIL
 const ItemsMenuMobile = () => {
   return (
     <div>

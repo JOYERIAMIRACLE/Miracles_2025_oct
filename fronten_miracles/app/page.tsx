@@ -1,5 +1,5 @@
-import CarouselTextBanner from "@/components/carrousel-text-banner"
-import FeatureProducts from "@/components/feature-products"
+import CarouselTextBanner from "@/components/Home/carrousel-text-banner"
+import FeatureProducts from "@/components/Carrusel-de-productos/feature-products"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
  

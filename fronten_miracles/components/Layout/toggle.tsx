@@ -13,6 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+
+// BOTON PARA TEMAS DARK/LIGTH
+
 const ModeToggle =() => {
   const { setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
