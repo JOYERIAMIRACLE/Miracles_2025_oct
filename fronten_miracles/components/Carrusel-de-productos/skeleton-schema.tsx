@@ -1,9 +1,14 @@
 import React from 'react'
 import { Skeleton } from '../ui/skeleton';
+
+
+// MANUAL DE DATOS DE SKELETON
 type SkeletonSchemaProps = {
     grid: number
 }
 
+
+// COMPONENTE BASE PARA PRODUCTO
 const SkeletonSchema = (props: SkeletonSchemaProps) => {
   const {grid} = props;
   return (    

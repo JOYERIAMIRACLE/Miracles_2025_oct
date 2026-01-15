@@ -1,11 +1,13 @@
 import { cn } from "@/lib/utils"
 
+// MANUAL DE DATOS DE ICONOS
 interface IconButtonProps {
     onClick: () => void,
     icon: React.ReactElement
     className?: string 
 }
 
+// COMPONENTE BASE PARA BOTON DE ICONOS
 const IconButton = (props: IconButtonProps) => {
     const {onClick, icon, className} = props 
     return(

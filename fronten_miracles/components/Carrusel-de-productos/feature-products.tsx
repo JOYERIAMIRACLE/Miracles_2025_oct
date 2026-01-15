@@ -2,7 +2,7 @@
 
 import { useGetFeaturedProducts } from "@/api/useGetFeaturedProducts"
 import { ResponseType } from "@/types/response"
-import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/carousel"
 import SkeletonSchema from "./skeleton-schema"
 import { ProductType } from "@/types/product"
 import { Card, CardContent } from "../ui/card"
@@ -11,6 +11,7 @@ import IconButton from "./icon-buttons"
 import { useRouter } from "next/navigation"
 
 
+// COMPONENTE PRESENTADOR DE PRODUCTOS 
 const FeatureProducts = () => {
     const {loading,result,error}: ResponseType = useGetFeaturedProducts()
     const router = useRouter()
@@ -56,7 +57,11 @@ const FeatureProducts = () => {
                                                 </div> 
                                             </CardContent>
                                             <div className="flex justify-between gap-4 px-8 ">
-                                                <h3>{nombreProducto}</h3>
+                                                <h3 className="text-lg font-bold ">{nombreProducto}</h3>
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <p className="px-2 py-1 text-white bg-black rounded-full dark:bg-white dark:text-black w-fit">{tipoProducto}</p>
+                                                    <p className="px-2 py-1 text-white bg-yellow-900 rounded-full  w-fit">{costo}</p>
+                                                </div>
 
                                             </div>
                                         </Card>
@@ -69,6 +74,8 @@ const FeatureProducts = () => {
 
                     )}
                 </CarouselContent>
+                <CarouselPrevious/>
+                <CarouselNext className="hidden sm:flex" />
             </Carousel>
         </div>
     )
