@@ -6,5 +6,5 @@ export type CategoryType = {
     MainImage: {
         id: number;
         url: string;
-        }[];
+        };
 }
