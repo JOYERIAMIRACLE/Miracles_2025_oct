@@ -6,8 +6,9 @@ export type ProductType = {
     descripcion: string;
     activo: boolean;
     isFeatured: boolean;
-    tipoProducto: string;
+    materialProducto: string;
     costo: number; 
+    estiloProducto: string;
     imagenes: {
         id: number;
         url: string;

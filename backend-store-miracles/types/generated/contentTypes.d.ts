@@ -486,6 +486,9 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.Text;
+    estiloProducto: Schema.Attribute.Enumeration<
+      ['Cartier', 'Cubana', 'China', 'Ancla']
+    >;
     imagenes: Schema.Attribute.Media<
       'images' | 'files' | 'videos' | 'audios',
       true
@@ -497,11 +500,13 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       'api::product.product'
     > &
       Schema.Attribute.Private;
+    materialProducto: Schema.Attribute.Enumeration<
+      ['Oro', 'Plata', 'Diamante']
+    >;
     nombreProducto: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'SinNombre'>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID;
-    tipoProducto: Schema.Attribute.Enumeration<['Oro', 'Plata', 'Diamante']>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

@@ -43,7 +43,7 @@
       "type": "boolean",
       "default": false
     },
-    "tipoProducto": {
+    "materialProducto": {
       "type": "enumeration",
       "enum": [
         "Oro",
@@ -53,6 +53,15 @@
     },
     "isFeatured": {
       "type": "boolean"
+    },
+    "estiloProducto": {
+      "type": "enumeration",
+      "enum": [
+        "Cartier",
+        "Cubana",
+        "China",
+        "Ancla"
+      ]
     }
   }
 }
