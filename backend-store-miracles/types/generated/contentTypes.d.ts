@@ -500,9 +500,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       'api::product.product'
     > &
       Schema.Attribute.Private;
-    materialProducto: Schema.Attribute.Enumeration<
-      ['Oro', 'Plata', 'Diamante']
-    >;
+    materialProducto: Schema.Attribute.Enumeration<['Oro', 'Plata', 'Platino']>;
     nombreProducto: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'SinNombre'>;
     publishedAt: Schema.Attribute.DateTime;

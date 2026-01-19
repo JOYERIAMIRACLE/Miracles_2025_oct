@@ -48,7 +48,7 @@
       "enum": [
         "Oro",
         "Plata",
-        "Diamante"
+        "Platino"
       ]
     },
     "isFeatured": {

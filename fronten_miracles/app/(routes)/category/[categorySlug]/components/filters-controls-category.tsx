@@ -1,13 +1,20 @@
 import React from 'react'
-import FilterOrigin from './filter-origin'
+import FilterMaterial from './filter-material'
 
-const FiltersControlCategory = () => {
+
+type FiltersControlsCategoryProps = {
+  setFilterMaterial: (materialProduct: string) => void
+}
+
+const FiltersControlsCategory = (props: FiltersControlsCategoryProps) => {
+  const {setFilterMaterial} = props
+
   return (
     <div className='sm:w-[350px] sm:mt-5 '>
-      <FilterOrigin/>
+      <FilterMaterial setFilterMaterial={setFilterMaterial}/>
       
     </div>
   )
 }
 
-export default FiltersControlCategory
+export default FiltersControlsCategory
