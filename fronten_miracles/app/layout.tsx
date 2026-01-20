@@ -16,8 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Joyeria Miracles",
-  description: "Joyeria de oro y plata",
+  title: {
+    default: "Joyeria Miracles | Oro y Plata de Alta Calidad",
+    template: "%s | Joyeria Miracles"
+  },
+  description: "Venta de joyeria fina en oro de 10k, 14k y plata 925. ",
+  keywords: ["joyeria", "oro", "plata", "anillos de compromiso", "mexico"], // Ayuda a que te encuentren
 };
 
 export default function RootLayout({

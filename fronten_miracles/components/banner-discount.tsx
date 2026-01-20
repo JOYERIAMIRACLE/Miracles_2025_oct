@@ -18,10 +18,10 @@ const BannerDiscount = () => {
       {/* CAJA DE BOTONES */}
       <div className='flex-col max-w-md mx-auto flex sm:flex-row mt-2 p-4 justify-center gap-8 '>
 
-        {/* BOTON 1 */}
+        {/* BOTON 1 COMPONENTE SHADCN*/}
         <Link href="#" className={buttonVariants()}>Comprar</Link>
 
-        {/* BOTON 2  */}
+        {/* BOTON 2 COMPONENTE SHADCN */}
         <Link href="#" className={buttonVariants({variant: "outline"})}>Más información</Link>
       </div>
     </div>

@@ -11,6 +11,8 @@ type SkeletonSchemaProps = {
 // COMPONENTE BASE PARA PRODUCTO
 const SkeletonSchema = (props: SkeletonSchemaProps) => {
   const {grid} = props;
+//   RECIBE EL PROP DE GRID
+    console.log(grid)
   return (    
     Array.from({length: grid}).map((_, index) => (
         <div key={index} className='flex flex-col gap-8 mx-auto space-y-3'>

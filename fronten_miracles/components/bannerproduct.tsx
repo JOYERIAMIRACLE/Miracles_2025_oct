@@ -9,6 +9,8 @@ const BannerProduct = () => {
         <p>banner'pr9oduct</p>
         <h4 className='mt-2 text-5xl font-extrabold uppercase'>joyaspremiun</h4>
         <p className='my-2 text-lg  '>Despierta tu expresion </p>
+
+        {/* COMPONENTE BOTON UI  */}
         <Link href="#" className={buttonVariants()}>
             Comprar
         </Link>

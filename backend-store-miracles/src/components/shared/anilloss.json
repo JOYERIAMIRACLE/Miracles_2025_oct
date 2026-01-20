@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_shared_anillosses",
+  "info": {
+    "displayName": "anilloss"
+  },
+  "options": {},
+  "attributes": {
+    "anillo": {
+      "type": "enumeration",
+      "enum": [
+        "solitario",
+        "lizo",
+        "graduacionn"
+      ]
+    }
+  },
+  "config": {}
+}

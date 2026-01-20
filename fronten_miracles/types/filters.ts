@@ -10,6 +10,9 @@ export type ResultFilterTypes = {
             materialProducto:{
                 enum:any 
             }
+            estiloProducto:{
+                enum:any
+            }
             
         }
     }

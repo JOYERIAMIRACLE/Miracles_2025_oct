@@ -13,30 +13,45 @@ import { useRouter } from "next/navigation"
 
 // COMPONENTE PRESENTADOR DE PRODUCTOS 
 const FeatureProducts = () => {
+
+
     const {loading,result,error}: ResponseType = useGetFeaturedProducts()
     const router = useRouter()
+    // TRAJO LOS PORIDUCTOS Y SU INFO 
     console.log(result); 
+    
+    
+    
+    
     return (
         <div className="max-w-6xl py-4 mx-auto sm:py-16 sm:px-24 ">
             <h3 className="px-6 text-3xl sm:pb-8">Productos destacados</h3>
             <Carousel>
+
+                {/* LOADING DE ESTADI */}
                 <CarouselContent className="  ">
                     {loading && (
                         
+                        // ENVIA EL PROP DEL GRID
                         <SkeletonSchema grid={3} />   
                     )}
+
+                    {/* TRAJO LA INFO DE PRODUCTOS */}
                     {result !== null && (
                         result.map((product: ProductType) => {
+
+                            // APODA LA INFORMACION * NO NECESARIO SI QIERES LIMPIAR DATOS
                             const { id, imagenes, nombreProducto, materialProducto, costo, slug } = product; 
 
                             return(
-                                
+                                // responsive grid 1/3
                                 <CarouselItem key={id} className="md:basis-1/2 lg:basis-1/3 group  ">
                                     <div className="p-1">
                                         <Card className="py-4 border border-gray-200 shadow-none">
                                             <CardContent className="relative flex items-center justify-center px-6 py-2">
                                                 
                                                 <img 
+                                                    // TRAJO LA URL DE IMAGEN PROTEGIDA POR ENV 
                                                     src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes[0].url}`} 
                                                     alt="image feature" />
                                                 <div className="absolute w-full px-6 transition duration-200 opacity-0 group-hover:opacity-100 bottom-5 ">
