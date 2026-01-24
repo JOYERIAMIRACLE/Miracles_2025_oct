@@ -22,6 +22,11 @@ const FilterMaterial = (props: FilterMaterialProps) => {
                 <p>cargando pues.....</p>
             )}
             <RadioGroup onValueChange={(value)=> setFilterMaterial(value)}>
+
+                <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value="" id="all-materiales" />
+                    <Label htmlFor="all-materiales">Todos</Label>
+                </div>
                 {result !== null && result.schema.attributes.materialProducto.enum.map((materialProducto:string)=>(
                     <div key={materialProducto} className='flex items-center space-x-2'>
                         <RadioGroupItem value={materialProducto} id={materialProducto}/>

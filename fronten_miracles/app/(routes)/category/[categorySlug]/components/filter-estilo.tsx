@@ -21,7 +21,13 @@ const FilterEstilo = (props: FilterEstiloProps) => {
             {loading && result === null && (
                 <p>cargando pues.....</p>
             )}
+
             <RadioGroup onValueChange={(value)=> setFilterEstilo(value)}>
+
+                <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value="" id="all-styles" />
+                    <Label htmlFor="all-styles">Todos</Label>
+                </div>
                 {result !== null && result.schema.attributes.estiloProducto.enum.map((estiloProducto:string)=>(
                     <div key={estiloProducto} className='flex items-center space-x-2'>
                         <RadioGroupItem value={estiloProducto} id={estiloProducto}/>

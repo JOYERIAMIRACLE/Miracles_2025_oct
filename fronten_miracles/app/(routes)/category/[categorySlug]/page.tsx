@@ -24,6 +24,7 @@ export default function Page() {
     //ESTADO PARA FILTRAR POR MATERIAL | TRAJO LOS PRODUCTOS DEL SLUG CON FILTRO DE MATERIAL | PRODUCTOS SON DE LA CATEGORIA Y ES DEL MATERIAL:
     const [filterMaterial, setFilterMaterial] = useState("")
     const [filterEstilo, setFilterEstilo] = useState("")
+    // const [filterAll, setFilterAll] = useState("")
     const router = useRouter()
     console.log(filterMaterial);
     console.log(filterEstilo)
@@ -57,12 +58,12 @@ export default function Page() {
 return (
         <main>
             {/* 1. BANNER RESPONSIVO (Fuera del contenedor limitado para que sea ancho total) */}
-            <div className="relative w-full min-h-[400px] md:h-[600px] flex items-center overflow-hidden bg-slate-900">
+            <div className="relative w-full min-h-[400px] md:h-[600px] flex items-center overflow-hidden bg-slate-900 ">
                 {/* Capa de fondo / Overlay */}
                 <div className="absolute inset-0 bg-black/50 z-10" />
                 
                 {/* Imagen de fondo (Aquí pondrías la URL de tu imagen de joyería) */}
-                <div className="absolute inset-0 bg-[url('/img/joyeria-banner.jpg')] bg-cover bg-center" />
+                <div className="absolute inset-0 bg-[url('/cmv1.jpg')] bg-cover bg-center " />
 
                 {/* Contenido del Banner */}
                 <div className="relative z-20 w-full max-w-6xl mx-auto px-6 md:px-24">
@@ -73,7 +74,7 @@ return (
                         <p className="max-w-lg text-white/90 text-lg md:text-xl">
                             Explora nuestra selección exclusiva de piezas diseñadas con precisión industrial y elegancia artesanal.
                         </p>
-                        <div className="w-full sm:w-72 h-14 bg-zinc-100 hover:bg-gold transition-colors rounded-full flex items-center justify-center text-black font-bold cursor-pointer">
+                        <div className="w-full sm:w-72 h-14 bg-zinc-100 hover:bg-blue-600 transition-colors rounded-full flex items-center justify-center text-black font-bold cursor-pointer ">
                             Ver Novedades
                         </div>
                     </div>
@@ -95,6 +96,7 @@ return (
                         <FiltersControlsCategory 
                             setFilterMaterial={setFilterMaterial} 
                             setFilterEstilo={setFilterEstilo} 
+                            // setFilterAll={setFilterAll}
                         />
                     </aside>
 
