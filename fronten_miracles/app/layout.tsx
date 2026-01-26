@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Layout/navbar";
-import Footer from "@/components/Layout/footer";
+
 import { ThemeProvider } from "@/components/Layout/theme-provider";
 
 const geistSans = Geist({
@@ -17,11 +16,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Joyeria Miracles | Oro y Plata de Alta Calidad",
-    template: "%s | Joyeria Miracles"
+    // Título por defecto si una página no tiene uno propio
+    default: "Joyería Miracles | Oro y Plata de Alta Calidad",
+    // El %s será reemplazado por el título de cada página específica
+    template: "%s | Joyería Miracles"
   },
-  description: "Venta de joyeria fina en oro de 10k, 14k y plata 925. ",
-  keywords: ["joyeria", "oro", "plata", "anillos de compromiso", "mexico"], // Ayuda a que te encuentren
+  description: "Venta de joyería fina en oro de 10k, 14k y plata 925.",
+  icons: {
+    icon: "/favicon.ico", // Asegúrate de tener este archivo en /public
+  },
 };
 
 export default function RootLayout({
@@ -30,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning >
+    <html lang="es" suppressHydrationWarning >
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -41,9 +44,9 @@ export default function RootLayout({
             disableTransitionOnChange
         >
             
-          <Navbar/>
+          
           {children}
-          <Footer />
+          
         </ThemeProvider>
       </body>
     </html>
