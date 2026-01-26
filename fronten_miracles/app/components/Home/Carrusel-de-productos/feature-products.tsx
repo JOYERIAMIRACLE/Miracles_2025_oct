@@ -2,10 +2,10 @@
 
 import { useGetFeaturedProducts } from "@/api/useGetFeaturedProducts"
 import { ResponseType } from "@/types/response"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/carousel"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel"
 import SkeletonSchema from "./skeleton-schema"
 import { ProductType } from "@/types/product"
-import { Card, CardContent } from "../ui/card"
+import { Card, CardContent } from "../../../../components/ui/card"
 import { Expand, ShoppingCart } from "lucide-react"
 import IconButton from "./icon-buttons"
 import { useRouter } from "next/navigation"

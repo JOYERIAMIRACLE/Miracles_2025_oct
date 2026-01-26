@@ -1,8 +1,8 @@
 "use client"
 import React from 'react'
-import { Carousel, CarouselContent, CarouselItem } from '../ui/carousel'
+import { Carousel, CarouselContent, CarouselItem } from '../../../components/ui/carousel'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent } from '../ui/card'
+import { Card, CardContent } from '../../../components/ui/card'
 import Autoplay from 'embla-carousel-autoplay'
  
 

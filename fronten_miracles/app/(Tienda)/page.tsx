@@ -1,10 +1,10 @@
-import CarouselTextBanner from "@/components/Home/carrousel-text-banner"
-import FeatureProducts from "@/components/Carrusel-de-productos/feature-products"
+import CarouselTextBanner from "@/app/components/Home/carrousel-text-banner"
+import FeatureProducts from "@/app/components/Home/Carrusel-de-productos/feature-products"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
-import BannerDiscount from "@/components/banner-discount"
-import ChoseCategory from "@/components/chose-category"
-import BannerProduct from "@/components/bannerproduct"
+import BannerDiscount from "@/app/components/Home/banner-discount"
+import ChoseCategory from "@/app/components/Home/chose-category"
+import BannerProduct from "@/app/components/Home/bannerproduct"
  
 export default function Home() {
   return (

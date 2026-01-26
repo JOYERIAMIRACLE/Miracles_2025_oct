@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { Separator } from '../ui/separator'
+import { Separator } from '../../../components/ui/separator'
 
 // MANUAL DE DATOS FOOTER
 const datafooter = [
