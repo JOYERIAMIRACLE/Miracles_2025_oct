@@ -38,10 +38,10 @@ const FeatureProducts = () => {
 
                     {/* TRAJO LA INFO DE PRODUCTOS */}
                     {result !== null && (
-                        result.map((product: ProductType) => {
+                        result.map((producto: ProductType) => {
 
                             // APODA LA INFORMACION * NO NECESARIO SI QIERES LIMPIAR DATOS
-                            const { id, imagenes, nombreProducto, materialProducto, costo, slug } = product; 
+                            const { id, imagenes, nombreProducto, materialProducto, costo, slug } = producto; 
 
                             return(
                                 // responsive grid 1/3
@@ -57,7 +57,7 @@ const FeatureProducts = () => {
                                                 <div className="absolute w-full px-6 transition duration-200 opacity-0 group-hover:opacity-100 bottom-5 ">
                                                     <div className="flex justify-center gap-x-6"> 
                                                         <IconButton 
-                                                        onClick={() => router.push(`product/${slug}`)}
+                                                        onClick={() => router.push(`producto/${slug}`)}
                                                         icon={<Expand size={20}/>}
                                                         className="text-gray-600"
                                                         />
