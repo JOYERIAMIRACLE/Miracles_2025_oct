@@ -3,6 +3,7 @@ import { useGetProductBySlug } from "@/api/getProductBySlug"
 import { useParams } from "next/navigation"
 import { ResponseType } from "@/types/response"
 import SkeletonProduct from "./components/skeleton-product"
+import CarouselProducto from "./components/carrusel-producto"
 
 export default function page(){
     const params = useParams()
@@ -14,15 +15,18 @@ export default function page(){
     console.log(result) 
     
     if (result === null){
-        return <SkeletonProduct />
+        return <SkeletonProduct /> 
     }
-    
+     
     return (
      
         <div className="max-w-6xl py-4 mx-auto sm:py-32 sm:px-24">
-            <div className="grid sm:grid-col-2 ">
+            <div className="grid sm:grid-cols-2 ">
                 <div>
-                    <p>carousel</p>
+                    <CarouselProducto imagenes={result[0]?.imagenes || []} />
+                </div>
+                <div className="sm:px-12">
+                    <p> {result[0]?.nombreProducto}     </p>
                 </div>
 
             </div>
