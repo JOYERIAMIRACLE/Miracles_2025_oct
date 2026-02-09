@@ -62,19 +62,6 @@
         "China",
         "Ancla"
       ]
-    },
-    "detallleprod": {
-      "type": "component",
-      "component": "shared.cfgfg",
-      "repeatable": false
-    },
-    "detallezonee": {
-      "type": "dynamiczone",
-      "components": [
-        "shared.cfgfg",
-        "shared.anilloss",
-        "shared.cadenasss"
-      ]
     }
   }
 }

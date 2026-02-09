@@ -1,7 +1,7 @@
 "use client"
 
 import { useGetCategoryProduct } from "@/api/getCategoryProduct"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { ResponseType } from "@/types/response"
 import { Separator } from "@/components/ui/separator"
 import FiltersControlsCategory from "./components/filters-controls-category"
@@ -12,12 +12,12 @@ import { useState } from "react"
 
 export default function Page() {
     const params = useParams()
-    const {categorySlug} = params
+    const { categorySlug } = params
 
     // TRAJO EL SLUG CON PARAMS | TRAJO EL SLUG DEL URL 
     console.log(categorySlug);
-   
-    const {result,loading, error}: ResponseType = useGetCategoryProduct(categorySlug || "" )
+
+    const { result, loading }: ResponseType = useGetCategoryProduct(categorySlug || "")
     // TRAJO EL LOS PRODUCTOS DEL SLUG | PRODUCTOS SON DE LA CATEGORIA 
     console.log(result)
 
@@ -25,7 +25,7 @@ export default function Page() {
     const [filterMaterial, setFilterMaterial] = useState("")
     const [filterEstilo, setFilterEstilo] = useState("")
     // const [filterAll, setFilterAll] = useState("")
-    const router = useRouter()
+    // const router = useRouter()
     console.log(filterMaterial);
     console.log(filterEstilo)
 
@@ -37,12 +37,12 @@ export default function Page() {
     //     filterMaterial === '' ? result : result.filter((product: ProductType)=> product.materialProducto === filterMaterial)
     // )
     // console.log(filteredProducts)
-    
+
     // 2. Aplicamos la lógica multi-filtro
     const filteredProducts = result !== null && !loading ? result.filter((product: ProductType) => {
         // Condición para Material
         const matchesMaterial = filterMaterial === '' || product.materialProducto === filterMaterial;
-        
+
         // Condición para Origen (Asegúrate que 'origen' exista en tu ProductType)
         const matchesEstilo = filterEstilo === '' || product.estiloProducto === filterEstilo;
 
@@ -52,16 +52,16 @@ export default function Page() {
         // El producto solo pasa si cumple TODAS las condiciones
         return matchesMaterial && matchesEstilo;
     }) : null;
-    
-    
-    
-return (
+
+
+
+    return (
         <main>
             {/* 1. BANNER RESPONSIVO (Fuera del contenedor limitado para que sea ancho total) */}
             <div className="relative w-full min-h-[400px] md:h-[600px] flex items-center overflow-hidden bg-slate-900 ">
                 {/* Capa de fondo / Overlay */}
                 <div className="absolute inset-0 bg-black/50 z-10" />
-                
+
                 {/* Imagen de fondo (Aquí pondrías la URL de tu imagen de joyería) */}
                 <div className="absolute inset-0 bg-[url('/cmv1.jpg')] bg-cover bg-center " />
 
@@ -93,10 +93,10 @@ return (
                 <div className="sm:flex sm:justify-between mt-8 gap-10">
                     {/* Panel de Control (Filtros) */}
                     <aside className="sm:w-[250px] shrink-0">
-                        <FiltersControlsCategory 
-                            setFilterMaterial={setFilterMaterial} 
-                            setFilterEstilo={setFilterEstilo} 
-                            // setFilterAll={setFilterAll}
+                        <FiltersControlsCategory
+                            setFilterMaterial={setFilterMaterial}
+                            setFilterEstilo={setFilterEstilo}
+                        // setFilterAll={setFilterAll}
                         />
                     </aside>
 
@@ -104,7 +104,7 @@ return (
                     <div className="flex-1">
                         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             {loading && <SkeletonSchema grid={3} />}
-                            
+
                             {filteredProducts !== null && !loading && (
                                 filteredProducts.map((product: ProductType) => (
                                     <ProductCard1 key={product.id} product={product} />

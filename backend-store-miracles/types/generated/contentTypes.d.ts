@@ -486,10 +486,6 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.Text;
-    detallezonee: Schema.Attribute.DynamicZone<
-      ['shared.cfgfg', 'shared.anilloss', 'shared.cadenasss']
-    >;
-    detallleprod: Schema.Attribute.Component<'shared.cfgfg', false>;
     estiloProducto: Schema.Attribute.Enumeration<
       ['Cartier', 'Cubana', 'China', 'Ancla']
     >;
