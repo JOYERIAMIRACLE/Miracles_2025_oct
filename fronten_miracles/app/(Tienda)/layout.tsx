@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Navbar from "@/app/components/Layout/navbar";
-import Footer from "@/app/components/Layout/footer";
+import Navbar from "@/app/(Tienda)/1tiendacomponentes/navbar";
+import Footer from "@/app/(Tienda)/1tiendacomponentes/footer";
 
 export const metadata: Metadata = {
   // Este título se inyectará en el %s del Root Layout

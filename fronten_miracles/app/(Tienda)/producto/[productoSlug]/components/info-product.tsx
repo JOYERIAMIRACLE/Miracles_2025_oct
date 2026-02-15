@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useCart } from '@/hooks/use-cart';
 import { formatPrice } from '@/lib/formatprice';
 import { ProductType } from '@/types/product';
 import { Heart } from 'lucide-react';
@@ -12,6 +13,7 @@ export type CarouselProductoinfoProps = {
 const Infoproduct = (props: CarouselProductoinfoProps) => {
 
     const {product} = props;
+    const {addItem} = useCart()
     console.log(product)
         return (
             // visualizar el producto con su nombre, material, precio, etc.
@@ -39,6 +41,7 @@ const Infoproduct = (props: CarouselProductoinfoProps) => {
                     <Button 
                     className=' w-full flex-1 '
                     onClick={() => {
+                        addItem(product)
                         console.log("comprar")
                     }}
                     >

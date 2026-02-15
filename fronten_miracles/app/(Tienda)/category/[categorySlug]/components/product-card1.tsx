@@ -6,7 +6,7 @@ import React from 'react'
 import { formatPrice } from '@/lib/formatprice';
 import { ProductType } from '@/types/product'
 
-import IconButton from '@/app/components/Home/Carrusel-de-productos/icon-buttons';
+import IconButton from '@/app/(Tienda)/1tiendacomponentes/icon-buttons';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 type ProductCardProps = {

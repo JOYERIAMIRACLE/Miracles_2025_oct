@@ -14,7 +14,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from "@/app/components/Layout/navigation-menu"
+} from "@/app/(Tienda)/1tiendacomponentes/navigation-menu"
 
 // MANUAL DE DATOS
 const components: { title: string; href: string; description: string }[] = [

@@ -1,17 +1,20 @@
 "use client"
 
 // IMPORTACIONES
-import { Heart, ShoppingCart, ShoppingCartIcon, User } from "lucide-react";
+import { BaggageClaim, Heart, ShoppingCart, ShoppingCartIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MenuList from "./menu-list";
 import ItemsMenuMobile from "./items-mobile";
 import ModeToggle from "./toggle";
+import { useCart } from "@/hooks/use-cart";
 
 // COMPONENTE BARRA DE NAVEGACION
 const Navbar = () =>{
 
     // LOGICA DE AYUDA
     const router = useRouter()
+    const cart = useCart()
+    console.log(cart.items.length)
 
     // VISUALIZACION 
     return (
@@ -36,9 +39,22 @@ const Navbar = () =>{
 
             {/* ICONOS DE NAVEGACION */}
             <div className="flex items-center justify-between gap-2 sm:gap-7">
-                <ShoppingCart strokeWidth={2} className="cursor-pointer" onClick={()=>router.push("/cart")}/>
-                <Heart strokeWidth={2} className="cursor-pointer" onClick={()=>router.push("/like-products")}/>
-                <User strokeWidth={2} className="cursor-pointer" onClick={()=>router.push("/Sesion")}/>
+                {cart.items.length === 0 ? 
+                    <ShoppingCart strokeWidth={1} 
+                        className="cursor-pointer"
+                        onClick={()=>router.push("/carrito")}
+                    />
+                    : (
+                        <div className="flex gap-1" onClick={()=> router.push("/carrito")}>
+                            <BaggageClaim strokeWidth={1} className="cursor-pointer"/>
+                            <span>{cart.items.length}</span>
+                        </div>
+                    
+                )}
+                
+
+                <Heart strokeWidth={1} className="cursor-pointer" onClick={()=>router.push("/like-products")}/>
+                <User strokeWidth={1} className="cursor-pointer" onClick={()=>router.push("/Sesion")}/>
 
                 {/* BOTON DE TEMA DARK/LIGTH */}
                 <ModeToggle/>

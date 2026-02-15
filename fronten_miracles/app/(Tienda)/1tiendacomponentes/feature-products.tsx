@@ -2,13 +2,14 @@
 
 import { useGetFeaturedProducts } from "@/api/useGetFeaturedProducts"
 import { ResponseType } from "@/types/response"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../components/ui/carousel"
 import SkeletonSchema from "./skeleton-schema"
 import { ProductType } from "@/types/product"
-import { Card, CardContent } from "../../../../components/ui/card"
+import { Card, CardContent } from "../../../components/ui/card"
 import { Expand, ShoppingCart } from "lucide-react"
 import IconButton from "./icon-buttons"
 import { useRouter } from "next/navigation"
+import { useCart } from "@/hooks/use-cart"
 
 
 // COMPONENTE PRESENTADOR DE PRODUCTOS 
@@ -17,6 +18,7 @@ const FeatureProducts = () => {
 
     const {loading,result,error}: ResponseType = useGetFeaturedProducts()
     const router = useRouter()
+    const {addItem} = useCart()
     // TRAJO LOS PORIDUCTOS Y SU INFO 
     console.log(result); 
     
@@ -62,7 +64,7 @@ const FeatureProducts = () => {
                                                         className="text-gray-600"
                                                         />
                                                         <IconButton 
-                                                        onClick={() => console.log("add item")}
+                                                        onClick={() => addItem(producto)}
                                                         icon={<ShoppingCart size={20}/>}
                                                         className="text-gray-600"
                                                         />
