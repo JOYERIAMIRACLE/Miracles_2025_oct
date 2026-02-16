@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useFavorites } from '@/hooks/productos-favoritos';
 import { useCart } from '@/hooks/use-cart';
 import { formatPrice } from '@/lib/formatprice';
 import { ProductType } from '@/types/product';
@@ -14,6 +15,7 @@ const Infoproduct = (props: CarouselProductoinfoProps) => {
 
     const {product} = props;
     const {addItem} = useCart()
+    const {addFavorite} = useFavorites()
     console.log(product)
         return (
             // visualizar el producto con su nombre, material, precio, etc.
@@ -48,7 +50,8 @@ const Infoproduct = (props: CarouselProductoinfoProps) => {
                     Comprar
                     </Button>
                     <Heart width={30} strokeWidth={1} className=' transition duration-200 cursor-pointer hover:text-blue-500' 
-                        onClick={() => {
+                        onClick={() => { 
+                            addFavorite(product)
                         console.log("favorito")
                     }}
                     />

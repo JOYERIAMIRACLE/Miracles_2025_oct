@@ -7,6 +7,7 @@ import MenuList from "./menu-list";
 import ItemsMenuMobile from "./items-mobile";
 import ModeToggle from "./toggle";
 import { useCart } from "@/hooks/use-cart";
+import { useFavorites } from "@/hooks/productos-favoritos";
 
 // COMPONENTE BARRA DE NAVEGACION
 const Navbar = () =>{
@@ -14,6 +15,7 @@ const Navbar = () =>{
     // LOGICA DE AYUDA
     const router = useRouter()
     const cart = useCart()
+    const favorites = useFavorites()
     console.log(cart.items.length)
 
     // VISUALIZACION 
@@ -52,8 +54,22 @@ const Navbar = () =>{
                     
                 )}
                 
+                
+                {/* <Heart strokeWidth={1} className="cursor-pointer" onClick={()=>router.push("/productos-favoritos")}/> */}
+                {favorites.items.length === 0 ? 
+                    <Heart strokeWidth={1} 
+                        className="cursor-pointer"
+                        onClick={()=>router.push("/productos-favoritos")}
+                    />
+                    : (
+                        <div className="flex gap-1" onClick={()=> router.push("/productos-favoritos")}>
+                            <Heart strokeWidth={1} className="cursor-pointer"/>
+                            <span>{favorites.items.length}</span>
+                        </div>
+                    
+                )}
 
-                <Heart strokeWidth={1} className="cursor-pointer" onClick={()=>router.push("/like-products")}/>
+
                 <User strokeWidth={1} className="cursor-pointer" onClick={()=>router.push("/Sesion")}/>
 
                 {/* BOTON DE TEMA DARK/LIGTH */}
