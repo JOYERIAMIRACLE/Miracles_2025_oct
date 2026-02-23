@@ -481,6 +481,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       'oneToOne',
       'api::product-category.product-category'
     >;
+    contenidoo: Schema.Attribute.RichText;
     costo: Schema.Attribute.Decimal;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

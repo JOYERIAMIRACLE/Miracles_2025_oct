@@ -150,7 +150,7 @@ const MenuList = () => {
         <NavigationMenuItem className="hidden md:block">
           <NavigationMenuTrigger>List</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[300px] gap-4">
+            <ul className="grid w-[600px] gap-4">
               <li>
                 <NavigationMenuLink asChild>
                   <Link href="#">

@@ -14,7 +14,7 @@ export default function page() {
 
 
     return (
-        <div className="max-w-6xl px-4 py-12 mx-auto sm:px-6 lg:px-8">
+        <div className="max-w-6xl px-4 py-12 mx-auto sm:px-6 lg:px-8 dark:bg-zinc-900">
             <h1 className="mb-4 text-3xl font-bold">carrito de compra</h1>
             <div className=" grid sm:grid-cols-2 sm:gap-5">
                 <div className="p-6 rounded-lg bg-slate-100 dark:text-black">

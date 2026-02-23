@@ -62,6 +62,9 @@
         "China",
         "Ancla"
       ]
+    },
+    "contenidoo": {
+      "type": "richtext"
     }
   }
 }
