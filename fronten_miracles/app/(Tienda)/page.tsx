@@ -18,4 +18,4 @@ export default function Home() {
       <p>subscripciuon</p>
     </div>
   )
-}
+}               
