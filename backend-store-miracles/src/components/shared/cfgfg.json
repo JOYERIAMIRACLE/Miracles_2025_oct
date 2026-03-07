@@ -1,10 +1,27 @@
 {
   "collectionName": "components_shared_cfgfgs",
   "info": {
-    "displayName": "cfgfg",
+    "displayName": "detalles",
     "icon": "bold"
   },
   "options": {},
-  "attributes": {},
+  "attributes": {
+    "DetalleAnillos": {
+      "type": "enumeration",
+      "enum": [
+        "Solitario",
+        "matrimonio ",
+        "Grafuacion"
+      ]
+    },
+    "DetalleEsclavas": {
+      "type": "enumeration",
+      "enum": [
+        "china",
+        "cartier",
+        "cubana"
+      ]
+    }
+  },
   "config": {}
 }

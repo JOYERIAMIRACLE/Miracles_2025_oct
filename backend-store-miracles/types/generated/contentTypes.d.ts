@@ -402,135 +402,6 @@ export interface ApiAboutAbout extends Struct.SingleTypeSchema {
   };
 }
 
-export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
-  collectionName: 'articles';
-  info: {
-    description: 'Create your blog content';
-    displayName: 'Article';
-    pluralName: 'articles';
-    singularName: 'article';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    author: Schema.Attribute.Relation<'manyToOne', 'api::author.author'>;
-    category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
-    cover: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 80;
-      }>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::article.article'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'title'>;
-    title: Schema.Attribute.String;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiAuthorAuthor extends Struct.CollectionTypeSchema {
-  collectionName: 'authors';
-  info: {
-    description: 'Create authors for your content';
-    displayName: 'ArticleAuthor';
-    pluralName: 'authors';
-    singularName: 'author';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    articles: Schema.Attribute.Relation<'oneToMany', 'api::article.article'>;
-    avatar: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    email: Schema.Attribute.String;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::author.author'
-    > &
-      Schema.Attribute.Private;
-    namee: Schema.Attribute.String;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
-  collectionName: 'categories';
-  info: {
-    description: 'Organize your content into categories';
-    displayName: 'ArticleCategory';
-    pluralName: 'categories';
-    singularName: 'category';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    articles: Schema.Attribute.Relation<'oneToMany', 'api::article.article'>;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    description: Schema.Attribute.Text;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::category.category'
-    > &
-      Schema.Attribute.Private;
-    name: Schema.Attribute.String;
-    publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiFinazaFinaza extends Struct.CollectionTypeSchema {
-  collectionName: 'finazas';
-  info: {
-    displayName: 'finazaAnalisis';
-    pluralName: 'finazas';
-    singularName: 'finaza';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::finaza.finaza'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    ventas: Schema.Attribute.JSON;
-  };
-}
-
 export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   collectionName: 'globals';
   info: {
@@ -586,37 +457,8 @@ export interface ApiProductCategoryProductCategory
       Schema.Attribute.Private;
     MainImage: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
     NombreCategoria: Schema.Attribute.String;
-    products: Schema.Attribute.Relation<'oneToMany', 'api::product.product'>;
     publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiProductPrecioVariableProductPrecioVariable
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'product_precio_variables';
-  info: {
-    displayName: 'ProductPrecioVariable';
-    pluralName: 'product-precio-variables';
-    singularName: 'product-precio-variable';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::product-precio-variable.product-precio-variable'
-    > &
-      Schema.Attribute.Private;
-    pricegold: Schema.Attribute.String;
-    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'NombreCategoria'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -635,32 +477,35 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
   };
   attributes: {
     activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    Costo: Schema.Attribute.Decimal;
+    categoria: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::product-category.product-category'
+    >;
+    contenidoo: Schema.Attribute.RichText;
+    costo: Schema.Attribute.Decimal;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    Descripcion: Schema.Attribute.Text;
-    Imagenes: Schema.Attribute.Media<
+    descripcion: Schema.Attribute.Text;
+    estiloProducto: Schema.Attribute.Enumeration<
+      ['Cartier', 'Cubana', 'China', 'Ancla']
+    >;
+    imagenes: Schema.Attribute.Media<
       'images' | 'files' | 'videos' | 'audios',
       true
     >;
-    IsFeature: Schema.Attribute.Boolean;
+    isFeatured: Schema.Attribute.Boolean;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::product.product'
     > &
       Schema.Attribute.Private;
-    NombreProducto: Schema.Attribute.String &
+    materialProducto: Schema.Attribute.Enumeration<['Oro', 'Plata', 'Platino']>;
+    nombreProducto: Schema.Attribute.String &
       Schema.Attribute.DefaultTo<'SinNombre'>;
-    PrecioReal: Schema.Attribute.JSON;
-    product_category: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::product-category.product-category'
-    >;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'NombreProducto'>;
-    TipoProducto: Schema.Attribute.Enumeration<['Oro', 'Plata', 'Diamante']>;
+    slug: Schema.Attribute.UID;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1177,13 +1022,8 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
-      'api::article.article': ApiArticleArticle;
-      'api::author.author': ApiAuthorAuthor;
-      'api::category.category': ApiCategoryCategory;
-      'api::finaza.finaza': ApiFinazaFinaza;
       'api::global.global': ApiGlobalGlobal;
       'api::product-category.product-category': ApiProductCategoryProductCategory;
-      'api::product-precio-variable.product-precio-variable': ApiProductPrecioVariableProductPrecioVariable;
       'api::product.product': ApiProductProduct;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

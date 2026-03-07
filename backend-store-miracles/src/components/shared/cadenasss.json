@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_shared_cadenassses",
+  "info": {
+    "displayName": "cadenasss"
+  },
+  "options": {},
+  "attributes": {
+    "esclavas": {
+      "type": "enumeration",
+      "enum": [
+        "cubana",
+        "placa",
+        "cartier"
+      ]
+    },
+    "format": {
+      "type": "json"
+    }
+  },
+  "config": {}
+}

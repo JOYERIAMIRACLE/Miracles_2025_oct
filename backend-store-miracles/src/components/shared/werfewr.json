@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_shared_werfewrs",
+  "info": {
+    "displayName": "werfewr",
+    "icon": "cloud"
+  },
+  "options": {},
+  "attributes": {
+    "sdgfd": {
+      "type": "string"
+    },
+    "dfgdfg": {
+      "type": "json"
+    }
+  },
+  "config": {}
+}

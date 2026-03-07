@@ -11,21 +11,25 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "NombreProducto": {
+    "categoria": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::product-category.product-category"
+    },
+    "nombreProducto": {
       "type": "string",
       "default": "SinNombre"
     },
-    "Descripcion": {
+    "descripcion": {
       "type": "text"
     },
     "slug": {
-      "type": "uid",
-      "targetField": "NombreProducto"
+      "type": "uid"
     },
-    "Costo": {
+    "costo": {
       "type": "decimal"
     },
-    "Imagenes": {
+    "imagenes": {
       "type": "media",
       "multiple": true,
       "allowedTypes": [
@@ -39,25 +43,28 @@
       "type": "boolean",
       "default": false
     },
-    "TipoProducto": {
+    "materialProducto": {
       "type": "enumeration",
       "enum": [
         "Oro",
         "Plata",
-        "Diamante"
+        "Platino"
       ]
     },
-    "IsFeature": {
+    "isFeatured": {
       "type": "boolean"
     },
-    "product_category": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::product-category.product-category",
-      "inversedBy": "products"
+    "estiloProducto": {
+      "type": "enumeration",
+      "enum": [
+        "Cartier",
+        "Cubana",
+        "China",
+        "Ancla"
+      ]
     },
-    "PrecioReal": {
-      "type": "json"
+    "contenidoo": {
+      "type": "richtext"
     }
   }
 }

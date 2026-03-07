@@ -1,12 +1,40 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface SharedAnilloss extends Struct.ComponentSchema {
+  collectionName: 'components_shared_anillosses';
+  info: {
+    displayName: 'anilloss';
+  };
+  attributes: {
+    anillo: Schema.Attribute.Enumeration<['solitario', 'lizo', 'graduacionn']>;
+  };
+}
+
+export interface SharedCadenasss extends Struct.ComponentSchema {
+  collectionName: 'components_shared_cadenassses';
+  info: {
+    displayName: 'cadenasss';
+  };
+  attributes: {
+    esclavas: Schema.Attribute.Enumeration<['cubana', 'placa', 'cartier']>;
+    format: Schema.Attribute.JSON;
+  };
+}
+
 export interface SharedCfgfg extends Struct.ComponentSchema {
   collectionName: 'components_shared_cfgfgs';
   info: {
-    displayName: 'cfgfg';
+    displayName: 'detalles';
     icon: 'bold';
   };
-  attributes: {};
+  attributes: {
+    DetalleAnillos: Schema.Attribute.Enumeration<
+      ['Solitario', 'matrimonio ', 'Grafuacion']
+    >;
+    DetalleEsclavas: Schema.Attribute.Enumeration<
+      ['china', 'cartier', 'cubana']
+    >;
+  };
 }
 
 export interface SharedMedia extends Struct.ComponentSchema {
@@ -71,15 +99,30 @@ export interface SharedSlider extends Struct.ComponentSchema {
   };
 }
 
+export interface SharedWerfewr extends Struct.ComponentSchema {
+  collectionName: 'components_shared_werfewrs';
+  info: {
+    displayName: 'werfewr';
+    icon: 'cloud';
+  };
+  attributes: {
+    dfgdfg: Schema.Attribute.JSON;
+    sdgfd: Schema.Attribute.String;
+  };
+}
+
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'shared.anilloss': SharedAnilloss;
+      'shared.cadenasss': SharedCadenasss;
       'shared.cfgfg': SharedCfgfg;
       'shared.media': SharedMedia;
       'shared.quote': SharedQuote;
       'shared.rich-text': SharedRichText;
       'shared.seo': SharedSeo;
       'shared.slider': SharedSlider;
+      'shared.werfewr': SharedWerfewr;
     }
   }
 }
