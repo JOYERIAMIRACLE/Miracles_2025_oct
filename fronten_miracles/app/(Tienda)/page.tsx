@@ -13,7 +13,7 @@ export default function Home() {
       <BannerDiscount />
       <ChoseCategory />
       <BannerProduct />
-      <p>empresa</p>
+      <p>empresa</p> 
       <p>blog</p>
       <p>subscripciuon</p>
     </div>

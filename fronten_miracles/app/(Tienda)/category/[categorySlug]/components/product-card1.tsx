@@ -21,7 +21,7 @@ const ProductCard1 = (props: ProductCardProps ) => {
 
     const router = useRouter()
     return (
-        <Link href={`/product/${product.slug}`}
+        <Link href={`/producto/${product.slug}`}
         className='relative p-2 transition-all duration-100 rounded-lg hover:shadow-md '>
             <div className='absolute flex items-center justify-between gap-3 px-2 z-[1] top-4 '>
                 <p className='px-2 py-1 text-xs text-white bg-black rounded-full
@@ -45,7 +45,7 @@ const ProductCard1 = (props: ProductCardProps ) => {
                             />
                             <div className='absolute w-full px-6 transition duration-200 opacity-0 group-hover:opacity-100 bottom-5 '>
                                 <div className='flex justify-center gap-x-6  '>
-                                    <IconButton onClick={()=> router.push(`/product/${product.slug}`)}
+                                    <IconButton onClick={()=> router.push(`/producto/${product.slug}`)}
                                      icon={<Expand size={20} className='text-gray-600'/>}></IconButton>
                                     <IconButton onClick={()=> console.log("oruydct")}
                                      icon={<ShoppingCart size={20} className='text-gray-600'/>}></IconButton>
