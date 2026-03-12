@@ -76,45 +76,62 @@ const MenuList = () => {
 
         {/* BOTON 1 */}
         <NavigationMenuItem>
-          <NavigationMenuTrigger>Nosotros</NavigationMenuTrigger>
+          <NavigationMenuTrigger>Tienda</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid gap-2 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+
+
+            {/* MENU1 */}
+            <ul className="grid gap-2 md:w-[400px] lg:w-[500px] lg:grid-rows-[.15fr_1fr]">
               <li className="row-span-3">
                 <NavigationMenuLink asChild>
+                {/* LINK1 */}
                   <a
                     className="from-muted/50 to-muted flex h-full w-full flex-col justify-start items-start
                  rounded-md bg-linear-to-b p-2 no-underline outline-hidden transition-all duration-200 select-none focus:shadow-md md:p-4"
                     href="/Conoce-Miracles"
                   >
                     <div className="mb-2 text-lg  font-medium ">
-                      Joyeria Miracles
+                      Joyeria de oro y plata Miracles
                     </div>
-                    <p>icono dinamico de ranking - Ranking y opiniones (cantidad de opiniones)</p>
+                    {/* <p>icono dinamico de ranking - Ranking y opiniones (cantidad de opiniones)</p>
                     <p className="text-muted-foreground text-sm leading-tight">
                       Oro y plata para cualqueir ocación especial 
                     </p>
                     <p className="text-blue-500 mt-2">
                         Conoce Miracles...
-                    </p>
+                    </p> */}
                   </a>
+                  {/* FIN LINK1 */}
                 </NavigationMenuLink>
               </li>
               
-              <ListItem href="/Historias-de-exito-Miracles" title="Historias de exito Miracles">
-                Conoce los storytelling más relevantes para el proposito de Miracles
+              
+              
+              <ListItem href="/Metodos-de-Servicio-Miracles" title="Aretes">
+              hermosos accesorios para realzar tu belleza y estilo, disponibles en una amplia variedad de diseños y materiales.
               </ListItem>
-              <ListItem href="/Metodos-de-Servicio-Miracles" title="Metodos de Servicio Miracles ">
-                Descubre todo lo que podemos hacer por ti 
+              
+              <ListItem href="/Historias-de-exito-Miracles" title="Cadenas">
+                brillantes y elegantes, nuestras cadenas de oro y plata son el complemento perfecto para cualquier ocasión, ofreciendo calidad y estilo en cada pieza.
               </ListItem>
-              <ListItem className="flex flex-col " href="/Contactanos" title="Contactanos ">
-                <div  className="flex flex-col ">
-                  <div className="text-blue-500" >Tel:</div>
-                  <div className="text-blue-500" >Whatsapp:</div>
-                  <div className="text-blue-500" >Correo:</div>
-                  
+              <ListItem href="/Metodos-de-Servicio-Miracles" title="Dijes ">
+              figuras increibles que se pueden colgar en pulseras, collares u otros accesorios, disponibles en una variedad de diseños y materiales para personalizar tu estilo. 
+              </ListItem>
 
-                </div>
+              <ListItem href="/Metodos-de-Servicio-Miracles" title="Anillos ">
+              personalidad y estilo a tus manos con nuestros anillos de oro y plata, disponibles en una amplia gama de diseños y tamaños para complementar cualquier ocasión.
               </ListItem>
+              <ListItem href="/Metodos-de-Servicio-Miracles" title="Argollas">
+              argollas de oro y plata, elegantes y versátiles, perfectas para complementar tu relacion con tu pareja, disponibles en una variedad de diseños y materiales para simbolizar tu amor eterno.
+              </ListItem>
+
+              <ListItem href="/Metodos-de-Servicio-Miracles" title="Esclavas ">
+              esclavas y elegancia en cada pieza, nuestras esclavas de oro y plata son el complemento perfecto para cualquier ocasión, disponibles en una variedad de diseños y materiales para realzar tu estilo.  
+              </ListItem>
+              <ListItem href="/Metodos-de-Servicio-Miracles" title="Rosarios ">
+              rosarios para la fe y la devoción, nuestras rosarios de oro y plata son el complemento perfecto para tus momentos de oración, disponibles en una variedad de diseños y materiales para simbolizar tu espiritualidad.
+              </ListItem>
+              
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
