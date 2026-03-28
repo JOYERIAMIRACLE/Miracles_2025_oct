@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import MenuList from "./menu-list";
 import ItemsMenuMobile from "./items-mobile";
 import ModeToggle from "./toggle";
-import { useCart } from "@/hooks/use-cart";
-import { useFavorites } from "@/hooks/productos-favoritos";
+import { useCart } from "@/hooks/useCart";
+import { useFavorites } from "@/hooks/useFavirites";
 
 // COMPONENTE BARRA DE NAVEGACION
 const Navbar = () =>{
