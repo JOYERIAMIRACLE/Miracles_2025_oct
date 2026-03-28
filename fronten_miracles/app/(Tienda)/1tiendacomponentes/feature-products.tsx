@@ -9,7 +9,7 @@ import { Card, CardContent } from "../../../components/ui/card"
 import { Expand, ShoppingCart } from "lucide-react"
 import IconButton from "./icon-buttons"
 import { useRouter } from "next/navigation"
-import { useCart } from "@/hooks/use-cart"
+import { useCart } from "@/hooks/useCart"
 
 
 // COMPONENTE PRESENTADOR DE PRODUCTOS 

@@ -1,4 +1,4 @@
-import { useFavorites } from "@/hooks/productos-favoritos";
+import { useFavorites } from "@/hooks/useFavirites";
 import { ProductType } from "@/types/product";
 import { useRouter } from "next/navigation";
 

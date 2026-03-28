@@ -1,4 +1,4 @@
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/hooks/useCart";
 import { ProductType } from "@/types/product"
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/formatprice";

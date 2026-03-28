@@ -1,0 +1,14 @@
+CONTEXTO: Joyería Miracles — Next.js 15.5 + React 19 + TypeScript + Tailwind v4 + shadcn/ui + Zustand + Sonner + Strapi 5
+CONVENCIONES: separadores // ─── Sección ───, comentarios // EN MAYÚSCULAS en páginas, sin punto y coma en tipos, persist + selectores en stores, orden en páginas: hooks → logs dev → guards → return
+
+ARCHIVO: [nombre del archivo, ej: app/(Tienda)/category/[categorySlug]/page.tsx]
+UBICACIÓN: [carpeta donde vive, ej: app/(Tienda)/category/]
+
+SOLICITUD:
+[describe qué quieres hacer, ej: agregar paginación, corregir el filtro, agregar un nuevo campo]
+
+CÓDIGO ACTUAL:
+[pega aquí el código o súbelo como archivo adjunto]
+
+NOTAS EXTRA:
+[cualquier detalle relevante, ej: el campo en Strapi se llama "precioOferta", ya tengo el tipo actualizado]

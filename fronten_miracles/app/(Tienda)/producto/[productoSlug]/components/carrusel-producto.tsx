@@ -1,13 +1,18 @@
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
-interface CarouselProductoProps {
-    imagenes: {
-        id: number;
-        url: string;
-        alternativeText: string | null;
-    }[]
-}
+// interface CarouselProductoProps {
+//     imagenes: {
+//         id: number;
+//         url: string;
+//         alternativeText: string | null;
+//     }[]
+// }
 
+import { ImageType } from "@/types/product"
+
+interface CarouselProductoProps {
+  imagenes: ImageType[]
+}
 
 const CarouselProducto = (props: CarouselProductoProps) => {
     

@@ -1,6 +1,6 @@
 "use client"
 
-import { useFavorites } from "@/hooks/productos-favoritos"
+import { useFavorites } from "@/hooks/useFavirites"
 
 export default function Page() {
 
