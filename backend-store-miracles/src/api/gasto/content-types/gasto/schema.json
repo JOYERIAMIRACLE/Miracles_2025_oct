@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "gastos",
+  "info": {
+    "singularName": "gasto",
+    "pluralName": "gastos",
+    "displayName": "gasto"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "concepto": {
+      "type": "string",
+      "required": true
+    },
+    "monto": {
+      "type": "decimal"
+    },
+    "fecha": {
+      "type": "date",
+      "required": true
+    },
+    "cuenta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cuenta.cuenta",
+      "inversedBy": "gastos"
+    },
+    "centro_costo": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::centro-costo.centro-costo",
+      "inversedBy": "gastoycentrodecostos"
+    },
+    "comprobante": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "notas": {
+      "type": "string"
+    }
+  }
+}

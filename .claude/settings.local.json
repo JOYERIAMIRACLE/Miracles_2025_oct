@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/RicardoRodriguezAvil/Desktop/Miracles/fronten_miracles -name api* -o -name strapi*)",
+      "Bash(xargs ls:*)",
+      "Bash(find \"/c/Users/RicardoRodriguezAvil/Desktop/Miracles/fronten_miracles/app/\\(personal\\)\" -name \"page.tsx\")"
+    ]
+  }
+}

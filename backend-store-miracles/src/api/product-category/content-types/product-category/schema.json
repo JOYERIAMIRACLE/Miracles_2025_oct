@@ -27,6 +27,12 @@
     "slug": {
       "type": "uid",
       "targetField": "NombreCategoria"
+    },
+    "relacionInventarioProductos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::inventario.inventario",
+      "mappedBy": "product_category"
     }
   }
 }

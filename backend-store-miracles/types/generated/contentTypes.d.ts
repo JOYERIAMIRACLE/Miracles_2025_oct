@@ -402,6 +402,188 @@ export interface ApiAboutAbout extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiCentroCostoCentroCosto extends Struct.CollectionTypeSchema {
+  collectionName: 'centro_costos';
+  info: {
+    displayName: 'centro-costo';
+    pluralName: 'centro-costos';
+    singularName: 'centro-costo';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    codigo: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String;
+    gastoycentrodecostos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::gasto.gasto'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::centro-costo.centro-costo'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCentroVentaCentroVenta extends Struct.CollectionTypeSchema {
+  collectionName: 'centro_ventas';
+  info: {
+    displayName: 'centro-venta';
+    pluralName: 'centro-ventas';
+    singularName: 'centro-venta';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    codigo: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::centro-venta.centro-venta'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ventayCentrodeventas: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::venta.venta'
+    >;
+  };
+}
+
+export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
+  collectionName: 'clientes';
+  info: {
+    displayName: 'Cliente';
+    pluralName: 'clientes';
+    singularName: 'cliente';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    canalContacto: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    direccion: Schema.Attribute.String;
+    email: Schema.Attribute.Email;
+    Estado: Schema.Attribute.Enumeration<['Activo', 'Inactivo ']>;
+    Funnel: Schema.Attribute.Enumeration<
+      ['Lead', 'Prospecto', 'Negociacion', 'Primera compra', 'Recompra']
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cliente.cliente'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    origenContacto: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    segmento: Schema.Attribute.Enumeration<
+      ['Pareja', 'Matrimonio', 'Familiar', 'Personalizado']
+    >;
+    telefono: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ventas: Schema.Attribute.Relation<'oneToMany', 'api::venta.venta'>;
+  };
+}
+
+export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
+  collectionName: 'cuentas';
+  info: {
+    displayName: 'cuenta';
+    pluralName: 'cuentas';
+    singularName: 'cuenta';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    activa: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    color: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    gastos: Schema.Attribute.Relation<'oneToMany', 'api::gasto.gasto'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cuenta.cuenta'
+    > &
+      Schema.Attribute.Private;
+    metaDeCuenta: Schema.Attribute.Decimal;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    proposito: Schema.Attribute.Enumeration<
+      ['Operativa', 'Ahorro', 'Inversi\u00F3n', 'Apartado', 'Presupuesto 1']
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    saldoInicial: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    tipo: Schema.Attribute.Enumeration<['Efectivo', 'Cr\u00E9dito', 'Debito']>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ventaCuenta: Schema.Attribute.Relation<'oneToMany', 'api::venta.venta'>;
+  };
+}
+
+export interface ApiGastoGasto extends Struct.CollectionTypeSchema {
+  collectionName: 'gastos';
+  info: {
+    displayName: 'gasto';
+    pluralName: 'gastos';
+    singularName: 'gasto';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    centro_costo: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::centro-costo.centro-costo'
+    >;
+    comprobante: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios'
+    >;
+    concepto: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    cuenta: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
+    fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::gasto.gasto'> &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal;
+    notas: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   collectionName: 'globals';
   info: {
@@ -434,6 +616,47 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiInventarioInventario extends Struct.CollectionTypeSchema {
+  collectionName: 'inventarios';
+  info: {
+    displayName: 'inventario';
+    pluralName: 'inventarios';
+    singularName: 'inventario';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    costoProduccion: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::inventario.inventario'
+    > &
+      Schema.Attribute.Private;
+    material: Schema.Attribute.Enumeration<['producto', 'servicio']>;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    precioVenta: Schema.Attribute.Decimal;
+    product_category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::product-category.product-category'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    sku: Schema.Attribute.String;
+    stock: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ventasInventario: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::venta.venta'
+    >;
+  };
+}
+
 export interface ApiProductCategoryProductCategory
   extends Struct.CollectionTypeSchema {
   collectionName: 'product_categories';
@@ -458,6 +681,10 @@ export interface ApiProductCategoryProductCategory
     MainImage: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
     NombreCategoria: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    relacionInventarioProductos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::inventario.inventario'
+    >;
     slug: Schema.Attribute.UID<'NombreCategoria'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -506,6 +733,46 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<'SinNombre'>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiVentaVenta extends Struct.CollectionTypeSchema {
+  collectionName: 'ventas';
+  info: {
+    displayName: 'venta';
+    pluralName: 'ventas';
+    singularName: 'venta';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    cantidad: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>;
+    centro_venta: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::centro-venta.centro-venta'
+    >;
+    cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
+    concepto: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    cuenta: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
+    estado: Schema.Attribute.Enumeration<['Pendiente', 'Pagado', 'Cancelado']>;
+    fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    inventario: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::inventario.inventario'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::venta.venta'> &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    notas: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1022,9 +1289,16 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
+      'api::centro-costo.centro-costo': ApiCentroCostoCentroCosto;
+      'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
+      'api::cliente.cliente': ApiClienteCliente;
+      'api::cuenta.cuenta': ApiCuentaCuenta;
+      'api::gasto.gasto': ApiGastoGasto;
       'api::global.global': ApiGlobalGlobal;
+      'api::inventario.inventario': ApiInventarioInventario;
       'api::product-category.product-category': ApiProductCategoryProductCategory;
       'api::product.product': ApiProductProduct;
+      'api::venta.venta': ApiVentaVenta;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

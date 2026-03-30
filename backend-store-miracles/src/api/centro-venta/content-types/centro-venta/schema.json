@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "centro_ventas",
+  "info": {
+    "singularName": "centro-venta",
+    "pluralName": "centro-ventas",
+    "displayName": "centro-venta"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string"
+    },
+    "codigo": {
+      "type": "string"
+    },
+    "ventayCentrodeventas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::venta.venta",
+      "mappedBy": "centro_venta"
+    }
+  }
+}
