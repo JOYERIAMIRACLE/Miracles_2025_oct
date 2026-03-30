@@ -1,5 +1,14 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface NuevoComponentesGestion extends Struct.ComponentSchema {
+  collectionName: 'components_nuevo_componentes_gestion_s';
+  info: {
+    displayName: 'componentes gestion ';
+    icon: 'arrowRight';
+  };
+  attributes: {};
+}
+
 export interface SharedAnilloss extends Struct.ComponentSchema {
   collectionName: 'components_shared_anillosses';
   info: {
@@ -114,6 +123,7 @@ export interface SharedWerfewr extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'nuevo.componentes-gestion': NuevoComponentesGestion;
       'shared.anilloss': SharedAnilloss;
       'shared.cadenasss': SharedCadenasss;
       'shared.cfgfg': SharedCfgfg;

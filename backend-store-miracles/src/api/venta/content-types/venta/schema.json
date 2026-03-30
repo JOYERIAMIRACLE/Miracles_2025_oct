@@ -1,0 +1,66 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ventas",
+  "info": {
+    "singularName": "venta",
+    "pluralName": "ventas",
+    "displayName": "venta"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "concepto": {
+      "type": "string",
+      "required": true
+    },
+    "monto": {
+      "type": "decimal",
+      "required": true
+    },
+    "fecha": {
+      "type": "date",
+      "required": true
+    },
+    "cuenta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cuenta.cuenta",
+      "inversedBy": "ventaCuenta"
+    },
+    "centro_venta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::centro-venta.centro-venta",
+      "inversedBy": "ventayCentrodeventas"
+    },
+    "cliente": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente.cliente",
+      "inversedBy": "ventas"
+    },
+    "inventario": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::inventario.inventario",
+      "inversedBy": "ventasInventario"
+    },
+    "cantidad": {
+      "type": "integer",
+      "default": 1
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": [
+        "Pendiente",
+        "Pagado",
+        "Cancelado"
+      ]
+    },
+    "notas": {
+      "type": "string"
+    }
+  }
+}

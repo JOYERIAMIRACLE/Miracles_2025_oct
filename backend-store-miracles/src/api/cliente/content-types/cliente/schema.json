@@ -1,0 +1,66 @@
+{
+  "kind": "collectionType",
+  "collectionName": "clientes",
+  "info": {
+    "singularName": "cliente",
+    "pluralName": "clientes",
+    "displayName": "Cliente"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email"
+    },
+    "telefono": {
+      "type": "string"
+    },
+    "direccion": {
+      "type": "string"
+    },
+    "segmento": {
+      "type": "enumeration",
+      "enum": [
+        "Pareja",
+        "Matrimonio",
+        "Familiar",
+        "Personalizado"
+      ]
+    },
+    "Funnel": {
+      "type": "enumeration",
+      "enum": [
+        "Lead",
+        "Prospecto",
+        "Negociacion",
+        "Primera compra",
+        "Recompra"
+      ]
+    },
+    "canalContacto": {
+      "type": "string"
+    },
+    "origenContacto": {
+      "type": "string"
+    },
+    "Estado": {
+      "type": "enumeration",
+      "enum": [
+        "Activo",
+        "Inactivo "
+      ]
+    },
+    "ventas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::venta.venta",
+      "mappedBy": "cliente"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "centro_costos",
+  "info": {
+    "singularName": "centro-costo",
+    "pluralName": "centro-costos",
+    "displayName": "centro-costo"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "codigo": {
+      "type": "string"
+    },
+    "descripcion": {
+      "type": "string"
+    },
+    "gastoycentrodecostos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::gasto.gasto",
+      "mappedBy": "centro_costo"
+    }
+  }
+}
