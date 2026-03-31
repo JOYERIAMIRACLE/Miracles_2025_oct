@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "prestamo_otorgados",
+  "info": {
+    "singularName": "prestamo-otorgado",
+    "pluralName": "prestamo-otorgados",
+    "displayName": "prestamo-otorgado"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "beneficiario": {
+      "type": "string"
+    },
+    "monto_original": {
+      "type": "decimal"
+    },
+    "saldo_pendiente": {
+      "type": "decimal"
+    },
+    "fecha_inicio": {
+      "type": "date"
+    },
+    "fecha_vencimiento": {
+      "type": "date"
+    },
+    "tasa_interes": {
+      "type": "decimal"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": [
+        "activo",
+        "liquidado",
+        "vencido"
+      ]
+    },
+    "notas": {
+      "type": "string"
+    }
+  }
+}

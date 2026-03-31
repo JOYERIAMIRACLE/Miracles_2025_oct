@@ -402,6 +402,39 @@ export interface ApiAboutAbout extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiActivoActivo extends Struct.CollectionTypeSchema {
+  collectionName: 'activos';
+  info: {
+    displayName: 'activo';
+    pluralName: 'activos';
+    singularName: 'activo';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    categoria: Schema.Attribute.Enumeration<
+      ['efectivo', 'inversi\u00F3n', 'bien_inmueble', 'veh\u00EDculo', 'otros']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::activo.activo'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    valor: Schema.Attribute.Decimal;
+  };
+}
+
 export interface ApiCentroCostoCentroCosto extends Struct.CollectionTypeSchema {
   collectionName: 'centro_costos';
   info: {
@@ -654,6 +687,140 @@ export interface ApiInventarioInventario extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::venta.venta'
     >;
+  };
+}
+
+export interface ApiPartidaPresupuestoPartidaPresupuesto
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'partida_presupuestos';
+  info: {
+    displayName: 'partida-presupuesto';
+    pluralName: 'partida-presupuestos';
+    singularName: 'partida-presupuesto';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    categoria: Schema.Attribute.Enumeration<
+      [
+        'vivienda',
+        'alimentaci\u00F3n',
+        'transporte',
+        'servicios',
+        'gastos Personales',
+        'entretenimiento',
+        'salud',
+        'ropa',
+        'educaci\u00F3n',
+        'ahorro',
+        'inversi\u00F3n',
+        'ingreso',
+      ]
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String & Schema.Attribute.Required;
+    frecuencia: Schema.Attribute.Enumeration<
+      ['diario', 'semanal', 'quincenal', 'mensual', 'anual']
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::partida-presupuesto.partida-presupuesto'
+    > &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      ['necesidad', 'gastos prescindibles', 'ahorro', 'ingreso']
+    >;
+    tipoPago: Schema.Attribute.Enumeration<
+      ['efectivo', 'TDC', 'apartado', 'transferencia', 'bonos', 'debito']
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPasivoPasivo extends Struct.CollectionTypeSchema {
+  collectionName: 'pasivos';
+  info: {
+    displayName: 'pasivo';
+    pluralName: 'pasivos';
+    singularName: 'pasivo';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    categoria: Schema.Attribute.Enumeration<
+      [
+        'tdc',
+        'credito_personal',
+        'hipoteca',
+        'automotriz',
+        'educativo',
+        'otros',
+      ]
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String;
+    dia_corte: Schema.Attribute.Integer;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pasivo.pasivo'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    saldo: Schema.Attribute.Decimal;
+    tasa_interes: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPrestamoOtorgadoPrestamoOtorgado
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'prestamo_otorgados';
+  info: {
+    displayName: 'prestamo-otorgado';
+    pluralName: 'prestamo-otorgados';
+    singularName: 'prestamo-otorgado';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    beneficiario: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<['activo', 'liquidado', 'vencido']>;
+    fecha_inicio: Schema.Attribute.Date;
+    fecha_vencimiento: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::prestamo-otorgado.prestamo-otorgado'
+    > &
+      Schema.Attribute.Private;
+    monto_original: Schema.Attribute.Decimal;
+    notas: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    saldo_pendiente: Schema.Attribute.Decimal;
+    tasa_interes: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1289,6 +1456,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
+      'api::activo.activo': ApiActivoActivo;
       'api::centro-costo.centro-costo': ApiCentroCostoCentroCosto;
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
       'api::cliente.cliente': ApiClienteCliente;
@@ -1296,6 +1464,9 @@ declare module '@strapi/strapi' {
       'api::gasto.gasto': ApiGastoGasto;
       'api::global.global': ApiGlobalGlobal;
       'api::inventario.inventario': ApiInventarioInventario;
+      'api::partida-presupuesto.partida-presupuesto': ApiPartidaPresupuestoPartidaPresupuesto;
+      'api::pasivo.pasivo': ApiPasivoPasivo;
+      'api::prestamo-otorgado.prestamo-otorgado': ApiPrestamoOtorgadoPrestamoOtorgado;
       'api::product-category.product-category': ApiProductCategoryProductCategory;
       'api::product.product': ApiProductProduct;
       'api::venta.venta': ApiVentaVenta;
