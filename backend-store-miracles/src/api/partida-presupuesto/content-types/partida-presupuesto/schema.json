@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "partida_presupuestos",
+  "info": {
+    "singularName": "partida-presupuesto",
+    "pluralName": "partida-presupuestos",
+    "displayName": "partida-presupuesto"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "descripcion": {
+      "type": "string",
+      "required": true
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "vivienda",
+        "alimentación",
+        "transporte",
+        "servicios",
+        "gastos Personales",
+        "entretenimiento",
+        "salud",
+        "ropa",
+        "educación",
+        "ahorro",
+        "inversión",
+        "ingreso"
+      ]
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": [
+        "necesidad",
+        "gastos prescindibles",
+        "ahorro",
+        "ingreso"
+      ]
+    },
+    "tipoPago": {
+      "type": "enumeration",
+      "enum": [
+        "efectivo",
+        "TDC",
+        "apartado",
+        "transferencia",
+        "bonos",
+        "debito"
+      ]
+    },
+    "frecuencia": {
+      "type": "enumeration",
+      "enum": [
+        "diario",
+        "semanal",
+        "quincenal",
+        "mensual",
+        "anual"
+      ]
+    },
+    "monto": {
+      "type": "decimal"
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

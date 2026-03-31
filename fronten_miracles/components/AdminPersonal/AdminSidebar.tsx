@@ -19,22 +19,22 @@ import {
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard", href: "/gestion-personal", icon: LayoutDashboard },
-  { name: "Finanzas", href: "/gestion-personal/finanzas", icon: Wallet },
-  { name: "Gastos", href: "/gestion-personal/gastos", icon: Banknote },
-  { name: "Ventas", href: "/gestion-personal/ventas", icon: ShoppingCart },
-  { name: "Inventario", href: "/gestion-personal/inventario", icon: Box },
-  { name: "Calendario", href: "/gestion-personal/calendario", icon: Calendar },
+  { name: "Dashboard", href: "/gestion-empresa", icon: LayoutDashboard },
+  { name: "Finanzas", href: "/gestion-empresa/finanzas", icon: Wallet },
+  { name: "Gastos", href: "/gestion-empresa/gastos", icon: Banknote },
+  { name: "Ventas", href: "/gestion-empresa/ventas", icon: ShoppingCart },
+  { name: "Inventario", href: "/gestion-empresa/inventario", icon: Box },
+  { name: "Calendario", href: "/gestion-empresa/calendario", icon: Calendar },
 ]
 
 const catalogos = [
-  { name: "Cuentas", href: "/gestion-personal/catalogos/cuentas", icon: PiggyBank },
-  { name: "Proveedores", href: "/gestion-personal/catalogos/proveedores", icon: Building2 },
-  { name: "Clientes", href: "/gestion-personal/catalogos/clientes", icon: Users },
-  { name: "Suscriptores", href: "/gestion-personal/catalogos/suscriptores", icon: UserPlus },
-  { name: "Socios Comerciales", href: "/gestion-personal/catalogos/socios-comerciales", icon: Briefcase },
-  { name: "Centros de Costos", href: "/gestion-personal/catalogos/centros-costos", icon: Tags },
-  { name: "Centros de Ventas", href: "/gestion-personal/catalogos/centros-ventas", icon: Tags },
+  { name: "Cuentas", href: "/gestion-empresa/catalogos/cuentas", icon: PiggyBank },
+  { name: "Proveedores", href: "/gestion-empresa/catalogos/proveedores", icon: Building2 },
+  { name: "Clientes", href: "/gestion-empresa/catalogos/clientes", icon: Users },
+  { name: "Suscriptores", href: "/gestion-empresa/catalogos/suscriptores", icon: UserPlus },
+  { name: "Socios Comerciales", href: "/gestion-empresa/catalogos/socios-comerciales", icon: Briefcase },
+  { name: "Centros de Costos", href: "/gestion-empresa/catalogos/centros-costos", icon: Tags },
+  { name: "Centros de Ventas", href: "/gestion-empresa/catalogos/centros-ventas", icon: Tags },
 ]
 
 export function AdminSidebar() {

@@ -8,7 +8,7 @@ export function AdminHeader() {
 
   // Generador dinámico de título usando la ruta
   const generateTitle = () => {
-    if (!pathname || pathname === "/gestion-personal") return "Dashboard de Inicio"
+    if (!pathname || pathname === "/gestion-empresa") return "Dashboard de Inicio"
     
     // Obtenemos el último segmento de la URL
     const parts = pathname.split("/").filter(Boolean)

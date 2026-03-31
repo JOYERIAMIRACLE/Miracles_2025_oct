@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "activos",
+  "info": {
+    "singularName": "activo",
+    "pluralName": "activos",
+    "displayName": "activo"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "efectivo",
+        "inversión",
+        "bien_inmueble",
+        "vehículo",
+        "otros"
+      ]
+    },
+    "valor": {
+      "type": "decimal"
+    },
+    "descripcion": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pasivos",
+  "info": {
+    "singularName": "pasivo",
+    "pluralName": "pasivos",
+    "displayName": "pasivo"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "tdc",
+        "credito_personal",
+        "hipoteca",
+        "automotriz",
+        "educativo",
+        "otros"
+      ]
+    },
+    "saldo": {
+      "type": "decimal"
+    },
+    "tasa_interes": {
+      "type": "decimal"
+    },
+    "dia_corte": {
+      "type": "integer"
+    },
+    "descripcion": {
+      "type": "string"
+    }
+  }
+}
