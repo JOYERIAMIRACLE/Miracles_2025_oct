@@ -3,9 +3,11 @@
 import { usePathname } from "next/navigation"
 
 const titles: Record<string, string> = {
-  "/gestion-personal":             "Dashboard Personal",
-  "/gestion-personal/presupuesto": "Presupuesto",
-  "/gestion-personal/patrimonio":  "Patrimonio",
+  "/gestion-personal":                      "Dashboard Personal",
+  "/gestion-personal/presupuesto":          "Presupuesto",
+  "/gestion-personal/registro-mensual":     "Registro Mensual",
+  "/gestion-personal/patrimonio":           "Patrimonio",
+  "/gestion-personal/metas":               "Metas de Ahorro",
 }
 
 export function PersonalHeader() {

@@ -9,11 +9,13 @@ import { useGetPartidas }  from "@/api/partida-presupuesto/getPartidas"
 import { useGetActivos }   from "@/api/activo/getActivos"
 import { useGetPasivos }   from "@/api/pasivo/getPasivos"
 import { useGetPrestamos } from "@/api/prestamo-otorgado/getPrestamos"
+import { useGetRegistros } from "@/api/registro-mensual/getRegistros"
 
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
 import { ActivoType }             from "@/types/activo"
 import { PasivoType }             from "@/types/pasivo"
 import { PrestamoOtorgadoType }   from "@/types/prestamo-otorgado"
+import { RegistroMensualType }    from "@/types/registro-mensual"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n: number) =>
@@ -80,22 +82,34 @@ function BarraItem({ label, monto, total, color, href }: {
 
 // ─── Página Dashboard ─────────────────────────────────────────────────────────
 export default function GestionPersonalPage() {
-  const { partidas: dataPartidas, loading: loadPart } = useGetPartidas()
-  const { activos:  dataActivos,  loading: loadAct  } = useGetActivos()
-  const { pasivos:  dataPasivos,  loading: loadPas  } = useGetPasivos()
-  const { prestamos: dataPrest,   loading: loadPrest } = useGetPrestamos()
+  const hoy = new Date()
+  const mesActual  = hoy.getMonth() + 1
+  const anioActual = hoy.getFullYear()
+
+  const { partidas:  dataPartidas, loading: loadPart  } = useGetPartidas()
+  const { activos:   dataActivos,  loading: loadAct   } = useGetActivos()
+  const { pasivos:   dataPasivos,  loading: loadPas   } = useGetPasivos()
+  const { prestamos: dataPrest,    loading: loadPrest  } = useGetPrestamos()
+  const { registros: dataRegs,     loading: loadRegs   } = useGetRegistros()
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
   const [activos,   setActivos]   = useState<ActivoType[]>([])
   const [pasivos,   setPasivos]   = useState<PasivoType[]>([])
   const [prestamos, setPrestamos] = useState<PrestamoOtorgadoType[]>([])
+  const [registros, setRegistros] = useState<RegistroMensualType[]>([])
 
-  useEffect(() => { setPartidas(dataPartidas   ?? []) }, [dataPartidas])
-  useEffect(() => { setActivos(dataActivos     ?? []) }, [dataActivos])
-  useEffect(() => { setPasivos(dataPasivos     ?? []) }, [dataPasivos])
-  useEffect(() => { setPrestamos(dataPrest     ?? []) }, [dataPrest])
+  useEffect(() => { setPartidas(dataPartidas ?? []) }, [dataPartidas])
+  useEffect(() => { setActivos(dataActivos   ?? []) }, [dataActivos])
+  useEffect(() => { setPasivos(dataPasivos   ?? []) }, [dataPasivos])
+  useEffect(() => { setPrestamos(dataPrest   ?? []) }, [dataPrest])
+  useEffect(() => { setRegistros(dataRegs    ?? []) }, [dataRegs])
 
-  const loading = loadPart || loadAct || loadPas || loadPrest
+  const loading = loadPart || loadAct || loadPas || loadPrest || loadRegs
+
+  // Registros del mes actual
+  const registrosMes = registros.filter(r => r.mes === mesActual && r.anio === anioActual)
+  const ingresoVariableMes = registrosMes.filter(r => r.tipo === "ingreso_variable").reduce((s, r) => s + (r.monto ?? 0), 0)
+  const gastoExtraMes      = registrosMes.filter(r => r.tipo === "gasto_extra").reduce((s, r) => s + (r.monto ?? 0), 0)
 
   // ─── Cálculos de presupuesto ─────────────────────────────────────────────
   const activasPartidas = partidas.filter(p => p.activo !== false)
@@ -108,7 +122,7 @@ export default function GestionPersonalPage() {
     .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso")
     .reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
 
-  const flujoNeto = ingresoMensual - egresoMensual
+  const flujoNeto = (ingresoMensual + ingresoVariableMes) - (egresoMensual + gastoExtraMes)
 
   const necesidadesMensual = activasPartidas
     .filter(p => p.tipo === "necesidad")
@@ -172,7 +186,7 @@ export default function GestionPersonalPage() {
         <KpiCard
           label="Flujo Neto Mensual"
           value={loading ? "..." : fmt(flujoNeto)}
-          sub={flujoNeto >= 0 ? "Ingresos > Egresos" : "Egresos > Ingresos"}
+          sub={`Real ${hoy.toLocaleString("es-MX", { month: "long" })}`}
           color={flujoNeto >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}
           icon={flujoNeto >= 0 ? TrendingUp : TrendingDown}
           href="/gestion-personal/presupuesto"

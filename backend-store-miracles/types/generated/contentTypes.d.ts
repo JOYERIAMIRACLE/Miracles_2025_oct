@@ -690,6 +690,42 @@ export interface ApiInventarioInventario extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiMetaAhorroMetaAhorro extends Struct.CollectionTypeSchema {
+  collectionName: 'meta_ahorros';
+  info: {
+    displayName: 'meta-ahorro';
+    pluralName: 'meta-ahorros';
+    singularName: 'meta-ahorro';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    categoria: Schema.Attribute.Enumeration<
+      ['emergencia', 'viaje', 'equipo', 'inversion', 'educacion', 'otros']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    fecha_objetivo: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::meta-ahorro.meta-ahorro'
+    > &
+      Schema.Attribute.Private;
+    monto_actual: Schema.Attribute.Decimal;
+    monto_meta: Schema.Attribute.Decimal;
+    nombre: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPartidaPresupuestoPartidaPresupuesto
   extends Struct.CollectionTypeSchema {
   collectionName: 'partida_presupuestos';
@@ -900,6 +936,66 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<'SinNombre'>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRegistroMensualRegistroMensual
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'registro_mensuals';
+  info: {
+    displayName: 'registro-mensual';
+    pluralName: 'registro-mensuals';
+    singularName: 'registro-mensual';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    anio: Schema.Attribute.Integer;
+    categoria: Schema.Attribute.Enumeration<
+      [
+        'vivienda',
+        'alimentaci\u00F3n',
+        'transporte',
+        'servicios',
+        'gastos',
+        'Personales',
+        'entretenimiento',
+        'salud',
+        'ropa',
+        'educaci\u00F3n',
+        'ahorro',
+        'inversi\u00F3n',
+        'ingreso',
+      ]
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::registro-mensual.registro-mensual'
+    > &
+      Schema.Attribute.Private;
+    mes: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 12;
+          min: 1;
+        },
+        number
+      >;
+    monto: Schema.Attribute.Decimal;
+    notas: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      ['ingreso_variable', 'gasto_extra', 'ahorro_real']
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1464,11 +1560,13 @@ declare module '@strapi/strapi' {
       'api::gasto.gasto': ApiGastoGasto;
       'api::global.global': ApiGlobalGlobal;
       'api::inventario.inventario': ApiInventarioInventario;
+      'api::meta-ahorro.meta-ahorro': ApiMetaAhorroMetaAhorro;
       'api::partida-presupuesto.partida-presupuesto': ApiPartidaPresupuestoPartidaPresupuesto;
       'api::pasivo.pasivo': ApiPasivoPasivo;
       'api::prestamo-otorgado.prestamo-otorgado': ApiPrestamoOtorgadoPrestamoOtorgado;
       'api::product-category.product-category': ApiProductCategoryProductCategory;
       'api::product.product': ApiProductProduct;
+      'api::registro-mensual.registro-mensual': ApiRegistroMensualRegistroMensual;
       'api::venta.venta': ApiVentaVenta;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

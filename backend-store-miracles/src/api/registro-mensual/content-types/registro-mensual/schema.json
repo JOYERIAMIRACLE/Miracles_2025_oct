@@ -1,0 +1,59 @@
+{
+  "kind": "collectionType",
+  "collectionName": "registro_mensuals",
+  "info": {
+    "singularName": "registro-mensual",
+    "pluralName": "registro-mensuals",
+    "displayName": "registro-mensual"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "descripcion": {
+      "type": "string",
+      "required": true
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": [
+        "ingreso_variable",
+        "gasto_extra",
+        "ahorro_real"
+      ]
+    },
+    "monto": {
+      "type": "decimal"
+    },
+    "mes": {
+      "type": "integer",
+      "min": 1,
+      "max": 12
+    },
+    "anio": {
+      "type": "integer"
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "vivienda",
+        "alimentación",
+        "transporte",
+        "servicios",
+        "gastos",
+        "Personales",
+        "entretenimiento",
+        "salud",
+        "ropa",
+        "educación",
+        "ahorro",
+        "inversión",
+        "ingreso"
+      ]
+    },
+    "notas": {
+      "type": "string"
+    }
+  }
+}

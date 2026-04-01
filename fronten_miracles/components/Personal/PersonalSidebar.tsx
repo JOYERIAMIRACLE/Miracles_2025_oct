@@ -7,13 +7,17 @@ import {
   Landmark,
   ListChecks,
   User,
+  CalendarDays,
+  Target,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard",   href: "/gestion-personal",              icon: LayoutDashboard },
-  { name: "Presupuesto", href: "/gestion-personal/presupuesto",  icon: ListChecks      },
-  { name: "Patrimonio",  href: "/gestion-personal/patrimonio",   icon: Landmark        },
+  { name: "Dashboard",        href: "/gestion-personal",                      icon: LayoutDashboard },
+  { name: "Presupuesto",      href: "/gestion-personal/presupuesto",          icon: ListChecks      },
+  { name: "Registro Mensual", href: "/gestion-personal/registro-mensual",     icon: CalendarDays    },
+  { name: "Patrimonio",       href: "/gestion-personal/patrimonio",           icon: Landmark        },
+  { name: "Metas de Ahorro",  href: "/gestion-personal/metas",                icon: Target          },
 ]
 
 export function PersonalSidebar() {
