@@ -1,5 +1,5 @@
 "use client"
-
+export const dynamic = 'force-static'
 import { useGetCategoryProduct } from "@/api/getCategoryProduct"
 import { useParams } from "next/navigation"
 import { ResponseType } from "@/types/response"
