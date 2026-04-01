@@ -1,5 +1,7 @@
 import ProductoClient from "./ProductoClient"
 
+export const dynamicParams = false
+
 export async function generateStaticParams() {
   try {
     const res = await fetch(

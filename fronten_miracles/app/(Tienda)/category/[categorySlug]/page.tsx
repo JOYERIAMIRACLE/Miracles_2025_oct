@@ -1,5 +1,7 @@
 import CategoryClient from "./CategoryClient"
 
+export const dynamicParams = false
+
 export async function generateStaticParams() {
   try {
     const res = await fetch(
