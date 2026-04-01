@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 // 1. Esta función sustituye al objeto metadata estático
-export async function generateMetadata({ params }: { params: { categorySlug: string } }): Promise<Metadata> {
-  // Obtenemos el slug (ej: "anillos-de-compromiso")
-  const slug = params.categorySlug;
+export async function generateMetadata({ params }: { params: Promise<{ categorySlug: string }> }): Promise<Metadata> {
+  const { categorySlug } = await params
+  const slug = categorySlug ?? "";
 
   // Formateamos el texto: quitamos guiones y ponemos la primera letra en mayúscula
   // Ej: "anillos-de-oro" -> "Anillos De Oro"
