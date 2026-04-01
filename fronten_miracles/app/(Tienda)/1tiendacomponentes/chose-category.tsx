@@ -31,7 +31,7 @@ const ChoseCategory = () => {
 
 
           {/* LOADING DE ESTADO {MAGIA} */}
-          {!loading && result !== undefined && (
+          {!loading && result !== null && result !== undefined && (
 
             // MANUAL DE APODOS // TRAJO LA INFO DE CATEGORIAS 
             result.map((category: CategoryType)=> (
