@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "meta_ahorros",
+  "info": {
+    "singularName": "meta-ahorro",
+    "pluralName": "meta-ahorros",
+    "displayName": "meta-ahorro"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string"
+    },
+    "monto_meta": {
+      "type": "decimal"
+    },
+    "monto_actual": {
+      "type": "decimal"
+    },
+    "fecha_objetivo": {
+      "type": "date"
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "emergencia",
+        "viaje",
+        "equipo",
+        "inversion",
+        "educacion",
+        "otros"
+      ]
+    },
+    "descripcion": {
+      "type": "text"
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}
