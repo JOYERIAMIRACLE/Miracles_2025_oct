@@ -1,1 +1,4 @@
-/* /index.html 200
+/gestion-personal /gestion-personal.html 200
+/gestion-personal/* /gestion-personal/:splat.html 200
+/gestion-empresa /gestion-empresa.html 200
+/gestion-empresa/* /gestion-empresa/:splat.html 200
