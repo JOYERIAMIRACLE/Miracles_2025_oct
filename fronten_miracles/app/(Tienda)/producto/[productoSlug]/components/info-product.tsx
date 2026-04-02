@@ -22,7 +22,7 @@ const Infoproduct = (props: CarouselProductoinfoProps) => {
             <div className='px-6'>
                 {/* title */}
                 <div className='justify-between mb-3 space-y-2'>
-                    <h1 className='text-2xl font-bold'>{product.nombreProducto} {product.categoria.NombreCategoria}</h1>
+                    <h1 className='text-2xl font-bold'>{product.nombreProducto} {product.categoria?.NombreCategoria}</h1>
                     <div className='flex items-center justify-between gap-3'>
                         <p className='px-2 py-1 text-xs text-white bg-black rounded-full dark:bg-white dark:text-black '>
                             {product.materialProducto}
