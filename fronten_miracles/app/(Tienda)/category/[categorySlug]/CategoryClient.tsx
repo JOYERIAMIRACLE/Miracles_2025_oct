@@ -31,7 +31,7 @@ export default function CategoryClient() {
         <div className="relative z-20 w-full max-w-6xl mx-auto px-6 md:px-24">
           <div className="flex flex-col gap-6">
             <h1 className="max-w-2xl text-white text-4xl md:text-6xl font-extrabold leading-tight">
-              {result !== null && !loading && result.length > 0 ? result[0].categoria.NombreCategoria : "Cargando..."}
+              {result !== null && !loading && result.length > 0 ? result[0].categoria?.NombreCategoria ?? "" : "Cargando..."}
             </h1>
             <p className="max-w-lg text-white/90 text-lg md:text-xl">
               Explora nuestra selección exclusiva de piezas diseñadas con precisión industrial y elegancia artesanal.
