@@ -42,7 +42,7 @@ const ChoseCategory = () => {
               >
                 <img 
                 // URL PROVIENE DE LINK DE BACKEND // URL PROTEGIDA POR ENV
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${category.MainImage?.url}`}
+                src={category.MainImage?.url?.startsWith('http') ? category.MainImage.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${category.MainImage?.url}`}
                 alt={category.NombreCategoria}
                 className='max-w-[270px] transition duration-300 ease-in-out rounded-lg group-hover:scale-110 '
                 />
