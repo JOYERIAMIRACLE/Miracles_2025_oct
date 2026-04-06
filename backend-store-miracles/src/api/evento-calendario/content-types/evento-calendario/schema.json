@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "evento_calendarios",
+  "info": {
+    "singularName": "evento-calendario",
+    "pluralName": "evento-calendarios",
+    "displayName": "evento-calendario"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "titulo": {
+      "type": "string"
+    },
+    "monto": {
+      "type": "decimal"
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": [
+        "ingreso",
+        "pago"
+      ]
+    },
+    "fecha": {
+      "type": "date"
+    },
+    "descripcion": {
+      "type": "text"
+    },
+    "recurrente": {
+      "type": "boolean"
+    }
+  }
+}
