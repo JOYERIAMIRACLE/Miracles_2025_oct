@@ -39,7 +39,7 @@ const ProductCard1 = (props: ProductCardProps ) => {
                     {product.imagenes.map((imagenes)=>(
                         <CarouselItem key={imagenes.id} className='group'>
                             <img 
-                                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes.url}`}
+                                src={imagenes.url?.startsWith('http') ? imagenes.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes.url}`}
                                 alt="imagen"
                                 className='rounded-xl'
                             />

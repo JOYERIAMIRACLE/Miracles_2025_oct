@@ -54,7 +54,7 @@ const FeatureProducts = () => {
                                                 
                                                 <img 
                                                     // TRAJO LA URL DE IMAGEN PROTEGIDA POR ENV 
-                                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes[0].url}`} 
+                                                    src={imagenes[0].url?.startsWith('http') ? imagenes[0].url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes[0].url}`}
                                                     alt="image feature" />
                                                 <div className="absolute w-full px-6 transition duration-200 opacity-0 group-hover:opacity-100 bottom-5 ">
                                                     <div className="flex justify-center gap-x-6"> 
