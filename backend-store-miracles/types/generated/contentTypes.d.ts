@@ -581,6 +581,40 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiEventoCalendarioEventoCalendario
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'evento_calendarios';
+  info: {
+    displayName: 'evento-calendario';
+    pluralName: 'evento-calendarios';
+    singularName: 'evento-calendario';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    fecha: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::evento-calendario.evento-calendario'
+    > &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    recurrente: Schema.Attribute.Boolean;
+    tipo: Schema.Attribute.Enumeration<['ingreso', 'pago']>;
+    titulo: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiGastoGasto extends Struct.CollectionTypeSchema {
   collectionName: 'gastos';
   info: {
@@ -1557,6 +1591,7 @@ declare module '@strapi/strapi' {
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
       'api::cliente.cliente': ApiClienteCliente;
       'api::cuenta.cuenta': ApiCuentaCuenta;
+      'api::evento-calendario.evento-calendario': ApiEventoCalendarioEventoCalendario;
       'api::gasto.gasto': ApiGastoGasto;
       'api::global.global': ApiGlobalGlobal;
       'api::inventario.inventario': ApiInventarioInventario;
