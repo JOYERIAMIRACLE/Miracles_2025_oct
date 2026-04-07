@@ -42,11 +42,11 @@ export default function CalendarioPage() {
   const eventosDelDia = (dia: Date) => eventos.filter(e => isSameDay(new Date(e.fecha + "T00:00:00"), dia))
 
   const totalIngresos = eventos
-    .filter(e => e.tipo === "ingreso" && new Date(e.fecha).getMonth() === mesActual.getMonth() && new Date(e.fecha).getFullYear() === mesActual.getFullYear())
+    .filter(e => e.tipo === "ingreso" && new Date(e.fecha + "T00:00:00").getMonth() === mesActual.getMonth() && new Date(e.fecha + "T00:00:00").getFullYear() === mesActual.getFullYear())
     .reduce((acc, e) => acc + e.monto, 0)
 
   const totalPagos = eventos
-    .filter(e => e.tipo === "pago" && new Date(e.fecha).getMonth() === mesActual.getMonth() && new Date(e.fecha).getFullYear() === mesActual.getFullYear())
+    .filter(e => e.tipo === "pago" && new Date(e.fecha + "T00:00:00").getMonth() === mesActual.getMonth() && new Date(e.fecha + "T00:00:00").getFullYear() === mesActual.getFullYear())
     .reduce((acc, e) => acc + e.monto, 0)
 
   const handleDiaClick = (dia: Date) => {
@@ -62,7 +62,7 @@ export default function CalendarioPage() {
   // Sincroniza el registro mensual de una categoría sumando todos los eventos del mes
   const sincronizarRegistro = async (categoria: CategoriaEvento, mes: number, anio: number, eventosActuales: EventoCalendarioType[]) => {
     const totalCategoria = eventosActuales
-      .filter(e => e.categoria === categoria && new Date(e.fecha).getMonth() + 1 === mes && new Date(e.fecha).getFullYear() === anio)
+      .filter(e => e.categoria === categoria && new Date(e.fecha + "T00:00:00").getMonth() + 1 === mes && new Date(e.fecha + "T00:00:00").getFullYear() === anio)
       .reduce((acc, e) => acc + e.monto, 0)
 
     const esIngreso = categoria === "ingreso"
