@@ -593,6 +593,22 @@ export interface ApiEventoCalendarioEventoCalendario
     draftAndPublish: true;
   };
   attributes: {
+    categoria: Schema.Attribute.Enumeration<
+      [
+        'vivienda',
+        'alimentaci\u00F3n',
+        'transporte',
+        'servicios',
+        'gastos_personales',
+        'entretenimiento',
+        'salud',
+        'ropa',
+        'educaci\u00F3n',
+        'ahorro',
+        'inversi\u00F3n',
+        'ingreso',
+      ]
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -779,7 +795,7 @@ export interface ApiPartidaPresupuestoPartidaPresupuesto
         'alimentaci\u00F3n',
         'transporte',
         'servicios',
-        'gastos Personales',
+        'gastos_personales',
         'entretenimiento',
         'salud',
         'ropa',
@@ -995,8 +1011,7 @@ export interface ApiRegistroMensualRegistroMensual
         'alimentaci\u00F3n',
         'transporte',
         'servicios',
-        'gastos',
-        'Personales',
+        'gastos_personales',
         'entretenimiento',
         'salud',
         'ropa',
