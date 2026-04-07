@@ -1,0 +1,28 @@
+export type EventoTipo = "ingreso" | "pago"
+
+export type CategoriaEvento =
+  | "vivienda" | "alimentación" | "transporte" | "servicios"
+  | "gastos_personales" | "entretenimiento" | "salud" | "ropa"
+  | "educación" | "ahorro" | "inversión" | "ingreso"
+
+export type EventoCalendarioType = {
+  id: number
+  documentId: string
+  titulo: string
+  monto: number
+  tipo: EventoTipo
+  fecha: string
+  descripcion: string | null
+  recurrente: boolean
+  categoria: CategoriaEvento | null
+}
+
+export type EventoCalendarioPayload = {
+  titulo: string
+  monto: number
+  tipo: EventoTipo
+  fecha: string
+  descripcion?: string
+  recurrente?: boolean
+  categoria?: CategoriaEvento | null
+}

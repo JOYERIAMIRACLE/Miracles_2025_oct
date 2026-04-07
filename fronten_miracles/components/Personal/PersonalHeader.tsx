@@ -8,6 +8,7 @@ const titles: Record<string, string> = {
   "/gestion-personal/registro-mensual":     "Registro Mensual",
   "/gestion-personal/patrimonio":           "Patrimonio",
   "/gestion-personal/metas":               "Metas de Ahorro",
+  "/gestion-personal/calendario":          "Calendario",
 }
 
 export function PersonalHeader() {

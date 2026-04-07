@@ -18,7 +18,7 @@ import {
 // ─── Constantes ────────────────────────────────────────────────────────────────
 const CATEGORIAS: CategoriaPresupuesto[] = [
   "vivienda", "alimentación", "transporte", "servicios",
-  "gastos Personales", "entretenimiento", "salud", "ropa",
+  "gastos_personales", "entretenimiento", "salud", "ropa",
   "educación", "ahorro", "inversión", "ingreso",
 ]
 
@@ -28,7 +28,7 @@ const CAT_LABEL: Record<string, string> = {
   "alimentación":     "2. Alimentación",
   "transporte":       "3. Transporte",
   "servicios":        "4. Servicios",
-  "gastos Personales":"5. Gastos Personales",
+  "gastos_personales":"5. Gastos Personales",
   "entretenimiento":  "6. Entretenimiento",
   "salud":            "7. Salud",
   "ropa":             "8. Ropa",

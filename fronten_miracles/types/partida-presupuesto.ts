@@ -5,7 +5,7 @@ export type CategoriaPresupuesto =
   | "alimentación"
   | "transporte"
   | "servicios"
-  | "gastos Personales"
+  | "gastos_personales"
   | "entretenimiento"
   | "salud"
   | "ropa"

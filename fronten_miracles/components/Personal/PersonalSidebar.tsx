@@ -18,6 +18,7 @@ const navigation = [
   { name: "Registro Mensual", href: "/gestion-personal/registro-mensual",     icon: CalendarDays    },
   { name: "Patrimonio",       href: "/gestion-personal/patrimonio",           icon: Landmark        },
   { name: "Metas de Ahorro",  href: "/gestion-personal/metas",                icon: Target          },
+  { name: "Calendario",       href: "/gestion-personal/calendario",           icon: CalendarDays    },
 ]
 
 export function PersonalSidebar() {

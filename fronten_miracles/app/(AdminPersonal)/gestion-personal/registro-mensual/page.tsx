@@ -18,7 +18,7 @@ import { CategoriaPresupuesto } from "@/types/partida-presupuesto"
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
 const CATEGORIAS_EGRESO: CategoriaPresupuesto[] = [
-  "vivienda","alimentación","transporte","servicios","gastos Personales",
+  "vivienda","alimentación","transporte","servicios","gastos_personales",
   "entretenimiento","salud","ropa","educación","ahorro","inversión",
 ]
 const CATEGORIA_INGRESO: CategoriaPresupuesto = "ingreso"
