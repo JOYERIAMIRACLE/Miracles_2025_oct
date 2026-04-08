@@ -58,8 +58,14 @@
         "bonos",
         "credito",
         "ahorros",
-        "inversion "
+        "inversion"
       ]
+    },
+    "cuenta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cuenta.cuenta",
+      "inversedBy": "evento_calendarios"
     }
   }
 }

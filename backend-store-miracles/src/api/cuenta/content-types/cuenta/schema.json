@@ -61,6 +61,12 @@
     },
     "saldoActual": {
       "type": "decimal"
+    },
+    "evento_calendarios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::evento-calendario.evento-calendario",
+      "mappedBy": "cuenta"
     }
   }
 }
