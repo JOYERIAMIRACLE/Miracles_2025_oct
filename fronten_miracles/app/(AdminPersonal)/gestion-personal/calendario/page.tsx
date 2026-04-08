@@ -8,10 +8,9 @@ import { updateRegistro } from "@/api/registro-mensual/updateRegistro"
 import { useGetRegistros } from "@/api/registro-mensual/getRegistros"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { updateCuenta } from "@/api/cuenta/updateCuenta"
-import { EventoCalendarioType, EventoCalendarioPayload, EventoTipo, CategoriaEvento, TipoPagoEvento } from "@/types/evento-calendario"
+import { EventoCalendarioType, EventoCalendarioPayload, EventoTipo, CategoriaEvento } from "@/types/evento-calendario"
 import { RegistroMensualType } from "@/types/registro-mensual"
 import { CategoriaPresupuesto } from "@/types/partida-presupuesto"
-import { CuentaType } from "@/types/cuenta"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { ChevronLeft, ChevronRight, Plus, X, Trash2, Wallet } from "lucide-react"
@@ -28,43 +27,18 @@ const CATEGORIAS_EGRESO: CategoriaEvento[] = [
   "educación", "ahorro", "inversión",
 ]
 
-const TIPO_PAGO_LABEL: Record<TipoPagoEvento, string> = {
-  efectivo:  "Efectivo",
-  debito:    "Débito",
-  bonos:     "Bonos",
-  credito:   "Crédito",
-  inversion: "Inversión",
-}
-
-// Encuentra la cuenta activa que corresponde a un tipoPago
-function cuentaParaTipoPago(cuentas: CuentaType[], tipoPago: TipoPagoEvento): CuentaType | undefined {
-  const mapaStrapi: Record<TipoPagoEvento, string> = {
-    efectivo:  "Efectivo",
-    debito:    "Debito",
-    bonos:     "",
-    credito:   "Crédito",
-    inversion: "",
-  }
-  const tipoStrapi = mapaStrapi[tipoPago]
-  if (!tipoStrapi) return undefined
-  return cuentas.find(c => c.activa && c.tipo === tipoStrapi)
-}
-
 // Calcula el nuevo saldo dado el tipo de cuenta, tipo de evento y monto
-function calcularNuevoSaldo(cuenta: CuentaType, tipoEvento: EventoTipo, monto: number, revertir = false): number {
-  const saldo = cuenta.saldoActual ?? cuenta.saldoInicial ?? 0
-  const esCredito = cuenta.tipo === "Crédito"
-
+function calcularNuevoSaldo(cuentaTipo: string, saldoBase: number, tipoEvento: EventoTipo, monto: number, revertir = false): number {
+  const esCredito = cuentaTipo === "Crédito"
   let delta: number
   if (esCredito) {
-    // Crédito: pago = más deuda (saldo sube), ingreso = abono (saldo baja)
+    // Crédito: pago = más deuda (saldo sube), ingreso/abono = deuda baja
     delta = tipoEvento === "pago" ? monto : -monto
   } else {
-    // Efectivo / Débito / otros: pago = gasto (saldo baja), ingreso = entra dinero (saldo sube)
+    // Efectivo / Débito: pago = gasto (baja), ingreso = entra (sube)
     delta = tipoEvento === "pago" ? -monto : monto
   }
-
-  return saldo + (revertir ? -delta : delta)
+  return saldoBase + (revertir ? -delta : delta)
 }
 
 export default function CalendarioPage() {
@@ -75,7 +49,7 @@ export default function CalendarioPage() {
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null)
   const [modalAgregar, setModalAgregar] = useState(false)
   const [form, setForm] = useState<EventoCalendarioPayload>({
-    titulo: "", monto: 0, tipo: "pago", tipoPago: null, fecha: "", descripcion: "", recurrente: false, categoria: null,
+    titulo: "", monto: 0, tipo: "pago", tipoPago: null, cuenta: null, fecha: "", descripcion: "", recurrente: false, categoria: null,
   })
   const [guardando, setGuardando] = useState(false)
 
@@ -98,7 +72,7 @@ export default function CalendarioPage() {
   }
 
   const handleAbrirFormulario = () => {
-    setForm({ titulo: "", monto: 0, tipo: "pago", tipoPago: null, fecha: diaSeleccionado ? format(diaSeleccionado, "yyyy-MM-dd") : "", descripcion: "", recurrente: false, categoria: null })
+    setForm({ titulo: "", monto: 0, tipo: "pago", tipoPago: null, cuenta: null, fecha: diaSeleccionado ? format(diaSeleccionado, "yyyy-MM-dd") : "", descripcion: "", recurrente: false, categoria: null })
     setModalAgregar(true)
   }
 
@@ -131,11 +105,9 @@ export default function CalendarioPage() {
     }
   }
 
-  const actualizarSaldoCuenta = async (tipoPago: TipoPagoEvento, tipoEvento: EventoTipo, monto: number, revertir = false) => {
-    const cuenta = cuentaParaTipoPago(cuentas, tipoPago)
-    if (!cuenta) return
-    const nuevoSaldo = calcularNuevoSaldo(cuenta, tipoEvento, monto, revertir)
-    const actualizada = await updateCuenta(cuenta.documentId, { saldoActual: nuevoSaldo })
+  const actualizarSaldoCuenta = async (cuentaDocumentId: string, cuentaTipo: string, saldoBase: number, tipoEvento: EventoTipo, monto: number, revertir = false) => {
+    const nuevoSaldo = calcularNuevoSaldo(cuentaTipo, saldoBase, tipoEvento, monto, revertir)
+    const actualizada = await updateCuenta(cuentaDocumentId, { saldoActual: nuevoSaldo })
     setCuentas(prev => prev.map(c => c.documentId === actualizada.documentId ? actualizada : c))
   }
 
@@ -144,15 +116,25 @@ export default function CalendarioPage() {
     setGuardando(true)
     try {
       const nuevo = await createEvento(form)
+      // Re-fetch the evento with populated cuenta (the response may not include it)
       const eventosActualizados = [...eventos, nuevo]
       setEventos(eventosActualizados)
       setModalAgregar(false)
 
       const promises: Promise<void>[] = []
 
-      // Actualiza saldo de cuenta si se eligió tipoPago
-      if (form.tipoPago) {
-        promises.push(actualizarSaldoCuenta(form.tipoPago, form.tipo, form.monto))
+      // Actualiza saldo de la cuenta seleccionada
+      if (form.cuenta) {
+        const cuentaObj = cuentas.find(c => c.documentId === form.cuenta)
+        if (cuentaObj) {
+          promises.push(actualizarSaldoCuenta(
+            cuentaObj.documentId,
+            cuentaObj.tipo ?? "",
+            cuentaObj.saldoActual ?? cuentaObj.saldoInicial ?? 0,
+            form.tipo,
+            form.monto,
+          ))
+        }
       }
 
       // Sincroniza el registro mensual si tiene categoría
@@ -162,7 +144,7 @@ export default function CalendarioPage() {
       }
 
       await Promise.all(promises)
-      toast.success("Evento guardado" + (form.tipoPago || form.categoria ? " y registros actualizados" : ""))
+      toast.success("Evento guardado" + (form.cuenta || form.categoria ? " y registros actualizados" : ""))
     } catch (e) {
       console.error(e)
       toast.error("Error al guardar")
@@ -179,9 +161,18 @@ export default function CalendarioPage() {
 
       const promises: Promise<void>[] = []
 
-      // Revierte el saldo de cuenta
-      if (evento.tipoPago) {
-        promises.push(actualizarSaldoCuenta(evento.tipoPago, evento.tipo, evento.monto, true))
+      // Revierte el saldo de la cuenta relacionada
+      if (evento.cuenta) {
+        const cuentaObj = cuentas.find(c => c.documentId === evento.cuenta!.documentId)
+        const saldoBase = cuentaObj?.saldoActual ?? cuentaObj?.saldoInicial ?? evento.cuenta.saldoActual ?? evento.cuenta.saldoInicial ?? 0
+        promises.push(actualizarSaldoCuenta(
+          evento.cuenta.documentId,
+          evento.cuenta.tipo,
+          saldoBase,
+          evento.tipo,
+          evento.monto,
+          true,
+        ))
       }
 
       // Re-sincroniza el registro mensual si tenía categoría
@@ -191,7 +182,7 @@ export default function CalendarioPage() {
       }
 
       await Promise.all(promises)
-      toast.success("Evento eliminado" + (evento.tipoPago || evento.categoria ? " y registros actualizados" : ""))
+      toast.success("Evento eliminado" + (evento.cuenta || evento.categoria ? " y registros actualizados" : ""))
     } catch (e) {
       console.error(e)
       toast.error("Error al eliminar")
@@ -241,7 +232,7 @@ export default function CalendarioPage() {
                   <p className={`text-sm font-bold ${positivo ? "text-green-700 dark:text-green-300" : "text-red-700 dark:text-red-300"}`}>
                     {esCredito ? "Deuda: " : ""}{saldo < 0 ? "-" : ""}${Math.abs(saldo).toLocaleString()}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">{c.tipo}</p>
+                  <p className="text-[10px] text-muted-foreground">{c.proposito ?? c.tipo}</p>
                 </div>
               )
             })}
@@ -339,16 +330,16 @@ export default function CalendarioPage() {
                     </select>
                   </div>
                   <div>
-                    <Label className="text-xs">Cuenta {form.tipoPago && <span className="text-indigo-500">→ actualiza saldo</span>}</Label>
+                    <Label className="text-xs">Cuenta {form.cuenta && <span className="text-indigo-500">→ actualiza saldo</span>}</Label>
                     <select
                       title="Cuenta"
                       className="w-full h-7 text-sm border rounded px-2 bg-background text-foreground"
-                      value={form.tipoPago ?? ""}
-                      onChange={e => setForm(f => ({ ...f, tipoPago: (e.target.value || null) as TipoPagoEvento | null }))}
+                      value={form.cuenta ?? ""}
+                      onChange={e => setForm(f => ({ ...f, cuenta: e.target.value || null }))}
                     >
                       <option value="">— Sin cuenta —</option>
-                      {(Object.keys(TIPO_PAGO_LABEL) as TipoPagoEvento[]).map(tp => (
-                        <option key={tp} value={tp}>{TIPO_PAGO_LABEL[tp]}</option>
+                      {cuentas.filter(c => c.activa).map(c => (
+                        <option key={c.documentId} value={c.documentId}>{c.nombre}</option>
                       ))}
                     </select>
                   </div>
@@ -394,7 +385,7 @@ export default function CalendarioPage() {
                       <p className={`text-xs font-bold ${evento.tipo === "ingreso" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                         {evento.tipo === "ingreso" ? "+" : "-"}${evento.monto.toLocaleString()}
                       </p>
-                      {evento.tipoPago && <p className="text-xs text-purple-500">{TIPO_PAGO_LABEL[evento.tipoPago]}</p>}
+                      {evento.cuenta && <p className="text-xs text-purple-500">{evento.cuenta.nombre}</p>}
                       {evento.categoria && <p className="text-xs text-indigo-500 capitalize">{evento.categoria}</p>}
                       {evento.descripcion && <p className="text-xs text-muted-foreground">{evento.descripcion}</p>}
                     </div>
