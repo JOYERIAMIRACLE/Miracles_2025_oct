@@ -21,5 +21,5 @@ export function useGetCuentas() {
     })()
   }, [url])
 
-  return { cuentas, loading, error }
+  return { cuentas, setCuentas, loading, error }
 }

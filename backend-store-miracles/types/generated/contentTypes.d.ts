@@ -572,6 +572,7 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
       ['Operativa', 'Ahorro', 'Inversi\u00F3n', 'Apartado', 'Presupuesto 1']
     >;
     publishedAt: Schema.Attribute.DateTime;
+    saldoActual: Schema.Attribute.Decimal;
     saldoInicial: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
     tipo: Schema.Attribute.Enumeration<['Efectivo', 'Cr\u00E9dito', 'Debito']>;
     updatedAt: Schema.Attribute.DateTime;
@@ -624,6 +625,9 @@ export interface ApiEventoCalendarioEventoCalendario
     publishedAt: Schema.Attribute.DateTime;
     recurrente: Schema.Attribute.Boolean;
     tipo: Schema.Attribute.Enumeration<['ingreso', 'pago']>;
+    tipoPago: Schema.Attribute.Enumeration<
+      ['efectivo', 'debito', 'bonos', 'credito', 'ahorros', 'inversion ']
+    >;
     titulo: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

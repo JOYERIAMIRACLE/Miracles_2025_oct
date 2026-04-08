@@ -58,6 +58,9 @@
       "relation": "oneToMany",
       "target": "api::venta.venta",
       "mappedBy": "cuenta"
+    },
+    "saldoActual": {
+      "type": "decimal"
     }
   }
 }
