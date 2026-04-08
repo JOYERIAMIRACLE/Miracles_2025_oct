@@ -49,6 +49,17 @@
         "inversión",
         "ingreso"
       ]
+    },
+    "tipoPago": {
+      "type": "enumeration",
+      "enum": [
+        "efectivo",
+        "debito",
+        "bonos",
+        "credito",
+        "ahorros",
+        "inversion "
+      ]
     }
   }
 }

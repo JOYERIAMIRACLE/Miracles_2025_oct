@@ -1,4 +1,5 @@
-export type EventoTipo = "ingreso" | "pago"
+export type EventoTipo    = "ingreso" | "pago"
+export type TipoPagoEvento = "efectivo" | "debito" | "bonos" | "credito" | "inversion"
 
 export type CategoriaEvento =
   | "vivienda" | "alimentación" | "transporte" | "servicios"
@@ -11,6 +12,7 @@ export type EventoCalendarioType = {
   titulo: string
   monto: number
   tipo: EventoTipo
+  tipoPago: TipoPagoEvento | null
   fecha: string
   descripcion: string | null
   recurrente: boolean
@@ -21,6 +23,7 @@ export type EventoCalendarioPayload = {
   titulo: string
   monto: number
   tipo: EventoTipo
+  tipoPago?: TipoPagoEvento | null
   fecha: string
   descripcion?: string
   recurrente?: boolean
