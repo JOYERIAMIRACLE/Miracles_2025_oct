@@ -9,6 +9,7 @@ import {
   User,
   CalendarDays,
   Target,
+  Wallet,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: "Patrimonio",       href: "/gestion-personal/patrimonio",           icon: Landmark        },
   { name: "Metas de Ahorro",  href: "/gestion-personal/metas",                icon: Target          },
   { name: "Calendario",       href: "/gestion-personal/calendario",           icon: CalendarDays    },
+  { name: "Cuentas",         href: "/gestion-personal/cuentas",              icon: Wallet          },
 ]
 
 export function PersonalSidebar() {
