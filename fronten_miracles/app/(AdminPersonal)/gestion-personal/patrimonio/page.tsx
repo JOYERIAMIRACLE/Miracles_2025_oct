@@ -24,6 +24,7 @@ import { deletePrestamo }  from "@/api/prestamo-otorgado/deletePrestamo"
 import { ActivoType, ActivoPayload, CategoriaActivo }    from "@/types/activo"
 import { PasivoType, PasivoPayload, CategoriaPasivo }    from "@/types/pasivo"
 import { PrestamoOtorgadoType, PrestamoOtorgadoPayload } from "@/types/prestamo-otorgado"
+import { useGetCuentas } from "@/api/cuenta/getCuentas"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n: number | null | undefined) =>
@@ -76,6 +77,7 @@ export default function PatrimonioPage() {
   const { activos:   dataActivos,   loading: loadA } = useGetActivos()
   const { pasivos:   dataPasivos,   loading: loadP } = useGetPasivos()
   const { prestamos: dataPrestamos, loading: loadR } = useGetPrestamos()
+  const { cuentas } = useGetCuentas()
 
   const [activos,   setActivos]   = useState<ActivoType[]>([])
   const [pasivos,   setPasivos]   = useState<PasivoType[]>([])
@@ -104,9 +106,15 @@ export default function PatrimonioPage() {
   const [formPrestamo, setFormPrestamo] = useState<PrestamoOtorgadoPayload>(emptyPrestamo)
 
   // ─── Cálculos de balance ─────────────────────────────────────────────────
-  const totalActivos   = activos.reduce((s, a) => s + (a.valor ?? 0), 0)
+  // Cuentas activas: no-crédito = activos líquidos, crédito = pasivos
+  const cuentasLiquidas = cuentas.filter(c => c.activa && c.tipo !== "Crédito")
+  const cuentasCredito  = cuentas.filter(c => c.activa && c.tipo === "Crédito")
+  const totalCuentasLiquidas = cuentasLiquidas.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const totalCuentasCredito  = cuentasCredito.reduce((s, c)  => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+
+  const totalActivos   = activos.reduce((s, a) => s + (a.valor ?? 0), 0) + totalCuentasLiquidas
   const totalPrestamos = prestamos.filter(p => p.estado === "activo").reduce((s, p) => s + (p.saldo_pendiente ?? 0), 0)
-  const totalPasivos   = pasivos.reduce((s, p) => s + (p.saldo ?? 0), 0)
+  const totalPasivos   = pasivos.reduce((s, p) => s + (p.saldo ?? 0), 0) + totalCuentasCredito
   const patrimonio     = totalActivos + totalPrestamos - totalPasivos
 
   // ─── Handlers ────────────────────────────────────────────────────────────
@@ -231,94 +239,157 @@ export default function PatrimonioPage() {
 
       {/* ── TAB: ACTIVOS ──────────────────────────────────────────────────── */}
       {tab === "activos" && (
-        <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 overflow-hidden rounded-xl">
-          <div className="overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
-                <tr>
-                  <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nombre</th>
-                  <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Categoría</th>
-                  <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Descripción</th>
-                  <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Valor</th>
-                  <th className="h-10 px-4" scope="col"><span className="sr-only">Acciones</span></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/60">
-                {loadA && <FilaSkeleton cols={5} />}
-                {!loadA && activos.map(a => (
-                  <tr key={a.documentId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 group transition-colors">
-                    <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{a.nombre}</td>
-                    <td className="px-4 py-3 text-zinc-500 text-xs">{CAT_ACTIVO_LABEL[a.categoria ?? ""] ?? a.categoria ?? "—"}</td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">{a.descripcion ?? "—"}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{fmt(a.valor)}</td>
-                    <td className="px-4 py-3 text-right">
-                      {confirmDeleteId === a.documentId ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <span className="text-xs text-zinc-400">¿Eliminar?</span>
-                          <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-red-600" onClick={() => handleDelete(a.documentId)}>Sí</Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => setConfirmDeleteId(null)}>No</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-indigo-600" onClick={() => handleEditActivo(a)}><Edit className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-red-600" onClick={() => setConfirmDeleteId(a.documentId)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      )}
-                    </td>
+        <div className="space-y-4">
+          {/* Cuentas automáticas */}
+          {cuentasLiquidas.length > 0 && (
+            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 overflow-hidden rounded-xl">
+              <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-between">
+                <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Efectivo y Cuentas — sincronizado automáticamente</p>
+                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{fmt(totalCuentasLiquidas)}</p>
+              </div>
+              <div className="overflow-auto">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/60">
+                    {cuentasLiquidas.map(c => (
+                      <tr key={c.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
+                        <td className="px-4 py-2.5 font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color ?? "#6366f1" }} />
+                          {c.nombre}
+                        </td>
+                        <td className="px-4 py-2.5 text-zinc-500 text-xs">{c.proposito ?? c.tipo}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold text-emerald-600 dark:text-emerald-400">{fmt(c.saldoActual ?? c.saldoInicial)}</td>
+                        <td className="px-4 py-2.5 text-right text-xs text-zinc-400">desde Cuentas</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+
+          {/* Activos manuales */}
+          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 overflow-hidden rounded-xl">
+            <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
+              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Otros activos — bienes, inversiones, vehículos</p>
+            </div>
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-zinc-100 dark:border-zinc-800">
+                  <tr>
+                    <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nombre</th>
+                    <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Categoría</th>
+                    <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Descripción</th>
+                    <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Valor</th>
+                    <th className="h-10 px-4" scope="col"><span className="sr-only">Acciones</span></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {!loadA && activos.length === 0 && <p className="py-12 text-center text-sm text-zinc-400">Sin activos registrados.</p>}
-          </div>
-        </Card>
+                </thead>
+                <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/60">
+                  {loadA && <FilaSkeleton cols={5} />}
+                  {!loadA && activos.map(a => (
+                    <tr key={a.documentId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 group transition-colors">
+                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{a.nombre}</td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs">{CAT_ACTIVO_LABEL[a.categoria ?? ""] ?? a.categoria ?? "—"}</td>
+                      <td className="px-4 py-3 text-zinc-400 text-xs">{a.descripcion ?? "—"}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{fmt(a.valor)}</td>
+                      <td className="px-4 py-3 text-right">
+                        {confirmDeleteId === a.documentId ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="text-xs text-zinc-400">¿Eliminar?</span>
+                            <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-red-600" onClick={() => handleDelete(a.documentId)}>Sí</Button>
+                            <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => setConfirmDeleteId(null)}>No</Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-indigo-600" onClick={() => handleEditActivo(a)}><Edit className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-red-600" onClick={() => setConfirmDeleteId(a.documentId)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!loadA && activos.length === 0 && <p className="py-10 text-center text-sm text-zinc-400">Sin otros activos. Agrega bienes, inversiones o vehículos.</p>}
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* ── TAB: PASIVOS ──────────────────────────────────────────────────── */}
       {tab === "pasivos" && (
-        <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 overflow-hidden rounded-xl">
-          <div className="overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
-                <tr>
-                  <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nombre</th>
-                  <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Categoría</th>
-                  <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Saldo</th>
-                  <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Tasa %</th>
-                  <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Día corte</th>
-                  <th className="h-10 px-4" scope="col"><span className="sr-only">Acciones</span></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/60">
-                {loadP && <FilaSkeleton cols={6} />}
-                {!loadP && pasivos.map(p => (
-                  <tr key={p.documentId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 group transition-colors">
-                    <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{p.nombre}</td>
-                    <td className="px-4 py-3 text-zinc-500 text-xs">{CAT_PASIVO_LABEL[p.categoria ?? ""] ?? p.categoria ?? "—"}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-red-500 dark:text-red-400">{fmt(p.saldo)}</td>
-                    <td className="px-4 py-3 text-right text-zinc-500 text-xs">{p.tasa_interes != null ? `${p.tasa_interes}%` : "—"}</td>
-                    <td className="px-4 py-3 text-right text-zinc-500 text-xs">{p.dia_corte ?? "—"}</td>
-                    <td className="px-4 py-3 text-right">
-                      {confirmDeleteId === p.documentId ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <span className="text-xs text-zinc-400">¿Eliminar?</span>
-                          <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-red-600" onClick={() => handleDelete(p.documentId)}>Sí</Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => setConfirmDeleteId(null)}>No</Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-indigo-600" onClick={() => handleEditPasivo(p)}><Edit className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-red-600" onClick={() => setConfirmDeleteId(p.documentId)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      )}
-                    </td>
+        <div className="space-y-4">
+          {/* Tarjetas de crédito automáticas */}
+          {cuentasCredito.length > 0 && (
+            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 overflow-hidden rounded-xl">
+              <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-red-50 dark:bg-red-500/10 flex items-center justify-between">
+                <p className="text-xs font-semibold text-red-500 dark:text-red-400 uppercase tracking-wider">Tarjetas de crédito — sincronizado automáticamente</p>
+                <p className="text-sm font-bold text-red-600 dark:text-red-400">{fmt(totalCuentasCredito)}</p>
+              </div>
+              <div className="overflow-auto">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/60">
+                    {cuentasCredito.map(c => (
+                      <tr key={c.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
+                        <td className="px-4 py-2.5 font-medium text-zinc-900 dark:text-zinc-100">{c.nombre}</td>
+                        <td className="px-4 py-2.5 text-zinc-500 text-xs">Tarjeta de Crédito</td>
+                        <td className="px-4 py-2.5 text-right font-semibold text-red-500 dark:text-red-400">{fmt(c.saldoActual ?? c.saldoInicial)}</td>
+                        <td className="px-4 py-2.5 text-right text-xs text-zinc-400">desde Cuentas</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+
+          {/* Pasivos manuales */}
+          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 overflow-hidden rounded-xl">
+            <div className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
+              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Otras deudas — hipoteca, crédito personal, automotriz</p>
+            </div>
+            <div className="overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-zinc-100 dark:border-zinc-800">
+                  <tr>
+                    <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nombre</th>
+                    <th className="h-10 px-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Categoría</th>
+                    <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Saldo</th>
+                    <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Tasa %</th>
+                    <th className="h-10 px-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Día corte</th>
+                    <th className="h-10 px-4" scope="col"><span className="sr-only">Acciones</span></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {!loadP && pasivos.length === 0 && <p className="py-12 text-center text-sm text-zinc-400">Sin pasivos registrados.</p>}
-          </div>
-        </Card>
+                </thead>
+                <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/60">
+                  {loadP && <FilaSkeleton cols={6} />}
+                  {!loadP && pasivos.map(p => (
+                    <tr key={p.documentId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 group transition-colors">
+                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{p.nombre}</td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs">{CAT_PASIVO_LABEL[p.categoria ?? ""] ?? p.categoria ?? "—"}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-red-500 dark:text-red-400">{fmt(p.saldo)}</td>
+                      <td className="px-4 py-3 text-right text-zinc-500 text-xs">{p.tasa_interes != null ? `${p.tasa_interes}%` : "—"}</td>
+                      <td className="px-4 py-3 text-right text-zinc-500 text-xs">{p.dia_corte ?? "—"}</td>
+                      <td className="px-4 py-3 text-right">
+                        {confirmDeleteId === p.documentId ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="text-xs text-zinc-400">¿Eliminar?</span>
+                            <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-red-600" onClick={() => handleDelete(p.documentId)}>Sí</Button>
+                            <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => setConfirmDeleteId(null)}>No</Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-indigo-600" onClick={() => handleEditPasivo(p)}><Edit className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-red-600" onClick={() => setConfirmDeleteId(p.documentId)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!loadP && pasivos.length === 0 && <p className="py-10 text-center text-sm text-zinc-400">Sin otras deudas registradas.</p>}
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* ── TAB: PRÉSTAMOS ────────────────────────────────────────────────── */}
