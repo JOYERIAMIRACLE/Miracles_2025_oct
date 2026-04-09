@@ -559,6 +559,10 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    evento_calendarios: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::evento-calendario.evento-calendario'
+    >;
     gastos: Schema.Attribute.Relation<'oneToMany', 'api::gasto.gasto'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -613,6 +617,7 @@ export interface ApiEventoCalendarioEventoCalendario
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    cuenta: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
     descripcion: Schema.Attribute.Text;
     fecha: Schema.Attribute.Date;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -626,7 +631,7 @@ export interface ApiEventoCalendarioEventoCalendario
     recurrente: Schema.Attribute.Boolean;
     tipo: Schema.Attribute.Enumeration<['ingreso', 'pago']>;
     tipoPago: Schema.Attribute.Enumeration<
-      ['efectivo', 'debito', 'bonos', 'credito', 'ahorros', 'inversion ']
+      ['efectivo', 'debito', 'bonos', 'credito', 'ahorros', 'inversion']
     >;
     titulo: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
