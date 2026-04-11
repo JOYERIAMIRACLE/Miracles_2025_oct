@@ -132,7 +132,7 @@ export default function CuentasPage() {
       </div>
 
       {/* Resumen */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl p-4">
           <p className="text-xs text-green-600 dark:text-green-400 font-medium">Disponible total</p>
           <p className="text-xl font-bold text-green-700 dark:text-green-300">{fmt(totalEfectivo)}</p>
@@ -152,9 +152,9 @@ export default function CuentasPage() {
         <div className="mb-6 bg-white dark:bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">{editando ? "Editar cuenta" : "Nueva cuenta"}</h2>
-            <button type="button" onClick={cerrar} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
+            <button type="button" title="Cerrar" onClick={cerrar} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="col-span-2">
               <Label className="text-xs">Nombre</Label>
               <Input className={inputCls} placeholder="Ej: BBVA Débito" value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
@@ -162,6 +162,7 @@ export default function CuentasPage() {
             <div>
               <Label className="text-xs">Tipo</Label>
               <select
+                title="Tipo de cuenta"
                 className="w-full h-8 text-sm border rounded px-2 bg-background text-foreground"
                 value={form.tipo ?? ""}
                 onChange={e => setForm(f => ({ ...f, tipo: (e.target.value || null) as TipoCuenta | null }))}
@@ -173,6 +174,7 @@ export default function CuentasPage() {
             <div>
               <Label className="text-xs">Propósito</Label>
               <select
+                title="Propósito de la cuenta"
                 className="w-full h-8 text-sm border rounded px-2 bg-background text-foreground"
                 value={form.proposito ?? ""}
                 onChange={e => setForm(f => ({ ...f, proposito: (e.target.value || null) as PropositoCuenta | null }))}
@@ -209,7 +211,7 @@ export default function CuentasPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 mt-4">
-              <input type="checkbox" id="activa" checked={form.activa ?? true} onChange={e => setForm(f => ({ ...f, activa: e.target.checked }))} />
+              <input type="checkbox" id="activa" title="Cuenta activa" checked={form.activa ?? true} onChange={e => setForm(f => ({ ...f, activa: e.target.checked }))} />
               <Label htmlFor="activa" className="text-xs">Cuenta activa</Label>
             </div>
           </div>

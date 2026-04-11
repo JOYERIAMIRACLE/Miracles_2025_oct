@@ -193,7 +193,7 @@ export default function CalendarioPage() {
     <div className="p-6 max-w-5xl mx-auto">
 
       {/* RESUMEN DEL MES */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl p-4">
           <p className="text-sm text-green-600 dark:text-green-400 font-medium">Ingresos del mes</p>
           <p className="text-2xl font-bold text-green-700 dark:text-green-300">${totalIngresos.toLocaleString()}</p>
@@ -363,7 +363,7 @@ export default function CalendarioPage() {
                     <Input className="h-7 text-sm" placeholder="Notas..." value={form.descripcion ?? ""} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} />
                   </div>
                   <div className="flex items-center gap-2">
-                    <input type="checkbox" id="recurrente" checked={form.recurrente} onChange={e => setForm(f => ({ ...f, recurrente: e.target.checked }))} />
+                    <input type="checkbox" id="recurrente" title="Recurrente mensual" checked={form.recurrente} onChange={e => setForm(f => ({ ...f, recurrente: e.target.checked }))} />
                     <Label htmlFor="recurrente" className="text-xs">Recurrente mensual</Label>
                   </div>
                   <Button type="button" size="sm" className="w-full" onClick={handleGuardar} disabled={guardando}>
