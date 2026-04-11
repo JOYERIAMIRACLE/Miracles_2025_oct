@@ -8,9 +8,9 @@ export default function GestionPersonalLayout({ children }: { children: ReactNod
       <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 z-50 w-64 border-r bg-background">
         <PersonalSidebar />
       </aside>
-      <div className="md:pl-64 flex flex-col flex-1 min-w-0">
+      <div className="md:pl-64 flex flex-col flex-1 min-w-0 w-full">
         <PersonalHeader />
-        <main className="flex-1 p-6 md:p-8">
+        <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
           {children}
         </main>
       </div>
