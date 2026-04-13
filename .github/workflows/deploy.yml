@@ -1,0 +1,29 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: fronten_miracles/package-lock.json
+
+      - name: Install dependencies
+        run: cd fronten_miracles && npm install
+
+      - name: Build
+        run: cd fronten_miracles && npm run build
+
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy fronten_miracles/out --project-name miracles-2025-octv2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 5b0a6ff7def6c2a2db4c33869b490353
