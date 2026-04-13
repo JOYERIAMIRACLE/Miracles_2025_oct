@@ -4,7 +4,7 @@ import { PersonalHeader } from "@/components/Personal/PersonalHeader"
 
 export default function GestionPersonalLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+    <div className="dark flex min-h-screen bg-slate-950 text-slate-100">
       <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 z-50 w-64">
         <PersonalSidebar />
       </aside>
