@@ -22,6 +22,12 @@ jobs:
       - name: Build
         run: cd fronten_miracles && npm run build
 
+      - name: Create Pages project if needed
+        run: npx wrangler pages project create miracles-frontend --production-branch main || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 5b0a6ff7def6c2a2db4c33869b490353
+
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy fronten_miracles/out --project-name miracles-frontend --commit-dirty=true
         env:
