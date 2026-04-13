@@ -1,15 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Wallet, TrendingUp, TrendingDown, ShieldCheck, PieChart, Landmark } from "lucide-react"
-import { Card } from "@/components/ui/card"
+import { useState, useEffect, useMemo } from "react"
+import { motion } from "framer-motion"
 import Link from "next/link"
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+} from "recharts"
+import {
+  Star, ChevronRight, TrendingUp, TrendingDown,
+  Wallet, CreditCard, DollarSign, Target,
+  Swords, Map, Package, BarChart3, CalendarDays, Trophy,
+  Shield, Zap, Heart,
+} from "lucide-react"
 
 import { useGetPartidas }  from "@/api/partida-presupuesto/getPartidas"
 import { useGetActivos }   from "@/api/activo/getActivos"
 import { useGetPasivos }   from "@/api/pasivo/getPasivos"
 import { useGetPrestamos } from "@/api/prestamo-otorgado/getPrestamos"
 import { useGetRegistros } from "@/api/registro-mensual/getRegistros"
+import { useGetCuentas }   from "@/api/cuenta/getCuentas"
+import { useGetMetas }     from "@/api/meta-ahorro/getMetas"
 
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
 import { ActivoType }             from "@/types/activo"
@@ -21,66 +31,220 @@ import { RegistroMensualType }    from "@/types/registro-mensual"
 const fmt = (n: number) =>
   `$${Math.round(n).toLocaleString("es-MX")}`
 
-const fmtDec = (n: number) =>
-  `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const fmtK = (n: number) =>
+  Math.abs(n) >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${Math.round(n)}`
 
-function calcFrecuencias(monto: number, frecuencia: string | null) {
+function calcMensual(monto: number, frecuencia: string | null) {
   switch (frecuencia) {
-    case "diario":    return { mensual: monto * 30 }
-    case "semanal":   return { mensual: monto * 4.33 }
-    case "quincenal": return { mensual: monto * 2 }
-    case "mensual":   return { mensual: monto }
-    case "anual":     return { mensual: monto / 12 }
-    default:          return { mensual: 0 }
+    case "diario":    return monto * 30
+    case "semanal":   return monto * 4.33
+    case "quincenal": return monto * 2
+    case "mensual":   return monto
+    case "anual":     return monto / 12
+    default:          return 0
   }
 }
 
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
-function KpiCard({ label, value, sub, color, icon: Icon, href }: {
-  label: string; value: string; sub?: string
-  color: string; icon: React.ElementType; href?: string
+const MESES_CORTO = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+
+// ─── Level System ─────────────────────────────────────────────────────────────
+function calcLevel(stats: {
+  patrimonioNeto: number; ratioSupervivencia: number
+  pctAhorro: number; metasCompletadas: number; flujoNeto: number
 }) {
-  const inner = (
-    <Card className="p-5 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{label}</p>
-          <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
-          {sub && <p className="text-xs text-zinc-400 mt-0.5">{sub}</p>}
-        </div>
-        <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${
-          color.includes("emerald") ? "bg-emerald-50 dark:bg-emerald-500/10" :
-          color.includes("red")     ? "bg-red-50 dark:bg-red-500/10" :
-          color.includes("indigo")  ? "bg-indigo-50 dark:bg-indigo-500/10" :
-          color.includes("amber")   ? "bg-amber-50 dark:bg-amber-500/10" :
-          "bg-zinc-100 dark:bg-zinc-800"}`}>
-          <Icon className={`h-4 w-4 ${color}`} />
-        </div>
-      </div>
-    </Card>
-  )
-  return href ? <Link href={href}>{inner}</Link> : inner
+  let xp = 0
+  if (stats.patrimonioNeto > 0) xp += Math.min(300, stats.patrimonioNeto / 1000)
+  xp += Math.min(200, stats.ratioSupervivencia * 33)
+  xp += Math.min(150, stats.pctAhorro * 5)
+  xp += stats.metasCompletadas * 50
+  if (stats.flujoNeto > 0) xp += 100
+  const level = Math.max(1, Math.floor(xp / 100) + 1)
+  return { level: Math.min(level, 99), xpInLevel: Math.round(xp % 100), xpToNext: 100 }
 }
 
-function BarraItem({ label, monto, total, color, href }: {
-  label: string; monto: number; total: number; color: string; href?: string
+function getLevelTitle(level: number) {
+  if (level >= 20) return "Maestro Financiero"
+  if (level >= 15) return "Estratega Dorado"
+  if (level >= 10) return "Guardian del Tesoro"
+  if (level >= 7)  return "Explorador Fiscal"
+  if (level >= 4)  return "Aprendiz de Oro"
+  return "Novato Financiero"
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+function OverviewCard({ label, value, sub, icon: Icon, color, delay }: {
+  label: string; value: string; sub?: string
+  icon: React.ElementType; color: string; delay: number
 }) {
-  const pct = total > 0 ? Math.min(100, Math.round((monto / total) * 100)) : 0
-  const inner = (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-zinc-700 dark:text-zinc-300 truncate max-w-[180px] capitalize">{label}</span>
-        <span className="text-zinc-500 tabular-nums text-xs">{fmt(monto)} <span className="text-zinc-400">({pct}%)</span></span>
+  const colors: Record<string, { icon: string; border: string; bg: string }> = {
+    green:  { icon: "text-emerald-400", border: "border-emerald-500/20", bg: "bg-emerald-500/10" },
+    red:    { icon: "text-red-400",     border: "border-red-500/20",     bg: "bg-red-500/10"     },
+    blue:   { icon: "text-cyan-400",    border: "border-cyan-500/20",    bg: "bg-cyan-500/10"    },
+    purple: { icon: "text-violet-400",  border: "border-violet-500/20",  bg: "bg-violet-500/10"  },
+    amber:  { icon: "text-amber-400",   border: "border-amber-500/20",   bg: "bg-amber-500/10"   },
+  }
+  const c = colors[color] || colors.blue
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      className={`p-4 rounded-xl bg-slate-900/60 border border-slate-700/40 backdrop-blur-sm`}
+    >
+      <div className="flex items-start justify-between">
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{label}</p>
+          <p className="text-xl font-bold text-slate-100 mt-1 truncate">{value}</p>
+          {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
+        </div>
+        <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${c.bg} ${c.border} border shrink-0`}>
+          <Icon className={`h-4 w-4 ${c.icon}`} />
+        </div>
       </div>
-      <div className="h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${color} w-[var(--bar-pct)]`} style={{ "--bar-pct": `${pct}%` } as React.CSSProperties} />
+    </motion.div>
+  )
+}
+
+function CategoryBar({ label, monto, total, color }: {
+  label: string; monto: number; total: number; color: string
+}) {
+  const pct = total > 0 ? Math.min(100, (monto / total) * 100) : 0
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-slate-300 capitalize truncate max-w-[140px]">{label}</span>
+        <span className="text-slate-500 tabular-nums">{fmt(monto)} <span className="text-slate-600">({Math.round(pct)}%)</span></span>
+      </div>
+      <div className="h-2.5 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/30">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className={`h-full rounded-full ${color}`}
+        />
       </div>
     </div>
   )
-  return href ? <Link href={href}>{inner}</Link> : inner
 }
 
-// ─── Página Dashboard ─────────────────────────────────────────────────────────
+function AccountRow({ nombre, tipo, saldo, color, meta }: {
+  nombre: string; tipo: string | null; saldo: number; color: string | null; meta: number | null
+}) {
+  const isCredit = tipo === "Crédito"
+  const pctMeta = meta && meta > 0 ? Math.min(100, (saldo / meta) * 100) : null
+
+  return (
+    <div className="flex items-center gap-3 py-2.5">
+      <div className="h-3 w-3 rounded-full shrink-0 border border-slate-700/50" style={{ backgroundColor: color ?? "#6366f1" }} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-slate-200 font-medium truncate">{nombre}</p>
+          <p className={`text-sm font-bold tabular-nums ${isCredit ? "text-red-400" : "text-emerald-400"}`}>
+            {fmt(saldo)}
+          </p>
+        </div>
+        {pctMeta !== null && (
+          <div className="mt-1 h-1.5 rounded-full bg-slate-800/80 overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500" style={{ width: `${pctMeta}%` }} />
+          </div>
+        )}
+        {!pctMeta && (
+          <p className="text-[10px] text-slate-600">{tipo ?? "Cuenta"}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function MiniChart({ data, title, colorPositive, colorNegative }: {
+  data: { name: string; value: number }[]; title: string
+  colorPositive: string; colorNegative?: string
+}) {
+  return (
+    <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm">
+      <h3 className="text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-3">{title}</h3>
+      <ResponsiveContainer width="100%" height={130}>
+        <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 10, fill: "#64748b" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis hide />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#1e293b",
+              border: "1px solid #334155",
+              borderRadius: "8px",
+              fontSize: "12px",
+              color: "#e2e8f0",
+            }}
+            formatter={(v: number) => [fmt(v), ""]}
+            labelStyle={{ color: "#94a3b8" }}
+          />
+          <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={24}>
+            {data.map((entry, i) => (
+              <Cell
+                key={i}
+                fill={colorNegative && entry.value < 0 ? colorNegative : colorPositive}
+                opacity={0.85}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function ModuleCard({ name, description, icon: Icon, href, color, delay }: {
+  name: string; description: string; icon: React.ElementType
+  href: string; color: string; delay: number
+}) {
+  const borders: Record<string, string> = {
+    cyan:   "hover:border-cyan-500/50",
+    purple: "hover:border-violet-500/50",
+    amber:  "hover:border-amber-500/50",
+    green:  "hover:border-emerald-500/50",
+    blue:   "hover:border-blue-500/50",
+    pink:   "hover:border-pink-500/50",
+  }
+  const icons: Record<string, string> = {
+    cyan:   "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+    purple: "text-violet-400 bg-violet-500/10 border-violet-500/20",
+    amber:  "text-amber-400 bg-amber-500/10 border-amber-500/20",
+    green:  "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+    blue:   "text-blue-400 bg-blue-500/10 border-blue-500/20",
+    pink:   "text-pink-400 bg-pink-500/10 border-pink-500/20",
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay }}
+    >
+      <Link href={href}>
+        <div className={`group p-3.5 rounded-xl bg-slate-900/60 border border-slate-700/40 backdrop-blur-sm transition-all duration-300 hover:shadow-lg cursor-pointer ${borders[color]}`}>
+          <div className="flex items-center gap-3">
+            <div className={`h-9 w-9 rounded-lg flex items-center justify-center border shrink-0 ${icons[color]}`}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xs font-semibold text-slate-200 group-hover:text-white">{name}</h3>
+              <p className="text-[10px] text-slate-600">{description}</p>
+            </div>
+            <ChevronRight className="h-3.5 w-3.5 text-slate-700 group-hover:text-slate-500 shrink-0" />
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  )
+}
+
+// ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function GestionPersonalPage() {
   const hoy = new Date()
   const mesActual  = hoy.getMonth() + 1
@@ -91,6 +255,8 @@ export default function GestionPersonalPage() {
   const { pasivos:   dataPasivos,  loading: loadPas   } = useGetPasivos()
   const { prestamos: dataPrest,    loading: loadPrest  } = useGetPrestamos()
   const { registros: dataRegs,     loading: loadRegs   } = useGetRegistros()
+  const { cuentas:   dataCuentas,  loading: loadCuent  } = useGetCuentas()
+  const { metas:     dataMetas,    loading: loadMetas  } = useGetMetas()
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
   const [activos,   setActivos]   = useState<ActivoType[]>([])
@@ -104,204 +270,339 @@ export default function GestionPersonalPage() {
   useEffect(() => { setPrestamos(dataPrest   ?? []) }, [dataPrest])
   useEffect(() => { setRegistros(dataRegs    ?? []) }, [dataRegs])
 
-  const loading = loadPart || loadAct || loadPas || loadPrest || loadRegs
+  const loading = loadPart || loadAct || loadPas || loadPrest || loadRegs || loadCuent || loadMetas
 
-  // Registros del mes actual
-  const registrosMes = registros.filter(r => r.mes === mesActual && r.anio === anioActual)
-  const ingresoVariableMes = registrosMes.filter(r => r.tipo === "ingreso_variable").reduce((s, r) => s + (r.monto ?? 0), 0)
-  const gastoExtraMes      = registrosMes.filter(r => r.tipo === "gasto_extra").reduce((s, r) => s + (r.monto ?? 0), 0)
+  const cuentas = dataCuentas ?? []
+  const metas   = dataMetas ?? []
 
-  // ─── Cálculos de presupuesto ─────────────────────────────────────────────
+  // ─── Calculos principales ───────────────────────────────────────────────
   const activasPartidas = partidas.filter(p => p.activo !== false)
 
   const ingresoMensual = activasPartidas
     .filter(p => p.categoria === "ingreso" || p.tipo === "ingreso")
-    .reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
+    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
   const egresoMensual = activasPartidas
     .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso")
-    .reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
+    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
+
+  const registrosMes = registros.filter(r => r.mes === mesActual && r.anio === anioActual)
+  const ingresoVariableMes = registrosMes.filter(r => r.tipo === "ingreso_variable").reduce((s, r) => s + (r.monto ?? 0), 0)
+  const gastoExtraMes      = registrosMes.filter(r => r.tipo === "gasto_extra").reduce((s, r) => s + (r.monto ?? 0), 0)
 
   const flujoNeto = (ingresoMensual + ingresoVariableMes) - (egresoMensual + gastoExtraMes)
 
-  const necesidadesMensual = activasPartidas
-    .filter(p => p.tipo === "necesidad")
-    .reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
+  // Cuentas
+  const cuentasActivas = cuentas.filter(c => c.activa)
+  const cuentasLiquidas = cuentasActivas.filter(c => c.tipo !== "Crédito")
+  const cuentasCredito  = cuentasActivas.filter(c => c.tipo === "Crédito")
+  const disponible     = cuentasLiquidas.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const deudaTotal     = cuentasCredito.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const balanceActual  = disponible - deudaTotal
 
-  const prescindiblesMensual = activasPartidas
-    .filter(p => p.tipo === "gastos prescindibles")
-    .reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
+  // Gasto del mes (presupuestado + extras)
+  const gastoDelMes = egresoMensual + gastoExtraMes
 
-  const ahorroMensual = activasPartidas
-    .filter(p => p.tipo === "ahorro")
-    .reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
+  // Balance proyectado: balance actual + ingresos restantes del mes - egresos restantes
+  const diasMes = new Date(anioActual, mesActual, 0).getDate()
+  const diasRestantes = diasMes - hoy.getDate()
+  const pctRestante = diasRestantes / diasMes
+  const balanceProyectado = balanceActual + (ingresoMensual * pctRestante) - (egresoMensual * pctRestante)
 
-  // ─── Cálculos de patrimonio ──────────────────────────────────────────────
+  // Patrimonio
   const totalActivos   = activos.reduce((s, a) => s + (a.valor ?? 0), 0)
   const totalPrestamos = prestamos.filter(p => p.estado === "activo").reduce((s, p) => s + (p.saldo_pendiente ?? 0), 0)
   const totalPasivos   = pasivos.reduce((s, p) => s + (p.saldo ?? 0), 0)
   const patrimonioNeto = totalActivos + totalPrestamos - totalPasivos
 
-  // Ratio de supervivencia: meses que puedes vivir sin ingresos
-  // Efectivo líquido = activos de categoría efectivo + inversión
+  // Supervivencia
   const efectivoLiquido = activos
     .filter(a => a.categoria === "efectivo" || a.categoria === "inversion")
     .reduce((s, a) => s + (a.valor ?? 0), 0)
   const ratioSupervivencia = egresoMensual > 0 ? efectivoLiquido / egresoMensual : 0
 
-  // Alertas de salud financiera
-  const pctPrescindibles = egresoMensual > 0 ? (prescindiblesMensual / egresoMensual) * 100 : 0
-  const alertaPrescindibles = pctPrescindibles > 30
+  const ahorroMensual = activasPartidas
+    .filter(p => p.tipo === "ahorro")
+    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
+  const pctAhorro = ingresoMensual > 0 ? (ahorroMensual / ingresoMensual) * 100 : 0
 
-  // Top categorías de gasto del presupuesto
-  const gastoPorCategoria = Object.values(
-    activasPartidas
-      .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso" && p.categoria)
-      .reduce<Record<string, { label: string; monto: number }>>((acc, p) => {
-        const key = p.categoria!
-        acc[key] = { label: key, monto: (acc[key]?.monto ?? 0) + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual }
-        return acc
-      }, {})
-  ).sort((a, b) => b.monto - a.monto).slice(0, 5)
+  // Categorias de gasto
+  const necesidades = activasPartidas
+    .filter(p => p.tipo === "necesidad")
+    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
+  const prescindibles = activasPartidas
+    .filter(p => p.tipo === "gastos prescindibles")
+    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
-  // ─── RENDER ────────────────────────────────────────────────────────────────
+  // Metas
+  const metasActivas = metas.filter(m => m.activo !== false)
+  const metasCompletadas = metasActivas.filter(m => m.monto_actual >= m.monto_meta).length
+
+  // Level
+  const { level, xpInLevel, xpToNext } = calcLevel({
+    patrimonioNeto, ratioSupervivencia, pctAhorro, metasCompletadas, flujoNeto,
+  })
+  const titulo = getLevelTitle(level)
+
+  // ─── Monthly chart data (ultimos 6 meses) ──────────────────────────────
+  const chartData = useMemo(() => {
+    const months: { mes: number; anio: number; label: string }[] = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(anioActual, mesActual - 1 - i, 1)
+      months.push({ mes: d.getMonth() + 1, anio: d.getFullYear(), label: MESES_CORTO[d.getMonth()] })
+    }
+
+    const ingresos = months.map(m => {
+      const regs = registros.filter(r => r.mes === m.mes && r.anio === m.anio && r.tipo === "ingreso_variable")
+      const extra = regs.reduce((s, r) => s + (r.monto ?? 0), 0)
+      return { name: m.label, value: Math.round(ingresoMensual + extra) }
+    })
+
+    const gastos = months.map(m => {
+      const regs = registros.filter(r => r.mes === m.mes && r.anio === m.anio && r.tipo === "gasto_extra")
+      const extra = regs.reduce((s, r) => s + (r.monto ?? 0), 0)
+      return { name: m.label, value: Math.round(egresoMensual + extra) }
+    })
+
+    const balance = months.map((m, i) => ({
+      name: m.label,
+      value: ingresos[i].value - gastos[i].value,
+    }))
+
+    return { ingresos, gastos, balance }
+  }, [registros, ingresoMensual, egresoMensual, mesActual, anioActual])
+
+  // Modules
+  const modules = [
+    { name: "Finanzas",    description: "Presupuesto y flujo",       icon: Swords,       href: "/gestion-personal/presupuesto",      color: "cyan"   },
+    { name: "Misiones",    description: "Metas de ahorro",           icon: Map,          href: "/gestion-personal/metas",            color: "amber"  },
+    { name: "Inventario",  description: "Cuentas y cartera",         icon: Package,      href: "/gestion-personal/cuentas",          color: "green"  },
+    { name: "Stats",       description: "Patrimonio y net worth",    icon: BarChart3,    href: "/gestion-personal/patrimonio",       color: "purple" },
+    { name: "Calendario",  description: "Eventos y pagos",           icon: CalendarDays, href: "/gestion-personal/calendario",       color: "blue"   },
+    { name: "Registro",    description: "Log de ingresos/gastos",    icon: Trophy,       href: "/gestion-personal/registro-mensual", color: "pink"   },
+  ]
+
+  // ─── RENDER ─────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="h-10 w-10 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full mx-auto"
+          />
+          <p className="text-sm text-slate-500">Cargando HUD...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-5xl mx-auto">
 
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Dashboard Personal</h1>
-        <p className="text-sm text-zinc-500">Resumen de tu situación financiera personal.</p>
-      </div>
+      {/* ── Character HUD (compacto) ───────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative rounded-xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800/80 border border-slate-700/50 p-4 overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl" />
 
-      {/* ── KPIs fila 1 ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="Patrimonio Neto"
-          value={loading ? "..." : fmtDec(patrimonioNeto)}
-          sub="Activos − Pasivos"
-          color={patrimonioNeto >= 0 ? "text-indigo-600 dark:text-indigo-400" : "text-red-600 dark:text-red-400"}
-          icon={Landmark}
-          href="/gestion-personal/patrimonio"
-        />
-        <KpiCard
-          label="Flujo Neto Mensual"
-          value={loading ? "..." : fmt(flujoNeto)}
-          sub={`Real ${hoy.toLocaleString("es-MX", { month: "long" })}`}
-          color={flujoNeto >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}
-          icon={flujoNeto >= 0 ? TrendingUp : TrendingDown}
-          href="/gestion-personal/presupuesto"
-        />
-        <KpiCard
-          label="Ratio Supervivencia"
-          value={loading ? "..." : `${ratioSupervivencia.toFixed(1)} meses`}
-          sub="Efectivo ÷ egresos/mes"
-          color={
-            ratioSupervivencia >= 6 ? "text-emerald-600 dark:text-emerald-400" :
-            ratioSupervivencia >= 3 ? "text-amber-600 dark:text-amber-400" :
-            "text-red-600 dark:text-red-400"
-          }
-          icon={ShieldCheck}
-        />
-        <KpiCard
-          label="Ahorro Mensual"
-          value={loading ? "..." : fmt(ahorroMensual)}
-          sub="Presupuestado"
-          color="text-emerald-600 dark:text-emerald-400"
+        <div className="relative flex items-center gap-4">
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-base font-bold shadow-lg shadow-cyan-500/20">
+              RR
+            </div>
+            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-md bg-slate-800 border border-cyan-500/50 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-cyan-400">{level}</span>
+            </div>
+          </div>
+
+          {/* Info + XP */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base font-bold text-slate-100">Ricardo</h1>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                {titulo}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-3">
+              <Star className="h-3 w-3 text-amber-400 shrink-0" />
+              <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden border border-slate-700/50">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(xpInLevel / xpToNext) * 100}%` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-500"
+                />
+              </div>
+              <span className="text-[10px] text-slate-600 tabular-nums shrink-0">{xpInLevel}/{xpToNext}</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Overview Cards ─────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <OverviewCard
+          label="Disponible"
+          value={fmt(disponible)}
+          sub="Cuentas liquidas"
           icon={Wallet}
-          href="/gestion-personal/presupuesto"
+          color="green"
+          delay={0.1}
+        />
+        <OverviewCard
+          label="Balance Actual"
+          value={fmt(balanceActual)}
+          sub="Liquido - Deuda"
+          icon={balanceActual >= 0 ? TrendingUp : TrendingDown}
+          color={balanceActual >= 0 ? "blue" : "red"}
+          delay={0.15}
+        />
+        <OverviewCard
+          label="Gasto del Mes"
+          value={fmt(gastoDelMes)}
+          sub={`${hoy.toLocaleString("es-MX", { month: "long" })} ${anioActual}`}
+          icon={CreditCard}
+          color="red"
+          delay={0.2}
+        />
+        <OverviewCard
+          label="Balance Proyectado"
+          value={fmt(balanceProyectado)}
+          sub={`Faltan ${diasRestantes} dias`}
+          icon={Target}
+          color={balanceProyectado >= 0 ? "purple" : "red"}
+          delay={0.25}
         />
       </div>
 
-      {/* ── Alerta si prescindibles > 30% ─────────────────────────────────── */}
-      {!loading && alertaPrescindibles && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/20 px-5 py-3 flex items-center gap-3">
-          <PieChart className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-          <p className="text-sm text-amber-700 dark:text-amber-300">
-            <span className="font-semibold">Alerta de salud financiera:</span> tus gastos prescindibles representan el{" "}
-            <span className="font-bold">{Math.round(pctPrescindibles)}%</span> de tus egresos. Se recomienda no superar el 30%.
-          </p>
-        </div>
-      )}
+      {/* ── Gasto por Categoria + Cuentas ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-      {/* ── Fila 2 ────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Distribución de egresos */}
-        <Card className="p-5 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80">
+        {/* Gasto por Categoria */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
+        >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Distribución de egresos</h2>
-            <Link href="/gestion-personal/presupuesto" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Ver presupuesto</Link>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gasto por Categoria</h2>
+            <Link href="/gestion-personal/presupuesto" className="text-[10px] text-cyan-500 hover:text-cyan-400">Ver detalle</Link>
           </div>
-          {loading ? (
-            <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-8 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />)}</div>
-          ) : egresoMensual === 0 ? (
-            <p className="text-sm text-zinc-400 text-center py-6">Sin egresos en el presupuesto.</p>
+          {egresoMensual === 0 ? (
+            <p className="text-xs text-slate-600 text-center py-6">Sin datos de presupuesto</p>
           ) : (
-            <div className="space-y-4">
-              {[
-                { label: "Necesidades",          monto: necesidadesMensual,   color: "bg-blue-500"  },
-                { label: "Gastos Prescindibles",  monto: prescindiblesMensual, color: alertaPrescindibles ? "bg-amber-500" : "bg-zinc-400" },
-                { label: "Ahorro",                monto: ahorroMensual,        color: "bg-emerald-500" },
-              ].filter(i => i.monto > 0).map(item => (
-                <BarraItem key={item.label} label={item.label} monto={item.monto} total={ingresoMensual || egresoMensual} color={item.color} />
+            <div className="space-y-3">
+              <CategoryBar label="Necesidades" monto={necesidades} total={egresoMensual} color="bg-gradient-to-r from-cyan-500 to-blue-500" />
+              <CategoryBar label="Prescindibles" monto={prescindibles} total={egresoMensual} color="bg-gradient-to-r from-amber-500 to-orange-500" />
+              <CategoryBar label="Ahorro" monto={ahorroMensual} total={egresoMensual} color="bg-gradient-to-r from-emerald-400 to-green-500" />
+              {gastoExtraMes > 0 && (
+                <CategoryBar label="Gastos Extra (mes)" monto={gastoExtraMes} total={egresoMensual} color="bg-gradient-to-r from-red-500 to-rose-500" />
+              )}
+            </div>
+          )}
+          <div className="mt-4 pt-3 border-t border-slate-800/60 flex justify-between text-[10px] text-slate-500">
+            <span>Ingreso: <span className="text-emerald-400 font-semibold">{fmt(ingresoMensual)}</span></span>
+            <span>Egreso: <span className="text-red-400 font-semibold">{fmt(egresoMensual)}</span></span>
+            <span>Flujo: <span className={`font-semibold ${flujoNeto >= 0 ? "text-cyan-400" : "text-red-400"}`}>{fmt(flujoNeto)}</span></span>
+          </div>
+        </motion.div>
+
+        {/* Cuentas */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mis Cuentas</h2>
+            <Link href="/gestion-personal/cuentas" className="text-[10px] text-cyan-500 hover:text-cyan-400">Ver todas</Link>
+          </div>
+          {cuentasActivas.length === 0 ? (
+            <p className="text-xs text-slate-600 text-center py-6">Sin cuentas activas</p>
+          ) : (
+            <div className="divide-y divide-slate-800/50">
+              {cuentasActivas.map(c => (
+                <AccountRow
+                  key={c.id}
+                  nombre={c.nombre}
+                  tipo={c.tipo}
+                  saldo={c.saldoActual ?? c.saldoInicial ?? 0}
+                  color={c.color}
+                  meta={c.metaDeCuenta}
+                />
               ))}
             </div>
           )}
-          {!loading && egresoMensual > 0 && (
-            <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between text-xs text-zinc-500">
-              <span>Ingreso mensual: <span className="font-semibold text-emerald-600">{fmt(ingresoMensual)}</span></span>
-              <span>Egreso mensual: <span className="font-semibold text-red-500">{fmt(egresoMensual)}</span></span>
-            </div>
-          )}
-        </Card>
-
-        {/* Top categorías de gasto */}
-        <Card className="p-5 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Top categorías de gasto</h2>
-            <Link href="/gestion-personal/presupuesto" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Ver detalle</Link>
+          <div className="mt-3 pt-3 border-t border-slate-800/60 flex justify-between text-[10px] text-slate-500">
+            <span>Liquido: <span className="text-emerald-400 font-semibold">{fmt(disponible)}</span></span>
+            {deudaTotal > 0 && <span>Deuda: <span className="text-red-400 font-semibold">{fmt(deudaTotal)}</span></span>}
           </div>
-          {loading ? (
-            <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-8 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />)}</div>
-          ) : gastoPorCategoria.length === 0 ? (
-            <p className="text-sm text-zinc-400 text-center py-6">Sin datos de presupuesto.</p>
-          ) : (
-            <div className="space-y-4">
-              {gastoPorCategoria.map(c => (
-                <BarraItem key={c.label} label={c.label} monto={c.monto} total={egresoMensual} color="bg-indigo-400" />
-              ))}
-            </div>
-          )}
-        </Card>
+        </motion.div>
       </div>
 
-      {/* ── Fila 3: Balance patrimonio ─────────────────────────────────────── */}
-      <Card className="p-5 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Balance patrimonial</h2>
-          <Link href="/gestion-personal/patrimonio" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Ver detalle</Link>
-        </div>
-        {loading ? (
-          <div className="h-8 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
-        ) : (
-          <div className="grid grid-cols-3 gap-4 text-center">
+      {/* ── Monthly Charts ─────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <MiniChart data={chartData.ingresos} title="Ingresos por Mes" colorPositive="#34d399" />
+        <MiniChart data={chartData.gastos} title="Gastos por Mes" colorPositive="#f87171" />
+        <MiniChart data={chartData.balance} title="Balance por Mes" colorPositive="#22d3ee" colorNegative="#f87171" />
+      </div>
+
+      {/* ── Quick RPG Stats ────────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
+      >
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Stats del Personaje</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="flex items-center gap-2">
+            <Heart className="h-4 w-4 text-red-400" />
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Activos + Por cobrar</p>
-              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{fmtDec(totalActivos + totalPrestamos)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Pasivos</p>
-              <p className="text-xl font-bold text-red-500 dark:text-red-400">{fmtDec(totalPasivos)}</p>
-            </div>
-            <div className="border-l border-zinc-100 dark:border-zinc-800">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Patrimonio Neto</p>
-              <p className={`text-xl font-bold ${patrimonioNeto >= 0 ? "text-indigo-600 dark:text-indigo-400" : "text-red-600 dark:text-red-400"}`}>
-                {fmtDec(patrimonioNeto)}
-              </p>
+              <p className="text-[10px] text-slate-600">Liquidez</p>
+              <p className="text-sm font-bold text-slate-200">{fmt(disponible)}</p>
             </div>
           </div>
-        )}
-      </Card>
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-emerald-400" />
+            <div>
+              <p className="text-[10px] text-slate-600">Ahorro</p>
+              <p className="text-sm font-bold text-slate-200">{Math.round(pctAhorro)}%</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-cyan-400" />
+            <div>
+              <p className="text-[10px] text-slate-600">Supervivencia</p>
+              <p className="text-sm font-bold text-slate-200">{ratioSupervivencia.toFixed(1)} meses</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-violet-400" />
+            <div>
+              <p className="text-[10px] text-slate-600">Patrimonio</p>
+              <p className="text-sm font-bold text-slate-200">{fmt(patrimonioNeto)}</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Module Grid ────────────────────────────────────────────────────── */}
+      <div>
+        <h2 className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Modulos</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          {modules.map((mod, i) => (
+            <ModuleCard key={mod.name} {...mod} delay={0.55 + i * 0.05} />
+          ))}
+        </div>
+      </div>
 
     </div>
   )
