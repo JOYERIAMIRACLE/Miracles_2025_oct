@@ -21,6 +21,9 @@ jobs:
 
       - name: Build
         run: cd fronten_miracles && npm run build
+        env:
+          NEXT_PUBLIC_BACKEND_URL: https://miracles-strapi.onrender.com
+          NEXT_PUBLIC_STRAPI_URL: https://miracles-strapi.onrender.com
 
       - name: Create Pages project if needed
         run: npx wrangler pages project create miracles-frontend --production-branch main || true
