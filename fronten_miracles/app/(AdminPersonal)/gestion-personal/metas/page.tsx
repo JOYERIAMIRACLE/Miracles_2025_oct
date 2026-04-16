@@ -12,6 +12,8 @@ import { updateMeta }     from "@/api/meta-ahorro/updateMeta"
 import { deleteMeta }     from "@/api/meta-ahorro/deleteMeta"
 import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { createTransaccion }   from "@/api/transaccion/createTransaccion"
+import { useGetCuentas }       from "@/api/cuenta/getCuentas"
 
 import { MetaAhorroType, MetaAhorroPayload, CategoriaMeta } from "@/types/meta-ahorro"
 
@@ -61,18 +63,20 @@ const EMPTY_FORM: MetaAhorroPayload = {
 
 // ─── Tarjeta de meta ──────────────────────────────────────────────────────────
 function MetaCard({
-  meta, ahorroMensual,
+  meta, ahorroMensual, cuentas,
   onEdit, onDelete, onAbonar,
 }: {
   meta: MetaAhorroType
   ahorroMensual: number
+  cuentas: { documentId: string; nombre: string }[]
   onEdit: () => void
   onDelete: () => void
-  onAbonar: (monto: number) => void
+  onAbonar: (monto: number, cuentaId: string | null) => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [abonoOpen,     setAbonoOpen]     = useState(false)
   const [abono,         setAbono]         = useState<string>("")
+  const [abonoCuenta,   setAbonoCuenta]   = useState<string | null>(null)
   const [savingAbono,   setSavingAbono]   = useState(false)
 
   const pct        = meta.monto_meta > 0 ? Math.min(100, (meta.monto_actual / meta.monto_meta) * 100) : 0
@@ -104,9 +108,10 @@ function MetaCard({
     if (isNaN(monto) || monto <= 0) { toast.error("Monto inválido"); return }
     setSavingAbono(true)
     try {
-      onAbonar(monto)
+      onAbonar(monto, abonoCuenta)
       setAbonoOpen(false)
       setAbono("")
+      setAbonoCuenta(null)
     } finally {
       setSavingAbono(false)
     }
@@ -196,18 +201,32 @@ function MetaCard({
       {!completado && (
         <div className="px-5 pb-4">
           {abonoOpen ? (
-            <div className="flex items-center gap-2">
-              <span className="text-zinc-400 text-sm">$</span>
-              <input
-                type="number" title="Monto del abono" placeholder="0.00" autoFocus
-                value={abono} onChange={e => setAbono(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") handleAbonar(); if (e.key === "Escape") setAbonoOpen(false) }}
-                className="flex-1 h-8 rounded-lg border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-zinc-800 px-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              />
-              <Button size="sm" className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white gap-1" onClick={handleAbonar} disabled={savingAbono}>
-                {savingAbono ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <></>}Abonar
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 text-zinc-400" onClick={() => setAbonoOpen(false)}>Cancelar</Button>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-zinc-400 text-sm">$</span>
+                <input
+                  type="number" title="Monto del abono" placeholder="0.00" autoFocus
+                  value={abono} onChange={e => setAbono(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleAbonar(); if (e.key === "Escape") setAbonoOpen(false) }}
+                  className="flex-1 h-8 rounded-lg border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-zinc-800 px-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  title="Cuenta origen"
+                  className="flex-1 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 text-xs text-zinc-700 dark:text-zinc-300"
+                  value={abonoCuenta ?? ""}
+                  onChange={e => setAbonoCuenta(e.target.value || null)}
+                >
+                  <option value="">Sin cuenta (solo meta)</option>
+                  {cuentas.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
+                </select>
+                <Button size="sm" className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white gap-1" onClick={handleAbonar} disabled={savingAbono}>
+                  {savingAbono ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <></>}Abonar
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 text-zinc-400" onClick={() => setAbonoOpen(false)}>X</Button>
+              </div>
+              {abonoCuenta && <p className="text-[10px] text-cyan-500">→ Crea transacción de ahorro</p>}
             </div>
           ) : (
             <Button variant="outline" size="sm" className="w-full h-8 text-xs border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400" onClick={() => setAbonoOpen(true)}>
@@ -230,7 +249,9 @@ function MetaCard({
 export default function MetasPage() {
   const { metas: dataMetas,       loading: loadM, error } = useGetMetas()
   const { partidas: dataPartidas, loading: loadP }        = useGetPartidas()
-  const { transacciones: dataTx,   loading: loadR }        = useGetTransacciones()
+  const { transacciones: dataTx, setTransacciones, loading: loadR } = useGetTransacciones()
+  const { cuentas } = useGetCuentas()
+  const cuentasActivas = cuentas.filter(c => c.activa)
 
   const [metas,   setMetas]   = useState<MetaAhorroType[]>([])
   const [modalOpen,    setModalOpen]    = useState(false)
@@ -315,7 +336,7 @@ export default function MetasPage() {
     }
   }
 
-  const handleAbonar = async (meta: MetaAhorroType, abono: number) => {
+  const handleAbonar = async (meta: MetaAhorroType, abono: number, cuentaId: string | null) => {
     try {
       const nuevoMonto = meta.monto_actual + abono
       const payload: MetaAhorroPayload = {
@@ -325,8 +346,24 @@ export default function MetasPage() {
       }
       const u = await updateMeta(meta.documentId, payload)
       setMetas(prev => prev.map(m => m.documentId === u.documentId ? u : m))
+
+      // Crear transacción si seleccionó cuenta
+      if (cuentaId) {
+        const txNueva = await createTransaccion({
+          descripcion: `Abono: ${meta.nombre}`,
+          tipo: "gasto",
+          monto: abono,
+          fecha: new Date().toISOString(),
+          categoria: "ahorro",
+          notas: `Meta: ${meta.nombre}`,
+          cuentaOrigen: cuentaId,
+          cuentaDestino: null,
+        })
+        setTransacciones(prev => [txNueva, ...prev])
+      }
+
       if (nuevoMonto >= meta.monto_meta) toast.success("¡Meta alcanzada! 🎉")
-      else toast.success(`Abono registrado. Falta: ${fmt(Math.max(0, meta.monto_meta - nuevoMonto))}`)
+      else toast.success(`Abono registrado${cuentaId ? " y transacción creada" : ""}. Falta: ${fmt(Math.max(0, meta.monto_meta - nuevoMonto))}`)
     } catch (err: any) {
       toast.error(err.message ?? "Error al abonar")
     }
@@ -379,9 +416,10 @@ export default function MetasPage() {
                   key={m.documentId}
                   meta={m}
                   ahorroMensual={ahorroPromedio}
+                  cuentas={cuentasActivas}
                   onEdit={() => handleEdit(m)}
                   onDelete={() => handleDelete(m.documentId)}
-                  onAbonar={(abono) => handleAbonar(m, abono)}
+                  onAbonar={(abono, cuentaId) => handleAbonar(m, abono, cuentaId)}
                 />
               ))
           }
