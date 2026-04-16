@@ -1,0 +1,69 @@
+{
+  "kind": "collectionType",
+  "collectionName": "transaccions",
+  "info": {
+    "singularName": "transaccion",
+    "pluralName": "transaccions",
+    "displayName": "Transaccion"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "descripcion": {
+      "type": "string",
+      "required": true
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": [
+        "ingreso",
+        "gasto",
+        "transferencia"
+      ],
+      "required": true
+    },
+    "monto": {
+      "type": "decimal",
+      "required": true
+    },
+    "fecha": {
+      "type": "datetime",
+      "required": true
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "alimentacion",
+        "transporte",
+        "vivienda",
+        "servicios",
+        "salud",
+        "educacion",
+        "entretenimiento",
+        "ropa",
+        "ahorro",
+        "inversion",
+        "sueldo",
+        "freelance",
+        "venta",
+        "transferencia",
+        "otro"
+      ]
+    },
+    "notas": {
+      "type": "text"
+    },
+    "cuentaOrigen": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cuenta.cuenta"
+    },
+    "cuentaDestino": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cuenta.cuenta"
+    }
+  }
+}

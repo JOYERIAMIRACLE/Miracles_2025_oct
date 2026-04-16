@@ -1,11 +1,12 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { createCuenta } from "@/api/cuenta/createCuenta"
 import { updateCuenta } from "@/api/cuenta/updateCuenta"
 import { deleteCuenta } from "@/api/cuenta/deleteCuenta"
 import { CuentaType, CuentaPayload, TipoCuenta, PropositoCuenta } from "@/types/cuenta"
-import { Plus, Pencil, Trash2, X, Check } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Banknote, TrendingUp, TrendingDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,6 +28,7 @@ const emptyForm = (): CuentaPayload => ({
   proposito: null,
   saldoInicial: 0,
   saldoActual: null,
+  saldoBanco: null,
   metaDeCuenta: null,
   color: COLORES[0],
   activa: true,
@@ -34,18 +36,39 @@ const emptyForm = (): CuentaPayload => ({
 
 export default function CuentasPage() {
   const { cuentas, setCuentas, loading } = useGetCuentas()
+  const { transacciones } = useGetTransacciones()
   const [mostrarForm, setMostrarForm] = useState(false)
   const [form, setForm] = useState<CuentaPayload>(emptyForm())
   const [editando, setEditando] = useState<CuentaType | null>(null)
   const [guardando, setGuardando] = useState(false)
 
-  const totalEfectivo = cuentas
-    .filter(c => c.activa && c.tipo !== "Crédito")
-    .reduce((acc, c) => acc + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const activas = cuentas.filter(c => c.activa)
+  const liquidas = activas.filter(c => c.tipo !== "Crédito")
+  const creditos = activas.filter(c => c.tipo === "Crédito")
+  const efectivo = activas.filter(c => c.tipo === "Efectivo")
 
-  const totalDeuda = cuentas
-    .filter(c => c.activa && c.tipo === "Crédito")
-    .reduce((acc, c) => acc + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const totalSistema  = liquidas.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const totalEfectivo = efectivo.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const totalBanco    = liquidas.filter(c => c.saldoBanco != null).reduce((s, c) => s + c.saldoBanco!, 0)
+  const tieneBancos   = liquidas.some(c => c.saldoBanco != null)
+  const totalDeuda    = creditos.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const diferencia    = tieneBancos ? totalBanco - totalSistema : null
+
+  // ─── Resumen mensual: transacciones registradas por mes ───
+  const resumenMensual = useMemo(() => {
+    const hoy = new Date()
+    const meses: { key: string; label: string; ingresos: number; gastos: number }[] = []
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      const label = d.toLocaleDateString("es-MX", { month: "short", year: "numeric" })
+      const txMes = transacciones.filter(t => t.fecha?.startsWith(key))
+      const ingresos = txMes.filter(t => t.tipo === "ingreso").reduce((s, t) => s + Number(t.monto), 0)
+      const gastos   = txMes.filter(t => t.tipo === "gasto").reduce((s, t) => s + Number(t.monto), 0)
+      meses.push({ key, label, ingresos, gastos })
+    }
+    return meses
+  }, [transacciones])
 
   const abrirCrear = () => {
     setEditando(null)
@@ -61,6 +84,7 @@ export default function CuentasPage() {
       proposito:    c.proposito,
       saldoInicial: c.saldoInicial ?? 0,
       saldoActual:  c.saldoActual,
+      saldoBanco:   c.saldoBanco,
       metaDeCuenta: c.metaDeCuenta,
       color:        c.color,
       activa:       c.activa ?? true,
@@ -132,18 +156,44 @@ export default function CuentasPage() {
       </div>
 
       {/* Resumen */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        {/* Diferencia / faltante (sutil) */}
+        <div className="bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+          <p className="text-xs text-muted-foreground font-medium">
+            {diferencia === null ? "Sin referencia" : diferencia === 0 ? "Todo cuadra" : diferencia > 0 ? "Sobrante" : "Faltante"}
+          </p>
+          <p className={`text-xl font-bold ${
+            diferencia === null ? "text-zinc-400"
+            : diferencia === 0 ? "text-muted-foreground"
+            : "text-zinc-700 dark:text-zinc-300"
+          }`}>
+            {diferencia !== null ? (diferencia >= 0 ? "+" : "") + fmt(diferencia) : "—"}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{diferencia !== null && diferencia !== 0 ? "Sin registrar" : ""}</p>
+        </div>
+        {/* Saldo efectivo */}
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Efectivo</p>
+          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{fmt(totalEfectivo)}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{efectivo.length} cuenta{efectivo.length !== 1 ? "s" : ""} cash</p>
+        </div>
+        {/* Saldo sistema */}
         <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl p-4">
-          <p className="text-xs text-green-600 dark:text-green-400 font-medium">Disponible total</p>
-          <p className="text-xl font-bold text-green-700 dark:text-green-300">{fmt(totalEfectivo)}</p>
+          <p className="text-xs text-green-600 dark:text-green-400 font-medium">Saldo sistema</p>
+          <p className="text-xl font-bold text-green-700 dark:text-green-300">{fmt(totalSistema)}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Según transacciones</p>
         </div>
-        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-xs text-red-600 dark:text-red-400 font-medium">Deuda en crédito</p>
-          <p className="text-xl font-bold text-red-700 dark:text-red-300">{fmt(totalDeuda)}</p>
-        </div>
+        {/* Saldo real banco */}
         <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Cuentas activas</p>
-          <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{cuentas.filter(c => c.activa).length}</p>
+          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Saldo real bancos</p>
+          <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{tieneBancos ? fmt(totalBanco) : "—"}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{tieneBancos ? "Lo que dice tu banco" : "Edita cuentas para ingresar"}</p>
+        </div>
+        {/* Deuda */}
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium">Deuda crédito</p>
+          <p className="text-xl font-bold text-red-700 dark:text-red-300">{fmt(totalDeuda)}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{creditos.length} tarjeta{creditos.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
 
@@ -188,8 +238,8 @@ export default function CuentasPage() {
               <Input className={inputCls} type="number" placeholder="0" value={form.saldoInicial ?? ""} onChange={e => setForm(f => ({ ...f, saldoInicial: Number(e.target.value) }))} />
             </div>
             <div>
-              <Label className="text-xs">Saldo actual <span className="text-muted-foreground">(ajuste manual)</span></Label>
-              <Input className={inputCls} type="number" placeholder="Dejar vacío = igual al inicial" value={form.saldoActual ?? ""} onChange={e => setForm(f => ({ ...f, saldoActual: e.target.value === "" ? null : Number(e.target.value) }))} />
+              <Label className="text-xs">Saldo real del banco <span className="text-muted-foreground">(referencia)</span></Label>
+              <Input className={inputCls} type="number" placeholder="Lo que dice tu banco hoy" value={form.saldoBanco ?? ""} onChange={e => setForm(f => ({ ...f, saldoBanco: e.target.value === "" ? null : Number(e.target.value) }))} />
             </div>
             <div>
               <Label className="text-xs">Meta de la cuenta (opcional)</Label>
@@ -232,6 +282,8 @@ export default function CuentasPage() {
             const saldo = c.saldoActual ?? c.saldoInicial ?? 0
             const esCredito = c.tipo === "Crédito"
             const saldoPositivo = esCredito ? saldo === 0 : saldo >= 0
+            const tieneBanco = c.saldoBanco !== null && c.saldoBanco !== undefined
+            const diferencia = tieneBanco ? c.saldoBanco! - saldo : null
             return (
               <div key={c.id} className={`flex items-center gap-4 p-4 rounded-xl border bg-white dark:bg-card transition-opacity ${!c.activa ? "opacity-50" : ""}`}>
                 {/* Color dot */}
@@ -246,19 +298,36 @@ export default function CuentasPage() {
                   <p className="text-xs text-muted-foreground">{c.tipo}{c.proposito ? ` · ${c.proposito}` : ""}</p>
                 </div>
 
-                {/* Saldo inicial */}
-                <div className="text-right hidden sm:block">
-                  <p className="text-xs text-muted-foreground">Inicial</p>
-                  <p className="text-sm">{fmt(c.saldoInicial)}</p>
-                </div>
-
-                {/* Saldo actual */}
+                {/* Saldo sistema (transacciones) */}
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">{esCredito ? "Deuda" : "Saldo actual"}</p>
+                  <p className="text-xs text-muted-foreground">{esCredito ? "Deuda" : "Sistema"}</p>
                   <p className={`text-sm font-bold ${saldoPositivo ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                     {fmt(saldo)}
                   </p>
                 </div>
+
+                {/* Saldo banco (referencia) */}
+                {tieneBanco && (
+                  <div className="text-right hidden sm:block">
+                    <p className="text-xs text-muted-foreground">Banco</p>
+                    <p className="text-sm font-semibold">{fmt(c.saldoBanco!)}</p>
+                  </div>
+                )}
+
+                {/* Diferencia (sutil) */}
+                {diferencia !== null && diferencia !== 0 && (
+                  <div className="text-right hidden sm:block">
+                    <p className="text-[10px] text-muted-foreground">{diferencia > 0 ? "sobrante" : "faltante"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {diferencia > 0 ? "+" : ""}{fmt(diferencia)}
+                    </p>
+                  </div>
+                )}
+                {diferencia === 0 && tieneBanco && (
+                  <div className="text-right hidden sm:block">
+                    <p className="text-[10px] text-muted-foreground">✓ cuadra</p>
+                  </div>
+                )}
 
                 {/* Meta */}
                 {c.metaDeCuenta && (
@@ -298,6 +367,35 @@ export default function CuentasPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Resumen mensual: ingresos vs gastos registrados (referencia) */}
+      {resumenMensual.some(m => m.ingresos > 0 || m.gastos > 0) && (
+        <div className="mt-8 bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 opacity-80">
+          <h2 className="font-medium text-xs text-muted-foreground mb-3">Registros mensuales (referencia)</h2>
+          <div className="space-y-2">
+            {resumenMensual.map(m => {
+              const neto = m.ingresos - m.gastos
+              const hayData = m.ingresos > 0 || m.gastos > 0
+              if (!hayData) return null
+              return (
+                <div key={m.key} className="flex items-center gap-3 text-sm">
+                  <span className="w-20 text-xs text-muted-foreground capitalize">{m.label}</span>
+                  <div className="flex-1 flex items-center gap-2">
+                    <TrendingUp size={12} className="text-green-500 shrink-0" />
+                    <span className="text-green-600 dark:text-green-400 text-xs font-medium w-24">{fmt(m.ingresos)}</span>
+                    <TrendingDown size={12} className="text-red-500 shrink-0" />
+                    <span className="text-red-600 dark:text-red-400 text-xs font-medium w-24">{fmt(m.gastos)}</span>
+                  </div>
+                  <span className={`text-xs font-bold w-28 text-right ${neto >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                    {neto >= 0 ? "+" : ""}{fmt(neto)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-3">Últimos 6 meses · Neto = Ingresos − Gastos registrados</p>
         </div>
       )}
     </div>

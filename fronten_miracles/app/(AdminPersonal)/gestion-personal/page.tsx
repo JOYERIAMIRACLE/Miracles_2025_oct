@@ -9,23 +9,22 @@ import {
 import {
   Star, ChevronRight, TrendingUp, TrendingDown,
   Wallet, CreditCard, DollarSign, Target,
-  Swords, Map, Package, BarChart3, CalendarDays, Trophy,
+  Swords, Map, Package, BarChart3, CalendarDays, ArrowLeftRight,
   Shield, Zap, Heart,
 } from "lucide-react"
 
-import { useGetPartidas }  from "@/api/partida-presupuesto/getPartidas"
-import { useGetActivos }   from "@/api/activo/getActivos"
-import { useGetPasivos }   from "@/api/pasivo/getPasivos"
-import { useGetPrestamos } from "@/api/prestamo-otorgado/getPrestamos"
-import { useGetRegistros } from "@/api/registro-mensual/getRegistros"
-import { useGetCuentas }   from "@/api/cuenta/getCuentas"
-import { useGetMetas }     from "@/api/meta-ahorro/getMetas"
+import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
+import { useGetActivos }       from "@/api/activo/getActivos"
+import { useGetPasivos }       from "@/api/pasivo/getPasivos"
+import { useGetPrestamos }     from "@/api/prestamo-otorgado/getPrestamos"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { useGetCuentas }       from "@/api/cuenta/getCuentas"
+import { useGetMetas }         from "@/api/meta-ahorro/getMetas"
 
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
 import { ActivoType }             from "@/types/activo"
 import { PasivoType }             from "@/types/pasivo"
 import { PrestamoOtorgadoType }   from "@/types/prestamo-otorgado"
-import { RegistroMensualType }    from "@/types/registro-mensual"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n: number) =>
@@ -250,27 +249,26 @@ export default function GestionPersonalPage() {
   const mesActual  = hoy.getMonth() + 1
   const anioActual = hoy.getFullYear()
 
-  const { partidas:  dataPartidas, loading: loadPart  } = useGetPartidas()
-  const { activos:   dataActivos,  loading: loadAct   } = useGetActivos()
-  const { pasivos:   dataPasivos,  loading: loadPas   } = useGetPasivos()
-  const { prestamos: dataPrest,    loading: loadPrest  } = useGetPrestamos()
-  const { registros: dataRegs,     loading: loadRegs   } = useGetRegistros()
-  const { cuentas:   dataCuentas,  loading: loadCuent  } = useGetCuentas()
-  const { metas:     dataMetas,    loading: loadMetas  } = useGetMetas()
+  const { partidas:       dataPartidas, loading: loadPart  } = useGetPartidas()
+  const { activos:        dataActivos,  loading: loadAct   } = useGetActivos()
+  const { pasivos:        dataPasivos,  loading: loadPas   } = useGetPasivos()
+  const { prestamos:      dataPrest,    loading: loadPrest  } = useGetPrestamos()
+  const { transacciones:  dataTx,       loading: loadTx     } = useGetTransacciones()
+  const { cuentas:        dataCuentas,  loading: loadCuent  } = useGetCuentas()
+  const { metas:          dataMetas,    loading: loadMetas  } = useGetMetas()
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
   const [activos,   setActivos]   = useState<ActivoType[]>([])
   const [pasivos,   setPasivos]   = useState<PasivoType[]>([])
   const [prestamos, setPrestamos] = useState<PrestamoOtorgadoType[]>([])
-  const [registros, setRegistros] = useState<RegistroMensualType[]>([])
 
   useEffect(() => { setPartidas(dataPartidas ?? []) }, [dataPartidas])
   useEffect(() => { setActivos(dataActivos   ?? []) }, [dataActivos])
   useEffect(() => { setPasivos(dataPasivos   ?? []) }, [dataPasivos])
   useEffect(() => { setPrestamos(dataPrest   ?? []) }, [dataPrest])
-  useEffect(() => { setRegistros(dataRegs    ?? []) }, [dataRegs])
 
-  const loading = loadPart || loadAct || loadPas || loadPrest || loadRegs || loadCuent || loadMetas
+  const loading = loadPart || loadAct || loadPas || loadPrest || loadTx || loadCuent || loadMetas
+  const transacciones = dataTx ?? []
 
   const cuentas = dataCuentas ?? []
   const metas   = dataMetas ?? []
@@ -286,11 +284,12 @@ export default function GestionPersonalPage() {
     .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso")
     .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
-  const registrosMes = registros.filter(r => r.mes === mesActual && r.anio === anioActual)
-  const ingresoVariableMes = registrosMes.filter(r => r.tipo === "ingreso_variable").reduce((s, r) => s + (r.monto ?? 0), 0)
-  const gastoExtraMes      = registrosMes.filter(r => r.tipo === "gasto_extra").reduce((s, r) => s + (r.monto ?? 0), 0)
+  const mesStr = `${anioActual}-${String(mesActual).padStart(2, "0")}`
+  const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesStr)
+  const ingresoRealMes = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0)
+  const gastoRealMes   = txMes.filter(tx => tx.tipo === "gasto").reduce((s, tx) => s + Number(tx.monto), 0)
 
-  const flujoNeto = (ingresoMensual + ingresoVariableMes) - (egresoMensual + gastoExtraMes)
+  const flujoNeto = (ingresoMensual + ingresoRealMes) - (egresoMensual + gastoRealMes)
 
   // Cuentas
   const cuentasActivas = cuentas.filter(c => c.activa)
@@ -300,8 +299,8 @@ export default function GestionPersonalPage() {
   const deudaTotal     = cuentasCredito.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
   const balanceActual  = disponible - deudaTotal
 
-  // Gasto del mes (presupuestado + extras)
-  const gastoDelMes = egresoMensual + gastoExtraMes
+  // Gasto del mes (presupuestado + real)
+  const gastoDelMes = egresoMensual + gastoRealMes
 
   // Balance proyectado: balance actual + ingresos restantes del mes - egresos restantes
   const diasMes = new Date(anioActual, mesActual, 0).getDate()
@@ -346,22 +345,29 @@ export default function GestionPersonalPage() {
 
   // ─── Monthly chart data (ultimos 6 meses) ──────────────────────────────
   const chartData = useMemo(() => {
-    const months: { mes: number; anio: number; label: string }[] = []
+    const months: { mes: number; anio: number; label: string; key: string }[] = []
     for (let i = 5; i >= 0; i--) {
       const d = new Date(anioActual, mesActual - 1 - i, 1)
-      months.push({ mes: d.getMonth() + 1, anio: d.getFullYear(), label: MESES_CORTO[d.getMonth()] })
+      months.push({
+        mes: d.getMonth() + 1,
+        anio: d.getFullYear(),
+        label: MESES_CORTO[d.getMonth()],
+        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      })
     }
 
     const ingresos = months.map(m => {
-      const regs = registros.filter(r => r.mes === m.mes && r.anio === m.anio && r.tipo === "ingreso_variable")
-      const extra = regs.reduce((s, r) => s + (r.monto ?? 0), 0)
-      return { name: m.label, value: Math.round(ingresoMensual + extra) }
+      const txIng = transacciones
+        .filter(tx => tx.fecha.slice(0, 7) === m.key && tx.tipo === "ingreso")
+        .reduce((s, tx) => s + Number(tx.monto), 0)
+      return { name: m.label, value: Math.round(ingresoMensual + txIng) }
     })
 
     const gastos = months.map(m => {
-      const regs = registros.filter(r => r.mes === m.mes && r.anio === m.anio && r.tipo === "gasto_extra")
-      const extra = regs.reduce((s, r) => s + (r.monto ?? 0), 0)
-      return { name: m.label, value: Math.round(egresoMensual + extra) }
+      const txGas = transacciones
+        .filter(tx => tx.fecha.slice(0, 7) === m.key && tx.tipo === "gasto")
+        .reduce((s, tx) => s + Number(tx.monto), 0)
+      return { name: m.label, value: Math.round(egresoMensual + txGas) }
     })
 
     const balance = months.map((m, i) => ({
@@ -370,7 +376,7 @@ export default function GestionPersonalPage() {
     }))
 
     return { ingresos, gastos, balance }
-  }, [registros, ingresoMensual, egresoMensual, mesActual, anioActual])
+  }, [transacciones, ingresoMensual, egresoMensual, mesActual, anioActual])
 
   // Modules
   const modules = [
@@ -378,8 +384,8 @@ export default function GestionPersonalPage() {
     { name: "Misiones",    description: "Metas de ahorro",           icon: Map,          href: "/gestion-personal/metas",            color: "amber"  },
     { name: "Inventario",  description: "Cuentas y cartera",         icon: Package,      href: "/gestion-personal/cuentas",          color: "green"  },
     { name: "Stats",       description: "Patrimonio y net worth",    icon: BarChart3,    href: "/gestion-personal/patrimonio",       color: "purple" },
-    { name: "Calendario",  description: "Eventos y pagos",           icon: CalendarDays, href: "/gestion-personal/calendario",       color: "blue"   },
-    { name: "Registro",    description: "Log de ingresos/gastos",    icon: Trophy,       href: "/gestion-personal/registro-mensual", color: "pink"   },
+    { name: "Calendario",     description: "Eventos y pagos",         icon: CalendarDays,  href: "/gestion-personal/calendario",      color: "blue"   },
+    { name: "Transacciones", description: "Movimientos y saldos",  icon: ArrowLeftRight, href: "/gestion-personal/transacciones", color: "cyan"   },
   ]
 
   // ─── RENDER ─────────────────────────────────────────────────────────────
@@ -501,8 +507,8 @@ export default function GestionPersonalPage() {
               <CategoryBar label="Necesidades" monto={necesidades} total={egresoMensual} color="bg-gradient-to-r from-cyan-500 to-blue-500" />
               <CategoryBar label="Prescindibles" monto={prescindibles} total={egresoMensual} color="bg-gradient-to-r from-amber-500 to-orange-500" />
               <CategoryBar label="Ahorro" monto={ahorroMensual} total={egresoMensual} color="bg-gradient-to-r from-emerald-400 to-green-500" />
-              {gastoExtraMes > 0 && (
-                <CategoryBar label="Gastos Extra (mes)" monto={gastoExtraMes} total={egresoMensual} color="bg-gradient-to-r from-red-500 to-rose-500" />
+              {gastoRealMes > 0 && (
+                <CategoryBar label="Gastos Reales (mes)" monto={gastoRealMes} total={egresoMensual} color="bg-gradient-to-r from-red-500 to-rose-500" />
               )}
             </div>
           )}

@@ -3,14 +3,12 @@ import { useState } from "react"
 import { useGetEventos } from "@/api/evento-calendario/getEventos"
 import { createEvento } from "@/api/evento-calendario/createEvento"
 import { deleteEvento } from "@/api/evento-calendario/deleteEvento"
-import { createRegistro } from "@/api/registro-mensual/createRegistro"
-import { updateRegistro } from "@/api/registro-mensual/updateRegistro"
-import { useGetRegistros } from "@/api/registro-mensual/getRegistros"
+import { createTransaccion } from "@/api/transaccion/createTransaccion"
+import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
-import { updateCuenta } from "@/api/cuenta/updateCuenta"
 import { EventoCalendarioType, EventoCalendarioPayload, EventoTipo, CategoriaEvento } from "@/types/evento-calendario"
-import { RegistroMensualType } from "@/types/registro-mensual"
-import { CategoriaPresupuesto } from "@/types/partida-presupuesto"
+import { TipoTransaccion, CategoriaTransaccion } from "@/types/transaccion"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { ChevronLeft, ChevronRight, Plus, X, Trash2, Wallet } from "lucide-react"
@@ -27,24 +25,26 @@ const CATEGORIAS_EGRESO: CategoriaEvento[] = [
   "educación", "ahorro", "inversión",
 ]
 
-// Calcula el nuevo saldo dado el tipo de cuenta, tipo de evento y monto
-function calcularNuevoSaldo(cuentaTipo: string, saldoBase: number, tipoEvento: EventoTipo, monto: number, revertir = false): number {
-  const esCredito = cuentaTipo === "Crédito"
-  let delta: number
-  if (esCredito) {
-    // Crédito: pago = más deuda (saldo sube), ingreso/abono = deuda baja
-    delta = tipoEvento === "pago" ? monto : -monto
-  } else {
-    // Efectivo / Débito: pago = gasto (baja), ingreso = entra (sube)
-    delta = tipoEvento === "pago" ? -monto : monto
-  }
-  return saldoBase + (revertir ? -delta : delta)
+// Mapeo de categorías calendario → transaccion (sin acentos)
+const CAT_MAP: Record<string, CategoriaTransaccion> = {
+  "vivienda": "vivienda",
+  "alimentación": "alimentacion",
+  "transporte": "transporte",
+  "servicios": "servicios",
+  "gastos_personales": "otro",
+  "entretenimiento": "entretenimiento",
+  "salud": "salud",
+  "ropa": "ropa",
+  "educación": "educacion",
+  "ahorro": "ahorro",
+  "inversión": "inversion",
+  "ingreso": "sueldo",
 }
 
 export default function CalendarioPage() {
   const { eventos, setEventos } = useGetEventos()
-  const { registros, setRegistros } = useGetRegistros()
-  const { cuentas, setCuentas } = useGetCuentas()
+  const { transacciones, setTransacciones } = useGetTransacciones()
+  const { cuentas } = useGetCuentas()
   const [mesActual, setMesActual] = useState(new Date())
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null)
   const [modalAgregar, setModalAgregar] = useState(false)
@@ -52,11 +52,31 @@ export default function CalendarioPage() {
     titulo: "", monto: 0, tipo: "pago", tipoPago: null, cuenta: null, fecha: "", descripcion: "", recurrente: false, categoria: null,
   })
   const [guardando, setGuardando] = useState(false)
+  const [cuentaDestino, setCuentaDestino] = useState<string | null>(null)
+
+  // Categorías que son transferencias (mueven dinero a otra cuenta, no son gasto)
+  const esTransferencia = form.tipo === "pago" && (form.categoria === "ahorro" || form.categoria === "inversión")
 
   const diasDelMes = eachDayOfInterval({ start: startOfMonth(mesActual), end: endOfMonth(mesActual) })
   const primerDia = getDay(startOfMonth(mesActual))
 
   const eventosDelDia = (dia: Date) => eventos.filter(e => isSameDay(new Date(e.fecha + "T00:00:00"), dia))
+
+  // Transacciones que NO vinieron del calendario (sin evento que coincida)
+  const txSueltas = (dia: Date) => {
+    const diaStr = format(dia, "yyyy-MM-dd")
+    return transacciones.filter(tx => {
+      if (!tx.fecha) return false
+      if (tx.fecha.slice(0, 10) !== diaStr) return false
+      // Excluir si hay un evento que coincide (fue creada desde calendario)
+      const tieneEvento = eventos.some(ev =>
+        ev.titulo === tx.descripcion &&
+        Number(ev.monto) === Number(tx.monto) &&
+        ev.fecha === diaStr
+      )
+      return !tieneEvento
+    })
+  }
 
   const totalIngresos = eventos
     .filter(e => e.tipo === "ingreso" && new Date(e.fecha + "T00:00:00").getMonth() === mesActual.getMonth() && new Date(e.fecha + "T00:00:00").getFullYear() === mesActual.getFullYear())
@@ -73,78 +93,56 @@ export default function CalendarioPage() {
 
   const handleAbrirFormulario = () => {
     setForm({ titulo: "", monto: 0, tipo: "pago", tipoPago: null, cuenta: null, fecha: diaSeleccionado ? format(diaSeleccionado, "yyyy-MM-dd") : "", descripcion: "", recurrente: false, categoria: null })
+    setCuentaDestino(null)
     setModalAgregar(true)
-  }
-
-  // Sincroniza el registro mensual de una categoría sumando todos los eventos del mes
-  const sincronizarRegistro = async (categoria: CategoriaEvento, mes: number, anio: number, eventosActuales: EventoCalendarioType[]) => {
-    const totalCategoria = eventosActuales
-      .filter(e => e.categoria === categoria && new Date(e.fecha + "T00:00:00").getMonth() + 1 === mes && new Date(e.fecha + "T00:00:00").getFullYear() === anio)
-      .reduce((acc, e) => acc + e.monto, 0)
-
-    const esIngreso = categoria === "ingreso"
-    const registroExistente = registros.find(r => r.categoria === categoria && r.mes === mes && r.anio === anio)
-
-    const payload = {
-      descripcion: `${categoria} — calendario`,
-      tipo: esIngreso ? "ingreso_variable" as const : "gasto_extra" as const,
-      monto: totalCategoria,
-      mes,
-      anio,
-      categoria: categoria as CategoriaPresupuesto,
-      notas: "Sincronizado desde calendario",
-    }
-
-    let saved: RegistroMensualType
-    if (registroExistente) {
-      saved = await updateRegistro(registroExistente.documentId, payload)
-      setRegistros(prev => prev.map(r => r.documentId === saved.documentId ? saved : r))
-    } else {
-      saved = await createRegistro(payload)
-      setRegistros(prev => [...prev, saved])
-    }
-  }
-
-  const actualizarSaldoCuenta = async (cuentaDocumentId: string, cuentaTipo: string, saldoBase: number, tipoEvento: EventoTipo, monto: number, revertir = false) => {
-    const nuevoSaldo = calcularNuevoSaldo(cuentaTipo, saldoBase, tipoEvento, monto, revertir)
-    const actualizada = await updateCuenta(cuentaDocumentId, { saldoActual: nuevoSaldo })
-    setCuentas(prev => prev.map(c => c.documentId === actualizada.documentId ? actualizada : c))
   }
 
   const handleGuardar = async () => {
     if (!form.titulo || !form.fecha || !form.monto) return
     setGuardando(true)
     try {
+      // 1. Crear el evento en calendario
       const nuevo = await createEvento(form)
-      // Re-fetch the evento with populated cuenta (the response may not include it)
-      const eventosActualizados = [...eventos, nuevo]
-      setEventos(eventosActualizados)
+      setEventos(prev => [...prev, nuevo])
       setModalAgregar(false)
 
-      const promises: Promise<void>[] = []
-
-      // Actualiza saldo de la cuenta seleccionada
+      // 2. Crear transacción automáticamente si tiene cuenta
       if (form.cuenta) {
-        const cuentaObj = cuentas.find(c => c.documentId === form.cuenta)
-        if (cuentaObj) {
-          promises.push(actualizarSaldoCuenta(
-            cuentaObj.documentId,
-            cuentaObj.tipo ?? "",
-            cuentaObj.saldoActual ?? cuentaObj.saldoInicial ?? 0,
-            form.tipo,
-            form.monto,
-          ))
+        const catTx = form.categoria ? CAT_MAP[form.categoria] ?? "otro" : "otro"
+
+        let tipoTx: TipoTransaccion
+        let origen: string | null = null
+        let destino: string | null = null
+
+        if (form.tipo === "ingreso") {
+          tipoTx = "ingreso"
+          destino = form.cuenta
+        } else if (esTransferencia && cuentaDestino) {
+          // Ahorro/inversión con destino = transferencia
+          tipoTx = "transferencia"
+          origen = form.cuenta
+          destino = cuentaDestino
+        } else {
+          tipoTx = "gasto"
+          origen = form.cuenta
         }
+
+        const txPayload = {
+          descripcion: form.titulo,
+          tipo: tipoTx,
+          monto: form.monto,
+          fecha: new Date(form.fecha).toISOString(),
+          categoria: catTx,
+          notas: form.descripcion || `Desde calendario`,
+          cuentaOrigen: origen,
+          cuentaDestino: destino,
+        }
+
+        const txNueva = await createTransaccion(txPayload)
+        setTransacciones(prev => [txNueva, ...prev])
       }
 
-      // Sincroniza el registro mensual si tiene categoría
-      if (form.categoria) {
-        const fechaEvento = new Date(form.fecha)
-        promises.push(sincronizarRegistro(form.categoria, fechaEvento.getMonth() + 1, fechaEvento.getFullYear(), eventosActualizados))
-      }
-
-      await Promise.all(promises)
-      toast.success("Evento guardado" + (form.cuenta || form.categoria ? " y registros actualizados" : ""))
+      toast.success("Evento guardado" + (form.cuenta ? " y transacción creada" : ""))
     } catch (e) {
       console.error(e)
       toast.error("Error al guardar")
@@ -156,33 +154,20 @@ export default function CalendarioPage() {
   const handleEliminar = async (evento: EventoCalendarioType) => {
     try {
       await deleteEvento(evento.documentId)
-      const eventosActualizados = eventos.filter(e => e.documentId !== evento.documentId)
-      setEventos(eventosActualizados)
+      setEventos(prev => prev.filter(e => e.documentId !== evento.documentId))
 
-      const promises: Promise<void>[] = []
-
-      // Revierte el saldo de la cuenta relacionada
-      if (evento.cuenta) {
-        const cuentaObj = cuentas.find(c => c.documentId === evento.cuenta!.documentId)
-        const saldoBase = cuentaObj?.saldoActual ?? cuentaObj?.saldoInicial ?? evento.cuenta.saldoActual ?? evento.cuenta.saldoInicial ?? 0
-        promises.push(actualizarSaldoCuenta(
-          evento.cuenta.documentId,
-          evento.cuenta.tipo,
-          saldoBase,
-          evento.tipo,
-          evento.monto,
-          true,
-        ))
+      // Buscar y eliminar transacción asociada (misma descripción, monto y fecha)
+      const txAsociada = transacciones.find(tx =>
+        tx.descripcion === evento.titulo &&
+        Number(tx.monto) === evento.monto &&
+        tx.fecha.slice(0, 10) === evento.fecha
+      )
+      if (txAsociada) {
+        await deleteTransaccion(txAsociada.documentId)
+        setTransacciones(prev => prev.filter(t => t.documentId !== txAsociada.documentId))
       }
 
-      // Re-sincroniza el registro mensual si tenía categoría
-      if (evento.categoria) {
-        const fechaEvento = new Date(evento.fecha)
-        promises.push(sincronizarRegistro(evento.categoria, fechaEvento.getMonth() + 1, fechaEvento.getFullYear(), eventosActualizados))
-      }
-
-      await Promise.all(promises)
-      toast.success("Evento eliminado" + (evento.cuenta || evento.categoria ? " y registros actualizados" : ""))
+      toast.success("Evento eliminado" + (txAsociada ? " y transacción revertida" : ""))
     } catch (e) {
       console.error(e)
       toast.error("Error al eliminar")
@@ -287,7 +272,15 @@ export default function CalendarioPage() {
                         {e.titulo}
                       </div>
                     ))}
-                    {evs.length > 2 && <div className="text-[10px] text-muted-foreground">+{evs.length - 2} más</div>}
+                    {txSueltas(dia).slice(0, evs.length >= 2 ? 0 : 2 - evs.length).map(tx => (
+                      <div key={`tx-${tx.id}`} className={`text-[10px] rounded px-1 truncate border border-dashed ${
+                        tx.tipo === "ingreso" ? "border-green-400 text-green-600 dark:text-green-400"
+                        : tx.tipo === "transferencia" ? "border-amber-400 text-amber-600 dark:text-amber-400"
+                        : "border-red-400 text-red-600 dark:text-red-400"}`}>
+                        {tx.descripcion}
+                      </div>
+                    ))}
+                    {(evs.length + txSueltas(dia).length) > 2 && <div className="text-[10px] text-muted-foreground">+{evs.length + txSueltas(dia).length - 2} más</div>}
                   </div>
                 </button>
               )
@@ -330,21 +323,7 @@ export default function CalendarioPage() {
                     </select>
                   </div>
                   <div>
-                    <Label className="text-xs">Cuenta {form.cuenta && <span className="text-indigo-500">→ actualiza saldo</span>}</Label>
-                    <select
-                      title="Cuenta"
-                      className="w-full h-7 text-sm border rounded px-2 bg-background text-foreground"
-                      value={form.cuenta ?? ""}
-                      onChange={e => setForm(f => ({ ...f, cuenta: e.target.value || null }))}
-                    >
-                      <option value="">— Sin cuenta —</option>
-                      {cuentas.filter(c => c.activa).map(c => (
-                        <option key={c.documentId} value={c.documentId}>{c.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Categoría {form.categoria && <span className="text-indigo-500">→ sincroniza registro mensual</span>}</Label>
+                    <Label className="text-xs">Categoría</Label>
                     <select
                       title="Categoría del evento"
                       className="w-full h-7 text-sm border rounded px-2 bg-background text-foreground"
@@ -358,6 +337,37 @@ export default function CalendarioPage() {
                       }
                     </select>
                   </div>
+                  <div>
+                    <Label className="text-xs">{esTransferencia ? "Cuenta origen" : "Cuenta"} <span className="text-cyan-500">→ crea transacción</span></Label>
+                    <select
+                      title="Cuenta"
+                      className="w-full h-7 text-sm border rounded px-2 bg-background text-foreground"
+                      value={form.cuenta ?? ""}
+                      onChange={e => setForm(f => ({ ...f, cuenta: e.target.value || null }))}
+                    >
+                      <option value="">— Sin cuenta —</option>
+                      {cuentas.filter(c => c.activa).map(c => (
+                        <option key={c.documentId} value={c.documentId}>{c.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* Cuenta destino para transferencias (ahorro/inversión) */}
+                  {esTransferencia && form.cuenta && (
+                    <div>
+                      <Label className="text-xs">Cuenta destino <span className="text-amber-500">→ transferencia</span></Label>
+                      <select
+                        title="Cuenta destino"
+                        className="w-full h-7 text-sm border rounded px-2 bg-background text-foreground"
+                        value={cuentaDestino ?? ""}
+                        onChange={e => setCuentaDestino(e.target.value || null)}
+                      >
+                        <option value="">— Seleccionar destino —</option>
+                        {cuentas.filter(c => c.activa && c.documentId !== form.cuenta).map(c => (
+                          <option key={c.documentId} value={c.documentId}>{c.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div>
                     <Label className="text-xs">Descripción (opcional)</Label>
                     <Input className="h-7 text-sm" placeholder="Notas..." value={form.descripcion ?? ""} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} />
@@ -373,7 +383,7 @@ export default function CalendarioPage() {
               )}
 
               <div className="space-y-2">
-                {eventosDelDia(diaSeleccionado).length === 0 && !modalAgregar && (
+                {eventosDelDia(diaSeleccionado).length === 0 && txSueltas(diaSeleccionado).length === 0 && !modalAgregar && (
                   <p className="text-sm text-muted-foreground text-center py-4">Sin eventos este día</p>
                 )}
                 {eventosDelDia(diaSeleccionado).map(evento => (
@@ -392,6 +402,29 @@ export default function CalendarioPage() {
                     <button type="button" title="Eliminar evento" onClick={() => handleEliminar(evento)} className="text-muted-foreground hover:text-red-500 transition-colors">
                       <Trash2 size={14} />
                     </button>
+                  </div>
+                ))}
+                {/* Transacciones creadas fuera del calendario */}
+                {txSueltas(diaSeleccionado).map(tx => (
+                  <div key={`tx-${tx.id}`} className={`flex items-center justify-between p-2 rounded-lg border border-dashed ${
+                    tx.tipo === "ingreso" ? "border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/20"
+                    : tx.tipo === "transferencia" ? "border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20"
+                    : "border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-950/20"}`}>
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm font-medium">{tx.descripcion}</p>
+                        <span className="text-[9px] bg-muted text-muted-foreground rounded px-1">tx</span>
+                      </div>
+                      <p className={`text-xs font-bold ${
+                        tx.tipo === "ingreso" ? "text-green-600 dark:text-green-400"
+                        : tx.tipo === "transferencia" ? "text-amber-600 dark:text-amber-400"
+                        : "text-red-600 dark:text-red-400"}`}>
+                        {tx.tipo === "ingreso" ? "+" : tx.tipo === "transferencia" ? "↔" : "-"}${Number(tx.monto).toLocaleString()}
+                      </p>
+                      {tx.cuentaOrigen && <p className="text-xs text-purple-500">{tx.cuentaOrigen.nombre}{tx.cuentaDestino ? ` → ${tx.cuentaDestino.nombre}` : ""}</p>}
+                      {!tx.cuentaOrigen && tx.cuentaDestino && <p className="text-xs text-purple-500">{tx.cuentaDestino.nombre}</p>}
+                      {tx.categoria && <p className="text-xs text-indigo-500 capitalize">{tx.categoria}</p>}
+                    </div>
                   </div>
                 ))}
               </div>

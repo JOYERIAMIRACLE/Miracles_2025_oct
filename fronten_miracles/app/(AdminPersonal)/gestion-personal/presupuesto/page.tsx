@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Plus, Edit, Trash2, X, Loader2 } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { Plus, Edit, Trash2, X, Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from "lucide-react"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { toast } from "sonner"
@@ -9,6 +10,7 @@ import { useGetPartidas } from "@/api/partida-presupuesto/getPartidas"
 import { createPartida } from "@/api/partida-presupuesto/createPartida"
 import { updatePartida } from "@/api/partida-presupuesto/updatePartida"
 import { deletePartida } from "@/api/partida-presupuesto/deletePartida"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import {
   PartidaPresupuestoType,
   PartidaPresupuestoPayload,
@@ -90,16 +92,54 @@ const TIPO_PAGO_COLORS: Record<string, string> = {
 const inputCls = "w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-zinc-400"
 const selectCls = `${inputCls} cursor-pointer`
 
+// ─── Mapeo categorías presupuesto → transaccion ──────────────────────────────
+// Las categorías del presupuesto tienen acentos, las de transacción no
+const PRESUPUESTO_A_TRANSACCION: Record<string, string[]> = {
+  "vivienda":          ["vivienda"],
+  "alimentación":      ["alimentacion"],
+  "transporte":        ["transporte"],
+  "servicios":         ["servicios"],
+  "gastos_personales": ["otro"],
+  "entretenimiento":   ["entretenimiento"],
+  "salud":             ["salud"],
+  "ropa":              ["ropa"],
+  "educación":         ["educacion"],
+  "ahorro":            ["ahorro"],
+  "inversión":         ["inversion"],
+  "ingreso":           ["sueldo", "freelance", "venta"],
+}
+
+const BAR_COLORS: Record<string, { bar: string; bg: string }> = {
+  "vivienda":          { bar: "bg-blue-500",    bg: "bg-blue-500/10"    },
+  "alimentación":      { bar: "bg-amber-500",   bg: "bg-amber-500/10"   },
+  "transporte":        { bar: "bg-violet-500",  bg: "bg-violet-500/10"  },
+  "servicios":         { bar: "bg-cyan-500",     bg: "bg-cyan-500/10"    },
+  "gastos_personales": { bar: "bg-pink-500",    bg: "bg-pink-500/10"    },
+  "entretenimiento":   { bar: "bg-orange-500",  bg: "bg-orange-500/10"  },
+  "salud":             { bar: "bg-red-500",     bg: "bg-red-500/10"     },
+  "ropa":              { bar: "bg-fuchsia-500", bg: "bg-fuchsia-500/10" },
+  "educación":         { bar: "bg-teal-500",    bg: "bg-teal-500/10"    },
+  "ahorro":            { bar: "bg-emerald-500", bg: "bg-emerald-500/10" },
+  "inversión":         { bar: "bg-indigo-500",  bg: "bg-indigo-500/10"  },
+  "ingreso":           { bar: "bg-green-500",   bg: "bg-green-500/10"   },
+}
+
 // ─── Página ────────────────────────────────────────────────────────────────────
 export default function PresupuestoPage() {
   // HOOKS
   const { partidas: dataStrapi, loading, error } = useGetPartidas()
+  const { transacciones } = useGetTransacciones()
   const [partidas,       setPartidas]       = useState<PartidaPresupuestoType[]>([])
   const [modalOpen,      setModalOpen]      = useState(false)
   const [editingPartida, setEditingPartida] = useState<PartidaPresupuestoType | null>(null)
   const [form,           setForm]           = useState<PartidaPresupuestoPayload>(EMPTY_FORM)
   const [saving,         setSaving]         = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  // Selector de mes para presupuesto vs real
+  const hoy = new Date()
+  const mesDefault = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`
+  const [mesSeleccionado, setMesSeleccionado] = useState(mesDefault)
 
   useEffect(() => { setPartidas(dataStrapi ?? []) }, [dataStrapi])
 
@@ -124,6 +164,48 @@ export default function PresupuestoPage() {
     },
     { dia: 0, semana: 0, quincena: 0, mensual: 0, anual: 0 }
   )
+
+  // ─── Presupuesto vs Real ────────────────────────────────────────────────
+  const mesLabelObj = new Date(mesSeleccionado + "-15")
+  const mesLabel = mesLabelObj.toLocaleString("es-MX", { month: "long", year: "numeric" })
+  const esMesActual = mesSeleccionado === mesDefault
+
+  const comparativa = useMemo(() => {
+    const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
+
+    return CATEGORIAS.filter(cat => cat !== "ingreso").map(cat => {
+      // Presupuestado mensual
+      const partidasCat = partidas.filter(p => p.activo !== false && p.categoria === cat)
+      const presupuestado = partidasCat.reduce((s, p) => {
+        const f = calcFrecuencias(p.monto ?? 0, p.frecuencia)
+        return s + f.mensual
+      }, 0)
+
+      // Gastado real del mes (solo gastos, no ingresos)
+      const catsTx = PRESUPUESTO_A_TRANSACCION[cat] ?? []
+      const gastado = txMes
+        .filter(tx => tx.tipo === "gasto" && catsTx.includes(tx.categoria ?? ""))
+        .reduce((s, tx) => s + Number(tx.monto), 0)
+
+      const pct = presupuestado > 0 ? (gastado / presupuestado) * 100 : 0
+      const excedido = pct > 100
+
+      return { cat, presupuestado, gastado, pct, excedido }
+    }).filter(c => c.presupuestado > 0 || c.gastado > 0)
+  }, [partidas, transacciones, mesSeleccionado])
+
+  // Totales de ingreso presupuestado vs real
+  const comparativaIngreso = useMemo(() => {
+    const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
+    const partidasIngreso = partidas.filter(p => p.activo !== false && (p.categoria === "ingreso" || p.tipo === "ingreso"))
+    const presupuestado = partidasIngreso.reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
+    const real = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0)
+    return { presupuestado, real, pct: presupuestado > 0 ? (real / presupuestado) * 100 : 0 }
+  }, [partidas, transacciones, mesSeleccionado])
+
+  const totalPresupuestadoGasto = comparativa.reduce((s, c) => s + c.presupuestado, 0)
+  const totalGastadoReal = comparativa.reduce((s, c) => s + c.gastado, 0)
+  const pctGastoTotal = totalPresupuestadoGasto > 0 ? (totalGastadoReal / totalPresupuestadoGasto) * 100 : 0
 
   // ─── CRUD ─────────────────────────────────────────────────────────────────
   const handleNuevo = () => { setEditingPartida(null); setForm(EMPTY_FORM); setModalOpen(true) }
@@ -182,6 +264,171 @@ export default function PresupuestoPage() {
         <Button onClick={handleNuevo} className="h-9 gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-full">
           <Plus className="h-4 w-4" /> Nueva Partida
         </Button>
+      </div>
+
+      {/* ── Presupuesto vs Real ──────────────────────────────────────────── */}
+      <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5 backdrop-blur-sm space-y-5">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Presupuesto vs Real</h2>
+              <p className="text-[10px] text-slate-500 mt-0.5 capitalize">{mesLabel}</p>
+            </div>
+            {/* Selector de mes */}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date(mesSeleccionado + "-15")
+                  d.setMonth(d.getMonth() - 1)
+                  setMesSeleccionado(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
+                }}
+                className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors"
+              >
+                ←
+              </button>
+              <input
+                type="month"
+                title="Seleccionar mes"
+                value={mesSeleccionado}
+                onChange={e => setMesSeleccionado(e.target.value)}
+                className="h-7 text-xs bg-slate-800 border border-slate-700 rounded-md px-2 text-slate-300"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date(mesSeleccionado + "-15")
+                  d.setMonth(d.getMonth() + 1)
+                  setMesSeleccionado(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
+                }}
+                className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors"
+              >
+                →
+              </button>
+              {!esMesActual && (
+                <button
+                  type="button"
+                  onClick={() => setMesSeleccionado(mesDefault)}
+                  className="text-[10px] text-cyan-400 hover:text-cyan-300 ml-1"
+                >
+                  Hoy
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-[10px]">
+            <span className="text-slate-500">Presupuestado: <span className="text-slate-300 font-semibold">{fmt(totalPresupuestadoGasto)}</span></span>
+            <span className="text-slate-500">Gastado: <span className={`font-semibold ${pctGastoTotal > 100 ? "text-red-400" : "text-emerald-400"}`}>{fmt(totalGastadoReal)}</span></span>
+            <span className={`px-2 py-0.5 rounded-full font-semibold ${pctGastoTotal > 100 ? "bg-red-500/10 text-red-400" : pctGastoTotal > 80 ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+              {Math.round(pctGastoTotal)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Resumen cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Ingresos */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/30">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-[10px] text-slate-500 uppercase font-medium">Ingresos</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-lg font-bold text-emerald-400">{fmt(comparativaIngreso.real)}</p>
+                <p className="text-[10px] text-slate-600">de {fmt(comparativaIngreso.presupuestado)}</p>
+              </div>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${comparativaIngreso.pct >= 100 ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
+                {Math.round(comparativaIngreso.pct)}%
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Gastos */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/30">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+              <span className="text-[10px] text-slate-500 uppercase font-medium">Gastos</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-lg font-bold text-red-400">{fmt(totalGastadoReal)}</p>
+                <p className="text-[10px] text-slate-600">de {fmt(totalPresupuestadoGasto)}</p>
+              </div>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${pctGastoTotal > 100 ? "bg-red-500/10 text-red-400" : pctGastoTotal > 80 ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                {Math.round(pctGastoTotal)}%
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Saldo */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/30">
+            <div className="flex items-center gap-2 mb-2">
+              {totalPresupuestadoGasto - totalGastadoReal >= 0
+                ? <CheckCircle className="h-3.5 w-3.5 text-cyan-400" />
+                : <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+              }
+              <span className="text-[10px] text-slate-500 uppercase font-medium">Disponible</span>
+            </div>
+            <div>
+              <p className={`text-lg font-bold ${totalPresupuestadoGasto - totalGastadoReal >= 0 ? "text-cyan-400" : "text-red-400"}`}>
+                {fmt(totalPresupuestadoGasto - totalGastadoReal)}
+              </p>
+              <p className="text-[10px] text-slate-600">restante del presupuesto</p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Barras por categoría */}
+        <div className="space-y-3">
+          {comparativa.map((c, i) => {
+            const colors = BAR_COLORS[c.cat] ?? { bar: "bg-slate-500", bg: "bg-slate-500/10" }
+            const pctClamped = Math.min(c.pct, 100)
+            const pctExceso = c.pct > 100 ? Math.min(c.pct - 100, 100) : 0
+
+            return (
+              <motion.div key={c.cat} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-slate-300 capitalize">{CAT_LABEL[c.cat]?.replace(/^\d+\.\s*/, "") ?? c.cat}</span>
+                  <div className="flex items-center gap-3 text-[10px]">
+                    <span className="text-slate-600">{fmt(c.gastado)} / {fmt(c.presupuestado)}</span>
+                    <span className={`font-semibold ${c.excedido ? "text-red-400" : c.pct > 80 ? "text-amber-400" : "text-emerald-400"}`}>
+                      {Math.round(c.pct)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="h-3 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/30 relative">
+                  {/* Barra de gasto dentro del presupuesto */}
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pctClamped}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
+                    className={`h-full rounded-full ${colors.bar} ${c.excedido ? "rounded-r-none" : ""}`}
+                  />
+                  {/* Barra de exceso (roja) */}
+                  {pctExceso > 0 && (
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pctExceso}%` }}
+                      transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 + 0.05 * i }}
+                      className="h-full rounded-r-full bg-red-500 absolute top-0"
+                      style={{ left: `${pctClamped}%` }}
+                    />
+                  )}
+                </div>
+              </motion.div>
+            )
+          })}
+
+          {comparativa.length === 0 && (
+            <p className="text-xs text-slate-600 text-center py-4">
+              Registra transacciones para ver la comparativa con tu presupuesto
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Tabla */}

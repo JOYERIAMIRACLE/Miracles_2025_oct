@@ -10,8 +10,8 @@ import { useGetMetas }    from "@/api/meta-ahorro/getMetas"
 import { createMeta }     from "@/api/meta-ahorro/createMeta"
 import { updateMeta }     from "@/api/meta-ahorro/updateMeta"
 import { deleteMeta }     from "@/api/meta-ahorro/deleteMeta"
-import { useGetPartidas } from "@/api/partida-presupuesto/getPartidas"
-import { useGetRegistros } from "@/api/registro-mensual/getRegistros"
+import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 
 import { MetaAhorroType, MetaAhorroPayload, CategoriaMeta } from "@/types/meta-ahorro"
 
@@ -230,7 +230,7 @@ function MetaCard({
 export default function MetasPage() {
   const { metas: dataMetas,       loading: loadM, error } = useGetMetas()
   const { partidas: dataPartidas, loading: loadP }        = useGetPartidas()
-  const { registros: dataRegs,    loading: loadR }        = useGetRegistros()
+  const { transacciones: dataTx,   loading: loadR }        = useGetTransacciones()
 
   const [metas,   setMetas]   = useState<MetaAhorroType[]>([])
   const [modalOpen,    setModalOpen]    = useState(false)
@@ -242,23 +242,29 @@ export default function MetasPage() {
   useEffect(() => { setMetas(dataMetas ?? []) }, [dataMetas])
 
   // ─── Ritmo de ahorro mensual ──────────────────────────────────────────────
-  // Usa el promedio de ahorro_real de los últimos 3 meses registrados
-  // Si no hay registros, usa el presupuesto planeado
-  const registros   = dataRegs   ?? []
-  const partidas    = dataPartidas ?? []
+  // Calcula promedio de transacciones tipo transferencia/ahorro de últimos 3 meses
+  // Si no hay transacciones, usa el presupuesto planeado
+  const transacciones = dataTx ?? []
+  const partidas      = dataPartidas ?? []
 
   const ahorroPlaneado = partidas
     .filter(p => p.activo !== false && p.tipo === "ahorro")
     .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
   const hoy = new Date()
-  const ultimos3 = Array.from({ length: 3 }, (_, i) => {
+  const ultimos3Meses = Array.from({ length: 3 }, (_, i) => {
     const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1)
-    return registros.find(r => r.mes === d.getMonth() + 1 && r.anio === d.getFullYear() && r.tipo === "ahorro_real")
-  }).filter(Boolean)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+  })
 
-  const ahorroPromedio = ultimos3.length > 0
-    ? ultimos3.reduce((s, r) => s + (r!.monto ?? 0), 0) / ultimos3.length
+  const ahorrosPorMes = ultimos3Meses.map(mesKey => {
+    return transacciones
+      .filter(tx => tx.fecha.slice(0, 7) === mesKey && tx.categoria === "ahorro")
+      .reduce((s, tx) => s + Number(tx.monto), 0)
+  }).filter(m => m > 0)
+
+  const ahorroPromedio = ahorrosPorMes.length > 0
+    ? ahorrosPorMes.reduce((s, m) => s + m, 0) / ahorrosPorMes.length
     : ahorroPlaneado
 
   // ─── Resumen ──────────────────────────────────────────────────────────────
@@ -339,7 +345,7 @@ export default function MetasPage() {
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Metas de Ahorro</h1>
           <p className="text-sm text-zinc-500">
             Ritmo actual: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{fmt(ahorroPromedio)}/mes</span>
-            {ultimos3.length > 0 ? " (promedio últimos 3 meses)" : " (presupuestado)"}
+            {ahorrosPorMes.length > 0 ? " (promedio últimos 3 meses)" : " (presupuestado)"}
           </p>
         </div>
         <Button onClick={handleNuevo} className="h-9 gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-full">

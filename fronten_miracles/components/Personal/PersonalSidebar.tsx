@@ -9,19 +9,19 @@ import {
   Package,
   BarChart3,
   CalendarDays,
-  Trophy,
   LayoutDashboard,
+  ArrowLeftRight,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigation = [
   { name: "HUD",              href: "/gestion-personal",                  icon: LayoutDashboard, color: "cyan"   },
   { name: "Finanzas",         href: "/gestion-personal/presupuesto",      icon: Swords,          color: "cyan"   },
-  { name: "Registro",         href: "/gestion-personal/registro-mensual", icon: Trophy,          color: "pink"   },
   { name: "Stats",            href: "/gestion-personal/patrimonio",       icon: BarChart3,       color: "purple" },
   { name: "Misiones",         href: "/gestion-personal/metas",            icon: Map,             color: "amber"  },
   { name: "Calendario",       href: "/gestion-personal/calendario",       icon: CalendarDays,    color: "blue"   },
   { name: "Inventario",       href: "/gestion-personal/cuentas",          icon: Package,         color: "green"  },
+  { name: "Transacciones",   href: "/gestion-personal/transacciones",    icon: ArrowLeftRight,  color: "cyan"   },
 ]
 
 const activeColors: Record<string, string> = {

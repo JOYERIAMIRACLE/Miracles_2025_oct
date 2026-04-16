@@ -577,6 +577,7 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
     >;
     publishedAt: Schema.Attribute.DateTime;
     saldoActual: Schema.Attribute.Decimal;
+    saldoBanco: Schema.Attribute.Decimal;
     saldoInicial: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
     tipo: Schema.Attribute.Enumeration<['Efectivo', 'Cr\u00E9dito', 'Debito']>;
     updatedAt: Schema.Attribute.DateTime;
@@ -1054,6 +1055,60 @@ export interface ApiRegistroMensualRegistroMensual
     tipo: Schema.Attribute.Enumeration<
       ['ingreso_variable', 'gasto_extra', 'ahorro_real']
     >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiTransaccionTransaccion extends Struct.CollectionTypeSchema {
+  collectionName: 'transaccions';
+  info: {
+    displayName: 'Transaccion';
+    pluralName: 'transaccions';
+    singularName: 'transaccion';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    categoria: Schema.Attribute.Enumeration<
+      [
+        'alimentacion',
+        'transporte',
+        'vivienda',
+        'servicios',
+        'salud',
+        'educacion',
+        'entretenimiento',
+        'ropa',
+        'ahorro',
+        'inversion',
+        'sueldo',
+        'freelance',
+        'venta',
+        'transferencia',
+        'otro',
+      ]
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    cuentaDestino: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
+    cuentaOrigen: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
+    descripcion: Schema.Attribute.String & Schema.Attribute.Required;
+    fecha: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaccion.transaccion'
+    > &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<['ingreso', 'gasto', 'transferencia']> &
+      Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1626,6 +1681,7 @@ declare module '@strapi/strapi' {
       'api::product-category.product-category': ApiProductCategoryProductCategory;
       'api::product.product': ApiProductProduct;
       'api::registro-mensual.registro-mensual': ApiRegistroMensualRegistroMensual;
+      'api::transaccion.transaccion': ApiTransaccionTransaccion;
       'api::venta.venta': ApiVentaVenta;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

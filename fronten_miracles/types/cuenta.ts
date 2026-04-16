@@ -12,6 +12,7 @@ export type CuentaType = {
   proposito:     PropositoCuenta | null
   saldoInicial:  number          | null
   saldoActual:   number          | null
+  saldoBanco:    number          | null
   metaDeCuenta:  number          | null
   color:         string          | null
   activa:        boolean         | null
