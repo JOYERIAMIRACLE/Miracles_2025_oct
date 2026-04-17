@@ -11,6 +11,7 @@ import { createPartida } from "@/api/partida-presupuesto/createPartida"
 import { updatePartida } from "@/api/partida-presupuesto/updatePartida"
 import { deletePartida } from "@/api/partida-presupuesto/deletePartida"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { useGetEventos }      from "@/api/evento-calendario/getEventos"
 import {
   PartidaPresupuestoType,
   PartidaPresupuestoPayload,
@@ -129,6 +130,7 @@ export default function PresupuestoPage() {
   // HOOKS
   const { partidas: dataStrapi, loading, error } = useGetPartidas()
   const { transacciones } = useGetTransacciones()
+  const { eventos }       = useGetEventos()
   const [partidas,       setPartidas]       = useState<PartidaPresupuestoType[]>([])
   const [modalOpen,      setModalOpen]      = useState(false)
   const [editingPartida, setEditingPartida] = useState<PartidaPresupuestoType | null>(null)
@@ -172,6 +174,10 @@ export default function PresupuestoPage() {
 
   const comparativa = useMemo(() => {
     const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
+    const evMes = eventos.filter(ev => ev.fecha.slice(0, 7) === mesSeleccionado)
+
+    // IDs de transacciones para no contar doble (evento + transacción del mismo registro)
+    const txDescripciones = new Set(txMes.map(tx => `${tx.fecha.slice(0, 10)}_${tx.monto}`))
 
     return CATEGORIAS.filter(cat => cat !== "ingreso").map(cat => {
       // Presupuestado mensual
@@ -181,27 +187,43 @@ export default function PresupuestoPage() {
         return s + f.mensual
       }, 0)
 
-      // Gastado real del mes (solo gastos, no ingresos)
+      // Gastado real del mes desde transacciones (gastos + transferencias para ahorro/inversión)
       const catsTx = PRESUPUESTO_A_TRANSACCION[cat] ?? []
-      const gastado = txMes
-        .filter(tx => tx.tipo === "gasto" && catsTx.includes(tx.categoria ?? ""))
+      const gastadoTx = txMes
+        .filter(tx => (tx.tipo === "gasto" || tx.tipo === "transferencia") && catsTx.includes(tx.categoria ?? ""))
         .reduce((s, tx) => s + Number(tx.monto), 0)
 
+      // Gastado desde eventos del calendario (categoría con acentos = misma que presupuesto)
+      // Solo contar eventos que NO tienen transacción asociada (evitar doble conteo)
+      const gastadoEv = evMes
+        .filter(ev => ev.tipo === "pago" && ev.categoria === cat)
+        .filter(ev => !txDescripciones.has(`${ev.fecha.slice(0, 10)}_${ev.monto}`))
+        .reduce((s, ev) => s + Number(ev.monto), 0)
+
+      const gastado = gastadoTx + gastadoEv
       const pct = presupuestado > 0 ? (gastado / presupuestado) * 100 : 0
       const excedido = pct > 100
 
       return { cat, presupuestado, gastado, pct, excedido }
     }).filter(c => c.presupuestado > 0 || c.gastado > 0)
-  }, [partidas, transacciones, mesSeleccionado])
+  }, [partidas, transacciones, eventos, mesSeleccionado])
 
   // Totales de ingreso presupuestado vs real
   const comparativaIngreso = useMemo(() => {
     const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
+    const evMes = eventos.filter(ev => ev.fecha.slice(0, 7) === mesSeleccionado)
+    const txKeys = new Set(txMes.map(tx => `${tx.fecha.slice(0, 10)}_${tx.monto}`))
+
     const partidasIngreso = partidas.filter(p => p.activo !== false && (p.categoria === "ingreso" || p.tipo === "ingreso"))
     const presupuestado = partidasIngreso.reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
-    const real = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0)
+    const realTx = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0)
+    const realEv = evMes
+      .filter(ev => ev.tipo === "ingreso")
+      .filter(ev => !txKeys.has(`${ev.fecha.slice(0, 10)}_${ev.monto}`))
+      .reduce((s, ev) => s + Number(ev.monto), 0)
+    const real = realTx + realEv
     return { presupuestado, real, pct: presupuestado > 0 ? (real / presupuestado) * 100 : 0 }
-  }, [partidas, transacciones, mesSeleccionado])
+  }, [partidas, transacciones, eventos, mesSeleccionado])
 
   const totalPresupuestadoGasto = comparativa.reduce((s, c) => s + c.presupuestado, 0)
   const totalGastadoReal = comparativa.reduce((s, c) => s + c.gastado, 0)
