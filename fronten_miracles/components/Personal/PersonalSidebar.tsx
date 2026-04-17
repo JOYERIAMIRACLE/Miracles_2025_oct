@@ -11,6 +11,7 @@ import {
   CalendarDays,
   LayoutDashboard,
   ArrowLeftRight,
+  CreditCard,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Calendario",       href: "/gestion-personal/calendario",       icon: CalendarDays,    color: "blue"   },
   { name: "Inventario",       href: "/gestion-personal/cuentas",          icon: Package,         color: "green"  },
   { name: "Transacciones",   href: "/gestion-personal/transacciones",    icon: ArrowLeftRight,  color: "cyan"   },
+  { name: "Créditos",        href: "/gestion-personal/creditos",         icon: CreditCard,      color: "red"    },
 ]
 
 const activeColors: Record<string, string> = {
