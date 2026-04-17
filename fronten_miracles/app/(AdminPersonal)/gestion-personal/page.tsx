@@ -246,8 +246,20 @@ function ModuleCard({ name, description, icon: Icon, href, color, delay }: {
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function GestionPersonalPage() {
   const hoy = new Date()
-  const mesActual  = hoy.getMonth() + 1
-  const anioActual = hoy.getFullYear()
+  const mesActualKey = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`
+
+  // ─── Filtro de mes ─────────────────────────────────────────────────────
+  const [mesSeleccionado, setMesSeleccionado] = useState(mesActualKey)
+  const esMesActual = mesSeleccionado === mesActualKey
+
+  const mesDate = new Date(mesSeleccionado + "-15")
+  const mesLabel = mesDate.toLocaleString("es-MX", { month: "long", year: "numeric" })
+
+  const navMes = (dir: -1 | 1) => {
+    const d = new Date(mesSeleccionado + "-15")
+    d.setMonth(d.getMonth() + dir)
+    setMesSeleccionado(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
+  }
 
   const { partidas:       dataPartidas, loading: loadPart  } = useGetPartidas()
   const { activos:        dataActivos,  loading: loadAct   } = useGetActivos()
@@ -273,23 +285,22 @@ export default function GestionPersonalPage() {
   const cuentas = dataCuentas ?? []
   const metas   = dataMetas ?? []
 
-  // ─── Calculos principales ───────────────────────────────────────────────
+  // ─── Presupuesto (referencia) ───────────────────────────────────────────
   const activasPartidas = partidas.filter(p => p.activo !== false)
 
-  const ingresoMensual = activasPartidas
+  const ingresoPresupuestado = activasPartidas
     .filter(p => p.categoria === "ingreso" || p.tipo === "ingreso")
     .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
-  const egresoMensual = activasPartidas
+  const egresoPresupuestado = activasPartidas
     .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso")
     .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
-  const mesStr = `${anioActual}-${String(mesActual).padStart(2, "0")}`
-  const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesStr)
-  const ingresoRealMes = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0)
-  const gastoRealMes   = txMes.filter(tx => tx.tipo === "gasto").reduce((s, tx) => s + Number(tx.monto), 0)
-
-  const flujoNeto = (ingresoMensual + ingresoRealMes) - (egresoMensual + gastoRealMes)
+  // ─── Datos REALES del mes seleccionado ──────────────────────────────────
+  const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
+  const ingresoReal = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0)
+  const gastoReal   = txMes.filter(tx => tx.tipo === "gasto" || tx.tipo === "transferencia").reduce((s, tx) => s + Number(tx.monto), 0)
+  const flujoNeto   = ingresoReal - gastoReal
 
   // Cuentas
   const cuentasActivas = cuentas.filter(c => c.activa)
@@ -299,14 +310,13 @@ export default function GestionPersonalPage() {
   const deudaTotal     = cuentasCredito.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
   const balanceActual  = disponible - deudaTotal
 
-  // Gasto del mes (presupuestado + real)
-  const gastoDelMes = egresoMensual + gastoRealMes
-
-  // Balance proyectado: balance actual + ingresos restantes del mes - egresos restantes
-  const diasMes = new Date(anioActual, mesActual, 0).getDate()
-  const diasRestantes = diasMes - hoy.getDate()
-  const pctRestante = diasRestantes / diasMes
-  const balanceProyectado = balanceActual + (ingresoMensual * pctRestante) - (egresoMensual * pctRestante)
+  // Balance proyectado (solo tiene sentido en el mes actual)
+  const diasMes = new Date(mesDate.getFullYear(), mesDate.getMonth() + 1, 0).getDate()
+  const diasRestantes = esMesActual ? diasMes - hoy.getDate() : 0
+  const pctRestante = diasMes > 0 ? diasRestantes / diasMes : 0
+  const balanceProyectado = esMesActual
+    ? balanceActual + (ingresoPresupuestado * pctRestante) - (egresoPresupuestado * pctRestante)
+    : flujoNeto
 
   // Patrimonio
   const totalActivos   = activos.reduce((s, a) => s + (a.valor ?? 0), 0)
@@ -314,24 +324,23 @@ export default function GestionPersonalPage() {
   const totalPasivos   = pasivos.reduce((s, p) => s + (p.saldo ?? 0), 0)
   const patrimonioNeto = totalActivos + totalPrestamos - totalPasivos
 
-  // Supervivencia
+  // Supervivencia (usa presupuesto como referencia de gastos fijos)
   const efectivoLiquido = activos
     .filter(a => a.categoria === "efectivo" || a.categoria === "inversion")
     .reduce((s, a) => s + (a.valor ?? 0), 0)
-  const ratioSupervivencia = egresoMensual > 0 ? efectivoLiquido / egresoMensual : 0
+  const gastoMensualRef = gastoReal > 0 ? gastoReal : egresoPresupuestado
+  const ratioSupervivencia = gastoMensualRef > 0 ? efectivoLiquido / gastoMensualRef : 0
 
-  const ahorroMensual = activasPartidas
-    .filter(p => p.tipo === "ahorro")
-    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
-  const pctAhorro = ingresoMensual > 0 ? (ahorroMensual / ingresoMensual) * 100 : 0
+  const ahorroReal = txMes.filter(tx => tx.categoria === "ahorro").reduce((s, tx) => s + Number(tx.monto), 0)
+  const pctAhorro = ingresoReal > 0 ? (ahorroReal / ingresoReal) * 100 : 0
 
-  // Categorias de gasto
-  const necesidades = activasPartidas
-    .filter(p => p.tipo === "necesidad")
-    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
-  const prescindibles = activasPartidas
-    .filter(p => p.tipo === "gastos prescindibles")
-    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
+  // Categorias de gasto REAL del mes
+  const necesidadesReal = txMes
+    .filter(tx => tx.tipo === "gasto" && ["vivienda", "alimentacion", "transporte", "servicios", "salud"].includes(tx.categoria ?? ""))
+    .reduce((s, tx) => s + Number(tx.monto), 0)
+  const prescindiblesReal = txMes
+    .filter(tx => tx.tipo === "gasto" && ["entretenimiento", "ropa", "otro"].includes(tx.categoria ?? ""))
+    .reduce((s, tx) => s + Number(tx.monto), 0)
 
   // Metas
   const metasActivas = metas.filter(m => m.activo !== false)
@@ -343,32 +352,31 @@ export default function GestionPersonalPage() {
   })
   const titulo = getLevelTitle(level)
 
-  // ─── Monthly chart data (ultimos 6 meses) ──────────────────────────────
+  // ─── Monthly chart data (6 meses alrededor del seleccionado) ───────────
   const chartData = useMemo(() => {
-    const months: { mes: number; anio: number; label: string; key: string }[] = []
+    const selDate = new Date(mesSeleccionado + "-15")
+    const months: { label: string; key: string }[] = []
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(anioActual, mesActual - 1 - i, 1)
+      const d = new Date(selDate.getFullYear(), selDate.getMonth() - i, 1)
       months.push({
-        mes: d.getMonth() + 1,
-        anio: d.getFullYear(),
         label: MESES_CORTO[d.getMonth()],
         key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
       })
     }
 
-    const ingresos = months.map(m => {
-      const txIng = transacciones
+    const ingresos = months.map(m => ({
+      name: m.label,
+      value: Math.round(transacciones
         .filter(tx => tx.fecha.slice(0, 7) === m.key && tx.tipo === "ingreso")
-        .reduce((s, tx) => s + Number(tx.monto), 0)
-      return { name: m.label, value: Math.round(ingresoMensual + txIng) }
-    })
+        .reduce((s, tx) => s + Number(tx.monto), 0)),
+    }))
 
-    const gastos = months.map(m => {
-      const txGas = transacciones
-        .filter(tx => tx.fecha.slice(0, 7) === m.key && tx.tipo === "gasto")
-        .reduce((s, tx) => s + Number(tx.monto), 0)
-      return { name: m.label, value: Math.round(egresoMensual + txGas) }
-    })
+    const gastos = months.map(m => ({
+      name: m.label,
+      value: Math.round(transacciones
+        .filter(tx => tx.fecha.slice(0, 7) === m.key && (tx.tipo === "gasto" || tx.tipo === "transferencia"))
+        .reduce((s, tx) => s + Number(tx.monto), 0)),
+    }))
 
     const balance = months.map((m, i) => ({
       name: m.label,
@@ -376,16 +384,16 @@ export default function GestionPersonalPage() {
     }))
 
     return { ingresos, gastos, balance }
-  }, [transacciones, ingresoMensual, egresoMensual, mesActual, anioActual])
+  }, [transacciones, mesSeleccionado])
 
   // Modules
   const modules = [
-    { name: "Finanzas",    description: "Presupuesto y flujo",       icon: Swords,       href: "/gestion-personal/presupuesto",      color: "cyan"   },
-    { name: "Misiones",    description: "Metas de ahorro",           icon: Map,          href: "/gestion-personal/metas",            color: "amber"  },
-    { name: "Inventario",  description: "Cuentas y cartera",         icon: Package,      href: "/gestion-personal/cuentas",          color: "green"  },
-    { name: "Stats",       description: "Patrimonio y net worth",    icon: BarChart3,    href: "/gestion-personal/patrimonio",       color: "purple" },
-    { name: "Calendario",     description: "Eventos y pagos",         icon: CalendarDays,  href: "/gestion-personal/calendario",      color: "blue"   },
-    { name: "Transacciones", description: "Movimientos y saldos",  icon: ArrowLeftRight, href: "/gestion-personal/transacciones", color: "cyan"   },
+    { name: "Finanzas",      description: "Presupuesto y flujo",       icon: Swords,        href: "/gestion-personal/presupuesto",   color: "cyan"   },
+    { name: "Objetivos",     description: "Metas y créditos",          icon: Target,        href: "/gestion-personal/objetivos",     color: "amber"  },
+    { name: "Inventario",    description: "Cuentas y cartera",         icon: Package,       href: "/gestion-personal/cuentas",       color: "green"  },
+    { name: "Stats",         description: "Patrimonio y net worth",    icon: BarChart3,     href: "/gestion-personal/patrimonio",    color: "purple" },
+    { name: "Calendario",    description: "Eventos y pagos",           icon: CalendarDays,  href: "/gestion-personal/calendario",    color: "blue"   },
+    { name: "Transacciones", description: "Movimientos y saldos",      icon: ArrowLeftRight,href: "/gestion-personal/transacciones", color: "cyan"   },
   ]
 
   // ─── RENDER ─────────────────────────────────────────────────────────────
@@ -450,36 +458,56 @@ export default function GestionPersonalPage() {
         </div>
       </motion.div>
 
+      {/* ── Selector de mes ──────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <button onClick={() => navMes(-1)} className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors">←</button>
+          <span className="text-sm font-semibold text-slate-300 capitalize min-w-[140px] text-center">{mesLabel}</span>
+          <button onClick={() => navMes(1)} className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors">→</button>
+          {!esMesActual && (
+            <button onClick={() => setMesSeleccionado(mesActualKey)} className="text-[10px] text-cyan-400 hover:text-cyan-300 ml-1">Hoy</button>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+          <span>Presupuesto: <span className="text-slate-400">{fmt(egresoPresupuestado)}</span></span>
+          <span>Real: <span className={`font-semibold ${gastoReal > egresoPresupuestado ? "text-red-400" : "text-emerald-400"}`}>{fmt(gastoReal)}</span></span>
+        </div>
+      </motion.div>
+
       {/* ── Overview Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <OverviewCard
-          label="Disponible"
-          value={fmt(disponible)}
-          sub="Cuentas liquidas"
-          icon={Wallet}
+          label="Ingreso Real"
+          value={fmt(ingresoReal)}
+          sub={ingresoPresupuestado > 0 ? `de ${fmt(ingresoPresupuestado)} presupuestado` : undefined}
+          icon={TrendingUp}
           color="green"
           delay={0.1}
         />
         <OverviewCard
-          label="Balance Actual"
-          value={fmt(balanceActual)}
-          sub="Liquido - Deuda"
-          icon={balanceActual >= 0 ? TrendingUp : TrendingDown}
-          color={balanceActual >= 0 ? "blue" : "red"}
+          label="Gasto Real"
+          value={fmt(gastoReal)}
+          sub={egresoPresupuestado > 0 ? `de ${fmt(egresoPresupuestado)} presupuestado` : undefined}
+          icon={CreditCard}
+          color="red"
           delay={0.15}
         />
         <OverviewCard
-          label="Gasto del Mes"
-          value={fmt(gastoDelMes)}
-          sub={`${hoy.toLocaleString("es-MX", { month: "long" })} ${anioActual}`}
-          icon={CreditCard}
-          color="red"
+          label="Flujo Neto"
+          value={fmt(flujoNeto)}
+          sub={`Ingreso - Gasto del mes`}
+          icon={flujoNeto >= 0 ? TrendingUp : TrendingDown}
+          color={flujoNeto >= 0 ? "blue" : "red"}
           delay={0.2}
         />
         <OverviewCard
-          label="Balance Proyectado"
-          value={fmt(balanceProyectado)}
-          sub={`Faltan ${diasRestantes} dias`}
+          label={esMesActual ? "Balance Proyectado" : "Disponible"}
+          value={esMesActual ? fmt(balanceProyectado) : fmt(disponible)}
+          sub={esMesActual ? `Faltan ${diasRestantes} dias` : "Saldo actual cuentas"}
           icon={Target}
           color={balanceProyectado >= 0 ? "purple" : "red"}
           delay={0.25}
@@ -497,24 +525,21 @@ export default function GestionPersonalPage() {
           className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gasto por Categoria</h2>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gasto Real por Tipo</h2>
             <Link href="/gestion-personal/presupuesto" className="text-[10px] text-cyan-500 hover:text-cyan-400">Ver detalle</Link>
           </div>
-          {egresoMensual === 0 ? (
-            <p className="text-xs text-slate-600 text-center py-6">Sin datos de presupuesto</p>
+          {gastoReal === 0 ? (
+            <p className="text-xs text-slate-600 text-center py-6">Sin transacciones este mes</p>
           ) : (
             <div className="space-y-3">
-              <CategoryBar label="Necesidades" monto={necesidades} total={egresoMensual} color="bg-gradient-to-r from-cyan-500 to-blue-500" />
-              <CategoryBar label="Prescindibles" monto={prescindibles} total={egresoMensual} color="bg-gradient-to-r from-amber-500 to-orange-500" />
-              <CategoryBar label="Ahorro" monto={ahorroMensual} total={egresoMensual} color="bg-gradient-to-r from-emerald-400 to-green-500" />
-              {gastoRealMes > 0 && (
-                <CategoryBar label="Gastos Reales (mes)" monto={gastoRealMes} total={egresoMensual} color="bg-gradient-to-r from-red-500 to-rose-500" />
-              )}
+              <CategoryBar label="Necesidades" monto={necesidadesReal} total={gastoReal} color="bg-gradient-to-r from-cyan-500 to-blue-500" />
+              <CategoryBar label="Prescindibles" monto={prescindiblesReal} total={gastoReal} color="bg-gradient-to-r from-amber-500 to-orange-500" />
+              <CategoryBar label="Ahorro" monto={ahorroReal} total={gastoReal} color="bg-gradient-to-r from-emerald-400 to-green-500" />
             </div>
           )}
           <div className="mt-4 pt-3 border-t border-slate-800/60 flex justify-between text-[10px] text-slate-500">
-            <span>Ingreso: <span className="text-emerald-400 font-semibold">{fmt(ingresoMensual)}</span></span>
-            <span>Egreso: <span className="text-red-400 font-semibold">{fmt(egresoMensual)}</span></span>
+            <span>Ingreso: <span className="text-emerald-400 font-semibold">{fmt(ingresoReal)}</span></span>
+            <span>Gasto: <span className="text-red-400 font-semibold">{fmt(gastoReal)}</span></span>
             <span>Flujo: <span className={`font-semibold ${flujoNeto >= 0 ? "text-cyan-400" : "text-red-400"}`}>{fmt(flujoNeto)}</span></span>
           </div>
         </motion.div>

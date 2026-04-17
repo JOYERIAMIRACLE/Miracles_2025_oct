@@ -5,13 +5,12 @@ import { usePathname } from "next/navigation"
 import {
   Gamepad2,
   Swords,
-  Map,
+  Target,
   Package,
   BarChart3,
   CalendarDays,
   LayoutDashboard,
   ArrowLeftRight,
-  CreditCard,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -19,11 +18,10 @@ const navigation = [
   { name: "HUD",              href: "/gestion-personal",                  icon: LayoutDashboard, color: "cyan"   },
   { name: "Finanzas",         href: "/gestion-personal/presupuesto",      icon: Swords,          color: "cyan"   },
   { name: "Stats",            href: "/gestion-personal/patrimonio",       icon: BarChart3,       color: "purple" },
-  { name: "Misiones",         href: "/gestion-personal/metas",            icon: Map,             color: "amber"  },
+  { name: "Objetivos",        href: "/gestion-personal/objetivos",        icon: Target,          color: "amber"  },
   { name: "Calendario",       href: "/gestion-personal/calendario",       icon: CalendarDays,    color: "blue"   },
   { name: "Inventario",       href: "/gestion-personal/cuentas",          icon: Package,         color: "green"  },
   { name: "Transacciones",   href: "/gestion-personal/transacciones",    icon: ArrowLeftRight,  color: "cyan"   },
-  { name: "Créditos",        href: "/gestion-personal/creditos",         icon: CreditCard,      color: "red"    },
 ]
 
 const activeColors: Record<string, string> = {
