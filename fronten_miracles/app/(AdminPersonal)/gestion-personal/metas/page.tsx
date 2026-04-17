@@ -63,12 +63,13 @@ const EMPTY_FORM: MetaAhorroPayload = {
 
 // ─── Tarjeta de meta ──────────────────────────────────────────────────────────
 function MetaCard({
-  meta, ahorroMensual, cuentas,
+  meta, ahorroMensual, cuentas, aportes,
   onEdit, onDelete, onAbonar,
 }: {
   meta: MetaAhorroType
   ahorroMensual: number
   cuentas: { documentId: string; nombre: string }[]
+  aportes: { fecha: string; monto: number; descripcion: string; cuenta?: string }[]
   onEdit: () => void
   onDelete: () => void
   onAbonar: (monto: number, cuentaId: string | null) => void
@@ -197,6 +198,24 @@ function MetaCard({
         </div>
       )}
 
+      {/* Historial de aportes */}
+      {aportes.length > 0 && (
+        <div className="px-5 pb-3 border-t border-zinc-50 dark:border-zinc-800/60 pt-3">
+          <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">Aportes registrados</p>
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {aportes.map((a, i) => (
+              <div key={i} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-zinc-400">{new Date(a.fecha).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}</span>
+                  <span className="text-zinc-500 truncate">{a.descripcion}</span>
+                </div>
+                <span className="font-semibold text-emerald-500 shrink-0">+{fmt(a.monto)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Botón abonar */}
       {!completado && (
         <div className="px-5 pb-4">
@@ -289,9 +308,10 @@ export default function MetasPage() {
     : ahorroPlaneado
 
   // ─── Total real ahorrado (desde transacciones) ─────────────────────────
-  const totalAhorradoReal = transacciones
+  const txAhorro = transacciones
     .filter(tx => tx.categoria === "ahorro")
-    .reduce((s, tx) => s + Number(tx.monto), 0)
+    .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+  const totalAhorradoReal = txAhorro.reduce((s, tx) => s + Number(tx.monto), 0)
 
   // ─── Resumen ──────────────────────────────────────────────────────────────
   const metasActivas    = metas.filter(m => m.activo !== false)
@@ -432,6 +452,12 @@ export default function MetasPage() {
                   meta={m}
                   ahorroMensual={ahorroPromedio}
                   cuentas={cuentasActivas}
+                  aportes={txAhorro.map(tx => ({
+                    fecha: tx.fecha,
+                    monto: Number(tx.monto),
+                    descripcion: tx.descripcion,
+                    cuenta: tx.cuentaOrigen?.nombre ?? tx.cuentaDestino?.nombre ?? undefined,
+                  }))}
                   onEdit={() => handleEdit(m)}
                   onDelete={() => handleDelete(m.documentId)}
                   onAbonar={(abono, cuentaId) => handleAbonar(m, abono, cuentaId)}
