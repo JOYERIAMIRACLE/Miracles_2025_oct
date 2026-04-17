@@ -190,7 +190,7 @@ function MetaCard({
           </div>
           {mesesHastaObjetivo !== null && mesesRestantes !== null && mesesHastaObjetivo < mesesRestantes && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
-              Necesitas ahorrar {fmtK(Math.ceil(falta / Math.max(1, mesesHastaObjetivo)))/1}/mes para llegar a tiempo.
+              Necesitas ahorrar {fmtK(Math.ceil(falta / Math.max(1, mesesHastaObjetivo)))}/mes para llegar a tiempo.
             </p>
           )}
           {meta.descripcion && <p className="text-xs text-zinc-400 italic">{meta.descripcion}</p>}
@@ -288,12 +288,26 @@ export default function MetasPage() {
     ? ahorrosPorMes.reduce((s, m) => s + m, 0) / ahorrosPorMes.length
     : ahorroPlaneado
 
+  // ─── Total real ahorrado (desde transacciones) ─────────────────────────
+  const totalAhorradoReal = transacciones
+    .filter(tx => tx.categoria === "ahorro")
+    .reduce((s, tx) => s + Number(tx.monto), 0)
+
   // ─── Resumen ──────────────────────────────────────────────────────────────
   const metasActivas    = metas.filter(m => m.activo !== false)
-  const metasCompletas  = metasActivas.filter(m => m.monto_actual >= m.monto_meta)
-  const metasEnCurso    = metasActivas.filter(m => m.monto_actual < m.monto_meta)
+  // Distribuir ahorro real proporcionalmente entre metas activas
+  const totalMetaObjetivo = metasActivas.reduce((s, m) => s + m.monto_meta, 0)
+  const metasConProgreso = metasActivas.map(m => {
+    // Proporción de esta meta vs el total de metas
+    const proporcion = totalMetaObjetivo > 0 ? m.monto_meta / totalMetaObjetivo : 1
+    // Ahorro real asignado a esta meta (proporcional) o el manual si es mayor
+    const ahorroAsignado = Math.max(m.monto_actual, Math.round(totalAhorradoReal * proporcion * 100) / 100)
+    return { ...m, monto_actual: ahorroAsignado }
+  })
+  const metasCompletas  = metasConProgreso.filter(m => m.monto_actual >= m.monto_meta)
+  const metasEnCurso    = metasConProgreso.filter(m => m.monto_actual < m.monto_meta)
   const totalMeta       = metasEnCurso.reduce((s, m) => s + m.monto_meta, 0)
-  const totalAhorrado   = metasEnCurso.reduce((s, m) => s + m.monto_actual, 0)
+  const totalAhorrado   = Math.max(totalAhorradoReal, metasEnCurso.reduce((s, m) => s + m.monto_actual, 0))
 
   // ─── CRUD ─────────────────────────────────────────────────────────────────
   const handleNuevo = () => { setEditingMeta(null); setForm(EMPTY_FORM); setModalOpen(true) }
@@ -383,6 +397,7 @@ export default function MetasPage() {
           <p className="text-sm text-zinc-500">
             Ritmo actual: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{fmt(ahorroPromedio)}/mes</span>
             {ahorrosPorMes.length > 0 ? " (promedio últimos 3 meses)" : " (presupuestado)"}
+            {totalAhorradoReal > 0 && <span className="ml-2">· Total registrado: <span className="font-semibold text-emerald-500">{fmt(totalAhorradoReal)}</span></span>}
           </p>
         </div>
         <Button onClick={handleNuevo} className="h-9 gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-full">
