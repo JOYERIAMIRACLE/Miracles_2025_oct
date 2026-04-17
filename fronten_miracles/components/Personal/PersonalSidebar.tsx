@@ -7,7 +7,6 @@ import {
   Swords,
   Target,
   Package,
-  BarChart3,
   CalendarDays,
   LayoutDashboard,
   ArrowLeftRight,
@@ -17,7 +16,6 @@ import { cn } from "@/lib/utils"
 const navigation = [
   { name: "HUD",              href: "/gestion-personal",                  icon: LayoutDashboard, color: "cyan"   },
   { name: "Finanzas",         href: "/gestion-personal/presupuesto",      icon: Swords,          color: "cyan"   },
-  { name: "Stats",            href: "/gestion-personal/patrimonio",       icon: BarChart3,       color: "purple" },
   { name: "Objetivos",        href: "/gestion-personal/objetivos",        icon: Target,          color: "amber"  },
   { name: "Calendario",       href: "/gestion-personal/calendario",       icon: CalendarDays,    color: "blue"   },
   { name: "Inventario",       href: "/gestion-personal/cuentas",          icon: Package,         color: "green"  },
@@ -69,7 +67,9 @@ export function PersonalSidebar() {
           </p>
           <ul className="space-y-1">
             {navigation.map(item => {
-              const isActive = pathname === item.href
+              const isActive =
+                pathname === item.href ||
+                (item.name === "Inventario" && pathname === "/gestion-personal/patrimonio")
               return (
                 <li key={item.name}>
                   <Link

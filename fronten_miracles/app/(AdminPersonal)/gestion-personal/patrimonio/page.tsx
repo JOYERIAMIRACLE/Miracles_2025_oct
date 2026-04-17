@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { InventarioNav } from "@/components/Personal/InventarioNav"
 import { toast } from "sonner"
 
 import { useGetActivos }   from "@/api/activo/getActivos"
@@ -206,6 +207,7 @@ export default function PatrimonioPage() {
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
+      <InventarioNav />
 
       {/* Balance general */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

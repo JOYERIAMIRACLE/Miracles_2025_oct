@@ -10,6 +10,7 @@ import { Plus, Pencil, Trash2, X, Check, Banknote, TrendingUp, TrendingDown } fr
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { InventarioNav } from "@/components/Personal/InventarioNav"
 import { toast } from "sonner"
 
 const TIPOS: TipoCuenta[]    = ["Efectivo", "Crédito", "Debito"]
@@ -145,6 +146,7 @@ export default function CuentasPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      <InventarioNav />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Mis Cuentas</h1>
