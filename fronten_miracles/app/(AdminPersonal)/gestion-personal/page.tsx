@@ -20,6 +20,8 @@ import { useGetPrestamos }     from "@/api/prestamo-otorgado/getPrestamos"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { useGetCuentas }       from "@/api/cuenta/getCuentas"
 import { useGetMetas }         from "@/api/meta-ahorro/getMetas"
+import { useGetCategorias }    from "@/api/categoria/getCategorias"
+import { grupoDe }             from "@/lib/categoria"
 
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
 import { ActivoType }             from "@/types/activo"
@@ -268,6 +270,7 @@ export default function GestionPersonalPage() {
   const { transacciones:  dataTx,       loading: loadTx     } = useGetTransacciones()
   const { cuentas:        dataCuentas,  loading: loadCuent  } = useGetCuentas()
   const { metas:          dataMetas,    loading: loadMetas  } = useGetMetas()
+  const { categorias }                                          = useGetCategorias()
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
   const [activos,   setActivos]   = useState<ActivoType[]>([])
@@ -331,15 +334,15 @@ export default function GestionPersonalPage() {
   const gastoMensualRef = gastoReal > 0 ? gastoReal : egresoPresupuestado
   const ratioSupervivencia = gastoMensualRef > 0 ? efectivoLiquido / gastoMensualRef : 0
 
-  const ahorroReal = txMes.filter(tx => tx.categoria === "ahorro").reduce((s, tx) => s + Number(tx.monto), 0)
+  const ahorroReal = txMes.filter(tx => grupoDe(tx.categoria, categorias) === "ahorro").reduce((s, tx) => s + Number(tx.monto), 0)
   const pctAhorro = ingresoReal > 0 ? (ahorroReal / ingresoReal) * 100 : 0
 
-  // Categorias de gasto REAL del mes
+  // Categorías de gasto REAL del mes — lookup dinámico via tabla Categoria
   const necesidadesReal = txMes
-    .filter(tx => tx.tipo === "gasto" && ["vivienda", "alimentacion", "transporte", "servicios", "salud"].includes(tx.categoria ?? ""))
+    .filter(tx => tx.tipo === "gasto" && grupoDe(tx.categoria, categorias) === "necesidad")
     .reduce((s, tx) => s + Number(tx.monto), 0)
   const prescindiblesReal = txMes
-    .filter(tx => tx.tipo === "gasto" && ["entretenimiento", "ropa", "otro"].includes(tx.categoria ?? ""))
+    .filter(tx => tx.tipo === "gasto" && grupoDe(tx.categoria, categorias) === "prescindible")
     .reduce((s, tx) => s + Number(tx.monto), 0)
 
   // Metas

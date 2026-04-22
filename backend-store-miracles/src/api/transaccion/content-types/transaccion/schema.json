@@ -33,24 +33,7 @@
       "required": true
     },
     "categoria": {
-      "type": "enumeration",
-      "enum": [
-        "alimentacion",
-        "transporte",
-        "vivienda",
-        "servicios",
-        "salud",
-        "educacion",
-        "entretenimiento",
-        "ropa",
-        "ahorro",
-        "inversion",
-        "sueldo",
-        "freelance",
-        "venta",
-        "transferencia",
-        "otro"
-      ]
+      "type": "string"
     },
     "notas": {
       "type": "text"

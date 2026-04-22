@@ -15,31 +15,8 @@ import { useGetEventos }      from "@/api/evento-calendario/getEventos"
 import {
   PartidaPresupuestoType,
   PartidaPresupuestoPayload,
-  CategoriaPresupuesto,
 } from "@/types/partida-presupuesto"
-
-// ─── Constantes ────────────────────────────────────────────────────────────────
-const CATEGORIAS: CategoriaPresupuesto[] = [
-  "vivienda", "alimentación", "transporte", "servicios",
-  "gastos_personales", "entretenimiento", "salud", "ropa",
-  "educación", "ahorro", "inversión", "ingreso",
-]
-
-// Etiquetas de display para cada categoría
-const CAT_LABEL: Record<string, string> = {
-  "vivienda":         "1. Vivienda",
-  "alimentación":     "2. Alimentación",
-  "transporte":       "3. Transporte",
-  "servicios":        "4. Servicios",
-  "gastos_personales":"5. Gastos Personales",
-  "entretenimiento":  "6. Entretenimiento",
-  "salud":            "7. Salud",
-  "ropa":             "8. Ropa",
-  "educación":        "9. Educación",
-  "ahorro":           "10. Ahorro",
-  "inversión":        "11. Inversión",
-  "ingreso":          "12. Ingreso",
-}
+import { useGetCategorias } from "@/api/categoria/getCategorias"
 
 const EMPTY_FORM: PartidaPresupuestoPayload = {
   descripcion: "", categoria: null, tipo: null,
@@ -93,37 +70,33 @@ const TIPO_PAGO_COLORS: Record<string, string> = {
 const inputCls = "w-full h-9 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-zinc-400"
 const selectCls = `${inputCls} cursor-pointer`
 
-// ─── Mapeo categorías presupuesto → transaccion ──────────────────────────────
-// Las categorías del presupuesto tienen acentos, las de transacción no
-const PRESUPUESTO_A_TRANSACCION: Record<string, string[]> = {
-  "vivienda":          ["vivienda"],
-  "alimentación":      ["alimentacion"],
-  "transporte":        ["transporte"],
-  "servicios":         ["servicios"],
-  "gastos_personales": ["otro"],
-  "entretenimiento":   ["entretenimiento"],
-  "salud":             ["salud"],
-  "ropa":              ["ropa"],
-  "educación":         ["educacion"],
-  "ahorro":            ["ahorro"],
-  "inversión":         ["inversion"],
-  "ingreso":           ["sueldo", "freelance", "venta"],
-}
+// Normaliza para comparar categorías (case/accent-insensitive)
+const normCat = (s: string | null | undefined) =>
+  (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim()
 
+// Mapa de colores por nombre normalizado de categoría (para barras del presupuesto vs real)
 const BAR_COLORS: Record<string, { bar: string; bg: string }> = {
   "vivienda":          { bar: "bg-blue-500",    bg: "bg-blue-500/10"    },
-  "alimentación":      { bar: "bg-amber-500",   bg: "bg-amber-500/10"   },
+  "alimentacion":      { bar: "bg-amber-500",   bg: "bg-amber-500/10"   },
   "transporte":        { bar: "bg-violet-500",  bg: "bg-violet-500/10"  },
-  "servicios":         { bar: "bg-cyan-500",     bg: "bg-cyan-500/10"    },
-  "gastos_personales": { bar: "bg-pink-500",    bg: "bg-pink-500/10"    },
+  "servicios":         { bar: "bg-cyan-500",    bg: "bg-cyan-500/10"    },
+  "gastos personales": { bar: "bg-pink-500",    bg: "bg-pink-500/10"    },
   "entretenimiento":   { bar: "bg-orange-500",  bg: "bg-orange-500/10"  },
   "salud":             { bar: "bg-red-500",     bg: "bg-red-500/10"     },
   "ropa":              { bar: "bg-fuchsia-500", bg: "bg-fuchsia-500/10" },
-  "educación":         { bar: "bg-teal-500",    bg: "bg-teal-500/10"    },
+  "educacion":         { bar: "bg-teal-500",    bg: "bg-teal-500/10"    },
   "ahorro":            { bar: "bg-emerald-500", bg: "bg-emerald-500/10" },
-  "inversión":         { bar: "bg-indigo-500",  bg: "bg-indigo-500/10"  },
+  "inversion":         { bar: "bg-indigo-500",  bg: "bg-indigo-500/10"  },
   "ingreso":           { bar: "bg-green-500",   bg: "bg-green-500/10"   },
+  "sueldo":            { bar: "bg-green-500",   bg: "bg-green-500/10"   },
+  "freelance":         { bar: "bg-teal-500",    bg: "bg-teal-500/10"    },
+  "venta":             { bar: "bg-amber-500",   bg: "bg-amber-500/10"   },
+  "otro":              { bar: "bg-zinc-500",    bg: "bg-zinc-500/10"    },
 }
+
+// Resuelve los colores de barra para una categoría (normaliza nombre)
+const barColorOf = (cat: string | null | undefined) =>
+  BAR_COLORS[normCat(cat)] ?? { bar: "bg-zinc-500", bg: "bg-zinc-500/10" }
 
 // ─── Página ────────────────────────────────────────────────────────────────────
 export default function PresupuestoPage() {
@@ -131,6 +104,15 @@ export default function PresupuestoPage() {
   const { partidas: dataStrapi, loading, error } = useGetPartidas()
   const { transacciones } = useGetTransacciones()
   const { eventos }       = useGetEventos()
+  const { categorias }    = useGetCategorias()
+
+  // Lista de nombres de categoría desde la tabla, ordenadas por orden
+  const CATEGORIAS = useMemo(
+    () => categorias.filter(c => c.activa).map(c => c.nombre),
+    [categorias],
+  )
+  // Para mostrar etiquetas (devuelve el nombre tal cual)
+  const labelDe = (cat: string | null | undefined) => cat ?? ""
   const [partidas,       setPartidas]       = useState<PartidaPresupuestoType[]>([])
   const [modalOpen,      setModalOpen]      = useState(false)
   const [editingPartida, setEditingPartida] = useState<PartidaPresupuestoType | null>(null)
@@ -148,7 +130,7 @@ export default function PresupuestoPage() {
   // ─── Agrupación por categoría ──────────────────────────────────────────────
   const porCategoria = CATEGORIAS.map(cat => ({
     cat,
-    items: partidas.filter(p => p.activo !== false && p.categoria === cat),
+    items: partidas.filter(p => p.activo !== false && normCat(p.categoria) === normCat(cat)),
   })).filter(g => g.items.length > 0)
 
   // ─── Totales globales ──────────────────────────────────────────────────────
@@ -179,24 +161,26 @@ export default function PresupuestoPage() {
     // IDs de transacciones para no contar doble (evento + transacción del mismo registro)
     const txDescripciones = new Set(txMes.map(tx => `${tx.fecha.slice(0, 10)}_${tx.monto}`))
 
-    return CATEGORIAS.filter(cat => cat !== "ingreso").map(cat => {
-      // Presupuestado mensual
-      const partidasCat = partidas.filter(p => p.activo !== false && p.categoria === cat)
+    // Solo categorías de gasto (ingresos no se comparan en esta tabla)
+    const catsGasto = categorias.filter(c => c.activa && c.tipo === "gasto").map(c => c.nombre)
+
+    return catsGasto.map(cat => {
+      const catKey = normCat(cat)
+      // Presupuestado mensual (compara nombre normalizado por si hay leves variaciones)
+      const partidasCat = partidas.filter(p => p.activo !== false && normCat(p.categoria) === catKey)
       const presupuestado = partidasCat.reduce((s, p) => {
         const f = calcFrecuencias(p.monto ?? 0, p.frecuencia)
         return s + f.mensual
       }, 0)
 
       // Gastado real del mes desde transacciones (gastos + transferencias para ahorro/inversión)
-      const catsTx = PRESUPUESTO_A_TRANSACCION[cat] ?? []
       const gastadoTx = txMes
-        .filter(tx => (tx.tipo === "gasto" || tx.tipo === "transferencia") && catsTx.includes(tx.categoria ?? ""))
+        .filter(tx => (tx.tipo === "gasto" || tx.tipo === "transferencia") && normCat(tx.categoria) === catKey)
         .reduce((s, tx) => s + Number(tx.monto), 0)
 
-      // Gastado desde eventos del calendario (categoría con acentos = misma que presupuesto)
-      // Solo contar eventos que NO tienen transacción asociada (evitar doble conteo)
+      // Gastado desde eventos del calendario que NO tienen transacción asociada
       const gastadoEv = evMes
-        .filter(ev => ev.tipo === "pago" && ev.categoria === cat)
+        .filter(ev => ev.tipo === "pago" && normCat(ev.categoria) === catKey)
         .filter(ev => !txDescripciones.has(`${ev.fecha.slice(0, 10)}_${ev.monto}`))
         .reduce((s, ev) => s + Number(ev.monto), 0)
 
@@ -407,14 +391,14 @@ export default function PresupuestoPage() {
         {/* Barras por categoría */}
         <div className="space-y-3">
           {comparativa.map((c, i) => {
-            const colors = BAR_COLORS[c.cat] ?? { bar: "bg-slate-500", bg: "bg-slate-500/10" }
+            const colors = barColorOf(c.cat)
             const pctClamped = Math.min(c.pct, 100)
             const pctExceso = c.pct > 100 ? Math.min(c.pct - 100, 100) : 0
 
             return (
               <motion.div key={c.cat} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-slate-300 capitalize">{CAT_LABEL[c.cat]?.replace(/^\d+\.\s*/, "") ?? c.cat}</span>
+                  <span className="text-xs text-slate-300 capitalize">{labelDe(c.cat)}</span>
                   <div className="flex items-center gap-3 text-[10px]">
                     <span className="text-slate-600">{fmt(c.gastado)} / {fmt(c.presupuestado)}</span>
                     <span className={`font-semibold ${c.excedido ? "text-red-400" : c.pct > 80 ? "text-amber-400" : "text-emerald-400"}`}>
@@ -490,13 +474,14 @@ export default function PresupuestoPage() {
                   },
                   { dia: 0, semana: 0, quincena: 0, mensual: 0, anual: 0 }
                 )
-                const esGrupoIngreso = cat === "31.Ingreso"
+                // Detecta si es grupo de ingreso por la categoría en la tabla Categorias
+                const esGrupoIngreso = categorias.some(c => normCat(c.nombre) === normCat(cat) && c.tipo === "ingreso")
 
                 return [
                   /* Fila de categoría */
                   <tr key={`cat-${cat}`} className="bg-zinc-50 dark:bg-zinc-800/50 border-t-2 border-zinc-200 dark:border-zinc-700">
                     <td colSpan={4} className="px-4 py-2">
-                      <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">{CAT_LABEL[cat] ?? cat}</span>
+                      <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">{labelDe(cat)}</span>
                     </td>
                     <td className="px-4 py-2 text-right text-xs font-semibold">{fmtSigned(subTotal.dia,      esGrupoIngreso)}</td>
                     <td className="px-4 py-2 text-right text-xs font-semibold">{fmtSigned(subTotal.semana,   esGrupoIngreso)}</td>
@@ -601,9 +586,9 @@ export default function PresupuestoPage() {
               {/* Categoría */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Categoría</label>
-                <select title="Categoría" value={form.categoria ?? ""} onChange={e => setForm(f => ({ ...f, categoria: (e.target.value || null) as any }))} className={selectCls}>
+                <select title="Categoría" value={form.categoria ?? ""} onChange={e => setForm(f => ({ ...f, categoria: e.target.value || null }))} className={selectCls}>
                   <option value="">— Sin categoría —</option>
-                  {CATEGORIAS.map(c => <option key={c} value={c}>{CAT_LABEL[c] ?? c}</option>)}
+                  {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
 

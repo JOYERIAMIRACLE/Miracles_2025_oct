@@ -7,8 +7,9 @@ import { createTransaccion } from "@/api/transaccion/createTransaccion"
 import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
-import { EventoCalendarioType, EventoCalendarioPayload, EventoTipo, CategoriaEvento } from "@/types/evento-calendario"
-import { TipoTransaccion, CategoriaTransaccion } from "@/types/transaccion"
+import { EventoCalendarioType, EventoCalendarioPayload, EventoTipo } from "@/types/evento-calendario"
+import { TipoTransaccion } from "@/types/transaccion"
+import { useGetCategorias } from "@/api/categoria/getCategorias"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { ChevronLeft, ChevronRight, Plus, X, Trash2, Wallet } from "lucide-react"
@@ -19,32 +20,18 @@ import { toast } from "sonner"
 
 const DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
 
-const CATEGORIAS_EGRESO: CategoriaEvento[] = [
-  "vivienda", "alimentación", "transporte", "servicios",
-  "gastos_personales", "entretenimiento", "salud", "ropa",
-  "educación", "ahorro", "inversión",
-]
-
-// Mapeo de categorías calendario → transaccion (sin acentos)
-const CAT_MAP: Record<string, CategoriaTransaccion> = {
-  "vivienda": "vivienda",
-  "alimentación": "alimentacion",
-  "transporte": "transporte",
-  "servicios": "servicios",
-  "gastos_personales": "otro",
-  "entretenimiento": "entretenimiento",
-  "salud": "salud",
-  "ropa": "ropa",
-  "educación": "educacion",
-  "ahorro": "ahorro",
-  "inversión": "inversion",
-  "ingreso": "sueldo",
-}
+// Normalize para detectar transferencias (ahorro/inversión) por nombre de categoría
+const normCat = (s: string | null | undefined) =>
+  (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim()
 
 export default function CalendarioPage() {
   const { eventos, setEventos } = useGetEventos()
   const { transacciones, setTransacciones } = useGetTransacciones()
   const { cuentas } = useGetCuentas()
+  const { categorias } = useGetCategorias()
+  const categoriasActivas = categorias.filter(c => c.activa)
+  const categoriasEgreso  = categoriasActivas.filter(c => c.tipo === "gasto")
+  const categoriasIngreso = categoriasActivas.filter(c => c.tipo === "ingreso")
   const [mesActual, setMesActual] = useState(new Date())
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null)
   const [modalAgregar, setModalAgregar] = useState(false)
@@ -55,7 +42,9 @@ export default function CalendarioPage() {
   const [cuentaDestino, setCuentaDestino] = useState<string | null>(null)
 
   // Categorías que son transferencias (mueven dinero a otra cuenta, no son gasto)
-  const esTransferencia = form.tipo === "pago" && (form.categoria === "ahorro" || form.categoria === "inversión")
+  // Detecta por grupo "ahorro" en la tabla Categorias
+  const catGrupoForm = categorias.find(c => normCat(c.nombre) === normCat(form.categoria))?.grupo
+  const esTransferencia = form.tipo === "pago" && catGrupoForm === "ahorro"
 
   const diasDelMes = eachDayOfInterval({ start: startOfMonth(mesActual), end: endOfMonth(mesActual) })
   const primerDia = getDay(startOfMonth(mesActual))
@@ -108,7 +97,8 @@ export default function CalendarioPage() {
 
       // 2. Crear transacción automáticamente si tiene cuenta
       if (form.cuenta) {
-        const catTx = form.categoria ? CAT_MAP[form.categoria] ?? "otro" : "otro"
+        // form.categoria ya contiene el nombre canónico de Categoria (mismo que tx.categoria)
+        const catTx = form.categoria ?? "Otro"
 
         let tipoTx: TipoTransaccion
         let origen: string | null = null
@@ -328,13 +318,12 @@ export default function CalendarioPage() {
                       title="Categoría del evento"
                       className="w-full h-7 text-sm border rounded px-2 bg-background text-foreground"
                       value={form.categoria ?? ""}
-                      onChange={e => setForm(f => ({ ...f, categoria: (e.target.value || null) as CategoriaEvento | null }))}
+                      onChange={e => setForm(f => ({ ...f, categoria: e.target.value || null }))}
                     >
                       <option value="">— Sin categoría —</option>
-                      {form.tipo === "ingreso"
-                        ? <option value="ingreso">Ingreso</option>
-                        : CATEGORIAS_EGRESO.map(c => <option key={c} value={c}>{c}</option>)
-                      }
+                      {(form.tipo === "ingreso" ? categoriasIngreso : categoriasEgreso).map(c => (
+                        <option key={c.documentId} value={c.nombre}>{c.nombre}</option>
+                      ))}
                     </select>
                   </div>
                   <div>

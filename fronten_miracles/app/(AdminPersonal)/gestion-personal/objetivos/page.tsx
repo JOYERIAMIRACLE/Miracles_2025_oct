@@ -16,6 +16,8 @@ import { updateMeta }          from "@/api/meta-ahorro/updateMeta"
 import { deleteMeta }          from "@/api/meta-ahorro/deleteMeta"
 import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { useGetCategorias }    from "@/api/categoria/getCategorias"
+import { grupoDe }             from "@/lib/categoria"
 import { createTransaccion }   from "@/api/transaccion/createTransaccion"
 import { useGetCuentas }       from "@/api/cuenta/getCuentas"
 
@@ -370,6 +372,7 @@ export default function ObjetivosPage() {
   const { partidas: dataPartidas, loading: loadP }        = useGetPartidas()
   const { transacciones: dataTx, setTransacciones, loading: loadT } = useGetTransacciones()
   const { cuentas, loading: loadC } = useGetCuentas()
+  const { categorias } = useGetCategorias()
   const cuentasActivas = cuentas.filter(c => c.activa)
 
   const [metas, setMetas] = useState<MetaAhorroType[]>([])
@@ -395,7 +398,7 @@ export default function ObjetivosPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
   })
   const ahorrosPorMes = ultimos3.map(k =>
-    transacciones.filter(tx => tx.fecha.slice(0, 7) === k && tx.categoria === "ahorro")
+    transacciones.filter(tx => tx.fecha.slice(0, 7) === k && grupoDe(tx.categoria, categorias) === "ahorro")
       .reduce((s, tx) => s + Number(tx.monto), 0)
   ).filter(m => m > 0)
   const ahorroPromedio = ahorrosPorMes.length > 0
@@ -403,7 +406,7 @@ export default function ObjetivosPage() {
     : ahorroPlaneado
 
   const txAhorro = transacciones
-    .filter(tx => tx.categoria === "ahorro")
+    .filter(tx => grupoDe(tx.categoria, categorias) === "ahorro")
     .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
   const totalAhorradoReal = txAhorro.reduce((s, tx) => s + Number(tx.monto), 0)
 

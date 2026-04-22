@@ -16,21 +16,7 @@
       "required": true
     },
     "categoria": {
-      "type": "enumeration",
-      "enum": [
-        "vivienda",
-        "alimentación",
-        "transporte",
-        "servicios",
-        "gastos_personales",
-        "entretenimiento",
-        "salud",
-        "ropa",
-        "educación",
-        "ahorro",
-        "inversión",
-        "ingreso"
-      ]
+      "type": "string"
     },
     "tipo": {
       "type": "enumeration",

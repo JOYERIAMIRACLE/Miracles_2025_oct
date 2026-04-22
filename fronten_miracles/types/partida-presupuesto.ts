@@ -1,18 +1,5 @@
 // ─── Tipos de Partida de Presupuesto ──────────────────────────────────────────
-
-export type CategoriaPresupuesto =
-  | "vivienda"
-  | "alimentación"
-  | "transporte"
-  | "servicios"
-  | "gastos_personales"
-  | "entretenimiento"
-  | "salud"
-  | "ropa"
-  | "educación"
-  | "ahorro"
-  | "inversión"
-  | "ingreso"
+// categoria ahora es texto libre que referencia Categoria.nombre
 
 export type TipoPartida      = "necesidad" | "gastos prescindibles" | "ahorro" | "ingreso"
 export type TipoPagoPartida  = "efectivo" | "TDC" | "apartado" | "transferencia" | "bonos" | "debito"
@@ -22,10 +9,10 @@ export type PartidaPresupuestoType = {
   id:          number
   documentId:  string
   descripcion: string
-  categoria:   CategoriaPresupuesto | null
-  tipo:        TipoPartida          | null
-  tipoPago:    TipoPagoPartida      | null
-  frecuencia:  FrecuenciaPartida    | null
+  categoria:   string | null
+  tipo:        TipoPartida       | null
+  tipoPago:    TipoPagoPartida   | null
+  frecuencia:  FrecuenciaPartida | null
   monto:       number
   activo:      boolean | null
 }

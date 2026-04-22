@@ -8,23 +8,8 @@ export type TipoTransaccion =
   | "gasto"
   | "transferencia"
 
-export type CategoriaTransaccion =
-  | "alimentacion"
-  | "transporte"
-  | "vivienda"
-  | "servicios"
-  | "salud"
-  | "educacion"
-  | "entretenimiento"
-  | "ropa"
-  | "ahorro"
-  | "inversion"
-  | "sueldo"
-  | "freelance"
-  | "venta"
-  | "transferencia"
-  | "otro"
-
+// categoria ahora es texto libre que referencia Categoria.nombre
+// (la tabla Categoria define los valores válidos, grupos y colores)
 export type TransaccionType = {
   id:            number
   documentId:    string
@@ -32,10 +17,10 @@ export type TransaccionType = {
   tipo:          TipoTransaccion
   monto:         number
   fecha:         string
-  categoria:     CategoriaTransaccion | null
-  notas:         string               | null
-  cuentaOrigen:  CuentaType           | null
-  cuentaDestino: CuentaType           | null
+  categoria:     string     | null
+  notas:         string     | null
+  cuentaOrigen:  CuentaType | null
+  cuentaDestino: CuentaType | null
 }
 
 export type TransaccionPayload = {
@@ -43,8 +28,8 @@ export type TransaccionPayload = {
   tipo:          TipoTransaccion
   monto:         number
   fecha:         string
-  categoria?:    CategoriaTransaccion | null
-  notas?:        string               | null
-  cuentaOrigen?: string | number      | null
-  cuentaDestino?: string | number     | null
+  categoria?:    string | null
+  notas?:        string | null
+  cuentaOrigen?: string | number | null
+  cuentaDestino?: string | number | null
 }

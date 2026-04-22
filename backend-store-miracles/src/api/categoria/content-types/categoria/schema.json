@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "categorias",
+  "info": {
+    "singularName": "categoria",
+    "pluralName": "categorias",
+    "displayName": "categoria"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": [
+        "ingreso",
+        "gasto"
+      ],
+      "required": true
+    },
+    "grupo": {
+      "type": "enumeration",
+      "enum": [
+        "necesidad",
+        "prescindible",
+        "ahorro",
+        "ingreso"
+      ]
+    },
+    "icono": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "orden": {
+      "type": "integer",
+      "default": 0
+    },
+    "activa": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

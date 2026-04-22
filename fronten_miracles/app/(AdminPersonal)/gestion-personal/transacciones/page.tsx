@@ -17,28 +17,15 @@ import { createTransaccion }   from "@/api/transaccion/createTransaccion"
 import { updateTransaccion }   from "@/api/transaccion/updateTransaccion"
 import { deleteTransaccion }   from "@/api/transaccion/deleteTransaccion"
 import { useGetCuentas }       from "@/api/cuenta/getCuentas"
+import { useGetCategorias }    from "@/api/categoria/getCategorias"
 
 import {
   TransaccionType, TransaccionPayload,
-  TipoTransaccion, CategoriaTransaccion,
+  TipoTransaccion,
 } from "@/types/transaccion"
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const TIPOS: TipoTransaccion[] = ["ingreso", "gasto", "transferencia"]
-
-const CATEGORIAS: CategoriaTransaccion[] = [
-  "alimentacion", "transporte", "vivienda", "servicios", "salud",
-  "educacion", "entretenimiento", "ropa", "ahorro", "inversion",
-  "sueldo", "freelance", "venta", "transferencia", "otro",
-]
-
-const CAT_LABELS: Record<string, string> = {
-  alimentacion: "Alimentación", transporte: "Transporte", vivienda: "Vivienda",
-  servicios: "Servicios", salud: "Salud", educacion: "Educación",
-  entretenimiento: "Entretenimiento", ropa: "Ropa", ahorro: "Ahorro",
-  inversion: "Inversión", sueldo: "Sueldo", freelance: "Freelance",
-  venta: "Venta", transferencia: "Transferencia", otro: "Otro",
-}
 
 const TIPO_CONFIG = {
   ingreso:       { icon: ArrowUpCircle,   color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "Ingreso"       },
@@ -94,11 +81,19 @@ function StatCard({ label, value, icon: Icon, color, bgColor, borderColor, delay
 export default function TransaccionesPage() {
   const { transacciones, setTransacciones, loading } = useGetTransacciones()
   const { cuentas } = useGetCuentas()
+  const { categorias } = useGetCategorias()
 
   const [mostrarForm, setMostrarForm] = useState(false)
   const [editando, setEditando] = useState<TransaccionType | null>(null)
   const [form, setForm] = useState<TransaccionPayload>(emptyForm())
   const [guardando, setGuardando] = useState(false)
+
+  // Categorías filtradas por tipo de transacción (ingreso → ingresos, gasto/transferencia → gastos)
+  const categoriasActivas = useMemo(() => categorias.filter(c => c.activa), [categorias])
+  const categoriasParaForm = useMemo(() => {
+    if (form.tipo === "ingreso") return categoriasActivas.filter(c => c.tipo === "ingreso")
+    return categoriasActivas.filter(c => c.tipo === "gasto")
+  }, [categoriasActivas, form.tipo])
 
   // Filtros
   const [filtroTipo, setFiltroTipo] = useState<string>("")
@@ -285,7 +280,7 @@ export default function TransaccionesPage() {
               <Label className="text-[10px] text-slate-500">Categoría</Label>
               <select title="Filtrar por categoría" className={selectCls} value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)}>
                 <option value="">Todas</option>
-                {CATEGORIAS.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+                {categoriasActivas.map(c => <option key={c.documentId} value={c.nombre}>{c.nombre}</option>)}
               </select>
             </div>
             <div>
@@ -365,9 +360,9 @@ export default function TransaccionesPage() {
             <div>
               <Label className="text-[10px] text-slate-500">Categoría</Label>
               <select title="Categoría" className={selectCls}
-                value={form.categoria ?? ""} onChange={e => setForm(f => ({ ...f, categoria: (e.target.value || null) as CategoriaTransaccion | null }))}>
+                value={form.categoria ?? ""} onChange={e => setForm(f => ({ ...f, categoria: e.target.value || null }))}>
                 <option value="">— Seleccionar —</option>
-                {CATEGORIAS.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+                {categoriasParaForm.map(c => <option key={c.documentId} value={c.nombre}>{c.nombre}</option>)}
               </select>
             </div>
 
@@ -442,7 +437,7 @@ export default function TransaccionesPage() {
                     <p className="text-sm font-medium text-slate-200 truncate">{tx.descripcion}</p>
                     {tx.categoria && (
                       <span className="text-[10px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded hidden sm:inline">
-                        {CAT_LABELS[tx.categoria] ?? tx.categoria}
+                        {tx.categoria}
                       </span>
                     )}
                   </div>

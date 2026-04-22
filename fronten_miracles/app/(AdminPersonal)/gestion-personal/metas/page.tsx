@@ -12,6 +12,8 @@ import { updateMeta }     from "@/api/meta-ahorro/updateMeta"
 import { deleteMeta }     from "@/api/meta-ahorro/deleteMeta"
 import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { useGetCategorias }    from "@/api/categoria/getCategorias"
+import { grupoDe }             from "@/lib/categoria"
 import { createTransaccion }   from "@/api/transaccion/createTransaccion"
 import { useGetCuentas }       from "@/api/cuenta/getCuentas"
 
@@ -269,6 +271,7 @@ export default function MetasPage() {
   const { metas: dataMetas,       loading: loadM, error } = useGetMetas()
   const { partidas: dataPartidas, loading: loadP }        = useGetPartidas()
   const { transacciones: dataTx, setTransacciones, loading: loadR } = useGetTransacciones()
+  const { categorias } = useGetCategorias()
   const { cuentas } = useGetCuentas()
   const cuentasActivas = cuentas.filter(c => c.activa)
 
@@ -299,7 +302,7 @@ export default function MetasPage() {
 
   const ahorrosPorMes = ultimos3Meses.map(mesKey => {
     return transacciones
-      .filter(tx => tx.fecha.slice(0, 7) === mesKey && tx.categoria === "ahorro")
+      .filter(tx => tx.fecha.slice(0, 7) === mesKey && grupoDe(tx.categoria, categorias) === "ahorro")
       .reduce((s, tx) => s + Number(tx.monto), 0)
   }).filter(m => m > 0)
 
@@ -309,7 +312,7 @@ export default function MetasPage() {
 
   // ─── Total real ahorrado (desde transacciones) ─────────────────────────
   const txAhorro = transacciones
-    .filter(tx => tx.categoria === "ahorro")
+    .filter(tx => grupoDe(tx.categoria, categorias) === "ahorro")
     .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
   const totalAhorradoReal = txAhorro.reduce((s, tx) => s + Number(tx.monto), 0)
 

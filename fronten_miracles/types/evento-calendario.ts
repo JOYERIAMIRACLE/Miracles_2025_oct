@@ -1,10 +1,7 @@
 export type EventoTipo    = "ingreso" | "pago"
 export type TipoPagoEvento = "efectivo" | "debito" | "bonos" | "credito" | "inversion"
 
-export type CategoriaEvento =
-  | "vivienda" | "alimentación" | "transporte" | "servicios"
-  | "gastos_personales" | "entretenimiento" | "salud" | "ropa"
-  | "educación" | "ahorro" | "inversión" | "ingreso"
+// categoria ahora es texto libre que referencia Categoria.nombre
 
 export type EventoCalendarioType = {
   id: number
@@ -16,7 +13,7 @@ export type EventoCalendarioType = {
   fecha: string
   descripcion: string | null
   recurrente: boolean
-  categoria: CategoriaEvento | null
+  categoria: string | null
   cuenta: { id: number; documentId: string; nombre: string; tipo: string; saldoActual: number | null; saldoInicial: number | null } | null
 }
 
@@ -28,6 +25,6 @@ export type EventoCalendarioPayload = {
   fecha: string
   descripcion?: string
   recurrente?: boolean
-  categoria?: CategoriaEvento | null
+  categoria?: string | null
   cuenta?: string | null  // documentId de la cuenta
 }

@@ -435,6 +435,45 @@ export interface ApiActivoActivo extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
+  collectionName: 'categorias';
+  info: {
+    displayName: 'categoria';
+    pluralName: 'categorias';
+    singularName: 'categoria';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activa: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    color: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    grupo: Schema.Attribute.Enumeration<
+      ['necesidad', 'prescindible', 'ahorro', 'ingreso']
+    >;
+    icono: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::categoria.categoria'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<['ingreso', 'gasto']> &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCentroCostoCentroCosto extends Struct.CollectionTypeSchema {
   collectionName: 'centro_costos';
   info: {
@@ -599,22 +638,7 @@ export interface ApiEventoCalendarioEventoCalendario
     draftAndPublish: true;
   };
   attributes: {
-    categoria: Schema.Attribute.Enumeration<
-      [
-        'vivienda',
-        'alimentaci\u00F3n',
-        'transporte',
-        'servicios',
-        'gastos_personales',
-        'entretenimiento',
-        'salud',
-        'ropa',
-        'educaci\u00F3n',
-        'ahorro',
-        'inversi\u00F3n',
-        'ingreso',
-      ]
-    >;
+    categoria: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -799,22 +823,7 @@ export interface ApiPartidaPresupuestoPartidaPresupuesto
   };
   attributes: {
     activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    categoria: Schema.Attribute.Enumeration<
-      [
-        'vivienda',
-        'alimentaci\u00F3n',
-        'transporte',
-        'servicios',
-        'gastos_personales',
-        'entretenimiento',
-        'salud',
-        'ropa',
-        'educaci\u00F3n',
-        'ahorro',
-        'inversi\u00F3n',
-        'ingreso',
-      ]
-    >;
+    categoria: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1072,25 +1081,7 @@ export interface ApiTransaccionTransaccion extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    categoria: Schema.Attribute.Enumeration<
-      [
-        'alimentacion',
-        'transporte',
-        'vivienda',
-        'servicios',
-        'salud',
-        'educacion',
-        'entretenimiento',
-        'ropa',
-        'ahorro',
-        'inversion',
-        'sueldo',
-        'freelance',
-        'venta',
-        'transferencia',
-        'otro',
-      ]
-    >;
+    categoria: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1666,6 +1657,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
       'api::activo.activo': ApiActivoActivo;
+      'api::categoria.categoria': ApiCategoriaCategoria;
       'api::centro-costo.centro-costo': ApiCentroCostoCentroCosto;
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
       'api::cliente.cliente': ApiClienteCliente;
