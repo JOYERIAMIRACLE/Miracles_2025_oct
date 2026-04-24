@@ -301,28 +301,29 @@ export default function GestionPersonalPage() {
     .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso")
     .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
-  // ─── Datos REALES del mes seleccionado ──────────────────────────────────
-  // Unifica transacciones + eventos del calendario sin transacción asociada (dedupe por fecha+monto)
-  // Esto hace que Dashboard, Presupuesto y Calendario cuenten el mismo universo.
-  const txMesRaw = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
-  const evMes    = eventos.filter(ev => ev.fecha?.slice(0, 7) === mesSeleccionado)
-  const txHuellas = new Set(txMesRaw.map(tx => `${tx.fecha.slice(0, 10)}_${Number(tx.monto)}`))
-
-  // Convierte eventos-sin-tx a forma de transacción para mezclarlos con txMes
+  // ─── Movimientos unificados: transacciones + eventos sin tx (deduplicado) ─
+  // Dashboard, Presupuesto y Calendario cuentan el mismo universo.
   type TxLike = { tipo: "ingreso" | "gasto" | "transferencia"; monto: number; categoria: string | null; fecha: string }
-  const evSinTx: TxLike[] = evMes
-    .filter(ev => !txHuellas.has(`${ev.fecha.slice(0, 10)}_${Number(ev.monto)}`))
-    .map(ev => ({
-      tipo:      ev.tipo === "ingreso" ? "ingreso" : "gasto",
-      monto:     Number(ev.monto),
-      categoria: ev.categoria,
-      fecha:     ev.fecha,
-    }))
 
-  const txMes: TxLike[] = [
-    ...txMesRaw.map(tx => ({ tipo: tx.tipo, monto: Number(tx.monto), categoria: tx.categoria, fecha: tx.fecha })),
-    ...evSinTx,
-  ]
+  function movimientosDeMes(mesKey: string): TxLike[] {
+    const tx = transacciones.filter(t => t.fecha?.slice(0, 7) === mesKey)
+    const ev = eventos.filter(e => e.fecha?.slice(0, 7) === mesKey)
+    const huellas = new Set(tx.map(t => `${t.fecha.slice(0, 10)}_${Number(t.monto)}`))
+    const evSinTx: TxLike[] = ev
+      .filter(e => !huellas.has(`${e.fecha.slice(0, 10)}_${Number(e.monto)}`))
+      .map(e => ({
+        tipo:      e.tipo === "ingreso" ? "ingreso" : "gasto",
+        monto:     Number(e.monto),
+        categoria: e.categoria,
+        fecha:     e.fecha,
+      }))
+    return [
+      ...tx.map(t => ({ tipo: t.tipo, monto: Number(t.monto), categoria: t.categoria, fecha: t.fecha })),
+      ...evSinTx,
+    ]
+  }
+
+  const txMes = movimientosDeMes(mesSeleccionado)
 
   const ingresoReal = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + tx.monto, 0)
   const gastoReal   = txMes.filter(tx => tx.tipo === "gasto" || tx.tipo === "transferencia").reduce((s, tx) => s + tx.monto, 0)
@@ -384,6 +385,7 @@ export default function GestionPersonalPage() {
   const titulo = getLevelTitle(level)
 
   // ─── Monthly chart data (6 meses alrededor del seleccionado) ───────────
+  // Usa movimientosDeMes para que cada barra incluya transacciones + eventos sin tx.
   const chartData = useMemo(() => {
     const selDate = new Date(mesSeleccionado + "-15")
     const months: { label: string; key: string }[] = []
@@ -395,27 +397,20 @@ export default function GestionPersonalPage() {
       })
     }
 
-    const ingresos = months.map(m => ({
-      name: m.label,
-      value: Math.round(transacciones
-        .filter(tx => tx.fecha.slice(0, 7) === m.key && tx.tipo === "ingreso")
-        .reduce((s, tx) => s + Number(tx.monto), 0)),
-    }))
+    const porMes = months.map(m => {
+      const mov = movimientosDeMes(m.key)
+      const ing = mov.filter(x => x.tipo === "ingreso").reduce((s, x) => s + x.monto, 0)
+      const gas = mov.filter(x => x.tipo === "gasto" || x.tipo === "transferencia").reduce((s, x) => s + x.monto, 0)
+      return { label: m.label, ing, gas }
+    })
 
-    const gastos = months.map(m => ({
-      name: m.label,
-      value: Math.round(transacciones
-        .filter(tx => tx.fecha.slice(0, 7) === m.key && (tx.tipo === "gasto" || tx.tipo === "transferencia"))
-        .reduce((s, tx) => s + Number(tx.monto), 0)),
-    }))
-
-    const balance = months.map((m, i) => ({
-      name: m.label,
-      value: ingresos[i].value - gastos[i].value,
-    }))
-
-    return { ingresos, gastos, balance }
-  }, [transacciones, mesSeleccionado])
+    return {
+      ingresos: porMes.map(p => ({ name: p.label, value: Math.round(p.ing) })),
+      gastos:   porMes.map(p => ({ name: p.label, value: Math.round(p.gas) })),
+      balance:  porMes.map(p => ({ name: p.label, value: Math.round(p.ing - p.gas) })),
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transacciones, eventos, mesSeleccionado])
 
   // Modules
   const modules = [
