@@ -67,13 +67,22 @@ export default function CalendarioPage() {
     })
   }
 
-  const totalIngresos = eventos
-    .filter(e => e.tipo === "ingreso" && new Date(e.fecha + "T00:00:00").getMonth() === mesActual.getMonth() && new Date(e.fecha + "T00:00:00").getFullYear() === mesActual.getFullYear())
-    .reduce((acc, e) => acc + e.monto, 0)
+  // Totales del mes: transacciones + eventos sin tx asociada (deduplicado por fecha+monto)
+  // Mismo criterio que HUD y Presupuesto — calendario también funciona como registro de transacciones.
+  const mesKey = `${mesActual.getFullYear()}-${String(mesActual.getMonth() + 1).padStart(2, "0")}`
+  const txDelMes = transacciones.filter(tx => tx.fecha?.slice(0, 7) === mesKey)
+  const evDelMes = eventos.filter(e => e.fecha?.slice(0, 7) === mesKey)
+  const txHuellas = new Set(txDelMes.map(tx => `${tx.fecha.slice(0, 10)}_${Number(tx.monto)}`))
 
-  const totalPagos = eventos
-    .filter(e => e.tipo === "pago" && new Date(e.fecha + "T00:00:00").getMonth() === mesActual.getMonth() && new Date(e.fecha + "T00:00:00").getFullYear() === mesActual.getFullYear())
-    .reduce((acc, e) => acc + e.monto, 0)
+  const totalIngresos =
+    txDelMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0) +
+    evDelMes.filter(e => e.tipo === "ingreso" && !txHuellas.has(`${e.fecha.slice(0, 10)}_${Number(e.monto)}`))
+      .reduce((s, e) => s + Number(e.monto), 0)
+
+  const totalPagos =
+    txDelMes.filter(tx => tx.tipo === "gasto" || tx.tipo === "transferencia").reduce((s, tx) => s + Number(tx.monto), 0) +
+    evDelMes.filter(e => e.tipo === "pago" && !txHuellas.has(`${e.fecha.slice(0, 10)}_${Number(e.monto)}`))
+      .reduce((s, e) => s + Number(e.monto), 0)
 
   const handleDiaClick = (dia: Date) => {
     setDiaSeleccionado(dia)

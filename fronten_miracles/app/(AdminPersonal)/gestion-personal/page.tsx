@@ -21,6 +21,7 @@ import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { useGetCuentas }       from "@/api/cuenta/getCuentas"
 import { useGetMetas }         from "@/api/meta-ahorro/getMetas"
 import { useGetCategorias }    from "@/api/categoria/getCategorias"
+import { useGetEventos }       from "@/api/evento-calendario/getEventos"
 import { grupoDe }             from "@/lib/categoria"
 
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
@@ -271,6 +272,7 @@ export default function GestionPersonalPage() {
   const { cuentas:        dataCuentas,  loading: loadCuent  } = useGetCuentas()
   const { metas:          dataMetas,    loading: loadMetas  } = useGetMetas()
   const { categorias }                                          = useGetCategorias()
+  const { eventos }                                             = useGetEventos()
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
   const [activos,   setActivos]   = useState<ActivoType[]>([])
@@ -300,9 +302,30 @@ export default function GestionPersonalPage() {
     .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
   // ─── Datos REALES del mes seleccionado ──────────────────────────────────
-  const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
-  const ingresoReal = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + Number(tx.monto), 0)
-  const gastoReal   = txMes.filter(tx => tx.tipo === "gasto" || tx.tipo === "transferencia").reduce((s, tx) => s + Number(tx.monto), 0)
+  // Unifica transacciones + eventos del calendario sin transacción asociada (dedupe por fecha+monto)
+  // Esto hace que Dashboard, Presupuesto y Calendario cuenten el mismo universo.
+  const txMesRaw = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
+  const evMes    = eventos.filter(ev => ev.fecha?.slice(0, 7) === mesSeleccionado)
+  const txHuellas = new Set(txMesRaw.map(tx => `${tx.fecha.slice(0, 10)}_${Number(tx.monto)}`))
+
+  // Convierte eventos-sin-tx a forma de transacción para mezclarlos con txMes
+  type TxLike = { tipo: "ingreso" | "gasto" | "transferencia"; monto: number; categoria: string | null; fecha: string }
+  const evSinTx: TxLike[] = evMes
+    .filter(ev => !txHuellas.has(`${ev.fecha.slice(0, 10)}_${Number(ev.monto)}`))
+    .map(ev => ({
+      tipo:      ev.tipo === "ingreso" ? "ingreso" : "gasto",
+      monto:     Number(ev.monto),
+      categoria: ev.categoria,
+      fecha:     ev.fecha,
+    }))
+
+  const txMes: TxLike[] = [
+    ...txMesRaw.map(tx => ({ tipo: tx.tipo, monto: Number(tx.monto), categoria: tx.categoria, fecha: tx.fecha })),
+    ...evSinTx,
+  ]
+
+  const ingresoReal = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + tx.monto, 0)
+  const gastoReal   = txMes.filter(tx => tx.tipo === "gasto" || tx.tipo === "transferencia").reduce((s, tx) => s + tx.monto, 0)
   const flujoNeto   = ingresoReal - gastoReal
 
   // Cuentas
