@@ -342,12 +342,18 @@ export default function GestionPersonalPage() {
   const deudaTotal     = cuentasCredito.reduce((s, c) => s + saldoDe(c), 0)
   const balanceActual  = disponible - deudaTotal
 
-  // Balance proyectado (solo tiene sentido en el mes actual)
+  // Balance proyectado: cómo cerrará el mes según eventos AGENDADOS en calendario
+  // (solo cuenta eventos futuros del mes; los pasados ya están en balanceActual via transacciones)
   const diasMes = new Date(mesDate.getFullYear(), mesDate.getMonth() + 1, 0).getDate()
   const diasRestantes = esMesActual ? diasMes - hoy.getDate() : 0
-  const pctRestante = diasMes > 0 ? diasRestantes / diasMes : 0
+  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`
+  const eventosFuturosMes = esMesActual
+    ? eventos.filter(ev => ev.fecha?.slice(0, 7) === mesSeleccionado && ev.fecha >= hoyStr)
+    : []
+  const ingresoAgendado = eventosFuturosMes.filter(ev => ev.tipo === "ingreso").reduce((s, ev) => s + Number(ev.monto), 0)
+  const pagoAgendado    = eventosFuturosMes.filter(ev => ev.tipo === "pago").reduce((s, ev) => s + Number(ev.monto), 0)
   const balanceProyectado = esMesActual
-    ? balanceActual + (ingresoPresupuestado * pctRestante) - (egresoPresupuestado * pctRestante)
+    ? balanceActual + ingresoAgendado - pagoAgendado
     : flujoNeto
 
   // Patrimonio
@@ -356,12 +362,9 @@ export default function GestionPersonalPage() {
   const totalPasivos   = pasivos.reduce((s, p) => s + (p.saldo ?? 0), 0)
   const patrimonioNeto = totalActivos + totalPrestamos - totalPasivos
 
-  // Supervivencia (usa presupuesto como referencia de gastos fijos)
-  const efectivoLiquido = activos
-    .filter(a => a.categoria === "efectivo" || a.categoria === "inversion")
-    .reduce((s, a) => s + (a.valor ?? 0), 0)
+  // Supervivencia: meses de gasto que cubres con tu liquidez real (cuentas, no módulo Patrimonio)
   const gastoMensualRef = gastoReal > 0 ? gastoReal : egresoPresupuestado
-  const ratioSupervivencia = gastoMensualRef > 0 ? efectivoLiquido / gastoMensualRef : 0
+  const ratioSupervivencia = gastoMensualRef > 0 ? disponible / gastoMensualRef : 0
 
   const ahorroReal = txMes.filter(tx => grupoDe(tx.categoria, categorias) === "ahorro").reduce((s, tx) => s + Number(tx.monto), 0)
   const pctAhorro = ingresoReal > 0 ? (ahorroReal / ingresoReal) * 100 : 0
@@ -533,7 +536,7 @@ export default function GestionPersonalPage() {
         <OverviewCard
           label={esMesActual ? "Balance Proyectado" : "Disponible"}
           value={esMesActual ? fmt(balanceProyectado) : fmt(disponible)}
-          sub={esMesActual ? `Faltan ${diasRestantes} dias` : "Saldo actual cuentas"}
+          sub={esMesActual ? `Según calendario · faltan ${diasRestantes} días` : "Saldo actual cuentas"}
           icon={Target}
           color={balanceProyectado >= 0 ? "purple" : "red"}
           delay={0.25}
