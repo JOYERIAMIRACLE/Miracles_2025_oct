@@ -338,6 +338,10 @@ export default function GestionPersonalPage() {
   const saldoDe = (c: typeof cuentas[number]) => c.saldoActual ?? c.saldoInicial ?? 0
   const operativaDisponible = cuentasOperativa.reduce((s, c) => s + saldoDe(c), 0)
   const apartadosDisponible = cuentasApartados.reduce((s, c) => s + saldoDe(c), 0)
+  // Ahorro acumulado: cuentas con propósito de guardar/invertir (no Operativa)
+  const ahorroAcumulado = cuentasLiquidas
+    .filter(c => c.proposito === "Ahorro" || c.proposito === "Inversión" || c.proposito === "Apartado")
+    .reduce((s, c) => s + saldoDe(c), 0)
   const disponible     = operativaDisponible + apartadosDisponible
   const deudaTotal     = cuentasCredito.reduce((s, c) => s + saldoDe(c), 0)
   const balanceActual  = disponible - deudaTotal
@@ -671,8 +675,8 @@ export default function GestionPersonalPage() {
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-violet-400" />
             <div>
-              <p className="text-[10px] text-slate-600">Patrimonio</p>
-              <p className="text-sm font-bold text-slate-200">{fmt(patrimonioNeto)}</p>
+              <p className="text-[10px] text-slate-600">Ahorro acum.</p>
+              <p className="text-sm font-bold text-slate-200">{fmt(ahorroAcumulado)}</p>
             </div>
           </div>
         </div>

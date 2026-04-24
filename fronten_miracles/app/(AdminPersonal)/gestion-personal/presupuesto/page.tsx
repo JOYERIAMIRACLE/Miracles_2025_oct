@@ -163,8 +163,9 @@ export default function PresupuestoPage() {
 
     // Solo categorías de gasto (ingresos no se comparan en esta tabla)
     const catsGasto = categorias.filter(c => c.activa && c.tipo === "gasto").map(c => c.nombre)
+    const catsGastoSet = new Set(catsGasto.map(normCat))
 
-    return catsGasto.map(cat => {
+    const filas = catsGasto.map(cat => {
       const catKey = normCat(cat)
       // Presupuestado mensual (compara nombre normalizado por si hay leves variaciones)
       const partidasCat = partidas.filter(p => p.activo !== false && normCat(p.categoria) === catKey)
@@ -189,8 +190,28 @@ export default function PresupuestoPage() {
       const excedido = pct > 100
 
       return { cat, presupuestado, gastado, pct, excedido }
-    }).filter(c => c.presupuestado > 0 || c.gastado > 0)
-  }, [partidas, transacciones, eventos, mesSeleccionado])
+    })
+
+    // Capturar movimientos sin categoría válida (null, vacía, o que no matchea ninguna Categoria)
+    const esCatValida = (c: string | null | undefined) => {
+      const k = normCat(c)
+      return k !== "" && catsGastoSet.has(k)
+    }
+    const gastadoHuerfanoTx = txMes
+      .filter(tx => (tx.tipo === "gasto" || tx.tipo === "transferencia") && !esCatValida(tx.categoria))
+      .reduce((s, tx) => s + Number(tx.monto), 0)
+    const gastadoHuerfanoEv = evMes
+      .filter(ev => ev.tipo === "pago" && !esCatValida(ev.categoria))
+      .filter(ev => !txDescripciones.has(`${ev.fecha.slice(0, 10)}_${ev.monto}`))
+      .reduce((s, ev) => s + Number(ev.monto), 0)
+    const gastadoHuerfano = gastadoHuerfanoTx + gastadoHuerfanoEv
+
+    if (gastadoHuerfano > 0) {
+      filas.push({ cat: "Sin categoría", presupuestado: 0, gastado: gastadoHuerfano, pct: 0, excedido: false })
+    }
+
+    return filas.filter(c => c.presupuestado > 0 || c.gastado > 0)
+  }, [partidas, transacciones, eventos, categorias, mesSeleccionado])
 
   // Totales de ingreso presupuestado vs real
   const comparativaIngreso = useMemo(() => {
