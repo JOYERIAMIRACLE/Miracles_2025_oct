@@ -15,13 +15,13 @@ import {
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "HUD",              href: "/gestion-personal",                  icon: LayoutDashboard, color: "cyan"   },
-  { name: "Finanzas",         href: "/gestion-personal/presupuesto",      icon: Swords,          color: "cyan"   },
+  { name: "Dashboard",        href: "/gestion-personal",                  icon: LayoutDashboard, color: "cyan"   },
+  { name: "Presupuesto",      href: "/gestion-personal/presupuesto",      icon: Swords,          color: "cyan"   },
   { name: "Objetivos",        href: "/gestion-personal/objetivos",        icon: Target,          color: "amber"  },
   { name: "Calendario",       href: "/gestion-personal/calendario",       icon: CalendarDays,    color: "blue"   },
-  { name: "Inventario",       href: "/gestion-personal/cuentas",          icon: Package,         color: "green"  },
+  { name: "Cuentas",          href: "/gestion-personal/cuentas",          icon: Package,         color: "green"  },
   { name: "Transacciones",   href: "/gestion-personal/transacciones",    icon: ArrowLeftRight,  color: "cyan"   },
-  { name: "Categorías",       href: "/gestion-personal/categorias",       icon: Tag,             color: "pink"   },
+  { name: "Etiquetas",        href: "/gestion-personal/categorias",       icon: Tag,             color: "pink"   },
 ]
 
 const activeColors: Record<string, string> = {
