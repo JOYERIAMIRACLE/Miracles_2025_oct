@@ -6,7 +6,7 @@ import { createCuenta } from "@/api/cuenta/createCuenta"
 import { updateCuenta } from "@/api/cuenta/updateCuenta"
 import { deleteCuenta } from "@/api/cuenta/deleteCuenta"
 import { CuentaType, CuentaPayload, TipoCuenta, PropositoCuenta } from "@/types/cuenta"
-import { Plus, Pencil, Trash2, X, Check, Banknote, TrendingUp, TrendingDown } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Banknote, TrendingUp, TrendingDown, Star, PiggyBank, Bookmark, Wallet, LineChart, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,6 +15,24 @@ import { toast } from "sonner"
 
 const TIPOS: TipoCuenta[]    = ["Efectivo", "Crédito", "Debito"]
 const PROPOSITOS: PropositoCuenta[] = ["Operativa", "Ahorro", "Inversión", "Apartado", "Presupuesto 1"]
+
+// Metadata visual por propósito — orden = orden de render en la lista
+type PropositoMeta = {
+  label:     string
+  icon:      React.ElementType
+  sectionCls: string  // clases para el header de sección
+  cardCls:    string  // clases para las tarjetas de cuenta dentro del grupo
+}
+const PROPOSITO_META: Record<string, PropositoMeta> = {
+  "Operativa":     { label: "Operativa · gasto diario", icon: Star,       sectionCls: "text-emerald-500",  cardCls: "border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-sm" },
+  "Ahorro":        { label: "Ahorro",                   icon: PiggyBank,  sectionCls: "text-blue-500",     cardCls: "border-blue-200 dark:border-blue-900/50 bg-blue-50/30 dark:bg-blue-950/15" },
+  "Inversión":     { label: "Inversión",                icon: LineChart,  sectionCls: "text-violet-500",   cardCls: "border-violet-200 dark:border-violet-900/50 bg-violet-50/30 dark:bg-violet-950/15" },
+  "Apartado":      { label: "Apartado",                 icon: Bookmark,   sectionCls: "text-amber-500",    cardCls: "border-amber-200 dark:border-amber-900/50 bg-amber-50/30 dark:bg-amber-950/15" },
+  "Presupuesto 1": { label: "Presupuesto 1",            icon: Wallet,     sectionCls: "text-indigo-500",   cardCls: "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-indigo-950/15" },
+  "__sin":         { label: "Sin propósito",            icon: Banknote,   sectionCls: "text-zinc-500",     cardCls: "" },
+  "__credito":     { label: "Crédito · tarjetas",       icon: CreditCard, sectionCls: "text-red-500",      cardCls: "" },
+}
+const ORDEN_PROPOSITOS = ["Operativa", "Ahorro", "Inversión", "Apartado", "Presupuesto 1", "__sin", "__credito"]
 
 const fmt = (n: number | null | undefined) =>
   `$${(n ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
@@ -47,13 +65,30 @@ export default function CuentasPage() {
   const liquidas = activas.filter(c => c.tipo !== "Crédito")
   const creditos = activas.filter(c => c.tipo === "Crédito")
   const efectivo = activas.filter(c => c.tipo === "Efectivo")
+  const operativas = liquidas.filter(c => c.proposito === "Operativa")
+  const apartados  = liquidas.filter(c => c.proposito !== "Operativa")
 
-  const totalSistema  = liquidas.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
-  const totalEfectivo = efectivo.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
-  const totalBanco    = liquidas.filter(c => c.saldoBanco != null).reduce((s, c) => s + c.saldoBanco!, 0)
-  const tieneBancos   = liquidas.some(c => c.saldoBanco != null)
-  const totalDeuda    = creditos.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
-  const diferencia    = tieneBancos ? totalBanco - totalSistema : null
+  const saldoDe = (c: CuentaType) => c.saldoActual ?? c.saldoInicial ?? 0
+  const totalSistema   = liquidas.reduce((s, c) => s + saldoDe(c), 0)
+  const totalOperativa = operativas.reduce((s, c) => s + saldoDe(c), 0)
+  const totalApartados = apartados.reduce((s, c) => s + saldoDe(c), 0)
+  const totalEfectivo  = efectivo.reduce((s, c) => s + saldoDe(c), 0)
+  const totalBanco     = liquidas.filter(c => c.saldoBanco != null).reduce((s, c) => s + c.saldoBanco!, 0)
+  const tieneBancos    = liquidas.some(c => c.saldoBanco != null)
+  const totalDeuda     = creditos.reduce((s, c) => s + saldoDe(c), 0)
+  const diferencia     = tieneBancos ? totalBanco - totalSistema : null
+
+  // Agrupa liquidas por propósito (para desglose y lista)
+  const gruposLista = useMemo(() => {
+    return ORDEN_PROPOSITOS.map(key => {
+      let items: CuentaType[] = []
+      if (key === "__credito")     items = creditos
+      else if (key === "__sin")    items = liquidas.filter(c => !c.proposito)
+      else                         items = liquidas.filter(c => c.proposito === key)
+      const total = items.reduce((s, c) => s + saldoDe(c), 0)
+      return { key, meta: PROPOSITO_META[key], items, total }
+    }).filter(g => g.items.length > 0)
+  }, [cuentas])
 
   // ─── Resumen mensual: transacciones registradas por mes ───
   const resumenMensual = useMemo(() => {
@@ -157,9 +192,61 @@ export default function CuentasPage() {
         </Button>
       </div>
 
-      {/* Resumen */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        {/* Diferencia / faltante (sutil) */}
+      {/* Operativa vs Apartados (separación principal) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        {/* Operativa — destacado */}
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/60 dark:to-emerald-900/20 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Star className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 fill-emerald-500" />
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold uppercase tracking-wide">Operativa</p>
+          </div>
+          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-200">{fmt(totalOperativa)}</p>
+          <p className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
+            {operativas.length} cuenta{operativas.length !== 1 ? "s" : ""} de gasto diario
+          </p>
+        </div>
+        {/* Apartados — con desglose por propósito */}
+        <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
+          <div className="flex items-center gap-1.5 mb-1">
+            <PiggyBank className="h-3.5 w-3.5 text-slate-500" />
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wide">Apartados</p>
+          </div>
+          <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{fmt(totalApartados)}</p>
+          {/* Desglose en pills */}
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {gruposLista
+              .filter(g => g.key !== "Operativa" && g.key !== "__credito" && g.total > 0)
+              .map(g => {
+                const Icon = g.meta.icon
+                return (
+                  <span key={g.key} className="inline-flex items-center gap-1 text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5">
+                    <Icon className={`h-2.5 w-2.5 ${g.meta.sectionCls}`} />
+                    <span className="text-slate-500">{g.meta.label}:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">{fmt(g.total)}</span>
+                  </span>
+                )
+              })}
+          </div>
+        </div>
+      </div>
+
+      {/* Resumen secundario */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Efectivo</p>
+          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{fmt(totalEfectivo)}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{efectivo.length} cuenta{efectivo.length !== 1 ? "s" : ""} cash</p>
+        </div>
+        <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Saldo banco</p>
+          <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{tieneBancos ? fmt(totalBanco) : "—"}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{tieneBancos ? "Referencia real" : "Editar cuentas"}</p>
+        </div>
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium">Deuda crédito</p>
+          <p className="text-xl font-bold text-red-700 dark:text-red-300">{fmt(totalDeuda)}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{creditos.length} tarjeta{creditos.length !== 1 ? "s" : ""}</p>
+        </div>
         <div className="bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
           <p className="text-xs text-muted-foreground font-medium">
             {diferencia === null ? "Sin referencia" : diferencia === 0 ? "Todo cuadra" : diferencia > 0 ? "Sobrante" : "Faltante"}
@@ -172,30 +259,6 @@ export default function CuentasPage() {
             {diferencia !== null ? (diferencia >= 0 ? "+" : "") + fmt(diferencia) : "—"}
           </p>
           <p className="text-[10px] text-muted-foreground mt-0.5">{diferencia !== null && diferencia !== 0 ? "Sin registrar" : ""}</p>
-        </div>
-        {/* Saldo efectivo */}
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Efectivo</p>
-          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{fmt(totalEfectivo)}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{efectivo.length} cuenta{efectivo.length !== 1 ? "s" : ""} cash</p>
-        </div>
-        {/* Saldo sistema */}
-        <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl p-4">
-          <p className="text-xs text-green-600 dark:text-green-400 font-medium">Saldo sistema</p>
-          <p className="text-xl font-bold text-green-700 dark:text-green-300">{fmt(totalSistema)}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Según transacciones</p>
-        </div>
-        {/* Saldo real banco */}
-        <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Saldo real bancos</p>
-          <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{tieneBancos ? fmt(totalBanco) : "—"}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{tieneBancos ? "Lo que dice tu banco" : "Edita cuentas para ingresar"}</p>
-        </div>
-        {/* Deuda */}
-        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-xs text-red-600 dark:text-red-400 font-medium">Deuda crédito</p>
-          <p className="text-xl font-bold text-red-700 dark:text-red-300">{fmt(totalDeuda)}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{creditos.length} tarjeta{creditos.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
 
@@ -273,21 +336,37 @@ export default function CuentasPage() {
         </div>
       )}
 
-      {/* Lista de cuentas */}
+      {/* Lista de cuentas — agrupada por propósito */}
       {loading ? (
         <p className="text-sm text-muted-foreground text-center py-8">Cargando...</p>
       ) : cuentas.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">No hay cuentas. Crea una.</p>
       ) : (
-        <div className="space-y-3">
-          {cuentas.map(c => {
+        <div className="space-y-6">
+          {gruposLista.map(grupo => {
+            const HeaderIcon = grupo.meta.icon
+            return (
+            <div key={grupo.key}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className={`text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 ${grupo.meta.sectionCls}`}>
+                  <HeaderIcon className="h-3 w-3" />
+                  {grupo.meta.label}
+                  <span className="text-muted-foreground font-normal">· {grupo.items.length}</span>
+                </h3>
+                <span className="text-xs font-semibold text-muted-foreground">{fmt(grupo.total)}</span>
+              </div>
+              <div className="space-y-2">
+          {grupo.items.map(c => {
             const saldo = c.saldoActual ?? c.saldoInicial ?? 0
             const esCredito = c.tipo === "Crédito"
+            const esOperativa = c.proposito === "Operativa"
             const saldoPositivo = esCredito ? saldo === 0 : saldo >= 0
             const tieneBanco = c.saldoBanco !== null && c.saldoBanco !== undefined
             const diferencia = tieneBanco ? c.saldoBanco! - saldo : null
             return (
-              <div key={c.id} className={`flex items-center gap-4 p-4 rounded-xl border bg-white dark:bg-card transition-opacity ${!c.activa ? "opacity-50" : ""}`}>
+              <div key={c.id} className={`flex items-center gap-4 p-4 rounded-xl border transition-opacity ${
+                !c.activa ? "opacity-50" : ""
+              } ${grupo.meta.cardCls || "border-border bg-white dark:bg-card"}`}>
                 {/* Color dot */}
                 <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color ?? "#6366f1" }} />
 
@@ -295,6 +374,7 @@ export default function CuentasPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-sm truncate">{c.nombre}</p>
+                    {esOperativa && <Star className="h-3 w-3 text-emerald-500 fill-emerald-500 shrink-0" />}
                     {!c.activa && <span className="text-[10px] bg-muted text-muted-foreground rounded px-1">Inactiva</span>}
                   </div>
                   <p className="text-xs text-muted-foreground">{c.tipo}{c.proposito ? ` · ${c.proposito}` : ""}</p>
@@ -367,6 +447,10 @@ export default function CuentasPage() {
                   </button>
                 </div>
               </div>
+            )
+          })}
+              </div>
+            </div>
             )
           })}
         </div>

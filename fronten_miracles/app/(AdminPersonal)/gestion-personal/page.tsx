@@ -306,11 +306,16 @@ export default function GestionPersonalPage() {
   const flujoNeto   = ingresoReal - gastoReal
 
   // Cuentas
-  const cuentasActivas = cuentas.filter(c => c.activa)
-  const cuentasLiquidas = cuentasActivas.filter(c => c.tipo !== "Crédito")
-  const cuentasCredito  = cuentasActivas.filter(c => c.tipo === "Crédito")
-  const disponible     = cuentasLiquidas.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
-  const deudaTotal     = cuentasCredito.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const cuentasActivas   = cuentas.filter(c => c.activa)
+  const cuentasLiquidas  = cuentasActivas.filter(c => c.tipo !== "Crédito")
+  const cuentasCredito   = cuentasActivas.filter(c => c.tipo === "Crédito")
+  const cuentasOperativa = cuentasLiquidas.filter(c => c.proposito === "Operativa")
+  const cuentasApartados = cuentasLiquidas.filter(c => c.proposito !== "Operativa")
+  const saldoDe = (c: typeof cuentas[number]) => c.saldoActual ?? c.saldoInicial ?? 0
+  const operativaDisponible = cuentasOperativa.reduce((s, c) => s + saldoDe(c), 0)
+  const apartadosDisponible = cuentasApartados.reduce((s, c) => s + saldoDe(c), 0)
+  const disponible     = operativaDisponible + apartadosDisponible
+  const deudaTotal     = cuentasCredito.reduce((s, c) => s + saldoDe(c), 0)
   const balanceActual  = disponible - deudaTotal
 
   // Balance proyectado (solo tiene sentido en el mes actual)
@@ -561,21 +566,45 @@ export default function GestionPersonalPage() {
           {cuentasActivas.length === 0 ? (
             <p className="text-xs text-slate-600 text-center py-6">Sin cuentas activas</p>
           ) : (
-            <div className="divide-y divide-slate-800/50">
-              {cuentasActivas.map(c => (
-                <AccountRow
-                  key={c.id}
-                  nombre={c.nombre}
-                  tipo={c.tipo}
-                  saldo={c.saldoActual ?? c.saldoInicial ?? 0}
-                  color={c.color}
-                  meta={c.metaDeCuenta}
-                />
-              ))}
+            <div className="space-y-3">
+              {/* Operativa destacada */}
+              {cuentasOperativa.length > 0 && (
+                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2">
+                  <p className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider mb-1 px-1">★ Operativa</p>
+                  <div className="divide-y divide-emerald-900/30">
+                    {cuentasOperativa.map(c => (
+                      <AccountRow key={c.id} nombre={c.nombre} tipo={c.tipo} saldo={saldoDe(c)} color={c.color} meta={c.metaDeCuenta} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Apartados */}
+              {cuentasApartados.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1 px-1">Apartados</p>
+                  <div className="divide-y divide-slate-800/50">
+                    {cuentasApartados.map(c => (
+                      <AccountRow key={c.id} nombre={c.nombre} tipo={c.tipo} saldo={saldoDe(c)} color={c.color} meta={c.metaDeCuenta} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Crédito */}
+              {cuentasCredito.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1 px-1">Crédito</p>
+                  <div className="divide-y divide-slate-800/50">
+                    {cuentasCredito.map(c => (
+                      <AccountRow key={c.id} nombre={c.nombre} tipo={c.tipo} saldo={saldoDe(c)} color={c.color} meta={c.metaDeCuenta} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          <div className="mt-3 pt-3 border-t border-slate-800/60 flex justify-between text-[10px] text-slate-500">
-            <span>Liquido: <span className="text-emerald-400 font-semibold">{fmt(disponible)}</span></span>
+          <div className="mt-3 pt-3 border-t border-slate-800/60 flex justify-between text-[10px] text-slate-500 flex-wrap gap-y-1">
+            <span>Operativa: <span className="text-emerald-400 font-semibold">{fmt(operativaDisponible)}</span></span>
+            <span>Apartados: <span className="text-slate-300 font-semibold">{fmt(apartadosDisponible)}</span></span>
             {deudaTotal > 0 && <span>Deuda: <span className="text-red-400 font-semibold">{fmt(deudaTotal)}</span></span>}
           </div>
         </motion.div>
