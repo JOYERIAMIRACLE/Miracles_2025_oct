@@ -230,6 +230,52 @@ export default function PresupuestoPage() {
     return { presupuestado, real, pct: presupuestado > 0 ? (real / presupuestado) * 100 : 0 }
   }, [partidas, transacciones, eventos, mesSeleccionado])
 
+  // Comparativa de ingresos desglosado por categoría (mismo modelo que la de gastos)
+  const comparativaIngresoPorCat = useMemo(() => {
+    const txMes = transacciones.filter(tx => tx.fecha.slice(0, 7) === mesSeleccionado)
+    const evMes = eventos.filter(ev => ev.fecha.slice(0, 7) === mesSeleccionado)
+    const txDescripciones = new Set(txMes.map(tx => `${tx.fecha.slice(0, 10)}_${tx.monto}`))
+
+    const catsIngreso = categorias.filter(c => c.activa && c.tipo === "ingreso").map(c => c.nombre)
+    const catsIngresoSet = new Set(catsIngreso.map(normCat))
+
+    const filas = catsIngreso.map(cat => {
+      const catKey = normCat(cat)
+      const partidasCat = partidas.filter(p => p.activo !== false && normCat(p.categoria) === catKey)
+      const presupuestado = partidasCat.reduce((s, p) => s + calcFrecuencias(p.monto ?? 0, p.frecuencia).mensual, 0)
+      const realTx = txMes
+        .filter(tx => tx.tipo === "ingreso" && normCat(tx.categoria) === catKey)
+        .reduce((s, tx) => s + Number(tx.monto), 0)
+      const realEv = evMes
+        .filter(ev => ev.tipo === "ingreso" && normCat(ev.categoria) === catKey)
+        .filter(ev => !txDescripciones.has(`${ev.fecha.slice(0, 10)}_${ev.monto}`))
+        .reduce((s, ev) => s + Number(ev.monto), 0)
+      const real = realTx + realEv
+      const pct = presupuestado > 0 ? (real / presupuestado) * 100 : 0
+      return { cat, presupuestado, real, pct }
+    })
+
+    // Ingresos sin categoría válida → fila "Sin categoría"
+    const esCatValida = (c: string | null | undefined) => {
+      const k = normCat(c)
+      return k !== "" && catsIngresoSet.has(k)
+    }
+    const huerfanoTx = txMes
+      .filter(tx => tx.tipo === "ingreso" && !esCatValida(tx.categoria))
+      .reduce((s, tx) => s + Number(tx.monto), 0)
+    const huerfanoEv = evMes
+      .filter(ev => ev.tipo === "ingreso" && !esCatValida(ev.categoria))
+      .filter(ev => !txDescripciones.has(`${ev.fecha.slice(0, 10)}_${ev.monto}`))
+      .reduce((s, ev) => s + Number(ev.monto), 0)
+    const huerfano = huerfanoTx + huerfanoEv
+
+    if (huerfano > 0) {
+      filas.push({ cat: "Sin categoría", presupuestado: 0, real: huerfano, pct: 0 })
+    }
+
+    return filas.filter(c => c.presupuestado > 0 || c.real > 0)
+  }, [partidas, transacciones, eventos, categorias, mesSeleccionado])
+
   const totalPresupuestadoGasto = comparativa.reduce((s, c) => s + c.presupuestado, 0)
   const totalGastadoReal = comparativa.reduce((s, c) => s + c.gastado, 0)
   const pctGastoTotal = totalPresupuestadoGasto > 0 ? (totalGastadoReal / totalPresupuestadoGasto) * 100 : 0
@@ -409,10 +455,12 @@ export default function PresupuestoPage() {
           </motion.div>
         </div>
 
-        {/* Barras por categoría */}
+        {/* Barras por categoría — Gastos */}
+        <h4 className="text-[10px] text-slate-500 uppercase font-medium mb-2 mt-4">Gastos por categoría</h4>
         <div className="space-y-3">
           {comparativa.map((c, i) => {
             const colors = barColorOf(c.cat)
+            const sinPresupuesto = c.presupuestado === 0 && c.gastado > 0
             const pctClamped = Math.min(c.pct, 100)
             const pctExceso = c.pct > 100 ? Math.min(c.pct - 100, 100) : 0
 
@@ -422,28 +470,44 @@ export default function PresupuestoPage() {
                   <span className="text-xs text-slate-300 capitalize">{labelDe(c.cat)}</span>
                   <div className="flex items-center gap-3 text-[10px]">
                     <span className="text-slate-600">{fmt(c.gastado)} / {fmt(c.presupuestado)}</span>
-                    <span className={`font-semibold ${c.excedido ? "text-red-400" : c.pct > 80 ? "text-amber-400" : "text-emerald-400"}`}>
-                      {Math.round(c.pct)}%
-                    </span>
+                    {sinPresupuesto ? (
+                      <span className="font-semibold text-amber-400">sin presupuesto</span>
+                    ) : (
+                      <span className={`font-semibold ${c.excedido ? "text-red-400" : c.pct > 80 ? "text-amber-400" : "text-emerald-400"}`}>
+                        {Math.round(c.pct)}%
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="h-3 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/30 relative">
-                  {/* Barra de gasto dentro del presupuesto */}
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pctClamped}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
-                    className={`h-full rounded-full ${colors.bar} ${c.excedido ? "rounded-r-none" : ""}`}
-                  />
-                  {/* Barra de exceso (roja) */}
-                  {pctExceso > 0 && (
+                  {sinPresupuesto ? (
+                    // Gasto sin presupuesto: barra completa en ámbar como alerta
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${pctExceso}%` }}
-                      transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 + 0.05 * i }}
-                      className="h-full rounded-r-full bg-red-500 absolute top-0"
-                      style={{ left: `${pctClamped}%` }}
+                      animate={{ width: `100%` }}
+                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
+                      className="h-full rounded-full bg-amber-500/70"
                     />
+                  ) : (
+                    <>
+                      {/* Barra de gasto dentro del presupuesto */}
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pctClamped}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
+                        className={`h-full rounded-full ${colors.bar} ${c.excedido ? "rounded-r-none" : ""}`}
+                      />
+                      {/* Barra de exceso (roja) */}
+                      {pctExceso > 0 && (
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pctExceso}%` }}
+                          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 + 0.05 * i }}
+                          className="h-full rounded-r-full bg-red-500 absolute top-0"
+                          style={{ left: `${pctClamped}%` }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>
@@ -456,6 +520,55 @@ export default function PresupuestoPage() {
             </p>
           )}
         </div>
+
+        {/* Barras por categoría — Ingresos */}
+        {comparativaIngresoPorCat.length > 0 && (
+          <>
+            <h4 className="text-[10px] text-slate-500 uppercase font-medium mb-2 mt-6">Ingresos por categoría</h4>
+            <div className="space-y-3">
+              {comparativaIngresoPorCat.map((c, i) => {
+                const colors = barColorOf(c.cat)
+                const sinPresupuesto = c.presupuestado === 0 && c.real > 0
+                const pctClamped = Math.min(c.pct, 100)
+
+                return (
+                  <motion.div key={c.cat} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-300 capitalize">{labelDe(c.cat)}</span>
+                      <div className="flex items-center gap-3 text-[10px]">
+                        <span className="text-slate-600">{fmt(c.real)} / {fmt(c.presupuestado)}</span>
+                        {sinPresupuesto ? (
+                          <span className="font-semibold text-amber-400">sin presupuesto</span>
+                        ) : (
+                          <span className={`font-semibold ${c.pct >= 100 ? "text-emerald-400" : c.pct >= 50 ? "text-amber-400" : "text-slate-400"}`}>
+                            {Math.round(c.pct)}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="h-3 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/30 relative">
+                      {sinPresupuesto ? (
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `100%` }}
+                          transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
+                          className="h-full rounded-full bg-amber-500/70"
+                        />
+                      ) : (
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pctClamped}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
+                          className={`h-full rounded-full ${colors.bar}`}
+                        />
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Tabla */}
