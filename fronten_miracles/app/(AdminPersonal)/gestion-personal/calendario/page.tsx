@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useGetEventos } from "@/api/evento-calendario/getEventos"
 import { createEvento } from "@/api/evento-calendario/createEvento"
 import { deleteEvento } from "@/api/evento-calendario/deleteEvento"
@@ -98,17 +98,25 @@ export default function CalendarioPage() {
   const handleGuardar = async () => {
     if (!form.titulo || !form.fecha || !form.monto) return
     setGuardando(true)
+
+    // 1. Crear el evento en calendario
+    let eventoCreado = false
     try {
-      // 1. Crear el evento en calendario
       const nuevo = await createEvento(form)
       setEventos(prev => [...prev, nuevo])
       setModalAgregar(false)
+      eventoCreado = true
+    } catch (e: any) {
+      console.error("[calendario] error creando evento:", e)
+      toast.error(`Error al guardar evento: ${e?.message ?? "desconocido"}`)
+      setGuardando(false)
+      return
+    }
 
-      // 2. Crear transacción automáticamente si tiene cuenta
-      if (form.cuenta) {
-        // form.categoria ya contiene el nombre canónico de Categoria (mismo que tx.categoria)
+    // 2. Crear transacción automáticamente si tiene cuenta — aislado
+    if (form.cuenta) {
+      try {
         const catTx = form.categoria ?? "Otro"
-
         let tipoTx: TipoTransaccion
         let origen: string | null = null
         let destino: string | null = null
@@ -117,7 +125,6 @@ export default function CalendarioPage() {
           tipoTx = "ingreso"
           destino = form.cuenta
         } else if (esTransferencia && cuentaDestino) {
-          // Ahorro/inversión con destino = transferencia
           tipoTx = "transferencia"
           origen = form.cuenta
           destino = cuentaDestino
@@ -139,15 +146,16 @@ export default function CalendarioPage() {
 
         const txNueva = await createTransaccion(txPayload)
         setTransacciones(prev => [txNueva, ...prev])
+        toast.success("Evento + transacción creados")
+      } catch (e: any) {
+        console.error("[calendario] evento creado pero falló la transacción:", e)
+        toast.error(`Evento guardado, pero falló crear transacción: ${e?.message ?? "desconocido"}`)
       }
-
-      toast.success("Evento guardado" + (form.cuenta ? " y transacción creada" : ""))
-    } catch (e) {
-      console.error(e)
-      toast.error("Error al guardar")
-    } finally {
-      setGuardando(false)
+    } else if (eventoCreado) {
+      toast.success("Evento guardado (sin cuenta, no se creó transacción)")
     }
+
+    setGuardando(false)
   }
 
   const handleEliminar = async (evento: EventoCalendarioType) => {
@@ -173,8 +181,59 @@ export default function CalendarioPage() {
     }
   }
 
+  // ── Eventos huérfanos: tienen cuenta pero NO existe tx con misma fecha+monto
+  const huerfanos = useMemo(() => {
+    const txKeys = new Set(transacciones.map(tx => `${tx.fecha?.slice(0, 10)}_${Number(tx.monto)}`))
+    return eventos.filter(ev => ev.cuenta && !txKeys.has(`${ev.fecha?.slice(0, 10)}_${Number(ev.monto)}`))
+  }, [eventos, transacciones])
+
+  const repararHuerfanos = async () => {
+    if (huerfanos.length === 0) { toast.success("No hay eventos huérfanos"); return }
+    if (!confirm(`Crear ${huerfanos.length} transacción(es) faltante(s) desde eventos del calendario?`)) return
+    let creadas = 0; let fallidas = 0
+    for (const ev of huerfanos) {
+      try {
+        const cat = ev.categoria ?? "Otro"
+        const cuentaDocId = ev.cuenta!.documentId
+        let tipoTx: TipoTransaccion = "gasto"
+        let origen: string | null = null
+        let destino: string | null = null
+        if (ev.tipo === "ingreso") { tipoTx = "ingreso"; destino = cuentaDocId }
+        else                       { tipoTx = "gasto";   origen  = cuentaDocId }
+        const tx = await createTransaccion({
+          descripcion:  ev.titulo,
+          tipo:         tipoTx,
+          monto:        Number(ev.monto),
+          fecha:        new Date(ev.fecha + "T05:00:00").toISOString(),
+          categoria:    cat,
+          notas:        ev.descripcion || "Reparado desde calendario",
+          cuentaOrigen:  origen,
+          cuentaDestino: destino,
+        })
+        setTransacciones(prev => [tx, ...prev])
+        creadas++
+      } catch (e) {
+        console.error("[reparar] falló evento", ev.titulo, e)
+        fallidas++
+      }
+    }
+    toast.success(`Reparado: ${creadas} ok${fallidas > 0 ? `, ${fallidas} fallaron (revisa consola)` : ""}`)
+  }
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
+
+      {/* Aviso de huérfanos */}
+      {huerfanos.length > 0 && (
+        <div className="mb-4 p-3 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 flex items-center justify-between gap-3">
+          <p className="text-xs text-amber-700 dark:text-amber-300">
+            ⚠️ {huerfanos.length} evento(s) con cuenta asociada no tienen transacción registrada.
+          </p>
+          <Button size="sm" variant="outline" onClick={repararHuerfanos}>
+            Crear transacciones faltantes
+          </Button>
+        </div>
+      )}
 
       {/* RESUMEN DEL MES */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">

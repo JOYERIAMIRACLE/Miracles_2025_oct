@@ -22,6 +22,8 @@ import { useGetCuentas }       from "@/api/cuenta/getCuentas"
 import { useGetMetas }         from "@/api/meta-ahorro/getMetas"
 import { useGetCategorias }    from "@/api/categoria/getCategorias"
 import { useGetEventos }       from "@/api/evento-calendario/getEventos"
+import { useGetSnapshotsMes, useGetSnapshotsCuenta } from "@/api/snapshot/getSnapshots"
+import { CerrarMesButton }     from "@/components/Personal/Snapshot/CerrarMesButton"
 import { grupoDe }             from "@/lib/categoria"
 
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
@@ -273,6 +275,8 @@ export default function GestionPersonalPage() {
   const { metas:          dataMetas,    loading: loadMetas  } = useGetMetas()
   const { categorias }                                          = useGetCategorias()
   const { eventos }                                             = useGetEventos()
+  const { snapshots: snapshotsMes }    = useGetSnapshotsMes()
+  const { snapshots: snapshotsCuenta } = useGetSnapshotsCuenta()
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
   const [activos,   setActivos]   = useState<ActivoType[]>([])
@@ -505,9 +509,33 @@ export default function GestionPersonalPage() {
             <button onClick={() => setMesSeleccionado(mesActualKey)} className="text-[10px] text-cyan-400 hover:text-cyan-300 ml-1">Hoy</button>
           )}
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-slate-500">
-          <span>Presupuesto: <span className="text-slate-400">{fmt(egresoPresupuestado)}</span></span>
-          <span>Real: <span className={`font-semibold ${gastoReal > egresoPresupuestado ? "text-red-400" : "text-emerald-400"}`}>{fmt(gastoReal)}</span></span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 text-[10px] text-slate-500">
+            <span>Presupuesto: <span className="text-slate-400">{fmt(egresoPresupuestado)}</span></span>
+            <span>Real: <span className={`font-semibold ${gastoReal > egresoPresupuestado ? "text-red-400" : "text-emerald-400"}`}>{fmt(gastoReal)}</span></span>
+          </div>
+          <CerrarMesButton
+            mes={mesSeleccionado}
+            cuentas={cuentas}
+            metricas={{
+              ingresoReal,
+              gastoReal,
+              flujoNeto,
+              ahorroReal,
+              ahorroAcumulado,
+              liquidezTotal:        disponible,
+              operativaSaldo:       operativaDisponible,
+              apartadosSaldo:       apartadosDisponible,
+              deudaTotal,
+              necesidadesReal,
+              prescindiblesReal,
+              ingresoPresupuestado,
+              egresoPresupuestado,
+            }}
+            snapshotMesExistente={snapshotsMes.find(s => s.mes === mesSeleccionado) ?? null}
+            snapshotsCuentaExistentes={snapshotsCuenta.filter(s => s.mes === mesSeleccionado)}
+            onDone={() => window.location.reload()}
+          />
         </div>
       </motion.div>
 

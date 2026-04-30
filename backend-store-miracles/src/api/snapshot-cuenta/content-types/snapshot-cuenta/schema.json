@@ -1,0 +1,40 @@
+{
+  "kind": "collectionType",
+  "collectionName": "snapshot_cuentas",
+  "info": {
+    "singularName": "snapshot-cuenta",
+    "pluralName": "snapshot-cuentas",
+    "displayName": "snapshot-cuenta"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "mes": {
+      "type": "string",
+      "required": true
+    },
+    "cuentaDocId": {
+      "type": "string",
+      "required": true
+    },
+    "cuentaNombre": {
+      "type": "string",
+      "required": true
+    },
+    "cuentaTipo": {
+      "type": "string"
+    },
+    "cuentaProposito": {
+      "type": "string"
+    },
+    "saldoSistema": {
+      "type": "decimal",
+      "default": 0
+    },
+    "saldoBanco": {
+      "type": "decimal"
+    }
+  }
+}

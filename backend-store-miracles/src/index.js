@@ -9,6 +9,27 @@ const PUBLIC_ACTIONS_CATEGORIA = [
   'api::categoria.categoria.delete',
 ];
 
+const PUBLIC_ACTIONS_TAREA = [
+  'api::tarea.tarea.find',
+  'api::tarea.tarea.findOne',
+  'api::tarea.tarea.create',
+  'api::tarea.tarea.update',
+  'api::tarea.tarea.delete',
+];
+
+const PUBLIC_ACTIONS_SNAPSHOT = [
+  'api::snapshot-cuenta.snapshot-cuenta.find',
+  'api::snapshot-cuenta.snapshot-cuenta.findOne',
+  'api::snapshot-cuenta.snapshot-cuenta.create',
+  'api::snapshot-cuenta.snapshot-cuenta.update',
+  'api::snapshot-cuenta.snapshot-cuenta.delete',
+  'api::snapshot-mes.snapshot-mes.find',
+  'api::snapshot-mes.snapshot-mes.findOne',
+  'api::snapshot-mes.snapshot-mes.create',
+  'api::snapshot-mes.snapshot-mes.update',
+  'api::snapshot-mes.snapshot-mes.delete',
+];
+
 // Mapeo: enum viejo (lowercase, con/sin acentos, underscore) → nombre canónico de Categoria
 const CATEGORIA_NORMALIZE_MAP = {
   'alimentación':      'Alimentación',
@@ -70,7 +91,8 @@ async function aplicarPermisosPublic(strapi) {
     .findOne({ where: { type: 'public' } });
   if (!publicRole) return;
 
-  for (const action of PUBLIC_ACTIONS_CATEGORIA) {
+  const todas = [...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT];
+  for (const action of todas) {
     const existing = await strapi.db
       .query('plugin::users-permissions.permission')
       .findOne({ where: { action, role: publicRole.id } });
@@ -80,7 +102,7 @@ async function aplicarPermisosPublic(strapi) {
         .create({ data: { action, role: publicRole.id } });
     }
   }
-  strapi.log.info('[bootstrap] Permisos Public de Categoria aplicados');
+  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots)');
 }
 
 async function sembrarCategoriasSiVacio(strapi) {

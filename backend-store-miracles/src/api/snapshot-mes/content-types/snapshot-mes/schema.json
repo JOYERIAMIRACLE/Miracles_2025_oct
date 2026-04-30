@@ -1,0 +1,72 @@
+{
+  "kind": "collectionType",
+  "collectionName": "snapshot_mes",
+  "info": {
+    "singularName": "snapshot-mes",
+    "pluralName": "snapshot-mes-list",
+    "displayName": "snapshot-mes"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "mes": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "ingresoReal": {
+      "type": "decimal",
+      "default": 0
+    },
+    "gastoReal": {
+      "type": "decimal",
+      "default": 0
+    },
+    "flujoNeto": {
+      "type": "decimal",
+      "default": 0
+    },
+    "ahorroReal": {
+      "type": "decimal",
+      "default": 0
+    },
+    "ahorroAcumulado": {
+      "type": "decimal",
+      "default": 0
+    },
+    "liquidezTotal": {
+      "type": "decimal",
+      "default": 0
+    },
+    "operativaSaldo": {
+      "type": "decimal",
+      "default": 0
+    },
+    "apartadosSaldo": {
+      "type": "decimal",
+      "default": 0
+    },
+    "deudaTotal": {
+      "type": "decimal",
+      "default": 0
+    },
+    "necesidadesReal": {
+      "type": "decimal",
+      "default": 0
+    },
+    "prescindiblesReal": {
+      "type": "decimal",
+      "default": 0
+    },
+    "ingresoPresupuestado": {
+      "type": "decimal",
+      "default": 0
+    },
+    "egresoPresupuestado": {
+      "type": "decimal",
+      "default": 0
+    }
+  }
+}

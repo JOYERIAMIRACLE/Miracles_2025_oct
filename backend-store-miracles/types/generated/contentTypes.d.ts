@@ -1070,6 +1070,127 @@ export interface ApiRegistroMensualRegistroMensual
   };
 }
 
+export interface ApiSnapshotCuentaSnapshotCuenta
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'snapshot_cuentas';
+  info: {
+    displayName: 'snapshot-cuenta';
+    pluralName: 'snapshot-cuentas';
+    singularName: 'snapshot-cuenta';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    cuentaDocId: Schema.Attribute.String & Schema.Attribute.Required;
+    cuentaNombre: Schema.Attribute.String & Schema.Attribute.Required;
+    cuentaProposito: Schema.Attribute.String;
+    cuentaTipo: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::snapshot-cuenta.snapshot-cuenta'
+    > &
+      Schema.Attribute.Private;
+    mes: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    saldoBanco: Schema.Attribute.Decimal;
+    saldoSistema: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSnapshotMesSnapshotMes extends Struct.CollectionTypeSchema {
+  collectionName: 'snapshot_mes';
+  info: {
+    displayName: 'snapshot-mes';
+    pluralName: 'snapshot-mes-list';
+    singularName: 'snapshot-mes';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    ahorroAcumulado: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    ahorroReal: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    apartadosSaldo: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deudaTotal: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    egresoPresupuestado: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<0>;
+    flujoNeto: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    gastoReal: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    ingresoPresupuestado: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<0>;
+    ingresoReal: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    liquidezTotal: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::snapshot-mes.snapshot-mes'
+    > &
+      Schema.Attribute.Private;
+    mes: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    necesidadesReal: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    operativaSaldo: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    prescindiblesReal: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiTareaTarea extends Struct.CollectionTypeSchema {
+  collectionName: 'tareas';
+  info: {
+    displayName: 'tarea';
+    pluralName: 'tareas';
+    singularName: 'tarea';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    ambito: Schema.Attribute.Enumeration<['personal', 'trabajo']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'personal'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    estado: Schema.Attribute.Enumeration<
+      ['pendiente', 'en_progreso', 'completada']
+    > &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    etiqueta: Schema.Attribute.String;
+    fechaCompletada: Schema.Attribute.DateTime;
+    fechaVencimiento: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::tarea.tarea'> &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    prioridad: Schema.Attribute.Enumeration<
+      ['baja', 'media', 'alta', 'urgente']
+    > &
+      Schema.Attribute.DefaultTo<'media'>;
+    publishedAt: Schema.Attribute.DateTime;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiTransaccionTransaccion extends Struct.CollectionTypeSchema {
   collectionName: 'transaccions';
   info: {
@@ -1673,6 +1794,9 @@ declare module '@strapi/strapi' {
       'api::product-category.product-category': ApiProductCategoryProductCategory;
       'api::product.product': ApiProductProduct;
       'api::registro-mensual.registro-mensual': ApiRegistroMensualRegistroMensual;
+      'api::snapshot-cuenta.snapshot-cuenta': ApiSnapshotCuentaSnapshotCuenta;
+      'api::snapshot-mes.snapshot-mes': ApiSnapshotMesSnapshotMes;
+      'api::tarea.tarea': ApiTareaTarea;
       'api::transaccion.transaccion': ApiTransaccionTransaccion;
       'api::venta.venta': ApiVentaVenta;
       'plugin::content-releases.release': PluginContentReleasesRelease;

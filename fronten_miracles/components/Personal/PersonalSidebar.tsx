@@ -11,17 +11,35 @@ import {
   LayoutDashboard,
   ArrowLeftRight,
   Tag,
+  Archive,
+  CheckSquare,
+  Briefcase,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const navigation = [
-  { name: "Dashboard",        href: "/gestion-personal",                  icon: LayoutDashboard, color: "cyan"   },
-  { name: "Presupuesto",      href: "/gestion-personal/presupuesto",      icon: Swords,          color: "cyan"   },
-  { name: "Objetivos",        href: "/gestion-personal/objetivos",        icon: Target,          color: "amber"  },
-  { name: "Calendario",       href: "/gestion-personal/calendario",       icon: CalendarDays,    color: "blue"   },
-  { name: "Cuentas",          href: "/gestion-personal/cuentas",          icon: Package,         color: "green"  },
-  { name: "Transacciones",   href: "/gestion-personal/transacciones",    icon: ArrowLeftRight,  color: "cyan"   },
-  { name: "Etiquetas",        href: "/gestion-personal/categorias",       icon: Tag,             color: "pink"   },
+type NavItem = { name: string; href: string; icon: typeof LayoutDashboard; color: string }
+
+const sections: { title: string; items: NavItem[] }[] = [
+  {
+    title: "Finanzas Personales",
+    items: [
+      { name: "Dashboard",      href: "/gestion-personal",                 icon: LayoutDashboard, color: "cyan"   },
+      { name: "Presupuesto",    href: "/gestion-personal/presupuesto",     icon: Swords,          color: "cyan"   },
+      { name: "Objetivos",      href: "/gestion-personal/objetivos",       icon: Target,          color: "amber"  },
+      { name: "Calendario",     href: "/gestion-personal/calendario",      icon: CalendarDays,    color: "blue"   },
+      { name: "Cuentas",        href: "/gestion-personal/cuentas",         icon: Package,         color: "green"  },
+      { name: "Transacciones",  href: "/gestion-personal/transacciones",   icon: ArrowLeftRight,  color: "cyan"   },
+      { name: "Etiquetas",      href: "/gestion-personal/categorias",      icon: Tag,             color: "pink"   },
+      { name: "Histórico",      href: "/gestion-personal/historial",       icon: Archive,         color: "purple" },
+    ],
+  },
+  {
+    title: "Productividad",
+    items: [
+      { name: "Tareas Personales", href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
+      { name: "Tareas de Trabajo", href: "/gestion-personal/tareas-trabajo",    icon: Briefcase,   color: "blue"   },
+    ],
+  },
 ]
 
 const activeColors: Record<string, string> = {
@@ -63,36 +81,42 @@ export function PersonalSidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto py-5">
-        <div className="px-3">
-          <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3 px-2">
-            Modulos
-          </p>
-          <ul className="space-y-1">
-            {navigation.map(item => {
-              const isActive =
-                pathname === item.href ||
-                (item.name === "Inventario" && pathname === "/gestion-personal/patrimonio")
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border",
-                      isActive
-                        ? `${activeColors[item.color]} shadow-sm`
-                        : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
-                    )}
-                  >
-                    <item.icon className={cn(
-                      "h-4 w-4 transition-colors",
-                      isActive ? iconActiveColors[item.color] : "text-slate-600"
-                    )} />
-                    {item.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+        <div className="px-3 space-y-5">
+          {sections.map((section, sIdx) => (
+            <div key={section.title}>
+              {/* Separador entre secciones */}
+              {sIdx > 0 && <div className="h-px bg-slate-800/80 mx-2 mb-4" />}
+              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3 px-2">
+                {section.title}
+              </p>
+              <ul className="space-y-1">
+                {section.items.map(item => {
+                  const isActive =
+                    pathname === item.href ||
+                    (item.name === "Cuentas" && pathname === "/gestion-personal/patrimonio")
+                  return (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border",
+                          isActive
+                            ? `${activeColors[item.color]} shadow-sm`
+                            : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                        )}
+                      >
+                        <item.icon className={cn(
+                          "h-4 w-4 transition-colors",
+                          isActive ? iconActiveColors[item.color] : "text-slate-600"
+                        )} />
+                        {item.name}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
 
