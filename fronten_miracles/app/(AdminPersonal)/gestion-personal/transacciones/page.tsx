@@ -102,23 +102,33 @@ export default function TransaccionesPage() {
   const [filtroMes, setFiltroMes] = useState<string>("")
   const [mostrarFiltros, setMostrarFiltros] = useState(false)
 
-  // ── Filtrado ───────────────────────────────────────────────────────────
+  // Map nombre de categoría (normalizado) → color desde la tabla Categorias
+  const colorPorCategoria = useMemo(() => {
+    const map: Record<string, string> = {}
+    const norm = (s: string) => s.toLowerCase().trim()
+    categorias.forEach(c => { if (c.color) map[norm(c.nombre)] = c.color })
+    return map
+  }, [categorias])
+
+  // ── Filtrado + ordenado por fecha desc ─────────────────────────────────
   const filtradas = useMemo(() => {
-    return transacciones.filter(tx => {
-      if (filtroTipo && tx.tipo !== filtroTipo) return false
-      if (filtroCategoria && tx.categoria !== filtroCategoria) return false
-      if (filtroCuenta) {
-        const cId = Number(filtroCuenta)
-        const matchOrigen  = tx.cuentaOrigen?.id === cId
-        const matchDestino = tx.cuentaDestino?.id === cId
-        if (!matchOrigen && !matchDestino) return false
-      }
-      if (filtroMes) {
-        const txMes = tx.fecha.slice(0, 7) // "YYYY-MM"
-        if (txMes !== filtroMes) return false
-      }
-      return true
-    })
+    return transacciones
+      .filter(tx => {
+        if (filtroTipo && tx.tipo !== filtroTipo) return false
+        if (filtroCategoria && tx.categoria !== filtroCategoria) return false
+        if (filtroCuenta) {
+          const cId = Number(filtroCuenta)
+          const matchOrigen  = tx.cuentaOrigen?.id === cId
+          const matchDestino = tx.cuentaDestino?.id === cId
+          if (!matchOrigen && !matchDestino) return false
+        }
+        if (filtroMes) {
+          const txMes = tx.fecha.slice(0, 7) // "YYYY-MM"
+          if (txMes !== filtroMes) return false
+        }
+        return true
+      })
+      .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
   }, [transacciones, filtroTipo, filtroCuenta, filtroCategoria, filtroMes])
 
   // ── Totales del mes actual ─────────────────────────────────────────────
@@ -435,11 +445,21 @@ export default function TransaccionesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-slate-200 truncate">{tx.descripcion}</p>
-                    {tx.categoria && (
-                      <span className="text-[10px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded hidden sm:inline">
-                        {tx.categoria}
-                      </span>
-                    )}
+                    {tx.categoria && (() => {
+                      const color = colorPorCategoria[tx.categoria.toLowerCase().trim()]
+                      return (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded hidden sm:inline border"
+                          style={color ? {
+                            backgroundColor: `${color}20`,
+                            color: color,
+                            borderColor: `${color}40`,
+                          } : { backgroundColor: "rgb(30 41 59)", color: "rgb(100 116 139)", borderColor: "transparent" }}
+                        >
+                          {tx.categoria}
+                        </span>
+                      )
+                    })()}
                   </div>
                   <div className="flex items-center gap-2 text-[10px] text-slate-600">
                     <span>{fmtFecha(tx.fecha)}</span>
