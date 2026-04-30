@@ -102,13 +102,15 @@ export default function TransaccionesPage() {
   const [filtroMes, setFiltroMes] = useState<string>("")
   const [mostrarFiltros, setMostrarFiltros] = useState(false)
 
-  // Map nombre de categoría (normalizado) → color desde la tabla Categorias
+  // Map nombre de categoría (normalizado: lower + sin acentos) → color desde la tabla Categorias
   const colorPorCategoria = useMemo(() => {
     const map: Record<string, string> = {}
-    const norm = (s: string) => s.toLowerCase().trim()
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim()
     categorias.forEach(c => { if (c.color) map[norm(c.nombre)] = c.color })
     return map
   }, [categorias])
+
+  const normKey = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim()
 
   // ── Filtrado + ordenado por fecha desc ─────────────────────────────────
   const filtradas = useMemo(() => {
@@ -446,7 +448,7 @@ export default function TransaccionesPage() {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-slate-200 truncate">{tx.descripcion}</p>
                     {tx.categoria && (() => {
-                      const color = colorPorCategoria[tx.categoria.toLowerCase().trim()]
+                      const color = colorPorCategoria[normKey(tx.categoria)]
                       return (
                         <span
                           className="text-[10px] px-1.5 py-0.5 rounded hidden sm:inline border"

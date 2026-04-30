@@ -117,6 +117,30 @@ async function sembrarCategoriasSiVacio(strapi) {
   strapi.log.info(`[bootstrap] ${CATEGORIAS_SEED.length} categorías sembradas`);
 }
 
+// Backfill: si una categoría coincide por nombre con un seed default y NO tiene color,
+// le asigna el color del seed. Idempotente — solo toca categorías sin color.
+async function backfillColoresCategorias(strapi) {
+  const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  const seedByName = new Map();
+  for (const c of CATEGORIAS_SEED) seedByName.set(norm(c.nombre), c);
+
+  const existentes = await strapi.db.query('api::categoria.categoria').findMany({});
+  let cambios = 0;
+  for (const cat of existentes) {
+    if (cat.color) continue;
+    const seed = seedByName.get(norm(cat.nombre));
+    if (!seed) continue;
+    await strapi.db.query('api::categoria.categoria').update({
+      where: { id: cat.id },
+      data: { color: seed.color, grupo: cat.grupo ?? seed.grupo },
+    });
+    cambios++;
+  }
+  if (cambios > 0) {
+    strapi.log.info(`[bootstrap] ${cambios} categorías rellenadas con color/grupo del seed`);
+  }
+}
+
 async function normalizarCategorias(strapi) {
   let total = 0;
   for (const model of MODELS_TO_NORMALIZE) {
@@ -151,6 +175,7 @@ module.exports = {
     try {
       await aplicarPermisosPublic(strapi);
       await sembrarCategoriasSiVacio(strapi);
+      await backfillColoresCategorias(strapi);
       await normalizarCategorias(strapi);
     } catch (err) {
       strapi.log.error('[bootstrap] Error: ' + err.message);
