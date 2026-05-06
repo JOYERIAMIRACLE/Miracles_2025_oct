@@ -14,6 +14,7 @@ import {
   Archive,
   CheckSquare,
   Briefcase,
+  ChefHat,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -38,6 +39,12 @@ const sections: { title: string; items: NavItem[] }[] = [
     items: [
       { name: "Tareas Personales", href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
       { name: "Tareas de Trabajo", href: "/gestion-personal/tareas-trabajo",    icon: Briefcase,   color: "blue"   },
+    ],
+  },
+  {
+    title: "Alimentación",
+    items: [
+      { name: "Recetario", href: "/gestion-personal/recetario", icon: ChefHat, color: "green" },
     ],
   },
 ]

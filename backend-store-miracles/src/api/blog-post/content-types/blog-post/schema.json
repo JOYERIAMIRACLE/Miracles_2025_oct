@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "blog_posts",
+  "info": {
+    "singularName": "blog-post",
+    "pluralName": "blog-posts",
+    "displayName": "BlogPost"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "titulo": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "titulo",
+      "required": true
+    },
+    "resumen": {
+      "type": "text"
+    },
+    "contenido": {
+      "type": "blocks"
+    },
+    "imagen_portada": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "fecha_publicacion": {
+      "type": "date"
+    },
+    "categoria_blog": {
+      "type": "enumeration",
+      "enum": [
+        "tips-de-joyeria",
+        "cuidado-de-joyas",
+        "tendencias",
+        "guias-de-regalo",
+        "noticias"
+      ]
+    },
+    "seo_descripcion": {
+      "type": "text"
+    }
+  }
+}

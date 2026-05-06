@@ -10,7 +10,7 @@ import {
   Star, ChevronRight, TrendingUp, TrendingDown,
   Wallet, CreditCard, DollarSign, Target,
   Swords, Map, Package, BarChart3, CalendarDays, ArrowLeftRight,
-  Shield, Zap, Heart,
+  Shield, Zap, Heart, ChefHat,
 } from "lucide-react"
 
 import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
@@ -431,6 +431,7 @@ export default function GestionPersonalPage() {
     { name: "Stats",         description: "Patrimonio y net worth",    icon: BarChart3,     href: "/gestion-personal/patrimonio",    color: "purple" },
     { name: "Calendario",    description: "Eventos y pagos",           icon: CalendarDays,  href: "/gestion-personal/calendario",    color: "blue"   },
     { name: "Transacciones", description: "Movimientos y saldos",      icon: ArrowLeftRight,href: "/gestion-personal/transacciones", color: "cyan"   },
+    { name: "Recetario",     description: "Recetas y videos",          icon: ChefHat,       href: "/gestion-personal/recetario",    color: "green"  },
   ]
 
   // ─── RENDER ─────────────────────────────────────────────────────────────

@@ -435,6 +435,49 @@ export interface ApiActivoActivo extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiBlogPostBlogPost extends Struct.CollectionTypeSchema {
+  collectionName: 'blog_posts';
+  info: {
+    displayName: 'BlogPost';
+    pluralName: 'blog-posts';
+    singularName: 'blog-post';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    categoria_blog: Schema.Attribute.Enumeration<
+      [
+        'tips-de-joyeria',
+        'cuidado-de-joyas',
+        'tendencias',
+        'guias-de-regalo',
+        'noticias',
+      ]
+    >;
+    contenido: Schema.Attribute.Blocks;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fecha_publicacion: Schema.Attribute.Date;
+    imagen_portada: Schema.Attribute.Media<'images'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::blog-post.blog-post'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    resumen: Schema.Attribute.Text;
+    seo_descripcion: Schema.Attribute.Text;
+    slug: Schema.Attribute.UID<'titulo'> & Schema.Attribute.Required;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   collectionName: 'categorias';
   info: {
@@ -1778,6 +1821,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
       'api::activo.activo': ApiActivoActivo;
+      'api::blog-post.blog-post': ApiBlogPostBlogPost;
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::centro-costo.centro-costo': ApiCentroCostoCentroCosto;
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;

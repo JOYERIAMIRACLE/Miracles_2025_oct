@@ -15,44 +15,54 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://joyeriamiraclesweb.com"
+
 export const metadata: Metadata = {
   title: {
-    // Título por defecto si una página no tiene uno propio
     default: "Joyería Miracles | Oro y Plata de Alta Calidad",
-    // El %s será reemplazado por el título de cada página específica
-    template: "%s | Joyería Miracles"
+    template: "%s | Joyería Miracles",
   },
-  description: "Venta de joyería fina en oro de 10k, 14k y plata 925.",
-  icons: {
-    icon: "/favicon.ico", // Asegúrate de tener este archivo en /public
-  },
-};
+  description: "Venta de joyería fina en oro de 10k, 14k y plata 925. Envíos a todo México.",
+  metadataBase: new URL(SITE),
+  icons: { icon: "/favicon.ico" },
+}
+
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "JewelryStore",
+  name: "Joyería Miracles",
+  url: SITE,
+  description: "Venta de joyería fina en oro de 10k, 14k y plata 925. Envíos a todo México.",
+  email: "miraclejoyeria@gmail.com",
+  areaServed: "MX",
+  currenciesAccepted: "MXN",
+  priceRange: "$$",
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning >
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider 
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
-            
-          
           {children}
-          
         </ThemeProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>
-  );
+  )
 }
 
 

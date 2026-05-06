@@ -1,27 +1,24 @@
 "use client"
-import { useGetCategoryProduct } from "@/api/getCategoryProduct"
-import { useParams } from "next/navigation"
-import { ResponseType } from "@/types/response"
 import { Separator } from "@/components/ui/separator"
 import FiltersControlsCategory from "./components/filters-controls-category"
-import SkeletonSchema from "@/app/(Tienda)/1tiendacomponentes/skeleton-schema"
 import ProductCard1 from "./components/product-card1"
 import { ProductType } from "@/types/product"
 import { useState } from "react"
 
-export default function CategoryClient() {
-  const params = useParams()
-  const { categorySlug } = params
-  const { result, loading }: ResponseType = useGetCategoryProduct(categorySlug || "")
+interface Props {
+  products: ProductType[]
+  categoryName: string
+}
 
+export default function CategoryClient({ products, categoryName }: Props) {
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo, setFilterEstilo] = useState("")
 
-  const filteredProducts = result !== null && !loading ? result.filter((product: ProductType) => {
-    const matchesMaterial = filterMaterial === '' || product.materialProducto === filterMaterial
-    const matchesEstilo = filterEstilo === '' || product.estiloProducto === filterEstilo
+  const filteredProducts = products.filter((product) => {
+    const matchesMaterial = filterMaterial === "" || product.materialProducto === filterMaterial
+    const matchesEstilo = filterEstilo === "" || product.estiloProducto === filterEstilo
     return matchesMaterial && matchesEstilo
-  }) : null
+  })
 
   return (
     <main>
@@ -31,7 +28,7 @@ export default function CategoryClient() {
         <div className="relative z-20 w-full max-w-6xl mx-auto px-6 md:px-24">
           <div className="flex flex-col gap-6">
             <h1 className="max-w-2xl text-white text-4xl md:text-6xl font-extrabold leading-tight">
-              {result !== null && !loading && result.length > 0 ? result[0].categoria?.NombreCategoria ?? "" : "Cargando..."}
+              {categoryName}
             </h1>
             <p className="max-w-lg text-white/90 text-lg md:text-xl">
               Explora nuestra selección exclusiva de piezas diseñadas con precisión industrial y elegancia artesanal.
@@ -51,13 +48,10 @@ export default function CategoryClient() {
           </aside>
           <div className="flex-1">
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {loading && <SkeletonSchema grid={3} />}
-              {filteredProducts !== null && !loading && (
-                filteredProducts.map((product: ProductType) => (
-                  <ProductCard1 key={product.id} product={product} />
-                ))
-              )}
-              {!loading && filteredProducts?.length === 0 && (
+              {filteredProducts.map((product) => (
+                <ProductCard1 key={product.id} product={product} />
+              ))}
+              {filteredProducts.length === 0 && (
                 <div className="col-span-full py-20 text-center">
                   <p className="text-xl text-gray-400">No se encontraron productos en esta categoría.</p>
                 </div>
