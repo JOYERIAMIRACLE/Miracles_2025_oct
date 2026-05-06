@@ -3,6 +3,7 @@ name: Deploy to Cloudflare Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -24,6 +25,7 @@ jobs:
         env:
           NEXT_PUBLIC_BACKEND_URL: https://miracles-strapi.onrender.com
           NEXT_PUBLIC_STRAPI_URL: https://miracles-strapi.onrender.com
+          NEXT_PUBLIC_SITE_URL: https://miracles-frontend.pages.dev
 
       - name: Create Pages project if needed
         run: npx wrangler pages project create miracles-frontend --production-branch main || true
