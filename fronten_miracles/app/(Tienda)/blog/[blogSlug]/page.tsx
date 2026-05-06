@@ -27,13 +27,14 @@ export async function generateStaticParams() {
       `${BACKEND}/api/blog-posts?fields[0]=slug&pagination[pageSize]=200`,
       { signal: AbortSignal.timeout(8000) }
     )
-    if (!res.ok) return []
+    if (!res.ok) return [{ blogSlug: "inicio" }]
     const json = await res.json()
-    return (json.data || []).map((p: { slug?: string }) => ({
-      blogSlug: p.slug ?? "",
-    }))
+    const items = (json.data || [])
+      .map((p: { slug?: string }) => ({ blogSlug: p.slug ?? "" }))
+      .filter((p: { blogSlug: string }) => Boolean(p.blogSlug))
+    return items.length > 0 ? items : [{ blogSlug: "inicio" }]
   } catch {
-    return []
+    return [{ blogSlug: "inicio" }]
   }
 }
 
