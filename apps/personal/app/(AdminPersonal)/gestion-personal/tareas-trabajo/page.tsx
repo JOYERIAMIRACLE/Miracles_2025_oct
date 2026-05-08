@@ -1,5 +1,5 @@
-import { TareasView } from "@/components/Personal/Tareas/TareasView"
+import { redirect } from "next/navigation"
 
-export default function TareasTrabajoPage() {
-  return <TareasView ambito="trabajo" titulo="Tareas de Trabajo" />
+export default function TareasTrabajoRedirect() {
+  redirect("/trabajo/tareas")
 }

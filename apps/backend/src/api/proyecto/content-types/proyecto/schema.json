@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "proyectos",
+  "info": {
+    "singularName": "proyecto",
+    "pluralName": "proyectos",
+    "displayName": "Proyecto"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "descripcion": {
+      "type": "text"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["activo", "pausado", "completado", "cancelado"],
+      "default": "activo"
+    },
+    "prioridad": {
+      "type": "enumeration",
+      "enum": ["baja", "media", "alta"],
+      "default": "media"
+    },
+    "fechaInicio": {
+      "type": "date"
+    },
+    "fechaFin": {
+      "type": "date"
+    },
+    "presupuesto": {
+      "type": "decimal"
+    },
+    "color": {
+      "type": "string"
+    },
+    "clienteTrabajo": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente-trabajo.cliente-trabajo",
+      "inversedBy": "proyectos"
+    },
+    "tareas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tarea.tarea",
+      "mappedBy": "proyecto"
+    },
+    "reuniones": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reunion.reunion",
+      "mappedBy": "proyecto"
+    },
+    "pagos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::pago-trabajo.pago-trabajo",
+      "mappedBy": "proyecto"
+    }
+  }
+}

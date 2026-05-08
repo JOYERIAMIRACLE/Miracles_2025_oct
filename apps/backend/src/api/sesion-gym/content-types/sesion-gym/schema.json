@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sesion_gyms",
+  "info": {
+    "singularName": "sesion-gym",
+    "pluralName": "sesion-gyms",
+    "displayName": "Sesión Gym"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "fecha":       { "type": "date", "required": true },
+    "duracion":    { "type": "integer" },
+    "notas":       { "type": "text" },
+    "ejerciciosRealizados": { "type": "json" },
+    "rutina": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::rutina.rutina",
+      "inversedBy": "sesiones"
+    }
+  }
+}

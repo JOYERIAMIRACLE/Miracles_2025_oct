@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { MobileSidebar } from "./MobileSidebar"
+import { AppLauncher } from "@/components/AppLauncher"
 
 const titles: Record<string, string> = {
   "/gestion-personal":                  "HUD Principal",
@@ -25,8 +26,11 @@ export function PersonalHeader() {
         <MobileSidebar />
         <h1 className="text-sm md:text-base font-semibold text-slate-300 tracking-tight">{title}</h1>
       </div>
-      <div className="h-7 w-7 rounded-md bg-gradient-to-br from-cyan-500 to-violet-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shadow-cyan-500/20 shrink-0">
-        RR
+      <div className="flex items-center gap-2">
+        <AppLauncher />
+        <div className="h-7 w-7 rounded-md bg-linear-to-br from-cyan-500 to-violet-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shadow-cyan-500/20 shrink-0">
+          RR
+        </div>
       </div>
     </header>
   )

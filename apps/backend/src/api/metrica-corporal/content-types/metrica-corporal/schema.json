@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "metrica_corporals",
+  "info": {
+    "singularName": "metrica-corporal",
+    "pluralName": "metrica-corporals",
+    "displayName": "Métrica Corporal"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "fecha":  { "type": "date", "required": true },
+    "peso":   { "type": "decimal" },
+    "grasa":  { "type": "decimal" },
+    "musculo":{ "type": "decimal" },
+    "medidas":{ "type": "json" },
+    "notas":  { "type": "text" }
+  }
+}

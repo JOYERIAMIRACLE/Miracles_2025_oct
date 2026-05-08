@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reuniones",
+  "info": {
+    "singularName": "reunion",
+    "pluralName": "reuniones",
+    "displayName": "Reunión"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "titulo": {
+      "type": "string",
+      "required": true
+    },
+    "fecha": {
+      "type": "datetime",
+      "required": true
+    },
+    "participantes": {
+      "type": "string"
+    },
+    "notas": {
+      "type": "text"
+    },
+    "acuerdos": {
+      "type": "text"
+    },
+    "clienteTrabajo": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente-trabajo.cliente-trabajo",
+      "inversedBy": "reuniones"
+    },
+    "proyecto": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::proyecto.proyecto",
+      "inversedBy": "reuniones"
+    }
+  }
+}

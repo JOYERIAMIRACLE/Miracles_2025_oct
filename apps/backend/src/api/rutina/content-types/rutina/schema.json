@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rutinas",
+  "info": {
+    "singularName": "rutina",
+    "pluralName": "rutinas",
+    "displayName": "Rutina"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":      { "type": "string", "required": true },
+    "descripcion": { "type": "text" },
+    "diasSemana":  { "type": "string" },
+    "activa":      { "type": "boolean", "default": true },
+    "ejercicios":  { "type": "json" },
+    "sesiones": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::sesion-gym.sesion-gym",
+      "mappedBy": "rutina"
+    }
+  }
+}

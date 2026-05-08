@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ejercicios",
+  "info": {
+    "singularName": "ejercicio",
+    "pluralName": "ejercicios",
+    "displayName": "Ejercicio"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":      { "type": "string", "required": true },
+    "musculo":     { "type": "enumeration", "enum": ["pecho","espalda","hombros","biceps","triceps","core","piernas","gluteos","cardio","cuerpo_completo"] },
+    "tipo":        { "type": "enumeration", "enum": ["fuerza","cardio","flexibilidad","funcional"], "default": "fuerza" },
+    "descripcion": { "type": "text" },
+    "videoUrl":    { "type": "string" }
+  }
+}

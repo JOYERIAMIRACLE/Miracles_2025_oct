@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { AppLauncher } from "@/components/AppLauncher"
 
 export function AdminHeader() {
   // 1. HOOKS
@@ -36,8 +37,8 @@ export function AdminHeader() {
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-bold tracking-tight">{title}</h1>
       </div>
-      <div className="flex items-center gap-4">
-        {/* Espacio para menú de usuario (Avatar) futuro */}
+      <div className="flex items-center gap-3">
+        <AppLauncher />
         <div className="h-9 w-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-sm font-semibold shadow border border-zinc-800">
           RR
         </div>

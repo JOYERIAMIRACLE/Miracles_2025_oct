@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pago_trabajos",
+  "info": {
+    "singularName": "pago-trabajo",
+    "pluralName": "pago-trabajos",
+    "displayName": "Pago Trabajo"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "concepto": {
+      "type": "string",
+      "required": true
+    },
+    "monto": {
+      "type": "decimal",
+      "required": true
+    },
+    "fecha": {
+      "type": "date"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["pendiente", "pagado", "parcial"],
+      "default": "pendiente"
+    },
+    "notas": {
+      "type": "text"
+    },
+    "clienteTrabajo": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente-trabajo.cliente-trabajo",
+      "inversedBy": "pagos"
+    },
+    "proyecto": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::proyecto.proyecto",
+      "inversedBy": "pagos"
+    }
+  }
+}

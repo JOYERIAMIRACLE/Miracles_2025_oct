@@ -13,8 +13,9 @@ import {
   Tag,
   Archive,
   CheckSquare,
-  Briefcase,
   ChefHat,
+  Dumbbell,
+  Activity,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -38,13 +39,14 @@ const sections: { title: string; items: NavItem[] }[] = [
     title: "Productividad",
     items: [
       { name: "Tareas Personales", href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
-      { name: "Tareas de Trabajo", href: "/gestion-personal/tareas-trabajo",    icon: Briefcase,   color: "blue"   },
     ],
   },
   {
-    title: "Alimentación",
+    title: "Salud",
     items: [
-      { name: "Recetario", href: "/gestion-personal/recetario", icon: ChefHat, color: "green" },
+      { name: "Recetario",  href: "/gestion-personal/recetario",        icon: ChefHat,   color: "green"  },
+      { name: "Gym",        href: "/gestion-personal/salud/gym",         icon: Dumbbell,  color: "red"    },
+      { name: "Métricas",   href: "/gestion-personal/salud/metricas",    icon: Activity,  color: "purple" },
     ],
   },
 ]

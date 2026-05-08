@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cliente_trabajos",
+  "info": {
+    "singularName": "cliente-trabajo",
+    "pluralName": "cliente-trabajos",
+    "displayName": "Cliente Trabajo"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "empresa": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "telefono": {
+      "type": "string"
+    },
+    "notas": {
+      "type": "text"
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    },
+    "proyectos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::proyecto.proyecto",
+      "mappedBy": "clienteTrabajo"
+    },
+    "reuniones": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reunion.reunion",
+      "mappedBy": "clienteTrabajo"
+    },
+    "pagos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::pago-trabajo.pago-trabajo",
+      "mappedBy": "clienteTrabajo"
+    }
+  }
+}
