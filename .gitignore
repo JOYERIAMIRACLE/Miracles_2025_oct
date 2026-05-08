@@ -1,5 +1,20 @@
+# Backups y docs privados
 backup.sql
 backup_render.sql
 *.sql
 1Documentacion personal/
 backups/
+
+# Monorepo
+node_modules/
+.turbo/
+
+# Builds
+apps/*/out/
+apps/*/.next/
+apps/*/dist/
+
+# Env
+.env
+.env.local
+.env*.local

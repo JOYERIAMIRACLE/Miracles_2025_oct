@@ -1,0 +1,18 @@
+{
+  "name": "miracles-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.0.8",
+  "scripts": {
+    "dev:personal":   "turbo dev --filter=@miracles/personal",
+    "dev:trabajo":    "turbo dev --filter=@miracles/trabajo",
+    "dev:ecommerce":  "turbo dev --filter=@miracles/ecommerce",
+    "dev:admin":      "turbo dev --filter=@miracles/admin",
+    "dev:blog":       "turbo dev --filter=@miracles/blog",
+    "build":          "turbo build",
+    "lint":           "turbo lint"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4"
+  }
+}

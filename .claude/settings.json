@@ -105,7 +105,15 @@
       "Bash(npx tsc *)",
       "PowerShell(netstat -ano)",
       "PowerShell(Get-Process -Id 28348 | Select-Object -ExpandProperty MainWindowTitle; \\(Get-WmiObject Win32_Process -Filter \"ProcessId=28348\"\\).CommandLine)",
-      "PowerShell(Stop-Process -Id 28348 -Force)"
+      "PowerShell(Stop-Process -Id 28348 -Force)",
+      "Bash(git rm *)",
+      "Bash(gh run *)",
+      "Bash(npm --version)",
+      "Bash(pnpm --version)",
+      "Bash(git mv *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm approve-builds *)",
+      "Bash(pnpm --filter @miracles/personal build)"
     ],
     "additionalDirectories": [
       "c:\\Users\\RicardoRodriguezAvil\\Desktop\\Miracles\\backend-store-miracles\\src\\api\\tarea\\content-types",

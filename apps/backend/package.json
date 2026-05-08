@@ -1,5 +1,5 @@
 {
-  "name": "store-miracles",
+  "name": "@miracles/backend",
   "version": "0.1.0",
   "private": true,
   "description": "A Strapi application",
