@@ -1,0 +1,20 @@
+{
+  "kind": "collectionType",
+  "collectionName": "item_compras",
+  "info": {
+    "singularName": "item-compra",
+    "pluralName": "item-compras",
+    "displayName": "Item Compra",
+    "description": "Lista de compras del supermercado"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "nombre":            { "type": "string", "required": true },
+    "cantidadSugerida":  { "type": "decimal", "default": 1 },
+    "unidad":            { "type": "string", "default": "pz" },
+    "categoria":         { "type": "string", "default": "otros" },
+    "completado":        { "type": "boolean", "default": false },
+    "auto":              { "type": "boolean", "default": false },
+    "ingredienteRef":    { "type": "string" }
+  }
+}

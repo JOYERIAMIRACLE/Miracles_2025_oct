@@ -1,0 +1,20 @@
+{
+  "kind": "collectionType",
+  "collectionName": "recetas",
+  "info": {
+    "singularName": "receta",
+    "pluralName": "recetas",
+    "displayName": "Receta",
+    "description": "Grimorio de recetas de cocina"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "nombre":      { "type": "string",  "required": true },
+    "descripcion": { "type": "text" },
+    "categoria":   { "type": "enumeration", "enum": ["desayuno","comida","cena","snack","postre"], "default": "comida" },
+    "videoUrl":    { "type": "string" },
+    "tiempoPrep":  { "type": "integer", "default": 30 },
+    "dificultad":  { "type": "enumeration", "enum": ["fácil","media","difícil"], "default": "fácil" },
+    "notas":       { "type": "text" }
+  }
+}

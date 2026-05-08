@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Plus, Pencil, Trash2, X, Search, ExternalLink, Clock,
@@ -10,29 +10,14 @@ import {
 import { toast } from "sonner"
 import { DespensaTab } from "./DespensaTab"
 import { ComprasTab }  from "./ComprasTab"
+import { useGetRecetas, createReceta, updateReceta, deleteReceta } from "@/api/receta/getRecetas"
+import { RecetaType, CategoriaReceta, Dificultad } from "@/types/recetario"
 
 type TabId = "recetas" | "despensa" | "compras"
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-type Categoria = "desayuno" | "comida" | "cena" | "snack" | "postre"
-type Dificultad = "fácil" | "media" | "difícil"
-
-type Receta = {
-  id: string
-  nombre: string
-  descripcion: string
-  categoria: Categoria
-  videoUrl: string
-  tiempoPrep: number
-  dificultad: Dificultad
-  notas: string
-  creadoEn: string
-}
-
-type RecetaForm = Omit<Receta, "id" | "creadoEn">
+type RecetaForm = Omit<RecetaType, "id" | "documentId" | "createdAt">
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const CATEGORIAS: { key: Categoria | "todas"; label: string; icon: React.ElementType; color: string }[] = [
+const CATEGORIAS: { key: CategoriaReceta | "todas"; label: string; icon: React.ElementType; color: string }[] = [
   { key: "todas",     label: "Todas",     icon: BookOpen, color: "cyan"   },
   { key: "desayuno",  label: "Desayuno",  icon: Coffee,   color: "amber"  },
   { key: "comida",    label: "Comida",    icon: Sun,      color: "green"  },
@@ -64,11 +49,9 @@ const DIFIC_COLORS: Record<Dificultad, string> = {
 
 const DIFIC_STARS: Record<Dificultad, number> = { "fácil": 1, "media": 2, "difícil": 3 }
 
-const STORAGE_KEY = "miracles_recetario"
-
 const FORM_EMPTY: RecetaForm = {
-  nombre: "", descripcion: "", categoria: "comida",
-  videoUrl: "", tiempoPrep: 30, dificultad: "fácil", notas: "",
+  nombre: "", descripcion: null, categoria: "comida",
+  videoUrl: null, tiempoPrep: 30, dificultad: "fácil", notas: null,
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -78,18 +61,18 @@ function getYoutubeThumbnail(url: string): string | null {
   return null
 }
 
-function catColorOf(categoria: Categoria): typeof CAT_COLORS[string] {
+function catColorOf(categoria: CategoriaReceta) {
   const cat = CATEGORIAS.find(c => c.key === categoria)
   return CAT_COLORS[cat?.color ?? "cyan"]
 }
 
-function catIconOf(categoria: Categoria): React.ElementType {
+function catIconOf(categoria: CategoriaReceta): React.ElementType {
   return CATEGORIAS.find(c => c.key === categoria)?.icon ?? BookOpen
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function RecetaCard({ receta, onEdit, onDelete, onView }: {
-  receta: Receta
+  receta: RecetaType
   onEdit: () => void
   onDelete: () => void
   onView: () => void
@@ -109,7 +92,6 @@ function RecetaCard({ receta, onEdit, onDelete, onView }: {
       className={`group relative rounded-xl bg-slate-900/60 border ${c.border} backdrop-blur-sm overflow-hidden cursor-pointer hover:shadow-lg ${c.glow} transition-all duration-300`}
       onClick={onView}
     >
-      {/* Thumbnail o placeholder */}
       <div className="relative h-32 overflow-hidden">
         {thumb ? (
           <img src={thumb} alt={receta.nombre} className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" />
@@ -125,14 +107,12 @@ function RecetaCard({ receta, onEdit, onDelete, onView }: {
             </div>
           </div>
         )}
-        {/* Category badge */}
         <div className="absolute top-2 left-2">
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${c.bg} ${c.text} ${c.border}`}>
             <CatIcon className="h-2.5 w-2.5" />
             {receta.categoria}
           </span>
         </div>
-        {/* Actions */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
           <button
             type="button"
@@ -153,7 +133,6 @@ function RecetaCard({ receta, onEdit, onDelete, onView }: {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-3">
         <h3 className="text-sm font-semibold text-slate-200 group-hover:text-white truncate">{receta.nombre}</h3>
         {receta.descripcion && (
@@ -161,7 +140,7 @@ function RecetaCard({ receta, onEdit, onDelete, onView }: {
         )}
         <div className="flex items-center justify-between mt-2.5">
           <div className="flex items-center gap-2.5 text-[10px] text-slate-600">
-            {receta.tiempoPrep > 0 && (
+            {receta.tiempoPrep != null && receta.tiempoPrep > 0 && (
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {receta.tiempoPrep} min
@@ -184,7 +163,7 @@ function RecetaCard({ receta, onEdit, onDelete, onView }: {
   )
 }
 
-function RecetaModal({ receta, onClose }: { receta: Receta; onClose: () => void }) {
+function RecetaModal({ receta, onClose }: { receta: RecetaType; onClose: () => void }) {
   const c = catColorOf(receta.categoria)
   const CatIcon = catIconOf(receta.categoria)
   const thumb = receta.videoUrl ? getYoutubeThumbnail(receta.videoUrl) : null
@@ -201,7 +180,6 @@ function RecetaModal({ receta, onClose }: { receta: Receta; onClose: () => void 
         className={`relative w-full max-w-lg rounded-2xl bg-slate-900 border ${c.border} shadow-2xl overflow-hidden`}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header thumbnail */}
         <div className="relative h-40 overflow-hidden">
           {thumb ? (
             <img src={thumb} alt={receta.nombre} className="w-full h-full object-cover opacity-60" />
@@ -210,7 +188,7 @@ function RecetaModal({ receta, onClose }: { receta: Receta; onClose: () => void 
               <CatIcon className={`h-14 w-14 ${c.text} opacity-20`} />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/60 to-transparent" />
           <button type="button" aria-label="Cerrar" onClick={onClose} className="absolute top-3 right-3 h-7 w-7 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
             <X className="h-4 w-4" />
           </button>
@@ -229,9 +207,8 @@ function RecetaModal({ receta, onClose }: { receta: Receta; onClose: () => void 
         </div>
 
         <div className="p-4 space-y-3">
-          {/* Stats */}
           <div className="flex items-center gap-4 text-xs text-slate-500">
-            {receta.tiempoPrep > 0 && (
+            {receta.tiempoPrep != null && receta.tiempoPrep > 0 && (
               <span className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-cyan-500" />
                 {receta.tiempoPrep} minutos
@@ -276,10 +253,11 @@ function RecetaModal({ receta, onClose }: { receta: Receta; onClose: () => void 
   )
 }
 
-function FormModal({ initial, onSave, onClose }: {
+function FormModal({ initial, onSave, onClose, saving }: {
   initial: RecetaForm
   onSave: (data: RecetaForm) => void
   onClose: () => void
+  saving: boolean
 }) {
   const [form, setForm] = useState<RecetaForm>(initial)
 
@@ -316,7 +294,6 @@ function FormModal({ initial, onSave, onClose }: {
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-          {/* Nombre */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Nombre *</label>
             <input
@@ -327,7 +304,6 @@ function FormModal({ initial, onSave, onClose }: {
             />
           </div>
 
-          {/* Categoría */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Categoría</label>
             <div className="grid grid-cols-5 gap-1.5">
@@ -339,7 +315,7 @@ function FormModal({ initial, onSave, onClose }: {
                   <button
                     key={cat.key}
                     type="button"
-                    onClick={() => set("categoria", cat.key as Categoria)}
+                    onClick={() => set("categoria", cat.key as CategoriaReceta)}
                     className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-[10px] font-semibold transition-all ${
                       active ? `${c.bg} ${c.text} ${c.border}` : "bg-slate-800/40 border-slate-700/40 text-slate-500 hover:border-slate-600"
                     }`}
@@ -352,24 +328,22 @@ function FormModal({ initial, onSave, onClose }: {
             </div>
           </div>
 
-          {/* Descripción */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Descripción breve</label>
             <textarea
-              value={form.descripcion}
-              onChange={e => set("descripcion", e.target.value)}
+              value={form.descripcion ?? ""}
+              onChange={e => set("descripcion", e.target.value || null)}
               rows={2}
               placeholder="De qué trata la receta..."
               className="w-full bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 resize-none"
             />
           </div>
 
-          {/* Video URL */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Link de video (YouTube u otro)</label>
             <input
-              value={form.videoUrl}
-              onChange={e => set("videoUrl", e.target.value)}
+              value={form.videoUrl ?? ""}
+              onChange={e => set("videoUrl", e.target.value || null)}
               placeholder="https://youtube.com/watch?v=..."
               className="w-full bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"
             />
@@ -380,7 +354,6 @@ function FormModal({ initial, onSave, onClose }: {
             )}
           </div>
 
-          {/* Tiempo + Dificultad */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label htmlFor="tiempo-prep" className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tiempo (min)</label>
@@ -389,7 +362,7 @@ function FormModal({ initial, onSave, onClose }: {
                 type="number"
                 min={0}
                 max={600}
-                value={form.tiempoPrep}
+                value={form.tiempoPrep ?? 0}
                 onChange={e => set("tiempoPrep", Number(e.target.value))}
                 className="w-full bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"
               />
@@ -415,12 +388,11 @@ function FormModal({ initial, onSave, onClose }: {
             </div>
           </div>
 
-          {/* Notas */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Notas / Ingredientes</label>
             <textarea
-              value={form.notas}
-              onChange={e => set("notas", e.target.value)}
+              value={form.notas ?? ""}
+              onChange={e => set("notas", e.target.value || null)}
               rows={3}
               placeholder="Pasos, ingredientes, tips..."
               className="w-full bg-slate-800/80 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 resize-none"
@@ -429,9 +401,10 @@ function FormModal({ initial, onSave, onClose }: {
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-sm font-semibold hover:bg-cyan-500/30 transition-colors"
+            disabled={saving}
+            className="w-full py-2.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-sm font-semibold hover:bg-cyan-500/30 disabled:opacity-40 transition-colors"
           >
-            {initial.nombre ? "Guardar cambios" : "Agregar receta"}
+            {saving ? "Guardando..." : initial.nombre ? "Guardar cambios" : "Agregar receta"}
           </button>
         </form>
       </motion.div>
@@ -441,50 +414,45 @@ function FormModal({ initial, onSave, onClose }: {
 
 // ─── Main View ────────────────────────────────────────────────────────────────
 export function RecetarioView() {
-  const [activeTab, setActiveTab] = useState<TabId>("recetas")
-  const [recetas, setRecetas] = useState<Receta[]>([])
-  const [busqueda, setBusqueda] = useState("")
-  const [categoriaFiltro, setCategoriaFiltro] = useState<Categoria | "todas">("todas")
-  const [formModal, setFormModal] = useState<{ open: boolean; editando: Receta | null }>({ open: false, editando: null })
-  const [detalle, setDetalle] = useState<Receta | null>(null)
+  const { recetas, setRecetas, loading } = useGetRecetas()
+  const [activeTab,     setActiveTab]     = useState<TabId>("recetas")
+  const [busqueda,      setBusqueda]      = useState("")
+  const [categoriaFiltro, setCategoriaFiltro] = useState<CategoriaReceta | "todas">("todas")
+  const [formModal, setFormModal] = useState<{ open: boolean; editando: RecetaType | null }>({ open: false, editando: null })
+  const [detalle,   setDetalle]   = useState<RecetaType | null>(null)
+  const [saving,    setSaving]    = useState(false)
 
-  useEffect(() => {
+  const handleSave = async (data: RecetaForm) => {
+    setSaving(true)
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setRecetas(JSON.parse(raw))
-    } catch {}
-  }, [])
-
-  const guardar = (lista: Receta[]) => {
-    setRecetas(lista)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
+      if (formModal.editando) {
+        const res = await updateReceta(formModal.editando.documentId, data)
+        if (res?.data) {
+          setRecetas(prev => prev.map(r => r.documentId === formModal.editando!.documentId ? res.data : r))
+          toast.success("Receta actualizada")
+        }
+      } else {
+        const res = await createReceta(data)
+        if (res?.data) {
+          setRecetas(prev => [res.data, ...prev])
+          toast.success("Receta agregada al grimorio")
+        }
+      }
+      setFormModal({ open: false, editando: null })
+    } finally { setSaving(false) }
   }
 
-  const handleSave = (data: RecetaForm) => {
-    if (formModal.editando) {
-      const updated = recetas.map(r =>
-        r.id === formModal.editando!.id ? { ...formModal.editando!, ...data } : r
-      )
-      guardar(updated)
-      toast.success("Receta actualizada")
-    } else {
-      const nueva: Receta = { ...data, id: crypto.randomUUID(), creadoEn: new Date().toISOString() }
-      guardar([...recetas, nueva])
-      toast.success("Receta agregada al grimorio")
-    }
-    setFormModal({ open: false, editando: null })
-  }
-
-  const handleDelete = (id: string) => {
-    guardar(recetas.filter(r => r.id !== id))
+  const handleDelete = async (documentId: string) => {
+    await deleteReceta(documentId)
+    setRecetas(prev => prev.filter(r => r.documentId !== documentId))
     toast.success("Receta eliminada")
   }
 
   const filtradas = useMemo(() => {
     return recetas.filter(r => {
-      const matchCat = categoriaFiltro === "todas" || r.categoria === categoriaFiltro
+      const matchCat  = categoriaFiltro === "todas" || r.categoria === categoriaFiltro
       const matchBusq = !busqueda || r.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        r.descripcion.toLowerCase().includes(busqueda.toLowerCase())
+        (r.descripcion ?? "").toLowerCase().includes(busqueda.toLowerCase())
       return matchCat && matchBusq
     })
   }, [recetas, categoriaFiltro, busqueda])
@@ -523,138 +491,137 @@ export function RecetarioView() {
         ))}
       </div>
 
-      {/* ── Despensa tab ───────────────────────────────────────────────────── */}
       {activeTab === "despensa" && (
         <DespensaTab onSwitchToCompras={() => setActiveTab("compras")} />
       )}
 
-      {/* ── Compras tab ────────────────────────────────────────────────────── */}
       {activeTab === "compras" && <ComprasTab />}
 
-      {/* ── Recetas tab ────────────────────────────────────────────────────── */}
       {activeTab === "recetas" && <>
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800/80 border border-slate-700/50 p-4 overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-48 h-48 bg-green-500/5 rounded-full blur-3xl" />
-        <div className="relative flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
-              <ChefHat className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-slate-100">Grimorio de Recetas</h1>
-              <p className="text-[10px] text-slate-500">{recetas.length} {recetas.length === 1 ? "receta guardada" : "recetas guardadas"}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFormModal({ open: true, editando: null })}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold hover:bg-green-500/20 transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Nueva receta
-          </button>
-        </div>
-      </motion.div>
-
-      {/* ── Search ─────────────────────────────────────────────────────────── */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
-        <input
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-          placeholder="Buscar receta..."
-          className="w-full bg-slate-900/60 border border-slate-700/40 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-green-500/40 focus:ring-1 focus:ring-green-500/10"
-        />
-      </div>
-
-      {/* ── Category Tabs ───────────────────────────────────────────────────── */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {CATEGORIAS.map(cat => {
-          const c = CAT_COLORS[cat.color]
-          const active = categoriaFiltro === cat.key
-          const Icon = cat.icon
-          const cnt = contPorCat[cat.key] ?? 0
-          return (
-            <button
-              key={cat.key}
-              type="button"
-              onClick={() => setCategoriaFiltro(cat.key as Categoria | "todas")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold whitespace-nowrap transition-all ${
-                active
-                  ? `${c.bg} ${c.text} ${c.border}`
-                  : "bg-slate-900/40 border-slate-700/40 text-slate-500 hover:border-slate-600 hover:text-slate-400"
-              }`}
-            >
-              <Icon className="h-3 w-3" />
-              {cat.label}
-              <span className={`text-[10px] px-1 rounded ${active ? "opacity-70" : "text-slate-700"}`}>
-                {cnt}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* ── Grid ───────────────────────────────────────────────────────────── */}
-      {filtradas.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center py-20 text-center"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative rounded-xl bg-slate-900 border border-slate-700/50 p-4 overflow-hidden"
         >
-          <ChefHat className="h-12 w-12 text-slate-700 mb-3" />
-          <p className="text-sm text-slate-500 font-medium">
-            {recetas.length === 0 ? "Tu grimorio está vacío" : "Sin recetas con ese filtro"}
-          </p>
-          <p className="text-xs text-slate-700 mt-1">
-            {recetas.length === 0 ? "Agrega tu primera receta para empezar" : "Prueba con otra categoría o búsqueda"}
-          </p>
-          {recetas.length === 0 && (
+          <div className="absolute top-0 right-0 w-48 h-48 bg-green-500/5 rounded-full blur-3xl" />
+          <div className="relative flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
+                <ChefHat className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-100">Grimorio de Recetas</h1>
+                <p className="text-[10px] text-slate-500">{recetas.length} {recetas.length === 1 ? "receta guardada" : "recetas guardadas"}</p>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => setFormModal({ open: true, editando: null })}
-              className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold hover:bg-green-500/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold hover:bg-green-500/20 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
-              Agregar primera receta
+              Nueva receta
             </button>
-          )}
+          </div>
         </motion.div>
-      ) : (
-        <motion.div layout className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          <AnimatePresence mode="popLayout">
-            {filtradas.map(r => (
-              <RecetaCard
-                key={r.id}
-                receta={r}
-                onView={() => setDetalle(r)}
-                onEdit={() => setFormModal({ open: true, editando: r })}
-                onDelete={() => handleDelete(r.id)}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      )}
 
-      {/* ── Modals ─────────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {detalle && (
-          <RecetaModal receta={detalle} onClose={() => setDetalle(null)} />
-        )}
-        {formModal.open && (
-          <FormModal
-            initial={formModal.editando ? { ...formModal.editando } : FORM_EMPTY}
-            onSave={handleSave}
-            onClose={() => setFormModal({ open: false, editando: null })}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
+          <input
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder="Buscar receta..."
+            className="w-full bg-slate-900/60 border border-slate-700/40 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-green-500/40 focus:ring-1 focus:ring-green-500/10"
           />
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {CATEGORIAS.map(cat => {
+            const c = CAT_COLORS[cat.color]
+            const active = categoriaFiltro === cat.key
+            const Icon = cat.icon
+            const cnt = contPorCat[cat.key] ?? 0
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => setCategoriaFiltro(cat.key as CategoriaReceta | "todas")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold whitespace-nowrap transition-all ${
+                  active
+                    ? `${c.bg} ${c.text} ${c.border}`
+                    : "bg-slate-900/40 border-slate-700/40 text-slate-500 hover:border-slate-600 hover:text-slate-400"
+                }`}
+              >
+                <Icon className="h-3 w-3" />
+                {cat.label}
+                <span className={`text-[10px] px-1 rounded ${active ? "opacity-70" : "text-slate-700"}`}>
+                  {cnt}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 border-2 border-green-500/30 border-t-green-400 rounded-full animate-spin" />
+          </div>
+        ) : filtradas.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20 text-center"
+          >
+            <ChefHat className="h-12 w-12 text-slate-700 mb-3" />
+            <p className="text-sm text-slate-500 font-medium">
+              {recetas.length === 0 ? "Tu grimorio está vacío" : "Sin recetas con ese filtro"}
+            </p>
+            <p className="text-xs text-slate-700 mt-1">
+              {recetas.length === 0 ? "Agrega tu primera receta para empezar" : "Prueba con otra categoría o búsqueda"}
+            </p>
+            {recetas.length === 0 && (
+              <button
+                type="button"
+                onClick={() => setFormModal({ open: true, editando: null })}
+                className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold hover:bg-green-500/20 transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Agregar primera receta
+              </button>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div layout className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <AnimatePresence mode="popLayout">
+              {filtradas.map(r => (
+                <RecetaCard
+                  key={r.documentId}
+                  receta={r}
+                  onView={() => setDetalle(r)}
+                  onEdit={() => setFormModal({ open: true, editando: r })}
+                  onDelete={() => handleDelete(r.documentId)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
-      </AnimatePresence>
+
+        <AnimatePresence>
+          {detalle && (
+            <RecetaModal receta={detalle} onClose={() => setDetalle(null)} />
+          )}
+          {formModal.open && (
+            <FormModal
+              initial={formModal.editando
+                ? { nombre: formModal.editando.nombre, descripcion: formModal.editando.descripcion, categoria: formModal.editando.categoria, videoUrl: formModal.editando.videoUrl, tiempoPrep: formModal.editando.tiempoPrep, dificultad: formModal.editando.dificultad, notas: formModal.editando.notas }
+                : FORM_EMPTY}
+              onSave={handleSave}
+              onClose={() => setFormModal({ open: false, editando: null })}
+              saving={saving}
+            />
+          )}
+        </AnimatePresence>
       </>}
 
     </div>

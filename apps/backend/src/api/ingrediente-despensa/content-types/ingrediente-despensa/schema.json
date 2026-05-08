@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ingrediente_despensas",
+  "info": {
+    "singularName": "ingrediente-despensa",
+    "pluralName": "ingrediente-despensas",
+    "displayName": "Ingrediente Despensa",
+    "description": "Stock de ingredientes en la despensa"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "nombre":          { "type": "string", "required": true },
+    "cantidad":        { "type": "decimal", "default": 0 },
+    "unidad":          { "type": "enumeration", "enum": ["pz","kg","g","L","ml","taza","bolsa","lata","caja","botella"], "default": "pz" },
+    "categoria":       { "type": "enumeration", "enum": ["verduras","frutas","carnes","lácteos","granos","especias","aceites","bebidas","enlatados","otros"], "default": "otros" },
+    "cantidadMinima":  { "type": "decimal", "default": 1 },
+    "notas":           { "type": "string" }
+  }
+}

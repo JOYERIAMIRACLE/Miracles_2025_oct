@@ -1,34 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Trash2, X, ShoppingCart, Check, RefreshCcw } from "lucide-react"
 import { toast } from "sonner"
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-type ItemCompra = {
-  id: string
-  nombre: string
-  cantidadSugerida: number
-  unidad: string
-  categoria: string
-  completado: boolean
-  auto: boolean
-  ingredienteId?: string
-  creadoEn: string
-}
-
-type Ingrediente = {
-  id: string
-  cantidad: number
-  cantidadMinima: number
-  actualizadoEn: string
-}
+import {
+  useGetItemsCompra, createItemCompra, updateItemCompra, deleteItemCompra,
+} from "@/api/item-compra/getItemsCompra"
+import { updateIngrediente } from "@/api/ingrediente-despensa/getIngredientes"
+import { ItemCompraType } from "@/types/recetario"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const STORAGE_COMPRAS  = "miracles_compras"
-const STORAGE_DESPENSA = "miracles_despensa"
-
 const CATEGORIAS_EMOJI: Record<string, string> = {
   verduras: "🥬", frutas: "🍎", carnes: "🥩", lácteos: "🥛",
   granos: "🌾", especias: "🌶️", aceites: "🫙", bebidas: "🧃",
@@ -42,7 +24,7 @@ function fmtQty(n: number) { return n % 1 === 0 ? String(n) : n.toFixed(1) }
 
 // ─── Row component ────────────────────────────────────────────────────────────
 function CompraRow({ item, onToggle, onDelete }: {
-  item: ItemCompra
+  item: ItemCompraType
   onToggle: () => void
   onDelete: () => void
 }) {
@@ -58,6 +40,8 @@ function CompraRow({ item, onToggle, onDelete }: {
       }`}
     >
       <button
+        type="button"
+        aria-label={item.completado ? "Marcar como pendiente" : "Marcar como comprado"}
         onClick={onToggle}
         className={`h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
           item.completado
@@ -86,6 +70,8 @@ function CompraRow({ item, onToggle, onDelete }: {
       </span>
 
       <button
+        type="button"
+        aria-label="Eliminar item"
         onClick={onDelete}
         className="h-5 w-5 rounded text-slate-700 hover:text-red-400 flex items-center justify-center transition-colors shrink-0"
       >
@@ -114,6 +100,7 @@ function AddItemInline({ onAdd }: { onAdd: (nombre: string, cantidad: number, un
   if (!open) {
     return (
       <button
+        type="button"
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-slate-700 text-slate-500 hover:text-slate-400 hover:border-slate-600 text-xs transition-colors w-full"
       >
@@ -131,7 +118,7 @@ function AddItemInline({ onAdd }: { onAdd: (nombre: string, cantidad: number, un
     >
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-slate-400">Agregar item</p>
-        <button onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-400 transition-colors">
+        <button type="button" aria-label="Cancelar" onClick={() => setOpen(false)} className="text-slate-600 hover:text-slate-400 transition-colors">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -146,11 +133,13 @@ function AddItemInline({ onAdd }: { onAdd: (nombre: string, cantidad: number, un
       <div className="flex gap-2">
         <input
           type="number" min={0.1} step={0.5} value={cantidad}
+          aria-label="Cantidad"
           onChange={e => setCantidad(Number(e.target.value))}
           className="w-16 bg-slate-800/80 border border-slate-700/60 rounded-lg px-2 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50"
         />
         <select
           value={unidad}
+          aria-label="Unidad"
           onChange={e => setUnidad(e.target.value)}
           className="bg-slate-800/80 border border-slate-700/60 rounded-lg px-2 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50"
         >
@@ -158,6 +147,7 @@ function AddItemInline({ onAdd }: { onAdd: (nombre: string, cantidad: number, un
         </select>
         <select
           value={categoria}
+          aria-label="Categoría"
           onChange={e => setCategoria(e.target.value)}
           className="flex-1 bg-slate-800/80 border border-slate-700/60 rounded-lg px-2 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50"
         >
@@ -167,6 +157,7 @@ function AddItemInline({ onAdd }: { onAdd: (nombre: string, cantidad: number, un
         </select>
       </div>
       <button
+        type="button"
         onClick={handleAdd}
         className="w-full py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-sm font-semibold hover:bg-cyan-500/30 transition-colors"
       >
@@ -178,61 +169,58 @@ function AddItemInline({ onAdd }: { onAdd: (nombre: string, cantidad: number, un
 
 // ─── Main ComprasTab ──────────────────────────────────────────────────────────
 export function ComprasTab() {
-  const [items, setItems] = useState<ItemCompra[]>([])
+  const { items, setItems, loading } = useGetItemsCompra()
 
-  // Re-read localStorage on every mount (component remounts when switching tabs)
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_COMPRAS)
-      if (raw) setItems(JSON.parse(raw))
-    } catch {}
-  }, [])
-
-  const guardar = (lista: ItemCompra[]) => {
-    setItems(lista)
-    localStorage.setItem(STORAGE_COMPRAS, JSON.stringify(lista))
+  const toggleItem = async (item: ItemCompraType) => {
+    const nuevoEstado = !item.completado
+    setItems(prev => prev.map(i => i.documentId === item.documentId ? { ...i, completado: nuevoEstado } : i))
+    await updateItemCompra(item.documentId, { completado: nuevoEstado })
   }
 
-  const toggleItem = (id: string) =>
-    guardar(items.map(i => i.id === id ? { ...i, completado: !i.completado } : i))
+  const deleteItem = async (documentId: string) => {
+    setItems(prev => prev.filter(i => i.documentId !== documentId))
+    await deleteItemCompra(documentId)
+  }
 
-  const deleteItem = (id: string) =>
-    guardar(items.filter(i => i.id !== id))
-
-  const addItem = (nombre: string, cantidad: number, unidad: string, categoria: string) => {
-    const nuevo: ItemCompra = {
-      id: crypto.randomUUID(), nombre, cantidadSugerida: cantidad, unidad,
-      categoria, completado: false, auto: false, creadoEn: new Date().toISOString(),
+  const addItem = async (nombre: string, cantidad: number, unidad: string, categoria: string) => {
+    const res = await createItemCompra({
+      nombre, cantidadSugerida: cantidad, unidad,
+      categoria, completado: false, auto: false,
+    })
+    if (res?.data) {
+      setItems(prev => [...prev, res.data])
+      toast.success("Item agregado a la lista")
     }
-    guardar([...items, nuevo])
-    toast.success("Item agregado a la lista")
   }
 
-  const limpiarCompletados = () => {
-    guardar(items.filter(i => !i.completado))
+  const limpiarCompletados = async () => {
+    const completados = items.filter(i => i.completado)
+    setItems(prev => prev.filter(i => !i.completado))
+    await Promise.all(completados.map(i => deleteItemCompra(i.documentId)))
     toast.success("Lista limpiada")
   }
 
-  // Restore completed items to cantidadMinima in pantry
-  const actualizarDespensa = () => {
-    const completados = items.filter(i => i.completado && i.ingredienteId)
+  const actualizarDespensa = async () => {
+    const completados = items.filter(i => i.completado && i.ingredienteRef)
     if (completados.length === 0) {
       toast.info("Marca items como comprados para actualizar la despensa")
       return
     }
-    try {
-      const raw = localStorage.getItem(STORAGE_DESPENSA)
-      const despensa: Ingrediente[] = raw ? JSON.parse(raw) : []
-      let actualizados = 0
-      const nueva = despensa.map(ing => {
-        const comprado = completados.find(c => c.ingredienteId === ing.id)
-        if (!comprado) return ing
+    const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+    let actualizados = 0
+    await Promise.all(completados.map(async (item) => {
+      if (!item.ingredienteRef) return
+      try {
+        const res  = await fetch(`${BASE}/api/ingrediente-despensas/${item.ingredienteRef}`)
+        const json = await res.json()
+        const ing  = json.data
+        if (!ing) return
+        const nuevaCantidad = Math.max(ing.cantidadMinima ?? 0, ing.cantidad + item.cantidadSugerida)
+        await updateIngrediente(item.ingredienteRef, { cantidad: nuevaCantidad })
         actualizados++
-        return { ...ing, cantidad: ing.cantidadMinima, actualizadoEn: new Date().toISOString() }
-      })
-      localStorage.setItem(STORAGE_DESPENSA, JSON.stringify(nueva))
-      toast.success(`${actualizados} ingrediente${actualizados !== 1 ? "s" : ""} actualizado${actualizados !== 1 ? "s" : ""} en despensa`)
-    } catch {}
+      } catch {}
+    }))
+    toast.success(`${actualizados} ingrediente${actualizados !== 1 ? "s" : ""} actualizado${actualizados !== 1 ? "s" : ""} en despensa`)
   }
 
   const pendientes  = items.filter(i => !i.completado)
@@ -241,10 +229,9 @@ export function ComprasTab() {
   return (
     <div className="space-y-4">
 
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <div className="h-9 w-9 rounded-xl bg-linear-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
             <ShoppingCart className="h-4 w-4 text-white" />
           </div>
           <div>
@@ -259,6 +246,7 @@ export function ComprasTab() {
         {completados.length > 0 && (
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={actualizarDespensa}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-colors"
             >
@@ -266,6 +254,7 @@ export function ComprasTab() {
               Actualizar despensa
             </button>
             <button
+              type="button"
               onClick={limpiarCompletados}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 text-xs font-semibold hover:text-slate-300 transition-colors"
             >
@@ -276,8 +265,11 @@ export function ComprasTab() {
         )}
       </div>
 
-      {/* Empty */}
-      {items.length === 0 && (
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="h-8 w-8 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin" />
+        </div>
+      ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <ShoppingCart className="h-10 w-10 text-slate-700 mb-3" />
           <p className="text-sm text-slate-500 font-medium">Lista vacía</p>
@@ -285,53 +277,52 @@ export function ComprasTab() {
             Genera una lista desde la Despensa o agrega items manualmente
           </p>
         </div>
+      ) : (
+        <>
+          {pendientes.length > 0 && (
+            <div className="rounded-xl bg-slate-900/40 border border-slate-700/30 overflow-hidden">
+              <div className="px-3 py-2 border-b border-slate-800/60">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Pendientes · {pendientes.length}
+                </p>
+              </div>
+              <div className="p-2 space-y-0.5">
+                <AnimatePresence mode="popLayout">
+                  {pendientes.map(item => (
+                    <CompraRow
+                      key={item.documentId} item={item}
+                      onToggle={() => toggleItem(item)}
+                      onDelete={() => deleteItem(item.documentId)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
+
+          {completados.length > 0 && (
+            <div className="rounded-xl bg-slate-900/30 border border-slate-700/20 overflow-hidden">
+              <div className="px-3 py-2 border-b border-slate-800/40">
+                <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                  Comprados · {completados.length}
+                </p>
+              </div>
+              <div className="p-2 space-y-0.5">
+                <AnimatePresence mode="popLayout">
+                  {completados.map(item => (
+                    <CompraRow
+                      key={item.documentId} item={item}
+                      onToggle={() => toggleItem(item)}
+                      onDelete={() => deleteItem(item.documentId)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {/* Pendientes */}
-      {pendientes.length > 0 && (
-        <div className="rounded-xl bg-slate-900/40 border border-slate-700/30 overflow-hidden">
-          <div className="px-3 py-2 border-b border-slate-800/60">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              Pendientes · {pendientes.length}
-            </p>
-          </div>
-          <div className="p-2 space-y-0.5">
-            <AnimatePresence mode="popLayout">
-              {pendientes.map(item => (
-                <CompraRow
-                  key={item.id} item={item}
-                  onToggle={() => toggleItem(item.id)}
-                  onDelete={() => deleteItem(item.id)}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
-
-      {/* Completados */}
-      {completados.length > 0 && (
-        <div className="rounded-xl bg-slate-900/30 border border-slate-700/20 overflow-hidden">
-          <div className="px-3 py-2 border-b border-slate-800/40">
-            <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
-              Comprados · {completados.length}
-            </p>
-          </div>
-          <div className="p-2 space-y-0.5">
-            <AnimatePresence mode="popLayout">
-              {completados.map(item => (
-                <CompraRow
-                  key={item.id} item={item}
-                  onToggle={() => toggleItem(item.id)}
-                  onDelete={() => deleteItem(item.id)}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
-
-      {/* Add manual item */}
       <AddItemInline onAdd={addItem} />
     </div>
   )
