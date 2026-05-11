@@ -44,7 +44,7 @@ export function AdminHeader() {
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-64 shadow-2xl flex flex-col overflow-hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-y-0 left-0 w-64 shadow-2xl" onClick={() => setMobileOpen(false)}>
             <AdminSidebar />
           </div>
         </div>
