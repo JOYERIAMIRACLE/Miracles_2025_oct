@@ -64,9 +64,9 @@ const APPS: AppEntry[] = [
     name: "Blog",
     description: "Artículos y contenido",
     icon: FileText,
-    href: "#",
+    href: "/blog",
     color: "pink",
-    status: "coming",
+    status: "active",
   },
 ]
 
