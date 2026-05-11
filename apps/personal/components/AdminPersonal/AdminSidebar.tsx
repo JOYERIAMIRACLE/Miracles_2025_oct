@@ -51,7 +51,7 @@ export function AdminSidebar() {
 
   // 4. RETURN PRINCIPAL
   return (
-    <div className="flex flex-col w-full border-r bg-background h-full">
+    <div className="flex flex-col w-full flex-1 border-r bg-background">
       <div className="h-16 flex items-center px-6 border-b">
         <div className="flex items-center gap-2 font-bold text-lg tracking-tight">
           <div className="h-6 w-6 bg-primary rounded-md flex items-center justify-center">

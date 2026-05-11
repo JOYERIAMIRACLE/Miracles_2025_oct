@@ -36,7 +36,7 @@ export function MobileSidebar() {
             <X size={18} />
           </button>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto" onClick={() => setOpen(false)}>
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col" onClick={() => setOpen(false)}>
           <PersonalSidebar />
         </div>
       </div>
