@@ -48,10 +48,8 @@ export async function generateMetadata({
 
   if (!post) return { title: "Artículo no encontrado" }
 
-  const descripcion =
-    post.seo_descripcion ??
-    post.resumen?.slice(0, 160) ??
-    `${post.titulo} — Blog Joyería Miracles`
+  const metaTitulo    = post.seo_titulo ?? post.titulo
+  const descripcion   = post.seo_descripcion ?? post.resumen?.slice(0, 160) ?? `${post.titulo} — Blog Joyería Miracles`
 
   const imgUrl = post.imagen_portada
     ? post.imagen_portada.url.startsWith("http")
@@ -60,10 +58,11 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: post.titulo,
+    title: metaTitulo,
     description: descripcion,
+    ...(post.seo_keywords && { keywords: post.seo_keywords }),
     openGraph: {
-      title: `${post.titulo} | Joyería Miracles`,
+      title: `${metaTitulo} | Joyería Miracles`,
       description: descripcion,
       type: "article",
       publishedTime: post.fecha_publicacion ?? undefined,

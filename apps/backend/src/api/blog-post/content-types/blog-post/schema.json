@@ -46,6 +46,12 @@
     },
     "seo_descripcion": {
       "type": "text"
+    },
+    "seo_titulo": {
+      "type": "string"
+    },
+    "seo_keywords": {
+      "type": "string"
     }
   }
 }

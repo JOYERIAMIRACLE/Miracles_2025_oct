@@ -49,6 +49,8 @@ export type BlogPostType = {
     | "noticias"
     | null
   seo_descripcion: string | null
+  seo_titulo: string | null
+  seo_keywords: string | null
   publishedAt: string | null
 }
 
