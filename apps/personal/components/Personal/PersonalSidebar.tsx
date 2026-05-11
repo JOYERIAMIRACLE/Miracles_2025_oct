@@ -75,11 +75,11 @@ export function PersonalSidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex flex-col w-64 bg-slate-950 min-h-screen h-full border-r border-slate-800/80">
+    <div className="flex flex-col w-full bg-slate-950 h-full border-r border-slate-800/80">
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-slate-800/80">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 bg-gradient-to-br from-cyan-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <div className="h-8 w-8 bg-linear-to-br from-cyan-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/20">
             <Gamepad2 className="h-4 w-4 text-white" />
           </div>
           <div>
@@ -132,7 +132,7 @@ export function PersonalSidebar() {
       {/* Footer */}
       <div className="px-4 py-4 border-t border-slate-800/80">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-md bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-[10px] font-bold text-white">
+          <div className="h-7 w-7 rounded-md bg-linear-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-[10px] font-bold text-white">
             RR
           </div>
           <div>

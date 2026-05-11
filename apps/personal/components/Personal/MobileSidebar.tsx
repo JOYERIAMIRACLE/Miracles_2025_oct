@@ -25,8 +25,8 @@ export function MobileSidebar() {
         />
       )}
 
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-950 border-r border-slate-800/80 shadow-2xl shadow-black/50 transform transition-transform duration-300 ease-in-out md:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center justify-end px-4 py-3 border-b border-slate-800/80">
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-slate-950 border-r border-slate-800/80 shadow-2xl shadow-black/50 transform transition-transform duration-300 ease-in-out md:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="flex items-center justify-end px-4 py-3 border-b border-slate-800/80 shrink-0">
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -36,7 +36,7 @@ export function MobileSidebar() {
             <X size={18} />
           </button>
         </div>
-        <div onClick={() => setOpen(false)}>
+        <div className="flex-1 min-h-0 overflow-y-auto" onClick={() => setOpen(false)}>
           <PersonalSidebar />
         </div>
       </div>
