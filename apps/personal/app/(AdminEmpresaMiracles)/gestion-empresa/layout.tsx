@@ -1,6 +1,12 @@
+import type { Metadata } from "next"
 import { ReactNode } from "react"
 import { AdminSidebar } from "@/components/AdminPersonal/AdminSidebar"
 import { AdminHeader } from "@/components/AdminPersonal/AdminHeader"
+
+export const metadata: Metadata = {
+  title: "Admin Empresa",
+  description: "Administración interna de Joyería Miracles.",
+}
 
 export default function GestionPersonalLayout({ children }: { children: ReactNode }) {
     // Este layout se ejecuta en el SEVIDOR (RSC) por defecto. No necesitamos use client.
