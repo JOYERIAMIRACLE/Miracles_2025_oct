@@ -32,6 +32,12 @@
       "relation": "manyToOne",
       "target": "api::categoria-pago.categoria-pago"
     },
+    "proveedor": {
+      "type": "string"
+    },
+    "descripcion": {
+      "type": "text"
+    },
     "notas": {
       "type": "text"
     },

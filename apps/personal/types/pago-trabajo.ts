@@ -10,6 +10,8 @@ export type PagoTrabajoType = {
   fecha:           string | null
   estado:          EstadoPago
   categoriaPago:   CategoriaPagoType | null
+  proveedor:       string | null
+  descripcion:     string | null
   notas:           string | null
   clienteTrabajo?: { id: number; documentId: string; nombre: string } | null
   proyecto?:       { id: number; documentId: string; nombre: string } | null
@@ -23,6 +25,8 @@ export type PagoTrabajoPayload = {
   fecha?:          string | null
   estado?:         EstadoPago
   categoriaPago?:  { connect: [{ id: number }] } | null
+  proveedor?:      string | null
+  descripcion?:    string | null
   notas?:          string | null
   clienteTrabajo?: { connect: [{ id: number }] } | null
   proyecto?:       { connect: [{ id: number }] } | null

@@ -4,8 +4,6 @@ import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, X, Wallet, Pencil, Check, Settings2 } from "lucide-react"
 import { useGetPagosTrabajo }    from "@/api/pago-trabajo/getPagosTrabajo"
-import { useGetClientesTrabajo } from "@/api/cliente-trabajo/getClientesTrabajo"
-import { useGetProyectos }       from "@/api/proyecto/getProyectos"
 import { useGetCategoriasPago }  from "@/api/categoria-pago/getCategoriasPago"
 import { createCategoriaPago, updateCategoriaPago, deleteCategoriaPago } from "@/api/categoria-pago/mutateCategoriasPago"
 import { createPagoTrabajo, updatePagoTrabajo, deletePagoTrabajo } from "@/api/pago-trabajo/mutatePagoTrabajo"
@@ -30,17 +28,14 @@ const CAT_COLORS = [
   "bg-teal-500/15 text-teal-400 border-teal-500/20",
   "bg-pink-500/15 text-pink-400 border-pink-500/20",
 ]
-
-function catColor(id: number) {
-  return CAT_COLORS[id % CAT_COLORS.length] ?? CAT_COLORS[0]
-}
+const catColor = (id: number) => CAT_COLORS[id % CAT_COLORS.length] ?? CAT_COLORS[0]
 
 // ── Gestión de categorías ───────────────────────────────────────────────────
 function GestionCategorias({ categorias, onRefetch }: {
   categorias: CategoriaPagoType[]
   onRefetch:  () => Promise<void>
 }) {
-  const [editId,    setEditId]    = useState<string | null>(null)
+  const [editId,     setEditId]     = useState<string | null>(null)
   const [editNombre, setEditNombre] = useState("")
   const [newNombre,  setNewNombre]  = useState("")
   const [adding,     setAdding]     = useState(false)
@@ -60,9 +55,7 @@ function GestionCategorias({ categorias, onRefetch }: {
     setSaving(true)
     await createCategoriaPago(newNombre.trim())
     await onRefetch()
-    setNewNombre("")
-    setAdding(false)
-    setSaving(false)
+    setNewNombre(""); setAdding(false); setSaving(false)
   }
 
   async function handleDelete(cat: CategoriaPagoType) {
@@ -78,64 +71,35 @@ function GestionCategorias({ categorias, onRefetch }: {
           <div key={cat.documentId} className="flex items-center gap-2 group">
             {editId === cat.documentId ? (
               <>
-                <input
-                  autoFocus
-                  value={editNombre}
-                  onChange={e => setEditNombre(e.target.value)}
+                <input autoFocus value={editNombre} onChange={e => setEditNombre(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") handleRename(cat); if (e.key === "Escape") setEditId(null) }}
-                  className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500/50"
-                />
-                <button type="button" aria-label="Guardar nombre" onClick={() => handleRename(cat)} disabled={saving}
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors">
-                  <Check className="h-4 w-4" />
-                </button>
-                <button type="button" aria-label="Cancelar edición" onClick={() => setEditId(null)}
-                  className="text-slate-500 hover:text-slate-300 transition-colors">
-                  <X className="h-4 w-4" />
-                </button>
+                  className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500/50" />
+                <button type="button" aria-label="Guardar" onClick={() => handleRename(cat)} disabled={saving} className="text-emerald-400 hover:text-emerald-300 transition-colors"><Check className="h-4 w-4" /></button>
+                <button type="button" aria-label="Cancelar" onClick={() => setEditId(null)} className="text-slate-500 hover:text-slate-300 transition-colors"><X className="h-4 w-4" /></button>
               </>
             ) : (
               <>
-                <span className={`text-[11px] px-2 py-1 rounded-full border font-medium ${catColor(cat.id)}`}>
-                  {cat.nombre}
-                </span>
-                <button type="button" aria-label="Renombrar categoría"
-                  onClick={() => { setEditId(cat.documentId); setEditNombre(cat.nombre) }}
-                  className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 transition-all">
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button type="button" aria-label="Eliminar categoría" onClick={() => handleDelete(cat)}
-                  className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-all ml-auto">
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                <span className={`text-[11px] px-2 py-1 rounded-full border font-medium ${catColor(cat.id)}`}>{cat.nombre}</span>
+                <button type="button" aria-label="Renombrar" onClick={() => { setEditId(cat.documentId); setEditNombre(cat.nombre) }}
+                  className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 transition-all"><Pencil className="h-3.5 w-3.5" /></button>
+                <button type="button" aria-label="Eliminar" onClick={() => handleDelete(cat)}
+                  className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-all ml-auto"><X className="h-3.5 w-3.5" /></button>
               </>
             )}
           </div>
         ))}
       </div>
-
       {adding ? (
         <div className="flex items-center gap-2 mt-2">
-          <input
-            autoFocus
-            value={newNombre}
-            onChange={e => setNewNombre(e.target.value)}
+          <input autoFocus value={newNombre} onChange={e => setNewNombre(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") { setAdding(false); setNewNombre("") } }}
             placeholder="Nombre de categoría"
-            className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500/50 placeholder:text-slate-600"
-          />
-          <button type="button" aria-label="Confirmar nueva categoría" onClick={handleAdd} disabled={!newNombre.trim() || saving}
-            className="text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors">
-            <Check className="h-4 w-4" />
-          </button>
-          <button type="button" aria-label="Cancelar" onClick={() => { setAdding(false); setNewNombre("") }}
-            className="text-slate-500 hover:text-slate-300 transition-colors">
-            <X className="h-4 w-4" />
-          </button>
+            className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500/50 placeholder:text-slate-600" />
+          <button type="button" aria-label="Confirmar" onClick={handleAdd} disabled={!newNombre.trim() || saving} className="text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors"><Check className="h-4 w-4" /></button>
+          <button type="button" aria-label="Cancelar" onClick={() => { setAdding(false); setNewNombre("") }} className="text-slate-500 hover:text-slate-300 transition-colors"><X className="h-4 w-4" /></button>
         </div>
       ) : (
-        <button type="button" onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors mt-2">
+        <button type="button" onClick={() => setAdding(true)} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors mt-2">
           <Plus className="h-3.5 w-3.5" /> Nueva categoría
         </button>
       )}
@@ -143,92 +107,84 @@ function GestionCategorias({ categorias, onRefetch }: {
   )
 }
 
-// ── Formulario nuevo pago ───────────────────────────────────────────────────
-function FormPago({ categorias, clientes, proyectos, onSave, onCancel }: {
+// ── Formulario crear / editar ───────────────────────────────────────────────
+type FormMode = { type: "create" } | { type: "edit"; pago: PagoTrabajoType }
+
+function FormPago({ mode, categorias, onSave, onCancel }: {
+  mode:       FormMode
   categorias: CategoriaPagoType[]
-  clientes:   { id: number; nombre: string }[]
-  proyectos:  { id: number; nombre: string }[]
   onSave:     () => void
   onCancel:   () => void
 }) {
-  const [concepto,    setConcepto]    = useState("")
-  const [monto,       setMonto]       = useState("")
-  const [fecha,       setFecha]       = useState(new Date().toISOString().slice(0, 10))
-  const [estado,      setEstado]      = useState<EstadoPago>("pendiente")
-  const [categoriaId, setCategoriaId] = useState<number | "">("")
-  const [notas,       setNotas]       = useState("")
-  const [clienteId,   setClienteId]   = useState<number | "">("")
-  const [proyectoId,  setProyectoId]  = useState<number | "">("")
+  const editing = mode.type === "edit" ? mode.pago : null
+
+  const [concepto,    setConcepto]    = useState(editing?.concepto    ?? "")
+  const [monto,       setMonto]       = useState(editing?.monto       ? String(editing.monto) : "")
+  const [fecha,       setFecha]       = useState(editing?.fecha       ?? new Date().toISOString().slice(0, 10))
+  const [estado,      setEstado]      = useState<EstadoPago>(editing?.estado ?? "pendiente")
+  const [categoriaId, setCategoriaId] = useState<number | "">(editing?.categoriaPago?.id ?? "")
+  const [proveedor,   setProveedor]   = useState(editing?.proveedor   ?? "")
+  const [descripcion, setDescripcion] = useState(editing?.descripcion ?? "")
+  const [notas,       setNotas]       = useState(editing?.notas       ?? "")
   const [saving,      setSaving]      = useState(false)
 
   async function handleSave() {
     if (!concepto.trim() || !monto) return
     setSaving(true)
     const payload: any = {
-      concepto: concepto.trim(),
-      monto:    Number(monto),
-      fecha:    fecha || null,
+      concepto:    concepto.trim(),
+      monto:       Number(monto),
+      fecha:       fecha || null,
       estado,
-      notas:    notas || null,
+      proveedor:   proveedor.trim() || null,
+      descripcion: descripcion.trim() || null,
+      notas:       notas.trim() || null,
     }
-    if (categoriaId) payload.categoriaPago  = { connect: [{ id: categoriaId }] }
-    if (clienteId)   payload.clienteTrabajo = { connect: [{ id: clienteId }] }
-    if (proyectoId)  payload.proyecto       = { connect: [{ id: proyectoId }] }
-    await createPagoTrabajo(payload)
+    if (categoriaId) payload.categoriaPago = { connect: [{ id: categoriaId }] }
+    else             payload.categoriaPago = { disconnect: [] }
+
+    if (editing) await updatePagoTrabajo(editing.documentId, payload)
+    else         await createPagoTrabajo(payload)
+
     setSaving(false)
     onSave()
   }
 
+  const inputCls = "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-emerald-500/50"
+  const selectCls = "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300"
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       className="p-5 rounded-xl bg-slate-800/80 border border-emerald-500/30 space-y-3"
     >
-      <h3 className="text-sm font-semibold text-slate-200">Nuevo Pago</h3>
+      <h3 className="text-sm font-semibold text-slate-200">{editing ? "Editar Pago" : "Nuevo Pago"}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input value={concepto} onChange={e => setConcepto(e.target.value)} placeholder="Concepto *"
-          className="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-emerald-500/50" />
-        <input type="number" value={monto} onChange={e => setMonto(e.target.value)} placeholder="Monto ($) *"
-          className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300" />
-        <input type="date" title="Fecha del pago" value={fecha} onChange={e => setFecha(e.target.value)}
-          className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300" />
-        <select title="Categoría" value={categoriaId} onChange={e => setCategoriaId(e.target.value ? Number(e.target.value) : "")}
-          className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
+          className={`sm:col-span-2 ${inputCls}`} />
+        <input type="number" value={monto} onChange={e => setMonto(e.target.value)} placeholder="Monto ($) *" className={inputCls} />
+        <input type="date" title="Fecha" value={fecha} onChange={e => setFecha(e.target.value)} className={selectCls} />
+        <input value={proveedor} onChange={e => setProveedor(e.target.value)} placeholder="Proveedor" className={inputCls} />
+        <select title="Categoría" value={categoriaId} onChange={e => setCategoriaId(e.target.value ? Number(e.target.value) : "")} className={selectCls}>
           <option value="">Sin categoría</option>
           {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
         </select>
-        <select title="Estado" value={estado} onChange={e => setEstado(e.target.value as EstadoPago)}
-          className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
+        <select title="Estado" value={estado} onChange={e => setEstado(e.target.value as EstadoPago)} className={selectCls}>
           <option value="pendiente">Pendiente</option>
           <option value="pagado">Pagado</option>
           <option value="parcial">Parcial</option>
         </select>
-        {clientes.length > 0 && (
-          <select title="Cliente" value={clienteId} onChange={e => setClienteId(e.target.value ? Number(e.target.value) : "")}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
-            <option value="">Sin cliente</option>
-            {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
-        )}
-        {proyectos.length > 0 && (
-          <select title="Proyecto" value={proyectoId} onChange={e => setProyectoId(e.target.value ? Number(e.target.value) : "")}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
-            <option value="">Sin proyecto</option>
-            {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-          </select>
-        )}
-        <input value={notas} onChange={e => setNotas(e.target.value)} placeholder="Notas"
-          className="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none" />
+        <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción del recurso"
+          rows={2} className={`sm:col-span-2 resize-none ${inputCls}`} />
+        <textarea value={notas} onChange={e => setNotas(e.target.value)} placeholder="Notas internas"
+          rows={2} className={`sm:col-span-2 resize-none ${inputCls}`} />
       </div>
       <div className="flex gap-2">
         <button type="button" onClick={handleSave} disabled={!concepto.trim() || !monto || saving}
           className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-sm font-medium transition-colors">
-          {saving ? "Guardando..." : "Registrar Pago"}
+          {saving ? "Guardando..." : editing ? "Guardar cambios" : "Registrar Pago"}
         </button>
-        <button type="button" onClick={onCancel}
-          className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 text-sm transition-colors">
+        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 text-sm transition-colors">
           Cancelar
         </button>
       </div>
@@ -236,14 +192,12 @@ function FormPago({ categorias, clientes, proyectos, onSave, onCancel }: {
   )
 }
 
-// ── Página principal ────────────────────────────────────────────────────────
+// ── Página ──────────────────────────────────────────────────────────────────
 export default function PagosPage() {
-  const { pagos, setPagos, loading, refetch }        = useGetPagosTrabajo()
+  const { pagos, setPagos, loading, refetch }                    = useGetPagosTrabajo()
   const { categorias, refetch: refetchCats, loading: loadingCats } = useGetCategoriasPago()
-  const { clientes }                                 = useGetClientesTrabajo()
-  const { proyectos }                                = useGetProyectos()
 
-  const [showForm,    setShowForm]    = useState(false)
+  const [formMode,    setFormMode]    = useState<FormMode | null>(null)
   const [showGestion, setShowGestion] = useState(false)
   const [filtroEst,   setFiltroEst]   = useState<EstadoPago | "todos">("todos")
   const [filtroCatId, setFiltroCatId] = useState<number | null>(null)
@@ -291,6 +245,11 @@ export default function PagosPage() {
     setPagos(prev => prev.filter(x => x.documentId !== p.documentId))
   }
 
+  async function handleSave() {
+    setFormMode(null)
+    await refetch()
+  }
+
   if (loading || loadingCats) return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="h-8 w-8 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
@@ -317,16 +276,11 @@ export default function PagosPage() {
       {porCategoria.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {porCategoria.map(({ cat, total, count }) => (
-            <button
-              key={cat.documentId}
-              type="button"
+            <button key={cat.documentId} type="button"
               onClick={() => setFiltroCatId(filtroCatId === cat.id ? null : cat.id)}
               className={`flex items-center justify-between px-3 py-2 rounded-lg border text-left transition-all ${
-                filtroCatId === cat.id
-                  ? `${catColor(cat.id)} border-current`
-                  : "border-slate-700/50 bg-slate-900/40 hover:bg-slate-800/60"
-              }`}
-            >
+                filtroCatId === cat.id ? `${catColor(cat.id)} border-current` : "border-slate-700/50 bg-slate-900/40 hover:bg-slate-800/60"
+              }`}>
               <div>
                 <p className={`text-[11px] font-semibold ${filtroCatId === cat.id ? "" : "text-slate-300"}`}>{cat.nombre}</p>
                 <p className="text-[10px] text-slate-500">{count} pago{count !== 1 ? "s" : ""}</p>
@@ -337,31 +291,23 @@ export default function PagosPage() {
         </div>
       )}
 
-      {/* Gestionar categorías (toggle) */}
+      {/* Gestionar categorías */}
       <div>
-        <button
-          type="button"
-          onClick={() => setShowGestion(v => !v)}
-          className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-        >
+        <button type="button" onClick={() => setShowGestion(v => !v)}
+          className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors">
           <Settings2 className="h-3.5 w-3.5" />
           {showGestion ? "Ocultar" : "Gestionar categorías"}
         </button>
         <AnimatePresence>
           {showGestion && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden mt-3"
-            >
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-3">
               <GestionCategorias categorias={categorias} onRefetch={refetchCats} />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Filtros estado + acción */}
+      {/* Filtros + acción */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           {(["todos","pendiente","pagado","parcial"] as const).map(f => (
@@ -377,24 +323,25 @@ export default function PagosPage() {
             </button>
           )}
         </div>
-        <button type="button" onClick={() => setShowForm(true)}
+        <button type="button" onClick={() => setFormMode({ type: "create" })}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors">
           <Plus className="h-4 w-4" /> Registrar Pago
         </button>
       </div>
 
+      {/* Formulario crear / editar */}
       <AnimatePresence>
-        {showForm && (
+        {formMode && (
           <FormPago
+            mode={formMode}
             categorias={categorias}
-            clientes={clientes.filter(c => c.activo)}
-            proyectos={proyectos.filter(p => p.estado === "activo")}
-            onSave={async () => { setShowForm(false); await refetch() }}
-            onCancel={() => setShowForm(false)}
+            onSave={handleSave}
+            onCancel={() => setFormMode(null)}
           />
         )}
       </AnimatePresence>
 
+      {/* Tabla */}
       {filtrados.length === 0 ? (
         <div className="text-center py-16 text-slate-600">
           <Wallet className="h-10 w-10 mx-auto mb-3 opacity-30" />
@@ -407,44 +354,34 @@ export default function PagosPage() {
               <tr className="border-b border-slate-800/60">
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Concepto</th>
                 <th className="text-center px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Categoría</th>
-                <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Cliente / Proyecto</th>
+                <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Proveedor</th>
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Fecha</th>
                 <th className="text-right px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Monto</th>
                 <th className="text-center px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
-                <th className="px-2 py-3 w-8"></th>
+                <th className="px-2 py-3 w-16" aria-label="Acciones"></th>
               </tr>
             </thead>
             <tbody>
               <AnimatePresence mode="popLayout">
                 {filtrados.map(p => (
-                  <motion.tr
-                    key={p.documentId}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="border-b border-slate-800/30 last:border-0 group hover:bg-slate-800/20 transition-colors"
-                  >
+                  <motion.tr key={p.documentId} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="border-b border-slate-800/30 last:border-0 group hover:bg-slate-800/20 transition-colors">
                     <td className="px-4 py-3">
                       <p className="text-slate-200 font-medium truncate max-w-[140px]">{p.concepto}</p>
-                      {p.notas && <p className="text-[10px] text-slate-600 truncate">{p.notas}</p>}
+                      {p.descripcion && <p className="text-[10px] text-slate-500 truncate max-w-[140px]">{p.descripcion}</p>}
+                      {p.notas       && <p className="text-[10px] text-slate-600 truncate max-w-[140px] italic">{p.notas}</p>}
                     </td>
                     <td className="px-4 py-3 text-center hidden sm:table-cell">
-                      <select
-                        title="Categoría del pago"
+                      <select title="Categoría del pago"
                         value={p.categoriaPago?.id ?? ""}
                         onChange={e => handleCategoria(p, e.target.value ? Number(e.target.value) : "")}
-                        className={`text-[10px] px-2 py-1 rounded-full border font-medium cursor-pointer bg-transparent transition-colors ${
-                          p.categoriaPago ? catColor(p.categoriaPago.id) : "text-slate-500 border-slate-700"
-                        }`}
-                      >
+                        className={`text-[10px] px-2 py-1 rounded-full border font-medium cursor-pointer bg-transparent transition-colors ${p.categoriaPago ? catColor(p.categoriaPago.id) : "text-slate-500 border-slate-700"}`}>
                         <option value="">Sin categoría</option>
                         {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                       </select>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <p className="text-slate-400 text-xs truncate">{p.clienteTrabajo?.nombre ?? "—"}</p>
-                      {p.proyecto && <p className="text-[10px] text-slate-600 truncate">{p.proyecto.nombre}</p>}
+                      <p className="text-slate-400 text-xs truncate">{p.proveedor ?? "—"}</p>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-500 hidden md:table-cell">{p.fecha ?? "—"}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-200 tabular-nums">{fmt(p.monto)}</td>
@@ -457,10 +394,18 @@ export default function PagosPage() {
                       </select>
                     </td>
                     <td className="px-2 py-3">
-                      <button type="button" onClick={() => handleDelete(p)} aria-label="Eliminar pago"
-                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-opacity">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button type="button" aria-label="Editar pago"
+                          onClick={() => setFormMode({ type: "edit", pago: p })}
+                          className="text-slate-500 hover:text-emerald-400 transition-colors">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" aria-label="Eliminar pago"
+                          onClick={() => handleDelete(p)}
+                          className="text-slate-600 hover:text-red-400 transition-colors">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
