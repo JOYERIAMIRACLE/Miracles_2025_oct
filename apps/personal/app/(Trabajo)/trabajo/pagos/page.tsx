@@ -27,13 +27,24 @@ const CATEGORIA_LABEL: Record<CategoriaPago, string> = {
 }
 
 const CATEGORIA_BADGE: Record<CategoriaPago, string> = {
-  comision:    "bg-violet-500/15 text-violet-300 border-violet-500/20",
-  anticipo:    "bg-sky-500/15 text-sky-300 border-sky-500/20",
-  liquidacion: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
-  honorario:   "bg-rose-500/15 text-rose-300 border-rose-500/20",
-  servicio:    "bg-orange-500/15 text-orange-300 border-orange-500/20",
+  comision:    "bg-violet-500/15 text-violet-400 border-violet-500/20",
+  anticipo:    "bg-sky-500/15 text-sky-400 border-sky-500/20",
+  liquidacion: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  honorario:   "bg-rose-500/15 text-rose-400 border-rose-500/20",
+  servicio:    "bg-orange-500/15 text-orange-400 border-orange-500/20",
   otro:        "bg-slate-500/15 text-slate-400 border-slate-500/20",
 }
+
+const CATEGORIA_SELECT: Record<CategoriaPago, string> = {
+  comision:    "text-violet-400 border-violet-500/20 bg-violet-500/10",
+  anticipo:    "text-sky-400 border-sky-500/20 bg-sky-500/10",
+  liquidacion: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10",
+  honorario:   "text-rose-400 border-rose-500/20 bg-rose-500/10",
+  servicio:    "text-orange-400 border-orange-500/20 bg-orange-500/10",
+  otro:        "text-slate-400 border-slate-500/20 bg-slate-500/10",
+}
+
+const CATEGORIAS = Object.keys(CATEGORIA_LABEL) as CategoriaPago[]
 
 function FormPago({ clientes, proyectos, onSave, onCancel }: {
   clientes:  { id: number; nombre: string }[]
@@ -86,12 +97,7 @@ function FormPago({ clientes, proyectos, onSave, onCancel }: {
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300" />
         <select value={categoria} onChange={e => setCategoria(e.target.value as CategoriaPago)}
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
-          <option value="comision">Comisión</option>
-          <option value="anticipo">Anticipo</option>
-          <option value="liquidacion">Liquidación</option>
-          <option value="honorario">Honorario</option>
-          <option value="servicio">Servicio</option>
-          <option value="otro">Otro</option>
+          {CATEGORIAS.map(c => <option key={c} value={c}>{CATEGORIA_LABEL[c]}</option>)}
         </select>
         <select value={estado} onChange={e => setEstado(e.target.value as EstadoPago)}
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
@@ -134,10 +140,16 @@ export default function PagosPage() {
   const { pagos, setPagos, loading, refetch } = useGetPagosTrabajo()
   const { clientes }                          = useGetClientesTrabajo()
   const { proyectos }                         = useGetProyectos()
-  const [showForm, setShowForm] = useState(false)
-  const [filtro,   setFiltro]   = useState<EstadoPago | "todos">("todos")
+  const [showForm,    setShowForm]    = useState(false)
+  const [filtroEst,   setFiltroEst]   = useState<EstadoPago | "todos">("todos")
+  const [filtroCat,   setFiltroCat]   = useState<CategoriaPago | "todas">("todas")
 
-  const filtrados = filtro === "todos" ? pagos : pagos.filter(p => p.estado === filtro)
+  const filtrados = useMemo(() =>
+    pagos
+      .filter(p => filtroEst === "todos"  || p.estado    === filtroEst)
+      .filter(p => filtroCat === "todas"  || p.categoria === filtroCat),
+    [pagos, filtroEst, filtroCat]
+  )
 
   const resumen = useMemo(() => ({
     total:     pagos.reduce((s, p) => s + p.monto, 0),
@@ -145,9 +157,25 @@ export default function PagosPage() {
     pendiente: pagos.filter(p => p.estado !== "pagado").reduce((s, p) => s + p.monto, 0),
   }), [pagos])
 
+  const porCategoria = useMemo(() =>
+    CATEGORIAS
+      .map(cat => ({
+        cat,
+        total: pagos.filter(p => p.categoria === cat).reduce((s, p) => s + p.monto, 0),
+        count: pagos.filter(p => p.categoria === cat).length,
+      }))
+      .filter(x => x.count > 0),
+    [pagos]
+  )
+
   async function handleEstado(p: PagoTrabajoType, estado: EstadoPago) {
     await updatePagoTrabajo(p.documentId, { estado })
     setPagos(prev => prev.map(x => x.documentId === p.documentId ? { ...x, estado } : x))
+  }
+
+  async function handleCategoria(p: PagoTrabajoType, categoria: CategoriaPago) {
+    await updatePagoTrabajo(p.documentId, { categoria })
+    setPagos(prev => prev.map(x => x.documentId === p.documentId ? { ...x, categoria } : x))
   }
 
   async function handleDelete(p: PagoTrabajoType) {
@@ -163,7 +191,7 @@ export default function PagosPage() {
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
-      {/* Resumen */}
+      {/* Stats principales */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total",     value: resumen.total,     color: "text-slate-200"   },
@@ -177,14 +205,49 @@ export default function PagosPage() {
         ))}
       </div>
 
+      {/* Desglose por categoría */}
+      {porCategoria.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {porCategoria.map(({ cat, total, count }) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setFiltroCat(filtroCat === cat ? "todas" : cat)}
+              className={`flex items-center justify-between px-3 py-2 rounded-lg border text-left transition-all ${
+                filtroCat === cat
+                  ? `${CATEGORIA_BADGE[cat]} border-current`
+                  : "border-slate-700/50 bg-slate-900/40 hover:bg-slate-800/60"
+              }`}
+            >
+              <div>
+                <p className={`text-[11px] font-semibold ${filtroCat === cat ? "" : "text-slate-300"}`}>
+                  {CATEGORIA_LABEL[cat]}
+                </p>
+                <p className="text-[10px] text-slate-500">{count} pago{count !== 1 ? "s" : ""}</p>
+              </div>
+              <p className={`text-sm font-bold tabular-nums ${filtroCat === cat ? "" : "text-slate-300"}`}>
+                {fmt(total)}
+              </p>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Filtros estado + acción */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           {(["todos","pendiente","pagado","parcial"] as const).map(f => (
-            <button key={f} type="button" onClick={() => setFiltro(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${filtro === f ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
+            <button key={f} type="button" onClick={() => setFiltroEst(f)}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${filtroEst === f ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
               {f === "todos" ? `Todos (${pagos.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${pagos.filter(p => p.estado === f).length})`}
             </button>
           ))}
+          {filtroCat !== "todas" && (
+            <button type="button" onClick={() => setFiltroCat("todas")}
+              className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-500 hover:text-slate-300 flex items-center gap-1">
+              <X className="h-3 w-3" /> {CATEGORIA_LABEL[filtroCat]}
+            </button>
+          )}
         </div>
         <button type="button" onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors">
@@ -214,7 +277,7 @@ export default function PagosPage() {
             <thead>
               <tr className="border-b border-slate-800/60">
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Concepto</th>
-                <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Categoría</th>
+                <th className="text-center px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Categoría</th>
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Cliente / Proyecto</th>
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Fecha</th>
                 <th className="text-right px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Monto</th>
@@ -237,14 +300,19 @@ export default function PagosPage() {
                       <p className="text-slate-200 font-medium truncate max-w-[140px]">{p.concepto}</p>
                       {p.notas && <p className="text-[10px] text-slate-600 truncate">{p.notas}</p>}
                     </td>
-                    <td className="px-4 py-3 hidden sm:table-cell">
-                      {p.categoria ? (
-                        <span className={`text-[11px] px-2 py-1 rounded-full border font-medium ${CATEGORIA_BADGE[p.categoria]}`}>
-                          {CATEGORIA_LABEL[p.categoria]}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-600">—</span>
-                      )}
+                    <td className="px-4 py-3 text-center hidden sm:table-cell">
+                      <select
+                        title="Categoría del pago"
+                        value={p.categoria ?? "otro"}
+                        onChange={e => handleCategoria(p, e.target.value as CategoriaPago)}
+                        className={`text-[10px] px-2 py-1 rounded-full border font-medium cursor-pointer transition-colors ${
+                          p.categoria ? CATEGORIA_SELECT[p.categoria] : CATEGORIA_SELECT["otro"]
+                        }`}
+                      >
+                        {CATEGORIAS.map(c => (
+                          <option key={c} value={c}>{CATEGORIA_LABEL[c]}</option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
                       <p className="text-slate-400 text-xs truncate">{p.clienteTrabajo?.nombre ?? "—"}</p>
@@ -253,7 +321,7 @@ export default function PagosPage() {
                     <td className="px-4 py-3 text-xs text-slate-500 hidden md:table-cell">{p.fecha ?? "—"}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-200 tabular-nums">{fmt(p.monto)}</td>
                     <td className="px-4 py-3 text-center">
-                      <select value={p.estado} onChange={e => handleEstado(p, e.target.value as EstadoPago)}
+                      <select title="Estado del pago" value={p.estado} onChange={e => handleEstado(p, e.target.value as EstadoPago)}
                         className={`text-[10px] px-2 py-1 rounded-full border font-medium bg-transparent cursor-pointer ${ESTADO_BADGE[p.estado]}`}>
                         <option value="pendiente">Pendiente</option>
                         <option value="pagado">Pagado</option>
