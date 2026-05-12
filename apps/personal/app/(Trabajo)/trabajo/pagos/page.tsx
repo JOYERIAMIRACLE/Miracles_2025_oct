@@ -2,12 +2,15 @@
 
 import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, X, Wallet } from "lucide-react"
+import { Plus, X, Wallet, Pencil, Check, Settings2 } from "lucide-react"
 import { useGetPagosTrabajo }    from "@/api/pago-trabajo/getPagosTrabajo"
 import { useGetClientesTrabajo } from "@/api/cliente-trabajo/getClientesTrabajo"
 import { useGetProyectos }       from "@/api/proyecto/getProyectos"
+import { useGetCategoriasPago }  from "@/api/categoria-pago/getCategoriasPago"
+import { createCategoriaPago, updateCategoriaPago, deleteCategoriaPago } from "@/api/categoria-pago/mutateCategoriasPago"
 import { createPagoTrabajo, updatePagoTrabajo, deletePagoTrabajo } from "@/api/pago-trabajo/mutatePagoTrabajo"
-import { PagoTrabajoType, EstadoPago, CategoriaPago } from "@/types/pago-trabajo"
+import { PagoTrabajoType, EstadoPago } from "@/types/pago-trabajo"
+import { CategoriaPagoType } from "@/types/categoria-pago"
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
 
@@ -17,50 +20,146 @@ const ESTADO_BADGE: Record<EstadoPago, string> = {
   parcial:   "bg-blue-500/15 text-blue-400 border-blue-500/20",
 }
 
-const CATEGORIA_LABEL: Record<CategoriaPago, string> = {
-  comision:    "Comisión",
-  anticipo:    "Anticipo",
-  liquidacion: "Liquidación",
-  honorario:   "Honorario",
-  servicio:    "Servicio",
-  otro:        "Otro",
+const CAT_COLORS = [
+  "bg-violet-500/15 text-violet-400 border-violet-500/20",
+  "bg-sky-500/15 text-sky-400 border-sky-500/20",
+  "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  "bg-rose-500/15 text-rose-400 border-rose-500/20",
+  "bg-orange-500/15 text-orange-400 border-orange-500/20",
+  "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  "bg-teal-500/15 text-teal-400 border-teal-500/20",
+  "bg-pink-500/15 text-pink-400 border-pink-500/20",
+]
+
+function catColor(id: number) {
+  return CAT_COLORS[id % CAT_COLORS.length] ?? CAT_COLORS[0]
 }
 
-const CATEGORIA_BADGE: Record<CategoriaPago, string> = {
-  comision:    "bg-violet-500/15 text-violet-400 border-violet-500/20",
-  anticipo:    "bg-sky-500/15 text-sky-400 border-sky-500/20",
-  liquidacion: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  honorario:   "bg-rose-500/15 text-rose-400 border-rose-500/20",
-  servicio:    "bg-orange-500/15 text-orange-400 border-orange-500/20",
-  otro:        "bg-slate-500/15 text-slate-400 border-slate-500/20",
-}
-
-const CATEGORIA_SELECT: Record<CategoriaPago, string> = {
-  comision:    "text-violet-400 border-violet-500/20 bg-violet-500/10",
-  anticipo:    "text-sky-400 border-sky-500/20 bg-sky-500/10",
-  liquidacion: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10",
-  honorario:   "text-rose-400 border-rose-500/20 bg-rose-500/10",
-  servicio:    "text-orange-400 border-orange-500/20 bg-orange-500/10",
-  otro:        "text-slate-400 border-slate-500/20 bg-slate-500/10",
-}
-
-const CATEGORIAS = Object.keys(CATEGORIA_LABEL) as CategoriaPago[]
-
-function FormPago({ clientes, proyectos, onSave, onCancel }: {
-  clientes:  { id: number; nombre: string }[]
-  proyectos: { id: number; nombre: string }[]
-  onSave:   () => void
-  onCancel: () => void
+// ── Gestión de categorías ───────────────────────────────────────────────────
+function GestionCategorias({ categorias, onRefetch }: {
+  categorias: CategoriaPagoType[]
+  onRefetch:  () => Promise<void>
 }) {
-  const [concepto,   setConcepto]   = useState("")
-  const [monto,      setMonto]      = useState("")
-  const [fecha,      setFecha]      = useState(new Date().toISOString().slice(0, 10))
-  const [estado,     setEstado]     = useState<EstadoPago>("pendiente")
-  const [categoria,  setCategoria]  = useState<CategoriaPago>("otro")
-  const [notas,      setNotas]      = useState("")
-  const [clienteId,  setClienteId]  = useState<number | "">("")
-  const [proyectoId, setProyectoId] = useState<number | "">("")
+  const [editId,    setEditId]    = useState<string | null>(null)
+  const [editNombre, setEditNombre] = useState("")
+  const [newNombre,  setNewNombre]  = useState("")
+  const [adding,     setAdding]     = useState(false)
   const [saving,     setSaving]     = useState(false)
+
+  async function handleRename(cat: CategoriaPagoType) {
+    if (!editNombre.trim() || editNombre === cat.nombre) { setEditId(null); return }
+    setSaving(true)
+    await updateCategoriaPago(cat.documentId, editNombre.trim())
+    await onRefetch()
+    setEditId(null)
+    setSaving(false)
+  }
+
+  async function handleAdd() {
+    if (!newNombre.trim()) return
+    setSaving(true)
+    await createCategoriaPago(newNombre.trim())
+    await onRefetch()
+    setNewNombre("")
+    setAdding(false)
+    setSaving(false)
+  }
+
+  async function handleDelete(cat: CategoriaPagoType) {
+    await deleteCategoriaPago(cat.documentId)
+    await onRefetch()
+  }
+
+  return (
+    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700/40 space-y-2">
+      <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-3">Gestionar categorías</p>
+      <div className="space-y-1.5">
+        {categorias.map(cat => (
+          <div key={cat.documentId} className="flex items-center gap-2 group">
+            {editId === cat.documentId ? (
+              <>
+                <input
+                  autoFocus
+                  value={editNombre}
+                  onChange={e => setEditNombre(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleRename(cat); if (e.key === "Escape") setEditId(null) }}
+                  className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500/50"
+                />
+                <button type="button" aria-label="Guardar nombre" onClick={() => handleRename(cat)} disabled={saving}
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                  <Check className="h-4 w-4" />
+                </button>
+                <button type="button" aria-label="Cancelar edición" onClick={() => setEditId(null)}
+                  className="text-slate-500 hover:text-slate-300 transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <span className={`text-[11px] px-2 py-1 rounded-full border font-medium ${catColor(cat.id)}`}>
+                  {cat.nombre}
+                </span>
+                <button type="button" aria-label="Renombrar categoría"
+                  onClick={() => { setEditId(cat.documentId); setEditNombre(cat.nombre) }}
+                  className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 transition-all">
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" aria-label="Eliminar categoría" onClick={() => handleDelete(cat)}
+                  className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-all ml-auto">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {adding ? (
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            autoFocus
+            value={newNombre}
+            onChange={e => setNewNombre(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") { setAdding(false); setNewNombre("") } }}
+            placeholder="Nombre de categoría"
+            className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none focus:border-emerald-500/50 placeholder:text-slate-600"
+          />
+          <button type="button" aria-label="Confirmar nueva categoría" onClick={handleAdd} disabled={!newNombre.trim() || saving}
+            className="text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors">
+            <Check className="h-4 w-4" />
+          </button>
+          <button type="button" aria-label="Cancelar" onClick={() => { setAdding(false); setNewNombre("") }}
+            className="text-slate-500 hover:text-slate-300 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setAdding(true)}
+          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors mt-2">
+          <Plus className="h-3.5 w-3.5" /> Nueva categoría
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ── Formulario nuevo pago ───────────────────────────────────────────────────
+function FormPago({ categorias, clientes, proyectos, onSave, onCancel }: {
+  categorias: CategoriaPagoType[]
+  clientes:   { id: number; nombre: string }[]
+  proyectos:  { id: number; nombre: string }[]
+  onSave:     () => void
+  onCancel:   () => void
+}) {
+  const [concepto,    setConcepto]    = useState("")
+  const [monto,       setMonto]       = useState("")
+  const [fecha,       setFecha]       = useState(new Date().toISOString().slice(0, 10))
+  const [estado,      setEstado]      = useState<EstadoPago>("pendiente")
+  const [categoriaId, setCategoriaId] = useState<number | "">("")
+  const [notas,       setNotas]       = useState("")
+  const [clienteId,   setClienteId]   = useState<number | "">("")
+  const [proyectoId,  setProyectoId]  = useState<number | "">("")
+  const [saving,      setSaving]      = useState(false)
 
   async function handleSave() {
     if (!concepto.trim() || !monto) return
@@ -70,11 +169,11 @@ function FormPago({ clientes, proyectos, onSave, onCancel }: {
       monto:    Number(monto),
       fecha:    fecha || null,
       estado,
-      categoria,
       notas:    notas || null,
     }
-    if (clienteId)  payload.clienteTrabajo = { connect: [{ id: clienteId }] }
-    if (proyectoId) payload.proyecto       = { connect: [{ id: proyectoId }] }
+    if (categoriaId) payload.categoriaPago  = { connect: [{ id: categoriaId }] }
+    if (clienteId)   payload.clienteTrabajo = { connect: [{ id: clienteId }] }
+    if (proyectoId)  payload.proyecto       = { connect: [{ id: proyectoId }] }
     await createPagoTrabajo(payload)
     setSaving(false)
     onSave()
@@ -93,27 +192,28 @@ function FormPago({ clientes, proyectos, onSave, onCancel }: {
           className="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-emerald-500/50" />
         <input type="number" value={monto} onChange={e => setMonto(e.target.value)} placeholder="Monto ($) *"
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300" />
-        <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
+        <input type="date" title="Fecha del pago" value={fecha} onChange={e => setFecha(e.target.value)}
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300" />
-        <select value={categoria} onChange={e => setCategoria(e.target.value as CategoriaPago)}
+        <select title="Categoría" value={categoriaId} onChange={e => setCategoriaId(e.target.value ? Number(e.target.value) : "")}
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
-          {CATEGORIAS.map(c => <option key={c} value={c}>{CATEGORIA_LABEL[c]}</option>)}
+          <option value="">Sin categoría</option>
+          {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
         </select>
-        <select value={estado} onChange={e => setEstado(e.target.value as EstadoPago)}
+        <select title="Estado" value={estado} onChange={e => setEstado(e.target.value as EstadoPago)}
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
           <option value="pendiente">Pendiente</option>
           <option value="pagado">Pagado</option>
           <option value="parcial">Parcial</option>
         </select>
         {clientes.length > 0 && (
-          <select value={clienteId} onChange={e => setClienteId(e.target.value ? Number(e.target.value) : "")}
+          <select title="Cliente" value={clienteId} onChange={e => setClienteId(e.target.value ? Number(e.target.value) : "")}
             className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
             <option value="">Sin cliente</option>
             {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </select>
         )}
         {proyectos.length > 0 && (
-          <select value={proyectoId} onChange={e => setProyectoId(e.target.value ? Number(e.target.value) : "")}
+          <select title="Proyecto" value={proyectoId} onChange={e => setProyectoId(e.target.value ? Number(e.target.value) : "")}
             className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
             <option value="">Sin proyecto</option>
             {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
@@ -136,19 +236,23 @@ function FormPago({ clientes, proyectos, onSave, onCancel }: {
   )
 }
 
+// ── Página principal ────────────────────────────────────────────────────────
 export default function PagosPage() {
-  const { pagos, setPagos, loading, refetch } = useGetPagosTrabajo()
-  const { clientes }                          = useGetClientesTrabajo()
-  const { proyectos }                         = useGetProyectos()
+  const { pagos, setPagos, loading, refetch }        = useGetPagosTrabajo()
+  const { categorias, refetch: refetchCats, loading: loadingCats } = useGetCategoriasPago()
+  const { clientes }                                 = useGetClientesTrabajo()
+  const { proyectos }                                = useGetProyectos()
+
   const [showForm,    setShowForm]    = useState(false)
+  const [showGestion, setShowGestion] = useState(false)
   const [filtroEst,   setFiltroEst]   = useState<EstadoPago | "todos">("todos")
-  const [filtroCat,   setFiltroCat]   = useState<CategoriaPago | "todas">("todas")
+  const [filtroCatId, setFiltroCatId] = useState<number | null>(null)
 
   const filtrados = useMemo(() =>
     pagos
-      .filter(p => filtroEst === "todos"  || p.estado    === filtroEst)
-      .filter(p => filtroCat === "todas"  || p.categoria === filtroCat),
-    [pagos, filtroEst, filtroCat]
+      .filter(p => filtroEst   === "todos" || p.estado === filtroEst)
+      .filter(p => filtroCatId === null    || p.categoriaPago?.id === filtroCatId),
+    [pagos, filtroEst, filtroCatId]
   )
 
   const resumen = useMemo(() => ({
@@ -158,14 +262,14 @@ export default function PagosPage() {
   }), [pagos])
 
   const porCategoria = useMemo(() =>
-    CATEGORIAS
+    categorias
       .map(cat => ({
         cat,
-        total: pagos.filter(p => p.categoria === cat).reduce((s, p) => s + p.monto, 0),
-        count: pagos.filter(p => p.categoria === cat).length,
+        total: pagos.filter(p => p.categoriaPago?.id === cat.id).reduce((s, p) => s + p.monto, 0),
+        count: pagos.filter(p => p.categoriaPago?.id === cat.id).length,
       }))
       .filter(x => x.count > 0),
-    [pagos]
+    [pagos, categorias]
   )
 
   async function handleEstado(p: PagoTrabajoType, estado: EstadoPago) {
@@ -173,9 +277,13 @@ export default function PagosPage() {
     setPagos(prev => prev.map(x => x.documentId === p.documentId ? { ...x, estado } : x))
   }
 
-  async function handleCategoria(p: PagoTrabajoType, categoria: CategoriaPago) {
-    await updatePagoTrabajo(p.documentId, { categoria })
-    setPagos(prev => prev.map(x => x.documentId === p.documentId ? { ...x, categoria } : x))
+  async function handleCategoria(p: PagoTrabajoType, catId: number | "") {
+    const payload: any = catId
+      ? { categoriaPago: { connect: [{ id: catId }] } }
+      : { categoriaPago: { disconnect: [] } }
+    await updatePagoTrabajo(p.documentId, payload)
+    const cat = categorias.find(c => c.id === catId) ?? null
+    setPagos(prev => prev.map(x => x.documentId === p.documentId ? { ...x, categoriaPago: cat } : x))
   }
 
   async function handleDelete(p: PagoTrabajoType) {
@@ -183,7 +291,7 @@ export default function PagosPage() {
     setPagos(prev => prev.filter(x => x.documentId !== p.documentId))
   }
 
-  if (loading) return (
+  if (loading || loadingCats) return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="h-8 w-8 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
     </div>
@@ -191,7 +299,7 @@ export default function PagosPage() {
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
-      {/* Stats principales */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total",     value: resumen.total,     color: "text-slate-200"   },
@@ -210,28 +318,48 @@ export default function PagosPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {porCategoria.map(({ cat, total, count }) => (
             <button
-              key={cat}
+              key={cat.documentId}
               type="button"
-              onClick={() => setFiltroCat(filtroCat === cat ? "todas" : cat)}
+              onClick={() => setFiltroCatId(filtroCatId === cat.id ? null : cat.id)}
               className={`flex items-center justify-between px-3 py-2 rounded-lg border text-left transition-all ${
-                filtroCat === cat
-                  ? `${CATEGORIA_BADGE[cat]} border-current`
+                filtroCatId === cat.id
+                  ? `${catColor(cat.id)} border-current`
                   : "border-slate-700/50 bg-slate-900/40 hover:bg-slate-800/60"
               }`}
             >
               <div>
-                <p className={`text-[11px] font-semibold ${filtroCat === cat ? "" : "text-slate-300"}`}>
-                  {CATEGORIA_LABEL[cat]}
-                </p>
+                <p className={`text-[11px] font-semibold ${filtroCatId === cat.id ? "" : "text-slate-300"}`}>{cat.nombre}</p>
                 <p className="text-[10px] text-slate-500">{count} pago{count !== 1 ? "s" : ""}</p>
               </div>
-              <p className={`text-sm font-bold tabular-nums ${filtroCat === cat ? "" : "text-slate-300"}`}>
-                {fmt(total)}
-              </p>
+              <p className={`text-sm font-bold tabular-nums ${filtroCatId === cat.id ? "" : "text-slate-300"}`}>{fmt(total)}</p>
             </button>
           ))}
         </div>
       )}
+
+      {/* Gestionar categorías (toggle) */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowGestion(v => !v)}
+          className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+          {showGestion ? "Ocultar" : "Gestionar categorías"}
+        </button>
+        <AnimatePresence>
+          {showGestion && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden mt-3"
+            >
+              <GestionCategorias categorias={categorias} onRefetch={refetchCats} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Filtros estado + acción */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -242,10 +370,10 @@ export default function PagosPage() {
               {f === "todos" ? `Todos (${pagos.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${pagos.filter(p => p.estado === f).length})`}
             </button>
           ))}
-          {filtroCat !== "todas" && (
-            <button type="button" onClick={() => setFiltroCat("todas")}
+          {filtroCatId !== null && (
+            <button type="button" onClick={() => setFiltroCatId(null)}
               className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-500 hover:text-slate-300 flex items-center gap-1">
-              <X className="h-3 w-3" /> {CATEGORIA_LABEL[filtroCat]}
+              <X className="h-3 w-3" /> {categorias.find(c => c.id === filtroCatId)?.nombre}
             </button>
           )}
         </div>
@@ -258,6 +386,7 @@ export default function PagosPage() {
       <AnimatePresence>
         {showForm && (
           <FormPago
+            categorias={categorias}
             clientes={clientes.filter(c => c.activo)}
             proyectos={proyectos.filter(p => p.estado === "activo")}
             onSave={async () => { setShowForm(false); await refetch() }}
@@ -303,15 +432,14 @@ export default function PagosPage() {
                     <td className="px-4 py-3 text-center hidden sm:table-cell">
                       <select
                         title="Categoría del pago"
-                        value={p.categoria ?? "otro"}
-                        onChange={e => handleCategoria(p, e.target.value as CategoriaPago)}
-                        className={`text-[10px] px-2 py-1 rounded-full border font-medium cursor-pointer transition-colors ${
-                          p.categoria ? CATEGORIA_SELECT[p.categoria] : CATEGORIA_SELECT["otro"]
+                        value={p.categoriaPago?.id ?? ""}
+                        onChange={e => handleCategoria(p, e.target.value ? Number(e.target.value) : "")}
+                        className={`text-[10px] px-2 py-1 rounded-full border font-medium cursor-pointer bg-transparent transition-colors ${
+                          p.categoriaPago ? catColor(p.categoriaPago.id) : "text-slate-500 border-slate-700"
                         }`}
                       >
-                        {CATEGORIAS.map(c => (
-                          <option key={c} value={c}>{CATEGORIA_LABEL[c]}</option>
-                        ))}
+                        <option value="">Sin categoría</option>
+                        {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                       </select>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">

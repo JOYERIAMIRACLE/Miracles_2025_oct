@@ -56,7 +56,28 @@ const PUBLIC_ACTIONS_TRABAJO = [
   'api::material-trabajo.material-trabajo.create',
   'api::material-trabajo.material-trabajo.update',
   'api::material-trabajo.material-trabajo.delete',
+  'api::categoria-pago.categoria-pago.find',
+  'api::categoria-pago.categoria-pago.findOne',
+  'api::categoria-pago.categoria-pago.create',
+  'api::categoria-pago.categoria-pago.update',
+  'api::categoria-pago.categoria-pago.delete',
 ];
+
+const CATEGORIAS_PAGO_SEED = [
+  'Comisión', 'Anticipo', 'Liquidación', 'Honorario', 'Servicio', 'Otro',
+];
+
+async function sembrarCategoriasPagoSiVacio(strapi) {
+  const count = await strapi.db.query('api::categoria-pago.categoria-pago').count({});
+  if (count > 0) {
+    strapi.log.info('[bootstrap] Categorías de pago ya existen — skip seed');
+    return;
+  }
+  for (const nombre of CATEGORIAS_PAGO_SEED) {
+    await strapi.db.query('api::categoria-pago.categoria-pago').create({ data: { nombre } });
+  }
+  strapi.log.info(`[bootstrap] ${CATEGORIAS_PAGO_SEED.length} categorías de pago sembradas`);
+}
 
 // Mapeo: enum viejo (lowercase, con/sin acentos, underscore) → nombre canónico de Categoria
 const CATEGORIA_NORMALIZE_MAP = {
@@ -205,6 +226,7 @@ module.exports = {
       await sembrarCategoriasSiVacio(strapi);
       await backfillColoresCategorias(strapi);
       await normalizarCategorias(strapi);
+      await sembrarCategoriasPagoSiVacio(strapi);
     } catch (err) {
       strapi.log.error('[bootstrap] Error: ' + err.message);
     }

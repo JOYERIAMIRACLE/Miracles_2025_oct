@@ -27,10 +27,10 @@
       "enum": ["pendiente", "pagado", "parcial"],
       "default": "pendiente"
     },
-    "categoria": {
-      "type": "enumeration",
-      "enum": ["comision", "anticipo", "liquidacion", "honorario", "servicio", "otro"],
-      "default": "otro"
+    "categoriaPago": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::categoria-pago.categoria-pago"
     },
     "notas": {
       "type": "text"

@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "categoria_pagos",
+  "info": {
+    "singularName": "categoria-pago",
+    "pluralName": "categoria-pagos",
+    "displayName": "Categoria Pago"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

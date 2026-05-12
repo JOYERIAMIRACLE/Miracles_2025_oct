@@ -1,5 +1,6 @@
-export type EstadoPago    = "pendiente" | "pagado" | "parcial"
-export type CategoriaPago = "comision" | "anticipo" | "liquidacion" | "honorario" | "servicio" | "otro"
+import { CategoriaPagoType } from "./categoria-pago"
+
+export type EstadoPago = "pendiente" | "pagado" | "parcial"
 
 export type PagoTrabajoType = {
   id:              number
@@ -8,7 +9,7 @@ export type PagoTrabajoType = {
   monto:           number
   fecha:           string | null
   estado:          EstadoPago
-  categoria:       CategoriaPago | null
+  categoriaPago:   CategoriaPagoType | null
   notas:           string | null
   clienteTrabajo?: { id: number; documentId: string; nombre: string } | null
   proyecto?:       { id: number; documentId: string; nombre: string } | null
@@ -17,12 +18,12 @@ export type PagoTrabajoType = {
 }
 
 export type PagoTrabajoPayload = {
-  concepto:         string
-  monto:            number
-  fecha?:           string | null
-  estado?:          EstadoPago
-  categoria?:       CategoriaPago | null
-  notas?:           string | null
-  clienteTrabajo?:  { connect: [{ id: number }] } | null
-  proyecto?:        { connect: [{ id: number }] } | null
+  concepto:        string
+  monto:           number
+  fecha?:          string | null
+  estado?:         EstadoPago
+  categoriaPago?:  { connect: [{ id: number }] } | null
+  notas?:          string | null
+  clienteTrabajo?: { connect: [{ id: number }] } | null
+  proyecto?:       { connect: [{ id: number }] } | null
 }
