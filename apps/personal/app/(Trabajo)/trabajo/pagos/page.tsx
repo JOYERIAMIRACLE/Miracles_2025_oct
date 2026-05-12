@@ -141,7 +141,7 @@ export default function PagosPage() {
 
   const resumen = useMemo(() => ({
     total:     pagos.reduce((s, p) => s + p.monto, 0),
-    cobrado:   pagos.filter(p => p.estado === "pagado").reduce((s, p) => s + p.monto, 0),
+    pagado:    pagos.filter(p => p.estado === "pagado").reduce((s, p) => s + p.monto, 0),
     pendiente: pagos.filter(p => p.estado !== "pagado").reduce((s, p) => s + p.monto, 0),
   }), [pagos])
 
@@ -167,7 +167,7 @@ export default function PagosPage() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total",     value: resumen.total,     color: "text-slate-200"   },
-          { label: "Cobrado",   value: resumen.cobrado,   color: "text-emerald-400" },
+          { label: "Pagado",    value: resumen.pagado,    color: "text-emerald-400" },
           { label: "Pendiente", value: resumen.pendiente, color: "text-amber-400"   },
         ].map(({ label, value, color }) => (
           <div key={label} className="p-4 rounded-xl bg-slate-900/60 border border-slate-700/40 text-center">
