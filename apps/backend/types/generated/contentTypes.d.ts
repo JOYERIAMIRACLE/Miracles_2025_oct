@@ -584,6 +584,46 @@ export interface ApiCentroVentaCentroVenta extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiClienteTrabajoClienteTrabajo
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'cliente_trabajos';
+  info: {
+    displayName: 'Cliente Trabajo';
+    pluralName: 'cliente-trabajos';
+    singularName: 'cliente-trabajo';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email;
+    empresa: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cliente-trabajo.cliente-trabajo'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    pagos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pago-trabajo.pago-trabajo'
+    >;
+    proyectos: Schema.Attribute.Relation<'oneToMany', 'api::proyecto.proyecto'>;
+    publishedAt: Schema.Attribute.DateTime;
+    reuniones: Schema.Attribute.Relation<'oneToMany', 'api::reunion.reunion'>;
+    telefono: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
   collectionName: 'clientes';
   info: {
@@ -666,6 +706,54 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     ventaCuenta: Schema.Attribute.Relation<'oneToMany', 'api::venta.venta'>;
+  };
+}
+
+export interface ApiEjercicioEjercicio extends Struct.CollectionTypeSchema {
+  collectionName: 'ejercicios';
+  info: {
+    displayName: 'Ejercicio';
+    pluralName: 'ejercicios';
+    singularName: 'ejercicio';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ejercicio.ejercicio'
+    > &
+      Schema.Attribute.Private;
+    musculo: Schema.Attribute.Enumeration<
+      [
+        'pecho',
+        'espalda',
+        'hombros',
+        'biceps',
+        'triceps',
+        'core',
+        'piernas',
+        'gluteos',
+        'cardio',
+        'cuerpo_completo',
+      ]
+    >;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      ['fuerza', 'cardio', 'flexibilidad', 'funcional']
+    > &
+      Schema.Attribute.DefaultTo<'fuerza'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    videoUrl: Schema.Attribute.String;
   };
 }
 
@@ -776,6 +864,58 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiIngredienteDespensaIngredienteDespensa
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'ingrediente_despensas';
+  info: {
+    description: 'Stock de ingredientes en la despensa';
+    displayName: 'Ingrediente Despensa';
+    pluralName: 'ingrediente-despensas';
+    singularName: 'ingrediente-despensa';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    cantidad: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    cantidadMinima: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<1>;
+    categoria: Schema.Attribute.Enumeration<
+      [
+        'verduras',
+        'frutas',
+        'carnes',
+        'l\u00E1cteos',
+        'granos',
+        'especias',
+        'aceites',
+        'bebidas',
+        'enlatados',
+        'otros',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'otros'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ingrediente-despensa.ingrediente-despensa'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    unidad: Schema.Attribute.Enumeration<
+      ['pz', 'kg', 'g', 'L', 'ml', 'taza', 'bolsa', 'lata', 'caja', 'botella']
+    > &
+      Schema.Attribute.DefaultTo<'pz'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiInventarioInventario extends Struct.CollectionTypeSchema {
   collectionName: 'inventarios';
   info: {
@@ -817,6 +957,41 @@ export interface ApiInventarioInventario extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiItemCompraItemCompra extends Struct.CollectionTypeSchema {
+  collectionName: 'item_compras';
+  info: {
+    description: 'Lista de compras del supermercado';
+    displayName: 'Item Compra';
+    pluralName: 'item-compras';
+    singularName: 'item-compra';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    auto: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    cantidadSugerida: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<1>;
+    categoria: Schema.Attribute.String & Schema.Attribute.DefaultTo<'otros'>;
+    completado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ingredienteRef: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::item-compra.item-compra'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    unidad: Schema.Attribute.String & Schema.Attribute.DefaultTo<'pz'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiMetaAhorroMetaAhorro extends Struct.CollectionTypeSchema {
   collectionName: 'meta_ahorros';
   info: {
@@ -846,6 +1021,78 @@ export interface ApiMetaAhorroMetaAhorro extends Struct.CollectionTypeSchema {
     monto_actual: Schema.Attribute.Decimal;
     monto_meta: Schema.Attribute.Decimal;
     nombre: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiMetricaCorporalMetricaCorporal
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'metrica_corporals';
+  info: {
+    displayName: 'M\u00E9trica Corporal';
+    pluralName: 'metrica-corporals';
+    singularName: 'metrica-corporal';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    grasa: Schema.Attribute.Decimal;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::metrica-corporal.metrica-corporal'
+    > &
+      Schema.Attribute.Private;
+    medidas: Schema.Attribute.JSON;
+    musculo: Schema.Attribute.Decimal;
+    notas: Schema.Attribute.Text;
+    peso: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPagoTrabajoPagoTrabajo extends Struct.CollectionTypeSchema {
+  collectionName: 'pago_trabajos';
+  info: {
+    displayName: 'Pago Trabajo';
+    pluralName: 'pago-trabajos';
+    singularName: 'pago-trabajo';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    clienteTrabajo: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::cliente-trabajo.cliente-trabajo'
+    >;
+    concepto: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<['pendiente', 'pagado', 'parcial']> &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    fecha: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pago-trabajo.pago-trabajo'
+    > &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    proyecto: Schema.Attribute.Relation<'manyToOne', 'api::proyecto.proyecto'>;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1054,6 +1301,96 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiProyectoProyecto extends Struct.CollectionTypeSchema {
+  collectionName: 'proyectos';
+  info: {
+    displayName: 'Proyecto';
+    pluralName: 'proyectos';
+    singularName: 'proyecto';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    clienteTrabajo: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::cliente-trabajo.cliente-trabajo'
+    >;
+    color: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    estado: Schema.Attribute.Enumeration<
+      ['activo', 'pausado', 'completado', 'cancelado']
+    > &
+      Schema.Attribute.DefaultTo<'activo'>;
+    fechaFin: Schema.Attribute.Date;
+    fechaInicio: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::proyecto.proyecto'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    pagos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pago-trabajo.pago-trabajo'
+    >;
+    presupuesto: Schema.Attribute.Decimal;
+    prioridad: Schema.Attribute.Enumeration<['baja', 'media', 'alta']> &
+      Schema.Attribute.DefaultTo<'media'>;
+    publishedAt: Schema.Attribute.DateTime;
+    reuniones: Schema.Attribute.Relation<'oneToMany', 'api::reunion.reunion'>;
+    tareas: Schema.Attribute.Relation<'oneToMany', 'api::tarea.tarea'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRecetaReceta extends Struct.CollectionTypeSchema {
+  collectionName: 'recetas';
+  info: {
+    description: 'Grimorio de recetas de cocina';
+    displayName: 'Receta';
+    pluralName: 'recetas';
+    singularName: 'receta';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    categoria: Schema.Attribute.Enumeration<
+      ['desayuno', 'comida', 'cena', 'snack', 'postre']
+    > &
+      Schema.Attribute.DefaultTo<'comida'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    dificultad: Schema.Attribute.Enumeration<
+      ['f\u00E1cil', 'media', 'dif\u00EDcil']
+    > &
+      Schema.Attribute.DefaultTo<'f\u00E1cil'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::receta.receta'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    tiempoPrep: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<30>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    videoUrl: Schema.Attribute.String;
+  };
+}
+
 export interface ApiRegistroMensualRegistroMensual
   extends Struct.CollectionTypeSchema {
   collectionName: 'registro_mensuals';
@@ -1107,6 +1444,111 @@ export interface ApiRegistroMensualRegistroMensual
     tipo: Schema.Attribute.Enumeration<
       ['ingreso_variable', 'gasto_extra', 'ahorro_real']
     >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReunionReunion extends Struct.CollectionTypeSchema {
+  collectionName: 'reuniones';
+  info: {
+    displayName: 'Reuni\u00F3n';
+    pluralName: 'reuniones';
+    singularName: 'reunion';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    acuerdos: Schema.Attribute.Text;
+    clienteTrabajo: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::cliente-trabajo.cliente-trabajo'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fecha: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reunion.reunion'
+    > &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    participantes: Schema.Attribute.String;
+    proyecto: Schema.Attribute.Relation<'manyToOne', 'api::proyecto.proyecto'>;
+    publishedAt: Schema.Attribute.DateTime;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRutinaRutina extends Struct.CollectionTypeSchema {
+  collectionName: 'rutinas';
+  info: {
+    displayName: 'Rutina';
+    pluralName: 'rutinas';
+    singularName: 'rutina';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activa: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    diasSemana: Schema.Attribute.String;
+    ejercicios: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::rutina.rutina'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    sesiones: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::sesion-gym.sesion-gym'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSesionGymSesionGym extends Struct.CollectionTypeSchema {
+  collectionName: 'sesion_gyms';
+  info: {
+    displayName: 'Sesi\u00F3n Gym';
+    pluralName: 'sesion-gyms';
+    singularName: 'sesion-gym';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    duracion: Schema.Attribute.Integer;
+    ejerciciosRealizados: Schema.Attribute.JSON;
+    fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::sesion-gym.sesion-gym'
+    > &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    rutina: Schema.Attribute.Relation<'manyToOne', 'api::rutina.rutina'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1226,6 +1668,7 @@ export interface ApiTareaTarea extends Struct.CollectionTypeSchema {
       ['baja', 'media', 'alta', 'urgente']
     > &
       Schema.Attribute.DefaultTo<'media'>;
+    proyecto: Schema.Attribute.Relation<'manyToOne', 'api::proyecto.proyecto'>;
     publishedAt: Schema.Attribute.DateTime;
     titulo: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
@@ -1825,19 +2268,30 @@ declare module '@strapi/strapi' {
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::centro-costo.centro-costo': ApiCentroCostoCentroCosto;
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
+      'api::cliente-trabajo.cliente-trabajo': ApiClienteTrabajoClienteTrabajo;
       'api::cliente.cliente': ApiClienteCliente;
       'api::cuenta.cuenta': ApiCuentaCuenta;
+      'api::ejercicio.ejercicio': ApiEjercicioEjercicio;
       'api::evento-calendario.evento-calendario': ApiEventoCalendarioEventoCalendario;
       'api::gasto.gasto': ApiGastoGasto;
       'api::global.global': ApiGlobalGlobal;
+      'api::ingrediente-despensa.ingrediente-despensa': ApiIngredienteDespensaIngredienteDespensa;
       'api::inventario.inventario': ApiInventarioInventario;
+      'api::item-compra.item-compra': ApiItemCompraItemCompra;
       'api::meta-ahorro.meta-ahorro': ApiMetaAhorroMetaAhorro;
+      'api::metrica-corporal.metrica-corporal': ApiMetricaCorporalMetricaCorporal;
+      'api::pago-trabajo.pago-trabajo': ApiPagoTrabajoPagoTrabajo;
       'api::partida-presupuesto.partida-presupuesto': ApiPartidaPresupuestoPartidaPresupuesto;
       'api::pasivo.pasivo': ApiPasivoPasivo;
       'api::prestamo-otorgado.prestamo-otorgado': ApiPrestamoOtorgadoPrestamoOtorgado;
       'api::product-category.product-category': ApiProductCategoryProductCategory;
       'api::product.product': ApiProductProduct;
+      'api::proyecto.proyecto': ApiProyectoProyecto;
+      'api::receta.receta': ApiRecetaReceta;
       'api::registro-mensual.registro-mensual': ApiRegistroMensualRegistroMensual;
+      'api::reunion.reunion': ApiReunionReunion;
+      'api::rutina.rutina': ApiRutinaRutina;
+      'api::sesion-gym.sesion-gym': ApiSesionGymSesionGym;
       'api::snapshot-cuenta.snapshot-cuenta': ApiSnapshotCuentaSnapshotCuenta;
       'api::snapshot-mes.snapshot-mes': ApiSnapshotMesSnapshotMes;
       'api::tarea.tarea': ApiTareaTarea;

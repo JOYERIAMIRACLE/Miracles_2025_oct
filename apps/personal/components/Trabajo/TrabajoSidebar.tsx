@@ -4,16 +4,17 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, CheckSquare, FolderKanban,
-  Users, CalendarDays, Wallet, ChevronRight,
+  Users, CalendarDays, Wallet, ChevronRight, Archive,
 } from "lucide-react"
 
 const NAV = [
-  { label: "Dashboard",  href: "/trabajo",           icon: LayoutDashboard },
-  { label: "Tareas",     href: "/trabajo/tareas",     icon: CheckSquare     },
-  { label: "Proyectos",  href: "/trabajo/proyectos",  icon: FolderKanban    },
-  { label: "Clientes",   href: "/trabajo/clientes",   icon: Users           },
-  { label: "Reuniones",  href: "/trabajo/reuniones",  icon: CalendarDays    },
-  { label: "Pagos",      href: "/trabajo/pagos",      icon: Wallet          },
+  { label: "Dashboard",  href: "/trabajo",            icon: LayoutDashboard },
+  { label: "Tareas",     href: "/trabajo/tareas",      icon: CheckSquare     },
+  { label: "Proyectos",  href: "/trabajo/proyectos",   icon: FolderKanban    },
+  { label: "Clientes",   href: "/trabajo/clientes",    icon: Users           },
+  { label: "Reuniones",  href: "/trabajo/reuniones",   icon: CalendarDays    },
+  { label: "Pagos",      href: "/trabajo/pagos",       icon: Wallet          },
+  { label: "Inventario", href: "/trabajo/inventario",  icon: Archive         },
 ]
 
 export function TrabajoSidebar() {

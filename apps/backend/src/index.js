@@ -30,6 +30,34 @@ const PUBLIC_ACTIONS_SNAPSHOT = [
   'api::snapshot-mes.snapshot-mes.delete',
 ];
 
+const PUBLIC_ACTIONS_TRABAJO = [
+  'api::cliente-trabajo.cliente-trabajo.find',
+  'api::cliente-trabajo.cliente-trabajo.findOne',
+  'api::cliente-trabajo.cliente-trabajo.create',
+  'api::cliente-trabajo.cliente-trabajo.update',
+  'api::cliente-trabajo.cliente-trabajo.delete',
+  'api::proyecto.proyecto.find',
+  'api::proyecto.proyecto.findOne',
+  'api::proyecto.proyecto.create',
+  'api::proyecto.proyecto.update',
+  'api::proyecto.proyecto.delete',
+  'api::reunion.reunion.find',
+  'api::reunion.reunion.findOne',
+  'api::reunion.reunion.create',
+  'api::reunion.reunion.update',
+  'api::reunion.reunion.delete',
+  'api::pago-trabajo.pago-trabajo.find',
+  'api::pago-trabajo.pago-trabajo.findOne',
+  'api::pago-trabajo.pago-trabajo.create',
+  'api::pago-trabajo.pago-trabajo.update',
+  'api::pago-trabajo.pago-trabajo.delete',
+  'api::material-trabajo.material-trabajo.find',
+  'api::material-trabajo.material-trabajo.findOne',
+  'api::material-trabajo.material-trabajo.create',
+  'api::material-trabajo.material-trabajo.update',
+  'api::material-trabajo.material-trabajo.delete',
+];
+
 // Mapeo: enum viejo (lowercase, con/sin acentos, underscore) → nombre canónico de Categoria
 const CATEGORIA_NORMALIZE_MAP = {
   'alimentación':      'Alimentación',
@@ -91,7 +119,7 @@ async function aplicarPermisosPublic(strapi) {
     .findOne({ where: { type: 'public' } });
   if (!publicRole) return;
 
-  const todas = [...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT];
+  const todas = [...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO];
   for (const action of todas) {
     const existing = await strapi.db
       .query('plugin::users-permissions.permission')
@@ -102,7 +130,7 @@ async function aplicarPermisosPublic(strapi) {
         .create({ data: { action, role: publicRole.id } });
     }
   }
-  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots)');
+  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo)');
 }
 
 async function sembrarCategoriasSiVacio(strapi) {

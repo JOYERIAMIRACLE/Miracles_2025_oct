@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "material_trabajos",
+  "info": {
+    "singularName": "material-trabajo",
+    "pluralName": "material-trabajos",
+    "displayName": "Material de Trabajo"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "promocional",
+        "folleto",
+        "camisa",
+        "otro"
+      ],
+      "required": true,
+      "default": "otro"
+    },
+    "cantidad": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "minimo": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "notas": {
+      "type": "text"
+    }
+  }
+}
