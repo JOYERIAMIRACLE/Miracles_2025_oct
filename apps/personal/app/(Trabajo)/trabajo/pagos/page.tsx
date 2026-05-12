@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, X, Wallet, TrendingUp } from "lucide-react"
-import { useGetPagosTrabajo }      from "@/api/pago-trabajo/getPagosTrabajo"
-import { useGetClientesTrabajo }   from "@/api/cliente-trabajo/getClientesTrabajo"
-import { useGetProyectos }         from "@/api/proyecto/getProyectos"
+import { Plus, X, Wallet } from "lucide-react"
+import { useGetPagosTrabajo }    from "@/api/pago-trabajo/getPagosTrabajo"
+import { useGetClientesTrabajo } from "@/api/cliente-trabajo/getClientesTrabajo"
+import { useGetProyectos }       from "@/api/proyecto/getProyectos"
 import { createPagoTrabajo, updatePagoTrabajo, deletePagoTrabajo } from "@/api/pago-trabajo/mutatePagoTrabajo"
-import { PagoTrabajoType, EstadoPago } from "@/types/pago-trabajo"
+import { PagoTrabajoType, EstadoPago, CategoriaPago } from "@/types/pago-trabajo"
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
 
@@ -17,16 +17,35 @@ const ESTADO_BADGE: Record<EstadoPago, string> = {
   parcial:   "bg-blue-500/15 text-blue-400 border-blue-500/20",
 }
 
+const CATEGORIA_LABEL: Record<CategoriaPago, string> = {
+  comision:    "Comisión",
+  anticipo:    "Anticipo",
+  liquidacion: "Liquidación",
+  honorario:   "Honorario",
+  servicio:    "Servicio",
+  otro:        "Otro",
+}
+
+const CATEGORIA_BADGE: Record<CategoriaPago, string> = {
+  comision:    "bg-violet-500/15 text-violet-300 border-violet-500/20",
+  anticipo:    "bg-sky-500/15 text-sky-300 border-sky-500/20",
+  liquidacion: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
+  honorario:   "bg-rose-500/15 text-rose-300 border-rose-500/20",
+  servicio:    "bg-orange-500/15 text-orange-300 border-orange-500/20",
+  otro:        "bg-slate-500/15 text-slate-400 border-slate-500/20",
+}
+
 function FormPago({ clientes, proyectos, onSave, onCancel }: {
   clientes:  { id: number; nombre: string }[]
   proyectos: { id: number; nombre: string }[]
-  onSave: (p: PagoTrabajoType) => void
+  onSave:   () => void
   onCancel: () => void
 }) {
   const [concepto,   setConcepto]   = useState("")
   const [monto,      setMonto]      = useState("")
   const [fecha,      setFecha]      = useState(new Date().toISOString().slice(0, 10))
   const [estado,     setEstado]     = useState<EstadoPago>("pendiente")
+  const [categoria,  setCategoria]  = useState<CategoriaPago>("otro")
   const [notas,      setNotas]      = useState("")
   const [clienteId,  setClienteId]  = useState<number | "">("")
   const [proyectoId, setProyectoId] = useState<number | "">("")
@@ -35,12 +54,19 @@ function FormPago({ clientes, proyectos, onSave, onCancel }: {
   async function handleSave() {
     if (!concepto.trim() || !monto) return
     setSaving(true)
-    const payload: any = { concepto: concepto.trim(), monto: Number(monto), fecha: fecha || null, estado, notas: notas || null }
+    const payload: any = {
+      concepto: concepto.trim(),
+      monto:    Number(monto),
+      fecha:    fecha || null,
+      estado,
+      categoria,
+      notas:    notas || null,
+    }
     if (clienteId)  payload.clienteTrabajo = { connect: [{ id: clienteId }] }
     if (proyectoId) payload.proyecto       = { connect: [{ id: proyectoId }] }
-    const res = await createPagoTrabajo(payload)
-    if (res?.data) onSave(res.data)
+    await createPagoTrabajo(payload)
     setSaving(false)
+    onSave()
   }
 
   return (
@@ -53,11 +79,20 @@ function FormPago({ clientes, proyectos, onSave, onCancel }: {
       <h3 className="text-sm font-semibold text-slate-200">Nuevo Pago</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input value={concepto} onChange={e => setConcepto(e.target.value)} placeholder="Concepto *"
-          className="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none" />
+          className="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-emerald-500/50" />
         <input type="number" value={monto} onChange={e => setMonto(e.target.value)} placeholder="Monto ($) *"
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300" />
         <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300" />
+        <select value={categoria} onChange={e => setCategoria(e.target.value as CategoriaPago)}
+          className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
+          <option value="comision">Comisión</option>
+          <option value="anticipo">Anticipo</option>
+          <option value="liquidacion">Liquidación</option>
+          <option value="honorario">Honorario</option>
+          <option value="servicio">Servicio</option>
+          <option value="otro">Otro</option>
+        </select>
         <select value={estado} onChange={e => setEstado(e.target.value as EstadoPago)}
           className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
           <option value="pendiente">Pendiente</option>
@@ -96,11 +131,11 @@ function FormPago({ clientes, proyectos, onSave, onCancel }: {
 }
 
 export default function PagosPage() {
-  const { pagos, setPagos, loading } = useGetPagosTrabajo()
-  const { clientes }                 = useGetClientesTrabajo()
-  const { proyectos }                = useGetProyectos()
-  const [showForm, setShowForm]      = useState(false)
-  const [filtro,   setFiltro]        = useState<EstadoPago | "todos">("todos")
+  const { pagos, setPagos, loading, refetch } = useGetPagosTrabajo()
+  const { clientes }                          = useGetClientesTrabajo()
+  const { proyectos }                         = useGetProyectos()
+  const [showForm, setShowForm] = useState(false)
+  const [filtro,   setFiltro]   = useState<EstadoPago | "todos">("todos")
 
   const filtrados = filtro === "todos" ? pagos : pagos.filter(p => p.estado === filtro)
 
@@ -147,7 +182,7 @@ export default function PagosPage() {
           {(["todos","pendiente","pagado","parcial"] as const).map(f => (
             <button key={f} type="button" onClick={() => setFiltro(f)}
               className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${filtro === f ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
-              {f.charAt(0).toUpperCase() + f.slice(1)} {f === "todos" ? `(${pagos.length})` : `(${pagos.filter(p => p.estado === f).length})`}
+              {f === "todos" ? `Todos (${pagos.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${pagos.filter(p => p.estado === f).length})`}
             </button>
           ))}
         </div>
@@ -162,7 +197,7 @@ export default function PagosPage() {
           <FormPago
             clientes={clientes.filter(c => c.activo)}
             proyectos={proyectos.filter(p => p.estado === "activo")}
-            onSave={p => { setPagos(prev => [p, ...prev]); setShowForm(false) }}
+            onSave={async () => { setShowForm(false); await refetch() }}
             onCancel={() => setShowForm(false)}
           />
         )}
@@ -179,7 +214,8 @@ export default function PagosPage() {
             <thead>
               <tr className="border-b border-slate-800/60">
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Concepto</th>
-                <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Cliente / Proyecto</th>
+                <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Categoría</th>
+                <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Cliente / Proyecto</th>
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Fecha</th>
                 <th className="text-right px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Monto</th>
                 <th className="text-center px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
@@ -198,10 +234,19 @@ export default function PagosPage() {
                     className="border-b border-slate-800/30 last:border-0 group hover:bg-slate-800/20 transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <p className="text-slate-200 font-medium truncate max-w-[160px]">{p.concepto}</p>
+                      <p className="text-slate-200 font-medium truncate max-w-[140px]">{p.concepto}</p>
                       {p.notas && <p className="text-[10px] text-slate-600 truncate">{p.notas}</p>}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
+                      {p.categoria ? (
+                        <span className={`text-[11px] px-2 py-1 rounded-full border font-medium ${CATEGORIA_BADGE[p.categoria]}`}>
+                          {CATEGORIA_LABEL[p.categoria]}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-600">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
                       <p className="text-slate-400 text-xs truncate">{p.clienteTrabajo?.nombre ?? "—"}</p>
                       {p.proyecto && <p className="text-[10px] text-slate-600 truncate">{p.proyecto.nombre}</p>}
                     </td>
