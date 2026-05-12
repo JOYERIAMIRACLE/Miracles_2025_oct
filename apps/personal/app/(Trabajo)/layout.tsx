@@ -1,6 +1,11 @@
+import type { Metadata } from "next"
 import { ReactNode } from "react"
 import { TrabajoSidebar } from "@/components/Trabajo/TrabajoSidebar"
 import { TrabajoHeader } from "@/components/Trabajo/TrabajoHeader"
+
+export const metadata: Metadata = {
+  title: { absolute: "Trabajo" },
+}
 
 export default function TrabajoLayout({ children }: { children: ReactNode }) {
   return (
