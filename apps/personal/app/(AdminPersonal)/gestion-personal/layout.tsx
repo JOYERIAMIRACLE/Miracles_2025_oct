@@ -1,12 +1,6 @@
-import type { Metadata } from "next"
 import { ReactNode } from "react"
 import { PersonalSidebar } from "@/components/Personal/PersonalSidebar"
 import { PersonalHeader } from "@/components/Personal/PersonalHeader"
-
-export const metadata: Metadata = {
-  title: "Personal",
-  description: "Gestión personal: finanzas, hábitos y seguimiento.",
-}
 
 export default function GestionPersonalLayout({ children }: { children: ReactNode }) {
   return (
