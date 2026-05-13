@@ -18,6 +18,7 @@ import { updateTransaccion }   from "@/api/transaccion/updateTransaccion"
 import { deleteTransaccion }   from "@/api/transaccion/deleteTransaccion"
 import { useGetCuentas }       from "@/api/cuenta/getCuentas"
 import { useGetCategorias }    from "@/api/categoria/getCategorias"
+import { useGetEventos }       from "@/api/evento-calendario/getEventos"
 
 import {
   TransaccionType, TransaccionPayload,
@@ -82,6 +83,7 @@ export default function TransaccionesPage() {
   const { transacciones, setTransacciones, loading } = useGetTransacciones()
   const { cuentas } = useGetCuentas()
   const { categorias } = useGetCategorias()
+  const { eventos } = useGetEventos()
 
   const [mostrarForm, setMostrarForm] = useState(false)
   const [editando, setEditando] = useState<TransaccionType | null>(null)
@@ -226,6 +228,11 @@ export default function TransaccionesPage() {
   }
 
   // ── Detección y limpieza de duplicados ────────────────────────────────
+  // txIds vinculados explícitamente a eventos (no borrar estos)
+  const txIdsPorEventos = useMemo(() => {
+    return new Set(eventos.map(ev => ev.txDocumentId).filter(Boolean) as string[])
+  }, [eventos])
+
   const duplicados = useMemo(() => {
     const grupos: Record<string, TransaccionType[]> = {}
     transacciones.forEach(tx => {
@@ -238,15 +245,17 @@ export default function TransaccionesPage() {
       if (!grupos[key]) grupos[key] = []
       grupos[key].push(tx)
     })
-    // De cada grupo con >1 item, conservar el de menor id y marcar el resto como duplicados
     const aEliminar: TransaccionType[] = []
     Object.values(grupos).forEach(grupo => {
       if (grupo.length < 2) return
       const ordenados = [...grupo].sort((a, b) => a.id - b.id)
-      aEliminar.push(...ordenados.slice(1))
+      // Conservar el vinculado a un evento si existe, si no el más antiguo
+      const conVinculo = ordenados.find(tx => txIdsPorEventos.has(tx.documentId))
+      const aConservar = conVinculo ?? ordenados[0]
+      aEliminar.push(...ordenados.filter(tx => tx.documentId !== aConservar.documentId))
     })
     return aEliminar
-  }, [transacciones])
+  }, [transacciones, txIdsPorEventos])
 
   const [limpiando, setLimpiando] = useState(false)
 

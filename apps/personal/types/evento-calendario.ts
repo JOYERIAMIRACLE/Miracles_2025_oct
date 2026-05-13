@@ -15,6 +15,7 @@ export type EventoCalendarioType = {
   recurrente: boolean
   categoria: string | null
   cuenta: { id: number; documentId: string; nombre: string; tipo: string; saldoActual: number | null; saldoInicial: number | null } | null
+  txDocumentId?: string | null
 }
 
 export type EventoCalendarioPayload = {
@@ -26,5 +27,6 @@ export type EventoCalendarioPayload = {
   descripcion?: string
   recurrente?: boolean
   categoria?: string | null
-  cuenta?: string | null  // documentId de la cuenta
+  cuenta?: string | null
+  txDocumentId?: string | null
 }

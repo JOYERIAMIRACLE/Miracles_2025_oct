@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react"
 import { useGetEventos } from "@/api/evento-calendario/getEventos"
 import { createEvento } from "@/api/evento-calendario/createEvento"
+import { updateEvento } from "@/api/evento-calendario/updateEvento"
 import { deleteEvento } from "@/api/evento-calendario/deleteEvento"
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
 import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
@@ -171,6 +172,11 @@ export default function CalendarioPage() {
 
         const txNueva = await createTransaccion(txPayload)
         setTransacciones(prev => [txNueva, ...prev])
+        // Guardar el vínculo explícito en el evento
+        try {
+          const evActualizado = await updateEvento(nuevo.documentId, { txDocumentId: txNueva.documentId } as any)
+          setEventos(prev => prev.map(e => e.documentId === evActualizado.documentId ? { ...e, txDocumentId: txNueva.documentId } : e))
+        } catch { /* no crítico */ }
         toast.success("Evento + transacción creados")
       } catch (e: any) {
         console.error("[calendario] evento creado pero falló la transacción:", e)
@@ -188,11 +194,13 @@ export default function CalendarioPage() {
       await deleteEvento(evento.documentId)
       setEventos(prev => prev.filter(e => e.documentId !== evento.documentId))
 
-      // Buscar y eliminar transacción asociada (misma descripción, monto y fecha)
+      // Buscar transacción asociada: primero por vínculo explícito, luego por huella
       const txAsociada = transacciones.find(tx =>
-        tx.descripcion === evento.titulo &&
-        Number(tx.monto) === evento.monto &&
-        tx.fecha.slice(0, 10) === evento.fecha
+        evento.txDocumentId
+          ? tx.documentId === evento.txDocumentId
+          : norm(tx.descripcion) === norm(evento.titulo) &&
+            Number(tx.monto) === evento.monto &&
+            tx.fecha.slice(0, 10) === evento.fecha
       )
       if (txAsociada) {
         await deleteTransaccion(txAsociada.documentId)
@@ -206,12 +214,17 @@ export default function CalendarioPage() {
     }
   }
 
-  // ── Eventos huérfanos: tienen cuenta pero NO existe tx con mismo titulo+fecha+monto
+  // ── Eventos huérfanos: tienen cuenta pero NO tienen transacción vinculada
+  const norm = (s: string | null | undefined) => (s ?? "").trim().toLowerCase()
   const huerfanos = useMemo(() => {
+    const txIds = new Set(transacciones.map(tx => tx.documentId))
     return eventos.filter(ev => {
       if (!ev.cuenta) return false
+      // Si tiene vínculo explícito, verificar que esa tx aún existe
+      if (ev.txDocumentId) return !txIds.has(ev.txDocumentId)
+      // Sin vínculo explícito: buscar por titulo+fecha+monto (insensible a mayúsculas)
       return !transacciones.some(tx =>
-        tx.descripcion === ev.titulo &&
+        norm(tx.descripcion) === norm(ev.titulo) &&
         tx.fecha?.slice(0, 10) === ev.fecha &&
         Number(tx.monto) === Number(ev.monto)
       )
@@ -224,13 +237,24 @@ export default function CalendarioPage() {
     let creadas = 0; let fallidas = 0; let omitidas = 0
     for (const ev of huerfanos) {
       try {
-        // Verificar de nuevo justo antes de crear para evitar duplicados
-        const yaExiste = transacciones.some(tx =>
-          tx.descripcion === ev.titulo &&
-          tx.fecha?.slice(0, 10) === ev.fecha &&
-          Number(tx.monto) === Number(ev.monto)
-        )
-        if (yaExiste) { omitidas++; continue }
+        // Si ya tiene txDocumentId y la tx existe, omitir
+        if (ev.txDocumentId && transacciones.some(tx => tx.documentId === ev.txDocumentId)) {
+          omitidas++; continue
+        }
+        // Sin vínculo explícito: verificar por titulo+fecha+monto
+        if (!ev.txDocumentId) {
+          const txExistente = transacciones.find(tx =>
+            norm(tx.descripcion) === norm(ev.titulo) &&
+            tx.fecha?.slice(0, 10) === ev.fecha &&
+            Number(tx.monto) === Number(ev.monto)
+          )
+          if (txExistente) {
+            // Guardar vínculo explícito y omitir creación
+            try { await updateEvento(ev.documentId, { txDocumentId: txExistente.documentId } as any) } catch { /* no crítico */ }
+            setEventos(prev => prev.map(e => e.documentId === ev.documentId ? { ...e, txDocumentId: txExistente.documentId } : e))
+            omitidas++; continue
+          }
+        }
 
         const cat = ev.categoria ?? "Otro"
         const cuentaDocId = ev.cuenta!.documentId
@@ -243,13 +267,16 @@ export default function CalendarioPage() {
           descripcion:  ev.titulo,
           tipo:         tipoTx,
           monto:        Number(ev.monto),
-          fecha:        new Date(ev.fecha + "T05:00:00").toISOString(),
+          fecha:        new Date(ev.fecha + "T12:00:00").toISOString(),
           categoria:    cat,
           notas:        ev.descripcion || "Reparado desde calendario",
           cuentaOrigen:  origen,
           cuentaDestino: destino,
         })
         setTransacciones(prev => [tx, ...prev])
+        // Guardar vínculo explícito en el evento
+        try { await updateEvento(ev.documentId, { txDocumentId: tx.documentId } as any) } catch { /* no crítico */ }
+        setEventos(prev => prev.map(e => e.documentId === ev.documentId ? { ...e, txDocumentId: tx.documentId } : e))
         creadas++
       } catch (e) {
         console.error("[reparar] falló evento", ev.titulo, e)
