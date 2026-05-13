@@ -80,7 +80,7 @@ export default function CalendarioPage() {
       .reduce((s, e) => s + Number(e.monto), 0)
 
   const totalPagos =
-    txDelMes.filter(tx => tx.tipo === "gasto" || tx.tipo === "transferencia").reduce((s, tx) => s + Number(tx.monto), 0) +
+    txDelMes.filter(tx => tx.tipo === "gasto").reduce((s, tx) => s + Number(tx.monto), 0) +
     evDelMes.filter(e => e.tipo === "pago" && !txHuellas.has(`${e.fecha.slice(0, 10)}_${Number(e.monto)}`))
       .reduce((s, e) => s + Number(e.monto), 0)
 

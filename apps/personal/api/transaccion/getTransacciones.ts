@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { TransaccionType } from "@/types/transaccion"
 
 export function useGetTransacciones() {
-  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transaccions?populate=*&sort=fecha:desc`
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transaccions?populate=*&sort[0]=fecha:desc&pagination[pageSize]=500`
   const [transacciones, setTransacciones] = useState<TransaccionType[]>([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string>("")

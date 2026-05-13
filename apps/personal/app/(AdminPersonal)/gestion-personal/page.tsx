@@ -330,7 +330,7 @@ export default function GestionPersonalPage() {
   const txMes = movimientosDeMes(mesSeleccionado)
 
   const ingresoReal = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + tx.monto, 0)
-  const gastoReal   = txMes.filter(tx => tx.tipo === "gasto" || tx.tipo === "transferencia").reduce((s, tx) => s + tx.monto, 0)
+  const gastoReal   = txMes.filter(tx => tx.tipo === "gasto").reduce((s, tx) => s + tx.monto, 0)
   const flujoNeto   = ingresoReal - gastoReal
 
   // Cuentas
