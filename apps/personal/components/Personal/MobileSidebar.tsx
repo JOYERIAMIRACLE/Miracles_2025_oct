@@ -1,11 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { Menu, X } from "lucide-react"
 import { PersonalSidebar } from "./PersonalSidebar"
 
 export function MobileSidebar() {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   return (
     <>
@@ -18,28 +22,33 @@ export function MobileSidebar() {
         <Menu size={20} />
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-slate-950 border-r border-slate-800/80 shadow-2xl shadow-black/50 transform transition-transform duration-300 ease-in-out md:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center justify-end px-4 py-3 border-b border-slate-800/80 shrink-0">
-          <button
-            type="button"
+      {mounted && createPortal(
+        <>
+          {/* Overlay */}
+          <div
+            className={`fixed inset-0 z-100 bg-black/70 backdrop-blur-sm transition-opacity duration-300 md:hidden ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
             onClick={() => setOpen(false)}
-            className="p-1.5 rounded-md hover:bg-slate-800 transition-colors text-slate-500"
-            aria-label="Cerrar menu"
-          >
-            <X size={18} />
-          </button>
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto" onClick={() => setOpen(false)}>
-          <PersonalSidebar />
-        </div>
-      </div>
+          />
+
+          {/* Panel */}
+          <div className={`fixed inset-y-0 left-0 z-200 w-72 flex flex-col bg-slate-950 border-r border-slate-800/80 shadow-2xl shadow-black/50 transform transition-transform duration-300 ease-in-out md:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
+            <div className="flex items-center justify-end px-4 py-3 border-b border-slate-800/80 shrink-0">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="p-1.5 rounded-md hover:bg-slate-800 transition-colors text-slate-500"
+                aria-label="Cerrar menu"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto" onClick={() => setOpen(false)}>
+              <PersonalSidebar />
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
     </>
   )
 }
