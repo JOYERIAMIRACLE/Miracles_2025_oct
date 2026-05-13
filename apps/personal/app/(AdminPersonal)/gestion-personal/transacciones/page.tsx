@@ -225,6 +225,49 @@ export default function TransaccionesPage() {
     }
   }
 
+  // ── Detección y limpieza de duplicados ────────────────────────────────
+  const duplicados = useMemo(() => {
+    const grupos: Record<string, TransaccionType[]> = {}
+    transacciones.forEach(tx => {
+      const key = [
+        (tx.descripcion ?? "").trim().toLowerCase(),
+        tx.fecha?.slice(0, 10) ?? "",
+        String(Number(tx.monto)),
+        tx.tipo,
+      ].join("|")
+      if (!grupos[key]) grupos[key] = []
+      grupos[key].push(tx)
+    })
+    // De cada grupo con >1 item, conservar el de menor id y marcar el resto como duplicados
+    const aEliminar: TransaccionType[] = []
+    Object.values(grupos).forEach(grupo => {
+      if (grupo.length < 2) return
+      const ordenados = [...grupo].sort((a, b) => a.id - b.id)
+      aEliminar.push(...ordenados.slice(1))
+    })
+    return aEliminar
+  }, [transacciones])
+
+  const [limpiando, setLimpiando] = useState(false)
+
+  const handleLimpiarDuplicados = async () => {
+    if (duplicados.length === 0) return
+    if (!confirm(`Se encontraron ${duplicados.length} transacción(es) duplicada(s).\n\nSe eliminarán los duplicados y los saldos de cuentas se corregirán automáticamente.\n\n¿Continuar?`)) return
+    setLimpiando(true)
+    let eliminadas = 0
+    for (const tx of duplicados) {
+      try {
+        await deleteTransaccion(tx.documentId)
+        setTransacciones(prev => prev.filter(t => t.documentId !== tx.documentId))
+        eliminadas++
+      } catch (e) {
+        console.error("[limpiar] falló eliminar", tx.descripcion, e)
+      }
+    }
+    setLimpiando(false)
+    toast.success(`${eliminadas} duplicado(s) eliminado(s). Los saldos se corrigieron automáticamente.`)
+  }
+
   const limpiarFiltros = () => {
     setFiltroTipo("")
     setFiltroCuenta("")
@@ -250,6 +293,23 @@ export default function TransaccionesPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      {/* ── Alerta de duplicados ───────────────────────────────────────── */}
+      {duplicados.length > 0 && (
+        <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30">
+          <p className="text-sm text-red-400">
+            ⚠️ Se detectaron <span className="font-bold">{duplicados.length}</span> transacción(es) duplicada(s) que están inflando los saldos.
+          </p>
+          <Button
+            size="sm"
+            onClick={handleLimpiarDuplicados}
+            disabled={limpiando}
+            className="bg-red-600 hover:bg-red-700 shrink-0"
+          >
+            {limpiando ? "Limpiando..." : "Limpiar duplicados"}
+          </Button>
+        </div>
+      )}
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
