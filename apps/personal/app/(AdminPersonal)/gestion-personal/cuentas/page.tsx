@@ -59,8 +59,10 @@ export default function CuentasPage() {
   const [form, setForm] = useState<CuentaPayload>(emptyForm())
   const [editando, setEditando] = useState<CuentaType | null>(null)
   const [guardando, setGuardando] = useState(false)
+  const [mostrarInactivas, setMostrarInactivas] = useState(false)
 
-  const activas = cuentas.filter(c => c.activa)
+  const activas   = cuentas.filter(c => c.activa)
+  const inactivas = cuentas.filter(c => !c.activa)
   const liquidas = activas.filter(c => c.tipo !== "Crédito")
   const creditos = activas.filter(c => c.tipo === "Crédito")
   const efectivo = activas.filter(c => c.tipo === "Efectivo")
@@ -352,7 +354,7 @@ export default function CuentasPage() {
               </div>
               <div className="space-y-2">
           {grupo.items.map(c => {
-            const saldo = c.saldoActual ?? c.saldoInicial ?? 0
+            const saldo = c.saldoActual ?? 0
             const esCredito = c.tipo === "Crédito"
             const esOperativa = c.proposito === "Operativa"
             const saldoPositivo = esCredito ? saldo === 0 : saldo >= 0
@@ -448,6 +450,41 @@ export default function CuentasPage() {
             </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Cuentas inactivas — sección colapsable */}
+      {inactivas.length > 0 && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setMostrarInactivas(v => !v)}
+            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            {mostrarInactivas ? "Ocultar" : "Ver"} cuentas inactivas ({inactivas.length})
+          </button>
+          {mostrarInactivas && (
+            <div className="mt-3 space-y-2">
+              {inactivas.map(c => (
+                <div key={c.id} className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-border bg-muted/20 opacity-60">
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color ?? "#6366f1" }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{c.nombre}</p>
+                    <p className="text-xs text-muted-foreground">{c.tipo}{c.proposito ? ` · ${c.proposito}` : ""} · <span className="italic">Inactiva</span></p>
+                  </div>
+                  <p className="text-sm font-bold">{fmt(c.saldoActual ?? 0)}</p>
+                  <button
+                    type="button"
+                    title="Reactivar cuenta"
+                    onClick={() => handleToggleActiva(c)}
+                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-emerald-500 transition-colors text-xs font-medium"
+                  >
+                    Activar
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
