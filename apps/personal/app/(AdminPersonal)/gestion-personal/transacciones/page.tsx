@@ -179,6 +179,22 @@ export default function TransaccionesPage() {
       return toast.error("Selecciona cuenta origen y destino")
     }
 
+    // Detectar posible duplicado al crear (mismo monto + mismo día + mismo tipo)
+    if (!editando) {
+      const diaFecha = form.fecha.slice(0, 10)
+      const posibleDup = transacciones.find(tx =>
+        tx.fecha?.slice(0, 10) === diaFecha &&
+        Number(tx.monto) === Number(form.monto) &&
+        tx.tipo === form.tipo
+      )
+      if (posibleDup) {
+        const ok = confirm(
+          `⚠️ Ya existe una transacción de tipo "${form.tipo}" por $${form.monto} el ${diaFecha} ("${posibleDup.descripcion}").\n\n¿Seguro que quieres registrar otra? Podría duplicar el gasto.`
+        )
+        if (!ok) return
+      }
+    }
+
     setGuardando(true)
     try {
       if (editando) {

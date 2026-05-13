@@ -97,6 +97,31 @@ export default function CalendarioPage() {
 
   const handleGuardar = async () => {
     if (!form.titulo || !form.fecha || !form.monto) return
+
+    // ── Bloquear evento duplicado (mismo título + fecha + monto) ──────────
+    const eventoYaExiste = eventos.some(ev =>
+      ev.titulo === form.titulo &&
+      ev.fecha  === form.fecha &&
+      Number(ev.monto) === Number(form.monto)
+    )
+    if (eventoYaExiste) {
+      toast.error("Ya existe un evento con el mismo título, fecha y monto. Revisa si ya lo registraste.")
+      return
+    }
+
+    // ── Si tiene cuenta, bloquear si ya hay transacción ese día por ese monto ─
+    if (form.cuenta) {
+      const txYaExiste = transacciones.some(tx =>
+        tx.fecha?.slice(0, 10) === form.fecha &&
+        Number(tx.monto) === Number(form.monto) &&
+        (tx.cuentaOrigen?.documentId === form.cuenta || tx.cuentaDestino?.documentId === form.cuenta)
+      )
+      if (txYaExiste) {
+        toast.error(`Ya existe una transacción de $${form.monto} en esa cuenta el ${form.fecha}. Revisa Transacciones para evitar duplicados.`)
+        return
+      }
+    }
+
     setGuardando(true)
 
     // 1. Crear el evento en calendario
