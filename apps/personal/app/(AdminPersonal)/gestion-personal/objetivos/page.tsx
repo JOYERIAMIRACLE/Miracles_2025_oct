@@ -235,7 +235,7 @@ function CreditoCard({ cuenta, pagos, pagosMes, totalPagado }: {
   cuenta: CuentaType; pagos: TransaccionType[]; pagosMes: number; totalPagado: number
 }) {
   const [histOpen, setHistOpen] = useState(false)
-  const deuda = cuenta.saldoActual ?? cuenta.saldoInicial ?? 0
+  const deuda = cuenta.saldoActual ?? 0
   const limite = cuenta.metaDeCuenta ?? 0
   const utilizado = limite > 0 ? Math.min(100, (deuda / limite) * 100) : 0
   const disponible = limite > 0 ? Math.max(0, limite - deuda) : 0
@@ -435,10 +435,10 @@ export default function ObjetivosPage() {
     return map
   }, [creditos, transacciones])
 
-  const totalDeuda = creditos.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const totalDeuda = creditos.reduce((s, c) => s + (c.saldoActual ?? 0), 0)
   const totalLimite = creditos.reduce((s, c) => s + (c.metaDeCuenta ?? 0), 0)
-  const creditosActivos = creditos.filter(c => (c.saldoActual ?? c.saldoInicial ?? 0) > 0)
-  const creditosLiquidados = creditos.filter(c => (c.saldoActual ?? c.saldoInicial ?? 0) <= 0)
+  const creditosActivos = creditos.filter(c => (c.saldoActual ?? 0) > 0)
+  const creditosLiquidados = creditos.filter(c => (c.saldoActual ?? 0) <= 0)
 
   // ─── CRUD METAS ──────────────────────────────────────────────────────
   const handleNuevo = () => { setEditingMeta(null); setForm(EMPTY_FORM); setModalOpen(true) }

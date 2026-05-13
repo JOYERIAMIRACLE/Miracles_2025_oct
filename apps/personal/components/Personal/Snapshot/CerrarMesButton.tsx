@@ -18,7 +18,7 @@ type Props = {
   onDone?: () => void
 }
 
-const saldoDe = (c: CuentaType) => c.saldoActual ?? c.saldoInicial ?? 0
+const saldoDe = (c: CuentaType) => c.saldoActual ?? 0
 
 export function CerrarMesButton({ mes, cuentas, metricas, snapshotMesExistente, snapshotsCuentaExistentes = [], onDone }: Props) {
   const [guardando, setGuardando] = useState(false)

@@ -44,7 +44,7 @@ function CreditoCard({
 }) {
   const [histOpen, setHistOpen] = useState(false)
 
-  const deuda      = cuenta.saldoActual ?? cuenta.saldoInicial ?? 0
+  const deuda      = cuenta.saldoActual ?? 0
   const limite     = cuenta.metaDeCuenta ?? 0  // metaDeCuenta = límite de crédito
   const utilizado  = limite > 0 ? Math.min(100, (deuda / limite) * 100) : 0
   const disponible = limite > 0 ? Math.max(0, limite - deuda) : 0
@@ -277,7 +277,7 @@ export default function CreditosPage() {
   }, [])
 
   // Totales
-  const totalDeuda = creditos.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const totalDeuda = creditos.reduce((s, c) => s + (c.saldoActual ?? 0), 0)
   const totalLimite = creditos.reduce((s, c) => s + (c.metaDeCuenta ?? 0), 0)
 
   const totalPagadoMes = useMemo(() => {
@@ -294,8 +294,8 @@ export default function CreditosPage() {
       .reduce((s, tx) => s + Number(tx.monto), 0)
   }, [comprasPorCredito, mesActual])
 
-  const creditosLiquidados = creditos.filter(c => (c.saldoActual ?? c.saldoInicial ?? 0) <= 0)
-  const creditosActivos    = creditos.filter(c => (c.saldoActual ?? c.saldoInicial ?? 0) > 0)
+  const creditosLiquidados = creditos.filter(c => (c.saldoActual ?? 0) <= 0)
+  const creditosActivos    = creditos.filter(c => (c.saldoActual ?? 0) > 0)
 
   const loading = loadC || loadT
 

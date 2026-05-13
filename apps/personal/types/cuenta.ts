@@ -10,12 +10,12 @@ export type CuentaType = {
   nombre:        string
   tipo:          TipoCuenta      | null
   proposito:     PropositoCuenta | null
-  saldoInicial:  number          | null
   saldoActual:   number          | null
   saldoBanco:    number          | null
   metaDeCuenta:  number          | null
   color:         string          | null
   activa:        boolean         | null
+  saldoInicial?: number          | null  // obsoleto, se mantiene para compatibilidad
 }
 
 export type CuentaPayload = Omit<CuentaType, "id" | "documentId">

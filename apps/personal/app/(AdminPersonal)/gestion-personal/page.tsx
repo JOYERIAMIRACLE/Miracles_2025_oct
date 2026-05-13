@@ -339,7 +339,7 @@ export default function GestionPersonalPage() {
   const cuentasCredito   = cuentasActivas.filter(c => c.tipo === "Crédito")
   const cuentasOperativa = cuentasLiquidas.filter(c => c.proposito === "Operativa")
   const cuentasApartados = cuentasLiquidas.filter(c => c.proposito !== "Operativa")
-  const saldoDe = (c: typeof cuentas[number]) => c.saldoActual ?? c.saldoInicial ?? 0
+  const saldoDe = (c: typeof cuentas[number]) => c.saldoActual ?? 0
   const operativaDisponible = cuentasOperativa.reduce((s, c) => s + saldoDe(c), 0)
   const apartadosDisponible = cuentasApartados.reduce((s, c) => s + saldoDe(c), 0)
   // Ahorro acumulado: cuentas con propósito de guardar/invertir (no Operativa)

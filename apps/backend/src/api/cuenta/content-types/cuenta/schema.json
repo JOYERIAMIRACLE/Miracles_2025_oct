@@ -33,10 +33,6 @@
         "Presupuesto 1"
       ]
     },
-    "saldoInicial": {
-      "type": "decimal",
-      "default": 0
-    },
     "metaDeCuenta": {
       "type": "decimal"
     },

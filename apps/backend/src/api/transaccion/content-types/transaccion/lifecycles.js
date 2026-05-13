@@ -12,7 +12,7 @@ async function updateSaldo(cuentaId, delta) {
     where: { id: cuentaId },
   });
   if (!cuenta) return;
-  const nuevoSaldo = Number(cuenta.saldoActual ?? cuenta.saldoInicial ?? 0) + Number(delta);
+  const nuevoSaldo = Number(cuenta.saldoActual ?? 0) + Number(delta);
   await strapi.db.query('api::cuenta.cuenta').update({
     where: { id: cuentaId },
     data: { saldoActual: nuevoSaldo },

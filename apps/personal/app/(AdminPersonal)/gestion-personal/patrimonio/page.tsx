@@ -110,8 +110,8 @@ export default function PatrimonioPage() {
   // Cuentas activas: no-crédito = activos líquidos, crédito = pasivos
   const cuentasLiquidas = cuentas.filter(c => c.activa && c.tipo !== "Crédito")
   const cuentasCredito  = cuentas.filter(c => c.activa && c.tipo === "Crédito")
-  const totalCuentasLiquidas = cuentasLiquidas.reduce((s, c) => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
-  const totalCuentasCredito  = cuentasCredito.reduce((s, c)  => s + (c.saldoActual ?? c.saldoInicial ?? 0), 0)
+  const totalCuentasLiquidas = cuentasLiquidas.reduce((s, c) => s + (c.saldoActual ?? 0), 0)
+  const totalCuentasCredito  = cuentasCredito.reduce((s, c)  => s + (c.saldoActual ?? 0), 0)
 
   const totalActivos   = activos.reduce((s, a) => s + (a.valor ?? 0), 0) + totalCuentasLiquidas
   const totalPrestamos = prestamos.filter(p => p.estado === "activo").reduce((s, p) => s + (p.saldo_pendiente ?? 0), 0)
@@ -259,7 +259,7 @@ export default function PatrimonioPage() {
                           {c.nombre}
                         </td>
                         <td className="px-4 py-2.5 text-zinc-500 text-xs">{c.proposito ?? c.tipo}</td>
-                        <td className="px-4 py-2.5 text-right font-semibold text-emerald-600 dark:text-emerald-400">{fmt(c.saldoActual ?? c.saldoInicial)}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold text-emerald-600 dark:text-emerald-400">{fmt(c.saldoActual ?? 0)}</td>
                         <td className="px-4 py-2.5 text-right text-xs text-zinc-400">desde Cuentas</td>
                       </tr>
                     ))}
@@ -334,7 +334,7 @@ export default function PatrimonioPage() {
                       <tr key={c.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
                         <td className="px-4 py-2.5 font-medium text-zinc-900 dark:text-zinc-100">{c.nombre}</td>
                         <td className="px-4 py-2.5 text-zinc-500 text-xs">Tarjeta de Crédito</td>
-                        <td className="px-4 py-2.5 text-right font-semibold text-red-500 dark:text-red-400">{fmt(c.saldoActual ?? c.saldoInicial)}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold text-red-500 dark:text-red-400">{fmt(c.saldoActual ?? 0)}</td>
                         <td className="px-4 py-2.5 text-right text-xs text-zinc-400">desde Cuentas</td>
                       </tr>
                     ))}

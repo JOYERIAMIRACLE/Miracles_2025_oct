@@ -330,7 +330,7 @@ export default function CalendarioPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             {cuentas.filter(c => c.activa).map(c => {
-              const saldo = c.saldoActual ?? c.saldoInicial ?? 0
+              const saldo = c.saldoActual ?? 0
               const esCredito = c.tipo === "Crédito"
               const positivo = esCredito ? saldo === 0 : saldo >= 0
               return (

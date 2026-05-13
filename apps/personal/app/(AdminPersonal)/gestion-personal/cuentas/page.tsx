@@ -45,7 +45,6 @@ const emptyForm = (): CuentaPayload => ({
   nombre: "",
   tipo: null,
   proposito: null,
-  saldoInicial: 0,
   saldoActual: null,
   saldoBanco: null,
   metaDeCuenta: null,
@@ -68,7 +67,7 @@ export default function CuentasPage() {
   const operativas = liquidas.filter(c => c.proposito === "Operativa")
   const apartados  = liquidas.filter(c => c.proposito !== "Operativa")
 
-  const saldoDe = (c: CuentaType) => c.saldoActual ?? c.saldoInicial ?? 0
+  const saldoDe = (c: CuentaType) => c.saldoActual ?? 0
   const totalSistema   = liquidas.reduce((s, c) => s + saldoDe(c), 0)
   const totalOperativa = operativas.reduce((s, c) => s + saldoDe(c), 0)
   const totalApartados = apartados.reduce((s, c) => s + saldoDe(c), 0)
@@ -118,7 +117,6 @@ export default function CuentasPage() {
       nombre:       c.nombre,
       tipo:         c.tipo,
       proposito:    c.proposito,
-      saldoInicial: c.saldoInicial ?? 0,
       saldoActual:  c.saldoActual,
       saldoBanco:   c.saldoBanco,
       metaDeCuenta: c.metaDeCuenta,
@@ -137,11 +135,7 @@ export default function CuentasPage() {
     if (!form.nombre) return toast.error("El nombre es obligatorio")
     setGuardando(true)
     try {
-      // Si no hay saldoActual seteado, lo igualamos al saldoInicial al crear
-      const payload: CuentaPayload = {
-        ...form,
-        saldoActual: form.saldoActual !== null ? form.saldoActual : form.saldoInicial,
-      }
+      const payload: CuentaPayload = { ...form }
       if (editando) {
         const updated = await updateCuenta(editando.documentId, payload)
         setCuentas(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
@@ -300,11 +294,11 @@ export default function CuentasPage() {
               </select>
             </div>
             <div>
-              <Label className="text-xs">Saldo inicial</Label>
-              <Input className={inputCls} type="number" placeholder="0" value={form.saldoInicial ?? ""} onChange={e => setForm(f => ({ ...f, saldoInicial: Number(e.target.value) }))} />
+              <Label className="text-xs">Saldo actual <span className="text-muted-foreground">(lo que tienes hoy)</span></Label>
+              <Input className={inputCls} type="number" placeholder="0" value={form.saldoActual ?? ""} onChange={e => setForm(f => ({ ...f, saldoActual: e.target.value === "" ? null : Number(e.target.value) }))} />
             </div>
             <div>
-              <Label className="text-xs">Saldo real del banco <span className="text-muted-foreground">(referencia)</span></Label>
+              <Label className="text-xs">Saldo banco <span className="text-muted-foreground">(referencia visual)</span></Label>
               <Input className={inputCls} type="number" placeholder="Lo que dice tu banco hoy" value={form.saldoBanco ?? ""} onChange={e => setForm(f => ({ ...f, saldoBanco: e.target.value === "" ? null : Number(e.target.value) }))} />
             </div>
             <div>
