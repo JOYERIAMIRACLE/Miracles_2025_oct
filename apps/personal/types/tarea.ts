@@ -16,6 +16,7 @@ export type TareaType = {
   fechaVencimiento: string | null  // ISO date YYYY-MM-DD
   fechaCompletada:  string | null  // ISO datetime
   notas:            string | null
+  progreso?:        number | null
   proyecto?:        { id: number; documentId: string; nombre: string } | null
   createdAt?:       string
   updatedAt?:       string
@@ -31,5 +32,6 @@ export type TareaPayload = {
   fechaVencimiento?: string | null
   fechaCompletada?:  string | null
   notas?:            string | null
+  progreso?:         number | null
   proyecto?:         { connect: [{ id: number }] } | null
 }

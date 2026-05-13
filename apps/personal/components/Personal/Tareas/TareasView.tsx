@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, AlertCircle, Sun, Sunrise, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -250,6 +250,15 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       toast.success("Tarea eliminada")
     } catch {
       toast.error("Error al eliminar")
+    }
+  }
+
+  const actualizarProgreso = async (t: TareaType, pct: number) => {
+    try {
+      const updated = await updateTarea(t.documentId, { progreso: pct })
+      setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+    } catch {
+      toast.error("Error al guardar progreso")
     }
   }
 
@@ -525,6 +534,11 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         </span>
                       )}
                     </div>
+
+                    <ProgresoBar
+                      value={t.progreso ?? 0}
+                      onSave={pct => actualizarProgreso(t, pct)}
+                    />
                   </div>
                 </div>
               )
@@ -697,6 +711,71 @@ function ResumenHoyCard({
           <li className="text-[10px] text-muted-foreground pl-3">+{tareas.length - 3} más</li>
         )}
       </ul>
+    </div>
+  )
+}
+
+// ─── Barra de progreso arrastrable ───────────────────────────────────────────
+
+function ProgresoBar({ value, onSave }: { value: number; onSave: (pct: number) => void }) {
+  const [local, setLocal] = useState(value)
+  const dragging = useRef(false)
+  const barRef  = useRef<HTMLDivElement>(null)
+  const fillRef = useRef<HTMLDivElement>(null)
+  const onSaveRef = useRef(onSave)
+  useEffect(() => { onSaveRef.current = onSave }, [onSave])
+  useEffect(() => { if (!dragging.current) setLocal(value) }, [value])
+
+  // Set fill width via DOM to avoid inline-style JSX lint warning
+  useLayoutEffect(() => {
+    if (fillRef.current) fillRef.current.style.width = `${local}%`
+  }, [local])
+
+  const calcPct = useCallback((clientX: number) => {
+    if (!barRef.current) return 0
+    const { left, width } = barRef.current.getBoundingClientRect()
+    return Math.min(Math.max(Math.round((clientX - left) / width * 100), 0), 100)
+  }, [])
+
+  useEffect(() => {
+    const onMove  = (e: MouseEvent) => { if (dragging.current) setLocal(calcPct(e.clientX)) }
+    const onUp    = (e: MouseEvent) => {
+      if (!dragging.current) return
+      const pct = calcPct(e.clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pct)
+    }
+    const onTMove = (e: TouchEvent) => { if (dragging.current) { e.preventDefault(); setLocal(calcPct(e.touches[0].clientX)) } }
+    const onTEnd  = (e: TouchEvent) => {
+      if (!dragging.current) return
+      const pct = calcPct(e.changedTouches[0].clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pct)
+    }
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup",   onUp)
+    window.addEventListener("touchmove", onTMove, { passive: false })
+    window.addEventListener("touchend",  onTEnd)
+    return () => {
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("mouseup",   onUp)
+      window.removeEventListener("touchmove", onTMove)
+      window.removeEventListener("touchend",  onTEnd)
+    }
+  }, [calcPct])
+
+  const color = local >= 100 ? "bg-emerald-500" : local >= 60 ? "bg-blue-500" : local >= 30 ? "bg-amber-500" : "bg-red-400"
+
+  return (
+    <div className="flex items-center gap-2 mt-2">
+      <div
+        ref={barRef}
+        onMouseDown={e => { e.preventDefault(); dragging.current = true; setLocal(calcPct(e.clientX)) }}
+        onTouchStart={e => { dragging.current = true; setLocal(calcPct(e.touches[0].clientX)) }}
+        aria-label={`Progreso ${local}%`}
+        className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full cursor-pointer select-none"
+      >
+        <div ref={fillRef} className={`h-full rounded-full ${color}`} />
+      </div>
+      <span className={`text-[10px] font-mono w-8 text-right shrink-0 tabular-nums ${local >= 100 ? "text-emerald-500" : "text-muted-foreground"}`}>
+        {local}%
+      </span>
     </div>
   )
 }
