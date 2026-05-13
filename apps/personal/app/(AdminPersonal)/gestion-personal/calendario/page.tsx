@@ -9,7 +9,6 @@ import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { EventoCalendarioType, EventoCalendarioPayload, EventoTipo } from "@/types/evento-calendario"
-import { TipoTransaccion } from "@/types/transaccion"
 import { useGetCategorias } from "@/api/categoria/getCategorias"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday } from "date-fns"
 import { es } from "date-fns/locale"
@@ -231,73 +230,15 @@ export default function CalendarioPage() {
     })
   }, [eventos, transacciones])
 
-  const repararHuerfanos = async () => {
-    if (huerfanos.length === 0) { toast.success("No hay eventos huérfanos"); return }
-    if (!confirm(`Crear ${huerfanos.length} transacción(es) faltante(s) desde eventos del calendario?`)) return
-    let creadas = 0; let fallidas = 0; let omitidas = 0
-    for (const ev of huerfanos) {
-      try {
-        // Si ya tiene txDocumentId y la tx existe, omitir
-        if (ev.txDocumentId && transacciones.some(tx => tx.documentId === ev.txDocumentId)) {
-          omitidas++; continue
-        }
-        // Sin vínculo explícito: verificar por titulo+fecha+monto
-        if (!ev.txDocumentId) {
-          const txExistente = transacciones.find(tx =>
-            norm(tx.descripcion) === norm(ev.titulo) &&
-            tx.fecha?.slice(0, 10) === ev.fecha &&
-            Number(tx.monto) === Number(ev.monto)
-          )
-          if (txExistente) {
-            // Guardar vínculo explícito y omitir creación
-            try { await updateEvento(ev.documentId, { txDocumentId: txExistente.documentId } as any) } catch { /* no crítico */ }
-            setEventos(prev => prev.map(e => e.documentId === ev.documentId ? { ...e, txDocumentId: txExistente.documentId } : e))
-            omitidas++; continue
-          }
-        }
-
-        const cat = ev.categoria ?? "Otro"
-        const cuentaDocId = ev.cuenta!.documentId
-        let tipoTx: TipoTransaccion = "gasto"
-        let origen: string | null = null
-        let destino: string | null = null
-        if (ev.tipo === "ingreso") { tipoTx = "ingreso"; destino = cuentaDocId }
-        else                       { tipoTx = "gasto";   origen  = cuentaDocId }
-        const tx = await createTransaccion({
-          descripcion:  ev.titulo,
-          tipo:         tipoTx,
-          monto:        Number(ev.monto),
-          fecha:        new Date(ev.fecha + "T12:00:00").toISOString(),
-          categoria:    cat,
-          notas:        ev.descripcion || "Reparado desde calendario",
-          cuentaOrigen:  origen,
-          cuentaDestino: destino,
-        })
-        setTransacciones(prev => [tx, ...prev])
-        // Guardar vínculo explícito en el evento
-        try { await updateEvento(ev.documentId, { txDocumentId: tx.documentId } as any) } catch { /* no crítico */ }
-        setEventos(prev => prev.map(e => e.documentId === ev.documentId ? { ...e, txDocumentId: tx.documentId } : e))
-        creadas++
-      } catch (e) {
-        console.error("[reparar] falló evento", ev.titulo, e)
-        fallidas++
-      }
-    }
-    toast.success(`Reparado: ${creadas} creada(s)${omitidas > 0 ? `, ${omitidas} ya existían` : ""}${fallidas > 0 ? `, ${fallidas} fallaron` : ""}`)
-  }
-
   return (
     <div className="p-6 max-w-5xl mx-auto">
 
-      {/* Aviso de huérfanos */}
+      {/* Aviso de huérfanos — solo informativo, sin acción automática */}
       {huerfanos.length > 0 && (
-        <div className="mb-4 p-3 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20 flex items-center justify-between gap-3">
+        <div className="mb-4 p-3 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20">
           <p className="text-xs text-amber-700 dark:text-amber-300">
-            ⚠️ {huerfanos.length} evento(s) con cuenta asociada no tienen transacción registrada.
+            ⚠️ {huerfanos.length} evento(s) con cuenta asociada no tienen transacción vinculada. Si el saldo de una cuenta está mal, corrígelo editando la cuenta y ajustando "Saldo actual".
           </p>
-          <Button size="sm" variant="outline" onClick={repararHuerfanos}>
-            Crear transacciones faltantes
-          </Button>
         </div>
       )}
 
