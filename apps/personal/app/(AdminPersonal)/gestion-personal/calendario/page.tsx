@@ -206,18 +206,32 @@ export default function CalendarioPage() {
     }
   }
 
-  // ── Eventos huérfanos: tienen cuenta pero NO existe tx con misma fecha+monto
+  // ── Eventos huérfanos: tienen cuenta pero NO existe tx con mismo titulo+fecha+monto
   const huerfanos = useMemo(() => {
-    const txKeys = new Set(transacciones.map(tx => `${tx.fecha?.slice(0, 10)}_${Number(tx.monto)}`))
-    return eventos.filter(ev => ev.cuenta && !txKeys.has(`${ev.fecha?.slice(0, 10)}_${Number(ev.monto)}`))
+    return eventos.filter(ev => {
+      if (!ev.cuenta) return false
+      return !transacciones.some(tx =>
+        tx.descripcion === ev.titulo &&
+        tx.fecha?.slice(0, 10) === ev.fecha &&
+        Number(tx.monto) === Number(ev.monto)
+      )
+    })
   }, [eventos, transacciones])
 
   const repararHuerfanos = async () => {
     if (huerfanos.length === 0) { toast.success("No hay eventos huérfanos"); return }
     if (!confirm(`Crear ${huerfanos.length} transacción(es) faltante(s) desde eventos del calendario?`)) return
-    let creadas = 0; let fallidas = 0
+    let creadas = 0; let fallidas = 0; let omitidas = 0
     for (const ev of huerfanos) {
       try {
+        // Verificar de nuevo justo antes de crear para evitar duplicados
+        const yaExiste = transacciones.some(tx =>
+          tx.descripcion === ev.titulo &&
+          tx.fecha?.slice(0, 10) === ev.fecha &&
+          Number(tx.monto) === Number(ev.monto)
+        )
+        if (yaExiste) { omitidas++; continue }
+
         const cat = ev.categoria ?? "Otro"
         const cuentaDocId = ev.cuenta!.documentId
         let tipoTx: TipoTransaccion = "gasto"
@@ -242,7 +256,7 @@ export default function CalendarioPage() {
         fallidas++
       }
     }
-    toast.success(`Reparado: ${creadas} ok${fallidas > 0 ? `, ${fallidas} fallaron (revisa consola)` : ""}`)
+    toast.success(`Reparado: ${creadas} creada(s)${omitidas > 0 ? `, ${omitidas} ya existían` : ""}${fallidas > 0 ? `, ${fallidas} fallaron` : ""}`)
   }
 
   return (
