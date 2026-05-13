@@ -6,7 +6,7 @@ import { createCuenta } from "@/api/cuenta/createCuenta"
 import { updateCuenta } from "@/api/cuenta/updateCuenta"
 import { deleteCuenta } from "@/api/cuenta/deleteCuenta"
 import { CuentaType, CuentaPayload, TipoCuenta, PropositoCuenta } from "@/types/cuenta"
-import { Plus, Pencil, Trash2, X, Check, Banknote, TrendingUp, TrendingDown, Star, PiggyBank, Bookmark, Wallet, LineChart, CreditCard, RefreshCw } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Banknote, TrendingUp, TrendingDown, Star, PiggyBank, Bookmark, Wallet, LineChart, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -179,38 +179,6 @@ export default function CuentasPage() {
     }
   }
 
-  // Calcula el saldo correcto sumando transacciones desde saldoInicial
-  const calcularSaldoDesdeTransacciones = (cuenta: CuentaType) => {
-    const base = cuenta.saldoInicial ?? 0
-    const delta = transacciones.reduce((s, tx) => {
-      if (tx.tipo === "ingreso" && tx.cuentaDestino?.id === cuenta.id)
-        return s + Number(tx.monto)
-      if (tx.tipo === "gasto" && tx.cuentaOrigen?.id === cuenta.id)
-        return s - Number(tx.monto)
-      if (tx.tipo === "transferencia") {
-        if (tx.cuentaOrigen?.id === cuenta.id)  return s - Number(tx.monto)
-        if (tx.cuentaDestino?.id === cuenta.id) return s + Number(tx.monto)
-      }
-      return s
-    }, 0)
-    return base + delta
-  }
-
-  const handleRecalcular = async (c: CuentaType) => {
-    const calculado = calcularSaldoDesdeTransacciones(c)
-    const actual = c.saldoActual ?? c.saldoInicial ?? 0
-    const ok = confirm(
-      `Recalcular saldo de "${c.nombre}" desde transacciones registradas:\n\nSaldo actual (sistema): ${fmt(actual)}\nSaldo calculado: ${fmt(calculado)}\n\n¿Aplicar el valor calculado?`
-    )
-    if (!ok) return
-    try {
-      const updated = await updateCuenta(c.documentId, { saldoActual: calculado })
-      setCuentas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
-      toast.success(`Saldo de "${c.nombre}" corregido a ${fmt(calculado)}`)
-    } catch (e: any) {
-      toast.error(e.message ?? "Error al recalcular")
-    }
-  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -454,14 +422,6 @@ export default function CuentasPage() {
 
                 {/* Acciones */}
                 <div className="flex gap-1 shrink-0">
-                  <button
-                    type="button"
-                    title="Recalcular saldo desde transacciones"
-                    onClick={() => handleRecalcular(c)}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors"
-                  >
-                    <RefreshCw size={13} />
-                  </button>
                   <button
                     type="button"
                     title={c.activa ? "Desactivar" : "Activar"}
