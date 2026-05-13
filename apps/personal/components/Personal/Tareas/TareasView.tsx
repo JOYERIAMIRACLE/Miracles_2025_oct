@@ -257,8 +257,13 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     try {
       const updated = await updateTarea(t.documentId, { progreso: pct })
       setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
-    } catch {
-      toast.error("Error al guardar progreso")
+    } catch (e: any) {
+      // 400 probablemente significa que el backend aún no tiene el campo progreso desplegado
+      if (e?.message?.includes("400") || e?.status === 400) {
+        toast.warning("El servidor aún no tiene el campo progreso. Espera el redeploy de Render.")
+      } else {
+        toast.error("Error al guardar progreso")
+      }
     }
   }
 
@@ -489,10 +494,10 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         {t.titulo}
                       </p>
                       <div className="flex items-center gap-1 shrink-0">
-                        <button title="Editar" onClick={() => abrirEditar(t)} className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted">
+                        <button type="button" title="Editar" onClick={() => abrirEditar(t)} className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted">
                           <Pencil size={12} />
                         </button>
-                        <button title="Eliminar" onClick={() => borrar(t)} className="p-1 text-muted-foreground hover:text-red-500 rounded hover:bg-muted">
+                        <button type="button" title="Eliminar" onClick={() => borrar(t)} className="p-1 text-muted-foreground hover:text-red-500 rounded hover:bg-muted">
                           <Trash2 size={12} />
                         </button>
                       </div>
