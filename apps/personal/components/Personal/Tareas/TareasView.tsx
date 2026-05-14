@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
-import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, AlertCircle, Sun, Sunrise, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, AlertCircle, Sun, Sunrise, ChevronLeft, ChevronRight, BarChart2, Clock } from "lucide-react"
+import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -93,7 +94,7 @@ const finSemana = (date: Date) => {
   return d
 }
 
-type Vista = "lista" | "calendario"
+type Vista = "lista" | "calendario" | "metricas"
 
 export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: string }) {
   const { tareas, setTareas, loading } = useGetTareas(ambito)
@@ -112,6 +113,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     titulo: "", descripcion: "", ambito,
     estado: "pendiente", prioridad: "media",
     etiqueta: null, fechaVencimiento: null, notas: null, responsable: null,
+    area: null, tiempoEstimado: null, tiempoReal: null,
   })
 
   // Etiquetas únicas usadas para autocomplete
@@ -190,12 +192,20 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     return [...s].sort()
   }, [tareas])
 
+  // Áreas usadas para autocomplete
+  const areasUsadas = useMemo(() => {
+    const s = new Set<string>()
+    tareas.forEach(t => { if (t.area) s.add(t.area) })
+    return [...s].sort()
+  }, [tareas])
+
   const abrirCrear = (fechaVencimiento: string | null = null) => {
     setEditando(null)
     setForm({
       titulo: "", descripcion: "", ambito,
       estado: "pendiente", prioridad: "media",
       etiqueta: null, fechaVencimiento, notas: null, responsable: null,
+      area: null, tiempoEstimado: null, tiempoReal: null,
     })
     setModalOpen(true)
   }
@@ -207,6 +217,9 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       estado: t.estado, prioridad: t.prioridad,
       etiqueta: t.etiqueta, fechaVencimiento: t.fechaVencimiento,
       notas: t.notas, responsable: t.responsable ?? null,
+      area: t.area ?? null,
+      tiempoEstimado: t.tiempoEstimado ?? null,
+      tiempoReal: t.tiempoReal ?? null,
     })
     setModalOpen(true)
   }
@@ -325,6 +338,17 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
             >
               <CalIcon size={12} />
               Calendario
+            </button>
+            <button
+              type="button"
+              onClick={() => setVista("metricas")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition ${
+                vista === "metricas" ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900" : "text-muted-foreground"
+              }`}
+              title="Vista métricas"
+            >
+              <BarChart2 size={12} />
+              Métricas
             </button>
           </div>
           <Button onClick={() => abrirCrear()} size="sm">
@@ -562,12 +586,23 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       )}
                     </div>
 
-                    {(t.responsable || t.ticket) && (
+                    {(t.responsable || t.area || t.tiempoEstimado || t.tiempoReal || t.ticket) && (
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {t.responsable && (
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             {t.responsable}
+                          </span>
+                        )}
+                        {t.area && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 text-muted-foreground">
+                            {t.area}
+                          </span>
+                        )}
+                        {(t.tiempoEstimado || t.tiempoReal) && (
+                          <span className={`text-[10px] flex items-center gap-1 ${t.tiempoReal && t.tiempoEstimado && t.tiempoReal > t.tiempoEstimado ? "text-red-500" : "text-muted-foreground"}`}>
+                            <Clock size={9} />
+                            {t.tiempoReal ? `${t.tiempoReal}h` : ""}{t.tiempoEstimado ? `/${t.tiempoEstimado}h est` : ""}
                           </span>
                         )}
                         {t.ticket && (
@@ -599,6 +634,11 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
           onClickDia={fechaIso => abrirCrear(fechaIso)}
           onClickTarea={t => abrirEditar(t)}
         />
+      )}
+
+      {/* VISTA: MÉTRICAS */}
+      {vista === "metricas" && (
+        <MetricasView tareas={tareas} />
       )}
 
       {/* Modal */}
@@ -700,15 +740,59 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 </datalist>
               </div>
               <div>
-                <Label className="text-xs" htmlFor="t-notas">Notas</Label>
+                <Label className="text-xs" htmlFor="t-area">Área de solicitud</Label>
                 <Input
-                  id="t-notas"
-                  value={form.notas ?? ""}
-                  onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
-                  placeholder="Notas adicionales..."
+                  id="t-area"
+                  list="areas-tarea"
+                  value={form.area ?? ""}
+                  onChange={e => setForm(f => ({ ...f, area: e.target.value || null }))}
+                  placeholder="Diseño, Marketing..."
+                  className="h-9"
+                />
+                <datalist id="areas-tarea">
+                  {areasUsadas.map(a => <option key={a} value={a} />)}
+                </datalist>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs" htmlFor="t-estimado">Tiempo estimado (h)</Label>
+                <Input
+                  id="t-estimado"
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.tiempoEstimado ?? ""}
+                  onChange={e => setForm(f => ({ ...f, tiempoEstimado: e.target.value ? Number(e.target.value) : null }))}
+                  placeholder="ej. 2.5"
                   className="h-9"
                 />
               </div>
+              <div>
+                <Label className="text-xs" htmlFor="t-real">Tiempo real (h)</Label>
+                <Input
+                  id="t-real"
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.tiempoReal ?? ""}
+                  onChange={e => setForm(f => ({ ...f, tiempoReal: e.target.value ? Number(e.target.value) : null }))}
+                  placeholder="ej. 3"
+                  className="h-9"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs" htmlFor="t-notas">Notas</Label>
+              <Input
+                id="t-notas"
+                value={form.notas ?? ""}
+                onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
+                placeholder="Notas adicionales..."
+                className="h-9"
+              />
             </div>
 
             <div className="flex gap-2 justify-end pt-2">

@@ -73,6 +73,15 @@
     "responsable": {
       "type": "string"
     },
+    "area": {
+      "type": "string"
+    },
+    "tiempoEstimado": {
+      "type": "decimal"
+    },
+    "tiempoReal": {
+      "type": "decimal"
+    },
     "ticket": {
       "type": "relation",
       "relation": "manyToOne",
