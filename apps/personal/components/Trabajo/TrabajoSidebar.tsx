@@ -3,14 +3,13 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  CheckSquare, CalendarDays, Wallet, ChevronRight, Archive, Megaphone,
+  CheckSquare, Wallet, ChevronRight, Archive, Megaphone,
 } from "lucide-react"
 
 const NAV = [
-  { label: "Tareas",     href: "/trabajo/tareas",      icon: CheckSquare  },
-  { label: "Reuniones",  href: "/trabajo/reuniones",   icon: CalendarDays },
-  { label: "Pagos",      href: "/trabajo/pagos",       icon: Wallet       },
-  { label: "Inventario", href: "/trabajo/inventario",  icon: Archive      },
+  { label: "Tareas",     href: "/trabajo/tareas",     icon: CheckSquare },
+  { label: "Pagos",      href: "/trabajo/pagos",      icon: Wallet      },
+  { label: "Inventario", href: "/trabajo/inventario", icon: Archive     },
 ]
 
 export function TrabajoSidebar() {
