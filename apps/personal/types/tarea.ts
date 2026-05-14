@@ -19,8 +19,7 @@ export type TareaType = {
   progreso?:        number | null
   responsable?:     string | null
   area?:            string | null
-  tiempoEstimado?:  number | null
-  tiempoReal?:      number | null
+  fechaInicio?:     string | null
   ticket?:          { id: number; documentId: string; titulo: string } | null
   proyecto?:        { id: number; documentId: string; nombre: string } | null
   createdAt?:       string
@@ -40,8 +39,7 @@ export type TareaPayload = {
   progreso?:         number | null
   responsable?:      string | null
   area?:             string | null
-  tiempoEstimado?:   number | null
-  tiempoReal?:       number | null
+  fechaInicio?:      string | null
   ticket?:           { connect: [{ documentId: string }] } | { disconnect: [] } | null
   proyecto?:         { connect: [{ id: number }] } | null
 }

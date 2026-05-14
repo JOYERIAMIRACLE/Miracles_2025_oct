@@ -20,10 +20,11 @@ const ESTADOS: { key: EstadoTarea | "todas"; label: string }[] = [
   { key: "completada",  label: "Completadas" },
 ]
 
-type RangoFecha = "todas" | "hoy" | "semana" | "proximos7" | "vencidas" | "sin_fecha"
+type RangoFecha = "todas" | "hoy" | "semana" | "proximos7" | "vencidas" | "sin_fecha" | "en_curso"
 const RANGOS: { key: RangoFecha; label: string }[] = [
   { key: "todas",      label: "Todas las fechas" },
-  { key: "hoy",        label: "Hoy" },
+  { key: "en_curso",   label: "En curso hoy" },
+  { key: "hoy",        label: "Vence hoy" },
   { key: "semana",     label: "Esta semana" },
   { key: "proximos7",  label: "Próx. 7 días" },
   { key: "vencidas",   label: "Vencidas" },
@@ -113,7 +114,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     titulo: "", descripcion: "", ambito,
     estado: "pendiente", prioridad: "media",
     etiqueta: null, fechaVencimiento: null, notas: null, responsable: null,
-    area: null, tiempoEstimado: null, tiempoReal: null,
+    area: null, fechaInicio: null,
   })
 
   // Etiquetas únicas usadas para autocomplete
@@ -161,6 +162,14 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       .filter(t => {
         if (filtroRango === "todas") return true
         if (filtroRango === "sin_fecha") return !t.fechaVencimiento
+        if (filtroRango === "en_curso") {
+          const inicio = t.fechaInicio ? new Date(t.fechaInicio + "T00:00:00").getTime() : null
+          const fin    = t.fechaVencimiento ? new Date(t.fechaVencimiento + "T00:00:00").getTime() : null
+          if (!inicio && !fin) return false
+          const desde = inicio ?? -Infinity
+          const hasta = fin ?? Infinity
+          return desde <= hoyTime && hoyTime <= hasta && t.estado !== "completada"
+        }
         if (!t.fechaVencimiento) return false
         const venc = new Date(t.fechaVencimiento + "T00:00:00").getTime()
         if (filtroRango === "hoy")       return venc === hoyTime
@@ -205,7 +214,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       titulo: "", descripcion: "", ambito,
       estado: "pendiente", prioridad: "media",
       etiqueta: null, fechaVencimiento, notas: null, responsable: null,
-      area: null, tiempoEstimado: null, tiempoReal: null,
+      area: null, fechaInicio: null,
     })
     setModalOpen(true)
   }
@@ -218,8 +227,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       etiqueta: t.etiqueta, fechaVencimiento: t.fechaVencimiento,
       notas: t.notas, responsable: t.responsable ?? null,
       area: t.area ?? null,
-      tiempoEstimado: t.tiempoEstimado ?? null,
-      tiempoReal: t.tiempoReal ?? null,
+      fechaInicio: t.fechaInicio ?? null,
     })
     setModalOpen(true)
   }
@@ -586,7 +594,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       )}
                     </div>
 
-                    {(t.responsable || t.area || t.tiempoEstimado || t.tiempoReal || t.ticket) && (
+                    {(t.responsable || t.area || t.fechaInicio || t.ticket) && (
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {t.responsable && (
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -599,10 +607,17 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                             {t.area}
                           </span>
                         )}
-                        {(t.tiempoEstimado || t.tiempoReal) && (
-                          <span className={`text-[10px] flex items-center gap-1 ${t.tiempoReal && t.tiempoEstimado && t.tiempoReal > t.tiempoEstimado ? "text-red-500" : "text-muted-foreground"}`}>
+                        {t.fechaInicio && (
+                          <span className="text-[10px] flex items-center gap-1 text-muted-foreground">
                             <Clock size={9} />
-                            {t.tiempoReal ? `${t.tiempoReal}h` : ""}{t.tiempoEstimado ? `/${t.tiempoEstimado}h est` : ""}
+                            {fmtFecha(t.fechaInicio)}
+                            {t.fechaVencimiento && (() => {
+                              const dias = Math.round(
+                                (new Date(t.fechaVencimiento + "T00:00:00").getTime() -
+                                 new Date(t.fechaInicio + "T00:00:00").getTime()) / 86400000
+                              )
+                              return <> → {fmtFecha(t.fechaVencimiento)} · {dias}d</>
+                            })()}
                           </span>
                         )}
                         {t.ticket && (
@@ -699,7 +714,17 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs" htmlFor="t-fecha">Vencimiento</Label>
+                <Label className="text-xs" htmlFor="t-inicio">Fecha inicio</Label>
+                <Input
+                  id="t-inicio"
+                  type="date"
+                  value={form.fechaInicio ?? ""}
+                  onChange={e => setForm(f => ({ ...f, fechaInicio: e.target.value || null }))}
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-xs" htmlFor="t-fecha">Fecha fin</Label>
                 <Input
                   id="t-fecha"
                   type="date"
@@ -707,20 +732,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                   onChange={e => setForm(f => ({ ...f, fechaVencimiento: e.target.value || null }))}
                   className="h-9"
                 />
-              </div>
-              <div>
-                <Label className="text-xs" htmlFor="t-etiqueta">Etiqueta</Label>
-                <Input
-                  id="t-etiqueta"
-                  list="etiquetas-tarea"
-                  value={form.etiqueta ?? ""}
-                  onChange={e => setForm(f => ({ ...f, etiqueta: e.target.value || null }))}
-                  placeholder="trabajo, urgente, idea..."
-                  className="h-9"
-                />
-                <datalist id="etiquetas-tarea">
-                  {etiquetasUsadas.map(et => <option key={et} value={et} />)}
-                </datalist>
               </div>
             </div>
 
@@ -757,42 +768,29 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs" htmlFor="t-estimado">Tiempo estimado (h)</Label>
+                <Label className="text-xs" htmlFor="t-etiqueta">Etiqueta</Label>
                 <Input
-                  id="t-estimado"
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.tiempoEstimado ?? ""}
-                  onChange={e => setForm(f => ({ ...f, tiempoEstimado: e.target.value ? Number(e.target.value) : null }))}
-                  placeholder="ej. 2.5"
+                  id="t-etiqueta"
+                  list="etiquetas-tarea"
+                  value={form.etiqueta ?? ""}
+                  onChange={e => setForm(f => ({ ...f, etiqueta: e.target.value || null }))}
+                  placeholder="campaña, urgente..."
                   className="h-9"
                 />
+                <datalist id="etiquetas-tarea">
+                  {etiquetasUsadas.map(et => <option key={et} value={et} />)}
+                </datalist>
               </div>
               <div>
-                <Label className="text-xs" htmlFor="t-real">Tiempo real (h)</Label>
+                <Label className="text-xs" htmlFor="t-notas">Notas</Label>
                 <Input
-                  id="t-real"
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.tiempoReal ?? ""}
-                  onChange={e => setForm(f => ({ ...f, tiempoReal: e.target.value ? Number(e.target.value) : null }))}
-                  placeholder="ej. 3"
+                  id="t-notas"
+                  value={form.notas ?? ""}
+                  onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
+                  placeholder="Notas adicionales..."
                   className="h-9"
                 />
               </div>
-            </div>
-
-            <div>
-              <Label className="text-xs" htmlFor="t-notas">Notas</Label>
-              <Input
-                id="t-notas"
-                value={form.notas ?? ""}
-                onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
-                placeholder="Notas adicionales..."
-                className="h-9"
-              />
             </div>
 
             <div className="flex gap-2 justify-end pt-2">

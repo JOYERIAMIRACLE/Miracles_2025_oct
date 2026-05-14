@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useRef, useLayoutEffect } from "react"
 import { TareaType, EstadoTarea } from "@/types/tarea"
 
 const ESTADO_COLOR: Record<EstadoTarea, string> = {
@@ -19,14 +19,25 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
   )
 }
 
+function Fill({ pct, color }: { pct: number; color: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => { if (ref.current) ref.current.style.width = `${pct}%` }, [pct])
+  return <div ref={ref} className={`h-full rounded-full ${color}`} />
+}
+
 function HBar({ value, max, color = "bg-blue-500" }: { value: number; max: number; color?: string }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-      <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      <Fill pct={pct} color={color} />
     </div>
   )
 }
+
+const diasEntre = (a: string, b: string) =>
+  Math.round((new Date(b + "T00:00:00").getTime() - new Date(a + "T00:00:00").getTime()) / 86400000)
+
+const fmtDias = (d: number) => d === 1 ? "1 día" : `${d} días`
 
 type PeriodFilter = "todo" | "mes" | "semana"
 
@@ -34,6 +45,9 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
   const [periodo, setPeriodo] = useState<PeriodFilter>("todo")
 
   const hoyMs = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime() }, [])
+  const hoyIso = useMemo(() => {
+    const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
+  }, [])
 
   const tareasFiltradas = useMemo(() => {
     if (periodo === "todo") return tareas
@@ -56,8 +70,21 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
   const progresoPromedio = total
     ? Math.round(tareasFiltradas.reduce((s, t) => s + (t.progreso ?? 0), 0) / total)
     : 0
-  const totalEstimado = tareasFiltradas.reduce((s, t) => s + (t.tiempoEstimado ?? 0), 0)
-  const totalReal     = tareasFiltradas.reduce((s, t) => s + (t.tiempoReal ?? 0), 0)
+
+  // Duración promedio (para tareas con fechaInicio + fechaVencimiento)
+  const conRango = tareasFiltradas.filter(t => t.fechaInicio && t.fechaVencimiento)
+  const duracionPromedio = conRango.length
+    ? Math.round(conRango.reduce((s, t) => s + diasEntre(t.fechaInicio!, t.fechaVencimiento!), 0) / conRango.length)
+    : null
+
+  // Tareas en curso hoy
+  const enCursoHoy = tareasFiltradas.filter(t => {
+    if (t.estado === "completada") return false
+    const desde = t.fechaInicio ?? null
+    const hasta = t.fechaVencimiento ?? null
+    if (!desde && !hasta) return false
+    return (desde ? desde <= hoyIso : true) && (hasta ? hoyIso <= hasta : true)
+  }).length
 
   // ── Por responsable ─────────────────────────────────────────────────────────
   const porResponsable = useMemo(() => {
@@ -68,18 +95,22 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
       map.get(key)!.push(t)
     })
     return [...map.entries()]
-      .map(([nombre, ts]) => ({
-        nombre,
-        total: ts.length,
-        completadas: ts.filter(t => t.estado === "completada").length,
-        enProgreso:  ts.filter(t => t.estado === "en_progreso").length,
-        pendientes:  ts.filter(t => t.estado === "pendiente").length,
-        estimado: ts.reduce((s, t) => s + (t.tiempoEstimado ?? 0), 0),
-        real:     ts.reduce((s, t) => s + (t.tiempoReal ?? 0), 0),
-        progreso: ts.length
-          ? Math.round(ts.reduce((s, t) => s + (t.progreso ?? 0), 0) / ts.length)
-          : 0,
-      }))
+      .map(([nombre, ts]) => {
+        const conDur = ts.filter(t => t.fechaInicio && t.fechaVencimiento)
+        return {
+          nombre,
+          total: ts.length,
+          completadas: ts.filter(t => t.estado === "completada").length,
+          enProgreso:  ts.filter(t => t.estado === "en_progreso").length,
+          pendientes:  ts.filter(t => t.estado === "pendiente").length,
+          progreso: ts.length
+            ? Math.round(ts.reduce((s, t) => s + (t.progreso ?? 0), 0) / ts.length)
+            : 0,
+          durPromedio: conDur.length
+            ? Math.round(conDur.reduce((s, t) => s + diasEntre(t.fechaInicio!, t.fechaVencimiento!), 0) / conDur.length)
+            : null,
+        }
+      })
       .sort((a, b) => b.total - a.total)
   }, [tareasFiltradas])
 
@@ -121,19 +152,23 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
 
   const maxEtiqueta = porEtiqueta.reduce((m, e) => Math.max(m, e.total), 0)
 
-  // ── Tiempo estimado vs real ───────────────────────────────────────────────
-  const conTiempo = useMemo(() =>
+  // ── Duración por tarea (tareas con rango definido) ────────────────────────
+  const tareasConRango = useMemo(() =>
     tareasFiltradas
-      .filter(t => t.tiempoEstimado || t.tiempoReal)
+      .filter(t => t.fechaInicio && t.fechaVencimiento)
       .map(t => ({
         ...t,
-        desviacion: (t.tiempoReal ?? 0) - (t.tiempoEstimado ?? 0),
-        pct: t.tiempoEstimado
-          ? Math.round(((t.tiempoReal ?? 0) / t.tiempoEstimado) * 100)
-          : null,
+        duracion: diasEntre(t.fechaInicio!, t.fechaVencimiento!),
+        vencida: t.fechaVencimiento! < hoyIso && t.estado !== "completada",
       }))
-      .sort((a, b) => b.desviacion - a.desviacion),
-  [tareasFiltradas])
+      .sort((a, b) => {
+        if (a.fechaInicio! < b.fechaInicio!) return -1
+        if (a.fechaInicio! > b.fechaInicio!) return 1
+        return 0
+      }),
+  [tareasFiltradas, hoyIso])
+
+  const maxDuracion = tareasConRango.reduce((m, t) => Math.max(m, t.duracion), 0)
 
   // ── Por fechas (completadas por mes) ─────────────────────────────────────
   const porMes = useMemo(() => {
@@ -152,7 +187,10 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
 
   const maxMes = porMes.reduce((m, [, c]) => Math.max(m, c), 0)
 
-  const fmtH = (h: number) => h === 0 ? "—" : `${h % 1 === 0 ? h : h.toFixed(1)} h`
+  const fmtFechaCort = (iso: string) => {
+    const d = new Date(iso + "T00:00:00")
+    return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
+  }
 
   return (
     <div className="space-y-6">
@@ -183,9 +221,9 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
         <StatCard label="Pendientes" value={pendientes} />
         <StatCard label="Progreso prom." value={`${progresoPromedio}%`} />
         <StatCard
-          label="Horas est / real"
-          value={`${fmtH(totalEstimado)}`}
-          sub={`Real: ${fmtH(totalReal)}`}
+          label="En curso hoy"
+          value={enCursoHoy}
+          sub={duracionPromedio !== null ? `Dur. prom. ${fmtDias(duracionPromedio)}` : undefined}
         />
       </div>
 
@@ -194,9 +232,9 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
         <h3 className="text-sm font-semibold">Tasa de completado</h3>
         <div className="flex items-center gap-3">
           <div className="flex-1 h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
-            <div className="h-full bg-emerald-500 transition-all" style={{ width: `${tasaCompletado}%` }} />
-            <div className="h-full bg-blue-500 transition-all"    style={{ width: `${total ? Math.round(enProgreso / total * 100) : 0}%` }} />
-            <div className="h-full bg-amber-500 transition-all"   style={{ width: `${total ? Math.round(pendientes / total * 100) : 0}%` }} />
+            <Fill pct={tasaCompletado} color="bg-emerald-500" />
+            <Fill pct={total ? Math.round(enProgreso / total * 100) : 0} color="bg-blue-500" />
+            <Fill pct={total ? Math.round(pendientes / total * 100) : 0} color="bg-amber-500" />
           </div>
           <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 w-10 text-right">{tasaCompletado}%</span>
         </div>
@@ -226,17 +264,13 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground shrink-0">
                       <span className="text-emerald-600 dark:text-emerald-400">{r.completadas} ✓</span>
                       <span>{r.progreso}% prog</span>
-                      {(r.estimado > 0 || r.real > 0) && (
-                        <span>{fmtH(r.real)}/{fmtH(r.estimado)}</span>
+                      {r.durPromedio !== null && (
+                        <span>{fmtDias(r.durPromedio)} prom</span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <HBar
-                      value={r.completadas}
-                      max={r.total}
-                      color="bg-emerald-500"
-                    />
+                    <HBar value={r.completadas} max={r.total} color="bg-emerald-500" />
                     <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">{r.total} t</span>
                   </div>
                 </div>
@@ -257,7 +291,7 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                   <span className="text-xs truncate w-28 shrink-0" title={a.area}>{a.area}</span>
                   <HBar value={a.total} max={maxArea} color="bg-violet-500" />
                   <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">{a.total}</span>
-                  <span className="text-[10px] text-emerald-500 w-4 shrink-0">{a.completadas > 0 ? `${Math.round(a.completadas/a.total*100)}%` : ""}</span>
+                  <span className="text-[10px] text-emerald-500 w-6 shrink-0">{a.completadas > 0 ? `${Math.round(a.completadas/a.total*100)}%` : ""}</span>
                 </div>
               ))}
             </div>
@@ -276,7 +310,7 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                   <span className="text-xs truncate w-28 shrink-0" title={e.etiqueta}>{e.etiqueta}</span>
                   <HBar value={e.total} max={maxEtiqueta} color="bg-amber-500" />
                   <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">{e.total}</span>
-                  <span className="text-[10px] text-emerald-500 w-4 shrink-0">{e.completadas > 0 ? `${Math.round(e.completadas/e.total*100)}%` : ""}</span>
+                  <span className="text-[10px] text-emerald-500 w-6 shrink-0">{e.completadas > 0 ? `${Math.round(e.completadas/e.total*100)}%` : ""}</span>
                 </div>
               ))}
             </div>
@@ -307,52 +341,37 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
         </div>
       </div>
 
-      {/* Tiempo estimado vs real */}
-      {conTiempo.length > 0 && (
+      {/* Duración por tarea (gantt simple) */}
+      {tareasConRango.length > 0 && (
         <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm font-semibold mb-3">Tiempo estimado vs real</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-[10px] text-muted-foreground uppercase border-b border-zinc-200 dark:border-zinc-800">
-                  <th className="text-left pb-2 font-medium">Tarea</th>
-                  <th className="text-left pb-2 font-medium">Responsable</th>
-                  <th className="text-right pb-2 font-medium">Estimado</th>
-                  <th className="text-right pb-2 font-medium">Real</th>
-                  <th className="text-right pb-2 font-medium">Desviación</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conTiempo.map(t => {
-                  const over = t.desviacion > 0
-                  const under = t.desviacion < 0
-                  return (
-                    <tr key={t.documentId} className="border-b border-zinc-100 dark:border-zinc-800/60 hover:bg-muted/30">
-                      <td className="py-2 max-w-[180px] truncate pr-3" title={t.titulo}>{t.titulo}</td>
-                      <td className="py-2 text-muted-foreground pr-3">{t.responsable ?? "—"}</td>
-                      <td className="py-2 text-right text-muted-foreground">{fmtH(t.tiempoEstimado ?? 0)}</td>
-                      <td className="py-2 text-right">{fmtH(t.tiempoReal ?? 0)}</td>
-                      <td className={`py-2 text-right font-medium ${over ? "text-red-500" : under ? "text-emerald-500" : "text-muted-foreground"}`}>
-                        {t.desviacion === 0 ? "=" : over ? `+${fmtH(t.desviacion)}` : fmtH(t.desviacion)}
-                        {t.pct !== null && t.pct !== 100 && (
-                          <span className="ml-1 text-[10px] opacity-70">({t.pct}%)</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="text-[10px] font-semibold border-t border-zinc-200 dark:border-zinc-800">
-                  <td colSpan={2} className="pt-2 text-muted-foreground">Total</td>
-                  <td className="pt-2 text-right text-muted-foreground">{fmtH(totalEstimado)}</td>
-                  <td className="pt-2 text-right">{fmtH(totalReal)}</td>
-                  <td className={`pt-2 text-right ${totalReal > totalEstimado ? "text-red-500" : "text-emerald-500"}`}>
-                    {totalReal === totalEstimado ? "=" : totalReal > totalEstimado ? `+${fmtH(totalReal - totalEstimado)}` : fmtH(totalReal - totalEstimado)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+          <h3 className="text-sm font-semibold mb-3">Duración de tareas (fecha inicio → fin)</h3>
+          <div className="space-y-2">
+            {tareasConRango.map(t => (
+              <div key={t.documentId} className="flex items-center gap-3">
+                <div className="w-44 shrink-0">
+                  <p className="text-xs truncate font-medium" title={t.titulo}>{t.titulo}</p>
+                  <p className="text-[10px] text-muted-foreground">{t.responsable ?? "—"}</p>
+                </div>
+                <div className="flex-1 flex items-center gap-2">
+                  <HBar
+                    value={t.duracion}
+                    max={maxDuracion}
+                    color={
+                      t.estado === "completada" ? "bg-emerald-500"
+                      : t.vencida ? "bg-red-500"
+                      : t.estado === "en_progreso" ? "bg-blue-500"
+                      : "bg-amber-400"
+                    }
+                  />
+                  <span className="text-[10px] text-muted-foreground shrink-0 w-16 text-right">
+                    {fmtFechaCort(t.fechaInicio!)} → {fmtFechaCort(t.fechaVencimiento!)}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground shrink-0 w-12 text-right">
+                    {fmtDias(t.duracion)}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

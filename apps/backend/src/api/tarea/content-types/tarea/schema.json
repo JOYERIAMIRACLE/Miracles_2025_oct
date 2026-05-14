@@ -76,11 +76,8 @@
     "area": {
       "type": "string"
     },
-    "tiempoEstimado": {
-      "type": "decimal"
-    },
-    "tiempoReal": {
-      "type": "decimal"
+    "fechaInicio": {
+      "type": "date"
     },
     "ticket": {
       "type": "relation",
