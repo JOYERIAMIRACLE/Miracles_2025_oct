@@ -102,6 +102,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>("")
   const [filtroPrioridad, setFiltroPrioridad] = useState<PrioridadTarea | "">("")
   const [filtroRango, setFiltroRango] = useState<RangoFecha>("todas")
+  const [filtroResponsable, setFiltroResponsable] = useState("")
   const [busqueda, setBusqueda] = useState("")
   const [mesCalendario, setMesCalendario] = useState(new Date())
   const [modalOpen, setModalOpen] = useState(false)
@@ -173,7 +174,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         const bVenc = b.fechaVencimiento ? new Date(b.fechaVencimiento).getTime() : Infinity
         return aVenc - bVenc
       })
-  }, [tareas, filtro, filtroEtiqueta, filtroPrioridad, filtroRango, busqueda])
+  }, [tareas, filtro, filtroEtiqueta, filtroPrioridad, filtroResponsable, filtroRango, busqueda])
 
   const stats = {
     total:       tareas.length,
@@ -188,8 +189,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     tareas.forEach(t => { if (t.responsable) s.add(t.responsable) })
     return [...s].sort()
   }, [tareas])
-
-  const [filtroResponsable, setFiltroResponsable] = useState("")
 
   const abrirCrear = (fechaVencimiento: string | null = null) => {
     setEditando(null)
