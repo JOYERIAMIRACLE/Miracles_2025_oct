@@ -1,0 +1,76 @@
+{
+  "kind": "collectionType",
+  "collectionName": "campanas",
+  "info": {
+    "singularName": "campana",
+    "pluralName": "campanas",
+    "displayName": "campana"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "unidadNegocio": {
+      "type": "string",
+      "required": true
+    },
+    "mes": {
+      "type": "enumeration",
+      "enum": [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      ],
+      "required": true
+    },
+    "anio": {
+      "type": "integer",
+      "default": 2025
+    },
+    "categoria": {
+      "type": "string"
+    },
+    "atributos": {
+      "type": "text"
+    },
+    "semana1Partes": {
+      "type": "text"
+    },
+    "semana1Titulo": {
+      "type": "string"
+    },
+    "semana1Archivo": {
+      "type": "string"
+    },
+    "semana2Partes": {
+      "type": "text"
+    },
+    "semana2Titulo": {
+      "type": "string"
+    },
+    "semana2Archivo": {
+      "type": "string"
+    },
+    "semana3Partes": {
+      "type": "text"
+    },
+    "semana3Titulo": {
+      "type": "string"
+    },
+    "semana3Archivo": {
+      "type": "string"
+    },
+    "semana4Partes": {
+      "type": "text"
+    },
+    "semana4Titulo": {
+      "type": "string"
+    },
+    "semana4Archivo": {
+      "type": "string"
+    },
+    "notas": {
+      "type": "text"
+    }
+  }
+}

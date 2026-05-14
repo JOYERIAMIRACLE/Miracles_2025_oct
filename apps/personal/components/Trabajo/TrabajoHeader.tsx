@@ -8,8 +8,9 @@ import { TrabajoSidebar } from "./TrabajoSidebar"
 
 const TITLES: Record<string, string> = {
   "/trabajo/tareas":     "Tareas",
-  "/trabajo/pagos":      "Pagos",
-  "/trabajo/inventario": "Inventario",
+  "/trabajo/campanas":   "Campañas",
+  "/trabajo/pagos":      "Registro de gastos",
+  "/trabajo/inventario": "Promocionales e impresos",
 }
 
 export function TrabajoHeader() {
