@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
-import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, AlertCircle, Sun, Sunrise, ChevronLeft, ChevronRight, BarChart2, Clock } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock } from "lucide-react"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -122,21 +122,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     const set = new Set<string>()
     tareas.forEach(t => { if (t.etiqueta) set.add(t.etiqueta) })
     return [...set].sort()
-  }, [tareas])
-
-  // Tareas accionables para Vista "Hoy"
-  const tareasHoy = useMemo(() => {
-    const hoyStr = isoHoy()
-    const result = { vencidas: [] as TareaType[], hoy: [] as TareaType[], manana: [] as TareaType[] }
-    tareas.forEach(t => {
-      if (t.estado === "completada" || !t.fechaVencimiento) return
-      const dias = diasHastaVencimiento(t.fechaVencimiento)
-      if (dias === null) return
-      if (dias < 0) result.vencidas.push(t)
-      else if (dias === 0) result.hoy.push(t)
-      else if (dias === 1) result.manana.push(t)
-    })
-    return result
   }, [tareas])
 
   const filtradas = useMemo(() => {
@@ -365,38 +350,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         </div>
       </div>
 
-      {/* Vista "Hoy" — solo si hay accionables */}
-      {(tareasHoy.vencidas.length > 0 || tareasHoy.hoy.length > 0 || tareasHoy.manana.length > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-          <ResumenHoyCard
-            label="Vencidas"
-            count={tareasHoy.vencidas.length}
-            tareas={tareasHoy.vencidas}
-            icon={AlertCircle}
-            tone="red"
-            onClick={t => abrirEditar(t)}
-            onFilter={() => { setFiltroRango("vencidas"); setFiltro("todas") }}
-          />
-          <ResumenHoyCard
-            label="Hoy"
-            count={tareasHoy.hoy.length}
-            tareas={tareasHoy.hoy}
-            icon={Sun}
-            tone="blue"
-            onClick={t => abrirEditar(t)}
-            onFilter={() => { setFiltroRango("hoy"); setFiltro("todas") }}
-          />
-          <ResumenHoyCard
-            label="Mañana"
-            count={tareasHoy.manana.length}
-            tareas={tareasHoy.manana}
-            icon={Sunrise}
-            tone="slate"
-            onClick={t => abrirEditar(t)}
-            onFilter={() => { /* no filtro directo, scroll a lista */ }}
-          />
-        </div>
-      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
@@ -803,55 +756,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
-
-function ResumenHoyCard({
-  label, count, tareas, icon: Icon, tone, onClick, onFilter,
-}: {
-  label: string
-  count: number
-  tareas: TareaType[]
-  icon: React.ElementType
-  tone: "red" | "blue" | "slate"
-  onClick: (t: TareaType) => void
-  onFilter: () => void
-}) {
-  const toneClass: Record<string, { border: string; bg: string; text: string; iconText: string }> = {
-    red:   { border: "border-red-300 dark:border-red-900/50",     bg: "bg-red-50/40 dark:bg-red-950/20",     text: "text-red-700 dark:text-red-300",     iconText: "text-red-500" },
-    blue:  { border: "border-blue-300 dark:border-blue-900/50",   bg: "bg-blue-50/40 dark:bg-blue-950/20",   text: "text-blue-700 dark:text-blue-300",   iconText: "text-blue-500" },
-    slate: { border: "border-slate-300 dark:border-slate-800",    bg: "bg-slate-50/40 dark:bg-slate-900/40", text: "text-slate-700 dark:text-slate-300", iconText: "text-slate-500" },
-  }
-  const c = toneClass[tone]
-  return (
-    <div className={`rounded-xl p-3 border ${c.border} ${c.bg}`}>
-      <button type="button" onClick={onFilter} className="w-full flex items-center justify-between mb-2 hover:opacity-80 transition">
-        <div className="flex items-center gap-1.5">
-          <Icon size={14} className={c.iconText} />
-          <p className={`text-[10px] font-semibold uppercase ${c.text}`}>{label}</p>
-        </div>
-        <span className={`text-lg font-bold ${c.text}`}>{count}</span>
-      </button>
-      <ul className="space-y-1">
-        {tareas.slice(0, 3).map(t => (
-          <li key={t.documentId}>
-            <button
-              type="button"
-              onClick={() => onClick(t)}
-              className="w-full text-left text-xs flex items-center gap-1.5 truncate hover:underline"
-            >
-              <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${PRIORIDAD_DOT[t.prioridad]}`} />
-              <span className="truncate">{t.titulo}</span>
-            </button>
-          </li>
-        ))}
-        {tareas.length > 3 && (
-          <li className="text-[10px] text-muted-foreground pl-3">+{tareas.length - 3} más</li>
-        )}
-      </ul>
     </div>
   )
 }
