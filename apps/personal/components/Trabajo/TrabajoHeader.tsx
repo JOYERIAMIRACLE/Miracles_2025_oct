@@ -7,10 +7,7 @@ import { useState } from "react"
 import { TrabajoSidebar } from "./TrabajoSidebar"
 
 const TITLES: Record<string, string> = {
-  "/trabajo":             "Dashboard",
   "/trabajo/tareas":      "Tareas",
-  "/trabajo/proyectos":   "Proyectos",
-  "/trabajo/clientes":    "Clientes",
   "/trabajo/reuniones":   "Reuniones",
   "/trabajo/pagos":       "Pagos",
   "/trabajo/inventario":  "Inventario",
@@ -18,7 +15,7 @@ const TITLES: Record<string, string> = {
 
 export function TrabajoHeader() {
   const pathname = usePathname()
-  const title = TITLES[pathname] ?? "Trabajo"
+  const title = TITLES[pathname] ?? "Marketing team"
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (

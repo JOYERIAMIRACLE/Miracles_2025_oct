@@ -4,7 +4,7 @@ import { TrabajoSidebar } from "@/components/Trabajo/TrabajoSidebar"
 import { TrabajoHeader } from "@/components/Trabajo/TrabajoHeader"
 
 export const metadata: Metadata = {
-  title: { absolute: "Trabajo" },
+  title: { absolute: "Marketing team" },
 }
 
 export default function TrabajoLayout({ children }: { children: ReactNode }) {

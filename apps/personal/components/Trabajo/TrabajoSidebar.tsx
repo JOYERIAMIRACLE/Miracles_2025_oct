@@ -3,18 +3,14 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, CheckSquare, FolderKanban,
-  Users, CalendarDays, Wallet, ChevronRight, Archive,
+  CheckSquare, CalendarDays, Wallet, ChevronRight, Archive, Megaphone,
 } from "lucide-react"
 
 const NAV = [
-  { label: "Dashboard",  href: "/trabajo",            icon: LayoutDashboard },
-  { label: "Tareas",     href: "/trabajo/tareas",      icon: CheckSquare     },
-  { label: "Proyectos",  href: "/trabajo/proyectos",   icon: FolderKanban    },
-  { label: "Clientes",   href: "/trabajo/clientes",    icon: Users           },
-  { label: "Reuniones",  href: "/trabajo/reuniones",   icon: CalendarDays    },
-  { label: "Pagos",      href: "/trabajo/pagos",       icon: Wallet          },
-  { label: "Inventario", href: "/trabajo/inventario",  icon: Archive         },
+  { label: "Tareas",     href: "/trabajo/tareas",      icon: CheckSquare  },
+  { label: "Reuniones",  href: "/trabajo/reuniones",   icon: CalendarDays },
+  { label: "Pagos",      href: "/trabajo/pagos",       icon: Wallet       },
+  { label: "Inventario", href: "/trabajo/inventario",  icon: Archive      },
 ]
 
 export function TrabajoSidebar() {
@@ -25,15 +21,15 @@ export function TrabajoSidebar() {
       {/* Logo */}
       <div className="h-14 flex items-center gap-3 px-5 border-b border-slate-800/60 shrink-0">
         <div className="h-7 w-7 rounded-lg bg-linear-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0">
-          <FolderKanban className="h-3.5 w-3.5 text-white" />
+          <Megaphone className="h-3.5 w-3.5 text-white" />
         </div>
-        <span className="text-sm font-bold text-slate-100">Trabajo</span>
+        <span className="text-sm font-bold text-slate-100">Marketing team</span>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {NAV.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || (href !== "/trabajo" && pathname.startsWith(href))
+          const active = pathname === href || pathname.startsWith(href)
           return (
             <Link
               key={href}
@@ -55,7 +51,7 @@ export function TrabajoSidebar() {
 
       {/* Footer */}
       <div className="px-4 py-3 border-t border-slate-800/60">
-        <p className="text-[10px] text-slate-600">Miracles · Trabajo</p>
+        <p className="text-[10px] text-slate-600">Miracles · Marketing team</p>
       </div>
     </div>
   )

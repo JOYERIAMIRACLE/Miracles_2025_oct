@@ -45,10 +45,10 @@ const APPS: AppEntry[] = [
     status: "active",
   },
   {
-    name: "Trabajo",
-    description: "Tareas · Clientes · Proyectos",
+    name: "Marketing team",
+    description: "Tareas · Reuniones · Inventario",
     icon: Briefcase,
-    href: "/trabajo",
+    href: "/trabajo/tareas",
     color: "blue",
     status: "active",
   },
