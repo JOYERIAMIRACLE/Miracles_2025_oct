@@ -1,0 +1,61 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tickets",
+  "info": {
+    "singularName": "ticket",
+    "pluralName": "tickets",
+    "displayName": "ticket"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "titulo": {
+      "type": "string",
+      "required": true
+    },
+    "descripcion": {
+      "type": "text"
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": ["Diseño", "Landing", "Campaña", "Contenido", "Soporte", "Otro"],
+      "default": "Otro"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["nuevo", "en_revision", "en_progreso", "entregado", "cerrado"],
+      "default": "nuevo"
+    },
+    "prioridad": {
+      "type": "enumeration",
+      "enum": ["baja", "media", "alta", "urgente"],
+      "default": "media"
+    },
+    "solicitante": {
+      "type": "string"
+    },
+    "responsable": {
+      "type": "string"
+    },
+    "estimacion": {
+      "type": "decimal"
+    },
+    "tiempoReal": {
+      "type": "decimal"
+    },
+    "fechaCierre": {
+      "type": "datetime"
+    },
+    "notas": {
+      "type": "text"
+    },
+    "tareas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tarea.tarea",
+      "mappedBy": "ticket"
+    }
+  }
+}

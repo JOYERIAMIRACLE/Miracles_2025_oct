@@ -69,6 +69,15 @@
       "min": 0,
       "max": 100,
       "default": 0
+    },
+    "responsable": {
+      "type": "string"
+    },
+    "ticket": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::ticket.ticket",
+      "inversedBy": "tareas"
     }
   }
 }

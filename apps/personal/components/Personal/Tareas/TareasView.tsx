@@ -110,7 +110,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [form, setForm] = useState<TareaPayload>({
     titulo: "", descripcion: "", ambito,
     estado: "pendiente", prioridad: "media",
-    etiqueta: null, fechaVencimiento: null, notas: null,
+    etiqueta: null, fechaVencimiento: null, notas: null, responsable: null,
   })
 
   // Etiquetas únicas usadas para autocomplete
@@ -148,6 +148,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       .filter(t => filtro === "todas" || t.estado === filtro)
       .filter(t => !filtroEtiqueta || t.etiqueta === filtroEtiqueta)
       .filter(t => !filtroPrioridad || t.prioridad === filtroPrioridad)
+      .filter(t => !filtroResponsable || t.responsable === filtroResponsable)
       .filter(t => {
         if (!busq) return true
         return t.titulo.toLowerCase().includes(busq) ||
@@ -181,12 +182,21 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     completadas: tareas.filter(t => t.estado === "completada").length,
   }
 
+  // Responsables usados para autocomplete
+  const responsablesUsados = useMemo(() => {
+    const s = new Set<string>()
+    tareas.forEach(t => { if (t.responsable) s.add(t.responsable) })
+    return [...s].sort()
+  }, [tareas])
+
+  const [filtroResponsable, setFiltroResponsable] = useState("")
+
   const abrirCrear = (fechaVencimiento: string | null = null) => {
     setEditando(null)
     setForm({
       titulo: "", descripcion: "", ambito,
       estado: "pendiente", prioridad: "media",
-      etiqueta: null, fechaVencimiento, notas: null,
+      etiqueta: null, fechaVencimiento, notas: null, responsable: null,
     })
     setModalOpen(true)
   }
@@ -196,7 +206,8 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     setForm({
       titulo: t.titulo, descripcion: t.descripcion, ambito: t.ambito,
       estado: t.estado, prioridad: t.prioridad,
-      etiqueta: t.etiqueta, fechaVencimiento: t.fechaVencimiento, notas: t.notas,
+      etiqueta: t.etiqueta, fechaVencimiento: t.fechaVencimiento,
+      notas: t.notas, responsable: t.responsable ?? null,
     })
     setModalOpen(true)
   }
@@ -279,10 +290,10 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   }, [tareas])
 
   const limpiarFiltros = () => {
-    setFiltro("todas"); setFiltroEtiqueta(""); setFiltroPrioridad(""); setFiltroRango("todas"); setBusqueda("")
+    setFiltro("todas"); setFiltroEtiqueta(""); setFiltroPrioridad(""); setFiltroRango("todas"); setBusqueda(""); setFiltroResponsable("")
   }
 
-  const hayFiltrosActivos = filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim()
+  const hayFiltrosActivos = filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim() || filtroResponsable
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -438,6 +449,18 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               </select>
             )}
 
+            {responsablesUsados.length > 0 && (
+              <select
+                title="Filtrar por responsable"
+                value={filtroResponsable}
+                onChange={e => setFiltroResponsable(e.target.value)}
+                className="text-xs px-2 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background"
+              >
+                <option value="">Todos los responsables</option>
+                {responsablesUsados.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            )}
+
             {hayFiltrosActivos && (
               <button
                 type="button"
@@ -539,6 +562,22 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         </span>
                       )}
                     </div>
+
+                    {(t.responsable || t.ticket) && (
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        {t.responsable && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            {t.responsable}
+                          </span>
+                        )}
+                        {t.ticket && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
+                            🎫 {t.ticket.titulo}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     <ProgresoBar
                       value={t.progreso ?? 0}
@@ -646,15 +685,31 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               </div>
             </div>
 
-            <div>
-              <Label className="text-xs" htmlFor="t-notas">Notas</Label>
-              <textarea
-                id="t-notas"
-                value={form.notas ?? ""}
-                onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
-                className="w-full min-h-[50px] text-sm rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2"
-                placeholder="Notas adicionales..."
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs" htmlFor="t-responsable">Responsable</Label>
+                <Input
+                  id="t-responsable"
+                  list="responsables-tarea"
+                  value={form.responsable ?? ""}
+                  onChange={e => setForm(f => ({ ...f, responsable: e.target.value || null }))}
+                  placeholder="Quién la realiza"
+                  className="h-9"
+                />
+                <datalist id="responsables-tarea">
+                  {responsablesUsados.map(r => <option key={r} value={r} />)}
+                </datalist>
+              </div>
+              <div>
+                <Label className="text-xs" htmlFor="t-notas">Notas</Label>
+                <Input
+                  id="t-notas"
+                  value={form.notas ?? ""}
+                  onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
+                  placeholder="Notas adicionales..."
+                  className="h-9"
+                />
+              </div>
             </div>
 
             <div className="flex gap-2 justify-end pt-2">

@@ -3,7 +3,7 @@ import { TareaType, AmbitoTarea } from "@/types/tarea"
 
 export function useGetTareas(ambito?: AmbitoTarea) {
   const filterStr = ambito ? `&filters[ambito][$eq]=${ambito}` : ""
-  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tareas?pagination[pageSize]=200&sort=createdAt:desc${filterStr}`
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tareas?pagination[pageSize]=200&sort=createdAt:desc${filterStr}&populate[ticket][fields][0]=titulo&populate[ticket][fields][1]=documentId`
   const [tareas, setTareas]   = useState<TareaType[]>([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string>("")

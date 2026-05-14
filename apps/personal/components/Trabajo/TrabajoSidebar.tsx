@@ -4,11 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, CheckSquare, FolderKanban,
-  Users, CalendarDays, Wallet, ChevronRight, Archive,
+  Users, CalendarDays, Wallet, ChevronRight, Archive, Ticket,
 } from "lucide-react"
 
 const NAV = [
   { label: "Dashboard",  href: "/trabajo",            icon: LayoutDashboard },
+  { label: "Tickets",    href: "/trabajo/tickets",     icon: Ticket          },
   { label: "Tareas",     href: "/trabajo/tareas",      icon: CheckSquare     },
   { label: "Proyectos",  href: "/trabajo/proyectos",   icon: FolderKanban    },
   { label: "Clientes",   href: "/trabajo/clientes",    icon: Users           },
