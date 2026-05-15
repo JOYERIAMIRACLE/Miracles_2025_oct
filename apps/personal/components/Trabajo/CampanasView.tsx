@@ -1,44 +1,66 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, Pencil, Trash2, X, Check, ExternalLink, ChevronDown, ChevronUp } from "lucide-react"
+import {
+  Plus, Pencil, Trash2, X, Check,
+  ExternalLink, ChevronDown, ChevronUp,
+  ArrowUp, ArrowDown,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useGetCampanas } from "@/api/campana/getCampanas"
 import { createCampana, updateCampana, deleteCampana } from "@/api/campana/mutateCampana"
-import { CampanaType, CampanaPayload, MESES, MesCampana } from "@/types/campana"
+import { CampanaType, CampanaPayload, MESES, MesCampana, TipoCampana } from "@/types/campana"
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const SEMANAS = [1, 2, 3, 4] as const
 type NSemana = typeof SEMANAS[number]
 
-const SEMANA_KEY = {
-  partes:  (n: NSemana) => `semana${n}Partes`  as keyof CampanaPayload,
-  titulo:  (n: NSemana) => `semana${n}Titulo`  as keyof CampanaPayload,
-  archivo: (n: NSemana) => `semana${n}Archivo` as keyof CampanaPayload,
-}
-
 const ANIO_ACTUAL = new Date().getFullYear()
 
-const emptyForm = (): CampanaPayload => ({
-  unidadNegocio: "",
-  mes: "Enero",
-  anio: ANIO_ACTUAL,
-  categoria: null,
-  atributos: null,
-  semana1Partes: null, semana1Titulo: null, semana1Archivo: null,
-  semana2Partes: null, semana2Titulo: null, semana2Archivo: null,
-  semana3Partes: null, semana3Titulo: null, semana3Archivo: null,
-  semana4Partes: null, semana4Titulo: null, semana4Archivo: null,
-  notas: null,
-})
+const fmtFecha = (iso: string | null) => {
+  if (!iso) return null
+  const d = new Date(iso + "T00:00:00")
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+}
 
-// Convierte texto multi-línea en lista de partes
-function ListaPartes({ texto }: { texto: string | null }) {
-  if (!texto?.trim()) return <p className="text-[11px] text-slate-500 italic">Sin partes</p>
+function semanaVal(c: CampanaType, n: NSemana, campo: "Fecha" | "Titulo" | "Partes" | "Archivo") {
+  return c[`semana${n}${campo}` as keyof CampanaType] as string | null
+}
+
+function emptyForm(): CampanaPayload {
+  return {
+    unidadNegocio: "", mes: "Enero", anio: ANIO_ACTUAL,
+    tipo: "completa", orden: 0,
+    categoria: null, atributos: null,
+    semana1Fecha: null, semana1Titulo: null, semana1Partes: null, semana1Archivo: null,
+    semana2Fecha: null, semana2Titulo: null, semana2Partes: null, semana2Archivo: null,
+    semana3Fecha: null, semana3Titulo: null, semana3Partes: null, semana3Archivo: null,
+    semana4Fecha: null, semana4Titulo: null, semana4Partes: null, semana4Archivo: null,
+    notas: null,
+  }
+}
+
+// ─── Sub-componentes ─────────────────────────────────────────────────────────
+
+function ArchivoLink({ url }: { url: string | null }) {
+  if (!url?.trim()) return null
+  if (!url.startsWith("http")) return <span className="text-[10px] text-slate-400 break-all">{url}</span>
   return (
-    <ul className="space-y-0.5">
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 hover:underline">
+      <ExternalLink size={9} /> Ver archivo
+    </a>
+  )
+}
+
+function ListaPartes({ texto }: { texto: string | null }) {
+  if (!texto?.trim()) return null
+  return (
+    <ul className="space-y-0.5 mt-1">
       {texto.trim().split("\n").filter(Boolean).map((p, i) => (
         <li key={i} className="text-[11px] text-slate-300 leading-snug">{p}</li>
       ))}
@@ -46,38 +68,23 @@ function ListaPartes({ texto }: { texto: string | null }) {
   )
 }
 
-function ArchivoLink({ url }: { url: string | null }) {
-  if (!url?.trim()) return null
-  const isUrl = url.startsWith("http")
-  if (!isUrl) return <span className="text-[10px] text-slate-400">{url}</span>
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 hover:underline transition-colors"
-    >
-      <ExternalLink size={9} />
-      Ver archivo
-    </a>
-  )
-}
+// ─── Tarjeta campaña completa ─────────────────────────────────────────────────
 
-function CampanaCard({
-  c,
-  onEdit,
-  onDelete,
+function CampanaCompletaCard({
+  c, onEdit, onDelete, onMover, esPrimera, esUltima,
 }: {
   c: CampanaType
   onEdit: () => void
   onDelete: () => void
+  onMover: (dir: "arriba" | "abajo") => void
+  esPrimera: boolean
+  esUltima: boolean
 }) {
   const [expandido, setExpandido] = useState(false)
   const atributos = c.atributos?.split("\n").filter(Boolean) ?? []
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-      {/* Header */}
       <div className="flex items-start justify-between gap-3 p-4 border-b border-slate-800/60">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -94,70 +101,57 @@ function CampanaCard({
           {atributos.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {atributos.map((a, i) => (
-                <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                  {a}
-                </span>
+                <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{a}</span>
               ))}
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={() => setExpandido(v => !v)}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"
-            title={expandido ? "Colapsar" : "Expandir"}
-          >
+
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button type="button" onClick={() => onMover("arriba")} disabled={esPrimera}
+            className="p-1.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:cursor-not-allowed rounded hover:bg-slate-800 transition" title="Mover arriba">
+            <ArrowUp size={12} />
+          </button>
+          <button type="button" onClick={() => onMover("abajo")} disabled={esUltima}
+            className="p-1.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:cursor-not-allowed rounded hover:bg-slate-800 transition" title="Mover abajo">
+            <ArrowDown size={12} />
+          </button>
+          <button type="button" onClick={() => setExpandido(v => !v)}
+            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition ml-1" title={expandido ? "Colapsar" : "Expandir"}>
             {expandido ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
-          <button type="button" onClick={onEdit} className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+          <button type="button" onClick={onEdit} title="Editar" className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
             <Pencil size={13} />
           </button>
-          <button type="button" onClick={onDelete} className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition">
+          <button type="button" onClick={onDelete} title="Eliminar" className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition">
             <Trash2 size={13} />
           </button>
         </div>
       </div>
 
-      {/* Semanas grid — siempre visible en resumen, expandible para detalles */}
       <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-slate-800/60">
         {SEMANAS.map(n => {
-          const titulo  = c[`semana${n}Titulo`  as keyof CampanaType] as string | null
-          const partes  = c[`semana${n}Partes`  as keyof CampanaType] as string | null
-          const archivo = c[`semana${n}Archivo` as keyof CampanaType] as string | null
+          const fecha   = semanaVal(c, n, "Fecha")
+          const titulo  = semanaVal(c, n, "Titulo")
+          const partes  = semanaVal(c, n, "Partes")
+          const archivo = semanaVal(c, n, "Archivo")
           const tieneContenido = titulo || partes || archivo
-
           return (
-            <div key={n} className={`p-3 space-y-2 ${!tieneContenido ? "opacity-40" : ""}`}>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Semana {n}</p>
-
-              {titulo && (
-                <p className="text-[11px] font-medium text-slate-200 leading-snug">{titulo}</p>
+            <div key={n} className={`p-3 space-y-1.5 ${!tieneContenido ? "opacity-30" : ""}`}>
+              <div>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Semana {n}</p>
+                {fecha && <p className="text-[9px] text-slate-600 mt-0.5">{fmtFecha(fecha)}</p>}
+              </div>
+              {titulo && <p className="text-[11px] font-medium text-slate-200 leading-snug">{titulo}</p>}
+              {expandido && partes && (
+                <div>
+                  <p className="text-[9px] text-slate-600 uppercase mb-0.5">Partes / Productos</p>
+                  <ListaPartes texto={partes} />
+                </div>
               )}
-
-              {expandido && (
-                <>
-                  {partes && (
-                    <div>
-                      <p className="text-[9px] text-slate-600 uppercase mb-1">Partes / Productos</p>
-                      <ListaPartes texto={partes} />
-                    </div>
-                  )}
-                  {archivo && (
-                    <div>
-                      <p className="text-[9px] text-slate-600 uppercase mb-1">Archivo</p>
-                      <ArchivoLink url={archivo} />
-                    </div>
-                  )}
-                </>
-              )}
-
-              {!expandido && archivo && (
-                <ArchivoLink url={archivo} />
-              )}
-
-              {!tieneContenido && (
-                <p className="text-[10px] text-slate-600 italic">—</p>
+              {(expandido || !titulo) && archivo && <ArchivoLink url={archivo} />}
+              {!expandido && !titulo && !partes && !archivo && (
+                <p className="text-[10px] text-slate-700 italic">—</p>
               )}
             </div>
           )
@@ -173,58 +167,135 @@ function CampanaCard({
   )
 }
 
-function SemanaFields({
-  n,
-  form,
-  setForm,
+// ─── Tarjeta títulos extra ────────────────────────────────────────────────────
+
+function CampanaTitulosCard({
+  c, onEdit, onDelete, onMover, esPrimera, esUltima,
 }: {
-  n: NSemana
-  form: CampanaPayload
-  setForm: React.Dispatch<React.SetStateAction<CampanaPayload>>
+  c: CampanaType
+  onEdit: () => void
+  onDelete: () => void
+  onMover: (dir: "arriba" | "abajo") => void
+  esPrimera: boolean
+  esUltima: boolean
 }) {
   return (
-    <div className="border border-slate-700 rounded-lg p-3 space-y-2">
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Semana {n}</p>
-      <div>
-        <Label className="text-[10px] text-slate-500">Título</Label>
-        <Input
-          value={(form[SEMANA_KEY.titulo(n)] as string) ?? ""}
-          onChange={e => setForm(f => ({ ...f, [SEMANA_KEY.titulo(n)]: e.target.value || null }))}
-          placeholder={`Título semana ${n}...`}
-          className="h-8 text-xs bg-slate-800 border-slate-700 text-slate-100"
-        />
+    <div className="bg-slate-900 border border-amber-800/40 rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-amber-800/30 bg-amber-950/20">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">Títulos extra</span>
+          <span className="text-xs font-bold text-slate-100">{c.unidadNegocio}</span>
+          {c.categoria && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              {c.categoria}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button type="button" onClick={() => onMover("arriba")} disabled={esPrimera}
+            className="p-1.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:cursor-not-allowed rounded hover:bg-slate-800 transition" title="Mover arriba">
+            <ArrowUp size={12} />
+          </button>
+          <button type="button" onClick={() => onMover("abajo")} disabled={esUltima}
+            className="p-1.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:cursor-not-allowed rounded hover:bg-slate-800 transition" title="Mover abajo">
+            <ArrowDown size={12} />
+          </button>
+          <button type="button" onClick={onEdit} title="Editar" className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition ml-1">
+            <Pencil size={13} />
+          </button>
+          <button type="button" onClick={onDelete} title="Eliminar" className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition">
+            <Trash2 size={13} />
+          </button>
+        </div>
       </div>
-      <div>
-        <Label className="text-[10px] text-slate-500">Números de parte / Productos</Label>
-        <textarea
-          value={(form[SEMANA_KEY.partes(n)] as string) ?? ""}
-          onChange={e => setForm(f => ({ ...f, [SEMANA_KEY.partes(n)]: e.target.value || null }))}
-          placeholder={"UK6A-DN-0E (Stock) - Ultrasónico\nFFRL-BN-1E (Stock) - Fotoeléctrico"}
-          rows={3}
-          className="w-full text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 px-3 py-2 resize-y placeholder:text-slate-600"
-        />
-      </div>
-      <div>
-        <Label className="text-[10px] text-slate-500">Link del archivo</Label>
-        <Input
-          value={(form[SEMANA_KEY.archivo(n)] as string) ?? ""}
-          onChange={e => setForm(f => ({ ...f, [SEMANA_KEY.archivo(n)]: e.target.value || null }))}
-          placeholder="https://sharepoint.com/..."
-          className="h-8 text-xs bg-slate-800 border-slate-700 text-slate-100"
-        />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-slate-800/40">
+        {SEMANAS.map(n => {
+          const fecha  = semanaVal(c, n, "Fecha")
+          const titulo = semanaVal(c, n, "Titulo")
+          return (
+            <div key={n} className={`px-3 py-2.5 ${!titulo ? "opacity-30" : ""}`}>
+              <p className="text-[9px] font-semibold text-amber-600/70 uppercase tracking-wider">Semana {n}</p>
+              {fecha && <p className="text-[9px] text-slate-600 mb-1">{fmtFecha(fecha)}</p>}
+              {titulo
+                ? <p className="text-[11px] text-amber-100/80 leading-snug mt-0.5">{titulo}</p>
+                : <p className="text-[10px] text-slate-700 italic">—</p>
+              }
+            </div>
+          )
+        })}
       </div>
     </div>
   )
 }
 
+// ─── Campos de semana en el formulario ───────────────────────────────────────
+
+function SemanaFields({
+  n, form, setForm, soloTitulo,
+}: {
+  n: NSemana
+  form: CampanaPayload
+  setForm: React.Dispatch<React.SetStateAction<CampanaPayload>>
+  soloTitulo: boolean
+}) {
+  const fechaKey   = `semana${n}Fecha`   as keyof CampanaPayload
+  const tituloKey  = `semana${n}Titulo`  as keyof CampanaPayload
+  const partesKey  = `semana${n}Partes`  as keyof CampanaPayload
+  const archivoKey = `semana${n}Archivo` as keyof CampanaPayload
+
+  return (
+    <div className={`border rounded-lg p-3 space-y-2 ${soloTitulo ? "border-amber-800/40 bg-amber-950/10" : "border-slate-700"}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-wide ${soloTitulo ? "text-amber-500/70" : "text-slate-400"}`}>
+        Semana {n}
+      </p>
+      <div>
+        <Label className="text-[10px] text-slate-500">Fecha</Label>
+        <Input type="date" value={(form[fechaKey] as string) ?? ""}
+          onChange={e => setForm(f => ({ ...f, [fechaKey]: e.target.value || null }))}
+          className="h-8 text-xs bg-slate-800 border-slate-700 text-slate-100" />
+      </div>
+      <div>
+        <Label className="text-[10px] text-slate-500">Título</Label>
+        <Input value={(form[tituloKey] as string) ?? ""}
+          onChange={e => setForm(f => ({ ...f, [tituloKey]: e.target.value || null }))}
+          placeholder={`Título semana ${n}...`}
+          className="h-8 text-xs bg-slate-800 border-slate-700 text-slate-100" />
+      </div>
+      {!soloTitulo && (
+        <>
+          <div>
+            <Label className="text-[10px] text-slate-500">Partes / Productos</Label>
+            <textarea
+              value={(form[partesKey] as string) ?? ""}
+              onChange={e => setForm(f => ({ ...f, [partesKey]: e.target.value || null }))}
+              placeholder={"UK6A-DN-0E (Stock) - Ultrasónico\nFFRL-BN-1E (Stock) - Fotoeléctrico"}
+              rows={3}
+              className="w-full text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 px-3 py-2 resize-y placeholder:text-slate-600"
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] text-slate-500">Link del archivo</Label>
+            <Input value={(form[archivoKey] as string) ?? ""}
+              onChange={e => setForm(f => ({ ...f, [archivoKey]: e.target.value || null }))}
+              placeholder="https://sharepoint.com/..."
+              className="h-8 text-xs bg-slate-800 border-slate-700 text-slate-100" />
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Vista principal ──────────────────────────────────────────────────────────
+
 export function CampanasView() {
   const { campanas, setCampanas, loading } = useGetCampanas()
-  const [modalOpen, setModalOpen]   = useState(false)
-  const [editando, setEditando]     = useState<CampanaType | null>(null)
-  const [guardando, setGuardando]   = useState(false)
-  const [form, setForm]             = useState<CampanaPayload>(emptyForm())
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editando, setEditando]   = useState<CampanaType | null>(null)
+  const [guardando, setGuardando] = useState(false)
+  const [form, setForm]           = useState<CampanaPayload>(emptyForm())
 
-  // Filtros
   const [filtroMes, setFiltroMes]             = useState<MesCampana | "">("")
   const [filtroAnio, setFiltroAnio]           = useState<number | "">(ANIO_ACTUAL)
   const [filtroUnidad, setFiltroUnidad]       = useState("")
@@ -234,15 +305,14 @@ export function CampanasView() {
   const categoriasUsadas = useMemo(() => [...new Set(campanas.map(c => c.categoria).filter(Boolean))].sort() as string[], [campanas])
   const aniosUsados      = useMemo(() => [...new Set(campanas.map(c => c.anio))].sort((a, b) => b - a), [campanas])
 
-  const filtradas = useMemo(() => {
-    return campanas
-      .filter(c => !filtroMes      || c.mes === filtroMes)
-      .filter(c => !filtroAnio     || c.anio === filtroAnio)
-      .filter(c => !filtroUnidad   || c.unidadNegocio === filtroUnidad)
-      .filter(c => !filtroCategoria || c.categoria === filtroCategoria)
-  }, [campanas, filtroMes, filtroAnio, filtroUnidad, filtroCategoria])
+  const filtradas = useMemo(() =>
+    campanas
+      .filter(c => !filtroMes       || c.mes === filtroMes)
+      .filter(c => !filtroAnio      || c.anio === filtroAnio)
+      .filter(c => !filtroUnidad    || c.unidadNegocio === filtroUnidad)
+      .filter(c => !filtroCategoria || c.categoria === filtroCategoria),
+  [campanas, filtroMes, filtroAnio, filtroUnidad, filtroCategoria])
 
-  // Agrupar por Mes + Año
   const porMes = useMemo(() => {
     const map = new Map<string, CampanaType[]>()
     filtradas.forEach(c => {
@@ -250,33 +320,72 @@ export function CampanasView() {
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(c)
     })
-    // Ordenar por año + mes
-    return [...map.entries()].sort(([a], [b]) => {
-      const [mesA, anioA] = a.split(" ")
-      const [mesB, anioB] = b.split(" ")
-      if (anioA !== anioB) return Number(anioB) - Number(anioA)
-      return MESES.indexOf(mesA as MesCampana) - MESES.indexOf(mesB as MesCampana)
-    })
+    return [...map.entries()]
+      .map(([key, items]) => [
+        key,
+        [...items].sort((a, b) => a.orden - b.orden || new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()),
+      ] as [string, CampanaType[]])
+      .sort(([a], [b]) => {
+        const [mesA, anioA] = a.split(" ")
+        const [mesB, anioB] = b.split(" ")
+        if (anioA !== anioB) return Number(anioB) - Number(anioA)
+        return MESES.indexOf(mesA as MesCampana) - MESES.indexOf(mesB as MesCampana)
+      })
   }, [filtradas])
 
-  const abrirCrear = () => {
+  // ── Reordenar ──────────────────────────────────────────────────────────────
+  const reordenar = async (documentId: string, grupoKey: string, dir: "arriba" | "abajo") => {
+    const grupo = porMes.find(([k]) => k === grupoKey)?.[1] ?? []
+    const idx = grupo.findIndex(c => c.documentId === documentId)
+    if (dir === "arriba" && idx === 0) return
+    if (dir === "abajo" && idx === grupo.length - 1) return
+
+    const swapIdx   = dir === "arriba" ? idx - 1 : idx + 1
+    const target    = grupo[idx]
+    const other     = grupo[swapIdx]
+    const newOrdenA = swapIdx * 10
+    const newOrdenB = idx * 10
+
+    // Optimistic update
+    setCampanas(prev => prev.map(c => {
+      if (c.documentId === target.documentId) return { ...c, orden: newOrdenA }
+      if (c.documentId === other.documentId)  return { ...c, orden: newOrdenB }
+      return c
+    }))
+
+    try {
+      await Promise.all([
+        updateCampana(target.documentId, { orden: newOrdenA }),
+        updateCampana(other.documentId,  { orden: newOrdenB }),
+      ])
+    } catch {
+      // Revert
+      setCampanas(prev => prev.map(c => {
+        if (c.documentId === target.documentId) return { ...c, orden: target.orden }
+        if (c.documentId === other.documentId)  return { ...c, orden: other.orden }
+        return c
+      }))
+      toast.error("Error al reordenar")
+    }
+  }
+
+  // ── Modal ──────────────────────────────────────────────────────────────────
+  const abrirCrear = (tipo: TipoCampana = "completa") => {
     setEditando(null)
-    setForm(emptyForm())
+    setForm({ ...emptyForm(), tipo })
     setModalOpen(true)
   }
 
   const abrirEditar = (c: CampanaType) => {
     setEditando(c)
     setForm({
-      unidadNegocio: c.unidadNegocio,
-      mes: c.mes,
-      anio: c.anio,
-      categoria: c.categoria,
-      atributos: c.atributos,
-      semana1Partes: c.semana1Partes, semana1Titulo: c.semana1Titulo, semana1Archivo: c.semana1Archivo,
-      semana2Partes: c.semana2Partes, semana2Titulo: c.semana2Titulo, semana2Archivo: c.semana2Archivo,
-      semana3Partes: c.semana3Partes, semana3Titulo: c.semana3Titulo, semana3Archivo: c.semana3Archivo,
-      semana4Partes: c.semana4Partes, semana4Titulo: c.semana4Titulo, semana4Archivo: c.semana4Archivo,
+      unidadNegocio: c.unidadNegocio, mes: c.mes, anio: c.anio,
+      tipo: c.tipo, orden: c.orden,
+      categoria: c.categoria, atributos: c.atributos,
+      semana1Fecha: c.semana1Fecha, semana1Titulo: c.semana1Titulo, semana1Partes: c.semana1Partes, semana1Archivo: c.semana1Archivo,
+      semana2Fecha: c.semana2Fecha, semana2Titulo: c.semana2Titulo, semana2Partes: c.semana2Partes, semana2Archivo: c.semana2Archivo,
+      semana3Fecha: c.semana3Fecha, semana3Titulo: c.semana3Titulo, semana3Partes: c.semana3Partes, semana3Archivo: c.semana3Archivo,
+      semana4Fecha: c.semana4Fecha, semana4Titulo: c.semana4Titulo, semana4Partes: c.semana4Partes, semana4Archivo: c.semana4Archivo,
       notas: c.notas,
     })
     setModalOpen(true)
@@ -291,8 +400,12 @@ export function CampanasView() {
         setCampanas(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
         toast.success("Campaña actualizada")
       } else {
-        const nueva = await createCampana(form)
-        setCampanas(prev => [nueva, ...prev])
+        // Assign orden = last in the group + 10
+        const grupoKey = `${form.mes} ${form.anio}`
+        const grupo = porMes.find(([k]) => k === grupoKey)?.[1] ?? []
+        const maxOrden = grupo.length > 0 ? Math.max(...grupo.map(c => c.orden)) : -10
+        const nueva = await createCampana({ ...form, orden: maxOrden + 10 })
+        setCampanas(prev => [...prev, nueva])
         toast.success("Campaña creada")
       }
       setModalOpen(false)
@@ -304,7 +417,7 @@ export function CampanasView() {
   }
 
   const borrar = async (c: CampanaType) => {
-    if (!confirm(`¿Eliminar campaña "${c.unidadNegocio} · ${c.mes} ${c.anio}"?`)) return
+    if (!confirm(`¿Eliminar "${c.unidadNegocio} · ${c.mes} ${c.anio}"?`)) return
     try {
       await deleteCampana(c.documentId)
       setCampanas(prev => prev.filter(x => x.documentId !== c.documentId))
@@ -314,71 +427,62 @@ export function CampanasView() {
     }
   }
 
+  const soloTitulo = form.tipo === "titulos_extra"
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Encabezado */}
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Campañas</h1>
           <p className="text-sm text-slate-500">Programación mensual por unidad de negocio</p>
         </div>
-        <Button onClick={abrirCrear} size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
-          <Plus size={14} className="mr-1" /> Nueva campaña
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => abrirCrear("titulos_extra")} size="sm" variant="outline"
+            className="border-amber-700/50 text-amber-400 hover:bg-amber-950/30 hover:text-amber-300">
+            <Plus size={14} className="mr-1" /> Títulos extra
+          </Button>
+          <Button onClick={() => abrirCrear("completa")} size="sm"
+            className="bg-blue-600 hover:bg-blue-500 text-white">
+            <Plus size={14} className="mr-1" /> Nueva campaña
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
       <div className="flex items-center gap-2 flex-wrap mb-6">
-        <select
-          title="Filtrar por año"
-          value={filtroAnio}
+        <select title="Año" value={filtroAnio}
           onChange={e => setFiltroAnio(e.target.value ? Number(e.target.value) : "")}
-          className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300"
-        >
+          className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300">
           <option value="">Todos los años</option>
           {aniosUsados.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-
-        <select
-          title="Filtrar por mes"
-          value={filtroMes}
+        <select title="Mes" value={filtroMes}
           onChange={e => setFiltroMes(e.target.value as MesCampana | "")}
-          className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300"
-        >
+          className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300">
           <option value="">Todos los meses</option>
           {MESES.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
-
         {unidadesUsadas.length > 0 && (
-          <select
-            title="Filtrar por unidad"
-            value={filtroUnidad}
+          <select title="Unidad" value={filtroUnidad}
             onChange={e => setFiltroUnidad(e.target.value)}
-            className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300"
-          >
+            className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300">
             <option value="">Todas las unidades</option>
             {unidadesUsadas.map(u => <option key={u} value={u}>{u}</option>)}
           </select>
         )}
-
         {categoriasUsadas.length > 0 && (
-          <select
-            title="Filtrar por categoría"
-            value={filtroCategoria}
+          <select title="Categoría" value={filtroCategoria}
             onChange={e => setFiltroCategoria(e.target.value)}
-            className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300"
-          >
+            className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300">
             <option value="">Todas las categorías</option>
             {categoriasUsadas.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         )}
-
         {(filtroMes || filtroUnidad || filtroCategoria) && (
-          <button
-            type="button"
+          <button type="button"
             onClick={() => { setFiltroMes(""); setFiltroUnidad(""); setFiltroCategoria("") }}
-            className="text-xs px-2 py-1.5 text-slate-500 hover:text-slate-300"
-          >
+            className="text-xs px-2 py-1.5 text-slate-500 hover:text-slate-300">
             Limpiar
           </button>
         )}
@@ -388,11 +492,17 @@ export function CampanasView() {
       {loading ? (
         <p className="text-sm text-slate-500 text-center py-12">Cargando...</p>
       ) : campanas.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-slate-500 text-sm mb-3">No hay campañas registradas</p>
-          <Button onClick={abrirCrear} size="sm" variant="outline">
-            <Plus size={14} className="mr-1" /> Crear primera campaña
-          </Button>
+        <div className="text-center py-16 space-y-3">
+          <p className="text-slate-500 text-sm">No hay campañas registradas</p>
+          <div className="flex items-center justify-center gap-2">
+            <Button onClick={() => abrirCrear("completa")} size="sm" variant="outline">
+              <Plus size={14} className="mr-1" /> Campaña completa
+            </Button>
+            <Button onClick={() => abrirCrear("titulos_extra")} size="sm" variant="outline"
+              className="border-amber-700/50 text-amber-400">
+              <Plus size={14} className="mr-1" /> Títulos extra
+            </Button>
+          </div>
         </div>
       ) : filtradas.length === 0 ? (
         <p className="text-sm text-slate-500 text-center py-12">Sin resultados con los filtros actuales.</p>
@@ -408,14 +518,25 @@ export function CampanasView() {
                 <div className="flex-1 h-px bg-slate-800" />
               </div>
               <div className="space-y-3">
-                {items.map(c => (
-                  <CampanaCard
-                    key={c.documentId}
-                    c={c}
-                    onEdit={() => abrirEditar(c)}
-                    onDelete={() => borrar(c)}
-                  />
-                ))}
+                {items.map((c, idx) =>
+                  c.tipo === "titulos_extra" ? (
+                    <CampanaTitulosCard key={c.documentId} c={c}
+                      onEdit={() => abrirEditar(c)}
+                      onDelete={() => borrar(c)}
+                      onMover={dir => reordenar(c.documentId, mesAnio, dir)}
+                      esPrimera={idx === 0}
+                      esUltima={idx === items.length - 1}
+                    />
+                  ) : (
+                    <CampanaCompletaCard key={c.documentId} c={c}
+                      onEdit={() => abrirEditar(c)}
+                      onDelete={() => borrar(c)}
+                      onMover={dir => reordenar(c.documentId, mesAnio, dir)}
+                      esPrimera={idx === 0}
+                      esUltima={idx === items.length - 1}
+                    />
+                  )
+                )}
               </div>
             </div>
           ))}
@@ -425,103 +546,110 @@ export function CampanasView() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl my-8 space-y-4 p-6">
+          <div className={`border rounded-xl w-full max-w-2xl my-8 space-y-4 p-6 bg-slate-900 ${soloTitulo ? "border-amber-800/50" : "border-slate-700"}`}>
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-slate-100">
-                {editando ? "Editar campaña" : "Nueva campaña"}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-slate-100">
+                  {editando ? "Editar campaña" : "Nueva campaña"}
+                </h2>
+                {soloTitulo && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                    Títulos extra
+                  </span>
+                )}
+              </div>
               <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)} className="text-slate-400">
                 <X size={16} />
               </Button>
+            </div>
+
+            {/* Tipo selector */}
+            <div className="flex gap-2">
+              {(["completa", "titulos_extra"] as TipoCampana[]).map(t => (
+                <button key={t} type="button"
+                  onClick={() => setForm(f => ({ ...f, tipo: t }))}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                    form.tipo === t
+                      ? t === "completa"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-amber-800/40 text-amber-300 border-amber-700/50"
+                      : "border-slate-700 text-slate-500 hover:text-slate-300"
+                  }`}>
+                  {t === "completa" ? "Campaña completa" : "Títulos extra"}
+                </button>
+              ))}
             </div>
 
             {/* Datos generales */}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <Label className="text-[10px] text-slate-500">Unidad de negocio *</Label>
-                <Input
-                  list="unidades-campana"
-                  value={form.unidadNegocio}
+                <Input list="unidades-campana" value={form.unidadNegocio}
                   onChange={e => setForm(f => ({ ...f, unidadNegocio: e.target.value }))}
                   placeholder="Store, MHS, etc."
-                  className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-                />
+                  className="h-9 bg-slate-800 border-slate-700 text-slate-100" />
                 <datalist id="unidades-campana">
                   {unidadesUsadas.map(u => <option key={u} value={u} />)}
                 </datalist>
               </div>
-
               <div>
                 <Label className="text-[10px] text-slate-500">Mes</Label>
-                <select
-                  value={form.mes}
+                <select value={form.mes} aria-label="Mes"
                   onChange={e => setForm(f => ({ ...f, mes: e.target.value as MesCampana }))}
-                  className="w-full h-9 rounded-md border border-slate-700 bg-slate-800 text-slate-100 px-3 text-sm"
-                  aria-label="Mes de la campaña"
-                >
+                  className="w-full h-9 rounded-md border border-slate-700 bg-slate-800 text-slate-100 px-3 text-sm">
                   {MESES.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
-
               <div>
                 <Label className="text-[10px] text-slate-500">Año</Label>
-                <Input
-                  type="number"
-                  value={form.anio}
+                <Input type="number" value={form.anio}
                   onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))}
-                  className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-                />
+                  className="h-9 bg-slate-800 border-slate-700 text-slate-100" />
               </div>
-
               <div>
                 <Label className="text-[10px] text-slate-500">Categoría de producto</Label>
-                <Input
-                  list="categorias-campana"
-                  value={form.categoria ?? ""}
+                <Input list="categorias-campana" value={form.categoria ?? ""}
                   onChange={e => setForm(f => ({ ...f, categoria: e.target.value || null }))}
                   placeholder="Sensors, Spare Parts..."
-                  className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-                />
+                  className="h-9 bg-slate-800 border-slate-700 text-slate-100" />
                 <datalist id="categorias-campana">
                   {categoriasUsadas.map(c => <option key={c} value={c} />)}
                 </datalist>
               </div>
-
-              <div>
-                <Label className="text-[10px] text-slate-500">Atributos / Valor agregado</Label>
-                <textarea
-                  value={form.atributos ?? ""}
-                  onChange={e => setForm(f => ({ ...f, atributos: e.target.value || null }))}
-                  placeholder={"Tiempo de Entrega\nAsesoramiento Técnico\nPrecio Competitivo"}
-                  rows={3}
-                  className="w-full text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 px-3 py-2 resize-none placeholder:text-slate-600"
-                />
-              </div>
+              {!soloTitulo && (
+                <div>
+                  <Label className="text-[10px] text-slate-500">Atributos / Valor agregado</Label>
+                  <textarea value={form.atributos ?? ""}
+                    onChange={e => setForm(f => ({ ...f, atributos: e.target.value || null }))}
+                    placeholder={"Tiempo de Entrega\nAsesoramiento Técnico"}
+                    rows={3}
+                    className="w-full text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 px-3 py-2 resize-none placeholder:text-slate-600" />
+                </div>
+              )}
             </div>
 
             {/* Semanas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SEMANAS.map(n => (
-                <SemanaFields key={n} n={n} form={form} setForm={setForm} />
+                <SemanaFields key={n} n={n} form={form} setForm={setForm} soloTitulo={soloTitulo} />
               ))}
             </div>
 
-            {/* Notas */}
-            <div>
-              <Label className="text-[10px] text-slate-500">Notas adicionales</Label>
-              <Input
-                value={form.notas ?? ""}
-                onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
-                placeholder="Observaciones..."
-                className="h-9 bg-slate-800 border-slate-700 text-slate-100"
-              />
-            </div>
+            {!soloTitulo && (
+              <div>
+                <Label className="text-[10px] text-slate-500">Notas adicionales</Label>
+                <Input value={form.notas ?? ""}
+                  onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
+                  placeholder="Observaciones..."
+                  className="h-9 bg-slate-800 border-slate-700 text-slate-100" />
+              </div>
+            )}
 
             <div className="flex gap-2 justify-end pt-2">
-              <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} className="border-slate-700 text-slate-300">
-                Cancelar
-              </Button>
-              <Button size="sm" onClick={guardar} disabled={guardando} className="bg-blue-600 hover:bg-blue-500 text-white">
+              <Button variant="outline" size="sm" onClick={() => setModalOpen(false)}
+                className="border-slate-700 text-slate-300">Cancelar</Button>
+              <Button size="sm" onClick={guardar} disabled={guardando}
+                className={soloTitulo ? "bg-amber-700 hover:bg-amber-600 text-white" : "bg-blue-600 hover:bg-blue-500 text-white"}>
                 <Check size={14} className="mr-1" />
                 {guardando ? "Guardando..." : "Guardar"}
               </Button>
