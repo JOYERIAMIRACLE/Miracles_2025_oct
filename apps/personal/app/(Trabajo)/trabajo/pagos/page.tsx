@@ -332,55 +332,86 @@ export default function PagosPage() {
   const [filtroEst,     setFiltroEst]     = useState<EstadoPago | "todos">("todos")
   const [filtroCatId,   setFiltroCatId]   = useState<number | null>(null)
   const [busqueda,      setBusqueda]      = useState("")
+  const [fechaDesde,    setFechaDesde]    = useState("")
+  const [fechaHasta,    setFechaHasta]    = useState("")
+
+  function aplicarPreset(preset: "mes" | "mesAnt" | "anio" | "todo") {
+    const hoy = new Date()
+    if (preset === "mes") {
+      setFechaDesde(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-01`)
+      setFechaHasta(hoy.toISOString().slice(0, 10))
+    } else if (preset === "mesAnt") {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1)
+      const h = new Date(hoy.getFullYear(), hoy.getMonth(), 0)
+      setFechaDesde(d.toISOString().slice(0, 10))
+      setFechaHasta(h.toISOString().slice(0, 10))
+    } else if (preset === "anio") {
+      setFechaDesde(`${hoy.getFullYear()}-01-01`)
+      setFechaHasta(hoy.toISOString().slice(0, 10))
+    } else {
+      setFechaDesde(""); setFechaHasta("")
+    }
+  }
+
+  const hayFiltroFecha = fechaDesde !== "" || fechaHasta !== ""
 
   // ── Datos derivados ────────────────────────────────────────────────────────
 
+  // Base filtrada por fecha — usada por métricas y tabla
+  const pagosFecha = useMemo(() =>
+    pagos.filter(p => {
+      if (fechaDesde && (!p.fecha || p.fecha < fechaDesde)) return false
+      if (fechaHasta && (!p.fecha || p.fecha > fechaHasta)) return false
+      return true
+    }),
+    [pagos, fechaDesde, fechaHasta]
+  )
+
   const filtrados = useMemo(() => {
     const q = busqueda.toLowerCase().trim()
-    return pagos
+    return pagosFecha
       .filter(p => filtroEst   === "todos" || p.estado === filtroEst)
       .filter(p => filtroCatId === null    || p.categoriaPago?.id === filtroCatId)
       .filter(p => !q || p.concepto.toLowerCase().includes(q) || (p.proveedor ?? "").toLowerCase().includes(q))
-  }, [pagos, filtroEst, filtroCatId, busqueda])
+  }, [pagosFecha, filtroEst, filtroCatId, busqueda])
 
   const resumen = useMemo(() => ({
-    total:     pagos.reduce((s, p) => s + p.monto, 0),
-    pagado:    pagos.filter(p => p.estado === "pagado").reduce((s, p) => s + p.monto, 0),
-    pendiente: pagos.filter(p => p.estado !== "pagado").reduce((s, p) => s + p.monto, 0),
-  }), [pagos])
+    total:     pagosFecha.reduce((s, p) => s + p.monto, 0),
+    pagado:    pagosFecha.filter(p => p.estado === "pagado").reduce((s, p) => s + p.monto, 0),
+    pendiente: pagosFecha.filter(p => p.estado !== "pagado").reduce((s, p) => s + p.monto, 0),
+  }), [pagosFecha])
 
   const porCategoria = useMemo(() =>
     categorias
       .map(cat => ({
         cat,
-        total: pagos.filter(p => p.categoriaPago?.id === cat.id).reduce((s, p) => s + p.monto, 0),
-        count: pagos.filter(p => p.categoriaPago?.id === cat.id).length,
+        total: pagosFecha.filter(p => p.categoriaPago?.id === cat.id).reduce((s, p) => s + p.monto, 0),
+        count: pagosFecha.filter(p => p.categoriaPago?.id === cat.id).length,
       }))
       .filter(x => x.count > 0),
-    [pagos, categorias]
+    [pagosFecha, categorias]
   )
 
   const sinCategoria = useMemo(
-    () => pagos.filter(p => !p.categoriaPago).reduce((s, p) => s + p.monto, 0),
-    [pagos]
+    () => pagosFecha.filter(p => !p.categoriaPago).reduce((s, p) => s + p.monto, 0),
+    [pagosFecha]
   )
 
   const porMes = useMemo<MesStat[]>(() => {
     const map: Record<string, number> = {}
-    pagos.forEach(p => {
+    pagosFecha.forEach(p => {
       if (!p.fecha) return
       const [y, m] = p.fecha.split("-")
       const key    = `${y}-${m}`
       const label  = `${MESES_ABREV[Number(m) - 1]} ${y}`
       map[key] = (map[key] ?? 0) + p.monto
-      // store label alongside key for sorting
       if (!map[`${key}_label`]) map[`${key}_label`] = label as unknown as number
     })
     return Object.keys(map)
       .filter(k => !k.endsWith("_label"))
       .sort()
       .map(key => ({ key, mes: String(map[`${key}_label`] ?? key), total: map[key]! }))
-  }, [pagos])
+  }, [pagosFecha])
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -492,7 +523,8 @@ export default function PagosPage() {
 
       {/* ── Filtros + búsqueda + acción ── */}
       <div className="flex flex-col gap-3">
-        {/* Fila 1: búsqueda */}
+
+        {/* Búsqueda */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
           <input
@@ -509,7 +541,54 @@ export default function PagosPage() {
           )}
         </div>
 
-        {/* Fila 2: pills estado + botón nuevo */}
+        {/* Filtro de fechas */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Presets */}
+          {(["mes","mesAnt","anio","todo"] as const).map(p => {
+            const labels = { mes: "Este mes", mesAnt: "Mes anterior", anio: "Este año", todo: "Todo" }
+            return (
+              <button key={p} type="button" onClick={() => aplicarPreset(p)}
+                className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                  (p === "todo" && !hayFiltroFecha)
+                    ? "bg-slate-700/60 border-slate-600 text-slate-200"
+                    : "border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600"
+                }`}>
+                {labels[p]}
+              </button>
+            )
+          })}
+
+          {/* Separador */}
+          <span className="text-slate-700 text-xs">|</span>
+
+          {/* Desde */}
+          <div className="flex items-center gap-1.5">
+            <label className="text-[10px] text-slate-500 shrink-0">De</label>
+            <input type="date" title="Fecha desde" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)}
+              className={`text-xs px-2 py-1 rounded-md border bg-slate-900 text-slate-300 outline-none transition-colors ${
+                fechaDesde ? "border-emerald-600/50 text-emerald-300" : "border-slate-700"
+              }`} />
+          </div>
+
+          {/* Hasta */}
+          <div className="flex items-center gap-1.5">
+            <label className="text-[10px] text-slate-500 shrink-0">Hasta</label>
+            <input type="date" title="Fecha hasta" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)}
+              className={`text-xs px-2 py-1 rounded-md border bg-slate-900 text-slate-300 outline-none transition-colors ${
+                fechaHasta ? "border-emerald-600/50 text-emerald-300" : "border-slate-700"
+              }`} />
+          </div>
+
+          {/* Limpiar fechas */}
+          {hayFiltroFecha && (
+            <button type="button" onClick={() => aplicarPreset("todo")}
+              className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors">
+              <X className="h-3 w-3" /> Limpiar
+            </button>
+          )}
+        </div>
+
+        {/* Pills estado + botón nuevo */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             {(["todos","pendiente","pagado","parcial"] as const).map(f => (
@@ -520,8 +599,8 @@ export default function PagosPage() {
                     : "border-slate-700 text-slate-500 hover:text-slate-300"
                 }`}>
                 {f === "todos"
-                  ? `Todos (${pagos.length})`
-                  : `${f.charAt(0).toUpperCase() + f.slice(1)} (${pagos.filter(p => p.estado === f).length})`}
+                  ? `Todos (${pagosFecha.length})`
+                  : `${f.charAt(0).toUpperCase() + f.slice(1)} (${pagosFecha.filter(p => p.estado === f).length})`}
               </button>
             ))}
             {filtroCatId !== null && (
