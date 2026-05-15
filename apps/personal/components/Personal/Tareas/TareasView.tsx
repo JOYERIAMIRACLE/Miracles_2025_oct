@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
-import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket } from "lucide-react"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -105,6 +105,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [filtroPrioridad, setFiltroPrioridad] = useState<PrioridadTarea | "">("")
   const [filtroRango, setFiltroRango] = useState<RangoFecha>("todas")
   const [filtroResponsable, setFiltroResponsable] = useState("")
+  const [filtroTicket, setFiltroTicket] = useState(false)
   const [busqueda, setBusqueda] = useState("")
   const [mesCalendario, setMesCalendario] = useState(new Date())
   const [modalOpen, setModalOpen] = useState(false)
@@ -114,7 +115,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     titulo: "", descripcion: "", ambito,
     estado: "pendiente", prioridad: "media",
     etiqueta: null, fechaVencimiento: null, notas: null, responsable: null,
-    area: null, fechaInicio: null,
+    area: null, fechaInicio: null, esTicket: false,
   })
 
   // Etiquetas únicas usadas para autocomplete
@@ -138,6 +139,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       .filter(t => !filtroEtiqueta || t.etiqueta === filtroEtiqueta)
       .filter(t => !filtroPrioridad || t.prioridad === filtroPrioridad)
       .filter(t => !filtroResponsable || t.responsable === filtroResponsable)
+      .filter(t => !filtroTicket || t.esTicket === true)
       .filter(t => {
         if (!busq) return true
         return t.titulo.toLowerCase().includes(busq) ||
@@ -199,7 +201,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       titulo: "", descripcion: "", ambito,
       estado: "pendiente", prioridad: "media",
       etiqueta: null, fechaVencimiento, notas: null, responsable: null,
-      area: null, fechaInicio: null,
+      area: null, fechaInicio: null, esTicket: false,
     })
     setModalOpen(true)
   }
@@ -213,8 +215,20 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       notas: t.notas, responsable: t.responsable ?? null,
       area: t.area ?? null,
       fechaInicio: t.fechaInicio ?? null,
+      esTicket: t.esTicket ?? false,
     })
     setModalOpen(true)
+  }
+
+  const toggleTicket = async (t: TareaType) => {
+    const nuevo = !(t.esTicket ?? false)
+    setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, esTicket: nuevo } : x))
+    try {
+      await updateTarea(t.documentId, { esTicket: nuevo })
+    } catch {
+      setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, esTicket: t.esTicket } : x))
+      toast.error("Error al actualizar")
+    }
   }
 
   const guardar = async () => {
@@ -295,10 +309,10 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   }, [tareas])
 
   const limpiarFiltros = () => {
-    setFiltro("todas"); setFiltroEtiqueta(""); setFiltroPrioridad(""); setFiltroRango("todas"); setBusqueda(""); setFiltroResponsable("")
+    setFiltro("todas"); setFiltroEtiqueta(""); setFiltroPrioridad(""); setFiltroRango("todas"); setBusqueda(""); setFiltroResponsable(""); setFiltroTicket(false)
   }
 
-  const hayFiltrosActivos = filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim() || filtroResponsable
+  const hayFiltrosActivos = filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim() || filtroResponsable || filtroTicket
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -445,6 +459,18 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               </select>
             )}
 
+            <button
+              type="button"
+              onClick={() => setFiltroTicket(v => !v)}
+              className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 ${
+                filtroTicket
+                  ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
+                  : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Ticket size={11} /> Solo tickets
+            </button>
+
             {hayFiltrosActivos && (
               <button
                 type="button"
@@ -501,6 +527,18 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         {t.titulo}
                       </p>
                       <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          title={t.esTicket ? "Quitar ticket de servicio" : "Marcar como ticket de servicio"}
+                          onClick={() => toggleTicket(t)}
+                          className={`p-1 rounded transition-colors ${
+                            t.esTicket
+                              ? "text-blue-500 dark:text-blue-400 hover:text-blue-600"
+                              : "text-muted-foreground/30 hover:text-blue-400"
+                          }`}
+                        >
+                          <Ticket size={12} />
+                        </button>
                         <button type="button" title="Editar" onClick={() => abrirEditar(t)} className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted">
                           <Pencil size={12} />
                         </button>
@@ -515,6 +553,11 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                     )}
 
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      {t.esTicket && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 inline-flex items-center gap-1">
+                          <Ticket size={9} /> Ticket
+                        </span>
+                      )}
                       <span className={`text-[10px] px-1.5 py-0.5 rounded border ${ESTADO_COLORS[t.estado]}`}>
                         {ESTADO_LABEL[t.estado]}
                       </span>
@@ -745,6 +788,19 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 />
               </div>
             </div>
+
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.esTicket ?? false}
+                onChange={e => setForm(f => ({ ...f, esTicket: e.target.checked }))}
+                className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-600 accent-blue-500"
+              />
+              <span className="text-sm flex items-center gap-1.5 text-muted-foreground">
+                <Ticket size={13} className="text-blue-400" />
+                Es ticket de servicio
+              </span>
+            </label>
 
             <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" size="sm" onClick={() => setModalOpen(false)}>Cancelar</Button>

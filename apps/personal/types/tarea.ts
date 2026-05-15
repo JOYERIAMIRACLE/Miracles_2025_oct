@@ -20,6 +20,7 @@ export type TareaType = {
   responsable?:     string | null
   area?:            string | null
   fechaInicio?:     string | null
+  esTicket?:        boolean | null
   ticket?:          { id: number; documentId: string; titulo: string } | null
   proyecto?:        { id: number; documentId: string; nombre: string } | null
   createdAt?:       string
@@ -40,6 +41,7 @@ export type TareaPayload = {
   responsable?:      string | null
   area?:             string | null
   fechaInicio?:      string | null
+  esTicket?:         boolean | null
   ticket?:           { connect: [{ documentId: string }] } | { disconnect: [] } | null
   proyecto?:         { connect: [{ id: number }] } | null
 }

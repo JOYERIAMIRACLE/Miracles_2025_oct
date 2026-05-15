@@ -84,6 +84,10 @@
       "relation": "manyToOne",
       "target": "api::ticket.ticket",
       "inversedBy": "tareas"
+    },
+    "esTicket": {
+      "type": "boolean",
+      "default": false
     }
   }
 }
