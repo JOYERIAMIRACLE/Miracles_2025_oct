@@ -211,16 +211,27 @@ function CampanaTitulosCard({
 
       <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-slate-800/40">
         {SEMANAS.map(n => {
-          const fecha  = semanaVal(c, n, "Fecha")
-          const titulo = semanaVal(c, n, "Titulo")
+          const fecha   = semanaVal(c, n, "Fecha")
+          const titulo  = semanaVal(c, n, "Titulo")
+          const extras  = semanaVal(c, n, "Partes")
+          const extrasList = extras?.trim().split("\n").filter(Boolean) ?? []
+          const hayContenido = titulo || extrasList.length > 0
           return (
-            <div key={n} className={`px-3 py-2.5 ${!titulo ? "opacity-30" : ""}`}>
+            <div key={n} className={`px-3 py-2.5 ${!hayContenido ? "opacity-30" : ""}`}>
               <p className="text-[9px] font-semibold text-amber-600/70 uppercase tracking-wider">Semana {n}</p>
               {fecha && <p className="text-[9px] text-slate-600 mb-1">{fmtFecha(fecha)}</p>}
-              {titulo
-                ? <p className="text-[11px] text-amber-100/80 leading-snug mt-0.5">{titulo}</p>
-                : <p className="text-[10px] text-slate-700 italic">—</p>
-              }
+              {hayContenido ? (
+                <ul className="space-y-0.5 mt-0.5">
+                  {titulo && (
+                    <li className="text-[11px] text-amber-100/90 leading-snug font-medium">{titulo}</li>
+                  )}
+                  {extrasList.map((t, i) => (
+                    <li key={i} className="text-[11px] text-amber-100/60 leading-snug">{t}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[10px] text-slate-700 italic">—</p>
+              )}
             </div>
           )
         })}
@@ -262,6 +273,18 @@ function SemanaFields({
           placeholder={`Título semana ${n}...`}
           className="h-8 text-xs bg-slate-800 border-slate-700 text-slate-100" />
       </div>
+      {soloTitulo && (
+        <div>
+          <Label className="text-[10px] text-amber-500/70">Títulos adicionales (uno por línea)</Label>
+          <textarea
+            value={(form[partesKey] as string) ?? ""}
+            onChange={e => setForm(f => ({ ...f, [partesKey]: e.target.value || null }))}
+            placeholder={"Título extra 1\nTítulo extra 2\nTítulo extra 3"}
+            rows={3}
+            className="w-full text-xs rounded-md border border-amber-800/40 bg-amber-950/10 text-slate-100 px-3 py-2 resize-y placeholder:text-slate-600"
+          />
+        </div>
+      )}
       {!soloTitulo && (
         <>
           <div>
