@@ -196,12 +196,13 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   }, [tareas])
 
   const abrirCrear = (fechaVencimiento: string | null = null) => {
+    const hoy = isoHoy()
     setEditando(null)
     setForm({
       titulo: "", descripcion: "", ambito,
       estado: "pendiente", prioridad: "media",
-      etiqueta: null, fechaVencimiento, notas: null, responsable: null,
-      area: null, fechaInicio: null, esTicket: false,
+      etiqueta: null, fechaVencimiento: fechaVencimiento ?? hoy, notas: null, responsable: null,
+      area: null, fechaInicio: hoy, esTicket: false,
     })
     setModalOpen(true)
   }
