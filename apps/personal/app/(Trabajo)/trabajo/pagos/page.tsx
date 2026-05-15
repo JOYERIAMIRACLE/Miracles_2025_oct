@@ -1,16 +1,25 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useLayoutEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, X, Wallet, Pencil, Check, Settings2 } from "lucide-react"
-import { useGetPagosTrabajo }    from "@/api/pago-trabajo/getPagosTrabajo"
-import { useGetCategoriasPago }  from "@/api/categoria-pago/getCategoriasPago"
+import {
+  Plus, X, Wallet, Pencil, Check, Settings2, BarChart2, Search,
+} from "lucide-react"
+import {
+  PieChart, Pie, Cell, Tooltip as RCTooltip,
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid,
+} from "recharts"
+import { useGetPagosTrabajo }   from "@/api/pago-trabajo/getPagosTrabajo"
+import { useGetCategoriasPago } from "@/api/categoria-pago/getCategoriasPago"
 import { createCategoriaPago, updateCategoriaPago, deleteCategoriaPago } from "@/api/categoria-pago/mutateCategoriasPago"
-import { createPagoTrabajo, updatePagoTrabajo, deletePagoTrabajo } from "@/api/pago-trabajo/mutatePagoTrabajo"
+import { createPagoTrabajo, updatePagoTrabajo, deletePagoTrabajo }       from "@/api/pago-trabajo/mutatePagoTrabajo"
 import { PagoTrabajoType, EstadoPago } from "@/types/pago-trabajo"
-import { CategoriaPagoType } from "@/types/categoria-pago"
+import { CategoriaPagoType }           from "@/types/categoria-pago"
 
-const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
+// ─── Constantes ───────────────────────────────────────────────────────────────
+
+const fmt      = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
+const fmtAxis  = (v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`
 
 const ESTADO_BADGE: Record<EstadoPago, string> = {
   pendiente: "bg-amber-500/15 text-amber-400 border-amber-500/20",
@@ -28,9 +37,24 @@ const CAT_COLORS = [
   "bg-teal-500/15 text-teal-400 border-teal-500/20",
   "bg-pink-500/15 text-pink-400 border-pink-500/20",
 ]
-const catColor = (id: number) => CAT_COLORS[id % CAT_COLORS.length] ?? CAT_COLORS[0]
 
-// ── Gestión de categorías ───────────────────────────────────────────────────
+const CHART_HEX = [
+  "#8b5cf6","#38bdf8","#34d399","#fb7185",
+  "#fb923c","#fbbf24","#2dd4bf","#f472b6","#94a3b8",
+]
+
+const catColor = (id: number) => CAT_COLORS[id % CAT_COLORS.length] ?? CAT_COLORS[0]
+const catHex   = (idx: number) => CHART_HEX[idx % CHART_HEX.length]
+
+const MESES_ABREV = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+
+const TOOLTIP_STYLE = {
+  background: "#0f172a", border: "1px solid #334155",
+  borderRadius: "8px", fontSize: "12px", color: "#cbd5e1",
+}
+
+// ─── Gestión de categorías ────────────────────────────────────────────────────
+
 function GestionCategorias({ categorias, onRefetch }: {
   categorias: CategoriaPagoType[]
   onRefetch:  () => Promise<void>
@@ -46,8 +70,7 @@ function GestionCategorias({ categorias, onRefetch }: {
     setSaving(true)
     await updateCategoriaPago(cat.documentId, editNombre.trim())
     await onRefetch()
-    setEditId(null)
-    setSaving(false)
+    setEditId(null); setSaving(false)
   }
 
   async function handleAdd() {
@@ -107,7 +130,112 @@ function GestionCategorias({ categorias, onRefetch }: {
   )
 }
 
-// ── Formulario crear / editar ───────────────────────────────────────────────
+function ColorDot({ color }: { color: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => { if (ref.current) ref.current.style.backgroundColor = color }, [color])
+  return <span ref={ref} className="w-2 h-2 rounded-full shrink-0" />
+}
+
+// ─── Panel de métricas ────────────────────────────────────────────────────────
+
+type CatStat  = { cat: CategoriaPagoType; total: number; count: number }
+type MesStat  = { mes: string; total: number; key: string }
+type DonutRow = { name: string; value: number; color: string }
+
+function MetricasPanel({ porCategoria, porMes, sinCategoria }: {
+  porCategoria: CatStat[]
+  porMes:       MesStat[]
+  sinCategoria: number
+}) {
+  const [activeIdx, setActiveIdx] = useState<number | null>(null)
+
+  const donutData: DonutRow[] = [
+    ...porCategoria.map(({ cat, total }, i) => ({
+      name:  cat.nombre,
+      value: total,
+      color: catHex(i)!,
+    })),
+    ...(sinCategoria > 0 ? [{ name: "Sin categoría", value: sinCategoria, color: "#475569" }] : []),
+  ]
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Dona — por categoría */}
+      <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por categoría</p>
+        {donutData.length === 0 ? (
+          <p className="text-xs text-slate-600 text-center py-10">Sin datos</p>
+        ) : (
+          <div className="flex items-center gap-4">
+            <ResponsiveContainer width={160} height={140}>
+              <PieChart>
+                <Pie
+                  data={donutData} cx="50%" cy="50%"
+                  innerRadius={42} outerRadius={65}
+                  dataKey="value" nameKey="name" paddingAngle={2}
+                  onMouseEnter={(_, i) => setActiveIdx(i)}
+                  onMouseLeave={() => setActiveIdx(null)}
+                >
+                  {donutData.map((entry, i) => (
+                    <Cell
+                      key={i} fill={entry.color}
+                      opacity={activeIdx === null || activeIdx === i ? 1 : 0.35}
+                      style={{ cursor: "pointer", outline: "none" }}
+                    />
+                  ))}
+                </Pie>
+                <RCTooltip
+                  formatter={(v: number) => [fmt(v), ""]}
+                  contentStyle={TOOLTIP_STYLE}
+                  itemStyle={{ color: "#cbd5e1" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <ul className="space-y-1.5 flex-1 min-w-0">
+              {donutData.map((d, i) => (
+                <li key={i}
+                  className={`flex items-center gap-1.5 text-[11px] transition-opacity ${activeIdx !== null && activeIdx !== i ? "opacity-40" : ""}`}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  onMouseLeave={() => setActiveIdx(null)}
+                >
+                  <ColorDot color={d.color} />
+                  <span className="text-slate-400 truncate flex-1">{d.name}</span>
+                  <span className="text-slate-300 tabular-nums shrink-0">{fmt(d.value)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Barras — por mes */}
+      <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por mes</p>
+        {porMes.length === 0 ? (
+          <p className="text-xs text-slate-600 text-center py-10">Sin gastos con fecha</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={140}>
+            <BarChart data={porMes} margin={{ top: 0, right: 4, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+              <XAxis dataKey="mes" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={38} />
+              <RCTooltip
+                formatter={(v: number) => [fmt(v), "Total"]}
+                contentStyle={TOOLTIP_STYLE}
+                itemStyle={{ color: "#cbd5e1" }}
+                labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
+              />
+              <Bar dataKey="total" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={40} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Formulario crear / editar ────────────────────────────────────────────────
+
 type FormMode = { type: "create" } | { type: "edit"; pago: PagoTrabajoType }
 
 function FormPago({ mode, categorias, onSave, onCancel }: {
@@ -131,7 +259,7 @@ function FormPago({ mode, categorias, onSave, onCancel }: {
   async function handleSave() {
     if (!concepto.trim() || !monto) return
     setSaving(true)
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       concepto:    concepto.trim(),
       monto:       Number(monto),
       fecha:       fecha || null,
@@ -150,7 +278,7 @@ function FormPago({ mode, categorias, onSave, onCancel }: {
     onSave()
   }
 
-  const inputCls = "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-emerald-500/50"
+  const inputCls  = "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-emerald-500/50"
   const selectCls = "bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300"
 
   return (
@@ -192,22 +320,28 @@ function FormPago({ mode, categorias, onSave, onCancel }: {
   )
 }
 
-// ── Página ──────────────────────────────────────────────────────────────────
+// ─── Página ───────────────────────────────────────────────────────────────────
+
 export default function PagosPage() {
-  const { pagos, setPagos, loading, refetch }                    = useGetPagosTrabajo()
-  const { categorias, refetch: refetchCats, loading: loadingCats } = useGetCategoriasPago()
+  const { pagos, setPagos, loading, refetch }                       = useGetPagosTrabajo()
+  const { categorias, refetch: refetchCats, loading: loadingCats }  = useGetCategoriasPago()
 
-  const [formMode,    setFormMode]    = useState<FormMode | null>(null)
-  const [showGestion, setShowGestion] = useState(false)
-  const [filtroEst,   setFiltroEst]   = useState<EstadoPago | "todos">("todos")
-  const [filtroCatId, setFiltroCatId] = useState<number | null>(null)
+  const [formMode,      setFormMode]      = useState<FormMode | null>(null)
+  const [showGestion,   setShowGestion]   = useState(false)
+  const [showMetricas,  setShowMetricas]  = useState(false)
+  const [filtroEst,     setFiltroEst]     = useState<EstadoPago | "todos">("todos")
+  const [filtroCatId,   setFiltroCatId]   = useState<number | null>(null)
+  const [busqueda,      setBusqueda]      = useState("")
 
-  const filtrados = useMemo(() =>
-    pagos
+  // ── Datos derivados ────────────────────────────────────────────────────────
+
+  const filtrados = useMemo(() => {
+    const q = busqueda.toLowerCase().trim()
+    return pagos
       .filter(p => filtroEst   === "todos" || p.estado === filtroEst)
-      .filter(p => filtroCatId === null    || p.categoriaPago?.id === filtroCatId),
-    [pagos, filtroEst, filtroCatId]
-  )
+      .filter(p => filtroCatId === null    || p.categoriaPago?.id === filtroCatId)
+      .filter(p => !q || p.concepto.toLowerCase().includes(q) || (p.proveedor ?? "").toLowerCase().includes(q))
+  }, [pagos, filtroEst, filtroCatId, busqueda])
 
   const resumen = useMemo(() => ({
     total:     pagos.reduce((s, p) => s + p.monto, 0),
@@ -226,13 +360,37 @@ export default function PagosPage() {
     [pagos, categorias]
   )
 
+  const sinCategoria = useMemo(
+    () => pagos.filter(p => !p.categoriaPago).reduce((s, p) => s + p.monto, 0),
+    [pagos]
+  )
+
+  const porMes = useMemo<MesStat[]>(() => {
+    const map: Record<string, number> = {}
+    pagos.forEach(p => {
+      if (!p.fecha) return
+      const [y, m] = p.fecha.split("-")
+      const key    = `${y}-${m}`
+      const label  = `${MESES_ABREV[Number(m) - 1]} ${y}`
+      map[key] = (map[key] ?? 0) + p.monto
+      // store label alongside key for sorting
+      if (!map[`${key}_label`]) map[`${key}_label`] = label as unknown as number
+    })
+    return Object.keys(map)
+      .filter(k => !k.endsWith("_label"))
+      .sort()
+      .map(key => ({ key, mes: String(map[`${key}_label`] ?? key), total: map[key]! }))
+  }, [pagos])
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
   async function handleEstado(p: PagoTrabajoType, estado: EstadoPago) {
     await updatePagoTrabajo(p.documentId, { estado })
     setPagos(prev => prev.map(x => x.documentId === p.documentId ? { ...x, estado } : x))
   }
 
   async function handleCategoria(p: PagoTrabajoType, catId: number | "") {
-    const payload: any = catId
+    const payload = catId
       ? { categoriaPago: { connect: [{ id: catId }] } }
       : { categoriaPago: { disconnect: [] } }
     await updatePagoTrabajo(p.documentId, payload)
@@ -250,6 +408,8 @@ export default function PagosPage() {
     await refetch()
   }
 
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   if (loading || loadingCats) return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="h-8 w-8 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />
@@ -258,7 +418,8 @@ export default function PagosPage() {
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
-      {/* Stats */}
+
+      {/* ── Stats ── */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total",     value: resumen.total,     color: "text-slate-200"   },
@@ -272,14 +433,36 @@ export default function PagosPage() {
         ))}
       </div>
 
-      {/* Desglose por categoría */}
+      {/* ── Toggle métricas ── */}
+      <button type="button" onClick={() => setShowMetricas(v => !v)}
+        className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+          showMetricas
+            ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+            : "border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600"
+        }`}>
+        <BarChart2 className="h-3.5 w-3.5" />
+        {showMetricas ? "Ocultar métricas" : "Ver métricas"}
+      </button>
+
+      {/* ── Panel de métricas ── */}
+      <AnimatePresence>
+        {showMetricas && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+            <MetricasPanel porCategoria={porCategoria} porMes={porMes} sinCategoria={sinCategoria} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Desglose por categoría (pills filtro) ── */}
       {porCategoria.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {porCategoria.map(({ cat, total, count }) => (
             <button key={cat.documentId} type="button"
               onClick={() => setFiltroCatId(filtroCatId === cat.id ? null : cat.id)}
               className={`flex items-center justify-between px-3 py-2 rounded-lg border text-left transition-all ${
-                filtroCatId === cat.id ? `${catColor(cat.id)} border-current` : "border-slate-700/50 bg-slate-900/40 hover:bg-slate-800/60"
+                filtroCatId === cat.id
+                  ? `${catColor(cat.id)} border-current`
+                  : "border-slate-700/50 bg-slate-900/40 hover:bg-slate-800/60"
               }`}>
               <div>
                 <p className={`text-[11px] font-semibold ${filtroCatId === cat.id ? "" : "text-slate-300"}`}>{cat.nombre}</p>
@@ -291,7 +474,7 @@ export default function PagosPage() {
         </div>
       )}
 
-      {/* Gestionar categorías */}
+      {/* ── Gestionar categorías ── */}
       <div>
         <button type="button" onClick={() => setShowGestion(v => !v)}
           className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors">
@@ -307,45 +490,66 @@ export default function PagosPage() {
         </AnimatePresence>
       </div>
 
-      {/* Filtros + acción */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          {(["todos","pendiente","pagado","parcial"] as const).map(f => (
-            <button key={f} type="button" onClick={() => setFiltroEst(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${filtroEst === f ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
-              {f === "todos" ? `Todos (${pagos.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${pagos.filter(p => p.estado === f).length})`}
-            </button>
-          ))}
-          {filtroCatId !== null && (
-            <button type="button" onClick={() => setFiltroCatId(null)}
-              className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-500 hover:text-slate-300 flex items-center gap-1">
-              <X className="h-3 w-3" /> {categorias.find(c => c.id === filtroCatId)?.nombre}
+      {/* ── Filtros + búsqueda + acción ── */}
+      <div className="flex flex-col gap-3">
+        {/* Fila 1: búsqueda */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
+          <input
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder="Buscar por concepto o proveedor…"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-slate-900/60 border border-slate-700/50 rounded-lg text-slate-200 placeholder:text-slate-600 outline-none focus:border-slate-500"
+          />
+          {busqueda && (
+            <button type="button" aria-label="Limpiar búsqueda" onClick={() => setBusqueda("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
-        <button type="button" onClick={() => setFormMode({ type: "create" })}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors">
-          <Plus className="h-4 w-4" /> Registrar Pago
-        </button>
+
+        {/* Fila 2: pills estado + botón nuevo */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {(["todos","pendiente","pagado","parcial"] as const).map(f => (
+              <button key={f} type="button" onClick={() => setFiltroEst(f)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                  filtroEst === f
+                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                    : "border-slate-700 text-slate-500 hover:text-slate-300"
+                }`}>
+                {f === "todos"
+                  ? `Todos (${pagos.length})`
+                  : `${f.charAt(0).toUpperCase() + f.slice(1)} (${pagos.filter(p => p.estado === f).length})`}
+              </button>
+            ))}
+            {filtroCatId !== null && (
+              <button type="button" onClick={() => setFiltroCatId(null)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-500 hover:text-slate-300 flex items-center gap-1">
+                <X className="h-3 w-3" /> {categorias.find(c => c.id === filtroCatId)?.nombre}
+              </button>
+            )}
+          </div>
+          <button type="button" onClick={() => setFormMode({ type: "create" })}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors">
+            <Plus className="h-4 w-4" /> Registrar Pago
+          </button>
+        </div>
       </div>
 
-      {/* Formulario crear / editar */}
+      {/* ── Formulario crear / editar ── */}
       <AnimatePresence>
         {formMode && (
-          <FormPago
-            mode={formMode}
-            categorias={categorias}
-            onSave={handleSave}
-            onCancel={() => setFormMode(null)}
-          />
+          <FormPago mode={formMode} categorias={categorias} onSave={handleSave} onCancel={() => setFormMode(null)} />
         )}
       </AnimatePresence>
 
-      {/* Tabla */}
+      {/* ── Tabla ── */}
       {filtrados.length === 0 ? (
         <div className="text-center py-16 text-slate-600">
           <Wallet className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Sin pagos registrados.</p>
+          <p className="text-sm">{busqueda ? "Sin resultados para esa búsqueda." : "Sin pagos registrados."}</p>
         </div>
       ) : (
         <div className="rounded-xl bg-slate-900/40 border border-slate-700/40 overflow-hidden">
@@ -358,7 +562,7 @@ export default function PagosPage() {
                 <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Fecha</th>
                 <th className="text-right px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Monto</th>
                 <th className="text-center px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
-                <th className="px-2 py-3 w-16" aria-label="Acciones"></th>
+                <th className="px-2 py-3 w-16"><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody>
@@ -375,7 +579,9 @@ export default function PagosPage() {
                       <select title="Categoría del pago"
                         value={p.categoriaPago?.id ?? ""}
                         onChange={e => handleCategoria(p, e.target.value ? Number(e.target.value) : "")}
-                        className={`text-[10px] px-2 py-1 rounded-full border font-medium cursor-pointer bg-transparent transition-colors ${p.categoriaPago ? catColor(p.categoriaPago.id) : "text-slate-500 border-slate-700"}`}>
+                        className={`text-[10px] px-2 py-1 rounded-full border font-medium cursor-pointer bg-transparent transition-colors ${
+                          p.categoriaPago ? catColor(p.categoriaPago.id) : "text-slate-500 border-slate-700"
+                        }`}>
                         <option value="">Sin categoría</option>
                         {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                       </select>
@@ -386,7 +592,8 @@ export default function PagosPage() {
                     <td className="px-4 py-3 text-xs text-slate-500 hidden md:table-cell">{p.fecha ?? "—"}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-200 tabular-nums">{fmt(p.monto)}</td>
                     <td className="px-4 py-3 text-center">
-                      <select title="Estado del pago" value={p.estado} onChange={e => handleEstado(p, e.target.value as EstadoPago)}
+                      <select title="Estado del pago" value={p.estado}
+                        onChange={e => handleEstado(p, e.target.value as EstadoPago)}
                         className={`text-[10px] px-2 py-1 rounded-full border font-medium bg-transparent cursor-pointer ${ESTADO_BADGE[p.estado]}`}>
                         <option value="pendiente">Pendiente</option>
                         <option value="pagado">Pagado</option>
