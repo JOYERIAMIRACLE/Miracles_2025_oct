@@ -3,8 +3,7 @@
 import { useState, useMemo } from "react"
 import {
   Plus, Pencil, Trash2, X, Check,
-  ExternalLink, ChevronDown, ChevronUp,
-  ArrowUp, ArrowDown,
+  ExternalLink, ArrowUp, ArrowDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,10 +67,153 @@ function ListaPartes({ texto }: { texto: string | null }) {
   )
 }
 
+// ─── Celda de semana con edición inline ──────────────────────────────────────
+
+function SemanaCell({
+  c, n, onSave, esExtra = false,
+}: {
+  c: CampanaType
+  n: NSemana
+  onSave: (fields: Partial<CampanaPayload>) => Promise<void>
+  esExtra?: boolean
+}) {
+  const [editando, setEditando] = useState(false)
+  const [saving,   setSaving]   = useState(false)
+  const [fFecha,   setFFecha]   = useState("")
+  const [fTitulo,  setFTitulo]  = useState("")
+  const [fPartes,  setFPartes]  = useState("")
+  const [fArchivo, setFArchivo] = useState("")
+
+  const fecha   = semanaVal(c, n, "Fecha")
+  const titulo  = semanaVal(c, n, "Titulo")
+  const partes  = semanaVal(c, n, "Partes")
+  const archivo = semanaVal(c, n, "Archivo")
+
+  const abrir = () => {
+    setFFecha(fecha ?? ""); setFTitulo(titulo ?? "")
+    setFPartes(partes ?? ""); setFArchivo(archivo ?? "")
+    setEditando(true)
+  }
+
+  const guardar = async () => {
+    setSaving(true)
+    try {
+      await onSave({
+        [`semana${n}Fecha`]:   fFecha   || null,
+        [`semana${n}Titulo`]:  fTitulo  || null,
+        [`semana${n}Partes`]:  fPartes  || null,
+        [`semana${n}Archivo`]: fArchivo || null,
+      } as Partial<CampanaPayload>)
+      setEditando(false)
+    } finally { setSaving(false) }
+  }
+
+  // ── Modo edición ────────────────────────────────────────────────────────────
+  if (editando) {
+    return (
+      <div className={`p-3 space-y-2 m-1 rounded-lg border-2 ${esExtra ? "border-amber-700/50 bg-amber-950/10" : "border-blue-700/50 bg-slate-800/60"}`}>
+        <p className={`text-[10px] font-bold uppercase tracking-wider ${esExtra ? "text-amber-400" : "text-blue-400"}`}>
+          Semana {n}
+        </p>
+        <input type="date" title="Fecha de la semana" value={fFecha} onChange={e => setFFecha(e.target.value)}
+          className="w-full text-xs rounded border border-slate-700 bg-slate-800 text-slate-200 px-2 py-1 outline-none focus:border-slate-500" />
+        <input autoFocus value={fTitulo} onChange={e => setFTitulo(e.target.value)}
+          placeholder="Título..." onKeyDown={e => { if (e.key === "Escape") setEditando(false) }}
+          className="w-full text-xs rounded border border-slate-700 bg-slate-800 text-slate-200 px-2 py-1 outline-none focus:border-slate-500" />
+        {esExtra ? (
+          <textarea value={fPartes} onChange={e => setFPartes(e.target.value)}
+            placeholder={"Título extra 1\nTítulo extra 2"} rows={3}
+            className="w-full text-xs rounded border border-amber-800/40 bg-amber-950/10 text-slate-100 px-2 py-1 resize-none placeholder:text-slate-600 outline-none" />
+        ) : (
+          <>
+            <textarea value={fPartes} onChange={e => setFPartes(e.target.value)}
+              placeholder={"Parte 1\nParte 2"} rows={2}
+              className="w-full text-xs rounded border border-slate-700 bg-slate-800 text-slate-200 px-2 py-1 resize-none placeholder:text-slate-600 outline-none focus:border-slate-500" />
+            <input value={fArchivo} onChange={e => setFArchivo(e.target.value)}
+              placeholder="Link del archivo..."
+              className="w-full text-xs rounded border border-slate-700 bg-slate-800 text-slate-200 px-2 py-1 outline-none focus:border-slate-500" />
+          </>
+        )}
+        <div className="flex gap-1.5">
+          <button type="button" onClick={guardar} disabled={saving}
+            className={`flex items-center justify-center gap-1 flex-1 text-xs py-1.5 rounded text-white transition disabled:opacity-50 ${
+              esExtra ? "bg-amber-700 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-500"
+            }`}>
+            <Check size={11} /> {saving ? "Guardando..." : "Guardar"}
+          </button>
+          <button type="button" title="Cancelar" onClick={() => setEditando(false)}
+            className="px-2.5 py-1 text-xs text-slate-500 hover:text-slate-300 rounded border border-slate-700 transition">
+            <X size={11} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Modo vista: titulos_extra ───────────────────────────────────────────────
+  if (esExtra) {
+    const extras  = partes?.trim().split("\n").filter(Boolean) ?? []
+    const hayContenido = !!(titulo || extras.length > 0)
+    return (
+      <div className={`px-3 py-2.5 group relative ${!hayContenido ? "opacity-30" : ""}`}>
+        <p className="text-[9px] font-semibold text-amber-600/70 uppercase tracking-wider">Semana {n}</p>
+        {fecha && <p className="text-[9px] text-slate-600 mb-1">{fmtFecha(fecha)}</p>}
+        {hayContenido ? (
+          <ul className="space-y-0.5 mt-0.5">
+            {titulo && <li className="text-[11px] text-amber-100/90 leading-snug font-medium">{titulo}</li>}
+            {extras.map((t, i) => <li key={i} className="text-[11px] text-amber-100/60 leading-snug">{t}</li>)}
+          </ul>
+        ) : (
+          <button type="button" onClick={abrir}
+            className="flex items-center gap-1 text-[10px] text-slate-600 hover:text-amber-500 transition mt-1">
+            <Plus size={10} /> Agregar
+          </button>
+        )}
+        {hayContenido && (
+          <button type="button" onClick={abrir} title="Editar semana"
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-slate-600 hover:text-amber-400 rounded hover:bg-slate-800 transition">
+            <Pencil size={10} />
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  // ── Modo vista: completa ────────────────────────────────────────────────────
+  const tieneContenido = !!(titulo || partes || archivo)
+  return (
+    <div className={`p-3 space-y-1.5 group relative ${!tieneContenido ? "opacity-30" : ""}`}>
+      <div>
+        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Semana {n}</p>
+        {fecha && <p className="text-[9px] text-slate-600 mt-0.5">{fmtFecha(fecha)}</p>}
+      </div>
+      {titulo && <p className="text-[11px] font-medium text-slate-200 leading-snug">{titulo}</p>}
+      {partes && (
+        <div>
+          <p className="text-[9px] text-slate-600 uppercase mb-0.5">Partes / Productos</p>
+          <ListaPartes texto={partes} />
+        </div>
+      )}
+      {archivo && <ArchivoLink url={archivo} />}
+      {!tieneContenido ? (
+        <button type="button" onClick={abrir}
+          className="flex items-center gap-1 text-[10px] text-slate-600 hover:text-slate-400 transition mt-1">
+          <Plus size={10} /> Agregar
+        </button>
+      ) : (
+        <button type="button" onClick={abrir} title="Editar semana"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+          <Pencil size={10} />
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ─── Tarjeta campaña completa ─────────────────────────────────────────────────
 
 function CampanaCompletaCard({
-  c, onEdit, onDelete, onMover, esPrimera, esUltima,
+  c, onEdit, onDelete, onMover, esPrimera, esUltima, onSaveSemana,
 }: {
   c: CampanaType
   onEdit: () => void
@@ -79,8 +221,8 @@ function CampanaCompletaCard({
   onMover: (dir: "arriba" | "abajo") => void
   esPrimera: boolean
   esUltima: boolean
+  onSaveSemana: (fields: Partial<CampanaPayload>) => Promise<void>
 }) {
-  const [expandido, setExpandido] = useState(false)
   const atributos = c.atributos?.split("\n").filter(Boolean) ?? []
 
   return (
@@ -106,7 +248,6 @@ function CampanaCompletaCard({
             </div>
           )}
         </div>
-
         <div className="flex items-center gap-0.5 shrink-0">
           <button type="button" onClick={() => onMover("arriba")} disabled={esPrimera}
             className="p-1.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:cursor-not-allowed rounded hover:bg-slate-800 transition" title="Mover arriba">
@@ -116,11 +257,7 @@ function CampanaCompletaCard({
             className="p-1.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:cursor-not-allowed rounded hover:bg-slate-800 transition" title="Mover abajo">
             <ArrowDown size={12} />
           </button>
-          <button type="button" onClick={() => setExpandido(v => !v)}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition ml-1" title={expandido ? "Colapsar" : "Expandir"}>
-            {expandido ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-          <button type="button" onClick={onEdit} title="Editar" className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+          <button type="button" onClick={onEdit} title="Editar campaña" className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition ml-1">
             <Pencil size={13} />
           </button>
           <button type="button" onClick={onDelete} title="Eliminar" className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition">
@@ -130,35 +267,12 @@ function CampanaCompletaCard({
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-slate-800/60">
-        {SEMANAS.map(n => {
-          const fecha   = semanaVal(c, n, "Fecha")
-          const titulo  = semanaVal(c, n, "Titulo")
-          const partes  = semanaVal(c, n, "Partes")
-          const archivo = semanaVal(c, n, "Archivo")
-          const tieneContenido = titulo || partes || archivo
-          return (
-            <div key={n} className={`p-3 space-y-1.5 ${!tieneContenido ? "opacity-30" : ""}`}>
-              <div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Semana {n}</p>
-                {fecha && <p className="text-[9px] text-slate-600 mt-0.5">{fmtFecha(fecha)}</p>}
-              </div>
-              {titulo && <p className="text-[11px] font-medium text-slate-200 leading-snug">{titulo}</p>}
-              {expandido && partes && (
-                <div>
-                  <p className="text-[9px] text-slate-600 uppercase mb-0.5">Partes / Productos</p>
-                  <ListaPartes texto={partes} />
-                </div>
-              )}
-              {(expandido || !titulo) && archivo && <ArchivoLink url={archivo} />}
-              {!expandido && !titulo && !partes && !archivo && (
-                <p className="text-[10px] text-slate-700 italic">—</p>
-              )}
-            </div>
-          )
-        })}
+        {SEMANAS.map(n => (
+          <SemanaCell key={n} c={c} n={n} onSave={onSaveSemana} />
+        ))}
       </div>
 
-      {c.notas && expandido && (
+      {c.notas && (
         <div className="px-4 py-2 border-t border-slate-800/60">
           <p className="text-[11px] text-slate-500">{c.notas}</p>
         </div>
@@ -170,7 +284,7 @@ function CampanaCompletaCard({
 // ─── Tarjeta títulos extra ────────────────────────────────────────────────────
 
 function CampanaTitulosCard({
-  c, onEdit, onDelete, onMover, esPrimera, esUltima,
+  c, onEdit, onDelete, onMover, esPrimera, esUltima, onSaveSemana,
 }: {
   c: CampanaType
   onEdit: () => void
@@ -178,6 +292,7 @@ function CampanaTitulosCard({
   onMover: (dir: "arriba" | "abajo") => void
   esPrimera: boolean
   esUltima: boolean
+  onSaveSemana: (fields: Partial<CampanaPayload>) => Promise<void>
 }) {
   return (
     <div className="bg-slate-900 border border-amber-800/40 rounded-xl overflow-hidden">
@@ -210,31 +325,9 @@ function CampanaTitulosCard({
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-slate-800/40">
-        {SEMANAS.map(n => {
-          const fecha   = semanaVal(c, n, "Fecha")
-          const titulo  = semanaVal(c, n, "Titulo")
-          const extras  = semanaVal(c, n, "Partes")
-          const extrasList = extras?.trim().split("\n").filter(Boolean) ?? []
-          const hayContenido = titulo || extrasList.length > 0
-          return (
-            <div key={n} className={`px-3 py-2.5 ${!hayContenido ? "opacity-30" : ""}`}>
-              <p className="text-[9px] font-semibold text-amber-600/70 uppercase tracking-wider">Semana {n}</p>
-              {fecha && <p className="text-[9px] text-slate-600 mb-1">{fmtFecha(fecha)}</p>}
-              {hayContenido ? (
-                <ul className="space-y-0.5 mt-0.5">
-                  {titulo && (
-                    <li className="text-[11px] text-amber-100/90 leading-snug font-medium">{titulo}</li>
-                  )}
-                  {extrasList.map((t, i) => (
-                    <li key={i} className="text-[11px] text-amber-100/60 leading-snug">{t}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-[10px] text-slate-700 italic">—</p>
-              )}
-            </div>
-          )
-        })}
+        {SEMANAS.map(n => (
+          <SemanaCell key={n} c={c} n={n} onSave={onSaveSemana} esExtra />
+        ))}
       </div>
     </div>
   )
@@ -450,6 +543,19 @@ export function CampanasView() {
     }
   }
 
+  const saveSemana = async (documentId: string, fields: Partial<CampanaPayload>) => {
+    const original = campanas.find(c => c.documentId === documentId)
+    setCampanas(prev => prev.map(c => c.documentId === documentId ? { ...c, ...fields } : c))
+    try {
+      const updated = await updateCampana(documentId, fields)
+      setCampanas(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
+    } catch {
+      if (original) setCampanas(prev => prev.map(c => c.documentId === documentId ? original : c))
+      toast.error("Error al guardar semana")
+      throw new Error("Error al guardar semana")
+    }
+  }
+
   const soloTitulo = form.tipo === "titulos_extra"
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -549,6 +655,7 @@ export function CampanasView() {
                       onMover={dir => reordenar(c.documentId, mesAnio, dir)}
                       esPrimera={idx === 0}
                       esUltima={idx === items.length - 1}
+                      onSaveSemana={fields => saveSemana(c.documentId, fields)}
                     />
                   ) : (
                     <CampanaCompletaCard key={c.documentId} c={c}
@@ -557,6 +664,7 @@ export function CampanasView() {
                       onMover={dir => reordenar(c.documentId, mesAnio, dir)}
                       esPrimera={idx === 0}
                       esUltima={idx === items.length - 1}
+                      onSaveSemana={fields => saveSemana(c.documentId, fields)}
                     />
                   )
                 )}
