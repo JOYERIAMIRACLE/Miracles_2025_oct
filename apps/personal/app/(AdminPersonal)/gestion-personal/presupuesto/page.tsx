@@ -3,6 +3,11 @@
 import { useState, useEffect, useMemo } from "react"
 import { Plus, Edit, Trash2, X, Loader2, TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
+import { useRef, useLayoutEffect } from "react"
+import {
+  PieChart, Pie, Cell,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
+} from "recharts"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { toast } from "sonner"
@@ -57,6 +62,15 @@ const fmtSigned = (n: number, esIngreso: boolean) => {
 }
 
 const esIngreso = (p: PartidaPresupuestoType) => p.categoria === "ingreso" || p.tipo === "ingreso"
+
+const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#ef4444","#3b82f6","#8b5cf6","#14b8a6","#f97316","#ec4899","#84cc16"]
+const TOOLTIP_STYLE = { backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 12, color: "#e2e8f0" }
+
+function ChartDot({ color }: { color: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => { if (ref.current) ref.current.style.backgroundColor = color }, [color])
+  return <span ref={ref} className="w-2 h-2 rounded-full shrink-0 inline-block" />
+}
 
 const TIPO_PAGO_COLORS: Record<string, string> = {
   efectivo:      "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
@@ -570,6 +584,80 @@ export default function PresupuestoPage() {
           </>
         )}
       </div>
+
+      {/* ── Gráficas ────────────────────────────────────────────────────────── */}
+      {comparativa.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          {/* Donut: distribución del presupuesto mensual */}
+          <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+              Distribución presupuesto mensual
+            </h3>
+            <div className="flex items-center gap-4">
+              <ResponsiveContainer width="50%" height={160}>
+                <PieChart>
+                  <Pie
+                    data={comparativa.filter(c => c.presupuestado > 0)}
+                    dataKey="presupuestado"
+                    nameKey="cat"
+                    cx="50%" cy="50%"
+                    innerRadius={45} outerRadius={70}
+                    strokeWidth={0}
+                  >
+                    {comparativa.filter(c => c.presupuestado > 0).map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={TOOLTIP_STYLE}
+                    formatter={(v: number) => [`$${Math.round(v).toLocaleString("es-MX")}`, "Presupuesto"]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex-1 space-y-1.5 min-w-0">
+                {comparativa.filter(c => c.presupuestado > 0).map((c, i) => (
+                  <div key={c.cat} className="flex items-center gap-2 min-w-0">
+                    <ChartDot color={CHART_COLORS[i % CHART_COLORS.length]} />
+                    <span className="text-[11px] text-slate-400 truncate capitalize flex-1">{c.cat}</span>
+                    <span className="text-[11px] text-slate-300 font-medium shrink-0">
+                      {fmt(c.presupuestado)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Barras: presupuestado vs gastado real por categoría */}
+          <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+              Presupuestado vs Real — {mesLabel}
+            </h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={comparativa.map(c => ({
+                  cat: c.cat.length > 10 ? c.cat.slice(0, 10) + "…" : c.cat,
+                  Presupuesto: Math.round(c.presupuestado),
+                  Real: Math.round(c.gastado),
+                }))}
+                margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+              >
+                <XAxis dataKey="cat" tick={{ fontSize: 9, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "#64748b" }} tickLine={false} axisLine={false}
+                  tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                <Tooltip
+                  contentStyle={TOOLTIP_STYLE}
+                  formatter={(v: number) => `$${v.toLocaleString("es-MX")}`}
+                />
+                <Legend wrapperStyle={{ fontSize: 10, color: "#94a3b8" }} />
+                <Bar dataKey="Presupuesto" fill="#6366f1" radius={[3, 3, 0, 0]} maxBarSize={20} />
+                <Bar dataKey="Real" fill="#10b981" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Tabla */}
       <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 shadow-sm overflow-hidden rounded-xl">

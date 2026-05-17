@@ -1,153 +1,130 @@
 "use client"
-import { useState, useMemo } from "react"
+
+import { useState, useMemo, useRef, useLayoutEffect } from "react"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
-import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { createCuenta } from "@/api/cuenta/createCuenta"
 import { updateCuenta } from "@/api/cuenta/updateCuenta"
 import { deleteCuenta } from "@/api/cuenta/deleteCuenta"
 import { CuentaType, CuentaPayload, TipoCuenta, PropositoCuenta } from "@/types/cuenta"
-import { Plus, Pencil, Trash2, X, Check, Banknote, TrendingUp, TrendingDown, Star, PiggyBank, Bookmark, Wallet, LineChart, CreditCard } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { InventarioNav } from "@/components/Personal/InventarioNav"
+import {
+  Plus, Pencil, Trash2, X, Check,
+  Banknote, PiggyBank, Bookmark, Wallet, LineChart, CreditCard, Star,
+} from "lucide-react"
 import { toast } from "sonner"
 
-const TIPOS: TipoCuenta[]    = ["Efectivo", "Crédito", "Debito"]
-const PROPOSITOS: PropositoCuenta[] = ["Operativa", "Ahorro", "Inversión", "Apartado", "Presupuesto 1"]
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Metadata visual por propósito — orden = orden de render en la lista
-type PropositoMeta = {
-  label:     string
-  icon:      React.ElementType
-  sectionCls: string  // clases para el header de sección
-  cardCls:    string  // clases para las tarjetas de cuenta dentro del grupo
-}
-const PROPOSITO_META: Record<string, PropositoMeta> = {
-  "Operativa":     { label: "Operativa · gasto diario", icon: Star,       sectionCls: "text-emerald-500",  cardCls: "border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-sm" },
-  "Ahorro":        { label: "Ahorro",                   icon: PiggyBank,  sectionCls: "text-blue-500",     cardCls: "border-blue-200 dark:border-blue-900/50 bg-blue-50/30 dark:bg-blue-950/15" },
-  "Inversión":     { label: "Inversión",                icon: LineChart,  sectionCls: "text-violet-500",   cardCls: "border-violet-200 dark:border-violet-900/50 bg-violet-50/30 dark:bg-violet-950/15" },
-  "Apartado":      { label: "Apartado",                 icon: Bookmark,   sectionCls: "text-amber-500",    cardCls: "border-amber-200 dark:border-amber-900/50 bg-amber-50/30 dark:bg-amber-950/15" },
-  "Presupuesto 1": { label: "Presupuesto 1",            icon: Wallet,     sectionCls: "text-indigo-500",   cardCls: "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-indigo-950/15" },
-  "__sin":         { label: "Sin propósito",            icon: Banknote,   sectionCls: "text-zinc-500",     cardCls: "" },
-  "__credito":     { label: "Crédito · tarjetas",       icon: CreditCard, sectionCls: "text-red-500",      cardCls: "" },
-}
-const ORDEN_PROPOSITOS = ["Operativa", "Ahorro", "Inversión", "Apartado", "Presupuesto 1", "__sin", "__credito"]
+const TIPOS: TipoCuenta[] = ["Efectivo", "Crédito", "Debito"]
+const PROPOSITOS: PropositoCuenta[] = ["Operativa", "Ahorro", "Inversión", "Apartado", "Presupuesto 1"]
+const COLORES = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#14b8a6", "#f97316"]
 
 const fmt = (n: number | null | undefined) =>
   `$${(n ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
 
-const COLORES = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#14b8a6", "#f97316"]
-
-const inputCls = "h-8 text-sm"
+type PropositoMeta = { label: string; icon: React.ElementType; color: string }
+const PROPOSITO_META: Record<string, PropositoMeta> = {
+  "Operativa":     { label: "Operativa",   icon: Star,       color: "text-emerald-400" },
+  "Ahorro":        { label: "Ahorro",      icon: PiggyBank,  color: "text-blue-400"    },
+  "Inversión":     { label: "Inversión",   icon: LineChart,  color: "text-violet-400"  },
+  "Apartado":      { label: "Apartado",    icon: Bookmark,   color: "text-amber-400"   },
+  "Presupuesto 1": { label: "Presupuesto", icon: Wallet,     color: "text-indigo-400"  },
+  "__sin":         { label: "Sin propósito", icon: Banknote, color: "text-slate-400"   },
+  "__credito":     { label: "Crédito",     icon: CreditCard, color: "text-red-400"     },
+}
+const ORDEN_PROPOSITOS = ["Operativa", "Ahorro", "Inversión", "Apartado", "Presupuesto 1", "__sin", "__credito"]
 
 const emptyForm = (): CuentaPayload => ({
-  nombre: "",
-  tipo: null,
-  proposito: null,
-  saldoActual: null,
-  saldoBanco: null,
-  metaDeCuenta: null,
-  color: COLORES[0],
-  activa: true,
+  nombre: "", tipo: null, proposito: null,
+  saldoActual: null, saldoBanco: null, metaDeCuenta: null,
+  color: COLORES[0], activa: true,
 })
+
+// ─── ColorDot (sin inline styles) ────────────────────────────────────────────
+
+function ColorDot({ color }: { color: string | null }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    if (ref.current) ref.current.style.backgroundColor = color ?? "#6366f1"
+  }, [color])
+  return <span ref={ref} className="w-3 h-3 rounded-full shrink-0 inline-block" />
+}
+
+function ColorBtn({ col, selected, onClick }: { col: string; selected: boolean; onClick: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null)
+  useLayoutEffect(() => {
+    if (ref.current) ref.current.style.backgroundColor = col
+  }, [col])
+  return (
+    <button ref={ref} type="button" title={col} onClick={onClick}
+      className={`w-6 h-6 rounded-full border-2 transition-transform ${selected ? "border-white scale-110" : "border-transparent"}`} />
+  )
+}
+
+// ─── Página ───────────────────────────────────────────────────────────────────
 
 export default function CuentasPage() {
   const { cuentas, setCuentas, loading } = useGetCuentas()
-  const { transacciones } = useGetTransacciones()
-  const [mostrarForm, setMostrarForm] = useState(false)
-  const [form, setForm] = useState<CuentaPayload>(emptyForm())
-  const [editando, setEditando] = useState<CuentaType | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [form,      setForm]      = useState<CuentaPayload>(emptyForm())
+  const [editando,  setEditando]  = useState<CuentaType | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [mostrarInactivas, setMostrarInactivas] = useState(false)
 
-  const activas   = cuentas.filter(c => c.activa)
+  const activas  = cuentas.filter(c => c.activa)
   const inactivas = cuentas.filter(c => !c.activa)
-  const liquidas = activas.filter(c => c.tipo !== "Crédito")
-  const creditos = activas.filter(c => c.tipo === "Crédito")
-  const efectivo = activas.filter(c => c.tipo === "Efectivo")
+  const liquidas  = activas.filter(c => c.tipo !== "Crédito")
+  const creditos  = activas.filter(c => c.tipo === "Crédito")
+  const efectivo  = activas.filter(c => c.tipo === "Efectivo")
   const operativas = liquidas.filter(c => c.proposito === "Operativa")
   const apartados  = liquidas.filter(c => c.proposito !== "Operativa")
 
   const saldoDe = (c: CuentaType) => c.saldoActual ?? 0
-  const totalSistema   = liquidas.reduce((s, c) => s + saldoDe(c), 0)
   const totalOperativa = operativas.reduce((s, c) => s + saldoDe(c), 0)
   const totalApartados = apartados.reduce((s, c) => s + saldoDe(c), 0)
   const totalEfectivo  = efectivo.reduce((s, c) => s + saldoDe(c), 0)
   const totalBanco     = liquidas.filter(c => c.saldoBanco != null).reduce((s, c) => s + c.saldoBanco!, 0)
   const tieneBancos    = liquidas.some(c => c.saldoBanco != null)
+  const totalSistema   = liquidas.reduce((s, c) => s + saldoDe(c), 0)
   const totalDeuda     = creditos.reduce((s, c) => s + saldoDe(c), 0)
   const diferencia     = tieneBancos ? totalBanco - totalSistema : null
 
-  // Agrupa liquidas por propósito (para desglose y lista)
   const gruposLista = useMemo(() => {
     return ORDEN_PROPOSITOS.map(key => {
-      let items: CuentaType[] = []
-      if (key === "__credito")     items = creditos
-      else if (key === "__sin")    items = liquidas.filter(c => !c.proposito)
-      else                         items = liquidas.filter(c => c.proposito === key)
+      const items: CuentaType[] =
+        key === "__credito" ? creditos
+        : key === "__sin"  ? liquidas.filter(c => !c.proposito)
+        :                    liquidas.filter(c => c.proposito === key)
       const total = items.reduce((s, c) => s + saldoDe(c), 0)
       return { key, meta: PROPOSITO_META[key], items, total }
     }).filter(g => g.items.length > 0)
   }, [cuentas])
 
-  // ─── Resumen mensual: transacciones registradas por mes ───
-  const resumenMensual = useMemo(() => {
-    const hoy = new Date()
-    const meses: { key: string; label: string; ingresos: number; gastos: number }[] = []
-    for (let i = 0; i < 6; i++) {
-      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-      const label = d.toLocaleDateString("es-MX", { month: "short", year: "numeric" })
-      const txMes = transacciones.filter(t => t.fecha?.startsWith(key))
-      const ingresos = txMes.filter(t => t.tipo === "ingreso").reduce((s, t) => s + Number(t.monto), 0)
-      const gastos   = txMes.filter(t => t.tipo === "gasto").reduce((s, t) => s + Number(t.monto), 0)
-      meses.push({ key, label, ingresos, gastos })
-    }
-    return meses
-  }, [transacciones])
-
-  const abrirCrear = () => {
-    setEditando(null)
-    setForm(emptyForm())
-    setMostrarForm(true)
-  }
-
+  // ── CRUD ───────────────────────────────────────────────────────────────────
+  const abrirCrear = () => { setEditando(null); setForm(emptyForm()); setModalOpen(true) }
   const abrirEditar = (c: CuentaType) => {
     setEditando(c)
     setForm({
-      nombre:       c.nombre,
-      tipo:         c.tipo,
-      proposito:    c.proposito,
-      saldoActual:  c.saldoActual,
-      saldoBanco:   c.saldoBanco,
-      metaDeCuenta: c.metaDeCuenta,
-      color:        c.color,
-      activa:       c.activa ?? true,
+      nombre: c.nombre, tipo: c.tipo, proposito: c.proposito,
+      saldoActual: c.saldoActual, saldoBanco: c.saldoBanco,
+      metaDeCuenta: c.metaDeCuenta, color: c.color, activa: c.activa ?? true,
     })
-    setMostrarForm(true)
+    setModalOpen(true)
   }
 
-  const cerrar = () => {
-    setMostrarForm(false)
-    setEditando(null)
-  }
-
-  const handleGuardar = async () => {
-    if (!form.nombre) return toast.error("El nombre es obligatorio")
+  const guardar = async () => {
+    if (!form.nombre.trim()) { toast.error("El nombre es obligatorio"); return }
     setGuardando(true)
     try {
-      const payload: CuentaPayload = { ...form }
       if (editando) {
-        const updated = await updateCuenta(editando.documentId, payload)
+        const updated = await updateCuenta(editando.documentId, form)
         setCuentas(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
         toast.success("Cuenta actualizada")
       } else {
-        const nueva = await createCuenta(payload)
+        const nueva = await createCuenta(form)
         setCuentas(prev => [...prev, nueva])
         toast.success("Cuenta creada")
       }
-      cerrar()
+      setModalOpen(false)
     } catch (e: any) {
       toast.error(e.message ?? "Error al guardar")
     } finally {
@@ -155,330 +132,185 @@ export default function CuentasPage() {
     }
   }
 
-  const handleEliminar = async (c: CuentaType) => {
+  const eliminar = async (c: CuentaType) => {
     if (!confirm(`¿Eliminar "${c.nombre}"?`)) return
     try {
       await deleteCuenta(c.documentId)
       setCuentas(prev => prev.filter(x => x.documentId !== c.documentId))
       toast.success("Cuenta eliminada")
-    } catch (e: any) {
-      toast.error(e.message ?? "Error al eliminar")
-    }
+    } catch { toast.error("Error al eliminar") }
   }
 
-  const handleToggleActiva = async (c: CuentaType) => {
+  const toggleActiva = async (c: CuentaType) => {
     try {
       const updated = await updateCuenta(c.documentId, { activa: !c.activa })
       setCuentas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
-    } catch {
-      toast.error("Error al actualizar")
-    }
+    } catch { toast.error("Error al actualizar") }
   }
 
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <InventarioNav />
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Mis Cuentas</h1>
-          <p className="text-sm text-muted-foreground">Gestiona tu cartera y saldos iniciales</p>
+          <h1 className="text-2xl font-bold text-slate-100">Mis Cuentas</h1>
+          <p className="text-sm text-slate-500">Saldos y distribución de tu dinero</p>
         </div>
-        <Button onClick={abrirCrear} size="sm">
-          <Plus size={14} className="mr-1" /> Nueva cuenta
-        </Button>
+        <button type="button" onClick={abrirCrear}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">
+          <Plus size={15} /> Nueva cuenta
+        </button>
       </div>
 
-      {/* Operativa vs Apartados (separación principal) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        {/* Operativa — destacado */}
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/60 dark:to-emerald-900/20 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-1.5 mb-1">
-            <Star className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 fill-emerald-500" />
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold uppercase tracking-wide">Operativa</p>
-          </div>
-          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-200">{fmt(totalOperativa)}</p>
-          <p className="text-[11px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
-            {operativas.length} cuenta{operativas.length !== 1 ? "s" : ""} de gasto diario
-          </p>
+      {/* Cards resumen */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-xl p-4">
+          <p className="text-[11px] text-emerald-400 font-semibold uppercase tracking-wide mb-1">Operativa</p>
+          <p className="text-xl font-bold text-emerald-300">{fmt(totalOperativa)}</p>
+          <p className="text-[10px] text-slate-600 mt-0.5">{operativas.length} cuenta{operativas.length !== 1 ? "s" : ""}</p>
         </div>
-        {/* Apartados — con desglose por propósito */}
-        <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
-          <div className="flex items-center gap-1.5 mb-1">
-            <PiggyBank className="h-3.5 w-3.5 text-slate-500" />
-            <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wide">Apartados</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{fmt(totalApartados)}</p>
-          {/* Desglose en pills */}
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {gruposLista
-              .filter(g => g.key !== "Operativa" && g.key !== "__credito" && g.total > 0)
-              .map(g => {
-                const Icon = g.meta.icon
-                return (
-                  <span key={g.key} className="inline-flex items-center gap-1 text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5">
-                    <Icon className={`h-2.5 w-2.5 ${g.meta.sectionCls}`} />
-                    <span className="text-slate-500">{g.meta.label}:</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">{fmt(g.total)}</span>
-                  </span>
-                )
-              })}
-          </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wide mb-1">Apartados</p>
+          <p className="text-xl font-bold text-slate-200">{fmt(totalApartados)}</p>
+          <p className="text-[10px] text-slate-600 mt-0.5">{apartados.length} cuenta{apartados.length !== 1 ? "s" : ""}</p>
+        </div>
+        <div className="bg-amber-950/40 border border-amber-800/40 rounded-xl p-4">
+          <p className="text-[11px] text-amber-400 font-semibold uppercase tracking-wide mb-1">Efectivo</p>
+          <p className="text-xl font-bold text-amber-300">{fmt(totalEfectivo)}</p>
+          <p className="text-[10px] text-slate-600 mt-0.5">{efectivo.length} cuenta{efectivo.length !== 1 ? "s" : ""}</p>
+        </div>
+        <div className="bg-red-950/40 border border-red-800/40 rounded-xl p-4">
+          <p className="text-[11px] text-red-400 font-semibold uppercase tracking-wide mb-1">Deuda crédito</p>
+          <p className="text-xl font-bold text-red-300">{fmt(totalDeuda)}</p>
+          <p className="text-[10px] text-slate-600 mt-0.5">{creditos.length} tarjeta{creditos.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
 
-      {/* Resumen secundario */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Efectivo</p>
-          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{fmt(totalEfectivo)}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{efectivo.length} cuenta{efectivo.length !== 1 ? "s" : ""} cash</p>
-        </div>
-        <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Saldo banco</p>
-          <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{tieneBancos ? fmt(totalBanco) : "—"}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{tieneBancos ? "Referencia real" : "Editar cuentas"}</p>
-        </div>
-        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-xs text-red-600 dark:text-red-400 font-medium">Deuda crédito</p>
-          <p className="text-xl font-bold text-red-700 dark:text-red-300">{fmt(totalDeuda)}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{creditos.length} tarjeta{creditos.length !== 1 ? "s" : ""}</p>
-        </div>
-        <div className="bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
-          <p className="text-xs text-muted-foreground font-medium">
-            {diferencia === null ? "Sin referencia" : diferencia === 0 ? "Todo cuadra" : diferencia > 0 ? "Sobrante" : "Faltante"}
-          </p>
-          <p className={`text-xl font-bold ${
-            diferencia === null ? "text-zinc-400"
-            : diferencia === 0 ? "text-muted-foreground"
-            : "text-zinc-700 dark:text-zinc-300"
-          }`}>
-            {diferencia !== null ? (diferencia >= 0 ? "+" : "") + fmt(diferencia) : "—"}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{diferencia !== null && diferencia !== 0 ? "Sin registrar" : ""}</p>
-        </div>
-      </div>
-
-      {/* Formulario */}
-      {mostrarForm && (
-        <div className="mb-6 bg-white dark:bg-card border rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold">{editando ? "Editar cuenta" : "Nueva cuenta"}</h2>
-            <button type="button" title="Cerrar" onClick={cerrar} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <Label className="text-xs">Nombre</Label>
-              <Input className={inputCls} placeholder="Ej: BBVA Débito" value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
-            </div>
-            <div>
-              <Label className="text-xs">Tipo</Label>
-              <select
-                title="Tipo de cuenta"
-                className="w-full h-8 text-sm border rounded px-2 bg-background text-foreground"
-                value={form.tipo ?? ""}
-                onChange={e => setForm(f => ({ ...f, tipo: (e.target.value || null) as TipoCuenta | null }))}
-              >
-                <option value="">— Seleccionar —</option>
-                {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs">Propósito</Label>
-              <select
-                title="Propósito de la cuenta"
-                className="w-full h-8 text-sm border rounded px-2 bg-background text-foreground"
-                value={form.proposito ?? ""}
-                onChange={e => setForm(f => ({ ...f, proposito: (e.target.value || null) as PropositoCuenta | null }))}
-              >
-                <option value="">— Seleccionar —</option>
-                {PROPOSITOS.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs">Saldo actual <span className="text-muted-foreground">(lo que tienes hoy)</span></Label>
-              <Input className={inputCls} type="number" placeholder="0" value={form.saldoActual ?? ""} onChange={e => setForm(f => ({ ...f, saldoActual: e.target.value === "" ? null : Number(e.target.value) }))} />
-            </div>
-            <div>
-              <Label className="text-xs">Saldo banco <span className="text-muted-foreground">(referencia visual)</span></Label>
-              <Input className={inputCls} type="number" placeholder="Lo que dice tu banco hoy" value={form.saldoBanco ?? ""} onChange={e => setForm(f => ({ ...f, saldoBanco: e.target.value === "" ? null : Number(e.target.value) }))} />
-            </div>
-            <div>
-              <Label className="text-xs">Meta de la cuenta (opcional)</Label>
-              <Input className={inputCls} type="number" placeholder="Ej: 50000" value={form.metaDeCuenta ?? ""} onChange={e => setForm(f => ({ ...f, metaDeCuenta: e.target.value === "" ? null : Number(e.target.value) }))} />
-            </div>
-            <div>
-              <Label className="text-xs">Color</Label>
-              <div className="flex gap-2 mt-1">
-                {COLORES.map(col => (
-                  <button
-                    type="button"
-                    key={col}
-                    title={col}
-                    onClick={() => setForm(f => ({ ...f, color: col }))}
-                    className={`w-6 h-6 rounded-full border-2 transition-all ${form.color === col ? "border-foreground scale-110" : "border-transparent"}`}
-                    style={{ backgroundColor: col }}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <input type="checkbox" id="activa" title="Cuenta activa" checked={form.activa ?? true} onChange={e => setForm(f => ({ ...f, activa: e.target.checked }))} />
-              <Label htmlFor="activa" className="text-xs">Cuenta activa</Label>
-            </div>
-          </div>
-          <Button className="mt-4 w-full" size="sm" onClick={handleGuardar} disabled={guardando}>
-            {guardando ? "Guardando..." : editando ? "Guardar cambios" : "Crear cuenta"}
-          </Button>
+      {/* Banco vs sistema */}
+      {tieneBancos && (
+        <div className={`mb-6 px-4 py-3 rounded-xl border text-sm flex items-center justify-between ${
+          diferencia === 0 ? "bg-emerald-950/30 border-emerald-800/40 text-emerald-400"
+          : "bg-amber-950/30 border-amber-800/40 text-amber-400"
+        }`}>
+          <span className="text-[11px] font-medium uppercase tracking-wide">
+            {diferencia === 0 ? "✓ Sistema cuadra con banco" : diferencia! > 0 ? "Sobrante sin registrar" : "Faltante en sistema"}
+          </span>
+          {diferencia !== 0 && (
+            <span className="font-bold">{diferencia! > 0 ? "+" : ""}{fmt(diferencia)}</span>
+          )}
         </div>
       )}
 
-      {/* Lista de cuentas — agrupada por propósito */}
+      {/* Lista agrupada */}
       {loading ? (
-        <p className="text-sm text-muted-foreground text-center py-8">Cargando...</p>
+        <p className="text-sm text-slate-500 text-center py-12">Cargando...</p>
       ) : cuentas.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-8">No hay cuentas. Crea una.</p>
+        <p className="text-sm text-slate-500 text-center py-12">No hay cuentas. Crea una.</p>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {gruposLista.map(grupo => {
-            const HeaderIcon = grupo.meta.icon
+            const Icon = grupo.meta.icon
             return (
-            <div key={grupo.key}>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className={`text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 ${grupo.meta.sectionCls}`}>
-                  <HeaderIcon className="h-3 w-3" />
-                  {grupo.meta.label}
-                  <span className="text-muted-foreground font-normal">· {grupo.items.length}</span>
-                </h3>
-                <span className="text-xs font-semibold text-muted-foreground">{fmt(grupo.total)}</span>
-              </div>
-              <div className="space-y-2">
-          {grupo.items.map(c => {
-            const saldo = c.saldoActual ?? 0
-            const esCredito = c.tipo === "Crédito"
-            const esOperativa = c.proposito === "Operativa"
-            const saldoPositivo = esCredito ? saldo === 0 : saldo >= 0
-            const tieneBanco = c.saldoBanco !== null && c.saldoBanco !== undefined
-            const diferencia = tieneBanco ? c.saldoBanco! - saldo : null
-            return (
-              <div key={c.id} className={`flex items-center gap-4 p-4 rounded-xl border transition-opacity ${
-                !c.activa ? "opacity-50" : ""
-              } ${grupo.meta.cardCls || "border-border bg-white dark:bg-card"}`}>
-                {/* Color dot */}
-                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color ?? "#6366f1" }} />
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm truncate">{c.nombre}</p>
-                    {esOperativa && <Star className="h-3 w-3 text-emerald-500 fill-emerald-500 shrink-0" />}
-                    {!c.activa && <span className="text-[10px] bg-muted text-muted-foreground rounded px-1">Inactiva</span>}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{c.tipo}{c.proposito ? ` · ${c.proposito}` : ""}</p>
+              <div key={grupo.key}>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className={`text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 ${grupo.meta.color}`}>
+                    <Icon className="h-3 w-3" />
+                    {grupo.meta.label}
+                    <span className="text-slate-600 font-normal">· {grupo.items.length}</span>
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-500">{fmt(grupo.total)}</span>
                 </div>
-
-                {/* Saldo sistema (transacciones) */}
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">{esCredito ? "Deuda" : "Sistema"}</p>
-                  <p className={`text-sm font-bold ${saldoPositivo ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                    {fmt(saldo)}
-                  </p>
-                </div>
-
-                {/* Saldo banco (referencia) */}
-                {tieneBanco && (
-                  <div className="text-right hidden sm:block">
-                    <p className="text-xs text-muted-foreground">Banco</p>
-                    <p className="text-sm font-semibold">{fmt(c.saldoBanco!)}</p>
-                  </div>
-                )}
-
-                {/* Diferencia (sutil) */}
-                {diferencia !== null && diferencia !== 0 && (
-                  <div className="text-right hidden sm:block">
-                    <p className="text-[10px] text-muted-foreground">{diferencia > 0 ? "sobrante" : "faltante"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {diferencia > 0 ? "+" : ""}{fmt(diferencia)}
-                    </p>
-                  </div>
-                )}
-                {diferencia === 0 && tieneBanco && (
-                  <div className="text-right hidden sm:block">
-                    <p className="text-[10px] text-muted-foreground">✓ cuadra</p>
-                  </div>
-                )}
-
-                {/* Meta */}
-                {c.metaDeCuenta && (
-                  <div className="text-right hidden md:block">
-                    <p className="text-xs text-muted-foreground">Meta</p>
-                    <p className="text-sm">{fmt(c.metaDeCuenta)}</p>
-                  </div>
-                )}
-
-                {/* Acciones */}
-                <div className="flex gap-1 shrink-0">
-                  <button
-                    type="button"
-                    title={c.activa ? "Desactivar" : "Activar"}
-                    onClick={() => handleToggleActiva(c)}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Check size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    title="Editar"
-                    onClick={() => abrirEditar(c)}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    title="Eliminar"
-                    onClick={() => handleEliminar(c)}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                <div className="space-y-2">
+                  {grupo.items.map(c => {
+                    const saldo = c.saldoActual ?? 0
+                    const esCredito = c.tipo === "Crédito"
+                    const saldoOk = esCredito ? saldo === 0 : saldo >= 0
+                    const difBanco = c.saldoBanco != null ? c.saldoBanco - saldo : null
+                    return (
+                      <div key={c.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-opacity bg-slate-900 ${
+                        !c.activa ? "opacity-40 border-slate-800/50" : "border-slate-800"
+                      }`}>
+                        <ColorDot color={c.color} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium text-slate-200 truncate">{c.nombre}</p>
+                            {c.proposito === "Operativa" && <Star className="h-3 w-3 text-emerald-500 fill-emerald-500 shrink-0" />}
+                          </div>
+                          <p className="text-[11px] text-slate-600">
+                            {c.tipo}{c.proposito ? ` · ${c.proposito}` : ""}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-slate-600">{esCredito ? "Deuda" : "Saldo"}</p>
+                          <p className={`text-sm font-bold ${saldoOk ? "text-emerald-400" : "text-red-400"}`}>
+                            {fmt(saldo)}
+                          </p>
+                        </div>
+                        {c.saldoBanco != null && (
+                          <div className="text-right hidden sm:block">
+                            <p className="text-[10px] text-slate-600">Banco</p>
+                            <p className="text-sm font-semibold text-slate-300">{fmt(c.saldoBanco)}</p>
+                          </div>
+                        )}
+                        {difBanco !== null && difBanco !== 0 && (
+                          <div className="text-right hidden sm:block">
+                            <p className="text-[10px] text-slate-600">{difBanco > 0 ? "sobrante" : "faltante"}</p>
+                            <p className="text-xs text-slate-500">{difBanco > 0 ? "+" : ""}{fmt(difBanco)}</p>
+                          </div>
+                        )}
+                        {c.metaDeCuenta && (
+                          <div className="text-right hidden md:block">
+                            <p className="text-[10px] text-slate-600">Meta</p>
+                            <p className="text-xs text-slate-400">{fmt(c.metaDeCuenta)}</p>
+                          </div>
+                        )}
+                        <div className="flex gap-0.5 shrink-0">
+                          <button type="button" title={c.activa ? "Desactivar" : "Activar"}
+                            onClick={() => toggleActiva(c)}
+                            className="p-1.5 rounded text-slate-600 hover:text-emerald-400 hover:bg-slate-800 transition">
+                            <Check size={13} />
+                          </button>
+                          <button type="button" title="Editar"
+                            onClick={() => abrirEditar(c)}
+                            className="p-1.5 rounded text-slate-600 hover:text-slate-300 hover:bg-slate-800 transition">
+                            <Pencil size={13} />
+                          </button>
+                          <button type="button" title="Eliminar"
+                            onClick={() => eliminar(c)}
+                            className="p-1.5 rounded text-slate-600 hover:text-red-400 hover:bg-slate-800 transition">
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
-            )
-          })}
-              </div>
-            </div>
             )
           })}
         </div>
       )}
 
-      {/* Cuentas inactivas — sección colapsable */}
+      {/* Inactivas */}
       {inactivas.length > 0 && (
         <div className="mt-6">
-          <button
-            type="button"
-            onClick={() => setMostrarInactivas(v => !v)}
-            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-          >
-            {mostrarInactivas ? "Ocultar" : "Ver"} cuentas inactivas ({inactivas.length})
+          <button type="button" onClick={() => setMostrarInactivas(v => !v)}
+            className="text-xs text-slate-600 hover:text-slate-400 transition">
+            {mostrarInactivas ? "Ocultar" : "Ver"} inactivas ({inactivas.length})
           </button>
           {mostrarInactivas && (
             <div className="mt-3 space-y-2">
               {inactivas.map(c => (
-                <div key={c.id} className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-border bg-muted/20 opacity-60">
-                  <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.color ?? "#6366f1" }} />
+                <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-800 opacity-50">
+                  <ColorDot color={c.color} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{c.nombre}</p>
-                    <p className="text-xs text-muted-foreground">{c.tipo}{c.proposito ? ` · ${c.proposito}` : ""} · <span className="italic">Inactiva</span></p>
+                    <p className="text-sm font-medium text-slate-400 truncate">{c.nombre}</p>
+                    <p className="text-[11px] text-slate-600">{c.tipo}{c.proposito ? ` · ${c.proposito}` : ""} · Inactiva</p>
                   </div>
-                  <p className="text-sm font-bold">{fmt(c.saldoActual ?? 0)}</p>
-                  <button
-                    type="button"
-                    title="Reactivar cuenta"
-                    onClick={() => handleToggleActiva(c)}
-                    className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-emerald-500 transition-colors text-xs font-medium"
-                  >
+                  <p className="text-sm font-bold text-slate-500">{fmt(c.saldoActual ?? 0)}</p>
+                  <button type="button" onClick={() => toggleActiva(c)}
+                    className="text-xs text-slate-600 hover:text-emerald-400 transition px-2 py-1 rounded border border-slate-700 hover:border-emerald-700">
                     Activar
                   </button>
                 </div>
@@ -488,32 +320,102 @@ export default function CuentasPage() {
         </div>
       )}
 
-      {/* Resumen mensual: ingresos vs gastos registrados (referencia) */}
-      {resumenMensual.some(m => m.ingresos > 0 || m.gastos > 0) && (
-        <div className="mt-8 bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 opacity-80">
-          <h2 className="font-medium text-xs text-muted-foreground mb-3">Registros mensuales (referencia)</h2>
-          <div className="space-y-2">
-            {resumenMensual.map(m => {
-              const neto = m.ingresos - m.gastos
-              const hayData = m.ingresos > 0 || m.gastos > 0
-              if (!hayData) return null
-              return (
-                <div key={m.key} className="flex items-center gap-3 text-sm">
-                  <span className="w-20 text-xs text-muted-foreground capitalize">{m.label}</span>
-                  <div className="flex-1 flex items-center gap-2">
-                    <TrendingUp size={12} className="text-green-500 shrink-0" />
-                    <span className="text-green-600 dark:text-green-400 text-xs font-medium w-24">{fmt(m.ingresos)}</span>
-                    <TrendingDown size={12} className="text-red-500 shrink-0" />
-                    <span className="text-red-600 dark:text-red-400 text-xs font-medium w-24">{fmt(m.gastos)}</span>
-                  </div>
-                  <span className={`text-xs font-bold w-28 text-right ${neto >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                    {neto >= 0 ? "+" : ""}{fmt(neto)}
-                  </span>
+      {/* Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-slate-100">
+                {editando ? "Editar cuenta" : "Nueva cuenta"}
+              </h2>
+              <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
+                className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] text-slate-500 mb-1">Nombre *</label>
+                <input autoFocus value={form.nombre}
+                  onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+                  placeholder="Ej: BBVA Débito"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] text-slate-500 mb-1">Tipo</label>
+                  <select title="Tipo de cuenta" value={form.tipo ?? ""}
+                    onChange={e => setForm(f => ({ ...f, tipo: (e.target.value || null) as TipoCuenta | null }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-slate-500">
+                    <option value="">— Seleccionar —</option>
+                    {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
                 </div>
-              )
-            })}
+                <div>
+                  <label className="block text-[11px] text-slate-500 mb-1">Propósito</label>
+                  <select title="Propósito" value={form.proposito ?? ""}
+                    onChange={e => setForm(f => ({ ...f, proposito: (e.target.value || null) as PropositoCuenta | null }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-slate-500">
+                    <option value="">— Seleccionar —</option>
+                    {PROPOSITOS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] text-slate-500 mb-1">Saldo actual</label>
+                  <input type="number" placeholder="0" value={form.saldoActual ?? ""}
+                    onChange={e => setForm(f => ({ ...f, saldoActual: e.target.value === "" ? null : Number(e.target.value) }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500" />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-500 mb-1">Saldo banco</label>
+                  <input type="number" placeholder="Referencia banco" value={form.saldoBanco ?? ""}
+                    onChange={e => setForm(f => ({ ...f, saldoBanco: e.target.value === "" ? null : Number(e.target.value) }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-500 mb-1">Meta (opcional)</label>
+                <input type="number" placeholder="Ej: 50000" value={form.metaDeCuenta ?? ""}
+                  onChange={e => setForm(f => ({ ...f, metaDeCuenta: e.target.value === "" ? null : Number(e.target.value) }))}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500" />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-500 mb-2">Color</label>
+                <div className="flex gap-2 flex-wrap">
+                  {COLORES.map(col => (
+                    <ColorBtn key={col} col={col} selected={form.color === col}
+                      onClick={() => setForm(f => ({ ...f, color: col }))} />
+                  ))}
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.activa ?? true}
+                  onChange={e => setForm(f => ({ ...f, activa: e.target.checked }))}
+                  className="rounded" />
+                <span className="text-sm text-slate-400">Cuenta activa</span>
+              </label>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-1">
+              <button type="button" onClick={() => setModalOpen(false)}
+                className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">
+                Cancelar
+              </button>
+              <button type="button" onClick={guardar} disabled={guardando}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg transition">
+                <Check size={14} />
+                {guardando ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-3">Últimos 6 meses · Neto = Ingresos − Gastos registrados</p>
         </div>
       )}
     </div>
