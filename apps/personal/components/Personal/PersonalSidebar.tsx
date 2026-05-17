@@ -10,7 +10,7 @@ import {
   LayoutDashboard,
   CheckSquare,
   ChefHat,
-  Home,
+  Dumbbell,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -30,6 +30,12 @@ const sections: { title: string; items: NavItem[] }[] = [
     title: "Productividad",
     items: [
       { name: "Tareas", href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
+    ],
+  },
+  {
+    title: "Salud",
+    items: [
+      { name: "Ejercicio", href: "/gestion-personal/salud/ejercicio", icon: Dumbbell, color: "green" },
     ],
   },
   {
