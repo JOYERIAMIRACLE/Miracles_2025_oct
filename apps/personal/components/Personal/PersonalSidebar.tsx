@@ -5,17 +5,12 @@ import { usePathname } from "next/navigation"
 import {
   Gamepad2,
   Swords,
-  Target,
   Package,
   CalendarDays,
   LayoutDashboard,
-  ArrowLeftRight,
-  Tag,
-  Archive,
   CheckSquare,
   ChefHat,
-  Dumbbell,
-  Activity,
+  Home,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -25,28 +20,22 @@ const sections: { title: string; items: NavItem[] }[] = [
   {
     title: "Finanzas Personales",
     items: [
-      { name: "Dashboard",      href: "/gestion-personal",                 icon: LayoutDashboard, color: "cyan"   },
-      { name: "Presupuesto",    href: "/gestion-personal/presupuesto",     icon: Swords,          color: "cyan"   },
-      { name: "Objetivos",      href: "/gestion-personal/objetivos",       icon: Target,          color: "amber"  },
-      { name: "Calendario",     href: "/gestion-personal/calendario",      icon: CalendarDays,    color: "blue"   },
-      { name: "Cuentas",        href: "/gestion-personal/cuentas",         icon: Package,         color: "green"  },
-      { name: "Transacciones",  href: "/gestion-personal/transacciones",   icon: ArrowLeftRight,  color: "cyan"   },
-      { name: "Etiquetas",      href: "/gestion-personal/categorias",      icon: Tag,             color: "pink"   },
-      { name: "Histórico",      href: "/gestion-personal/historial",       icon: Archive,         color: "purple" },
+      { name: "Dashboard",   href: "/gestion-personal",             icon: LayoutDashboard, color: "cyan"  },
+      { name: "Presupuesto", href: "/gestion-personal/presupuesto", icon: Swords,          color: "cyan"  },
+      { name: "Calendario",  href: "/gestion-personal/calendario",  icon: CalendarDays,    color: "blue"  },
+      { name: "Cuentas",     href: "/gestion-personal/cuentas",     icon: Package,         color: "green" },
     ],
   },
   {
     title: "Productividad",
     items: [
-      { name: "Tareas Personales", href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
+      { name: "Tareas", href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
     ],
   },
   {
-    title: "Salud",
+    title: "Vivienda",
     items: [
-      { name: "Recetario",  href: "/gestion-personal/recetario",        icon: ChefHat,   color: "green"  },
-      { name: "Gym",        href: "/gestion-personal/salud/gym",         icon: Dumbbell,  color: "red"    },
-      { name: "Métricas",   href: "/gestion-personal/salud/metricas",    icon: Activity,  color: "purple" },
+      { name: "Recetario", href: "/gestion-personal/vivienda/recetario", icon: ChefHat, color: "amber" },
     ],
   },
 ]
@@ -100,9 +89,7 @@ export function PersonalSidebar() {
               </p>
               <ul className="space-y-1">
                 {section.items.map(item => {
-                  const isActive =
-                    pathname === item.href ||
-                    (item.name === "Cuentas" && pathname === "/gestion-personal/patrimonio")
+                  const isActive = pathname === item.href
                   return (
                     <li key={item.name}>
                       <Link

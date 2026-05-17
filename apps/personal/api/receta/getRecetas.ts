@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react"
-import { RecetaType } from "@/types/recetario"
+import { RecetaType, RecetaPayload } from "@/types/recetario"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 export function useGetRecetas() {
-  const [recetas,  setRecetas]  = useState<RecetaType[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const [recetas, setRecetas] = useState<RecetaType[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/recetas?pagination[pageSize]=200&sort=createdAt:desc`)
+        const res  = await fetch(`${BASE}/api/recetas?pagination[pageSize]=200&sort=nombre:asc`)
         const json = await res.json()
         setRecetas(json.data ?? [])
       } finally { setLoading(false) }
@@ -20,20 +20,22 @@ export function useGetRecetas() {
   return { recetas, setRecetas, loading }
 }
 
-export async function createReceta(payload: Partial<RecetaType>) {
-  const res = await fetch(`${BASE}/api/recetas`, {
+export async function createReceta(payload: RecetaPayload): Promise<RecetaType> {
+  const res  = await fetch(`${BASE}/api/recetas`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
-  return res.json()
+  const json = await res.json()
+  return json.data
 }
 
-export async function updateReceta(documentId: string, payload: Partial<RecetaType>) {
-  const res = await fetch(`${BASE}/api/recetas/${documentId}`, {
+export async function updateReceta(documentId: string, payload: Partial<RecetaPayload>): Promise<RecetaType> {
+  const res  = await fetch(`${BASE}/api/recetas/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
-  return res.json()
+  const json = await res.json()
+  return json.data
 }
 
 export async function deleteReceta(documentId: string) {
