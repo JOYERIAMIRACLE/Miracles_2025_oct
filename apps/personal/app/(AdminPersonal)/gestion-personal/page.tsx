@@ -1,42 +1,31 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo, useRef, useLayoutEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie, Cell,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from "recharts"
-import {
-  Star, ChevronRight, TrendingUp, TrendingDown,
-  Wallet, CreditCard, DollarSign, Target,
-  Swords, Map, Package, BarChart3, CalendarDays, ArrowLeftRight,
-  Shield, Zap, Heart, ChefHat,
-} from "lucide-react"
+import { TrendingUp, TrendingDown, Wallet, CalendarDays } from "lucide-react"
 
-import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
-import { useGetActivos }       from "@/api/activo/getActivos"
-import { useGetPasivos }       from "@/api/pasivo/getPasivos"
-import { useGetPrestamos }     from "@/api/prestamo-otorgado/getPrestamos"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
-import { useGetCuentas }       from "@/api/cuenta/getCuentas"
-import { useGetMetas }         from "@/api/meta-ahorro/getMetas"
-import { useGetCategorias }    from "@/api/categoria/getCategorias"
 import { useGetEventos }       from "@/api/evento-calendario/getEventos"
+import { useGetCuentas }       from "@/api/cuenta/getCuentas"
+import { useGetPartidas }      from "@/api/partida-presupuesto/getPartidas"
 import { useGetSnapshotsMes, useGetSnapshotsCuenta } from "@/api/snapshot/getSnapshots"
 import { CerrarMesButton }     from "@/components/Personal/Snapshot/CerrarMesButton"
-import { grupoDe }             from "@/lib/categoria"
-
-import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
-import { ActivoType }             from "@/types/activo"
-import { PasivoType }             from "@/types/pasivo"
-import { PrestamoOtorgadoType }   from "@/types/prestamo-otorgado"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmt = (n: number) =>
-  `$${Math.round(n).toLocaleString("es-MX")}`
 
-const fmtK = (n: number) =>
-  Math.abs(n) >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${Math.round(n)}`
+const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
+const fmtDia = (iso: string) => {
+  const d = new Date(iso + "T12:00:00")
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+}
+const MESES_CORTO = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#ef4444","#3b82f6","#8b5cf6","#14b8a6","#f97316","#ec4899","#84cc16","#06b6d4","#a78bfa"]
+const TOOLTIP_STYLE = { backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 12, color: "#e2e8f0" }
 
 function calcMensual(monto: number, frecuencia: string | null) {
   switch (frecuencia) {
@@ -49,215 +38,62 @@ function calcMensual(monto: number, frecuencia: string | null) {
   }
 }
 
-const MESES_CORTO = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
+// ─── ColorDot sin inline styles ───────────────────────────────────────────────
 
-// ─── Level System ─────────────────────────────────────────────────────────────
-function calcLevel(stats: {
-  patrimonioNeto: number; ratioSupervivencia: number
-  pctAhorro: number; metasCompletadas: number; flujoNeto: number
-}) {
-  let xp = 0
-  if (stats.patrimonioNeto > 0) xp += Math.min(300, stats.patrimonioNeto / 1000)
-  xp += Math.min(200, stats.ratioSupervivencia * 33)
-  xp += Math.min(150, stats.pctAhorro * 5)
-  xp += stats.metasCompletadas * 50
-  if (stats.flujoNeto > 0) xp += 100
-  const level = Math.max(1, Math.floor(xp / 100) + 1)
-  return { level: Math.min(level, 99), xpInLevel: Math.round(xp % 100), xpToNext: 100 }
+function ColorDot({ color }: { color: string | null }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    if (ref.current) ref.current.style.backgroundColor = color ?? "#6366f1"
+  }, [color])
+  return <span ref={ref} className="w-2.5 h-2.5 rounded-full shrink-0 inline-block" />
 }
 
-function getLevelTitle(level: number) {
-  if (level >= 20) return "Maestro Financiero"
-  if (level >= 15) return "Estratega Dorado"
-  if (level >= 10) return "Guardian del Tesoro"
-  if (level >= 7)  return "Explorador Fiscal"
-  if (level >= 4)  return "Aprendiz de Oro"
-  return "Novato Financiero"
+function ChartDot({ color }: { color: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => { if (ref.current) ref.current.style.backgroundColor = color }, [color])
+  return <span ref={ref} className="w-2 h-2 rounded-full shrink-0 inline-block" />
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-function OverviewCard({ label, value, sub, icon: Icon, color, delay }: {
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
+
+function KpiCard({ label, value, sub, color, icon: Icon, delay }: {
   label: string; value: string; sub?: string
-  icon: React.ElementType; color: string; delay: number
+  color: "green" | "red" | "blue" | "slate"; icon: React.ElementType; delay: number
 }) {
-  const colors: Record<string, { icon: string; border: string; bg: string }> = {
-    green:  { icon: "text-emerald-400", border: "border-emerald-500/20", bg: "bg-emerald-500/10" },
-    red:    { icon: "text-red-400",     border: "border-red-500/20",     bg: "bg-red-500/10"     },
-    blue:   { icon: "text-cyan-400",    border: "border-cyan-500/20",    bg: "bg-cyan-500/10"    },
-    purple: { icon: "text-violet-400",  border: "border-violet-500/20",  bg: "bg-violet-500/10"  },
-    amber:  { icon: "text-amber-400",   border: "border-amber-500/20",   bg: "bg-amber-500/10"   },
-  }
-  const c = colors[color] || colors.blue
+  const cls = {
+    green: "border-emerald-800/40 bg-emerald-950/30 text-emerald-300",
+    red:   "border-red-800/40 bg-red-950/30 text-red-300",
+    blue:  "border-blue-800/40 bg-blue-950/30 text-blue-300",
+    slate: "border-slate-700 bg-slate-900 text-slate-300",
+  }[color]
+  const iconCls = {
+    green: "text-emerald-400", red: "text-red-400", blue: "text-blue-400", slate: "text-slate-400",
+  }[color]
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay }}
-      className={`p-4 rounded-xl bg-slate-900/60 border border-slate-700/40 backdrop-blur-sm`}
-    >
-      <div className="flex items-start justify-between">
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
+      className={`p-4 rounded-xl border ${cls}`}>
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{label}</p>
-          <p className="text-xl font-bold text-slate-100 mt-1 truncate">{value}</p>
+          <p className="text-2xl font-bold text-slate-100 mt-1 tabular-nums">{value}</p>
           {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
         </div>
-        <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${c.bg} ${c.border} border shrink-0`}>
-          <Icon className={`h-4 w-4 ${c.icon}`} />
-        </div>
+        <Icon className={`h-5 w-5 shrink-0 mt-0.5 ${iconCls}`} />
       </div>
     </motion.div>
   )
 }
 
-function CategoryBar({ label, monto, total, color }: {
-  label: string; monto: number; total: number; color: string
-}) {
-  const pct = total > 0 ? Math.min(100, (monto / total) * 100) : 0
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-300 capitalize truncate max-w-[140px]">{label}</span>
-        <span className="text-slate-500 tabular-nums">{fmt(monto)} <span className="text-slate-600">({Math.round(pct)}%)</span></span>
-      </div>
-      <div className="h-2.5 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/30">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className={`h-full rounded-full ${color}`}
-        />
-      </div>
-    </div>
-  )
-}
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function AccountRow({ nombre, tipo, saldo, color, meta }: {
-  nombre: string; tipo: string | null; saldo: number; color: string | null; meta: number | null
-}) {
-  const isCredit = tipo === "Crédito"
-  const pctMeta = meta && meta > 0 ? Math.min(100, (saldo / meta) * 100) : null
-
-  return (
-    <div className="flex items-center gap-3 py-2.5">
-      <div className="h-3 w-3 rounded-full shrink-0 border border-slate-700/50" style={{ backgroundColor: color ?? "#6366f1" }} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-slate-200 font-medium truncate">{nombre}</p>
-          <p className={`text-sm font-bold tabular-nums ${isCredit ? "text-red-400" : "text-emerald-400"}`}>
-            {fmt(saldo)}
-          </p>
-        </div>
-        {pctMeta !== null && (
-          <div className="mt-1 h-1.5 rounded-full bg-slate-800/80 overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500" style={{ width: `${pctMeta}%` }} />
-          </div>
-        )}
-        {!pctMeta && (
-          <p className="text-[10px] text-slate-600">{tipo ?? "Cuenta"}</p>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function MiniChart({ data, title, colorPositive, colorNegative }: {
-  data: { name: string; value: number }[]; title: string
-  colorPositive: string; colorNegative?: string
-}) {
-  return (
-    <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm">
-      <h3 className="text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-3">{title}</h3>
-      <ResponsiveContainer width="100%" height={130}>
-        <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-          <XAxis
-            dataKey="name"
-            tick={{ fontSize: 10, fill: "#64748b" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis hide />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#1e293b",
-              border: "1px solid #334155",
-              borderRadius: "8px",
-              fontSize: "12px",
-              color: "#e2e8f0",
-            }}
-            formatter={(v: number) => [fmt(v), ""]}
-            labelStyle={{ color: "#94a3b8" }}
-          />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={24}>
-            {data.map((entry, i) => (
-              <Cell
-                key={i}
-                fill={colorNegative && entry.value < 0 ? colorNegative : colorPositive}
-                opacity={0.85}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-
-function ModuleCard({ name, description, icon: Icon, href, color, delay }: {
-  name: string; description: string; icon: React.ElementType
-  href: string; color: string; delay: number
-}) {
-  const borders: Record<string, string> = {
-    cyan:   "hover:border-cyan-500/50",
-    purple: "hover:border-violet-500/50",
-    amber:  "hover:border-amber-500/50",
-    green:  "hover:border-emerald-500/50",
-    blue:   "hover:border-blue-500/50",
-    pink:   "hover:border-pink-500/50",
-  }
-  const icons: Record<string, string> = {
-    cyan:   "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-    purple: "text-violet-400 bg-violet-500/10 border-violet-500/20",
-    amber:  "text-amber-400 bg-amber-500/10 border-amber-500/20",
-    green:  "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    blue:   "text-blue-400 bg-blue-500/10 border-blue-500/20",
-    pink:   "text-pink-400 bg-pink-500/10 border-pink-500/20",
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay }}
-    >
-      <Link href={href}>
-        <div className={`group p-3.5 rounded-xl bg-slate-900/60 border border-slate-700/40 backdrop-blur-sm transition-all duration-300 hover:shadow-lg cursor-pointer ${borders[color]}`}>
-          <div className="flex items-center gap-3">
-            <div className={`h-9 w-9 rounded-lg flex items-center justify-center border shrink-0 ${icons[color]}`}>
-              <Icon className="h-4 w-4" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-xs font-semibold text-slate-200 group-hover:text-white">{name}</h3>
-              <p className="text-[10px] text-slate-600">{description}</p>
-            </div>
-            <ChevronRight className="h-3.5 w-3.5 text-slate-700 group-hover:text-slate-500 shrink-0" />
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  )
-}
-
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function GestionPersonalPage() {
   const hoy = new Date()
   const mesActualKey = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`
-
-  // ─── Filtro de mes ─────────────────────────────────────────────────────
   const [mesSeleccionado, setMesSeleccionado] = useState(mesActualKey)
   const esMesActual = mesSeleccionado === mesActualKey
 
-  const mesDate = new Date(mesSeleccionado + "-15")
+  const mesDate  = new Date(mesSeleccionado + "-15")
   const mesLabel = mesDate.toLocaleString("es-MX", { month: "long", year: "numeric" })
 
   const navMes = (dir: -1 | 1) => {
@@ -266,461 +102,310 @@ export default function GestionPersonalPage() {
     setMesSeleccionado(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
   }
 
-  const { partidas:       dataPartidas, loading: loadPart  } = useGetPartidas()
-  const { activos:        dataActivos,  loading: loadAct   } = useGetActivos()
-  const { pasivos:        dataPasivos,  loading: loadPas   } = useGetPasivos()
-  const { prestamos:      dataPrest,    loading: loadPrest  } = useGetPrestamos()
-  const { transacciones:  dataTx,       loading: loadTx     } = useGetTransacciones()
-  const { cuentas:        dataCuentas,  loading: loadCuent  } = useGetCuentas()
-  const { metas:          dataMetas,    loading: loadMetas  } = useGetMetas()
-  const { categorias }                                          = useGetCategorias()
-  const { eventos }                                             = useGetEventos()
+  const { transacciones: dataTx,     loading: loadTx    } = useGetTransacciones()
+  const { eventos,                    loading: loadEv    } = useGetEventos()
+  const { cuentas: dataCuentas,       loading: loadCu    } = useGetCuentas()
+  const { partidas,                   loading: loadPart  } = useGetPartidas()
   const { snapshots: snapshotsMes }    = useGetSnapshotsMes()
   const { snapshots: snapshotsCuenta } = useGetSnapshotsCuenta()
 
-  const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
-  const [activos,   setActivos]   = useState<ActivoType[]>([])
-  const [pasivos,   setPasivos]   = useState<PasivoType[]>([])
-  const [prestamos, setPrestamos] = useState<PrestamoOtorgadoType[]>([])
+  const loading = loadTx || loadEv || loadCu || loadPart
 
-  useEffect(() => { setPartidas(dataPartidas ?? []) }, [dataPartidas])
-  useEffect(() => { setActivos(dataActivos   ?? []) }, [dataActivos])
-  useEffect(() => { setPasivos(dataPasivos   ?? []) }, [dataPasivos])
-  useEffect(() => { setPrestamos(dataPrest   ?? []) }, [dataPrest])
-
-  const loading = loadPart || loadAct || loadPas || loadPrest || loadTx || loadCuent || loadMetas
   const transacciones = dataTx ?? []
+  const cuentas       = dataCuentas ?? []
 
-  const cuentas = dataCuentas ?? []
-  const metas   = dataMetas ?? []
+  // ── Movimientos unificados: transacciones + eventos sin tx ────────────────
+  type Mov = { tipo: "ingreso" | "gasto" | "transferencia"; monto: number; categoria: string | null; fecha: string; descripcion?: string }
 
-  // ─── Presupuesto (referencia) ───────────────────────────────────────────
-  const activasPartidas = partidas.filter(p => p.activo !== false)
-
-  const ingresoPresupuestado = activasPartidas
-    .filter(p => p.categoria === "ingreso" || p.tipo === "ingreso")
-    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
-
-  const egresoPresupuestado = activasPartidas
-    .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso")
-    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
-
-  // ─── Movimientos unificados: transacciones + eventos sin tx (deduplicado) ─
-  // Dashboard, Presupuesto y Calendario cuentan el mismo universo.
-  type TxLike = { tipo: "ingreso" | "gasto" | "transferencia"; monto: number; categoria: string | null; fecha: string }
-
-  function movimientosDeMes(mesKey: string): TxLike[] {
+  function movsDeMes(mesKey: string): Mov[] {
     const tx = transacciones.filter(t => t.fecha?.slice(0, 7) === mesKey)
     const ev = eventos.filter(e => e.fecha?.slice(0, 7) === mesKey)
     const huellas = new Set(tx.map(t => `${t.fecha.slice(0, 10)}_${Number(t.monto)}`))
-    const evSinTx: TxLike[] = ev
+    const evSinTx: Mov[] = ev
       .filter(e => !huellas.has(`${e.fecha.slice(0, 10)}_${Number(e.monto)}`))
-      .map(e => ({
-        tipo:      e.tipo === "ingreso" ? "ingreso" : "gasto",
-        monto:     Number(e.monto),
-        categoria: e.categoria,
-        fecha:     e.fecha,
-      }))
+      .map(e => ({ tipo: e.tipo === "ingreso" ? "ingreso" : "gasto", monto: Number(e.monto), categoria: e.categoria, fecha: e.fecha, descripcion: e.titulo }))
     return [
-      ...tx.map(t => ({ tipo: t.tipo, monto: Number(t.monto), categoria: t.categoria, fecha: t.fecha })),
+      ...tx.map(t => ({ tipo: t.tipo as Mov["tipo"], monto: Number(t.monto), categoria: t.categoria, fecha: t.fecha, descripcion: t.descripcion })),
       ...evSinTx,
     ]
   }
 
-  const txMes = movimientosDeMes(mesSeleccionado)
+  const txMes = movsDeMes(mesSeleccionado)
 
-  const ingresoReal = txMes.filter(tx => tx.tipo === "ingreso").reduce((s, tx) => s + tx.monto, 0)
-  const gastoReal   = txMes.filter(tx => tx.tipo === "gasto").reduce((s, tx) => s + tx.monto, 0)
+  const ingresoReal = txMes.filter(m => m.tipo === "ingreso").reduce((s, m) => s + m.monto, 0)
+  const gastoReal   = txMes.filter(m => m.tipo === "gasto").reduce((s, m) => s + m.monto, 0)
   const flujoNeto   = ingresoReal - gastoReal
 
-  // Cuentas
-  const cuentasActivas   = cuentas.filter(c => c.activa)
-  const cuentasLiquidas  = cuentasActivas.filter(c => c.tipo !== "Crédito")
-  const cuentasCredito   = cuentasActivas.filter(c => c.tipo === "Crédito")
-  const cuentasOperativa = cuentasLiquidas.filter(c => c.proposito === "Operativa")
-  const cuentasApartados = cuentasLiquidas.filter(c => c.proposito !== "Operativa")
-  const saldoDe = (c: typeof cuentas[number]) => c.saldoActual ?? 0
-  const operativaDisponible = cuentasOperativa.reduce((s, c) => s + saldoDe(c), 0)
-  const apartadosDisponible = cuentasApartados.reduce((s, c) => s + saldoDe(c), 0)
-  // Ahorro acumulado: cuentas con propósito de guardar/invertir (no Operativa)
-  const ahorroAcumulado = cuentasLiquidas
-    .filter(c => c.proposito === "Ahorro" || c.proposito === "Inversión" || c.proposito === "Apartado")
-    .reduce((s, c) => s + saldoDe(c), 0)
-  const disponible     = operativaDisponible + apartadosDisponible
-  const deudaTotal     = cuentasCredito.reduce((s, c) => s + saldoDe(c), 0)
-  const balanceActual  = disponible - deudaTotal
+  // ── Presupuesto referencia ─────────────────────────────────────────────────
+  const activasPartidas = (partidas ?? []).filter(p => p.activo !== false)
+  const egresoPresupuestado = activasPartidas
+    .filter(p => p.categoria !== "ingreso" && p.tipo !== "ingreso")
+    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
+  const ingresoPresupuestado = activasPartidas
+    .filter(p => p.categoria === "ingreso" || p.tipo === "ingreso")
+    .reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
 
-  // Balance proyectado: cómo cerrará el mes según eventos AGENDADOS en calendario
-  // (solo cuenta eventos futuros del mes; los pasados ya están en balanceActual via transacciones)
-  const diasMes = new Date(mesDate.getFullYear(), mesDate.getMonth() + 1, 0).getDate()
-  const diasRestantes = esMesActual ? diasMes - hoy.getDate() : 0
-  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`
-  const eventosFuturosMes = esMesActual
-    ? eventos.filter(ev => ev.fecha?.slice(0, 7) === mesSeleccionado && ev.fecha >= hoyStr)
-    : []
-  const ingresoAgendado = eventosFuturosMes.filter(ev => ev.tipo === "ingreso").reduce((s, ev) => s + Number(ev.monto), 0)
-  const pagoAgendado    = eventosFuturosMes.filter(ev => ev.tipo === "pago").reduce((s, ev) => s + Number(ev.monto), 0)
-  const balanceProyectado = esMesActual
-    ? balanceActual + ingresoAgendado - pagoAgendado
-    : flujoNeto
+  // ── Cuentas ───────────────────────────────────────────────────────────────
+  const cuentasActivas  = cuentas.filter(c => c.activa)
+  const cuentasLiquidas = cuentasActivas.filter(c => c.tipo !== "Crédito")
+  const cuentasCredito  = cuentasActivas.filter(c => c.tipo === "Crédito")
+  const operativa = cuentasLiquidas.filter(c => c.proposito === "Operativa").reduce((s, c) => s + (c.saldoActual ?? 0), 0)
+  const apartados = cuentasLiquidas.filter(c => c.proposito !== "Operativa").reduce((s, c) => s + (c.saldoActual ?? 0), 0)
+  const deuda     = cuentasCredito.reduce((s, c) => s + (c.saldoActual ?? 0), 0)
+  const disponible = operativa + apartados
 
-  // Patrimonio
-  const totalActivos   = activos.reduce((s, a) => s + (a.valor ?? 0), 0)
-  const totalPrestamos = prestamos.filter(p => p.estado === "activo").reduce((s, p) => s + (p.saldo_pendiente ?? 0), 0)
-  const totalPasivos   = pasivos.reduce((s, p) => s + (p.saldo ?? 0), 0)
-  const patrimonioNeto = totalActivos + totalPrestamos - totalPasivos
-
-  // Supervivencia: meses de gasto que cubres con tu liquidez real (cuentas, no módulo Patrimonio)
-  const gastoMensualRef = gastoReal > 0 ? gastoReal : egresoPresupuestado
-  const ratioSupervivencia = gastoMensualRef > 0 ? disponible / gastoMensualRef : 0
-
-  const ahorroReal = txMes.filter(tx => grupoDe(tx.categoria, categorias) === "ahorro").reduce((s, tx) => s + Number(tx.monto), 0)
-  const pctAhorro = ingresoReal > 0 ? (ahorroReal / ingresoReal) * 100 : 0
-
-  // Categorías de gasto REAL del mes — lookup dinámico via tabla Categoria
-  const necesidadesReal = txMes
-    .filter(tx => tx.tipo === "gasto" && grupoDe(tx.categoria, categorias) === "necesidad")
-    .reduce((s, tx) => s + Number(tx.monto), 0)
-  const prescindiblesReal = txMes
-    .filter(tx => tx.tipo === "gasto" && grupoDe(tx.categoria, categorias) === "prescindible")
-    .reduce((s, tx) => s + Number(tx.monto), 0)
-
-  // Metas
-  const metasActivas = metas.filter(m => m.activo !== false)
-  const metasCompletadas = metasActivas.filter(m => m.monto_actual >= m.monto_meta).length
-
-  // Level
-  const { level, xpInLevel, xpToNext } = calcLevel({
-    patrimonioNeto, ratioSupervivencia, pctAhorro, metasCompletadas, flujoNeto,
-  })
-  const titulo = getLevelTitle(level)
-
-  // ─── Monthly chart data (6 meses alrededor del seleccionado) ───────────
-  // Usa movimientosDeMes para que cada barra incluya transacciones + eventos sin tx.
-  const chartData = useMemo(() => {
-    const selDate = new Date(mesSeleccionado + "-15")
-    const months: { label: string; key: string }[] = []
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(selDate.getFullYear(), selDate.getMonth() - i, 1)
-      months.push({
-        label: MESES_CORTO[d.getMonth()],
-        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      })
-    }
-
-    const porMes = months.map(m => {
-      const mov = movimientosDeMes(m.key)
-      const ing = mov.filter(x => x.tipo === "ingreso").reduce((s, x) => s + x.monto, 0)
-      const gas = mov.filter(x => x.tipo === "gasto" || x.tipo === "transferencia").reduce((s, x) => s + x.monto, 0)
-      return { label: m.label, ing, gas }
+  // ── Gasto por categoría real (donut) ──────────────────────────────────────
+  const gastoPorCat = useMemo(() => {
+    const map = new Map<string, number>()
+    txMes.filter(m => m.tipo === "gasto").forEach(m => {
+      const cat = m.categoria?.trim() || "Sin categoría"
+      map.set(cat, (map.get(cat) ?? 0) + m.monto)
     })
+    return [...map.entries()]
+      .map(([cat, monto]) => ({ cat, monto }))
+      .sort((a, b) => b.monto - a.monto)
+  }, [txMes])
 
-    return {
-      ingresos: porMes.map(p => ({ name: p.label, value: Math.round(p.ing) })),
-      gastos:   porMes.map(p => ({ name: p.label, value: Math.round(p.gas) })),
-      balance:  porMes.map(p => ({ name: p.label, value: Math.round(p.ing - p.gas) })),
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // ── Ingresos del mes con fecha ────────────────────────────────────────────
+  const ingresosDelMes = useMemo(() =>
+    txMes
+      .filter(m => m.tipo === "ingreso")
+      .sort((a, b) => a.fecha.localeCompare(b.fecha)),
+  [txMes])
+
+  const ingresoPorCat = useMemo(() => {
+    const map = new Map<string, number>()
+    txMes.filter(m => m.tipo === "ingreso").forEach(m => {
+      const cat = m.categoria?.trim() || "Sin categoría"
+      map.set(cat, (map.get(cat) ?? 0) + m.monto)
+    })
+    return [...map.entries()]
+      .map(([cat, monto]) => ({ cat, monto }))
+      .sort((a, b) => b.monto - a.monto)
+  }, [txMes])
+
+  // ── Tendencia 6 meses ─────────────────────────────────────────────────────
+  const tendencia = useMemo(() => {
+    const selDate = new Date(mesSeleccionado + "-15")
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(selDate.getFullYear(), selDate.getMonth() - (5 - i), 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      const movs = movsDeMes(key)
+      return {
+        name: MESES_CORTO[d.getMonth()],
+        Ingresos: Math.round(movs.filter(x => x.tipo === "ingreso").reduce((s, x) => s + x.monto, 0)),
+        Gastos:   Math.round(movs.filter(x => x.tipo === "gasto").reduce((s, x) => s + x.monto, 0)),
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transacciones, eventos, mesSeleccionado])
 
-  // Modules
-  const modules = [
-    { name: "Finanzas",      description: "Presupuesto y flujo",       icon: Swords,        href: "/gestion-personal/presupuesto",   color: "cyan"   },
-    { name: "Objetivos",     description: "Metas y créditos",          icon: Target,        href: "/gestion-personal/objetivos",     color: "amber"  },
-    { name: "Inventario",    description: "Cuentas y cartera",         icon: Package,       href: "/gestion-personal/cuentas",       color: "green"  },
-    { name: "Stats",         description: "Patrimonio y net worth",    icon: BarChart3,     href: "/gestion-personal/patrimonio",    color: "purple" },
-    { name: "Calendario",    description: "Eventos y pagos",           icon: CalendarDays,  href: "/gestion-personal/calendario",    color: "blue"   },
-    { name: "Transacciones", description: "Movimientos y saldos",      icon: ArrowLeftRight,href: "/gestion-personal/transacciones", color: "cyan"   },
-    { name: "Recetario",     description: "Recetas y videos",          icon: ChefHat,       href: "/gestion-personal/recetario",    color: "green"  },
-  ]
-
-  // ─── RENDER ─────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="h-10 w-10 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full mx-auto"
-          />
-          <p className="text-sm text-slate-500">Cargando HUD...</p>
-        </div>
-      </div>
-    )
-  }
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-5 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
 
-      {/* ── Character HUD (compacto) ───────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800/80 border border-slate-700/50 p-4 overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl" />
-
-        <div className="relative flex items-center gap-4">
-          {/* Avatar */}
-          <div className="relative shrink-0">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white text-base font-bold shadow-lg shadow-cyan-500/20">
-              RR
-            </div>
-            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-md bg-slate-800 border border-cyan-500/50 flex items-center justify-center">
-              <span className="text-[9px] font-bold text-cyan-400">{level}</span>
-            </div>
-          </div>
-
-          {/* Info + XP */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-base font-bold text-slate-100">Ricardo</h1>
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                {titulo}
-              </span>
-            </div>
-            <div className="mt-2 flex items-center gap-3">
-              <Star className="h-3 w-3 text-amber-400 shrink-0" />
-              <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden border border-slate-700/50">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(xpInLevel / xpToNext) * 100}%` }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-500"
-                />
-              </div>
-              <span className="text-[10px] text-slate-600 tabular-nums shrink-0">{xpInLevel}/{xpToNext}</span>
-            </div>
-          </div>
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-100">Resumen</h1>
+          <p className="text-sm text-slate-500 capitalize">{mesLabel}</p>
         </div>
-      </motion.div>
-
-      {/* ── Selector de mes ──────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center justify-between"
-      >
         <div className="flex items-center gap-2">
-          <button onClick={() => navMes(-1)} className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors">←</button>
-          <span className="text-sm font-semibold text-slate-300 capitalize min-w-[140px] text-center">{mesLabel}</span>
-          <button onClick={() => navMes(1)} className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors">→</button>
+          <button type="button" onClick={() => navMes(-1)}
+            className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-sm transition-colors">
+            ←
+          </button>
+          <span className="text-sm font-semibold text-slate-300 min-w-[130px] text-center capitalize">{mesLabel}</span>
+          <button type="button" onClick={() => navMes(1)}
+            className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-sm transition-colors">
+            →
+          </button>
           {!esMesActual && (
-            <button onClick={() => setMesSeleccionado(mesActualKey)} className="text-[10px] text-cyan-400 hover:text-cyan-300 ml-1">Hoy</button>
+            <button type="button" onClick={() => setMesSeleccionado(mesActualKey)}
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 ml-1">Hoy</button>
           )}
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-[10px] text-slate-500">
-            <span>Presupuesto: <span className="text-slate-400">{fmt(egresoPresupuestado)}</span></span>
-            <span>Real: <span className={`font-semibold ${gastoReal > egresoPresupuestado ? "text-red-400" : "text-emerald-400"}`}>{fmt(gastoReal)}</span></span>
-          </div>
           <CerrarMesButton
             mes={mesSeleccionado}
             cuentas={cuentas}
             metricas={{
-              ingresoReal,
-              gastoReal,
-              flujoNeto,
-              ahorroReal,
-              ahorroAcumulado,
-              liquidezTotal:        disponible,
-              operativaSaldo:       operativaDisponible,
-              apartadosSaldo:       apartadosDisponible,
-              deudaTotal,
-              necesidadesReal,
-              prescindiblesReal,
-              ingresoPresupuestado,
-              egresoPresupuestado,
+              ingresoReal, gastoReal, flujoNeto,
+              ahorroReal: 0, ahorroAcumulado: apartados,
+              liquidezTotal: disponible,
+              operativaSaldo: operativa, apartadosSaldo: apartados,
+              deudaTotal: deuda,
+              necesidadesReal: 0, prescindiblesReal: 0,
+              ingresoPresupuestado, egresoPresupuestado,
             }}
             snapshotMesExistente={snapshotsMes.find(s => s.mes === mesSeleccionado) ?? null}
             snapshotsCuentaExistentes={snapshotsCuenta.filter(s => s.mes === mesSeleccionado)}
             onDone={() => window.location.reload()}
           />
         </div>
-      </motion.div>
-
-      {/* ── Overview Cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <OverviewCard
-          label="Ingreso Real"
-          value={fmt(ingresoReal)}
-          sub={ingresoPresupuestado > 0 ? `de ${fmt(ingresoPresupuestado)} presupuestado` : undefined}
-          icon={TrendingUp}
-          color="green"
-          delay={0.1}
-        />
-        <OverviewCard
-          label="Gasto Real"
-          value={fmt(gastoReal)}
-          sub={egresoPresupuestado > 0 ? `de ${fmt(egresoPresupuestado)} presupuestado` : undefined}
-          icon={CreditCard}
-          color="red"
-          delay={0.15}
-        />
-        <OverviewCard
-          label="Flujo Neto"
-          value={fmt(flujoNeto)}
-          sub={`Ingreso - Gasto del mes`}
-          icon={flujoNeto >= 0 ? TrendingUp : TrendingDown}
-          color={flujoNeto >= 0 ? "blue" : "red"}
-          delay={0.2}
-        />
-        <OverviewCard
-          label={esMesActual ? "Balance Proyectado" : "Disponible"}
-          value={esMesActual ? fmt(balanceProyectado) : fmt(disponible)}
-          sub={esMesActual ? `Según calendario · faltan ${diasRestantes} días` : "Saldo actual cuentas"}
-          icon={Target}
-          color={balanceProyectado >= 0 ? "purple" : "red"}
-          delay={0.25}
-        />
       </div>
 
-      {/* ── Gasto por Categoria + Cuentas ──────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* KPI Cards */}
+      {loading ? (
+        <p className="text-sm text-slate-500 text-center py-12">Cargando...</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiCard label="Ingreso" value={fmt(ingresoReal)}
+              sub={ingresoPresupuestado > 0 ? `de ${fmt(ingresoPresupuestado)} presupuestado` : undefined}
+              icon={TrendingUp} color="green" delay={0.05} />
+            <KpiCard label="Gasto" value={fmt(gastoReal)}
+              sub={egresoPresupuestado > 0 ? `de ${fmt(egresoPresupuestado)} presupuestado` : undefined}
+              icon={TrendingDown} color="red" delay={0.1} />
+            <KpiCard label="Flujo neto" value={fmt(flujoNeto)}
+              sub={flujoNeto >= 0 ? "Mes positivo" : "Mes negativo"}
+              icon={flujoNeto >= 0 ? TrendingUp : TrendingDown}
+              color={flujoNeto >= 0 ? "blue" : "red"} delay={0.15} />
+            <KpiCard label="Disponible" value={fmt(disponible)}
+              sub={deuda > 0 ? `Deuda: ${fmt(deuda)}` : "Sin deuda activa"}
+              icon={Wallet} color="slate" delay={0.2} />
+          </div>
 
-        {/* Gasto por Categoria */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gasto Real por Tipo</h2>
-            <Link href="/gestion-personal/presupuesto" className="text-[10px] text-cyan-500 hover:text-cyan-400">Ver detalle</Link>
-          </div>
-          {gastoReal === 0 ? (
-            <p className="text-xs text-slate-600 text-center py-6">Sin transacciones este mes</p>
-          ) : (
-            <div className="space-y-3">
-              <CategoryBar label="Necesidades" monto={necesidadesReal} total={gastoReal} color="bg-gradient-to-r from-cyan-500 to-blue-500" />
-              <CategoryBar label="Prescindibles" monto={prescindiblesReal} total={gastoReal} color="bg-gradient-to-r from-amber-500 to-orange-500" />
-              <CategoryBar label="Ahorro" monto={ahorroReal} total={gastoReal} color="bg-gradient-to-r from-emerald-400 to-green-500" />
-            </div>
-          )}
-          <div className="mt-4 pt-3 border-t border-slate-800/60 flex justify-between text-[10px] text-slate-500">
-            <span>Ingreso: <span className="text-emerald-400 font-semibold">{fmt(ingresoReal)}</span></span>
-            <span>Gasto: <span className="text-red-400 font-semibold">{fmt(gastoReal)}</span></span>
-            <span>Flujo: <span className={`font-semibold ${flujoNeto >= 0 ? "text-cyan-400" : "text-red-400"}`}>{fmt(flujoNeto)}</span></span>
-          </div>
-        </motion.div>
+          {/* Gasto por categoría + Tendencia */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        {/* Cuentas */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mis Cuentas</h2>
-            <Link href="/gestion-personal/cuentas" className="text-[10px] text-cyan-500 hover:text-cyan-400">Ver todas</Link>
-          </div>
-          {cuentasActivas.length === 0 ? (
-            <p className="text-xs text-slate-600 text-center py-6">Sin cuentas activas</p>
-          ) : (
-            <div className="space-y-3">
-              {/* Operativa destacada */}
-              {cuentasOperativa.length > 0 && (
-                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2">
-                  <p className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider mb-1 px-1">★ Operativa</p>
-                  <div className="divide-y divide-emerald-900/30">
-                    {cuentasOperativa.map(c => (
-                      <AccountRow key={c.id} nombre={c.nombre} tipo={c.tipo} saldo={saldoDe(c)} color={c.color} meta={c.metaDeCuenta} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Apartados */}
-              {cuentasApartados.length > 0 && (
-                <div>
-                  <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1 px-1">Apartados</p>
-                  <div className="divide-y divide-slate-800/50">
-                    {cuentasApartados.map(c => (
-                      <AccountRow key={c.id} nombre={c.nombre} tipo={c.tipo} saldo={saldoDe(c)} color={c.color} meta={c.metaDeCuenta} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Crédito */}
-              {cuentasCredito.length > 0 && (
-                <div>
-                  <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1 px-1">Crédito</p>
-                  <div className="divide-y divide-slate-800/50">
-                    {cuentasCredito.map(c => (
-                      <AccountRow key={c.id} nombre={c.nombre} tipo={c.tipo} saldo={saldoDe(c)} color={c.color} meta={c.metaDeCuenta} />
-                    ))}
+            {/* Donut — en qué gasté */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">En qué gasté</h2>
+              {gastoPorCat.length === 0 ? (
+                <p className="text-xs text-slate-600 text-center py-10">Sin gastos registrados</p>
+              ) : (
+                <div className="flex items-start gap-4">
+                  <ResponsiveContainer width="45%" height={170}>
+                    <PieChart>
+                      <Pie data={gastoPorCat} dataKey="monto" nameKey="cat"
+                        cx="50%" cy="50%" innerRadius={48} outerRadius={72} strokeWidth={0}>
+                        {gastoPorCat.map((_, i) => (
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={TOOLTIP_STYLE}
+                        formatter={(v: number) => [fmt(v), ""]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex-1 space-y-2 min-w-0 max-h-[170px] overflow-y-auto pr-1">
+                    {gastoPorCat.map((g, i) => {
+                      const pct = gastoReal > 0 ? Math.round((g.monto / gastoReal) * 100) : 0
+                      return (
+                        <div key={g.cat} className="flex items-center gap-2 min-w-0">
+                          <ChartDot color={CHART_COLORS[i % CHART_COLORS.length]} />
+                          <span className="text-[11px] text-slate-400 truncate flex-1 capitalize">{g.cat}</span>
+                          <span className="text-[11px] text-slate-300 font-medium shrink-0 tabular-nums">{fmt(g.monto)}</span>
+                          <span className="text-[10px] text-slate-600 shrink-0 w-8 text-right">{pct}%</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
             </div>
-          )}
-          <div className="mt-3 pt-3 border-t border-slate-800/60 flex justify-between text-[10px] text-slate-500 flex-wrap gap-y-1">
-            <span>Operativa: <span className="text-emerald-400 font-semibold">{fmt(operativaDisponible)}</span></span>
-            <span>Apartados: <span className="text-slate-300 font-semibold">{fmt(apartadosDisponible)}</span></span>
-            {deudaTotal > 0 && <span>Deuda: <span className="text-red-400 font-semibold">{fmt(deudaTotal)}</span></span>}
-          </div>
-        </motion.div>
-      </div>
 
-      {/* ── Monthly Charts ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <MiniChart data={chartData.ingresos} title="Ingresos por Mes" colorPositive="#34d399" />
-        <MiniChart data={chartData.gastos} title="Gastos por Mes" colorPositive="#f87171" />
-        <MiniChart data={chartData.balance} title="Balance por Mes" colorPositive="#22d3ee" colorNegative="#f87171" />
-      </div>
-
-      {/* ── Quick RPG Stats ────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
-      >
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Stats del Personaje</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="flex items-center gap-2">
-            <Heart className="h-4 w-4 text-red-400" />
-            <div>
-              <p className="text-[10px] text-slate-600">Liquidez</p>
-              <p className="text-sm font-bold text-slate-200">{fmt(disponible)}</p>
+            {/* Barras — tendencia 6 meses */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Ingresos vs Gastos — 6 meses</h2>
+              <ResponsiveContainer width="100%" height={170}>
+                <BarChart data={tendencia} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false}
+                    tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE}
+                    formatter={(v: number) => `$${v.toLocaleString("es-MX")}`} />
+                  <Legend wrapperStyle={{ fontSize: 10, color: "#94a3b8" }} />
+                  <Bar dataKey="Ingresos" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={18} />
+                  <Bar dataKey="Gastos"   fill="#f87171" radius={[3, 3, 0, 0]} maxBarSize={18} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-emerald-400" />
-            <div>
-              <p className="text-[10px] text-slate-600">Ahorro</p>
-              <p className="text-sm font-bold text-slate-200">{Math.round(pctAhorro)}%</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-cyan-400" />
-            <div>
-              <p className="text-[10px] text-slate-600">Supervivencia</p>
-              <p className="text-sm font-bold text-slate-200">{ratioSupervivencia.toFixed(1)} meses</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-violet-400" />
-            <div>
-              <p className="text-[10px] text-slate-600">Ahorro acum.</p>
-              <p className="text-sm font-bold text-slate-200">{fmt(ahorroAcumulado)}</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
 
-      {/* ── Module Grid ────────────────────────────────────────────────────── */}
-      <div>
-        <h2 className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Modulos</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {modules.map((mod, i) => (
-            <ModuleCard key={mod.name} {...mod} delay={0.55 + i * 0.05} />
-          ))}
-        </div>
-      </div>
+          {/* Cuándo gané + Cuentas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
+            {/* Ingresos del mes con fecha */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cuándo gané</h2>
+                <Link href="/gestion-personal/calendario"
+                  className="text-[10px] text-cyan-500 hover:text-cyan-400 flex items-center gap-1">
+                  <CalendarDays size={10} /> Ver calendario
+                </Link>
+              </div>
+              {ingresosDelMes.length === 0 ? (
+                <p className="text-xs text-slate-600 text-center py-8">Sin ingresos registrados</p>
+              ) : (
+                <div className="space-y-2">
+                  {ingresoPorCat.map((g, i) => (
+                    <div key={g.cat} className="flex items-center gap-2">
+                      <ChartDot color={CHART_COLORS[i % CHART_COLORS.length]} />
+                      <span className="text-xs text-slate-400 capitalize flex-1 truncate">{g.cat}</span>
+                      <span className="text-xs text-emerald-400 font-semibold tabular-nums">+{fmt(g.monto)}</span>
+                    </div>
+                  ))}
+                  <div className="pt-3 mt-3 border-t border-slate-800 space-y-1.5 max-h-[140px] overflow-y-auto">
+                    {ingresosDelMes.map((m, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="text-slate-600 shrink-0 w-14">{fmtDia(m.fecha)}</span>
+                        <span className="text-slate-400 truncate flex-1">{m.descripcion ?? m.categoria ?? "Ingreso"}</span>
+                        <span className="text-emerald-400 font-medium shrink-0 tabular-nums">+{fmt(m.monto)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Cuentas — saldos actuales */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mis cuentas</h2>
+                <Link href="/gestion-personal/cuentas"
+                  className="text-[10px] text-cyan-500 hover:text-cyan-400">Ver detalle</Link>
+              </div>
+
+              {/* Resumen */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="bg-emerald-950/40 border border-emerald-800/30 rounded-lg p-2.5 text-center">
+                  <p className="text-[10px] text-emerald-400 font-medium mb-0.5">Operativa</p>
+                  <p className="text-sm font-bold text-emerald-300 tabular-nums">{fmt(operativa)}</p>
+                </div>
+                <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-2.5 text-center">
+                  <p className="text-[10px] text-slate-400 font-medium mb-0.5">Apartados</p>
+                  <p className="text-sm font-bold text-slate-200 tabular-nums">{fmt(apartados)}</p>
+                </div>
+                <div className="bg-red-950/40 border border-red-800/30 rounded-lg p-2.5 text-center">
+                  <p className="text-[10px] text-red-400 font-medium mb-0.5">Deuda</p>
+                  <p className="text-sm font-bold text-red-300 tabular-nums">{fmt(deuda)}</p>
+                </div>
+              </div>
+
+              {/* Lista de cuentas */}
+              <div className="space-y-2 max-h-[160px] overflow-y-auto">
+                {cuentasActivas.length === 0 ? (
+                  <p className="text-xs text-slate-600 text-center py-4">Sin cuentas activas</p>
+                ) : (
+                  cuentasActivas.map(c => {
+                    const saldo = c.saldoActual ?? 0
+                    const esCredito = c.tipo === "Crédito"
+                    return (
+                      <div key={c.id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-800/60 last:border-0">
+                        <ColorDot color={c.color} />
+                        <span className="text-xs text-slate-300 flex-1 truncate">{c.nombre}</span>
+                        <span className="text-[10px] text-slate-600 shrink-0">{c.proposito ?? c.tipo}</span>
+                        <span className={`text-xs font-semibold tabular-nums shrink-0 ${esCredito ? "text-red-400" : "text-slate-200"}`}>
+                          {fmt(saldo)}
+                        </span>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
