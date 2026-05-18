@@ -17,7 +17,8 @@
     "receta": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::receta.receta"
+      "target": "api::receta.receta",
+      "inversedBy": "planComidas"
     }
   }
 }

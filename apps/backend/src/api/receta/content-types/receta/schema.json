@@ -16,6 +16,12 @@
     "tiempoPrep":  { "type": "integer", "default": 30 },
     "dificultad":  { "type": "enumeration", "enum": ["fácil","media","difícil"], "default": "fácil" },
     "notas":       { "type": "text" },
-    "categorias":  { "type": "json" }
+    "categorias":  { "type": "json" },
+    "planComidas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::plan-comida.plan-comida",
+      "mappedBy": "receta"
+    }
   }
 }
