@@ -14,6 +14,12 @@
       "enum": ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"],
       "required": true
     },
+    "momento": {
+      "type": "enumeration",
+      "enum": ["desayuno","comida","cena"],
+      "required": true,
+      "default": "comida"
+    },
     "receta": {
       "type": "relation",
       "relation": "manyToOne",
