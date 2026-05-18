@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronLeft, ChevronRight, Plus, X, Search, Check, ArrowLeft } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, X, Search, Check, ArrowLeft, PlayCircle } from "lucide-react"
 import { toast } from "sonner"
 import { useGetRecetas, createReceta } from "@/api/receta/getRecetas"
 import { useGetPlanSemana, createPlanComida, deletePlanComida } from "@/api/plan-comida/getPlanComidas"
@@ -170,6 +170,12 @@ export function PlaneadorView() {
             <div key={plan.documentId} className="group flex items-start gap-0.5">
               <div className="flex-1 min-w-0 bg-slate-800 rounded-lg px-2 py-1.5">
                 <p className="text-[10px] font-medium text-slate-200 leading-snug">{plan.receta.nombre}</p>
+                {plan.receta.videoUrl && (
+                  <a href={plan.receta.videoUrl} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] text-amber-500 hover:text-amber-400 transition">
+                    <PlayCircle size={10} /> Ver video
+                  </a>
+                )}
                 {plan.receta.categorias.length > 0 && (
                   <div className="flex gap-0.5 mt-1 flex-wrap">
                     {plan.receta.categorias.map(cat => (
