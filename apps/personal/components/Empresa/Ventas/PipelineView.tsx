@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, X, Check, Phone, Mail, MessageCircle, ChevronRight, Pencil, Trash2, User } from "lucide-react"
+import { Plus, X, Check, Phone, Mail, MessageCircle, ChevronRight, ChevronLeft, Pencil, Trash2, User } from "lucide-react"
 import { toast } from "sonner"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
 import { useGetVentasByCliente, createVenta } from "@/api/ventaEmpresa/getVentas"
@@ -100,14 +100,15 @@ function ClientePanel({ cliente, onClose, onUpdate }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cliente.documentId])
 
-  const avanzarFunnel = async () => {
-    const idx    = FUNNEL_ETAPAS.indexOf(cliente.Funnel ?? "Lead")
-    const siguiente = FUNNEL_ETAPAS[Math.min(idx + 1, FUNNEL_ETAPAS.length - 1)]
-    if (siguiente === cliente.Funnel) return
+  const moverFunnel = async (dir: 1 | -1) => {
+    const idx     = FUNNEL_ETAPAS.indexOf(cliente.Funnel ?? "Lead")
+    const destIdx = Math.max(0, Math.min(FUNNEL_ETAPAS.length - 1, idx + dir))
+    if (destIdx === idx) return
+    const destino = FUNNEL_ETAPAS[destIdx]
     try {
-      const updated = await updateCliente(cliente.documentId, { Funnel: siguiente })
+      const updated = await updateCliente(cliente.documentId, { Funnel: destino })
       onUpdate(updated)
-      toast.success(`Avanzó a ${FUNNEL_LABEL[siguiente]}`)
+      toast.success(dir === 1 ? `Avanzó a ${FUNNEL_LABEL[destino]}` : `Regresó a ${FUNNEL_LABEL[destino]}`)
     } catch {
       toast.error("Error al actualizar")
     }
@@ -179,14 +180,23 @@ function ClientePanel({ cliente, onClose, onUpdate }: {
           </div>
         </div>
 
-        {/* Avanzar funnel */}
-        {cliente.Funnel && cliente.Funnel !== "Recompra" && (
-          <div className="px-4 py-3 border-b border-slate-800">
-            <button type="button" onClick={avanzarFunnel}
-              className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium border border-slate-700 hover:border-emerald-700 hover:text-emerald-400 rounded-lg transition text-slate-400">
-              Avanzar a {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(cliente.Funnel) + 1]]}
-              <ChevronRight size={13} />
-            </button>
+        {/* Mover en funnel */}
+        {cliente.Funnel && (
+          <div className="px-4 py-3 border-b border-slate-800 flex gap-2">
+            {cliente.Funnel !== "Lead" && (
+              <button type="button" onClick={() => moverFunnel(-1)}
+                className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-300 rounded-lg transition text-slate-500">
+                <ChevronLeft size={13} />
+                {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(cliente.Funnel) - 1]]}
+              </button>
+            )}
+            {cliente.Funnel !== "Recompra" && (
+              <button type="button" onClick={() => moverFunnel(1)}
+                className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-medium border border-slate-700 hover:border-emerald-700 hover:text-emerald-400 rounded-lg transition text-slate-400">
+                {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(cliente.Funnel) + 1]]}
+                <ChevronRight size={13} />
+              </button>
+            )}
           </div>
         )}
 

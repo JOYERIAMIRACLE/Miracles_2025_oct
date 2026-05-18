@@ -1,5 +1,5 @@
-import { TareasView } from "@/components/Personal/Tareas/TareasView"
+import { TareasEmpresaView } from "@/components/Empresa/Marketing/TareasEmpresaView"
 
 export default function TareasMarketingPage() {
-  return <TareasView ambito="trabajo" titulo="Tareas de Marketing" />
+  return <TareasEmpresaView />
 }
