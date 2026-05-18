@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "plan_comidas",
+  "info": {
+    "singularName": "plan-comida",
+    "pluralName": "plan-comidas",
+    "displayName": "Plan de Comida"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "semanaInicio": { "type": "date", "required": true },
+    "diaSemana": {
+      "type": "enumeration",
+      "enum": ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"],
+      "required": true
+    },
+    "receta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::receta.receta"
+    }
+  }
+}

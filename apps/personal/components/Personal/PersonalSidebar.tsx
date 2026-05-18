@@ -11,6 +11,7 @@ import {
   CheckSquare,
   ChefHat,
   Dumbbell,
+  CalendarRange,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -41,7 +42,8 @@ const sections: { title: string; items: NavItem[] }[] = [
   {
     title: "Vivienda",
     items: [
-      { name: "Recetario", href: "/gestion-personal/vivienda/recetario", icon: ChefHat, color: "amber" },
+      { name: "Recetario",  href: "/gestion-personal/vivienda/recetario",  icon: ChefHat,      color: "amber" },
+      { name: "Planeador",  href: "/gestion-personal/vivienda/planeador",  icon: CalendarRange, color: "amber" },
     ],
   },
 ]

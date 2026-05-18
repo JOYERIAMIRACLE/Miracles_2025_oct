@@ -4,10 +4,21 @@ import { useState, useMemo } from "react"
 import { Plus, Pencil, Trash2, X, Check, PlayCircle, Search } from "lucide-react"
 import { toast } from "sonner"
 import { useGetRecetas, createReceta, updateReceta, deleteReceta } from "@/api/receta/getRecetas"
-import { RecetaType, RecetaPayload } from "@/types/recetario"
+import {
+  RecetaType, RecetaPayload,
+  CategoriaReceta, CATEGORIAS, CATEGORIA_LABEL, CATEGORIA_COLOR,
+} from "@/types/recetario"
 
 function emptyForm(): RecetaPayload {
-  return { nombre: "", descripcion: null, videoUrl: null }
+  return { nombre: "", descripcion: null, videoUrl: null, categorias: [] }
+}
+
+function CategoriaBadge({ cat }: { cat: CategoriaReceta }) {
+  return (
+    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${CATEGORIA_COLOR[cat]}`}>
+      {CATEGORIA_LABEL[cat]}
+    </span>
+  )
 }
 
 function RecetaCard({ r, onEdit, onDelete }: {
@@ -31,8 +42,14 @@ function RecetaCard({ r, onEdit, onDelete }: {
         </div>
       </div>
 
+      {r.categorias.length > 0 && (
+        <div className="flex gap-1 flex-wrap">
+          {r.categorias.map(cat => <CategoriaBadge key={cat} cat={cat} />)}
+        </div>
+      )}
+
       {r.descripcion && (
-        <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">{r.descripcion}</p>
+        <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 whitespace-pre-wrap">{r.descripcion}</p>
       )}
 
       {r.videoUrl ? (
@@ -54,12 +71,15 @@ export function RecetarioView() {
   const [guardando, setGuardando] = useState(false)
   const [form,      setForm]      = useState<RecetaPayload>(emptyForm())
   const [busqueda,  setBusqueda]  = useState("")
+  const [filtroCategoria, setFiltroCategoria] = useState<CategoriaReceta | "">("")
 
   const filtradas = useMemo(() =>
-    recetas.filter(r =>
-      !busqueda || r.nombre.toLowerCase().includes(busqueda.toLowerCase())
-    ),
-  [recetas, busqueda])
+    recetas.filter(r => {
+      const matchNombre    = !busqueda || r.nombre.toLowerCase().includes(busqueda.toLowerCase())
+      const matchCategoria = !filtroCategoria || r.categorias.includes(filtroCategoria)
+      return matchNombre && matchCategoria
+    }),
+  [recetas, busqueda, filtroCategoria])
 
   const abrirCrear = () => {
     setEditando(null)
@@ -69,8 +89,17 @@ export function RecetarioView() {
 
   const abrirEditar = (r: RecetaType) => {
     setEditando(r)
-    setForm({ nombre: r.nombre, descripcion: r.descripcion, videoUrl: r.videoUrl })
+    setForm({ nombre: r.nombre, descripcion: r.descripcion, videoUrl: r.videoUrl, categorias: r.categorias })
     setModalOpen(true)
+  }
+
+  const toggleCategoria = (cat: CategoriaReceta) => {
+    setForm(f => ({
+      ...f,
+      categorias: f.categorias.includes(cat)
+        ? f.categorias.filter(c => c !== cat)
+        : [...f.categorias, cat],
+    }))
   }
 
   const guardar = async () => {
@@ -119,15 +148,29 @@ export function RecetarioView() {
         </button>
       </div>
 
-      {/* Búsqueda */}
-      <div className="relative mb-6 max-w-xs">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-        <input
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-          placeholder="Buscar receta..."
-          className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 placeholder:text-slate-600 outline-none focus:border-slate-500"
-        />
+      {/* Búsqueda + filtro categoría */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative max-w-xs">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <input
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder="Buscar receta..."
+            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 placeholder:text-slate-600 outline-none focus:border-slate-500"
+          />
+        </div>
+        <div className="flex gap-1.5 flex-wrap items-center">
+          <button type="button" onClick={() => setFiltroCategoria("")}
+            className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${filtroCategoria === "" ? "bg-slate-700 border-slate-600 text-slate-200" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
+            Todas
+          </button>
+          {CATEGORIAS.map(cat => (
+            <button key={cat} type="button" onClick={() => setFiltroCategoria(filtroCategoria === cat ? "" : cat)}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${filtroCategoria === cat ? CATEGORIA_COLOR[cat] + " font-medium" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
+              {CATEGORIA_LABEL[cat]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid */}
@@ -136,9 +179,9 @@ export function RecetarioView() {
       ) : filtradas.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <p className="text-slate-500 text-sm">
-            {busqueda ? "Sin resultados" : "No hay recetas guardadas"}
+            {busqueda || filtroCategoria ? "Sin resultados" : "No hay recetas guardadas"}
           </p>
-          {!busqueda && (
+          {!busqueda && !filtroCategoria && (
             <button type="button" onClick={abrirCrear}
               className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700 rounded-lg text-slate-400 hover:text-slate-200 hover:border-slate-600 transition">
               <Plus size={14} /> Agregar primera receta
@@ -164,7 +207,7 @@ export function RecetarioView() {
               <h2 className="text-base font-semibold text-slate-100">
                 {editando ? "Editar receta" : "Nueva receta"}
               </h2>
-              <button type="button" onClick={() => setModalOpen(false)}
+              <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
                 className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
                 <X size={16} />
               </button>
@@ -181,6 +224,20 @@ export function RecetarioView() {
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
                 />
               </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-500 mb-2">Categorías</label>
+                <div className="flex gap-2 flex-wrap">
+                  {CATEGORIAS.map(cat => (
+                    <button key={cat} type="button"
+                      onClick={() => toggleCategoria(cat)}
+                      className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${form.categorias.includes(cat) ? CATEGORIA_COLOR[cat] + " font-medium" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
+                      {CATEGORIA_LABEL[cat]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[11px] text-slate-500 mb-1">Descripción</label>
                 <textarea
@@ -188,7 +245,7 @@ export function RecetarioView() {
                   onChange={e => setForm(f => ({ ...f, descripcion: e.target.value || null }))}
                   placeholder="Ingredientes, pasos rápidos, notas..."
                   rows={4}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 resize-none"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 resize-y"
                 />
               </div>
               <div>

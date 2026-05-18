@@ -15,6 +15,7 @@
     "videoUrl":    { "type": "string" },
     "tiempoPrep":  { "type": "integer", "default": 30 },
     "dificultad":  { "type": "enumeration", "enum": ["fácil","media","difícil"], "default": "fácil" },
-    "notas":       { "type": "text" }
+    "notas":       { "type": "text" },
+    "categorias":  { "type": "json" }
   }
 }

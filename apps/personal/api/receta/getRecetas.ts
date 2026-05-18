@@ -3,6 +3,8 @@ import { RecetaType, RecetaPayload } from "@/types/recetario"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
+const normalize = (r: RecetaType): RecetaType => ({ ...r, categorias: r.categorias ?? [] })
+
 export function useGetRecetas() {
   const [recetas, setRecetas] = useState<RecetaType[]>([])
   const [loading, setLoading] = useState(true)
@@ -12,7 +14,7 @@ export function useGetRecetas() {
       try {
         const res  = await fetch(`${BASE}/api/recetas?pagination[pageSize]=200&sort=nombre:asc`)
         const json = await res.json()
-        setRecetas(json.data ?? [])
+        setRecetas((json.data ?? []).map(normalize))
       } finally { setLoading(false) }
     })()
   }, [])
@@ -26,7 +28,7 @@ export async function createReceta(payload: RecetaPayload): Promise<RecetaType> 
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
-  return json.data
+  return normalize(json.data)
 }
 
 export async function updateReceta(documentId: string, payload: Partial<RecetaPayload>): Promise<RecetaType> {
@@ -35,7 +37,7 @@ export async function updateReceta(documentId: string, payload: Partial<RecetaPa
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
-  return json.data
+  return normalize(json.data)
 }
 
 export async function deleteReceta(documentId: string) {
