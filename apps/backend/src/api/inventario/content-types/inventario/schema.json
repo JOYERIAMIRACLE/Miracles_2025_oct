@@ -18,6 +18,9 @@
     "sku": {
       "type": "string"
     },
+    "descripcion": {
+      "type": "text"
+    },
     "costoProduccion": {
       "type": "decimal"
     },

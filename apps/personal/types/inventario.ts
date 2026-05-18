@@ -8,6 +8,7 @@ export type InventarioType = {
   documentId:       string
   nombre:           string
   sku:              string | null
+  descripcion:      string | null
   costoProduccion:  number | null
   precioVenta:      number | null
   stock:            number | null

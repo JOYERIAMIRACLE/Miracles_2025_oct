@@ -15,6 +15,7 @@ const margen = (costo: number | null, precio: number | null) => {
 type FormData = {
   nombre:          string
   sku:             string
+  descripcion:     string
   costoProduccion: string
   precioVenta:     string
   stock:           string
@@ -22,7 +23,7 @@ type FormData = {
 }
 
 const emptyForm = (): FormData => ({
-  nombre: "", sku: "", costoProduccion: "", precioVenta: "", stock: "0", material: "producto",
+  nombre: "", sku: "", descripcion: "", costoProduccion: "", precioVenta: "", stock: "0", material: "producto",
 })
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
@@ -67,6 +68,7 @@ export function InventarioEmpresaView() {
     setForm({
       nombre:          it.nombre,
       sku:             it.sku ?? "",
+      descripcion:     it.descripcion ?? "",
       costoProduccion: it.costoProduccion != null ? String(it.costoProduccion) : "",
       precioVenta:     it.precioVenta != null ? String(it.precioVenta) : "",
       stock:           String(it.stock ?? 0),
@@ -82,6 +84,7 @@ export function InventarioEmpresaView() {
       const payload = {
         nombre:          form.nombre.trim(),
         sku:             form.sku.trim() || null,
+        descripcion:     form.descripcion.trim() || null,
         costoProduccion: form.costoProduccion ? Number(form.costoProduccion) : null,
         precioVenta:     form.precioVenta ? Number(form.precioVenta) : null,
         stock:           Number(form.stock) || 0,
@@ -199,6 +202,11 @@ export function InventarioEmpresaView() {
                         <div>
                           <p className="font-medium text-slate-200">{it.nombre}</p>
                           {it.sku && <p className="text-[10px] text-slate-500">{it.sku}</p>}
+                          {it.descripcion && (
+                            <p className="text-[10px] text-slate-600 max-w-[200px] truncate mt-0.5" title={it.descripcion}>
+                              {it.descripcion}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -288,6 +296,12 @@ export function InventarioEmpresaView() {
                 <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Nombre <span className="text-red-400">*</span></label>
                 <input type="text" placeholder="Ej. Anillo solitario oro 14k" value={form.nombre}
                   onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inp} />
+              </div>
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Descripción</label>
+                <textarea placeholder="Material, medidas, características…" value={form.descripcion}
+                  onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
+                  rows={2} className={inp + " resize-none h-auto py-2"} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
