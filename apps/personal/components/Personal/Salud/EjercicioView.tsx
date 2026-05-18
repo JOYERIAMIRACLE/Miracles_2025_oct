@@ -48,7 +48,7 @@ function EjercicioCard({ e, onEdit, onDelete }: {
         </div>
       </div>
       {e.descripcion && (
-        <p className="text-xs text-slate-400 leading-relaxed">{e.descripcion}</p>
+        <p className="text-xs text-slate-400 leading-relaxed whitespace-pre-wrap">{e.descripcion}</p>
       )}
     </div>
   )
@@ -214,8 +214,8 @@ export function EjercicioView() {
                 <textarea value={form.descripcion ?? ""}
                   onChange={e => setForm(f => ({ ...f, descripcion: e.target.value || null }))}
                   placeholder="Series, repeticiones, notas..."
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 resize-none" />
+                  rows={4}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 resize-y" />
               </div>
               <div>
                 <label className="block text-[11px] text-slate-500 mb-2">Dia de la semana</label>
