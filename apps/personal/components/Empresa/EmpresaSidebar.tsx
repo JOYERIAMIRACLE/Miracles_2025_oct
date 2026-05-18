@@ -2,17 +2,35 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Building2, Users, ShoppingBag, LayoutDashboard, Package } from "lucide-react"
+import {
+  Building2, Users, ShoppingBag, LayoutDashboard, Package,
+  Megaphone, CheckSquare, Wallet, Archive,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type NavItem = { name: string; href: string; icon: typeof LayoutDashboard; color: string }
 
-const sections: { title: string; items: NavItem[] }[] = [
+const sections: { title: string | null; items: NavItem[] }[] = [
+  {
+    title: null,
+    items: [
+      { name: "Dashboard", href: "/gestion-empresa", icon: LayoutDashboard, color: "emerald" },
+    ],
+  },
   {
     title: "Ventas",
     items: [
       { name: "Pipeline",  href: "/gestion-empresa/ventas/pipeline", icon: Users,       color: "emerald" },
       { name: "Pedidos",   href: "/gestion-empresa/ventas/pedidos",  icon: ShoppingBag, color: "emerald" },
+    ],
+  },
+  {
+    title: "Marketing",
+    items: [
+      { name: "Campañas",      href: "/gestion-empresa/marketing/campanas",      icon: Megaphone,   color: "blue" },
+      { name: "Tareas",        href: "/gestion-empresa/marketing/tareas",        icon: CheckSquare, color: "blue" },
+      { name: "Gastos",        href: "/gestion-empresa/marketing/gastos",        icon: Wallet,      color: "blue" },
+      { name: "Promocionales", href: "/gestion-empresa/marketing/promocionales", icon: Archive,     color: "blue" },
     ],
   },
   {
@@ -55,21 +73,25 @@ export function EmpresaSidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto py-5">
-        <div className="px-3 space-y-5">
+        <div className="px-3 space-y-1">
           {sections.map((section, sIdx) => (
-            <div key={section.title}>
-              {sIdx > 0 && <div className="h-px bg-slate-800/80 mx-2 mb-4" />}
-              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3 px-2">
-                {section.title}
-              </p>
-              <ul className="space-y-1">
+            <div key={section.title ?? "_top"}>
+              {sIdx > 0 && <div className="h-px bg-slate-800/80 mx-2 my-3" />}
+              {section.title && (
+                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1.5 px-2 mt-1">
+                  {section.title}
+                </p>
+              )}
+              <ul className="space-y-0.5">
                 {section.items.map(item => {
-                  const isActive = pathname === item.href
+                  const isActive = item.href === "/gestion-empresa"
+                    ? pathname === item.href
+                    : pathname.startsWith(item.href)
                   return (
                     <li key={item.name}>
                       <Link href={item.href}
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border",
+                          "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 border",
                           isActive
                             ? `${activeColors[item.color]} shadow-sm`
                             : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
