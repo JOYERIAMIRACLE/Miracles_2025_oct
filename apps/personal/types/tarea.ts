@@ -1,7 +1,7 @@
 // ─── Tipos de Tarea ───────────────────────────────────────────────────────────
 
 export type AmbitoTarea    = "personal" | "trabajo"
-export type EstadoTarea    = "pendiente" | "en_progreso" | "completada"
+export type EstadoTarea    = "pendiente" | "en_progreso" | "en_pausa" | "completada"
 export type PrioridadTarea = "baja" | "media" | "alta" | "urgente"
 
 export type TareaType = {

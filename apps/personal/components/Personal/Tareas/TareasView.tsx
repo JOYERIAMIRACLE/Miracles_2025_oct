@@ -17,6 +17,7 @@ const ESTADOS: { key: EstadoTarea | "todas"; label: string }[] = [
   { key: "todas",       label: "Todas" },
   { key: "pendiente",   label: "Pendientes" },
   { key: "en_progreso", label: "En progreso" },
+  { key: "en_pausa",    label: "En pausa" },
   { key: "completada",  label: "Completadas" },
 ]
 
@@ -50,12 +51,14 @@ const PRIORIDAD_DOT: Record<PrioridadTarea, string> = {
 const ESTADO_COLORS: Record<EstadoTarea, string> = {
   pendiente:   "bg-amber-500/10 text-amber-400 border-amber-500/20",
   en_progreso: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  en_pausa:    "bg-violet-500/10 text-violet-400 border-violet-500/20",
   completada:  "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
 }
 
 const ESTADO_LABEL: Record<EstadoTarea, string> = {
   pendiente:   "Pendiente",
   en_progreso: "En progreso",
+  en_pausa:    "En pausa",
   completada:  "Completada",
 }
 
@@ -166,7 +169,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         return true
       })
       .sort((a, b) => {
-        const orden = { pendiente: 0, en_progreso: 1, completada: 2 }
+        const orden = { pendiente: 0, en_progreso: 1, en_pausa: 2, completada: 3 }
         if (orden[a.estado] !== orden[b.estado]) return orden[a.estado] - orden[b.estado]
         const aVenc = a.fechaVencimiento ? new Date(a.fechaVencimiento).getTime() : Infinity
         const bVenc = b.fechaVencimiento ? new Date(b.fechaVencimiento).getTime() : Infinity
@@ -178,6 +181,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     total:       tareas.length,
     pendientes:  tareas.filter(t => t.estado === "pendiente").length,
     enProgreso:  tareas.filter(t => t.estado === "en_progreso").length,
+    enPausa:     tareas.filter(t => t.estado === "en_pausa").length,
     completadas: tareas.filter(t => t.estado === "completada").length,
   }
 
@@ -379,6 +383,10 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         <div className="border border-blue-200 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/20 rounded-xl p-3">
           <p className="text-[10px] text-blue-600 dark:text-blue-400 uppercase">En progreso</p>
           <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{stats.enProgreso}</p>
+        </div>
+        <div className="border border-violet-200 dark:border-violet-900/40 bg-violet-50/30 dark:bg-violet-950/20 rounded-xl p-3">
+          <p className="text-[10px] text-violet-600 dark:text-violet-400 uppercase">En pausa</p>
+          <p className="text-xl font-bold text-violet-700 dark:text-violet-300">{stats.enPausa}</p>
         </div>
         <div className="border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-xl p-3">
           <p className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase">Completadas</p>
@@ -692,6 +700,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 >
                   <option value="pendiente">Pendiente</option>
                   <option value="en_progreso">En progreso</option>
+                  <option value="en_pausa">En pausa</option>
                   <option value="completada">Completada</option>
                 </select>
               </div>

@@ -32,6 +32,7 @@
       "enum": [
         "pendiente",
         "en_progreso",
+        "en_pausa",
         "completada"
       ],
       "default": "pendiente"
