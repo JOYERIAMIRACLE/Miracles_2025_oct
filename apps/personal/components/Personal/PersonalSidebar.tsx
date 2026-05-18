@@ -36,7 +36,8 @@ const sections: { title: string; items: NavItem[] }[] = [
   {
     title: "Salud",
     items: [
-      { name: "Ejercicio", href: "/gestion-personal/salud/ejercicio", icon: Dumbbell, color: "green" },
+      { name: "Ejercicio",  href: "/gestion-personal/salud/ejercicio",           icon: Dumbbell,     color: "green" },
+      { name: "Planeador",  href: "/gestion-personal/salud/planeador-ejercicio", icon: CalendarRange, color: "green" },
     ],
   },
   {

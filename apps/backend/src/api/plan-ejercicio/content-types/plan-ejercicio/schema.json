@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "plan_ejercicios",
+  "info": {
+    "singularName": "plan-ejercicio",
+    "pluralName": "plan-ejercicios",
+    "displayName": "Plan de Ejercicio"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "semanaInicio": { "type": "date", "required": true },
+    "diaSemana": {
+      "type": "enumeration",
+      "enum": ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"],
+      "required": true
+    },
+    "ejercicio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::ejercicio.ejercicio",
+      "inversedBy": "planEjercicios"
+    }
+  }
+}

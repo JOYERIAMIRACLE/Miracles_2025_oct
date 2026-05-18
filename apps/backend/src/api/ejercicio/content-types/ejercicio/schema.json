@@ -13,6 +13,12 @@
     "diaSemana":   {
       "type": "enumeration",
       "enum": ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"]
+    },
+    "planEjercicios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::plan-ejercicio.plan-ejercicio",
+      "mappedBy": "ejercicio"
     }
   }
 }
