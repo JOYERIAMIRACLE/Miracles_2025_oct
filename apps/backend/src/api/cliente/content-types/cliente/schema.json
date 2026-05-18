@@ -7,7 +7,7 @@
     "displayName": "Cliente"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -53,8 +53,11 @@
       "type": "enumeration",
       "enum": [
         "Activo",
-        "Inactivo "
+        "Inactivo"
       ]
+    },
+    "notas": {
+      "type": "text"
     },
     "ventas": {
       "type": "relation",

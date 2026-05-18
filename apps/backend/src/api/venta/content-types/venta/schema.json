@@ -7,7 +7,7 @@
     "displayName": "venta"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -22,6 +22,10 @@
     "fecha": {
       "type": "date",
       "required": true
+    },
+    "metodoPago": {
+      "type": "enumeration",
+      "enum": ["Efectivo","Transferencia","Tarjeta","Otro"]
     },
     "cuenta": {
       "type": "relation",
@@ -54,10 +58,14 @@
     "estado": {
       "type": "enumeration",
       "enum": [
-        "Pendiente",
+        "Cotizado",
         "Pagado",
+        "Preparando",
+        "Enviado",
+        "Entregado",
         "Cancelado"
-      ]
+      ],
+      "default": "Cotizado"
     },
     "notas": {
       "type": "string"
