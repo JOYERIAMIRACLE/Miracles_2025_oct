@@ -27,20 +27,22 @@ export function useGetInventario() {
 }
 
 export async function createInventario(payload: Omit<InventarioPayload, "product_category"> & { product_category?: string | null }): Promise<InventarioType> {
-  const res = await fetch(`${URL}?populate=product_category,foto`, {
+  const res = await fetch(URL, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
+  if (!json.data) throw new Error(json.error?.message ?? "Error al crear")
   return json.data
 }
 
 export async function updateInventario(documentId: string, payload: Partial<InventarioPayload> & { product_category?: string | null }): Promise<InventarioType> {
-  const res = await fetch(`${URL}/${documentId}?populate=product_category,foto`, {
+  const res = await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
+  if (!json.data) throw new Error(json.error?.message ?? "Error al actualizar")
   return json.data
 }
 

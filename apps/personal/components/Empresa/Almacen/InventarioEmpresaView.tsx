@@ -119,10 +119,9 @@ export function InventarioEmpresaView() {
     if (!form.nombre.trim()) { toast.error("El nombre es obligatorio"); return }
     setSaving(true)
     try {
-      let fotoId: number | undefined
+      let fotoData: { id: number; url: string } | undefined
       if (fotoFile) {
-        const uploaded = await uploadFoto(fotoFile)
-        fotoId = uploaded.id
+        fotoData = await uploadFoto(fotoFile)
       }
 
       const payload: Record<string, unknown> = {
@@ -134,21 +133,29 @@ export function InventarioEmpresaView() {
         costoProduccion: form.costoProduccion ? Number(form.costoProduccion) : null,
         precioVenta: form.precioVenta ? Number(form.precioVenta) : null,
         stock: Number(form.stock) || 0, material: form.material,
-        ...(fotoId ? { foto: fotoId } : {}),
+        ...(fotoData ? { foto: fotoData.id } : {}),
       }
 
       if (editing) {
         const updated = await updateInventario(editing.documentId, payload as any)
-        setItems(prev => prev.map(i => i.documentId === updated.documentId ? updated : i))
+        // Strapi no devuelve relaciones populadas en PUT — las preservamos manualmente
+        const merged: InventarioType = {
+          ...editing,
+          ...updated,
+          foto: fotoData ?? editing.foto,
+          product_category: editing.product_category,
+        }
+        setItems(prev => prev.map(i => i.documentId === merged.documentId ? merged : i))
         toast.success("Producto actualizado")
       } else {
         const nuevo = await createInventario(payload as any)
-        setItems(prev => [...prev, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+        const withFoto: InventarioType = { ...nuevo, foto: fotoData ?? null }
+        setItems(prev => [...prev, withFoto].sort((a, b) => a.nombre.localeCompare(b.nombre)))
         toast.success("Producto creado")
       }
       setModalOpen(false)
-    } catch {
-      toast.error("Error al guardar")
+    } catch (e: any) {
+      toast.error(e?.message ?? "Error al guardar")
     } finally {
       setSaving(false)
     }
