@@ -78,6 +78,19 @@ export async function uploadFoto(file: File): Promise<{ id: number; url: string 
 
 export async function publishToTienda(inv: InventarioType): Promise<string> {
   const PRODUCTS = `${BASE}/api/products`
+
+  // Resolver categoría: usar product_category enlazado o buscar por nombre (categoriaJoya)
+  let categoriaDocId = inv.product_category?.documentId
+  if (!categoriaDocId && inv.categoriaJoya) {
+    try {
+      const catRes = await fetch(
+        `${BASE}/api/product-categories?filters[NombreCategoria][$eq]=${encodeURIComponent(inv.categoriaJoya)}&fields[0]=documentId`
+      )
+      const catJson = await catRes.json()
+      categoriaDocId = catJson.data?.[0]?.documentId
+    } catch {}
+  }
+
   const body: Record<string, unknown> = {
     nombreProducto:   inv.nombre,
     descripcion:      inv.descripcion,
@@ -88,7 +101,7 @@ export async function publishToTienda(inv: InventarioType): Promise<string> {
     materialProducto: inv.materialJoya,
     activo:           true,
     ...(inv.foto ? { imagenes: [inv.foto.id] } : {}),
-    ...(inv.product_category?.documentId ? { categoria: inv.product_category.documentId } : {}),
+    ...(categoriaDocId ? { categoria: categoriaDocId } : {}),
   }
 
   let productDocId: string
