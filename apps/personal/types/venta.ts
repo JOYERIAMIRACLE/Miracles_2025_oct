@@ -17,7 +17,7 @@ export type VentaType = {
   cuenta:       CuentaType       | null
   centro_venta: CentroVentaType  | null
   cliente:      ClienteType      | null
-  inventario:   { id: number; documentId: string; nombreProducto: string; costo: number | null } | null
+  producto:     { id: number; documentId: string; nombreProducto: string; costo: number | null } | null
   cantidad:     number           | null
   estado:       EstadoVenta      | null
   notas:        string           | null
@@ -30,7 +30,7 @@ export type VentaPayload = {
   cuenta:       number        | null
   centro_venta: number        | null
   cliente:      number        | null
-  inventario:   number        | null
+  producto:     number        | null
   cantidad:     number        | null
   estado:       EstadoVenta   | null
   notas:        string        | null

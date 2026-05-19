@@ -14,7 +14,7 @@ export function useGetVentas() {
         const params = new URLSearchParams({
           "pagination[pageSize]": "500",
           "sort":                 "fecha:desc",
-          "populate":             "cliente,inventario",
+          "populate":             "cliente,producto",
         })
         const res  = await fetch(`${URL}?${params}`)
         const json = await res.json()
@@ -31,7 +31,7 @@ export async function useGetVentasByCliente(clienteDocumentId: string) {
     "filters[cliente][documentId][$eq]": clienteDocumentId,
     "pagination[pageSize]": "100",
     "sort": "fecha:desc",
-    "populate": "cliente,inventario",
+    "populate": "cliente,producto",
   })
   const res  = await fetch(`${URL}?${params}`)
   const json = await res.json()
@@ -40,8 +40,8 @@ export async function useGetVentasByCliente(clienteDocumentId: string) {
 
 export async function createVenta(payload: VentaPayload): Promise<VentaEmpresa> {
   const body: Record<string, unknown> = { ...payload }
-  if (payload.cliente)    body.cliente    = { connect: [{ documentId: payload.cliente }] }
-  if (payload.inventario) body.inventario = { connect: [{ documentId: payload.inventario }] }
+  if (payload.cliente)  body.cliente  = { connect: [{ documentId: payload.cliente }] }
+  if (payload.producto) body.producto = { connect: [{ documentId: payload.producto }] }
   const res  = await fetch(URL, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: body }),

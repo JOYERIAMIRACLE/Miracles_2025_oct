@@ -2,24 +2,18 @@
 
 module.exports = {
   async up(knex) {
+    // Drop inventario_id column from ventas (old FK to inventarios table)
+    const hasColumn = await knex.schema.hasColumn('ventas', 'inventario_id')
+    if (hasColumn) {
+      await knex.schema.alterTable('ventas', t => {
+        t.dropColumn('inventario_id')
+      })
+    }
+
+    // Drop inventarios table if it still exists
     const hasTable = await knex.schema.hasTable('inventarios')
-    if (!hasTable) return
-
-    // Drop any FK constraints in ventas that reference inventarios
-    const result = await knex.raw(`
-      SELECT tc.constraint_name
-      FROM information_schema.table_constraints AS tc
-      JOIN information_schema.referential_constraints AS rc
-        ON tc.constraint_name = rc.constraint_name
-      JOIN information_schema.table_constraints AS ccu
-        ON ccu.constraint_name = rc.unique_constraint_name
-      WHERE tc.constraint_type = 'FOREIGN KEY'
-        AND tc.table_name = 'ventas'
-        AND ccu.table_name = 'inventarios'
-    `)
-
-    for (const row of (result.rows ?? [])) {
-      await knex.raw(`ALTER TABLE ventas DROP CONSTRAINT IF EXISTS "${row.constraint_name}"`)
+    if (hasTable) {
+      await knex.schema.dropTableIfExists('inventarios')
     }
   },
 

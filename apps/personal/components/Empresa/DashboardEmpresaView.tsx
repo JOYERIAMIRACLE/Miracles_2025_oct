@@ -33,7 +33,7 @@ export function DashboardEmpresaView() {
 
     const topProductos = Object.entries(
       ventas.reduce((acc, v) => {
-        const nombre = v.inventario?.nombreProducto ?? "Sin producto"
+        const nombre = v.producto?.nombreProducto ?? "Sin producto"
         acc[nombre] = (acc[nombre] ?? 0) + (v.monto ?? 0)
         return acc
       }, {} as Record<string, number>)

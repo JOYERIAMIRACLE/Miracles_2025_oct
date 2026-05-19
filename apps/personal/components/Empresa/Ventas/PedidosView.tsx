@@ -27,7 +27,7 @@ function emptyForm(): VentaPayload {
     notas: null,
     cantidad: 1,
     cliente: null,
-    inventario: null,
+    producto: null,
   }
 }
 
@@ -85,7 +85,7 @@ export function PedidosView() {
       notas:      v.notas,
       cantidad:   v.cantidad,
       cliente:    v.cliente?.documentId ?? null,
-      inventario: v.inventario?.documentId ?? null,
+      producto:   v.producto?.documentId ?? null,
     })
     setModalOpen(true)
   }
@@ -201,9 +201,9 @@ export function PedidosView() {
                 <tr key={v.documentId} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="px-4 py-3">
                     <p className="font-medium text-slate-200 leading-snug">{v.concepto}</p>
-                    {v.inventario && (
+                    {v.producto && (
                       <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                        <Package size={10} /> {v.inventario.nombreProducto} ×{v.cantidad}
+                        <Package size={10} /> {v.producto.nombreProducto} ×{v.cantidad}
                       </p>
                     )}
                   </td>

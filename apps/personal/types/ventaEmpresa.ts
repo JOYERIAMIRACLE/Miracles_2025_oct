@@ -26,7 +26,7 @@ export type VentaEmpresa = {
   notas:       string | null
   cantidad:    number
   cliente:     Pick<ClienteEmpresa, "id" | "documentId" | "nombre" | "telefono"> | null
-  inventario:  { id: number; documentId: string; nombreProducto: string; costo: number | null } | null
+  producto:    { id: number; documentId: string; nombreProducto: string; costo: number | null } | null
   createdAt:   string
 }
 
@@ -39,5 +39,5 @@ export type VentaPayload = {
   notas?:      string | null
   cantidad?:   number
   cliente?:    string | null
-  inventario?: string | null
+  producto?:   string | null
 }

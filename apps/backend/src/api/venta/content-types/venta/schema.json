@@ -45,7 +45,7 @@
       "target": "api::cliente.cliente",
       "inversedBy": "ventas"
     },
-    "inventario": {
+    "producto": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::product.product"
