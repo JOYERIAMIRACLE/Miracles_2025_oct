@@ -38,9 +38,8 @@
       "enum": [
         "Lead",
         "Prospecto",
-        "Negociacion",
-        "Primera compra",
-        "Recompra"
+        "Cotizacion",
+        "Pedido"
       ]
     },
     "canalContacto": {

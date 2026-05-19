@@ -190,7 +190,7 @@ function ClientePanel({ cliente, onClose, onUpdate }: {
                 {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(cliente.Funnel) - 1]]}
               </button>
             )}
-            {cliente.Funnel !== "Recompra" && (
+            {cliente.Funnel !== "Pedido" && (
               <button type="button" onClick={() => moverFunnel(1)}
                 className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-medium border border-slate-700 hover:border-emerald-700 hover:text-emerald-400 rounded-lg transition text-slate-400">
                 {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(cliente.Funnel) + 1]]}
@@ -332,7 +332,7 @@ export function PipelineView() {
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Pipeline de Clientes</h1>
-          <p className="text-sm text-slate-500">{clientes.length} clientes · {clientes.filter(c => c.Funnel === "Lead" || c.Funnel === "Prospecto" || c.Funnel === "Negociacion").length} en proceso</p>
+          <p className="text-sm text-slate-500">{clientes.length} clientes · {clientes.filter(c => c.Funnel === "Lead" || c.Funnel === "Prospecto" || c.Funnel === "Cotizacion").length} en proceso</p>
         </div>
         <button type="button" onClick={abrirCrear}
           className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">
