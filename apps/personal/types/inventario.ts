@@ -1,8 +1,8 @@
 export type MaterialInventario = "producto" | "servicio"
-export type CategoriaJoya    = "Anillo" | "Collar" | "Pulsera" | "Arete" | "Set" | "Dijes" | "Otro"
+export type CategoriaJoya    = "Anillos" | "Cadenas" | "Esclavas" | "Dijes" | "Broqueles" | "Aretes" | "Pulsos"
 export type MaterialJoya     = "Oro 10k" | "Plata 925"
 
-export const CATEGORIAS_JOYA:  CategoriaJoya[] = ["Anillo", "Collar", "Pulsera", "Arete", "Set", "Dijes", "Otro"]
+export const CATEGORIAS_JOYA:  CategoriaJoya[] = ["Anillos", "Cadenas", "Esclavas", "Dijes", "Broqueles", "Aretes", "Pulsos"]
 export const MATERIALES_JOYA:  MaterialJoya[]  = ["Oro 10k", "Plata 925"]
 
 export type InventarioType = {

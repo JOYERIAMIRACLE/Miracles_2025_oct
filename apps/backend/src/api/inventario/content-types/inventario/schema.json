@@ -41,13 +41,13 @@
     "categoriaJoya": {
       "type": "enumeration",
       "enum": [
-        "Anillo",
-        "Collar",
-        "Pulsera",
-        "Arete",
-        "Set",
+        "Anillos",
+        "Cadenas",
+        "Esclavas",
         "Dijes",
-        "Otro"
+        "Broqueles",
+        "Aretes",
+        "Pulsos"
       ]
     },
     "materialJoya": {
