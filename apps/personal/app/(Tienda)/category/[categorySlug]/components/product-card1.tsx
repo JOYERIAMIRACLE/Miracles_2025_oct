@@ -64,8 +64,8 @@ const ProductCard1 = ({ product }: ProductCardProps) => {
           </CarouselContent>
         </Carousel>
       ) : (
-        <div className='w-full aspect-square rounded-xl bg-muted flex items-center justify-center'>
-          <span className='text-4xl'>💍</span>
+        <div className='w-full aspect-square rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center'>
+          <span className='text-5xl opacity-40'>💍</span>
         </div>
       )}
 
