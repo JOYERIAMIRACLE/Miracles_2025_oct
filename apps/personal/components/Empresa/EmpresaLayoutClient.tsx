@@ -1,15 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu } from "lucide-react"
 import { EmpresaSidebar } from "./EmpresaSidebar"
 import { EmpresaHeader } from "./EmpresaHeader"
+import { AuthGuard } from "@/components/AuthGuard"
 
 export function EmpresaLayoutClient({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <>
+    <AuthGuard>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 z-50 w-64">
         <EmpresaSidebar />
@@ -35,6 +36,6 @@ export function EmpresaLayoutClient({ children }: { children: React.ReactNode })
           {children}
         </main>
       </div>
-    </>
+    </AuthGuard>
   )
 }

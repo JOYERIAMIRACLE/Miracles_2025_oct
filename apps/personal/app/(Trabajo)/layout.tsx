@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { ReactNode } from "react"
-import { TrabajoSidebar } from "@/components/Trabajo/TrabajoSidebar"
-import { TrabajoHeader } from "@/components/Trabajo/TrabajoHeader"
+import { TrabajoLayoutClient } from "@/components/Trabajo/TrabajoLayoutClient"
 
 export const metadata: Metadata = {
   title: { absolute: "Marketing team" },
@@ -10,15 +9,7 @@ export const metadata: Metadata = {
 export default function TrabajoLayout({ children }: { children: ReactNode }) {
   return (
     <div className="dark flex min-h-screen bg-slate-950 text-slate-100">
-      <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 z-50 w-64">
-        <TrabajoSidebar />
-      </aside>
-      <div className="md:pl-64 flex flex-col flex-1 min-w-0 w-full">
-        <TrabajoHeader />
-        <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
-          {children}
-        </main>
-      </div>
+      <TrabajoLayoutClient>{children}</TrabajoLayoutClient>
     </div>
   )
 }

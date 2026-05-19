@@ -1,8 +1,10 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { Menu } from "lucide-react"
+import { Menu, LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { AppLauncher } from "@/components/AppLauncher"
+import { removeToken } from "@/lib/auth"
 
 const titles: Record<string, string> = {
   "/gestion-empresa":                           "Dashboard",
@@ -17,6 +19,8 @@ const titles: Record<string, string> = {
 
 export function EmpresaHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname()
+  const router = useRouter()
+  function handleLogout() { removeToken(); router.push("/login") }
   const title = titles[pathname] ?? pathname.split("/").filter(Boolean).pop()
     ?.replace(/-/g, " ")
     .replace(/\b\w/g, c => c.toUpperCase()) ?? "Empresa"
@@ -36,6 +40,10 @@ export function EmpresaHeader({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
       <div className="flex items-center gap-2">
         <AppLauncher />
+        <button type="button" onClick={handleLogout} title="Cerrar sesión"
+          className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors">
+          <LogOut size={15} />
+        </button>
         <div className="h-7 w-7 rounded-md bg-linear-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shadow-emerald-500/20 shrink-0">
           M
         </div>
