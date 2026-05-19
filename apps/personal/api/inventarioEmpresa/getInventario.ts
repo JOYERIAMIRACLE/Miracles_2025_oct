@@ -16,7 +16,16 @@ export function useGetInventario() {
           "sort":                 "nombre:asc",
           "populate":             "product_category,foto",
         })
-        const res  = await fetch(`${URL}?${params}`)
+        let res = await fetch(`${URL}?${params}`)
+        if (!res.ok) {
+          // Fallback: Strapi sin campo foto (schema anterior)
+          const fallback = new URLSearchParams({
+            "pagination[pageSize]": "500",
+            "sort":                 "nombre:asc",
+            "populate":             "product_category",
+          })
+          res = await fetch(`${URL}?${fallback}`)
+        }
         const json = await res.json()
         setItems(json.data ?? [])
       } finally { setLoading(false) }
