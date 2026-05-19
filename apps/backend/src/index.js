@@ -67,6 +67,29 @@ const CATEGORIAS_PAGO_SEED = [
   'Comisión', 'Anticipo', 'Liquidación', 'Honorario', 'Servicio', 'Otro',
 ];
 
+async function crearAdminSiNoExiste(strapi) {
+  const email = 'miraclejoyeria@gmail.com';
+  const existing = await strapi.db.query('admin::user').findOne({ where: { email } });
+  if (existing) {
+    strapi.log.info('[bootstrap] Admin ya existe — skip');
+    return;
+  }
+  const superAdminRole = await strapi.db.query('admin::role').findOne({ where: { code: 'strapi-super-admin' } });
+  const hashedPassword = await strapi.service('admin::auth').hashPassword('MiNuevaPass123!');
+  await strapi.db.query('admin::user').create({
+    data: {
+      firstname: 'Admin',
+      lastname: 'Miracles',
+      email,
+      password: hashedPassword,
+      isActive: true,
+      registrationToken: null,
+      ...(superAdminRole ? { roles: [{ id: superAdminRole.id }] } : {}),
+    },
+  });
+  strapi.log.info('[bootstrap] Admin user creado: ' + email);
+}
+
 async function sembrarCategoriasPagoSiVacio(strapi) {
   const count = await strapi.db.query('api::categoria-pago.categoria-pago').count({});
   if (count > 0) {
@@ -222,6 +245,7 @@ module.exports = {
 
   async bootstrap({ strapi }) {
     try {
+      await crearAdminSiNoExiste(strapi);
       await aplicarPermisosPublic(strapi);
       await sembrarCategoriasSiVacio(strapi);
       await backfillColoresCategorias(strapi);
