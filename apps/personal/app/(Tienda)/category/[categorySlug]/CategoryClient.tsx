@@ -16,7 +16,7 @@ export default function CategoryClient({ products, categoryName }: Props) {
 
   const filteredProducts = products.filter((product) => {
     const matchesMaterial = filterMaterial === "" || product.materialProducto === filterMaterial
-    const matchesEstilo = filterEstilo === "" || product.estiloProducto === filterEstilo
+    const matchesEstilo = filterEstilo === "" || product.figura === filterEstilo
     return matchesMaterial && matchesEstilo
   })
 

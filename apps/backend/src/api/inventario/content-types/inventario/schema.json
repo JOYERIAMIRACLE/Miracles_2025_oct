@@ -65,6 +65,11 @@
     "figura": {
       "type": "string"
     },
+    "foto": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
     "product_category": {
       "type": "relation",
       "relation": "manyToOne",

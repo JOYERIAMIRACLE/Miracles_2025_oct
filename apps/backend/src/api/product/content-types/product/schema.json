@@ -46,22 +46,21 @@
     "materialProducto": {
       "type": "enumeration",
       "enum": [
-        "Oro",
-        "Plata",
-        "Platino"
+        "Oro 10k",
+        "Plata 925"
       ]
     },
     "isFeatured": {
       "type": "boolean"
     },
-    "estiloProducto": {
-      "type": "enumeration",
-      "enum": [
-        "Cartier",
-        "Cubana",
-        "China",
-        "Ancla"
-      ]
+    "figura": {
+      "type": "string"
+    },
+    "talla": {
+      "type": "string"
+    },
+    "sku": {
+      "type": "string"
     },
     "contenidoo": {
       "type": "richtext"

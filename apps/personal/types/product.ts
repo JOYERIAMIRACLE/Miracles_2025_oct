@@ -1,32 +1,27 @@
-// ─── Tipos de producto ────────────────────────────────────────────────────────
- 
 export type ProductType = {
-  id: number
-  documentId: string
-  nombreProducto: string
-  slug: string
-  descripcion: string
-  activo: boolean
-  isFeatured: boolean
-  materialProducto: string
-  costo: number
-  estiloProducto: string
-  imagenes: ImageType[]
-  categoria: CategoriaType
+  id:               number
+  documentId:       string
+  nombreProducto:   string
+  slug:             string
+  descripcion:      string | null
+  activo:           boolean
+  isFeatured:       boolean
+  materialProducto: "Oro 10k" | "Plata 925" | null
+  costo:            number | null
+  figura:           string | null
+  talla:            string | null
+  sku:              string | null
+  imagenes:         ImageType[]
+  categoria:        CategoriaType | null
 }
- 
-// ─── Tipos relacionados ───────────────────────────────────────────────────────
- 
+
 export type ImageType = {
-  id: number
-  url: string
-  // CAMPO OPCIONAL — Strapi lo devuelve null si no se cargó en el panel
+  id:              number
+  url:             string
   alternativeText: string | null
 }
- 
+
 export type CategoriaType = {
-  slug: string
-  // ⚠ VERIFICAR EN STRAPI — asegúrate que el campo se llama exactamente así
+  slug:            string
   NombreCategoria: string
 }
- 

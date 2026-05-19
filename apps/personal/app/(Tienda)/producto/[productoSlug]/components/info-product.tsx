@@ -1,63 +1,75 @@
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useFavorites } from '@/hooks/useFavirites';
-import { useCart } from '@/hooks/useCart';
-import { formatPrice } from '@/lib/formatprice';
-import { ProductType } from '@/types/product';
-import { Heart } from 'lucide-react';
-import React from 'react'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { useFavorites } from '@/hooks/useFavirites'
+import { useCart } from '@/hooks/useCart'
+import { formatPrice } from '@/lib/formatprice'
+import { ProductType } from '@/types/product'
+import { Heart } from 'lucide-react'
 
-export type CarouselProductoinfoProps = {
-    product: ProductType
-}
+export type CarouselProductoinfoProps = { product: ProductType }
 
-const Infoproduct = (props: CarouselProductoinfoProps) => {
+const Infoproduct = ({ product }: CarouselProductoinfoProps) => {
+  const { addItem } = useCart()
+  const { addFavorite } = useFavorites()
 
-    const {product} = props;
-    const {addItem} = useCart()
-    const {addFavorite} = useFavorites()
-    console.log(product)
-        return (
-            // visualizar el producto con su nombre, material, precio, etc.
-            <div className='px-6'>
-                {/* title */}
-                <div className='justify-between mb-3 space-y-2'>
-                    <h1 className='text-2xl font-bold'>{product.nombreProducto} {product.categoria?.NombreCategoria}</h1>
-                    <div className='flex items-center justify-between gap-3'>
-                        <p className='px-2 py-1 text-xs text-white bg-black rounded-full dark:bg-white dark:text-black '>
-                            {product.materialProducto}
-                        </p>
-                        
-                    </div>
-                </div>
+  return (
+    <div className='px-6'>
+      {/* Nombre y categoría */}
+      <h1 className='text-2xl font-bold mb-1'>
+        {product.nombreProducto}
+        {product.categoria?.NombreCategoria && (
+          <span className='text-base font-normal text-muted-foreground ml-2'>
+            · {product.categoria.NombreCategoria}
+          </span>
+        )}
+      </h1>
 
+      {/* Badges: material, figura, talla */}
+      <div className='flex flex-wrap items-center gap-2 mb-3'>
+        {product.materialProducto && (
+          <span className='px-2 py-1 text-xs text-white bg-amber-800 rounded-full'>
+            {product.materialProducto}
+          </span>
+        )}
+        {product.figura && (
+          <span className='px-2 py-1 text-xs bg-muted rounded-full'>
+            {product.figura}
+          </span>
+        )}
+        {product.talla && (
+          <span className='px-2 py-1 text-xs bg-muted rounded-full'>
+            Talla {product.talla}
+          </span>
+        )}
+      </div>
 
-                <Separator className='my-4' />
-                <p>{product.descripcion}</p>
+      {/* SKU */}
+      {product.sku && (
+        <p className='text-xs text-muted-foreground font-mono mb-2'>SKU: {product.sku}</p>
+      )}
 
+      <Separator className='my-4' />
 
-                <Separator className='my-4' />
-                <p className='text-2xl font-bold'>{formatPrice(product.costo)}</p>
+      {product.descripcion && <p className='text-sm leading-relaxed'>{product.descripcion}</p>}
 
-                <div className='flex items-center m-2 gap-5'>
-                    <Button 
-                    className=' w-full flex-1 '
-                    onClick={() => {
-                        addItem(product)
-                        console.log("comprar")
-                    }}
-                    >
-                    Comprar
-                    </Button>
-                    <Heart width={30} strokeWidth={1} className=' transition duration-200 cursor-pointer hover:text-blue-500' 
-                        onClick={() => { 
-                            addFavorite(product)
-                        console.log("favorito")
-                    }}
-                    />
-                </div>
-            </div>
-        )
+      <Separator className='my-4' />
+
+      <p className='text-2xl font-bold mb-4'>
+        {product.costo ? `${formatPrice(product.costo)} MXN` : '—'}
+      </p>
+
+      <div className='flex items-center gap-4'>
+        <Button className='flex-1' onClick={() => addItem(product)}>
+          Agregar al carrito
+        </Button>
+        <Heart
+          width={28} strokeWidth={1.5}
+          className='cursor-pointer transition-colors hover:text-rose-500'
+          onClick={() => addFavorite(product)}
+        />
+      </div>
+    </div>
+  )
 }
 
 export default Infoproduct

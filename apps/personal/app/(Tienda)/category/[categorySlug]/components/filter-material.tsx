@@ -2,7 +2,7 @@
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
-const MATERIALES = ["Oro", "Plata", "Platino"]
+const MATERIALES = ["Oro 10k", "Plata 925"]
 
 type FilterMaterialProps = {
   setFilterMaterial: (materialProduct: string) => void

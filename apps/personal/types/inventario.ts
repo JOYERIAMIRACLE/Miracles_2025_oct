@@ -19,6 +19,7 @@ export type InventarioType = {
   categoriaJoya:    CategoriaJoya | null
   materialJoya:     MaterialJoya | null
   talla:            string | null
+  foto:             { id: number; url: string } | null
   product_category: { id: number; documentId: string; NombreCategoria: string } | null
 }
 

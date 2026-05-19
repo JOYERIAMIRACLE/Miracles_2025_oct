@@ -2,22 +2,20 @@
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
-const ESTILOS = ["Cartier", "Cubana", "China", "Ancla"]
-
 type FilterEstiloProps = {
-  setFilterEstilo: (estiloProducto: string) => void
+  setFilterEstilo: (figura: string) => void
 }
 
 const FilterEstilo = ({ setFilterEstilo }: FilterEstiloProps) => {
   return (
     <div className='my-5'>
-      <p className='mb-3 font-bold'>Estilo</p>
+      <p className='mb-3 font-bold'>Estilo / Figura</p>
       <RadioGroup defaultValue="" onValueChange={(value) => setFilterEstilo(value)}>
         <div className='flex items-center space-x-2'>
           <RadioGroupItem value="" id="all-estilos" />
           <Label htmlFor="all-estilos">Todos</Label>
         </div>
-        {ESTILOS.map((estilo) => (
+        {["Cartier", "Figaro", "Cubana", "Corazón", "Cruz", "Solitario", "Otro"].map((estilo) => (
           <div key={estilo} className='flex items-center space-x-2'>
             <RadioGroupItem value={estilo} id={estilo} />
             <Label htmlFor={estilo}>{estilo}</Label>
