@@ -18,9 +18,11 @@ export type InventarioType = {
   material:         MaterialInventario | null
   categoriaJoya:    CategoriaJoya | null
   materialJoya:     MaterialJoya | null
-  talla:            string | null
-  foto:             { id: number; url: string } | null
-  product_category: { id: number; documentId: string; NombreCategoria: string } | null
+  talla:              string | null
+  foto:               { id: number; url: string } | null
+  publicadoEnTienda:  boolean | null
+  productoTiendaId:   string | null
+  product_category:   { id: number; documentId: string; NombreCategoria: string } | null
 }
 
 export type InventarioPayload = Omit<InventarioType, "id" | "documentId" | "product_category"> & {

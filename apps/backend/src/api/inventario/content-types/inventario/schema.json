@@ -70,6 +70,13 @@
       "multiple": false,
       "allowedTypes": ["images"]
     },
+    "publicadoEnTienda": {
+      "type": "boolean",
+      "default": false
+    },
+    "productoTiendaId": {
+      "type": "string"
+    },
     "product_category": {
       "type": "relation",
       "relation": "manyToOne",
