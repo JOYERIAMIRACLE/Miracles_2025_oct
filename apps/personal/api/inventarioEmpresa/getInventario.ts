@@ -14,7 +14,7 @@ export function useGetInventario() {
         const params = new URLSearchParams({
           "pagination[pageSize]": "500",
           "sort":                 "nombreProducto:asc",
-          "populate":             "categoria,imagenes",
+          "populate":             "*",
         })
         const res  = await fetch(`${URL}?${params}`)
         const json = await res.json()
