@@ -43,7 +43,8 @@ const FeatureProducts = () => {
                         result.map((producto: ProductType) => {
 
                             // APODA LA INFORMACION * NO NECESARIO SI QIERES LIMPIAR DATOS
-                            const { id, imagenes, nombreProducto, materialProducto, costo, slug } = producto; 
+                            const { id, imagenes, nombreProducto, materialProducto, costo, slug } = producto;
+                            if (!slug) return null
 
                             return(
                                 // responsive grid 1/3

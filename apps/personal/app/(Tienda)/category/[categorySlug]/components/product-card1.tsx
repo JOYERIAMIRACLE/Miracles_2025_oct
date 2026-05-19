@@ -13,6 +13,8 @@ const ProductCard1 = ({ product }: ProductCardProps) => {
   const router = useRouter()
   const { addItem } = useCart()
 
+  if (!product.slug) return null
+
   return (
     <Link href={`/producto/${product.slug}`}
       className='relative p-2 transition-all duration-100 rounded-lg hover:shadow-md group/card'>
