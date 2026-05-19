@@ -34,18 +34,23 @@ const ChoseCategory = () => {
           {!loading && result !== null && result !== undefined && (
 
             // MANUAL DE APODOS // TRAJO LA INFO DE CATEGORIAS 
-            result.map((category: CategoryType)=> (
+            result.filter((category: CategoryType) => category.slug).map((category: CategoryType)=> (
 
-              <Link key={category.id} 
+              <Link key={category.id}
               href={`/category/${category.slug}`}
               className='relative max-w-xs mx-auto overflow-hidden bg-no-repeatbg-cover rounded-lg  group '
               >
-                <img 
-                // URL PROVIENE DE LINK DE BACKEND // URL PROTEGIDA POR ENV
-                src={category.MainImage?.url?.startsWith('http') ? category.MainImage.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${category.MainImage?.url}`}
-                alt={category.NombreCategoria}
-                className='max-w-[270px] transition duration-300 ease-in-out rounded-lg group-hover:scale-110 '
-                />
+                {category.MainImage?.url ? (
+                  <img
+                  src={category.MainImage.url.startsWith('http') ? category.MainImage.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${category.MainImage.url}`}
+                  alt={category.NombreCategoria}
+                  className='max-w-[270px] transition duration-300 ease-in-out rounded-lg group-hover:scale-110 '
+                  />
+                ) : (
+                  <div className='max-w-[270px] w-full aspect-square bg-slate-800 rounded-lg flex items-center justify-center'>
+                    <span className='text-5xl'>💍</span>
+                  </div>
+                )}
                 <h4 className='font-bold absolute w-full py-2 text-lg text-center text-white bottom-5 backdrop-blur-lg  group-hover:scale-105 '>{category.NombreCategoria}</h4>
               </Link>
 

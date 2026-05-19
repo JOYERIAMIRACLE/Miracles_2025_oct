@@ -52,9 +52,9 @@ const FeatureProducts = () => {
                                         <Card className="py-4 border border-gray-200 shadow-none">
                                             <CardContent className="relative flex items-center justify-center px-6 py-2">
 
-                                                {imagenes && imagenes.length > 0 ? (
+                                                {imagenes && imagenes.length > 0 && imagenes[0]?.url ? (
                                                     <img
-                                                        src={imagenes[0].url?.startsWith('http') ? imagenes[0].url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes[0].url}`}
+                                                        src={imagenes[0].url.startsWith('http') ? imagenes[0].url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes[0].url}`}
                                                         alt="image feature" />
                                                 ) : (
                                                     <div className="w-full aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
