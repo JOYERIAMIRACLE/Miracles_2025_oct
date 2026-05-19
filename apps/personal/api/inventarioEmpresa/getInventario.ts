@@ -15,7 +15,7 @@ export function useGetInventario() {
           "pagination[pageSize]": "500",
           "sort":                 "nombreProducto:asc",
           "populate":             "categoria,imagenes",
-          "publicationState":     "preview",
+          "status":               "draft",
         })
         const res  = await fetch(`${URL}?${params}`)
         const json = await res.json()
