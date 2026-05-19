@@ -1,6 +1,13 @@
 'use strict';
 
 // Acciones del API Categoria que queremos abrir al rol Public
+const PUBLIC_ACTIONS_PRODUCT = [
+  'api::product.product.find',
+  'api::product.product.findOne',
+  'api::product-category.product-category.find',
+  'api::product-category.product-category.findOne',
+];
+
 const PUBLIC_ACTIONS_CATEGORIA = [
   'api::categoria.categoria.find',
   'api::categoria.categoria.findOne',
@@ -141,7 +148,7 @@ async function aplicarPermisosPublic(strapi) {
     .findOne({ where: { type: 'public' } });
   if (!publicRole) return;
 
-  const todas = [...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO];
+  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO];
   for (const action of todas) {
     const existing = await strapi.db
       .query('plugin::users-permissions.permission')
