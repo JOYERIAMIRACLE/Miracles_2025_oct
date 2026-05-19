@@ -140,8 +140,8 @@ export function InventarioEmpresaView() {
         const merged: ProductType = {
           ...editing, ...updated,
           imagenes: fotoData
-            ? [{ id: fotoData.id, url: fotoData.url, alternativeText: null }, ...editing.imagenes.slice(1)]
-            : editing.imagenes,
+            ? [{ id: fotoData.id, url: fotoData.url, alternativeText: null }, ...(editing.imagenes ?? []).slice(1)]
+            : editing.imagenes ?? [],
           categoria: editing.categoria,
         }
         setItems(prev => prev.map(i => i.documentId === merged.documentId ? merged : i))
