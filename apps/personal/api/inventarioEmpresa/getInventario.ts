@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
-import { InventarioType, InventarioPayload } from "@/types/inventario"
+import { ProductType } from "@/types/product"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const URL  = `${BASE}/api/inventarios`
+const URL  = `${BASE}/api/products`
 
 export function useGetInventario() {
-  const [items,   setItems]   = useState<InventarioType[]>([])
+  const [items,   setItems]   = useState<ProductType[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -13,19 +13,11 @@ export function useGetInventario() {
       try {
         const params = new URLSearchParams({
           "pagination[pageSize]": "500",
-          "sort":                 "nombre:asc",
-          "populate":             "product_category,foto",
+          "sort":                 "nombreProducto:asc",
+          "populate":             "categoria,imagenes",
+          "publicationState":     "preview",
         })
-        let res = await fetch(`${URL}?${params}`)
-        if (!res.ok) {
-          // Fallback: Strapi sin campo foto (schema anterior)
-          const fallback = new URLSearchParams({
-            "pagination[pageSize]": "500",
-            "sort":                 "nombre:asc",
-            "populate":             "product_category",
-          })
-          res = await fetch(`${URL}?${fallback}`)
-        }
+        const res  = await fetch(`${URL}?${params}`)
         const json = await res.json()
         setItems(json.data ?? [])
       } finally { setLoading(false) }
@@ -35,8 +27,8 @@ export function useGetInventario() {
   return { items, setItems, loading }
 }
 
-export async function createInventario(payload: Omit<InventarioPayload, "product_category"> & { product_category?: string | null }): Promise<InventarioType> {
-  const res = await fetch(URL, {
+export async function createProducto(payload: Partial<ProductType> & { categoria?: string | null }): Promise<ProductType> {
+  const res = await fetch(`${URL}?status=draft`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -45,7 +37,7 @@ export async function createInventario(payload: Omit<InventarioPayload, "product
   return json.data
 }
 
-export async function updateInventario(documentId: string, payload: Partial<InventarioPayload> & { product_category?: string | null }): Promise<InventarioType> {
+export async function updateProducto(documentId: string, payload: Record<string, unknown>): Promise<ProductType> {
   const res = await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
@@ -55,11 +47,11 @@ export async function updateInventario(documentId: string, payload: Partial<Inve
   return json.data
 }
 
-export async function deleteInventario(documentId: string) {
+export async function deleteProducto(documentId: string) {
   await fetch(`${URL}/${documentId}`, { method: "DELETE" })
 }
 
-export async function patchStock(documentId: string, stock: number): Promise<InventarioType> {
+export async function patchStock(documentId: string, stock: number): Promise<ProductType> {
   const res = await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: { stock } }),
@@ -76,57 +68,29 @@ export async function uploadFoto(file: File): Promise<{ id: number; url: string 
   return { id: data[0].id, url: data[0].url }
 }
 
-export async function publishToTienda(inv: InventarioType): Promise<string> {
-  const PRODUCTS = `${BASE}/api/products`
-
-  // Resolver categoría: usar product_category enlazado o buscar por nombre (categoriaJoya)
-  let categoriaDocId = inv.product_category?.documentId
-  if (!categoriaDocId && inv.categoriaJoya) {
-    try {
-      const catRes = await fetch(
-        `${BASE}/api/product-categories?filters[NombreCategoria][$eq]=${encodeURIComponent(inv.categoriaJoya)}&fields[0]=documentId`
-      )
-      const catJson = await catRes.json()
-      categoriaDocId = catJson.data?.[0]?.documentId
-    } catch {}
-  }
-
-  const body: Record<string, unknown> = {
-    nombreProducto:   inv.nombre,
-    descripcion:      inv.descripcion,
-    costo:            inv.precioVenta,
-    sku:              inv.sku,
-    talla:            inv.talla,
-    figura:           inv.figura,
-    materialProducto: inv.materialJoya,
-    activo:           true,
-    ...(inv.foto ? { imagenes: [inv.foto.id] } : {}),
-    ...(categoriaDocId ? { categoria: categoriaDocId } : {}),
-  }
-
-  let productDocId: string
-
-  if (inv.productoTiendaId) {
-    const res = await fetch(`${PRODUCTS}/${inv.productoTiendaId}`, {
-      method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: body }),
-    })
-    const json = await res.json()
-    productDocId = json.data?.documentId ?? inv.productoTiendaId
-  } else {
-    const res = await fetch(`${PRODUCTS}?status=published`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: body }),
-    })
-    const json = await res.json()
-    productDocId = json.data?.documentId
-    if (!productDocId) throw new Error("No se pudo crear el producto en tienda")
-  }
-
-  await fetch(`${URL}/${inv.documentId}`, {
+export async function toggleActivoTienda(documentId: string, activo: boolean): Promise<void> {
+  const status = activo ? "published" : "draft"
+  await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: { publicadoEnTienda: true, productoTiendaId: productDocId } }),
+    body: JSON.stringify({ data: { activo }, status }),
   })
+}
 
-  return productDocId
+async function resolverCategoriaId(categoriaJoya: string | null): Promise<string | undefined> {
+  if (!categoriaJoya) return undefined
+  try {
+    const res = await fetch(
+      `${BASE}/api/product-categories?filters[NombreCategoria][$eq]=${encodeURIComponent(categoriaJoya)}&fields[0]=documentId`
+    )
+    const json = await res.json()
+    return json.data?.[0]?.documentId
+  } catch { return undefined }
+}
+
+export async function publishToTienda(item: ProductType): Promise<void> {
+  const categoriaDocId = item.categoria?.documentId ?? await resolverCategoriaId(item.categoriaJoya)
+  await fetch(`${URL}/${item.documentId}?status=published`, {
+    method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: { activo: true, ...(categoriaDocId ? { categoria: categoriaDocId } : {}) } }),
+  })
 }

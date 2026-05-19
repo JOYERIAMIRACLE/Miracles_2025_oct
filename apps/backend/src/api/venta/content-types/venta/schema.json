@@ -48,8 +48,7 @@
     "inventario": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::inventario.inventario",
-      "inversedBy": "ventasInventario"
+      "target": "api::product.product"
     },
     "cantidad": {
       "type": "integer",

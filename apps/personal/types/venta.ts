@@ -5,7 +5,6 @@
 import { CuentaType } from "@/types/cuenta"
 import { CentroVentaType } from "@/types/centro-venta"
 import { ClienteType } from "@/types/cliente"
-import { InventarioType } from "@/types/inventario"
 
 export type EstadoVenta = "Pendiente" | "Pagado" | "Cancelado"
 
@@ -18,7 +17,7 @@ export type VentaType = {
   cuenta:       CuentaType       | null
   centro_venta: CentroVentaType  | null
   cliente:      ClienteType      | null
-  inventario:   InventarioType   | null
+  inventario:   { id: number; documentId: string; nombreProducto: string; costo: number | null } | null
   cantidad:     number           | null
   estado:       EstadoVenta      | null
   notas:        string           | null

@@ -235,7 +235,7 @@ export default function VentasPage() {
                 <tr key={v.documentId} className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40 group cursor-default">
                   <td className="p-5 align-middle">
                     <div className="font-semibold text-zinc-900 dark:text-zinc-100">{v.concepto}</div>
-                    {v.inventario && <div className="text-xs text-zinc-400 mt-0.5">{v.inventario.nombre} ×{v.cantidad}</div>}
+                    {v.inventario && <div className="text-xs text-zinc-400 mt-0.5">{v.inventario.nombreProducto} ×{v.cantidad}</div>}
                   </td>
                   <td className="p-5 align-middle text-sm text-zinc-600 dark:text-zinc-400">{v.fecha ?? "—"}</td>
                   <td className="p-5 align-middle text-sm text-zinc-700 dark:text-zinc-300">{v.cliente?.nombre ?? "—"}</td>

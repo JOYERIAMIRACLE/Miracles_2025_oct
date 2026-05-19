@@ -17,22 +17,17 @@
     "MainImage": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
+      "allowedTypes": ["images", "files", "videos", "audios"]
     },
     "slug": {
       "type": "uid",
       "targetField": "NombreCategoria"
     },
-    "relacionInventarioProductos": {
+    "products": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::inventario.inventario",
-      "mappedBy": "product_category"
+      "target": "api::product.product",
+      "mappedBy": "categoria"
     }
   }
 }

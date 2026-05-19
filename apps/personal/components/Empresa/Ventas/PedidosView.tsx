@@ -203,7 +203,7 @@ export function PedidosView() {
                     <p className="font-medium text-slate-200 leading-snug">{v.concepto}</p>
                     {v.inventario && (
                       <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                        <Package size={10} /> {v.inventario.nombre} ×{v.cantidad}
+                        <Package size={10} /> {v.inventario.nombreProducto} ×{v.cantidad}
                       </p>
                     )}
                   </td>

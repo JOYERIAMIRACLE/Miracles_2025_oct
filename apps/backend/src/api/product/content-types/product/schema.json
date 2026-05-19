@@ -11,37 +11,39 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "categoria": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::product-category.product-category"
-    },
     "nombreProducto": {
       "type": "string",
-      "default": "SinNombre"
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "nombreProducto"
+    },
+    "sku": {
+      "type": "string"
     },
     "descripcion": {
       "type": "text"
     },
-    "slug": {
-      "type": "uid"
+    "figura": {
+      "type": "string"
     },
-    "costo": {
-      "type": "decimal"
+    "talla": {
+      "type": "string"
     },
-    "imagenes": {
-      "type": "media",
-      "multiple": true,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
+    "categoriaJoya": {
+      "type": "enumeration",
+      "enum": [
+        "Anillos",
+        "Cadenas",
+        "Esclavas",
+        "Dijes",
+        "Broqueles",
+        "Aretes",
+        "Pulsos",
+        "Rosarios",
+        "Argollas"
       ]
-    },
-    "activo": {
-      "type": "boolean",
-      "default": false
     },
     "materialProducto": {
       "type": "enumeration",
@@ -50,17 +52,42 @@
         "Plata 925"
       ]
     },
+    "costoProduccion": {
+      "type": "decimal"
+    },
+    "costo": {
+      "type": "decimal"
+    },
+    "stock": {
+      "type": "integer",
+      "default": 0
+    },
+    "material": {
+      "type": "enumeration",
+      "enum": [
+        "producto",
+        "servicio"
+      ],
+      "default": "producto"
+    },
+    "imagenes": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": ["images"]
+    },
+    "activo": {
+      "type": "boolean",
+      "default": false
+    },
     "isFeatured": {
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },
-    "figura": {
-      "type": "string"
-    },
-    "talla": {
-      "type": "string"
-    },
-    "sku": {
-      "type": "string"
+    "categoria": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product-category.product-category",
+      "inversedBy": "products"
     },
     "contenidoo": {
       "type": "richtext"
