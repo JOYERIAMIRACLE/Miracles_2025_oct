@@ -22,7 +22,7 @@ async function fetchProduct(slug: string): Promise<ProductType | null> {
 export async function generateStaticParams() {
   try {
     const res = await fetch(
-      `${BACKEND}/api/products?fields[0]=slug&pagination[pageSize]=100`,
+      `${BACKEND}/api/products?fields[0]=slug&filters[activo][$eq]=true&pagination[pageSize]=100`,
       { signal: AbortSignal.timeout(8000) }
     )
     if (!res.ok) return [{ productoSlug: "loading" }]

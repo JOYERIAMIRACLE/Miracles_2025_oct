@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export function useGetCategoryProduct(slug: string | string[]) {
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products?populate=*&filters[categoria][slug][$eq]=${slug}`
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/products?populate=*&filters[categoria][slug][$eq]=${slug}&filters[activo][$eq]=true`
     const [result, setResult] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")

@@ -22,7 +22,7 @@ async function fetchCategory(slug: string): Promise<CategoryData | null> {
 async function fetchCategoryProducts(slug: string): Promise<ProductType[]> {
   try {
     const res = await fetch(
-      `${BACKEND}/api/products?populate=*&filters[categoria][slug][$eq]=${slug}&pagination[pageSize]=100`,
+      `${BACKEND}/api/products?populate=*&filters[categoria][slug][$eq]=${slug}&filters[activo][$eq]=true&pagination[pageSize]=100`,
       { signal: AbortSignal.timeout(8000) }
     )
     if (!res.ok) return []

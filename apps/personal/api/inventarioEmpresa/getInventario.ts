@@ -15,7 +15,6 @@ export function useGetInventario() {
           "pagination[pageSize]": "500",
           "sort":                 "nombreProducto:asc",
           "populate":             "categoria,imagenes",
-          "status":               "draft",
         })
         const res  = await fetch(`${URL}?${params}`)
         const json = await res.json()
@@ -28,7 +27,7 @@ export function useGetInventario() {
 }
 
 export async function createProducto(payload: Partial<ProductType> & { categoria?: string | null }): Promise<ProductType> {
-  const res = await fetch(`${URL}?status=draft`, {
+  const res = await fetch(URL, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -69,10 +68,9 @@ export async function uploadFoto(file: File): Promise<{ id: number; url: string 
 }
 
 export async function toggleActivoTienda(documentId: string, activo: boolean): Promise<void> {
-  const status = activo ? "published" : "draft"
   await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: { activo }, status }),
+    body: JSON.stringify({ data: { activo } }),
   })
 }
 
@@ -89,7 +87,7 @@ async function resolverCategoriaId(categoriaJoya: string | null): Promise<string
 
 export async function publishToTienda(item: ProductType): Promise<void> {
   const categoriaDocId = item.categoria?.documentId ?? await resolverCategoriaId(item.categoriaJoya)
-  await fetch(`${URL}/${item.documentId}?status=published`, {
+  await fetch(`${URL}/${item.documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: { activo: true, ...(categoriaDocId ? { categoria: categoriaDocId } : {}) } }),
   })
