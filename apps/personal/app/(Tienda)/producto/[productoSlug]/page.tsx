@@ -49,22 +49,41 @@ export async function generateMetadata({
   if (!product) return { title: "Producto no encontrado" }
 
   const nombre = `${product.nombreProducto} ${product.categoria?.NombreCategoria ?? ""}`.trim()
+
+  const detalles = [
+    product.materialProducto,
+    product.talla ? `Talla ${product.talla}` : null,
+    product.figura,
+  ].filter(Boolean).join(", ")
+
   const descripcion = product.descripcion
     ? product.descripcion.slice(0, 160)
-    : `${product.nombreProducto} de ${product.materialProducto} en Joyería Miracles. Envíos a todo México.`
+    : `${nombre}${detalles ? ` · ${detalles}` : ""} · Joyería Miracles. Envíos a todo México.`
 
   const imagen = product.imagenes?.[0]
   const imageUrl = imagen?.url
     ? imagen.url.startsWith("http") ? imagen.url : `${BACKEND}${imagen.url}`
     : undefined
 
+  const siteUrl = "https://miracles-frontend.pages.dev"
+
   return {
-    title: nombre,
+    title: `${nombre} | Joyería Miracles`,
     description: descripcion,
+    alternates: { canonical: `${siteUrl}/producto/${product.slug}` },
     openGraph: {
       title: `${nombre} | Joyería Miracles`,
       description: descripcion,
-      ...(imageUrl && { images: [{ url: imageUrl, alt: nombre }] }),
+      url: `${siteUrl}/producto/${product.slug}`,
+      siteName: "Joyería Miracles",
+      type: "website",
+      ...(imageUrl && { images: [{ url: imageUrl, width: 800, height: 800, alt: nombre }] }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${nombre} | Joyería Miracles`,
+      description: descripcion,
+      ...(imageUrl && { images: [imageUrl] }),
     },
   }
 }
@@ -90,14 +109,17 @@ export default async function Page({
     "@type": "Product",
     name: nombre,
     description: product.descripcion ?? "",
-    sku: product.documentId,
-    ...(imageUrl && { image: imageUrl }),
+    sku: product.sku ?? product.documentId,
+    ...(imageUrl && { image: [imageUrl] }),
     brand: { "@type": "Brand", name: "Joyería Miracles" },
+    material: product.materialProducto ?? undefined,
     offers: {
       "@type": "Offer",
+      url: `https://miracles-frontend.pages.dev/producto/${product.slug}`,
       priceCurrency: "MXN",
-      price: product.costo,
+      price: product.costo ?? 0,
       availability: "https://schema.org/InStock",
+      itemCondition: "https://schema.org/NewCondition",
       seller: { "@type": "Organization", name: "Joyería Miracles" },
     },
   }
