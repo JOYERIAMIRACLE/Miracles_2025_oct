@@ -23,12 +23,8 @@ const CAT_ABBR: Record<CategoriaJoya, string> = {
 }
 
 const MAT_ABBR: Record<MaterialJoya, string> = {
-  "Oro 14k":          "O14K",
-  "Oro 18k":          "O18K",
-  "Plata 925":        "P925",
-  "Acero inoxidable": "ACE",
-  "Baño de oro":      "BAO",
-  "Otro":             "OTR",
+  "Oro 10k":  "O10K",
+  "Plata 925": "P925",
 }
 
 function buildSku(
@@ -63,6 +59,7 @@ type FormData = {
   nombre:          string
   sku:             string
   descripcion:     string
+  figura:          string
   categoriaJoya:   CategoriaJoya | ""
   materialJoya:    MaterialJoya | ""
   talla:           string
@@ -73,7 +70,7 @@ type FormData = {
 }
 
 const emptyForm = (): FormData => ({
-  nombre: "", sku: "", descripcion: "",
+  nombre: "", sku: "", descripcion: "", figura: "",
   categoriaJoya: "", materialJoya: "", talla: "",
   costoProduccion: "", precioVenta: "", stock: "0", material: "producto",
 })
@@ -119,6 +116,7 @@ export function InventarioEmpresaView() {
       nombre:          it.nombre,
       sku:             it.sku ?? "",
       descripcion:     it.descripcion ?? "",
+      figura:          it.figura ?? "",
       categoriaJoya:   it.categoriaJoya ?? "",
       materialJoya:    it.materialJoya ?? "",
       talla:           it.talla ?? "",
@@ -138,6 +136,7 @@ export function InventarioEmpresaView() {
         nombre:          form.nombre.trim(),
         sku:             form.sku.trim() || null,
         descripcion:     form.descripcion.trim() || null,
+        figura:          form.figura.trim() || null,
         categoriaJoya:   (form.categoriaJoya || null) as CategoriaJoya | null,
         materialJoya:    (form.materialJoya || null) as MaterialJoya | null,
         talla:           form.talla.trim() || null,
@@ -448,6 +447,11 @@ export function InventarioEmpresaView() {
                           sku: skuAuto ? buildSku(f.categoriaJoya, f.materialJoya, t, items, editing?.documentId) : f.sku,
                         }))
                       }} className={inp} />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estilo / Figura / Tejido</label>
+                    <input type="text" placeholder="Ej. Corazón, Cartier, Figaro, Solitario…" value={form.figura}
+                      onChange={e => setForm(f => ({ ...f, figura: e.target.value }))} className={inp} />
                   </div>
                 </div>
               </div>

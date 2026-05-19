@@ -1,9 +1,9 @@
 export type MaterialInventario = "producto" | "servicio"
 export type CategoriaJoya    = "Anillo" | "Collar" | "Pulsera" | "Arete" | "Set" | "Dijes" | "Otro"
-export type MaterialJoya     = "Oro 14k" | "Oro 18k" | "Plata 925" | "Acero inoxidable" | "Baño de oro" | "Otro"
+export type MaterialJoya     = "Oro 10k" | "Plata 925"
 
 export const CATEGORIAS_JOYA:  CategoriaJoya[] = ["Anillo", "Collar", "Pulsera", "Arete", "Set", "Dijes", "Otro"]
-export const MATERIALES_JOYA:  MaterialJoya[]  = ["Oro 14k", "Oro 18k", "Plata 925", "Acero inoxidable", "Baño de oro", "Otro"]
+export const MATERIALES_JOYA:  MaterialJoya[]  = ["Oro 10k", "Plata 925"]
 
 export type InventarioType = {
   id:               number
@@ -11,6 +11,7 @@ export type InventarioType = {
   nombre:           string
   sku:              string | null
   descripcion:      string | null
+  figura:           string | null
   costoProduccion:  number | null
   precioVenta:      number | null
   stock:            number | null

@@ -53,15 +53,14 @@
     "materialJoya": {
       "type": "enumeration",
       "enum": [
-        "Oro 14k",
-        "Oro 18k",
-        "Plata 925",
-        "Acero inoxidable",
-        "Baño de oro",
-        "Otro"
+        "Oro 10k",
+        "Plata 925"
       ]
     },
     "talla": {
+      "type": "string"
+    },
+    "figura": {
       "type": "string"
     },
     "product_category": {
