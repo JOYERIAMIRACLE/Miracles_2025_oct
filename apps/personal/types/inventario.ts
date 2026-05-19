@@ -1,7 +1,9 @@
-// ─── Tipos de Inventario ──────────────────────────────────────────────────────
-// Refleja schema: backend-store-miracles/src/api/inventario/content-types/inventario/schema.json
-
 export type MaterialInventario = "producto" | "servicio"
+export type CategoriaJoya    = "Anillo" | "Collar" | "Pulsera" | "Arete" | "Set" | "Dijes" | "Otro"
+export type MaterialJoya     = "Oro 14k" | "Oro 18k" | "Plata 925" | "Acero inoxidable" | "Baño de oro" | "Otro"
+
+export const CATEGORIAS_JOYA:  CategoriaJoya[] = ["Anillo", "Collar", "Pulsera", "Arete", "Set", "Dijes", "Otro"]
+export const MATERIALES_JOYA:  MaterialJoya[]  = ["Oro 14k", "Oro 18k", "Plata 925", "Acero inoxidable", "Baño de oro", "Otro"]
 
 export type InventarioType = {
   id:               number
@@ -13,9 +15,12 @@ export type InventarioType = {
   precioVenta:      number | null
   stock:            number | null
   material:         MaterialInventario | null
+  categoriaJoya:    CategoriaJoya | null
+  materialJoya:     MaterialJoya | null
+  talla:            string | null
   product_category: { id: number; documentId: string; NombreCategoria: string } | null
 }
 
 export type InventarioPayload = Omit<InventarioType, "id" | "documentId" | "product_category"> & {
-  product_category: number | null  // se envía solo el id al crear/editar
+  product_category: number | null
 }

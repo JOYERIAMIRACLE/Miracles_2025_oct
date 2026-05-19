@@ -38,6 +38,32 @@
         "servicio"
       ]
     },
+    "categoriaJoya": {
+      "type": "enumeration",
+      "enum": [
+        "Anillo",
+        "Collar",
+        "Pulsera",
+        "Arete",
+        "Set",
+        "Dijes",
+        "Otro"
+      ]
+    },
+    "materialJoya": {
+      "type": "enumeration",
+      "enum": [
+        "Oro 14k",
+        "Oro 18k",
+        "Plata 925",
+        "Acero inoxidable",
+        "Baño de oro",
+        "Otro"
+      ]
+    },
+    "talla": {
+      "type": "string"
+    },
     "product_category": {
       "type": "relation",
       "relation": "manyToOne",
