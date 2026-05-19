@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react"
 import { ProductType } from "@/types/product"
+import { getToken } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL  = `${BASE}/api/products`
+
+function authHeaders(): Record<string, string> {
+  const token = getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 export function useGetInventario() {
   const [items,   setItems]   = useState<ProductType[]>([])
@@ -28,7 +34,7 @@ export function useGetInventario() {
 
 export async function createProducto(payload: Partial<ProductType> & { categoria?: string | null }): Promise<ProductType> {
   const res = await fetch(URL, {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
@@ -38,7 +44,7 @@ export async function createProducto(payload: Partial<ProductType> & { categoria
 
 export async function updateProducto(documentId: string, payload: Record<string, unknown>): Promise<ProductType> {
   const res = await fetch(`${URL}/${documentId}`, {
-    method: "PUT", headers: { "Content-Type": "application/json" },
+    method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
@@ -47,12 +53,12 @@ export async function updateProducto(documentId: string, payload: Record<string,
 }
 
 export async function deleteProducto(documentId: string) {
-  await fetch(`${URL}/${documentId}`, { method: "DELETE" })
+  await fetch(`${URL}/${documentId}`, { method: "DELETE", headers: authHeaders() })
 }
 
 export async function patchStock(documentId: string, stock: number): Promise<ProductType> {
   const res = await fetch(`${URL}/${documentId}`, {
-    method: "PUT", headers: { "Content-Type": "application/json" },
+    method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: { stock } }),
   })
   return (await res.json()).data
@@ -61,7 +67,7 @@ export async function patchStock(documentId: string, stock: number): Promise<Pro
 export async function uploadFoto(file: File): Promise<{ id: number; url: string }> {
   const fd = new FormData()
   fd.append("files", file)
-  const res = await fetch(`${BASE}/api/upload`, { method: "POST", body: fd })
+  const res = await fetch(`${BASE}/api/upload`, { method: "POST", headers: authHeaders(), body: fd })
   if (!res.ok) throw new Error("Error al subir imagen")
   const data = await res.json()
   return { id: data[0].id, url: data[0].url }
@@ -69,7 +75,7 @@ export async function uploadFoto(file: File): Promise<{ id: number; url: string 
 
 export async function toggleActivoTienda(documentId: string, activo: boolean): Promise<void> {
   await fetch(`${URL}/${documentId}`, {
-    method: "PUT", headers: { "Content-Type": "application/json" },
+    method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: { activo } }),
   })
 }
@@ -88,7 +94,7 @@ async function resolverCategoriaId(categoriaJoya: string | null): Promise<string
 export async function publishToTienda(item: ProductType): Promise<void> {
   const categoriaDocId = item.categoria?.documentId ?? await resolverCategoriaId(item.categoriaJoya)
   await fetch(`${URL}/${item.documentId}`, {
-    method: "PUT", headers: { "Content-Type": "application/json" },
+    method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: { activo: true, ...(categoriaDocId ? { categoria: categoriaDocId } : {}) } }),
   })
 }
