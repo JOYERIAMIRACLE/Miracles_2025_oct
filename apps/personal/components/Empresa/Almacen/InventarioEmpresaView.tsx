@@ -20,6 +20,8 @@ const CAT_ABBR: Record<CategoriaJoya, string> = {
   "Broqueles": "BRO",
   "Aretes":    "ARE",
   "Pulsos":    "PUL",
+  "Rosarios":  "ROS",
+  "Argollas":  "ARG",
 }
 
 const MAT_ABBR: Record<MaterialJoya, string> = {
@@ -53,6 +55,8 @@ const CAT_COLOR: Record<CategoriaJoya, string> = {
   "Broqueles": "bg-amber-500/10 text-amber-300 border-amber-500/20",
   "Aretes":    "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
   "Pulsos":    "bg-rose-500/10 text-rose-300 border-rose-500/20",
+  "Rosarios":  "bg-indigo-500/10 text-indigo-300 border-indigo-500/20",
+  "Argollas":  "bg-orange-500/10 text-orange-300 border-orange-500/20",
 }
 
 type FormData = {
