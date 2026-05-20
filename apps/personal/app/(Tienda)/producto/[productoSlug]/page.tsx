@@ -29,7 +29,9 @@ export async function generateStaticParams() {
     const params = (json.data || []).map((p: { slug?: string; attributes?: { slug?: string } }) => ({
       productoSlug: p.slug ?? p.attributes?.slug ?? "",
     }))
-    return params.length > 0 ? params : [{ productoSlug: "loading" }]
+    // "loading" siempre se genera — es el shell que usa el _redirects de Cloudflare
+    // para cualquier producto no pre-generado (slug nuevo o fetch fallido en build)
+    return [{ productoSlug: "loading" }, ...params]
   } catch {
     return [{ productoSlug: "loading" }]
   }
