@@ -508,7 +508,7 @@ function ModalRapida({
             <label className="text-[11px] text-slate-500 block mb-1">Tipo</label>
             <div className="flex gap-2">
               {(["completa", "titulos_extra"] as const).map(t => (
-                <button type="button"
+                <button
                   key={t}
                   type="button"
                   onClick={() => setForm(f => ({ ...f, tipo: t }))}
