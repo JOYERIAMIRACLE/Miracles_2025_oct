@@ -3,14 +3,15 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  CheckSquare, Wallet, ChevronRight, Archive, Megaphone, BarChart3,
+  CheckSquare, Wallet, ChevronRight, Archive, Megaphone, BarChart3, LayoutPanelLeft,
 } from "lucide-react"
 
 const NAV = [
-  { label: "Tareas",                   href: "/trabajo/tareas",     icon: CheckSquare },
-  { label: "Campañas",                 href: "/trabajo/campanas",   icon: BarChart3   },
-  { label: "Registro de gastos",       href: "/trabajo/pagos",      icon: Wallet      },
-  { label: "Promocionales e impresos", href: "/trabajo/inventario", icon: Archive     },
+  { label: "Tareas",                   href: "/trabajo/tareas",           icon: CheckSquare    },
+  { label: "Campañas",                 href: "/trabajo/campanas",         icon: BarChart3      },
+  { label: "Planeador",                href: "/trabajo/campanas-planner", icon: LayoutPanelLeft },
+  { label: "Registro de gastos",       href: "/trabajo/pagos",            icon: Wallet         },
+  { label: "Promocionales e impresos", href: "/trabajo/inventario",       icon: Archive        },
 ]
 
 export function TrabajoSidebar() {
