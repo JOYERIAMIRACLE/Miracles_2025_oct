@@ -19,7 +19,8 @@ export default function ProductoClient({ product: initialProduct, productoSlug }
 
   useEffect(() => {
     if (initialProduct) return
-    const slug = productoSlug ?? pathname.split("/").filter(Boolean).pop() ?? ""
+    const slugFromPath = pathname.split("/").filter(Boolean).pop() ?? ""
+    const slug = (productoSlug && productoSlug !== "loading") ? productoSlug : slugFromPath
     if (!slug || slug === "loading") return
     ;(async () => {
       try {

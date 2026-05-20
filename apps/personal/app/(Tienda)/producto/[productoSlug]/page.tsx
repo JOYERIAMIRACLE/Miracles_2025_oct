@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ProductType } from "@/types/product"
 import ProductoClient from "./ProductoClient"
@@ -96,7 +95,8 @@ export default async function Page({
   const { productoSlug } = await params
   const product = await fetchProduct(productoSlug)
 
-  if (!product) return notFound()
+  // Si el fetch del build falló (timeout de Strapi), ProductoClient lo carga client-side
+  if (!product) return <ProductoClient productoSlug={productoSlug} />
 
   const nombre = `${product.nombreProducto} ${product.categoria?.NombreCategoria ?? ""}`.trim()
   const imagen = product.imagenes?.[0]
