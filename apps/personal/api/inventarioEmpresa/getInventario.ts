@@ -74,17 +74,25 @@ export async function uploadFoto(file: File): Promise<{ id: number; url: string 
 }
 
 export async function toggleIsFeatured(documentId: string, isFeatured: boolean): Promise<void> {
-  await fetch(`${URL}/${documentId}`, {
+  const res = await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: { isFeatured } }),
   })
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}))
+    throw new Error(json.error?.message ?? "Error al guardar en servidor")
+  }
 }
 
 export async function toggleActivoTienda(documentId: string, activo: boolean): Promise<void> {
-  await fetch(`${URL}/${documentId}`, {
+  const res = await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: { activo } }),
   })
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}))
+    throw new Error(json.error?.message ?? "Error al guardar en servidor")
+  }
 }
 
 async function resolverCategoriaId(categoriaJoya: string | null): Promise<string | undefined> {
