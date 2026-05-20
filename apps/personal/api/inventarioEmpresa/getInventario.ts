@@ -73,6 +73,13 @@ export async function uploadFoto(file: File): Promise<{ id: number; url: string 
   return { id: data[0].id, url: data[0].url }
 }
 
+export async function toggleIsFeatured(documentId: string, isFeatured: boolean): Promise<void> {
+  await fetch(`${URL}/${documentId}`, {
+    method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ data: { isFeatured } }),
+  })
+}
+
 export async function toggleActivoTienda(documentId: string, activo: boolean): Promise<void> {
   await fetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },

@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Store, CheckCircle2, Eye, EyeOff } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
-import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda } from "@/api/inventarioEmpresa/getInventario"
+import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem } from "@/types/product"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -71,6 +71,7 @@ export function InventarioEmpresaView() {
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [fotoFile,    setFotoFile]    = useState<File | null>(null)
   const [publishing,  setPublishing]  = useState<string | null>(null)
+  const [featuring,   setFeaturing]   = useState<string | null>(null)
 
   const filtrados = useMemo(() => items.filter(it => {
     const matchSearch = !search || it.nombreProducto.toLowerCase().includes(search.toLowerCase()) || (it.sku ?? "").toLowerCase().includes(search.toLowerCase())
@@ -200,6 +201,17 @@ export function InventarioEmpresaView() {
     finally { setPublishing(null) }
   }
 
+  async function handleToggleFeatured(it: ProductType) {
+    const nuevo = !it.isFeatured
+    setFeaturing(it.documentId)
+    try {
+      await toggleIsFeatured(it.documentId, nuevo)
+      setItems(prev => prev.map(i => i.documentId === it.documentId ? { ...i, isFeatured: nuevo } : i))
+      toast.success(nuevo ? "Marcado como destacado" : "Quitado de destacados")
+    } catch { toast.error("Error al cambiar destacado") }
+    finally { setFeaturing(null) }
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-5">
 
@@ -248,7 +260,7 @@ export function InventarioEmpresaView() {
           <table className="w-full text-sm">
             <thead className="border-b border-slate-800 bg-slate-950/50">
               <tr>
-                {["","Producto / SKU","Categoría","Material","Talla / Figura","Costo","P. Venta","Margen","Stock","Tienda",""].map((h,i) => (
+                {["","Producto / SKU","Categoría","Material","Talla / Figura","Costo","P. Venta","Margen","Stock","Tienda","⭐",""].map((h,i) => (
                   <th key={i} className="h-10 px-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -264,6 +276,7 @@ export function InventarioEmpresaView() {
                 const bajo = (it.stock??0)<=2 && it.material==="producto"
                 const thumb = it.imagenes?.[0]
                 const isPublishing = publishing===it.documentId
+                const isFeaturing  = featuring===it.documentId
                 return (
                   <tr key={it.documentId} className="hover:bg-slate-800/40 transition-colors group">
 
@@ -351,6 +364,16 @@ export function InventarioEmpresaView() {
                         {isPublishing
                           ? <Loader2 size={10} className="animate-spin"/>
                           : it.activo ? <><Eye size={10}/> Activo</> : <><EyeOff size={10}/> Oculto</>}
+                      </button>
+                    </td>
+
+                    {/* Destacado */}
+                    <td className="px-3 py-3">
+                      <button type="button" onClick={() => handleToggleFeatured(it)}
+                        disabled={isFeaturing}
+                        title={it.isFeatured ? "Destacado — clic para quitar" : "No destacado — clic para marcar"}
+                        className={`p-1.5 rounded-lg transition-all ${it.isFeatured ? "text-amber-400 hover:text-amber-300" : "text-slate-700 hover:text-amber-500"}`}>
+                        {isFeaturing ? <Loader2 size={14} className="animate-spin"/> : <Star size={14} fill={it.isFeatured ? "currentColor" : "none"}/>}
                       </button>
                     </td>
 
