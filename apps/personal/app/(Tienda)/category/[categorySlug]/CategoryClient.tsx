@@ -2,19 +2,20 @@
 import { Separator } from "@/components/ui/separator"
 import FiltersControlsCategory from "./components/filters-controls-category"
 import ProductCard1 from "./components/product-card1"
-import { ProductType } from "@/types/product"
 import { useState } from "react"
+import { useGetCategoryProduct } from "@/api/getCategoryProduct"
 
 interface Props {
-  products: ProductType[]
+  categorySlug: string
   categoryName: string
 }
 
-export default function CategoryClient({ products, categoryName }: Props) {
+export default function CategoryClient({ categorySlug, categoryName }: Props) {
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo, setFilterEstilo] = useState("")
+  const { result: products, loading } = useGetCategoryProduct(categorySlug)
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = (products ?? []).filter((product) => {
     const matchesMaterial = filterMaterial === "" || product.materialProducto === filterMaterial
     const matchesEstilo = filterEstilo === "" || product.figura === filterEstilo
     return matchesMaterial && matchesEstilo
@@ -49,10 +50,13 @@ export default function CategoryClient({ products, categoryName }: Props) {
           </aside>
           <div className="flex-1">
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProducts.map((product) => (
+              {loading && Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-xl bg-slate-800 animate-pulse aspect-square" />
+              ))}
+              {!loading && filteredProducts.map((product) => (
                 <ProductCard1 key={product.id} product={product} />
               ))}
-              {filteredProducts.length === 0 && (
+              {!loading && filteredProducts.length === 0 && (
                 <div className="col-span-full py-20 text-center">
                   <p className="text-xl text-gray-400">No se encontraron productos en esta categoría.</p>
                 </div>

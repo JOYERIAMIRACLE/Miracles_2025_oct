@@ -9,6 +9,11 @@ import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProduc
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const imgUrl  = (url: string) => url.startsWith("http") ? url : `${BACKEND}${url}`
 
+function slugify(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-")
+}
+
 const fmt    = (n: number | null) => n != null ? `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : "—"
 const margen = (costo: number | null, precio: number | null) => {
   if (!costo || !precio || costo === 0) return null
@@ -121,6 +126,7 @@ export function InventarioEmpresaView() {
       let fotoData: { id: number; url: string } | undefined
       if (fotoFile) fotoData = await uploadFoto(fotoFile)
 
+      const needsSlug = !editing || !editing.slug
       const payload: Record<string, unknown> = {
         nombreProducto: form.nombreProducto.trim(),
         sku:            form.sku.trim() || null,
@@ -133,6 +139,7 @@ export function InventarioEmpresaView() {
         costo:          form.costo ? Number(form.costo) : null,
         stock:          Number(form.stock) || 0,
         material:       form.material,
+        ...(needsSlug ? { slug: slugify(form.nombreProducto.trim()) } : {}),
         ...(fotoData ? { imagenes: [fotoData.id] } : {}),
       }
 
@@ -140,6 +147,7 @@ export function InventarioEmpresaView() {
         const updated = await updateProducto(editing.documentId, payload)
         const merged: ProductType = {
           ...editing, ...updated,
+          slug: updated.slug ?? editing.slug ?? slugify(form.nombreProducto.trim()),
           imagenes: fotoData
             ? [{ id: fotoData.id, url: fotoData.url, alternativeText: null }, ...(editing.imagenes ?? []).slice(1)]
             : editing.imagenes ?? [],
