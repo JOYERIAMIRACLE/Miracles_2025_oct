@@ -43,7 +43,7 @@ export async function createProducto(payload: Partial<ProductType> & { categoria
 }
 
 export async function updateProducto(documentId: string, payload: Record<string, unknown>): Promise<ProductType> {
-  const res = await fetch(`${URL}/${documentId}`, {
+  const res = await fetch(`${URL}/${documentId}?populate=*`, {
     method: "PUT", headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ data: payload }),
   })
