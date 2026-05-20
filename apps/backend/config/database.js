@@ -42,10 +42,10 @@ module.exports = ({ env }) => {
       },
       pool: {
         min: env.int('DATABASE_POOL_MIN', 0),
-        max: env.int('DATABASE_POOL_MAX', 3),
-        acquireTimeoutMillis: 30000,
-        idleTimeoutMillis: 20000,
-        reapIntervalMillis: 1000,
+        max: env.int('DATABASE_POOL_MAX', 6),
+        acquireTimeoutMillis: 60000,
+        idleTimeoutMillis: 30000,
+        reapIntervalMillis: 5000,
       },
     },
     sqlite: {
