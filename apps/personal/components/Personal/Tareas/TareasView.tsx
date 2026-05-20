@@ -67,13 +67,25 @@ const MESES_NOMBRES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio",
 
 const fmtFecha = (iso: string | null) => {
   if (!iso) return ""
-  const d = new Date(iso + "T00:00:00")
+  const d = iso.includes("T") ? new Date(iso) : new Date(iso + "T00:00:00")
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
 }
 
-const fmtHora = (iso: string) => {
+const fmtFechaHora = (iso: string) => {
   const d = new Date(iso)
-  return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false })
+  const fecha = d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
+  const hora  = d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false })
+  return `${fecha} ${hora}`
+}
+
+const fmtDuracion = (desde: string, hasta: string) => {
+  const ms    = new Date(hasta).getTime() - (desde.includes("T") ? new Date(desde) : new Date(desde + "T00:00:00")).getTime()
+  const dias  = Math.floor(ms / (1000 * 60 * 60 * 24))
+  const horas = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  if (dias > 0 && horas > 0) return `${dias}d ${horas}h`
+  if (dias > 0) return `${dias}d`
+  if (horas > 0) return `${horas}h`
+  return "< 1h"
 }
 
 const isoHoy = () => {
@@ -253,7 +265,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         payload.fechaCompletada = null
       }
       if (!editando) {
-        payload.fechaInicio = isoHoy()
+        payload.fechaInicio = new Date().toISOString()
       }
 
       if (editando) {
@@ -278,7 +290,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       const payload: Partial<TareaPayload> = {
         estado: nuevoEstado,
         fechaCompletada: nuevoEstado === "completada" ? new Date().toISOString() : null,
-        ...(!t.fechaInicio && nuevoEstado === "en_progreso" ? { fechaInicio: isoHoy() } : {}),
+        ...(!t.fechaInicio && nuevoEstado === "en_progreso" ? { fechaInicio: new Date().toISOString() } : {}),
       }
       const updated = await updateTarea(t.documentId, payload)
       setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
@@ -651,27 +663,19 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         {t.estado === "completada" && t.fechaCompletada ? (
                           <span className="text-[10px] flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                             <Check size={9} />
-                            {t.fechaInicio && <>{fmtFecha(t.fechaInicio)} → </>}
-                            {fmtFecha(t.fechaCompletada.slice(0, 10))} {fmtHora(t.fechaCompletada)}
-                            {t.fechaInicio && (() => {
-                              const dias = Math.round(
-                                (new Date(t.fechaCompletada!.slice(0, 10) + "T00:00:00").getTime() -
-                                 new Date(t.fechaInicio + "T00:00:00").getTime()) / 86400000
-                              )
-                              return dias > 0 ? <> · {dias}d</> : null
-                            })()}
+                            {t.fechaInicio && <>{fmtFechaHora(t.fechaInicio)} → </>}
+                            {fmtFechaHora(t.fechaCompletada)}
+                            {t.fechaInicio && (
+                              <> · {fmtDuracion(t.fechaInicio, t.fechaCompletada)}</>
+                            )}
                           </span>
                         ) : t.fechaInicio ? (
                           <span className="text-[10px] flex items-center gap-1 text-muted-foreground">
                             <Clock size={9} />
-                            {fmtFecha(t.fechaInicio)}
-                            {t.fechaVencimiento && (() => {
-                              const dias = Math.round(
-                                (new Date(t.fechaVencimiento + "T00:00:00").getTime() -
-                                 new Date(t.fechaInicio + "T00:00:00").getTime()) / 86400000
-                              )
-                              return <> → {fmtFecha(t.fechaVencimiento)} · {dias}d</>
-                            })()}
+                            {fmtFechaHora(t.fechaInicio)}
+                            {t.fechaVencimiento && (
+                              <> → {fmtFecha(t.fechaVencimiento)}</>
+                            )}
                           </span>
                         ) : null}
                         {t.ticket && (
@@ -778,16 +782,12 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                   Fecha inicio {!editando && <span className="text-muted-foreground font-normal">(auto)</span>}
                 </Label>
                 {editando ? (
-                  <Input
-                    id="t-inicio"
-                    type="date"
-                    value={form.fechaInicio ?? ""}
-                    onChange={e => setForm(f => ({ ...f, fechaInicio: e.target.value || null }))}
-                    className="h-9"
-                  />
+                  <div className="h-9 flex items-center px-3 text-sm rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 text-muted-foreground">
+                    {form.fechaInicio ? fmtFechaHora(form.fechaInicio) : "—"}
+                  </div>
                 ) : (
                   <div className="h-9 flex items-center px-3 text-sm rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 text-muted-foreground">
-                    {isoHoy()}
+                    Ahora (automático)
                   </div>
                 )}
               </div>
