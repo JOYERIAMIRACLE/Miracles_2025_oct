@@ -247,6 +247,9 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       } else if (form.estado !== "completada") {
         payload.fechaCompletada = null
       }
+      if (!editando) {
+        payload.fechaInicio = isoHoy()
+      }
 
       if (editando) {
         const updated = await updateTarea(editando.documentId, payload)
@@ -270,6 +273,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       const payload: Partial<TareaPayload> = {
         estado: nuevoEstado,
         fechaCompletada: nuevoEstado === "completada" ? new Date().toISOString() : null,
+        ...(!t.fechaInicio && nuevoEstado === "en_progreso" ? { fechaInicio: isoHoy() } : {}),
       }
       const updated = await updateTarea(t.documentId, payload)
       setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
@@ -626,7 +630,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       )}
                     </div>
 
-                    {(t.responsable || t.area || t.fechaInicio || t.ticket) && (
+                    {(t.responsable || t.area || t.fechaInicio || t.fechaCompletada || t.ticket) && (
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {t.responsable && (
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -639,7 +643,20 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                             {t.area}
                           </span>
                         )}
-                        {t.fechaInicio && (
+                        {t.estado === "completada" && t.fechaCompletada ? (
+                          <span className="text-[10px] flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                            <Check size={9} />
+                            {t.fechaInicio && <>{fmtFecha(t.fechaInicio)} → </>}
+                            {fmtFecha(t.fechaCompletada.slice(0, 10))}
+                            {t.fechaInicio && (() => {
+                              const dias = Math.round(
+                                (new Date(t.fechaCompletada!.slice(0, 10) + "T00:00:00").getTime() -
+                                 new Date(t.fechaInicio + "T00:00:00").getTime()) / 86400000
+                              )
+                              return dias > 0 ? <> · {dias}d</> : null
+                            })()}
+                          </span>
+                        ) : t.fechaInicio ? (
                           <span className="text-[10px] flex items-center gap-1 text-muted-foreground">
                             <Clock size={9} />
                             {fmtFecha(t.fechaInicio)}
@@ -651,7 +668,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                               return <> → {fmtFecha(t.fechaVencimiento)} · {dias}d</>
                             })()}
                           </span>
-                        )}
+                        ) : null}
                         {t.ticket && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
                             🎫 {t.ticket.titulo}
@@ -752,17 +769,25 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs" htmlFor="t-inicio">Fecha inicio</Label>
-                <Input
-                  id="t-inicio"
-                  type="date"
-                  value={form.fechaInicio ?? ""}
-                  onChange={e => setForm(f => ({ ...f, fechaInicio: e.target.value || null }))}
-                  className="h-9"
-                />
+                <Label className="text-xs" htmlFor="t-inicio">
+                  Fecha inicio {!editando && <span className="text-muted-foreground font-normal">(auto)</span>}
+                </Label>
+                {editando ? (
+                  <Input
+                    id="t-inicio"
+                    type="date"
+                    value={form.fechaInicio ?? ""}
+                    onChange={e => setForm(f => ({ ...f, fechaInicio: e.target.value || null }))}
+                    className="h-9"
+                  />
+                ) : (
+                  <div className="h-9 flex items-center px-3 text-sm rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 text-muted-foreground">
+                    {isoHoy()}
+                  </div>
+                )}
               </div>
               <div>
-                <Label className="text-xs" htmlFor="t-fecha">Fecha fin</Label>
+                <Label className="text-xs" htmlFor="t-fecha">Fecha límite</Label>
                 <Input
                   id="t-fecha"
                   type="date"
