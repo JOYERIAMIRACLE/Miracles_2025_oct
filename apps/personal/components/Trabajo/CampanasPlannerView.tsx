@@ -18,14 +18,17 @@ const SEMANAS     = [1, 2, 3, 4] as const
 type NSemana      = typeof SEMANAS[number]
 
 const FILAS_GRID = [
-  { label: "MHS",   rowBg: "bg-blue-950/30",   badge: "bg-blue-500/15 text-blue-300 border-blue-500/30"    },
-  { label: "Store", rowBg: "bg-violet-950/30",  badge: "bg-violet-500/15 text-violet-300 border-violet-500/30" },
-  { label: "Extra", rowBg: "bg-amber-950/30",   badge: "bg-amber-500/15 text-amber-300 border-amber-500/30"  },
+  { label: "MHS",   rowBg: "bg-blue-950/30",   },
+  { label: "Store", rowBg: "bg-violet-950/30",  },
+  { label: "Extra", rowBg: "bg-amber-950/30",   },
 ] as const
+
+const DIAS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const
 
 const _now       = new Date()
 const ANIO_HOY   = _now.getFullYear()
 const MES_HOY    = MESES[_now.getMonth()]
+const MES_HOY_IDX = _now.getMonth()
 const SEMANA_HOY = Math.min(Math.ceil(_now.getDate() / 7), 4) as NSemana
 
 const TIPO_FILTERS: Array<[TipoCampana | "", string]> = [
@@ -34,7 +37,29 @@ const TIPO_FILTERS: Array<[TipoCampana | "", string]> = [
   ["titulos_extra", "Títulos extra"],
 ]
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+
+function weekStart(ref: Date): Date {
+  const d = new Date(ref.getTime())
+  const dow = d.getDay()
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d.getTime())
+  r.setDate(r.getDate() + n)
+  return r
+}
+
+function toYMD(d: Date): string {
+  return d.toISOString().split("T")[0]
+}
+
+const HOY_YMD = toYMD(new Date())
+
+// ─── Data helpers ─────────────────────────────────────────────────────────────
 
 function getSemana(c: CampanaType, n: NSemana, k: "Titulo" | "Fecha") {
   return c[`semana${n}${k}` as keyof CampanaType] as string | null
@@ -44,15 +69,54 @@ function semanasLlenas(c: CampanaType) {
   return SEMANAS.filter(n => !!getSemana(c, n, "Titulo")).length
 }
 
-type Status = "actual" | "proxima" | "publicada"
+type DiaItem = { campana: CampanaType; n: NSemana; titulo: string }
 
-function getStatus(c: CampanaType): Status {
-  const mIdx = MESES.indexOf(c.mes)
-  const mHoy = MESES.indexOf(MES_HOY)
-  if (c.anio < ANIO_HOY || (c.anio === ANIO_HOY && mIdx < mHoy)) return "publicada"
-  if (c.anio === ANIO_HOY && mIdx === mHoy && getSemana(c, SEMANA_HOY, "Titulo")) return "actual"
-  return "proxima"
+function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string): DiaItem[] {
+  const out: DiaItem[] = []
+  for (const c of campanas) {
+    if (c.categoria !== categoria) continue
+    for (const n of SEMANAS) {
+      const fecha  = getSemana(c, n, "Fecha")
+      const titulo = getSemana(c, n, "Titulo")
+      if (fecha === dayStr && titulo) out.push({ campana: c, n, titulo })
+    }
+  }
+  return out
 }
+
+// Catalog sections:  semanaActual | proximasMes | futureMeses[] | publicadas
+function buildSections(campanas: CampanaType[]) {
+  const semanaActual: CampanaType[]  = []
+  const proximasMes: CampanaType[]   = []
+  const publicadas:  CampanaType[]   = []
+  const futureMap = new Map<string, { mes: MesCampana; anio: number; items: CampanaType[] }>()
+
+  for (const c of campanas) {
+    const mIdx = MESES.indexOf(c.mes)
+    const isPast    = c.anio < ANIO_HOY || (c.anio === ANIO_HOY && mIdx < MES_HOY_IDX)
+    const isCurrent = c.anio === ANIO_HOY && mIdx === MES_HOY_IDX
+
+    if (isPast) {
+      publicadas.push(c)
+    } else if (isCurrent) {
+      if (getSemana(c, SEMANA_HOY, "Titulo")) semanaActual.push(c)
+      else proximasMes.push(c)
+    } else {
+      const key = `${c.anio}-${String(mIdx).padStart(2, "0")}`
+      if (!futureMap.has(key)) futureMap.set(key, { mes: c.mes, anio: c.anio, items: [] })
+      futureMap.get(key)!.items.push(c)
+    }
+  }
+
+  const futureMeses = [...futureMap.values()].sort((a, b) => {
+    if (a.anio !== b.anio) return a.anio - b.anio
+    return MESES.indexOf(a.mes) - MESES.indexOf(b.mes)
+  })
+
+  return { semanaActual, proximasMes, futureMeses, publicadas }
+}
+
+// ─── Payload helpers ──────────────────────────────────────────────────────────
 
 function emptyPayload(mes: MesCampana, anio: number, categoria: string | null): CampanaPayload {
   return {
@@ -80,7 +144,7 @@ function payloadDe(c: CampanaType): CampanaPayload {
   }
 }
 
-// ─── Small UI pieces ──────────────────────────────────────────────────────────
+// ─── Small UI ─────────────────────────────────────────────────────────────────
 
 function Dots({ c }: { c: CampanaType }) {
   return (
@@ -135,7 +199,6 @@ function CampanaCard({ c, onEdit, onDelete }: {
           </button>
         </div>
       </div>
-
       <div className="flex gap-1.5 flex-wrap">
         <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${
           c.tipo === "completa"
@@ -146,9 +209,7 @@ function CampanaCard({ c, onEdit, onDelete }: {
         </span>
         <CategoriaBadge cat={c.categoria} />
       </div>
-
       {c.notas && <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{c.notas}</p>}
-
       <div className="flex items-center justify-between mt-auto">
         <Dots c={c} />
         <span className={`text-[10px] font-mono ${llenas === 4 ? "text-emerald-400" : "text-slate-600"}`}>{llenas}/4</span>
@@ -194,7 +255,6 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
         </div>
 
         <div className="space-y-3">
-          {/* Nombre */}
           <div>
             <label className="block text-[11px] text-slate-500 mb-1">Nombre *</label>
             <input autoFocus value={form.unidadNegocio}
@@ -204,7 +264,6 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
             />
           </div>
 
-          {/* Categoría */}
           <div>
             <label className="block text-[11px] text-slate-500 mb-1">Categoría</label>
             <div className="flex gap-2">
@@ -217,14 +276,12 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
                       : cat === "Store" ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
                                         : "bg-amber-600/20 border-amber-500/40 text-amber-300"
                       : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
-                  }`}>
-                  {cat}
+                  }`}>{cat}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Tipo */}
           <div>
             <label className="block text-[11px] text-slate-500 mb-1">Tipo</label>
             <div className="flex gap-2">
@@ -242,7 +299,6 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
             </div>
           </div>
 
-          {/* Mes + Año */}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[11px] text-slate-500 mb-1">Mes</label>
@@ -264,7 +320,6 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
             </div>
           </div>
 
-          {/* Semanas */}
           <div>
             <label className="block text-[11px] text-slate-500 mb-2">Semanas</label>
             <div className="space-y-2">
@@ -287,7 +342,6 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
             </div>
           </div>
 
-          {/* Notas */}
           <div>
             <label className="block text-[11px] text-slate-500 mb-1">Notas</label>
             <textarea value={form.notas ?? ""}
@@ -315,7 +369,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
   )
 }
 
-// ─── Tab: Catálogo ─────────────────────────────────────────────────────────────
+// ─── Tab: Catálogo — secciones temporales ─────────────────────────────────────
 
 function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
   campanas: CampanaType[]
@@ -337,9 +391,18 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
     }),
   [campanas, busqueda, filtroTipo, filtroCat])
 
-  const actuales   = filtradas.filter(c => getStatus(c) === "actual")
-  const proximas   = filtradas.filter(c => getStatus(c) === "proxima")
-  const publicadas = filtradas.filter(c => getStatus(c) === "publicada")
+  const { semanaActual, proximasMes, futureMeses, publicadas } = useMemo(
+    () => buildSections(filtradas),
+    [filtradas],
+  )
+
+  const Grid = ({ items }: { items: CampanaType[] }) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {items.map(c => (
+        <CampanaCard key={c.documentId} c={c} onEdit={() => onEdit(c)} onDelete={() => onDelete(c)} />
+      ))}
+    </div>
+  )
 
   return (
     <div>
@@ -381,7 +444,7 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
         </div>
       </div>
 
-      {/* Contenido */}
+      {/* Secciones */}
       {filtradas.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <p className="text-slate-500 text-sm">{busqueda || filtroTipo || filtroCat ? "Sin resultados" : "No hay campañas"}</p>
@@ -394,27 +457,29 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
         </div>
       ) : (
         <div className="space-y-10">
-          {actuales.length > 0 && (
+          {semanaActual.length > 0 && (
             <div>
-              <SectionHeader label="Semana actual" count={actuales.length} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {actuales.map(c => <CampanaCard key={c.documentId} c={c} onEdit={() => onEdit(c)} onDelete={() => onDelete(c)} />)}
-              </div>
+              <SectionHeader label={`Semana actual (sem. ${SEMANA_HOY} de ${MES_HOY})`} count={semanaActual.length} />
+              <Grid items={semanaActual} />
             </div>
           )}
-          {proximas.length > 0 && (
+          {proximasMes.length > 0 && (
             <div>
-              <SectionHeader label="Próximas" count={proximas.length} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {proximas.map(c => <CampanaCard key={c.documentId} c={c} onEdit={() => onEdit(c)} onDelete={() => onDelete(c)} />)}
-              </div>
+              <SectionHeader label={`Próximas de ${MES_HOY}`} count={proximasMes.length} />
+              <Grid items={proximasMes} />
             </div>
           )}
+          {futureMeses.map(({ mes, anio, items }) => (
+            <div key={`${mes}-${anio}`}>
+              <SectionHeader label={`${mes} ${anio}`} count={items.length} />
+              <Grid items={items} />
+            </div>
+          ))}
           {publicadas.length > 0 && (
             <div>
               <SectionHeader label="Publicadas" count={publicadas.length} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {publicadas.map(c => <CampanaCard key={c.documentId} c={c} onEdit={() => onEdit(c)} onDelete={() => onDelete(c)} />)}
+              <div className="opacity-60">
+                <Grid items={publicadas} />
               </div>
             </div>
           )}
@@ -424,108 +489,113 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
   )
 }
 
-// ─── Tab: Planeador (grid MHS/Store/Extra × Semana 1-4) ──────────────────────
+// ─── Tab: Planeador — vista semanal por día ────────────────────────────────────
 
 function VistaPlaneador({ campanas, onEdit, onAgregar }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
   onAgregar: (opts: { categoria: string; mes: MesCampana; anio: number }) => void
 }) {
-  const [mes,  setMes]  = useState<MesCampana>(MES_ACTUAL)
-  const [anio, setAnio] = useState(ANIO_ACTUAL)
+  const [wStart, setWStart] = useState(() => weekStart(new Date()))
 
-  const cambiarMes = (dir: -1 | 1) => {
-    const idx = MESES.indexOf(mes)
-    const n   = idx + dir
-    if (n < 0)    { setMes(MESES[11]); setAnio(a => a - 1) }
-    else if (n > 11) { setMes(MESES[0]);  setAnio(a => a + 1) }
-    else setMes(MESES[n])
-  }
+  const days    = Array.from({ length: 7 }, (_, i) => addDays(wStart, i))
+  const wEnd    = addDays(wStart, 6)
 
-  const delMes    = campanas.filter(c => c.mes === mes && c.anio === anio)
-  const isHoyMes  = mes === MES_HOY && anio === ANIO_HOY
+  const isHoy   = (d: Date) => toYMD(d) === HOY_YMD
+
+  const weekLabel = (() => {
+    const s = wStart.toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+    const e = wEnd.toLocaleDateString("es-MX",   { day: "numeric", month: "short", year: "numeric" })
+    return `${s} – ${e}`
+  })()
+
+  const prevWeek = () => setWStart(d => addDays(d, -7))
+  const nextWeek = () => setWStart(d => addDays(d, +7))
 
   return (
     <div>
-      {/* Nav mes */}
+      {/* Week nav */}
       <div className="flex items-center gap-3 mb-6">
-        <button type="button" title="Mes anterior" onClick={() => cambiarMes(-1)}
+        <button type="button" title="Semana anterior" onClick={prevWeek}
           className="h-8 w-8 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
           <ChevronLeft size={14} />
         </button>
-        <h2 className="text-base font-semibold text-slate-200 min-w-[150px] text-center">{mes} {anio}</h2>
-        <button type="button" title="Mes siguiente" onClick={() => cambiarMes(1)}
+        <span className="text-sm font-semibold text-slate-200 min-w-[220px] text-center">{weekLabel}</span>
+        <button type="button" title="Semana siguiente" onClick={nextWeek}
           className="h-8 w-8 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
           <ChevronRight size={14} />
         </button>
-        <span className="text-[11px] text-slate-600">{delMes.length} campaña{delMes.length !== 1 ? "s" : ""}</span>
+        <button type="button" onClick={() => setWStart(weekStart(new Date()))}
+          className="text-[11px] text-slate-600 hover:text-slate-400 underline underline-offset-2 transition ml-1">
+          Hoy
+        </button>
       </div>
 
       {/* Grid */}
       <div className="overflow-x-auto rounded-xl border border-slate-800">
-        <div className="min-w-[640px]">
-          {/* Header */}
-          <div className="grid grid-cols-[88px_1fr_1fr_1fr_1fr] border-b border-slate-800 bg-slate-900/60">
+        <div className="min-w-[860px]">
+          {/* Day headers */}
+          <div className="grid grid-cols-[72px_repeat(7,1fr)] border-b border-slate-800 bg-slate-900/60">
             <div />
-            {SEMANAS.map(n => {
-              const esHoy = isHoyMes && n === SEMANA_HOY
-              return (
-                <div key={n} className={`px-3 py-2.5 border-l border-slate-800 text-center ${esHoy ? "bg-blue-500/5" : ""}`}>
-                  <span className={`text-[10px] font-semibold uppercase tracking-wider ${esHoy ? "text-blue-400" : "text-slate-500"}`}>
-                    Sem. {n}{esHoy && <span className="ml-1 text-[9px] normal-case text-blue-500/50">· hoy</span>}
-                  </span>
-                </div>
-              )
-            })}
+            {days.map((d, i) => (
+              <div key={i} className={`px-2 py-2.5 border-l border-slate-800 text-center ${isHoy(d) ? "bg-blue-500/5" : ""}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wider ${isHoy(d) ? "text-blue-400" : "text-slate-500"}`}>
+                  {DIAS_ES[i]}
+                </p>
+                <p className={`text-[12px] font-medium mt-0.5 ${isHoy(d) ? "text-blue-300" : "text-slate-400"}`}>
+                  {d.toLocaleDateString("es-MX", { day: "numeric" })}
+                </p>
+                <p className="text-[9px] text-slate-600">
+                  {d.toLocaleDateString("es-MX", { month: "short" })}
+                </p>
+              </div>
+            ))}
           </div>
 
-          {/* Filas: MHS / Store / Extra */}
-          {FILAS_GRID.map((fila, ri) => {
-            const filaCampanas = delMes.filter(c => c.categoria === fila.label)
-            return (
-              <div key={fila.label}
-                className={`grid grid-cols-[88px_1fr_1fr_1fr_1fr] ${ri < FILAS_GRID.length - 1 ? "border-b border-slate-800" : ""}`}>
-                {/* Label fila */}
-                <div className={`${fila.rowBg} border-r border-slate-800 flex items-center justify-center p-3 min-h-[90px]`}>
-                  <span className="text-[11px] font-bold text-slate-300 uppercase tracking-widest select-none [writing-mode:vertical-rl] rotate-180">
-                    {fila.label}
-                  </span>
-                </div>
-
-                {/* Celdas semana */}
-                {SEMANAS.map(n => {
-                  const esHoy  = isHoyMes && n === SEMANA_HOY
-                  const items  = filaCampanas.filter(c => !!getSemana(c, n, "Titulo"))
-                  return (
-                    <div key={n}
-                      className={`border-l border-slate-800 p-2 flex flex-col gap-1.5 min-h-[90px] ${esHoy ? "bg-blue-500/5" : ""}`}>
-                      {items.map(c => (
-                        <button key={c.documentId} type="button" onClick={() => onEdit(c)}
-                          className="w-full text-left px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 hover:border-blue-500/40 transition-colors">
-                          <p className="text-[11px] font-medium text-slate-200 line-clamp-2 leading-snug">
-                            {getSemana(c, n, "Titulo")}
-                          </p>
-                          {getSemana(c, n, "Fecha") && (
-                            <p className="text-[10px] text-slate-600 mt-0.5">
-                              {new Date(getSemana(c, n, "Fecha")! + "T00:00:00")
-                                .toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
-                            </p>
-                          )}
-                        </button>
-                      ))}
-                      <button type="button"
-                        onClick={() => onAgregar({ categoria: fila.label, mes, anio })}
-                        className="w-full px-2 py-1 rounded-lg border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[10px] flex items-center justify-center gap-1 transition-colors mt-auto">
-                        <Plus size={9} /> Agregar
-                      </button>
-                    </div>
-                  )
-                })}
+          {/* MHS / Store / Extra rows */}
+          {FILAS_GRID.map((fila, ri) => (
+            <div key={fila.label}
+              className={`grid grid-cols-[72px_repeat(7,1fr)] ${ri < FILAS_GRID.length - 1 ? "border-b border-slate-800" : ""}`}>
+              {/* Row label */}
+              <div className={`${fila.rowBg} border-r border-slate-800 flex items-center justify-center p-2 min-h-[80px]`}>
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
+                  {fila.label}
+                </span>
               </div>
-            )
-          })}
+
+              {/* Day cells */}
+              {days.map((day, di) => {
+                const dayStr = toYMD(day)
+                const items  = getDiaItems(campanas, dayStr, fila.label)
+                return (
+                  <div key={di}
+                    className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[80px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
+                    {items.map(({ campana, n, titulo }) => (
+                      <button key={`${campana.documentId}-${n}`} type="button" onClick={() => onEdit(campana)}
+                        className="w-full text-left px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 hover:border-blue-500/40 transition-colors">
+                        <p className="text-[10px] font-medium text-slate-200 line-clamp-2 leading-snug">{titulo}</p>
+                      </button>
+                    ))}
+                    <button type="button"
+                      onClick={() => onAgregar({
+                        categoria: fila.label,
+                        mes: MESES[day.getMonth()],
+                        anio: day.getFullYear(),
+                      })}
+                      className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto">
+                      <Plus size={8} /> Agregar
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
         </div>
       </div>
+
+      <p className="text-[11px] text-slate-700 mt-3">
+        Los ítems aparecen en el día de su fecha asignada (campo "Fecha" de cada semana).
+      </p>
     </div>
   )
 }
