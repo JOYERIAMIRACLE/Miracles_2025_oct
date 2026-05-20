@@ -71,6 +71,11 @@ const fmtFecha = (iso: string | null) => {
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
 }
 
+const fmtHora = (iso: string) => {
+  const d = new Date(iso)
+  return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false })
+}
+
 const isoHoy = () => {
   const d = new Date(); d.setHours(0, 0, 0, 0)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
@@ -647,7 +652,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                           <span className="text-[10px] flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                             <Check size={9} />
                             {t.fechaInicio && <>{fmtFecha(t.fechaInicio)} → </>}
-                            {fmtFecha(t.fechaCompletada.slice(0, 10))}
+                            {fmtFecha(t.fechaCompletada.slice(0, 10))} {fmtHora(t.fechaCompletada)}
                             {t.fechaInicio && (() => {
                               const dias = Math.round(
                                 (new Date(t.fechaCompletada!.slice(0, 10) + "T00:00:00").getTime() -
