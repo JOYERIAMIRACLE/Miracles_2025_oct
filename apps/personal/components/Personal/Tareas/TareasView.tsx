@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
-import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket, ChevronDown, ClipboardList } from "lucide-react"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -110,6 +110,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [filtroResponsable, setFiltroResponsable] = useState("")
   const [filtroTicket, setFiltroTicket] = useState(false)
   const [busqueda, setBusqueda] = useState("")
+  const [avancesOpen, setAvancesOpen] = useState<string | null>(null)
   const [mesCalendario, setMesCalendario] = useState(new Date())
   const [modalOpen, setModalOpen] = useState(false)
   const [editando, setEditando] = useState<TareaType | null>(null)
@@ -299,6 +300,20 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       } else {
         toast.error("Error al guardar progreso")
       }
+    }
+  }
+
+  const agregarAvance = async (t: TareaType, nota: string) => {
+    const hoy = new Date()
+    const entrada = `${hoy.getDate()} ${MESES_NOMBRES[hoy.getMonth()].slice(0, 3)} · ${nota.trim()}`
+    const nuevasNotas = t.notas ? `${entrada}\n${t.notas}` : entrada
+    setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, notas: nuevasNotas } : x))
+    try {
+      await updateTarea(t.documentId, { notas: nuevasNotas })
+      toast.success("Avance registrado")
+    } catch {
+      setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, notas: t.notas } : x))
+      toast.error("Error al guardar")
     }
   }
 
@@ -554,6 +569,18 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         <button type="button" title="Eliminar" onClick={() => borrar(t)} className="p-1 text-muted-foreground hover:text-red-500 rounded hover:bg-muted">
                           <Trash2 size={12} />
                         </button>
+                        <button
+                          type="button"
+                          title="Desglose de avances"
+                          onClick={() => setAvancesOpen(prev => prev === t.documentId ? null : t.documentId)}
+                          className={`p-1 rounded transition-colors ${
+                            avancesOpen === t.documentId
+                              ? "text-violet-400 hover:text-violet-500"
+                              : "text-muted-foreground/40 hover:text-violet-400"
+                          }`}
+                        >
+                          <ClipboardList size={12} />
+                        </button>
                       </div>
                     </div>
 
@@ -637,6 +664,12 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       value={t.progreso ?? 0}
                       onSave={pct => actualizarProgreso(t, pct)}
                     />
+                    {avancesOpen === t.documentId && (
+                      <AvancesPanel
+                        notas={t.notas}
+                        onAgregar={nota => agregarAvance(t, nota)}
+                      />
+                    )}
                   </div>
                 </div>
               )
@@ -887,6 +920,66 @@ function ProgresoBar({ value, onSave }: { value: number; onSave: (pct: number) =
       <span className={`text-[10px] font-mono w-8 text-right shrink-0 tabular-nums ${local >= 100 ? "text-emerald-500" : "text-muted-foreground"}`}>
         {local}%
       </span>
+    </div>
+  )
+}
+
+// ─── Panel de avances ────────────────────────────────────────────────────────
+
+function AvancesPanel({ notas, onAgregar }: { notas: string | null; onAgregar: (nota: string) => Promise<void> }) {
+  const [input, setInput] = useState("")
+  const [guardando, setGuardando] = useState(false)
+
+  const entradas = notas ? notas.split("\n").filter(Boolean) : []
+
+  const enviar = async () => {
+    if (!input.trim()) return
+    setGuardando(true)
+    await onAgregar(input.trim())
+    setInput("")
+    setGuardando(false)
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
+        <ClipboardList size={10} />
+        Desglose de avances
+      </p>
+      {entradas.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground italic mb-2">Sin avances registrados.</p>
+      ) : (
+        <div className="space-y-1.5 mb-3 max-h-40 overflow-y-auto pr-1">
+          {entradas.map((entrada, i) => {
+            const sepIdx = entrada.indexOf(" · ")
+            const fecha = sepIdx !== -1 ? entrada.slice(0, sepIdx) : ""
+            const texto = sepIdx !== -1 ? entrada.slice(sepIdx + 3) : entrada
+            return (
+              <div key={i} className="flex gap-2 items-start">
+                {fecha && <span className="text-[10px] text-muted-foreground shrink-0 pt-px min-w-[42px]">{fecha}</span>}
+                <p className="text-[11px] text-foreground leading-snug">{texto}</p>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <Input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Anotar avance o pendiente..."
+          className="h-7 text-xs flex-1"
+          onKeyDown={e => { if (e.key === "Enter") enviar() }}
+        />
+        <button
+          type="button"
+          onClick={enviar}
+          disabled={guardando || !input.trim()}
+          className="h-7 px-2.5 text-xs rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 disabled:opacity-40 hover:opacity-80 transition shrink-0"
+        >
+          {guardando ? "..." : "Anotar"}
+        </button>
+      </div>
     </div>
   )
 }
