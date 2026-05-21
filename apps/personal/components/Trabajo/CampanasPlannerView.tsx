@@ -276,7 +276,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
           {field("Título *",
             <input autoFocus value={form.unidadNegocio}
               onChange={e => setForm(f => ({ ...f, unidadNegocio: e.target.value }))}
-              placeholder="Ej. Campaña día de las madres..."
+              placeholder="Ej. Campaña Mayo 2026..."
               className={inputCls}
             />
           )}
@@ -303,7 +303,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
           {field("Categoría de producto",
             <input value={form.notas ?? ""}
               onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
-              placeholder="Ej. Aretes, Cadenas, Anillos..."
+              placeholder="Ej. Temporada, Promo, Lanzamiento..."
               className={inputCls}
             />
           )}
@@ -312,7 +312,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
           {field("Productos",
             <textarea value={form.atributos ?? ""}
               onChange={e => setForm(f => ({ ...f, atributos: e.target.value || null }))}
-              placeholder="Lista de productos incluidos en la campaña..."
+              placeholder="Ej. Arracada lisa, cadena cubana, pulsera..."
               rows={3}
               className={`${inputCls} resize-y`}
             />
