@@ -312,7 +312,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onG
           {field("Productos",
             <textarea value={form.atributos ?? ""}
               onChange={e => setForm(f => ({ ...f, atributos: e.target.value || null }))}
-              placeholder="Ej. Arracada lisa, cadena cubana, pulsera..."
+              placeholder="Ej. PLC, HMI, Conveyor..."
               rows={3}
               className={`${inputCls} resize-y`}
             />
