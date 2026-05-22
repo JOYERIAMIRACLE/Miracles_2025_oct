@@ -325,6 +325,14 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
             />
           )}
 
+          {/* Fecha */}
+          {field("Fecha",
+            <input type="date" title="Fecha de la campaña" value={form.semana1Fecha ?? ""}
+              onChange={e => setForm(f => ({ ...f, semana1Fecha: e.target.value || null }))}
+              className={inputCls}
+            />
+          )}
+
           {/* Unidad de negocio */}
           {field("Unidad de negocio",
             <div className="flex gap-2">
