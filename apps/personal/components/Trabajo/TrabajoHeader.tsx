@@ -6,11 +6,15 @@ import { useState } from "react"
 import { TrabajoSidebar } from "./TrabajoSidebar"
 
 const TITLES: Record<string, string> = {
-  "/trabajo/tareas":           "Tareas",
-  "/trabajo/campanas":         "Campañas",
-  "/trabajo/campanas-planner": "Planeador de campañas",
-  "/trabajo/pagos":            "Registro de gastos",
-  "/trabajo/inventario":       "Promocionales e impresos",
+  "/trabajo/tareas":                   "Tareas",
+  "/trabajo/campanas":                 "Campañas",
+  "/trabajo/campanas-planner":         "Planeador de campañas",
+  "/trabajo/pagos":                    "Costos de adquisición",
+  "/trabajo/inventario":               "Material Físico",
+  "/trabajo/mkt/ecosistema":           "Ecosistema digital",
+  "/trabajo/mkt/inventario-digital":   "Material Digital",
+  "/trabajo/mkt/roles":                "Roles del equipo",
+  "/trabajo/mkt/contrasenas":          "Contraseñas",
 }
 
 export function TrabajoHeader() {

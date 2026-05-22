@@ -3,15 +3,39 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  CheckSquare, Wallet, ChevronRight, Archive, Megaphone, BarChart3, LayoutPanelLeft,
+  CheckSquare, Wallet, ChevronRight, Archive, Megaphone,
+  TrendingUp, FileImage, Users, Lock,
 } from "lucide-react"
 
-const NAV = [
-  { label: "Tareas",                   href: "/trabajo/tareas",           icon: CheckSquare    },
-  { label: "Campañas",                 href: "/trabajo/campanas",         icon: BarChart3      },
-  { label: "Planeador",                href: "/trabajo/campanas-planner", icon: LayoutPanelLeft },
-  { label: "Registro de gastos",       href: "/trabajo/pagos",            icon: Wallet         },
-  { label: "Promocionales e impresos", href: "/trabajo/inventario",       icon: Archive        },
+const SECTIONS = [
+  {
+    title: "Operación",
+    items: [
+      { label: "Tareas",   href: "/trabajo/tareas",   icon: CheckSquare },
+      { label: "Campañas", href: "/trabajo/campanas", icon: Megaphone   },
+    ],
+  },
+  {
+    title: "Funnel",
+    items: [
+      { label: "Ecosistema digital",    href: "/trabajo/mkt/ecosistema", icon: TrendingUp },
+      { label: "Costos de adquisición", href: "/trabajo/pagos",          icon: Wallet     },
+    ],
+  },
+  {
+    title: "Inventario",
+    items: [
+      { label: "Material Físico",   href: "/trabajo/inventario",           icon: Archive   },
+      { label: "Material Digital",  href: "/trabajo/mkt/inventario-digital", icon: FileImage },
+    ],
+  },
+  {
+    title: "Equipo",
+    items: [
+      { label: "Roles",        href: "/trabajo/mkt/roles",       icon: Users },
+      { label: "Contraseñas",  href: "/trabajo/mkt/contrasenas", icon: Lock  },
+    ],
+  },
 ]
 
 export function TrabajoSidebar() {
@@ -28,26 +52,35 @@ export function TrabajoSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={[
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group",
-                active
-                  ? "bg-blue-500/15 text-blue-300 border border-blue-500/20"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60",
-              ].join(" ")}
-            >
-              <Icon className={`h-4 w-4 shrink-0 ${active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"}`} />
-              <span className="flex-1">{label}</span>
-              {active && <ChevronRight className="h-3 w-3 text-blue-500/50" />}
-            </Link>
-          )
-        })}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+        {SECTIONS.map(({ title, items }) => (
+          <div key={title}>
+            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+              {title}
+            </p>
+            <div className="space-y-0.5">
+              {items.map(({ label, href, icon: Icon }) => {
+                const active = pathname === href || pathname.startsWith(href + "/")
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={[
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group",
+                      active
+                        ? "bg-blue-500/15 text-blue-300 border border-blue-500/20"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60",
+                    ].join(" ")}
+                  >
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"}`} />
+                    <span className="flex-1">{label}</span>
+                    {active && <ChevronRight className="h-3 w-3 text-blue-500/50" />}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
