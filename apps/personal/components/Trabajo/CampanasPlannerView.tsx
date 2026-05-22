@@ -83,20 +83,32 @@ function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string)
 
   for (const c of campanas) {
     if (c.categoria !== categoria) continue
-    const cMesIdx = MESES.indexOf(c.mes)
+    const cMesIdx  = MESES.indexOf(c.mes)
+    const firstMon = getFirstMonday(c.anio, cMesIdx)
 
-    for (const n of SEMANAS) {
-      const fecha  = getSemana(c, n, "Fecha")
-      const titulo = getSemana(c, n, "Titulo")
-      if (!titulo) continue
+    const hasAnyTitulo = SEMANAS.some(n => !!getSemana(c, n, "Titulo"))
 
-      if (fecha) {
-        if (fecha === dayStr) out.push({ campana: c, n, titulo })
-      } else if (isMonday) {
-        // Sin fecha: posicionar en el lunes de la semana N del mes de la campaña
-        const firstMon = getFirstMonday(c.anio, cMesIdx)
-        const weekMon  = addDays(firstMon, (n - 1) * 7)
-        if (toYMD(weekMon) === dayStr) out.push({ campana: c, n, titulo })
+    if (hasAnyTitulo) {
+      // Campaña con títulos por semana: mostrar en su día/lunes correspondiente
+      for (const n of SEMANAS) {
+        const fecha  = getSemana(c, n, "Fecha")
+        const titulo = getSemana(c, n, "Titulo")
+        if (!titulo) continue
+        if (fecha) {
+          if (fecha === dayStr) out.push({ campana: c, n, titulo })
+        } else if (isMonday) {
+          const weekMon = addDays(firstMon, (n - 1) * 7)
+          if (toYMD(weekMon) === dayStr) out.push({ campana: c, n, titulo })
+        }
+      }
+    } else if (isMonday && c.unidadNegocio) {
+      // Campaña sin títulos (creada desde planeador): mostrar en el lunes de cada semana del mes
+      for (let i = 0; i < 4; i++) {
+        const weekMon = addDays(firstMon, i * 7)
+        if (weekMon.getMonth() === cMesIdx && toYMD(weekMon) === dayStr) {
+          out.push({ campana: c, n: (i + 1) as NSemana, titulo: c.unidadNegocio })
+          break
+        }
       }
     }
   }
