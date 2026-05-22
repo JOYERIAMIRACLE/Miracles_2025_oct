@@ -271,17 +271,21 @@ function CampanaCard({ c, onEdit, onDelete }: {
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
-function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, onGuardar, onCerrar }: {
+function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, defaultFecha, onGuardar, onCerrar }: {
   editando: CampanaType | null
   defaultCategoria: string | null
   defaultMes: MesCampana
   defaultAnio: number
+  defaultFecha: string | null
   onGuardar: (p: CampanaPayload) => Promise<void>
   onCerrar: () => void
 }) {
-  const [form, setForm]     = useState<CampanaPayload>(
-    editando ? payloadDe(editando) : emptyPayload(defaultMes, defaultAnio, defaultCategoria)
-  )
+  const [form, setForm]     = useState<CampanaPayload>(() => {
+    if (editando) return payloadDe(editando)
+    const base = emptyPayload(defaultMes, defaultAnio, defaultCategoria)
+    if (defaultFecha) base.semana1Fecha = defaultFecha
+    return base
+  })
   const [saving, setSaving] = useState(false)
 
   const guardar = async () => {
@@ -518,7 +522,7 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
 function VistaPlaneador({ campanas, onEdit, onAgregar }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
-  onAgregar: (opts: { categoria: string; mes: MesCampana; anio: number }) => void
+  onAgregar: (opts: { categoria: string; mes: MesCampana; anio: number; fecha: string }) => void
 }) {
   const [wStart, setWStart] = useState(() => weekStart(new Date()))
 
@@ -598,7 +602,7 @@ function VistaPlaneador({ campanas, onEdit, onAgregar }: {
                       </button>
                     ))}
                     <button type="button"
-                      onClick={() => onAgregar({ categoria: fila.label, mes: MESES[day.getMonth()], anio: day.getFullYear() })}
+                      onClick={() => onAgregar({ categoria: fila.label, mes: MESES[day.getMonth()], anio: day.getFullYear(), fecha: toYMD(day) })}
                       className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto">
                       <Plus size={8} /> Agregar
                     </button>
@@ -623,13 +627,13 @@ export default function CampanasPlannerView() {
   const [tab,      setTab]      = useState<"catalogo" | "planeador">("catalogo")
   const [modal,    setModal]    = useState(false)
   const [editando, setEditando] = useState<CampanaType | null>(null)
-  const [defOpts,  setDefOpts]  = useState<{ categoria: string | null; mes: MesCampana; anio: number }>({
-    categoria: null, mes: MES_ACTUAL, anio: ANIO_ACTUAL,
+  const [defOpts,  setDefOpts]  = useState<{ categoria: string | null; mes: MesCampana; anio: number; fecha: string | null }>({
+    categoria: null, mes: MES_ACTUAL, anio: ANIO_ACTUAL, fecha: null,
   })
 
   const abrirNueva = (opts?: Partial<typeof defOpts>) => {
     setEditando(null)
-    setDefOpts({ categoria: null, mes: MES_ACTUAL, anio: ANIO_ACTUAL, ...opts })
+    setDefOpts({ categoria: null, mes: MES_ACTUAL, anio: ANIO_ACTUAL, fecha: null, ...opts })
     setModal(true)
   }
 
@@ -705,6 +709,7 @@ export default function CampanasPlannerView() {
           defaultCategoria={defOpts.categoria}
           defaultMes={defOpts.mes}
           defaultAnio={defOpts.anio}
+          defaultFecha={defOpts.fecha}
           onGuardar={guardar}
           onCerrar={() => setModal(false)}
         />
