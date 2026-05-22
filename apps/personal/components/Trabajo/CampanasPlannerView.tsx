@@ -84,7 +84,7 @@ function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string)
     const hasAnyTitulo = SEMANAS.some(n => !!getSemana(c, n, "Titulo"))
 
     if (hasAnyTitulo) {
-      // Campaña con títulos por semana: mostrar en su día/lunes correspondiente
+      // Campaña con títulos: mostrar en su fecha exacta, o en el lunes de su semana si no tiene fecha
       for (const n of SEMANAS) {
         const fecha  = getSemana(c, n, "Fecha")
         const titulo = getSemana(c, n, "Titulo")
@@ -96,14 +96,11 @@ function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string)
           if (toYMD(weekMon) === dayStr) out.push({ campana: c, n, titulo })
         }
       }
-    } else if (isMonday && c.unidadNegocio) {
-      // Campaña sin títulos (creada desde planeador): mostrar en el lunes de cada semana del mes
-      for (let i = 0; i < 4; i++) {
-        const weekMon = addDays(firstMon, i * 7)
-        if (weekMon.getMonth() === cMesIdx && toYMD(weekMon) === dayStr) {
-          out.push({ campana: c, n: (i + 1) as NSemana, titulo: c.unidadNegocio })
-          break
-        }
+    } else {
+      // Sin títulos (creada desde planeador): solo mostrar si tiene semana1Fecha exacta
+      const fecha = getSemana(c, 1, "Fecha")
+      if (fecha && fecha === dayStr && c.unidadNegocio) {
+        out.push({ campana: c, n: 1, titulo: c.unidadNegocio })
       }
     }
   }
@@ -482,7 +479,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onNueva }: {
                     </button>
                   ))}
                 </div>
-                <button type="button" onClick={() => onNueva({ mes, anio })}
+                <button type="button" title="Agregar campaña" onClick={() => onNueva({ mes, anio })}
                   className="flex items-center justify-center h-7 w-7 rounded-lg border border-dashed border-slate-700 hover:border-blue-500/40 text-slate-600 hover:text-blue-400 transition-colors shrink-0">
                   <Plus size={12} />
                 </button>
@@ -628,8 +625,7 @@ function VistaPlaneador({ campanas, onEdit, onAgregar }: {
                     {items.map(({ campana, n, titulo }) => (
                       <button key={`${campana.documentId}-${n}`} type="button" onClick={() => onEdit(campana)}
                         className="w-full text-left px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 hover:border-blue-500/40 transition-colors">
-                        <p className="text-[10px] font-medium text-slate-200 line-clamp-2 leading-snug">{titulo}</p>
-                        <p className="text-[9px] text-slate-600 mt-0.5 truncate">{campana.unidadNegocio}</p>
+                          <p className="text-[10px] font-medium text-slate-200 line-clamp-2 leading-snug">{titulo}</p>
                       </button>
                     ))}
                     <button type="button"
