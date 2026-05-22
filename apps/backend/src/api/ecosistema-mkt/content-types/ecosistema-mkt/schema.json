@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ecosistema_mkts",
+  "info": {
+    "singularName": "ecosistema-mkt",
+    "pluralName": "ecosistema-mkts",
+    "displayName": "Ecosistema Mkt"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "mes": {
+      "type": "string",
+      "required": true
+    },
+    "anio": {
+      "type": "integer",
+      "required": true
+    },
+    "canal": {
+      "type": "string"
+    },
+    "impresiones": {
+      "type": "integer",
+      "default": 0
+    },
+    "visitas": {
+      "type": "integer",
+      "default": 0
+    },
+    "clics": {
+      "type": "integer",
+      "default": 0
+    },
+    "leads": {
+      "type": "integer",
+      "default": 0
+    },
+    "contactosNuevos": {
+      "type": "integer",
+      "default": 0
+    },
+    "compras": {
+      "type": "integer",
+      "default": 0
+    },
+    "montoCompras": {
+      "type": "decimal",
+      "default": 0
+    },
+    "notas": {
+      "type": "text"
+    }
+  }
+}
