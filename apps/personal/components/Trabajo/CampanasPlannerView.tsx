@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import {
-  Plus, Pencil, Trash2, X, Check, Search,
+  Plus, Pencil, Trash2, X, Check,
   Calendar, LayoutGrid, ChevronLeft, ChevronRight,
   FileText, Link2,
 } from "lucide-react"
@@ -24,11 +24,6 @@ const MES_HOY    = MESES[_now.getMonth()]
 const MES_HOY_IDX = _now.getMonth()
 const SEMANA_HOY = Math.min(Math.ceil(_now.getDate() / 7), 4) as NSemana
 
-const TIPO_FILTERS: Array<[TipoCampana | "", string]> = [
-  ["", "Todas"],
-  ["completa", "Completa"],
-  ["titulos_extra", "Títulos extra"],
-]
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -405,122 +400,150 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
   )
 }
 
-// ─── Tab: Catálogo — secciones temporales ─────────────────────────────────────
+// ─── Tab: Catálogo — por mes y semana ─────────────────────────────────────────
 
-function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
+function semanaLabel(semanaStart: Date, semanaEnd: Date, n: NSemana): string {
+  const hoy        = new Date(); hoy.setHours(0,0,0,0)
+  const wHoy       = weekStart(hoy)
+  const wSiguiente = addDays(wHoy, 7)
+
+  const fmt = (d: Date, opts: Intl.DateTimeFormatOptions) =>
+    d.toLocaleDateString("es-MX", opts)
+
+  if (toYMD(semanaStart) === toYMD(wHoy)) {
+    return `Semana actual ${fmt(semanaStart,{day:"numeric"})}-${fmt(semanaEnd,{day:"numeric", month:"short"})}`
+  }
+  if (toYMD(semanaStart) === toYMD(wSiguiente)) {
+    return `Semana siguiente ${fmt(semanaStart,{day:"numeric"})}-${fmt(semanaEnd,{day:"numeric", month:"short"})}`
+  }
+  return `Semana ${n}`
+}
+
+function MesGroup({ mes, anio, campanas, onEdit, onNueva }: {
+  mes: MesCampana; anio: number; campanas: CampanaType[]
+  onEdit: (c: CampanaType) => void
+  onNueva: (opts: { mes: MesCampana; anio: number }) => void
+}) {
+  const isCurrentMonth = anio === ANIO_HOY && MESES.indexOf(mes) === MES_HOY_IDX
+  const [collapsed, setCollapsed] = useState(false)
+
+  const mesIdx   = MESES.indexOf(mes)
+  const firstMon = getFirstMonday(anio, mesIdx)
+  const hoy      = new Date(); hoy.setHours(0,0,0,0)
+
+  const sinTitulosDocIds = new Set(
+    campanas
+      .filter(c => !SEMANAS.some(n => !!getSemana(c, n, "Titulo")))
+      .map(c => c.documentId)
+  )
+
+  return (
+    <div className="border border-slate-800 rounded-xl overflow-hidden">
+      <button type="button" onClick={() => setCollapsed(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/60 hover:bg-slate-800/40 transition">
+        <span className="text-sm font-bold text-slate-200">{mes} {anio}</span>
+        <ChevronRight className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${collapsed ? "" : "rotate-90"}`} />
+      </button>
+
+      {!collapsed && (
+        <div className="divide-y divide-slate-800/50">
+          {SEMANAS.map(n => {
+            const sStart = addDays(firstMon, (n - 1) * 7)
+            const sEnd   = addDays(sStart, 6)
+
+            // Para el mes actual, ocultar semanas completamente pasadas
+            if (isCurrentMonth && sEnd < hoy) return null
+
+            const label = semanaLabel(sStart, sEnd, n)
+
+            // Campañas con título en esta semana
+            const conTitulo = campanas
+              .filter(c => !!getSemana(c, n, "Titulo"))
+              .map(c => ({ c, titulo: getSemana(c, n, "Titulo")! }))
+
+            // Campañas sin ningún título: mostrar en semana 1
+            const sinTitulo = n === 1
+              ? campanas
+                  .filter(c => sinTitulosDocIds.has(c.documentId))
+                  .map(c => ({ c, titulo: c.unidadNegocio }))
+              : []
+
+            const items = [...conTitulo, ...sinTitulo]
+
+            return (
+              <div key={n} className="flex items-center gap-3 px-4 py-3 min-h-[52px]">
+                <span className="text-[11px] text-slate-500 w-44 shrink-0 leading-snug">{label}</span>
+                <div className="flex-1 flex flex-wrap items-center gap-2">
+                  {items.map(({ c, titulo }) => (
+                    <button key={`${c.documentId}-${n}`} type="button" onClick={() => onEdit(c)}
+                      className="flex items-center gap-1.5 pl-2 pr-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-blue-500/40 transition-colors text-left max-w-[180px]">
+                      <CategoriaBadge cat={c.categoria} />
+                      <span className="text-xs text-slate-200 truncate">{titulo}</span>
+                    </button>
+                  ))}
+                </div>
+                <button type="button" onClick={() => onNueva({ mes, anio })}
+                  className="flex items-center justify-center h-7 w-7 rounded-lg border border-dashed border-slate-700 hover:border-blue-500/40 text-slate-600 hover:text-blue-400 transition-colors shrink-0">
+                  <Plus size={12} />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function VistaCatalogo({ campanas, onEdit, onDelete: _onDelete, onNueva }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
   onDelete: (c: CampanaType) => void
   onNueva: () => void
 }) {
-  const [busqueda,   setBusqueda]   = useState("")
-  const [filtroTipo, setFiltroTipo] = useState<TipoCampana | "">("")
-  const [filtroCat,  setFiltroCat]  = useState("")
+  const grupos = useMemo(() => {
+    const map = new Map<string, { mes: MesCampana; anio: number; items: CampanaType[] }>()
+    campanas.forEach(c => {
+      const key = `${c.anio}-${String(MESES.indexOf(c.mes)).padStart(2, "0")}`
+      if (!map.has(key)) map.set(key, { mes: c.mes, anio: c.anio, items: [] })
+      map.get(key)!.items.push(c)
+    })
+    const nowKey = `${ANIO_HOY}-${String(MES_HOY_IDX).padStart(2, "0")}`
+    return [...map.entries()]
+      .sort(([a], [b]) => {
+        const aFut = a >= nowKey; const bFut = b >= nowKey
+        if (aFut && !bFut) return -1
+        if (!aFut && bFut) return 1
+        return aFut ? a.localeCompare(b) : b.localeCompare(a)
+      })
+      .map(([, v]) => v)
+  }, [campanas])
 
-  const filtradas = useMemo(() =>
-    campanas.filter(c => {
-      const q = busqueda.toLowerCase()
-      const matchB = !busqueda || c.unidadNegocio.toLowerCase().includes(q) || (c.categoria?.toLowerCase().includes(q) ?? false)
-      const matchT = !filtroTipo || c.tipo === filtroTipo
-      const matchC = !filtroCat  || c.categoria === filtroCat
-      return matchB && matchT && matchC
-    }),
-  [campanas, busqueda, filtroTipo, filtroCat])
-
-  const { semanaActual, proximasMes, futureMeses, publicadas } = useMemo(
-    () => buildSections(filtradas),
-    [filtradas],
-  )
-
-  const Grid = ({ items }: { items: CampanaType[] }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map(c => (
-        <CampanaCard key={c.documentId} c={c} onEdit={() => onEdit(c)} onDelete={() => onDelete(c)} />
-      ))}
-    </div>
-  )
+  if (campanas.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-slate-500 text-sm mb-3">No hay campañas</p>
+        <button type="button" onClick={onNueva}
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700 rounded-lg text-slate-400 hover:text-slate-200 transition">
+          <Plus size={14} /> Crear primera campaña
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div>
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative max-w-xs">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-            placeholder="Buscar campaña..."
-            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 placeholder:text-slate-600 outline-none focus:border-slate-500"
-          />
-        </div>
-        <div className="flex gap-1.5 flex-wrap items-center">
-          {TIPO_FILTERS.map(([v, l]) => (
-            <button key={v} type="button"
-              onClick={() => setFiltroTipo(prev => prev === v ? "" : v)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                filtroTipo === v
-                  ? v === "completa"      ? "bg-blue-500/15 border-blue-500/30 text-blue-300 font-medium"
-                  : v === "titulos_extra" ? "bg-amber-500/15 border-amber-500/30 text-amber-300 font-medium"
-                                          : "bg-slate-700 border-slate-600 text-slate-200"
-                  : "border-slate-700 text-slate-500 hover:text-slate-300"
-              }`}>{l}
-            </button>
-          ))}
-          <div className="w-px h-4 bg-slate-700" />
-          {(["MHS", "Store", "Extra"] as const).map(cat => (
-            <button key={cat} type="button"
-              onClick={() => setFiltroCat(prev => prev === cat ? "" : cat)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                filtroCat === cat
-                  ? cat === "MHS"   ? "bg-blue-500/15 border-blue-500/30 text-blue-300 font-medium"
-                  : cat === "Store" ? "bg-violet-500/15 border-violet-500/30 text-violet-300 font-medium"
-                                    : "bg-amber-500/15 border-amber-500/30 text-amber-300 font-medium"
-                  : "border-slate-700 text-slate-500 hover:text-slate-300"
-              }`}>{cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Secciones */}
-      {filtradas.length === 0 ? (
-        <div className="text-center py-16 space-y-3">
-          <p className="text-slate-500 text-sm">{busqueda || filtroTipo || filtroCat ? "Sin resultados" : "No hay campañas"}</p>
-          {!busqueda && !filtroTipo && !filtroCat && (
-            <button type="button" onClick={onNueva}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700 rounded-lg text-slate-400 hover:text-slate-200 hover:border-slate-600 transition">
-              <Plus size={14} /> Crear primera campaña
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-10">
-          {semanaActual.length > 0 && (
-            <div>
-              <SectionHeader label={`Semana actual (sem. ${SEMANA_HOY} de ${MES_HOY})`} count={semanaActual.length} />
-              <Grid items={semanaActual} />
-            </div>
-          )}
-          {proximasMes.length > 0 && (
-            <div>
-              <SectionHeader label={`Próximas de ${MES_HOY}`} count={proximasMes.length} />
-              <Grid items={proximasMes} />
-            </div>
-          )}
-          {futureMeses.map(({ mes, anio, items }) => (
-            <div key={`${mes}-${anio}`}>
-              <SectionHeader label={`${mes} ${anio}`} count={items.length} />
-              <Grid items={items} />
-            </div>
-          ))}
-          {publicadas.length > 0 && (
-            <div>
-              <SectionHeader label="Publicadas" count={publicadas.length} />
-              <div className="opacity-60">
-                <Grid items={publicadas} />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+    <div className="space-y-3">
+      {grupos.map(({ mes, anio, items }) => (
+        <MesGroup
+          key={`${mes}-${anio}`}
+          mes={mes} anio={anio} campanas={items}
+          onEdit={onEdit}
+          onNueva={({ mes: m, anio: a }) => {
+            // Re-use the parent onNueva trigger; parent will open modal
+            onNueva()
+          }}
+        />
+      ))}
     </div>
   )
 }
