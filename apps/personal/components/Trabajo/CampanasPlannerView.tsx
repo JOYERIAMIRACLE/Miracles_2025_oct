@@ -30,10 +30,77 @@ const TIPO_FILTERS: Array<[TipoCampana | "", string]> = [
   ["titulos_extra", "Títulos extra"],
 ]
 
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+
+function weekStart(ref: Date): Date {
+  const d = new Date(ref.getTime())
+  const dow = d.getDay()
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d.getTime())
+  r.setDate(r.getDate() + n)
+  return r
+}
+
+function toYMD(d: Date): string {
+  return d.toISOString().split("T")[0]
+}
+
+const HOY_YMD = toYMD(new Date())
+
+const FILAS_GRID = [
+  { label: "MHS",   rowBg: "bg-blue-950/30"   },
+  { label: "Store", rowBg: "bg-violet-950/30"  },
+  { label: "Extra", rowBg: "bg-amber-950/30"   },
+] as const
+
+const DIAS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const
+
+function getFirstMonday(year: number, monthIdx: number): Date {
+  const d = new Date(year, monthIdx, 1)
+  const dow = d.getDay()
+  d.setDate(d.getDate() + (dow === 0 ? 1 : dow === 1 ? 0 : 8 - dow))
+  return d
+}
+
 // ─── Data helpers ─────────────────────────────────────────────────────────────
 
 function getSemana(c: CampanaType, n: NSemana, k: "Titulo" | "Fecha") {
   return c[`semana${n}${k}` as keyof CampanaType] as string | null
+}
+
+type DiaItem = { campana: CampanaType; n: NSemana; titulo: string }
+
+function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string): DiaItem[] {
+  const out: DiaItem[] = []
+  const [yr, mo, dy] = dayStr.split("-").map(Number)
+  const dayDate  = new Date(yr, mo - 1, dy)
+  const isMonday = dayDate.getDay() === 1
+
+  for (const c of campanas) {
+    if (c.categoria !== categoria) continue
+    const cMesIdx = MESES.indexOf(c.mes)
+
+    for (const n of SEMANAS) {
+      const fecha  = getSemana(c, n, "Fecha")
+      const titulo = getSemana(c, n, "Titulo")
+      if (!titulo) continue
+
+      if (fecha) {
+        if (fecha === dayStr) out.push({ campana: c, n, titulo })
+      } else if (isMonday) {
+        // Sin fecha: posicionar en el lunes de la semana N del mes de la campaña
+        const firstMon = getFirstMonday(c.anio, cMesIdx)
+        const weekMon  = addDays(firstMon, (n - 1) * 7)
+        if (toYMD(weekMon) === dayStr) out.push({ campana: c, n, titulo })
+      }
+    }
+  }
+  return out
 }
 
 // Catalog sections:  semanaActual | proximasMes | futureMeses[] | publicadas
@@ -434,114 +501,105 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
   )
 }
 
-// ─── Tab: Planeador — filas por semana dentro del mes ─────────────────────────
+// ─── Tab: Planeador — calendario semanal por día ──────────────────────────────
 
 function VistaPlaneador({ campanas, onEdit, onAgregar }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
-  onAgregar: (opts: { mes: MesCampana; anio: number }) => void
+  onAgregar: (opts: { categoria: string; mes: MesCampana; anio: number }) => void
 }) {
-  const [mesIdx, setMesIdx] = useState(MES_HOY_IDX)
-  const [anio,   setAnio]   = useState(ANIO_ACTUAL)
+  const [wStart, setWStart] = useState(() => weekStart(new Date()))
 
-  const mes = MESES[mesIdx]
+  const days   = Array.from({ length: 5 }, (_, i) => addDays(wStart, i))
+  const wEnd   = addDays(wStart, 6)
+  const isHoy  = (d: Date) => toYMD(d) === HOY_YMD
 
-  const prevMes = () => {
-    if (mesIdx === 0) { setMesIdx(11); setAnio(a => a - 1) }
-    else setMesIdx(m => m - 1)
-  }
-  const nextMes = () => {
-    if (mesIdx === 11) { setMesIdx(0); setAnio(a => a + 1) }
-    else setMesIdx(m => m + 1)
-  }
+  const weekLabel = (() => {
+    const s = wStart.toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+    const e = wEnd.toLocaleDateString("es-MX",   { day: "numeric", month: "short", year: "numeric" })
+    return `${s} – ${e}`
+  })()
 
-  const delMes = useMemo(
-    () => campanas.filter(c => c.mes === mes && c.anio === anio),
-    [campanas, mes, anio],
-  )
+  const prevWeek = () => setWStart(d => addDays(d, -7))
+  const nextWeek = () => setWStart(d => addDays(d, +7))
 
   return (
     <div>
-      {/* Navegación de mes */}
+      {/* Nav semana */}
       <div className="flex items-center gap-3 mb-6">
-        <button type="button" title="Mes anterior" onClick={prevMes}
+        <button type="button" title="Semana anterior" onClick={prevWeek}
           className="h-8 w-8 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
           <ChevronLeft size={14} />
         </button>
-        <span className="text-sm font-semibold text-slate-200 min-w-[160px] text-center capitalize">
-          {mes} {anio}
-        </span>
-        <button type="button" title="Mes siguiente" onClick={nextMes}
+        <span className="text-sm font-semibold text-slate-200 min-w-[220px] text-center">{weekLabel}</span>
+        <button type="button" title="Semana siguiente" onClick={nextWeek}
           className="h-8 w-8 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
           <ChevronRight size={14} />
         </button>
-        <button type="button"
-          onClick={() => { setMesIdx(MES_HOY_IDX); setAnio(ANIO_ACTUAL) }}
+        <button type="button" onClick={() => setWStart(weekStart(new Date()))}
           className="text-[11px] text-slate-600 hover:text-slate-400 underline underline-offset-2 transition ml-1">
           Hoy
         </button>
       </div>
 
-      {/* Filas por semana */}
-      <div className="rounded-xl border border-slate-800 overflow-hidden">
-        {SEMANAS.map((n, i) => {
-          const items = delMes
-            .filter(c => !!getSemana(c, n, "Titulo"))
-            .map(c => ({ campana: c, titulo: getSemana(c, n, "Titulo")!, fecha: getSemana(c, n, "Fecha") }))
-
-          const fechaRef = items.find(it => it.fecha)?.fecha
-
-          const esActual = anio === ANIO_HOY && mes === MES_HOY && n === SEMANA_HOY
-
-          return (
-            <div key={n}
-              className={[
-                "flex gap-0 min-h-[64px]",
-                i < SEMANAS.length - 1 ? "border-b border-slate-800" : "",
-                esActual ? "bg-blue-500/5" : "",
-              ].join(" ")}
-            >
-              {/* Label semana */}
-              <div className={`w-24 shrink-0 flex flex-col justify-center px-4 py-3 border-r border-slate-800 ${esActual ? "bg-blue-500/10" : "bg-slate-900/40"}`}>
-                <p className={`text-xs font-semibold ${esActual ? "text-blue-400" : "text-slate-500"}`}>
-                  Semana {n}
+      {/* Grid */}
+      <div className="overflow-x-auto rounded-xl border border-slate-800">
+        <div className="min-w-[860px]">
+          {/* Cabecera días */}
+          <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-800 bg-slate-900/60">
+            <div />
+            {days.map((d, i) => (
+              <div key={i} className={`px-2 py-2.5 border-l border-slate-800 text-center ${isHoy(d) ? "bg-blue-500/5" : ""}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wider ${isHoy(d) ? "text-blue-400" : "text-slate-500"}`}>
+                  {DIAS_ES[i]}
                 </p>
-                {fechaRef && (
-                  <p className="text-[10px] text-slate-600 mt-0.5">{fmtFecha(fechaRef)}</p>
-                )}
+                <p className={`text-[12px] font-medium mt-0.5 ${isHoy(d) ? "text-blue-300" : "text-slate-400"}`}>
+                  {d.toLocaleDateString("es-MX", { day: "numeric" })}
+                </p>
+                <p className="text-[9px] text-slate-600">
+                  {d.toLocaleDateString("es-MX", { month: "short" })}
+                </p>
               </div>
+            ))}
+          </div>
 
-              {/* Campañas de la semana */}
-              <div className="flex-1 flex flex-wrap items-center gap-2 px-4 py-3">
-                {items.map(({ campana, titulo }) => (
-                  <button
-                    key={campana.documentId}
-                    type="button"
-                    onClick={() => onEdit(campana)}
-                    className="flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-blue-500/40 transition-colors max-w-xs text-left"
-                  >
-                    <CategoriaBadge cat={campana.categoria} />
-                    <span className="text-xs text-slate-200 truncate leading-none">{titulo}</span>
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => onAgregar({ mes, anio })}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-slate-800 hover:border-blue-500/30 text-slate-700 hover:text-blue-500/70 text-xs transition-colors"
-                >
-                  <Plus size={11} /> Agregar
-                </button>
+          {/* Filas MHS / Store / Extra */}
+          {FILAS_GRID.map((fila, ri) => (
+            <div key={fila.label}
+              className={`grid grid-cols-[72px_repeat(5,1fr)] ${ri < FILAS_GRID.length - 1 ? "border-b border-slate-800" : ""}`}>
+              <div className={`${fila.rowBg} border-r border-slate-800 flex items-center justify-center p-2 min-h-[88px]`}>
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
+                  {fila.label}
+                </span>
               </div>
+              {days.map((day, di) => {
+                const dayStr = toYMD(day)
+                const items  = getDiaItems(campanas, dayStr, fila.label)
+                return (
+                  <div key={di}
+                    className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
+                    {items.map(({ campana, n, titulo }) => (
+                      <button key={`${campana.documentId}-${n}`} type="button" onClick={() => onEdit(campana)}
+                        className="w-full text-left px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 hover:border-blue-500/40 transition-colors">
+                        <p className="text-[10px] font-medium text-slate-200 line-clamp-2 leading-snug">{titulo}</p>
+                        <p className="text-[9px] text-slate-600 mt-0.5 truncate">{campana.unidadNegocio}</p>
+                      </button>
+                    ))}
+                    <button type="button"
+                      onClick={() => onAgregar({ categoria: fila.label, mes: MESES[day.getMonth()], anio: day.getFullYear() })}
+                      className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto">
+                      <Plus size={8} /> Agregar
+                    </button>
+                  </div>
+                )
+              })}
             </div>
-          )
-        })}
+          ))}
+        </div>
       </div>
-
-      {delMes.length === 0 && (
-        <p className="text-xs text-slate-600 text-center mt-4">
-          Sin campañas en {mes} {anio}
-        </p>
-      )}
+      <p className="text-[11px] text-slate-700 mt-3">
+        Campañas con fecha exacta aparecen en su día. Sin fecha, se posicionan el lunes de su semana dentro del mes.
+      </p>
     </div>
   )
 }
@@ -625,7 +683,7 @@ export default function CampanasPlannerView() {
         <VistaPlaneador
           campanas={campanas}
           onEdit={abrirEditar}
-          onAgregar={({ mes, anio }) => abrirNueva({ mes, anio })}
+          onAgregar={opts => abrirNueva(opts)}
         />
       )}
 
