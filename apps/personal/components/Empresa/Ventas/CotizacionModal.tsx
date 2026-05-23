@@ -9,7 +9,61 @@ import {
 } from "@/types/cotizacion"
 import { createCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { ClienteEmpresa } from "@/types/clienteEmpresa"
+import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
+import { ProductType } from "@/types/product"
 
+// ─── Combobox de producto ─────────────────────────────────────────────────────
+function ProductoSearch({
+  value, onChange, onSelect, productos,
+}: {
+  value:    string
+  onChange: (v: string) => void
+  onSelect: (p: ProductType) => void
+  productos: ProductType[]
+}) {
+  const [open, setOpen] = useState(false)
+
+  const filtered = value.length >= 1
+    ? productos.filter(p =>
+        p.nombreProducto.toLowerCase().includes(value.toLowerCase()) ||
+        (p.sku ?? "").toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 8)
+    : []
+
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="Descripción o buscar inventario…"
+        className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 w-full"
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-20 top-full left-0 w-72 mt-0.5 bg-slate-850 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden">
+          {filtered.map(p => (
+            <button key={p.documentId} type="button"
+              onMouseDown={e => { e.preventDefault(); onSelect(p); setOpen(false) }}
+              className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-700/80 transition text-left gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] text-slate-200 truncate">{p.nombreProducto}</p>
+                {p.sku && <p className="text-[9px] text-slate-500 font-mono">{p.sku}</p>}
+              </div>
+              {p.costo != null && (
+                <span className="text-[10px] text-emerald-400 font-semibold shrink-0">
+                  {p.costo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function emptyItem(): ItemCotizacion {
   return { sku: "", descripcion: "", cantidad: 1, precio: 0, subtotal: 0 }
 }
@@ -17,12 +71,13 @@ function emptyItem(): ItemCotizacion {
 const fmt = (n: number) =>
   n.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
 
+// ─── Modal ────────────────────────────────────────────────────────────────────
 interface Props {
-  cliente:            ClienteEmpresa
-  cotizacion:         Cotizacion | null
-  totalCotizaciones:  number
-  onClose:            () => void
-  onSaved:            (c: Cotizacion) => void
+  cliente:           ClienteEmpresa
+  cotizacion:        Cotizacion | null
+  totalCotizaciones: number
+  onClose:           () => void
+  onSaved:           (c: Cotizacion) => void
 }
 
 export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClose, onSaved }: Props) {
@@ -34,6 +89,8 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
   const [notas,       setNotas]       = useState(cotizacion?.notas ?? "")
   const [guardando,   setGuardando]   = useState(false)
 
+  const { items: productos } = useGetInventario()
+
   const subtotal = items.reduce((acc, i) => acc + i.cantidad * i.precio, 0)
   const total    = subtotal + Number(precioEnvio)
 
@@ -43,6 +100,14 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
       const updated = { ...item, [field]: value }
       updated.subtotal = updated.cantidad * updated.precio
       return updated
+    }))
+  }
+
+  const selectProducto = (idx: number, p: ProductType) => {
+    setItems(prev => prev.map((item, i) => {
+      if (i !== idx) return item
+      const precio = p.costo ?? 0
+      return { ...item, sku: p.sku ?? "", descripcion: p.nombreProducto, precio, subtotal: item.cantidad * precio }
     }))
   }
 
@@ -77,7 +142,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
   const inp = "px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 w-full"
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-60 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
         onClick={e => e.stopPropagation()}>
 
@@ -128,10 +193,13 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
                 <div key={idx} className="grid grid-cols-[72px_1fr_56px_90px_90px_28px] gap-1.5 items-center">
                   <input value={item.sku}
                     onChange={e => updateItem(idx, "sku", e.target.value)}
-                    placeholder="SKU-001" className={inp} />
-                  <input value={item.descripcion}
-                    onChange={e => updateItem(idx, "descripcion", e.target.value)}
-                    placeholder="Descripción del producto" className={inp} />
+                    placeholder="SKU" className={inp} />
+                  <ProductoSearch
+                    value={item.descripcion}
+                    onChange={v => updateItem(idx, "descripcion", v)}
+                    onSelect={p => selectProducto(idx, p)}
+                    productos={productos}
+                  />
                   <input type="number" min="1" title="Cantidad"
                     value={item.cantidad}
                     onChange={e => updateItem(idx, "cantidad", Number(e.target.value) || 1)}
