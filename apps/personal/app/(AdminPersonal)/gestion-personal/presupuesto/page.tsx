@@ -611,7 +611,10 @@ export default function PresupuestoPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={TOOLTIP_STYLE}
-                    formatter={(v: number) => [`$${Math.round(v).toLocaleString("es-MX")}`, "Presupuesto"]}
+                    formatter={(v: number, name: string) => [
+                      `$${Math.round(v).toLocaleString("es-MX")}`,
+                      name.charAt(0).toUpperCase() + name.slice(1),
+                    ]}
                   />
                 </PieChart>
               </ResponsiveContainer>
