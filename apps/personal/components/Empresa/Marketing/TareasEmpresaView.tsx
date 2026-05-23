@@ -25,17 +25,18 @@ const PRIORIDADES: { key: PrioridadTarea; label: string; dot: string }[] = [
   { key: "urgente", label: "Urgente", dot: "bg-red-400" },
 ]
 
-const CATEGORIAS = ["Contenido", "Campaña", "Diseño", "SEO", "Analytics", "Social Media", "Email", "Otro"]
+const CATEGORIAS = ["Contenido", "Campaña", "Diseño", "SEO", "Analytics", "Social Media", "Email", "Infraestructura web", "Otro"]
 
 const CATEGORIA_COLOR: Record<string, string> = {
-  "Contenido":    "bg-green-500/10 text-green-400 border-green-500/20",
-  "Campaña":      "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  "Diseño":       "bg-pink-500/10 text-pink-400 border-pink-500/20",
-  "SEO":          "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  "Analytics":    "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  "Social Media": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "Email":        "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  "Otro":         "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  "Contenido":          "bg-green-500/10 text-green-400 border-green-500/20",
+  "Campaña":            "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  "Diseño":             "bg-pink-500/10 text-pink-400 border-pink-500/20",
+  "SEO":                "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  "Analytics":          "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Social Media":       "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  "Email":              "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  "Infraestructura web":"bg-teal-500/10 text-teal-400 border-teal-500/20",
+  "Otro":               "bg-slate-500/10 text-slate-400 border-slate-500/20",
 }
 
 type FormData = {
