@@ -72,6 +72,16 @@ function ChartDot({ color }: { color: string }) {
   return <span ref={ref} className="w-2 h-2 rounded-full shrink-0 inline-block" />
 }
 
+function WeekBar({ pct }: { pct: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => { if (ref.current) ref.current.style.width = `${Math.min(pct, 100)}%` }, [pct])
+  return (
+    <div className="flex-1 h-1.5 rounded-full bg-slate-800">
+      <div ref={ref} className="h-1.5 rounded-full bg-indigo-500 transition-all duration-500" />
+    </div>
+  )
+}
+
 const TIPO_PAGO_COLORS: Record<string, string> = {
   efectivo:      "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
   TDC:           "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
@@ -122,10 +132,18 @@ function weekKey(dateStr: string | null | undefined): string {
   return d.toISOString().split("T")[0]
 }
 
-function weekShortLabel(mondayStr: string): string {
-  const d = new Date(mondayStr + "T12:00:00")
-  if (isNaN(d.getTime())) return ""
-  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
+function weekRangeLabel(mondayStr: string): string {
+  const mon = new Date(mondayStr + "T12:00:00")
+  if (isNaN(mon.getTime())) return ""
+  const sun = new Date(mon)
+  sun.setDate(sun.getDate() + 6)
+  const monDay = mon.getDate()
+  const sunDay = sun.getDate()
+  const monMonth = mon.toLocaleDateString("es-MX", { month: "short" })
+  const sunMonth = sun.toLocaleDateString("es-MX", { month: "short" })
+  return monMonth === sunMonth
+    ? `${monDay} — ${sunDay} ${sunMonth}`
+    : `${monDay} ${monMonth} — ${sunDay} ${sunMonth}`
 }
 
 // ─── Página ────────────────────────────────────────────────────────────────────
@@ -313,30 +331,29 @@ export default function PresupuestoPage() {
   const semanaActualKey = weekKey(new Date().toISOString().split("T")[0])
 
   const gastoPorSemana = useMemo(() => {
-    const map = new Map<string, number>()
+    const map = new Map<string, { total: number; cats: Map<string, number> }>()
     for (const tx of transacciones) {
       if (tx.tipo !== "gasto") continue
       const k = weekKey(tx.fecha)
-      map.set(k, (map.get(k) ?? 0) + Number(tx.monto))
+      if (!k) continue
+      if (!map.has(k)) map.set(k, { total: 0, cats: new Map() })
+      const w = map.get(k)!
+      const monto = Number(tx.monto)
+      w.total += monto
+      const cat = tx.categoria ?? "Sin categoría"
+      w.cats.set(cat, (w.cats.get(cat) ?? 0) + monto)
     }
     return [...map.entries()]
       .sort((a, b) => b[0].localeCompare(a[0]))
-      .slice(0, 6)
+      .slice(0, 8)
       .reverse()
-      .map(([monday, total]) => ({ monday, label: weekShortLabel(monday), total: Math.round(total) }))
+      .map(([monday, { total, cats }]) => ({
+        monday,
+        rangeLabel: weekRangeLabel(monday),
+        total: Math.round(total),
+        cats: [...cats.entries()].sort((a, b) => b[1] - a[1]).map(([cat, t]) => ({ cat, total: Math.round(t) })),
+      }))
   }, [transacciones])
-
-  const gastoSemanaActualCat = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const tx of transacciones) {
-      if (tx.tipo !== "gasto" || weekKey(tx.fecha) !== semanaActualKey) continue
-      const cat = tx.categoria ?? "Sin categoría"
-      map.set(cat, (map.get(cat) ?? 0) + Number(tx.monto))
-    }
-    return [...map.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([cat, total]) => ({ cat, total: Math.round(total) }))
-  }, [transacciones, semanaActualKey])
 
   // ─── CRUD ─────────────────────────────────────────────────────────────────
   const handleNuevo = () => { setEditingPartida(null); setForm(EMPTY_FORM); setModalOpen(true) }
@@ -707,56 +724,49 @@ export default function PresupuestoPage() {
       )}
 
       {/* ── Gasto por semana ──────────────────────────────────────────────── */}
-      {gastoPorSemana.length > 0 && (
-        <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
-            Gasto por semana
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {/* Barras por semana */}
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={gastoPorSemana} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: "#64748b" }} tickLine={false} axisLine={false}
-                  tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip
-                  contentStyle={TOOLTIP_STYLE}
-                  formatter={(v: number) => [`$${v.toLocaleString("es-MX")}`, "Gasto"]}
-                />
-                <Bar dataKey="total" radius={[3, 3, 0, 0]} maxBarSize={36}>
-                  {gastoPorSemana.map((s, i) => (
-                    <Cell key={i} fill={s.monday === semanaActualKey ? "#6366f1" : "#1e293b"} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-
-            {/* Desglose categorías semana actual */}
-            <div>
-              <p className="text-[11px] text-slate-500 mb-3">
-                Esta semana · {fmt(gastoPorSemana.find(s => s.monday === semanaActualKey)?.total ?? 0)}
-              </p>
-              {gastoSemanaActualCat.length === 0 ? (
-                <p className="text-xs text-slate-600">Sin gastos registrados esta semana</p>
-              ) : (
-                <div className="space-y-2.5">
-                  {gastoSemanaActualCat.slice(0, 7).map(({ cat, total }, i) => {
-                    const pct = Math.round((total / gastoSemanaActualCat[0].total) * 100)
-                    return (
-                      <div key={cat} className="flex items-center gap-2 min-w-0">
-                        <ChartDot color={CHART_COLORS[i % CHART_COLORS.length]} />
-                        <span className="text-[11px] text-slate-400 capitalize truncate flex-1">{cat}</span>
-                        <span className="text-[10px] text-slate-600 shrink-0">{pct}%</span>
-                        <span className="text-[11px] font-medium text-slate-300 shrink-0 w-20 text-right">{fmt(total)}</span>
+      {gastoPorSemana.length > 0 && (() => {
+        const maxTotal = Math.max(...gastoPorSemana.map(s => s.total))
+        return (
+          <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+              Gasto por semana
+            </h3>
+            <div className="space-y-1">
+              {[...gastoPorSemana].reverse().map(semana => {
+                const esActual = semana.monday === semanaActualKey
+                const pct = maxTotal > 0 ? (semana.total / maxTotal) * 100 : 0
+                return (
+                  <div key={semana.monday}
+                    className={`rounded-lg px-3 py-3 transition-colors ${esActual ? "bg-indigo-500/10 border border-indigo-500/20" : "hover:bg-slate-800/40"}`}>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-[11px] font-mono w-36 shrink-0 ${esActual ? "text-indigo-300 font-semibold" : "text-slate-400"}`}>
+                        {semana.rangeLabel}
+                      </span>
+                      <WeekBar pct={pct} />
+                      <span className={`text-sm font-bold w-24 text-right shrink-0 ${esActual ? "text-indigo-200" : "text-slate-300"}`}>
+                        {fmt(semana.total)}
+                      </span>
+                      {esActual && <span className="text-[10px] text-indigo-400 font-medium shrink-0">esta semana</span>}
+                    </div>
+                    {semana.cats.length > 0 && (
+                      <div className="mt-1.5 ml-36 flex flex-wrap gap-x-3 gap-y-0.5">
+                        {semana.cats.slice(0, 5).map(({ cat, total }) => (
+                          <span key={cat} className="text-[10px] text-slate-500 capitalize">
+                            {cat} <span className="text-slate-400 font-medium">{fmt(total)}</span>
+                          </span>
+                        ))}
+                        {semana.cats.length > 5 && (
+                          <span className="text-[10px] text-slate-600">+{semana.cats.length - 5} más</span>
+                        )}
                       </div>
-                    )
-                  })}
-                </div>
-              )}
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Tabla */}
       <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 shadow-sm overflow-hidden rounded-xl">
