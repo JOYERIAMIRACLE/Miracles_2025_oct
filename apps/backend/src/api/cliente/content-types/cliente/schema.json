@@ -37,16 +37,19 @@
       "type": "enumeration",
       "enum": [
         "Lead",
-        "LeadCalificado",
         "Oferta",
         "Pedido",
         "Entrega"
       ]
     },
-    "fechaLead": {
+    "calificado": {
+      "type": "boolean",
+      "default": false
+    },
+    "fechaCalificado": {
       "type": "datetime"
     },
-    "fechaLeadCalificado": {
+    "fechaLead": {
       "type": "datetime"
     },
     "fechaOferta": {
