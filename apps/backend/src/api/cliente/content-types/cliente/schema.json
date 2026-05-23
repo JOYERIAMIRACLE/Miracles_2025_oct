@@ -37,10 +37,26 @@
       "type": "enumeration",
       "enum": [
         "Lead",
-        "Prospecto",
-        "Cotizacion",
-        "Pedido"
+        "LeadCalificado",
+        "Oferta",
+        "Pedido",
+        "Entrega"
       ]
+    },
+    "fechaLead": {
+      "type": "datetime"
+    },
+    "fechaLeadCalificado": {
+      "type": "datetime"
+    },
+    "fechaOferta": {
+      "type": "datetime"
+    },
+    "fechaPedido": {
+      "type": "datetime"
+    },
+    "fechaEntrega": {
+      "type": "datetime"
     },
     "canalContacto": {
       "type": "string"

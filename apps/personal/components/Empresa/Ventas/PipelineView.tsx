@@ -3,8 +3,7 @@
 import { useState, useMemo } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle,
-  ChevronRight, ChevronLeft, Pencil, Trash2, User,
-  Hash, ArrowRight,
+  ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
@@ -15,24 +14,39 @@ import {
 
 // ─── Metadatos por etapa ──────────────────────────────────────────────────────
 
-const STAGE_META: Record<FunnelEtapa, { prefix: string; desc: string; nextLabel?: string }> = {
-  Lead:       { prefix: "L",   desc: "Contacto que te buscó por algún medio",           nextLabel: "Calificar como prospecto" },
-  Prospecto:  { prefix: "P",   desc: "Contacto calificado como potencial cliente",       nextLabel: "Enviar cotización" },
-  Cotizacion: { prefix: "C",   desc: "Prospecto con oferta de venta enviada",            nextLabel: "Convertir a pedido" },
-  Pedido:     { prefix: "PED", desc: "Cotización convertida en venta confirmada" },
+const STAGE_META: Record<FunnelEtapa, {
+  prefix:    string
+  desc:      string
+  fechaKey:  keyof ClienteEmpresa
+  nextLabel?: string
+  numColor:  string
+  dot:       string
+}> = {
+  Lead:           { prefix: "L",   desc: "Contacto que llegó por algún medio",         fechaKey: "fechaLead",           nextLabel: "Calificar",     numColor: "text-slate-400 bg-slate-800 border-slate-700",          dot: "bg-slate-400" },
+  LeadCalificado: { prefix: "LC",  desc: "Contacto calificado como potencial cliente", fechaKey: "fechaLeadCalificado", nextLabel: "Enviar oferta", numColor: "text-blue-400 bg-blue-950/40 border-blue-800/50",       dot: "bg-blue-400" },
+  Oferta:         { prefix: "OF",  desc: "Oferta de venta enviada al cliente",         fechaKey: "fechaOferta",         nextLabel: "Confirmar pedido", numColor: "text-amber-400 bg-amber-950/40 border-amber-800/50",  dot: "bg-amber-400" },
+  Pedido:         { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",    fechaKey: "fechaPedido",         nextLabel: "Registrar entrega", numColor: "text-emerald-400 bg-emerald-950/40 border-emerald-800/50", dot: "bg-emerald-400" },
+  Entrega:        { prefix: "ENT", desc: "Pedido entregado al cliente",                fechaKey: "fechaEntrega",        numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50", dot: "bg-violet-400" },
 }
 
-const NUM_COLOR: Record<FunnelEtapa, string> = {
-  Lead:       "text-slate-400 bg-slate-800 border-slate-700",
-  Prospecto:  "text-blue-400 bg-blue-950/40 border-blue-800/50",
-  Cotizacion: "text-amber-400 bg-amber-950/40 border-amber-800/50",
-  Pedido:     "text-emerald-400 bg-emerald-950/40 border-emerald-800/50",
+// Campo de fecha que se auto-llena al entrar a cada etapa
+const FECHA_FIELD: Record<FunnelEtapa, keyof ClientePayload> = {
+  Lead:           "fechaLead",
+  LeadCalificado: "fechaLeadCalificado",
+  Oferta:         "fechaOferta",
+  Pedido:         "fechaPedido",
+  Entrega:        "fechaEntrega",
 }
 
 const CANALES = ["WhatsApp", "Instagram", "Facebook", "Llamada", "Email", "Referido", "Visita", "Otro"]
 
 function numDisplay(etapa: FunnelEtapa, idx: number) {
   return `${STAGE_META[etapa].prefix}-${String(idx + 1).padStart(3, "0")}`
+}
+
+const fmtDt = (iso: string | null) => {
+  if (!iso) return null
+  return new Date(iso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })
 }
 
 // ─── Canal icon ───────────────────────────────────────────────────────────────
@@ -47,103 +61,112 @@ function CanalIcon({ canal }: { canal: string | null }) {
   return <span className="text-[9px] text-slate-500 shrink-0">{canal.slice(0, 2).toUpperCase()}</span>
 }
 
+// ─── Timeline de etapas ───────────────────────────────────────────────────────
+function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
+  const etapaActual = cliente.Funnel ?? "Lead"
+  const idxActual   = FUNNEL_ETAPAS.indexOf(etapaActual)
+
+  return (
+    <div className="px-4 py-3 border-b border-slate-800">
+      <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-3">Recorrido</p>
+      <div className="space-y-2">
+        {FUNNEL_ETAPAS.map((etapa, idx) => {
+          const meta     = STAGE_META[etapa]
+          const fecha    = cliente[meta.fechaKey] as string | null
+          const pasada   = idx < idxActual
+          const actual   = idx === idxActual
+          const pendiente = idx > idxActual
+
+          return (
+            <div key={etapa} className="flex items-start gap-2.5">
+              {/* Dot + línea */}
+              <div className="flex flex-col items-center shrink-0">
+                <div className={`h-2.5 w-2.5 rounded-full border-2 mt-0.5 ${
+                  pasada   ? `${meta.dot} border-transparent` :
+                  actual   ? `bg-transparent ${meta.dot.replace("bg-", "border-")}` :
+                             "bg-transparent border-slate-700"
+                }`} />
+                {idx < FUNNEL_ETAPAS.length - 1 && (
+                  <div className={`w-px flex-1 min-h-[16px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-800"}`} />
+                )}
+              </div>
+              {/* Info */}
+              <div className="pb-2 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[11px] font-semibold ${
+                    actual   ? FUNNEL_COLOR[etapa].split(" ")[1] :
+                    pasada   ? "text-slate-400" :
+                               "text-slate-700"
+                  }`}>
+                    {FUNNEL_LABEL[etapa]}
+                  </span>
+                  {actual && (
+                    <span className={`text-[9px] px-1 py-0.5 rounded border font-semibold ${FUNNEL_COLOR[etapa]}`}>actual</span>
+                  )}
+                </div>
+                {fecha ? (
+                  <p className="text-[10px] text-slate-500">{fmtDt(fecha)}</p>
+                ) : pendiente ? (
+                  <p className="text-[10px] text-slate-700">—</p>
+                ) : null}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Card por etapa ───────────────────────────────────────────────────────────
 function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar }: {
-  c: ClienteEmpresa
-  num: string
-  etapa: FunnelEtapa
-  onEdit: () => void
-  onDelete: () => void
-  onSelect: () => void
-  onAvanzar?: () => void
+  c: ClienteEmpresa; num: string; etapa: FunnelEtapa
+  onEdit: () => void; onDelete: () => void; onSelect: () => void; onAvanzar?: () => void
 }) {
   const meta = STAGE_META[etapa]
 
   return (
-    <div
-      className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 group hover:border-slate-600 transition-colors cursor-pointer"
-      onClick={onSelect}
-    >
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 group hover:border-slate-600 transition-colors cursor-pointer"
+      onClick={onSelect}>
       {/* Número + acciones */}
       <div className="flex items-center justify-between gap-1">
-        <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${NUM_COLOR[etapa]}`}>
+        <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${meta.numColor}`}>
           #{num}
         </span>
         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0" onClick={e => e.stopPropagation()}>
           <button type="button" onClick={onEdit} title="Editar"
-            className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition">
-            <Pencil size={11} />
-          </button>
+            className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition"><Pencil size={11} /></button>
           <button type="button" onClick={onDelete} title="Eliminar"
-            className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition">
-            <Trash2 size={11} />
-          </button>
+            className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition"><Trash2 size={11} /></button>
         </div>
       </div>
 
       {/* Nombre */}
       <p className="text-xs font-semibold text-slate-100 leading-snug">{c.nombre}</p>
 
-      {/* Campos clave según etapa */}
-      {etapa === "Lead" && (
-        <div className="space-y-1">
-          {c.canalContacto && (
-            <span className="flex items-center gap-1 text-[10px] text-slate-400">
-              <CanalIcon canal={c.canalContacto} /> {c.canalContacto}
-            </span>
-          )}
-          {c.origenContacto && (
-            <p className="text-[10px] text-slate-600">Origen: {c.origenContacto}</p>
-          )}
-          {c.telefono && (
-            <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} /> {c.telefono}</p>
-          )}
-        </div>
-      )}
+      {/* Campos clave por etapa */}
+      <div className="space-y-1">
+        {etapa === "Lead" && <>
+          {c.canalContacto && <span className="flex items-center gap-1 text-[10px] text-slate-400"><CanalIcon canal={c.canalContacto} />{c.canalContacto}</span>}
+          {c.origenContacto && <p className="text-[10px] text-slate-600">Origen: {c.origenContacto}</p>}
+          {c.telefono && <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
+        </>}
+        {etapa === "LeadCalificado" && <>
+          {c.segmento && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-950/40 text-blue-300 border border-blue-800/40">{c.segmento}</span>}
+          {c.canalContacto && <span className="flex items-center gap-1 text-[10px] text-slate-500"><CanalIcon canal={c.canalContacto} />{c.canalContacto}</span>}
+          {c.notas && <p className="text-[10px] text-slate-500 line-clamp-2 italic">"{c.notas}"</p>}
+        </>}
+        {(etapa === "Oferta" || etapa === "Pedido" || etapa === "Entrega") && <>
+          {c.notas && <p className="text-[10px] text-slate-400 line-clamp-2">{c.notas}</p>}
+          {c.telefono && <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
+        </>}
+        {/* Fecha de entrada a esta etapa */}
+        {(c[meta.fechaKey] as string | null) && (
+          <p className="text-[9px] text-slate-700">{fmtDt(c[meta.fechaKey] as string)}</p>
+        )}
+      </div>
 
-      {etapa === "Prospecto" && (
-        <div className="space-y-1">
-          {c.segmento && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-950/40 text-blue-300 border border-blue-800/40">
-              {c.segmento}
-            </span>
-          )}
-          {c.canalContacto && (
-            <span className="flex items-center gap-1 text-[10px] text-slate-500">
-              <CanalIcon canal={c.canalContacto} /> {c.canalContacto}
-            </span>
-          )}
-          {c.notas && (
-            <p className="text-[10px] text-slate-500 line-clamp-2 italic">"{c.notas}"</p>
-          )}
-        </div>
-      )}
-
-      {etapa === "Cotizacion" && (
-        <div className="space-y-1">
-          {c.notas && (
-            <p className="text-[10px] text-slate-400 line-clamp-2">
-              {c.notas}
-            </p>
-          )}
-          {c.telefono && (
-            <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} /> {c.telefono}</p>
-          )}
-        </div>
-      )}
-
-      {etapa === "Pedido" && (
-        <div className="space-y-1">
-          {c.notas && (
-            <p className="text-[10px] text-slate-400 line-clamp-2">{c.notas}</p>
-          )}
-          {c.telefono && (
-            <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} /> {c.telefono}</p>
-          )}
-        </div>
-      )}
-
-      {/* Botón avanzar etapa */}
+      {/* Avanzar */}
       {onAvanzar && meta.nextLabel && (
         <button type="button"
           onClick={e => { e.stopPropagation(); onAvanzar() }}
@@ -155,13 +178,10 @@ function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar }: {
   )
 }
 
-// ─── Panel lateral simplificado ───────────────────────────────────────────────
+// ─── Panel lateral ────────────────────────────────────────────────────────────
 function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
-  cliente: ClienteEmpresa
-  num: string
-  onClose: () => void
-  onUpdate: (updated: ClienteEmpresa) => void
-  onEdit: () => void
+  cliente: ClienteEmpresa; num: string
+  onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
 }) {
   const etapa = cliente.Funnel ?? "Lead"
 
@@ -169,14 +189,16 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
     const idx    = FUNNEL_ETAPAS.indexOf(etapa)
     const newIdx = Math.max(0, Math.min(FUNNEL_ETAPAS.length - 1, idx + dir))
     if (newIdx === idx) return
-    const destino = FUNNEL_ETAPAS[newIdx]
+    const destino    = FUNNEL_ETAPAS[newIdx]
+    const fechaField = FECHA_FIELD[destino]
+    const extra      = dir === 1 && !(cliente[fechaField] as string | null)
+      ? { [fechaField]: new Date().toISOString() }
+      : {}
     try {
-      const updated = await updateCliente(cliente.documentId, { Funnel: destino })
+      const updated = await updateCliente(cliente.documentId, { Funnel: destino, ...extra })
       onUpdate(updated)
-      toast.success(dir === 1 ? `Avanzó a ${FUNNEL_LABEL[destino]}` : `Regresó a ${FUNNEL_LABEL[destino]}`)
-    } catch {
-      toast.error("Error al actualizar")
-    }
+      toast.success(dir === 1 ? `→ ${FUNNEL_LABEL[destino]}` : `← ${FUNNEL_LABEL[destino]}`)
+    } catch { toast.error("Error al actualizar") }
   }
 
   return (
@@ -194,40 +216,24 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
               <div>
                 <p className="text-sm font-bold text-slate-100">{cliente.nombre}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${NUM_COLOR[etapa]}`}>
-                    #{num}
-                  </span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>
-                    {FUNNEL_LABEL[etapa]}
-                  </span>
+                  <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${STAGE_META[etapa].numColor}`}>#{num}</span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>{FUNNEL_LABEL[etapa]}</span>
                 </div>
               </div>
             </div>
             <button type="button" title="Cerrar" onClick={onClose}
-              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition shrink-0">
-              <X size={16} />
-            </button>
+              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition shrink-0"><X size={16} /></button>
           </div>
         </div>
 
-        {/* Info de contacto */}
-        <div className="p-4 border-b border-slate-800 space-y-2">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Contacto</p>
-          {cliente.telefono    && <p className="text-xs text-slate-300 flex items-center gap-2"><Phone size={11} className="text-slate-600" /> {cliente.telefono}</p>}
-          {cliente.email       && <p className="text-xs text-slate-300 flex items-center gap-2"><Mail size={11} className="text-slate-600" /> {cliente.email}</p>}
-          {cliente.canalContacto && (
-            <p className="text-xs text-slate-300 flex items-center gap-2">
-              <CanalIcon canal={cliente.canalContacto} /> {cliente.canalContacto}
-            </p>
-          )}
+        {/* Contacto */}
+        <div className="p-4 border-b border-slate-800 space-y-1.5">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Contacto</p>
+          {cliente.telefono      && <p className="text-xs text-slate-300 flex items-center gap-2"><Phone size={11} className="text-slate-600" />{cliente.telefono}</p>}
+          {cliente.email         && <p className="text-xs text-slate-300 flex items-center gap-2"><Mail size={11} className="text-slate-600" />{cliente.email}</p>}
+          {cliente.canalContacto && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
           {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
           {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
-        </div>
-
-        {/* Descripción etapa */}
-        <div className="px-4 py-3 border-b border-slate-800">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Etapa actual</p>
-          <p className="text-xs text-slate-400">{STAGE_META[etapa].desc}</p>
         </div>
 
         {/* Notas */}
@@ -238,20 +244,21 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
           </div>
         )}
 
-        {/* Mover en funnel */}
+        {/* Timeline */}
+        <Timeline cliente={cliente} />
+
+        {/* Mover */}
         <div className="px-4 py-3 border-b border-slate-800 flex gap-2">
           {etapa !== "Lead" && (
             <button type="button" onClick={() => moverFunnel(-1)}
               className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
-              <ChevronLeft size={12} />
-              {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
+              <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
             </button>
           )}
-          {etapa !== "Pedido" && (
+          {etapa !== "Entrega" && (
             <button type="button" onClick={() => moverFunnel(1)}
               className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-emerald-800/50 hover:border-emerald-600 hover:text-emerald-300 rounded-lg transition text-emerald-500/70">
-              {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}
-              <ChevronRight size={12} />
+              {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
             </button>
           )}
         </div>
@@ -270,12 +277,9 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
 
 // ─── Modal crear/editar ───────────────────────────────────────────────────────
 function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando }: {
-  editando: ClienteEmpresa | null
-  form: ClientePayload
+  editando: ClienteEmpresa | null; form: ClientePayload
   setForm: React.Dispatch<React.SetStateAction<ClientePayload>>
-  onGuardar: () => void
-  onCerrar: () => void
-  guardando: boolean
+  onGuardar: () => void; onCerrar: () => void; guardando: boolean
 }) {
   const etapa = form.Funnel ?? "Lead"
   const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
@@ -290,19 +294,17 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
             <p className="text-[11px] text-slate-500 mt-0.5">{STAGE_META[etapa].desc}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onCerrar}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
-            <X size={16} />
-          </button>
+            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={16} /></button>
         </div>
 
-        {/* Etapa */}
+        {/* Selector de etapa */}
         <div>
-          <label className={lbl}>Etapa del funnel</label>
+          <label className={lbl}>Etapa</label>
           <div className="flex gap-1.5 flex-wrap">
             {FUNNEL_ETAPAS.map(e => (
               <button key={e} type="button"
                 onClick={() => setForm(f => ({ ...f, Funnel: e }))}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${
+                className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border transition ${
                   etapa === e ? FUNNEL_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"
                 }`}>
                 {FUNNEL_LABEL[e]}
@@ -316,7 +318,7 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
           <label className={lbl}>Nombre del contacto *</label>
           <input autoFocus value={form.nombre}
             onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-            placeholder={etapa === "Lead" ? "Quién te contactó" : etapa === "Prospecto" ? "Nombre del prospecto" : etapa === "Cotizacion" ? "Cliente cotizado" : "Nombre del cliente"}
+            placeholder="Nombre completo"
             className={inp} />
         </div>
 
@@ -329,10 +331,8 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
               placeholder="55 0000 0000" className={inp} />
           </div>
           <div>
-            <label className={lbl}>
-              {etapa === "Lead" ? "Canal por el que contactó *" : "Canal"}
-            </label>
-            <select value={form.canalContacto ?? ""} title="Canal de contacto"
+            <label className={lbl}>Canal de contacto</label>
+            <select value={form.canalContacto ?? ""} title="Canal"
               onChange={e => setForm(f => ({ ...f, canalContacto: e.target.value || null }))}
               className={inp}>
               <option value="">— Seleccionar —</option>
@@ -341,7 +341,6 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
           </div>
         </div>
 
-        {/* Email */}
         <div>
           <label className={lbl}>Email</label>
           <input type="email" value={form.email ?? ""}
@@ -349,8 +348,7 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
             placeholder="correo@email.com" className={inp} />
         </div>
 
-        {/* Campos específicos por etapa */}
-        {(etapa === "Lead") && (
+        {etapa === "Lead" && (
           <div>
             <label className={lbl}>Origen del contacto</label>
             <input value={form.origenContacto ?? ""}
@@ -359,7 +357,7 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
           </div>
         )}
 
-        {(etapa === "Prospecto" || etapa === "Cotizacion" || etapa === "Pedido") && (
+        {(etapa === "LeadCalificado" || etapa === "Oferta" || etapa === "Pedido" || etapa === "Entrega") && (
           <div>
             <label className={lbl}>Segmento</label>
             <select value={form.segmento ?? ""} title="Segmento"
@@ -371,31 +369,29 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
           </div>
         )}
 
-        {/* Notas con hint según etapa */}
         <div>
           <label className={lbl}>
-            {etapa === "Lead"       ? "Notas del contacto inicial" :
-             etapa === "Prospecto"  ? "¿Qué busca? / Calificación" :
-             etapa === "Cotizacion" ? "Concepto / detalle de la oferta" :
-                                     "Detalle del pedido confirmado"}
+            {etapa === "Lead"           ? "Notas del contacto inicial" :
+             etapa === "LeadCalificado" ? "¿Qué busca? / Por qué califica" :
+             etapa === "Oferta"         ? "Concepto / detalle de la oferta" :
+             etapa === "Pedido"         ? "Detalle del pedido confirmado" :
+                                         "Detalle de la entrega"}
           </label>
           <textarea value={form.notas ?? ""}
             onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
             placeholder={
-              etapa === "Lead"       ? "Lo que comentó, qué le interesa…" :
-              etapa === "Prospecto"  ? "Anillo de compromiso, presupuesto aprox., fecha de boda…" :
-              etapa === "Cotizacion" ? "Solitario 1ct · $45,000 · Entrega estimada 15/06" :
-                                      "Anticipo recibido, fecha de entrega, especificaciones…"
+              etapa === "Lead"           ? "Lo que comentó, qué le interesa…" :
+              etapa === "LeadCalificado" ? "Busca anillo de compromiso, presupuesto aprox…" :
+              etapa === "Oferta"         ? "Solitario 1ct · $45,000 · Entrega est. 15/06" :
+              etapa === "Pedido"         ? "Anticipo recibido, fecha de producción…" :
+                                          "Fecha de entrega, quién recibió…"
             }
-            rows={3}
-            className={`${inp} resize-none h-auto py-2`} />
+            rows={3} className={`${inp} resize-none h-auto py-2`} />
         </div>
 
         <div className="flex gap-2 justify-end pt-1">
           <button type="button" onClick={onCerrar}
-            className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">
-            Cancelar
-          </button>
+            className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">Cancelar</button>
           <button type="button" onClick={onGuardar} disabled={guardando}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} /> {guardando ? "Guardando..." : "Guardar"}
@@ -408,18 +404,23 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
-  return { nombre: "", email: null, telefono: null, direccion: null, segmento: null, Funnel: etapa, canalContacto: null, origenContacto: null, Estado: "Activo", notas: null }
+  return {
+    nombre: "", email: null, telefono: null, direccion: null,
+    segmento: null, Funnel: etapa, canalContacto: null, origenContacto: null,
+    Estado: "Activo", notas: null,
+    fechaLead: etapa === "Lead" ? new Date().toISOString() : null,
+    fechaLeadCalificado: null, fechaOferta: null, fechaPedido: null, fechaEntrega: null,
+  }
 }
 
 export function PipelineView() {
   const { clientes, setClientes, loading } = useGetClientes()
-  const [modalOpen,        setModalOpen]        = useState(false)
-  const [editando,         setEditando]         = useState<ClienteEmpresa | null>(null)
-  const [form,             setForm]             = useState<ClientePayload>(emptyCliente())
-  const [guardando,        setGuardando]        = useState(false)
-  const [selectedCliente,  setSelectedCliente]  = useState<ClienteEmpresa | null>(null)
+  const [modalOpen,       setModalOpen]       = useState(false)
+  const [editando,        setEditando]        = useState<ClienteEmpresa | null>(null)
+  const [form,            setForm]            = useState<ClientePayload>(emptyCliente())
+  const [guardando,       setGuardando]       = useState(false)
+  const [selectedCliente, setSelectedCliente] = useState<ClienteEmpresa | null>(null)
 
-  // Índice de numeración por etapa (cronológico)
   const porFunnel = useMemo(() => {
     const map = new Map<FunnelEtapa, ClienteEmpresa[]>()
     FUNNEL_ETAPAS.forEach(e => map.set(e, []))
@@ -430,7 +431,6 @@ export function PipelineView() {
     return map
   }, [clientes])
 
-  // Mapa rápido documentId → número de display
   const numMap = useMemo(() => {
     const m = new Map<string, string>()
     FUNNEL_ETAPAS.forEach(etapa => {
@@ -439,10 +439,18 @@ export function PipelineView() {
     return m
   }, [porFunnel])
 
-  const abrirCrear  = (etapa: FunnelEtapa = "Lead") => { setEditando(null); setForm(emptyCliente(etapa)); setModalOpen(true) }
+  const abrirCrear = (etapa: FunnelEtapa = "Lead") => {
+    setEditando(null); setForm(emptyCliente(etapa)); setModalOpen(true)
+  }
   const abrirEditar = (c: ClienteEmpresa) => {
     setEditando(c)
-    setForm({ nombre: c.nombre, email: c.email, telefono: c.telefono, direccion: c.direccion, segmento: c.segmento, Funnel: c.Funnel ?? "Lead", canalContacto: c.canalContacto, origenContacto: c.origenContacto, Estado: c.Estado, notas: c.notas })
+    setForm({
+      nombre: c.nombre, email: c.email, telefono: c.telefono, direccion: c.direccion,
+      segmento: c.segmento, Funnel: c.Funnel ?? "Lead", canalContacto: c.canalContacto,
+      origenContacto: c.origenContacto, Estado: c.Estado, notas: c.notas,
+      fechaLead: c.fechaLead, fechaLeadCalificado: c.fechaLeadCalificado,
+      fechaOferta: c.fechaOferta, fechaPedido: c.fechaPedido, fechaEntrega: c.fechaEntrega,
+    })
     setModalOpen(true)
   }
 
@@ -461,11 +469,7 @@ export function PipelineView() {
         toast.success("Creado")
       }
       setModalOpen(false)
-    } catch {
-      toast.error("Error al guardar")
-    } finally {
-      setGuardando(false)
-    }
+    } catch { toast.error("Error al guardar") } finally { setGuardando(false) }
   }
 
   const borrar = async (c: ClienteEmpresa) => {
@@ -475,23 +479,22 @@ export function PipelineView() {
       setClientes(prev => prev.filter(x => x.documentId !== c.documentId))
       if (selectedCliente?.documentId === c.documentId) setSelectedCliente(null)
       toast.success("Eliminado")
-    } catch {
-      toast.error("Error al eliminar")
-    }
+    } catch { toast.error("Error al eliminar") }
   }
 
   const avanzar = async (c: ClienteEmpresa) => {
     const idx    = FUNNEL_ETAPAS.indexOf(c.Funnel ?? "Lead")
     const newIdx = Math.min(FUNNEL_ETAPAS.length - 1, idx + 1)
     if (newIdx === idx) return
+    const destino    = FUNNEL_ETAPAS[newIdx]
+    const fechaField = FECHA_FIELD[destino]
+    const extra      = !(c[fechaField] as string | null) ? { [fechaField]: new Date().toISOString() } : {}
     try {
-      const updated = await updateCliente(c.documentId, { Funnel: FUNNEL_ETAPAS[newIdx] })
+      const updated = await updateCliente(c.documentId, { Funnel: destino, ...extra })
       setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
       if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
-      toast.success(`Avanzó a ${FUNNEL_LABEL[FUNNEL_ETAPAS[newIdx]]}`)
-    } catch {
-      toast.error("Error al avanzar")
-    }
+      toast.success(`→ ${FUNNEL_LABEL[destino]}`)
+    } catch { toast.error("Error al avanzar") }
   }
 
   const handleUpdate = (updated: ClienteEmpresa) => {
@@ -499,17 +502,14 @@ export function PipelineView() {
     setSelectedCliente(updated)
   }
 
-  const totalActivos = clientes.filter(c => c.Funnel !== "Pedido").length
-  const totalPedidos = clientes.filter(c => c.Funnel === "Pedido").length
-
   return (
     <div className="p-6 max-w-full mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Pipeline de ventas</h1>
           <p className="text-sm text-slate-500">
-            {totalActivos} en proceso · {totalPedidos} pedidos confirmados
+            {clientes.filter(c => c.Funnel !== "Entrega").length} en proceso ·{" "}
+            {clientes.filter(c => c.Funnel === "Entrega").length} entregas completadas
           </p>
         </div>
         <button type="button" onClick={() => abrirCrear("Lead")}
@@ -522,40 +522,34 @@ export function PipelineView() {
         <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
       ) : (
         <div className="overflow-x-auto pb-4">
-          <div className="flex gap-4 min-w-[860px]">
+          <div className="flex gap-3 min-w-[1000px]">
             {FUNNEL_ETAPAS.map(etapa => {
               const items = porFunnel.get(etapa) ?? []
-              const meta  = STAGE_META[etapa]
               return (
-                <div key={etapa} className="flex-1 min-w-[190px] flex flex-col gap-2">
-                  {/* Encabezado columna */}
+                <div key={etapa} className="flex-1 min-w-[175px] flex flex-col gap-2">
                   <div className={`px-3 py-2.5 rounded-xl border ${FUNNEL_COLOR[etapa]}`}>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold">{FUNNEL_LABEL[etapa]}</span>
                       <span className="text-[10px] font-bold opacity-70 bg-black/20 px-1.5 py-0.5 rounded-full">{items.length}</span>
                     </div>
-                    <p className="text-[10px] opacity-60 mt-0.5 leading-snug">{meta.desc}</p>
+                    <p className="text-[10px] opacity-60 mt-0.5 leading-snug">{STAGE_META[etapa].desc}</p>
                   </div>
 
-                  {/* Cards */}
                   <div className="flex flex-col gap-2">
                     {items.map((c, i) => (
-                      <ClienteCard key={c.documentId}
-                        c={c}
-                        num={numDisplay(etapa, i)}
-                        etapa={etapa}
+                      <ClienteCard key={c.documentId} c={c}
+                        num={numDisplay(etapa, i)} etapa={etapa}
                         onEdit={() => abrirEditar(c)}
                         onDelete={() => borrar(c)}
                         onSelect={() => setSelectedCliente(c)}
-                        onAvanzar={etapa !== "Pedido" ? () => avanzar(c) : undefined}
+                        onAvanzar={etapa !== "Entrega" ? () => avanzar(c) : undefined}
                       />
                     ))}
                   </div>
 
-                  {/* Agregar en esta etapa */}
                   <button type="button" onClick={() => abrirCrear(etapa)}
                     className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-700 hover:text-slate-500 border border-dashed border-slate-800 hover:border-slate-700 rounded-xl transition mt-1">
-                    <Plus size={10} /> Agregar {FUNNEL_LABEL[etapa].toLowerCase()}
+                    <Plus size={10} /> Agregar
                   </button>
                 </div>
               )
@@ -564,19 +558,11 @@ export function PipelineView() {
         </div>
       )}
 
-      {/* Modal */}
       {modalOpen && (
-        <ClienteModal
-          editando={editando}
-          form={form}
-          setForm={setForm}
-          onGuardar={guardar}
-          onCerrar={() => setModalOpen(false)}
-          guardando={guardando}
-        />
+        <ClienteModal editando={editando} form={form} setForm={setForm}
+          onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
       )}
 
-      {/* Panel lateral */}
       {selectedCliente && (
         <ClientePanel
           cliente={selectedCliente}
