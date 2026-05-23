@@ -120,6 +120,64 @@ function ProgresoBar({ value, onSave }: { value: number; onSave: (pct: number) =
   )
 }
 
+// ─── Panel de avances ────────────────────────────────────────────────────────
+
+function AvancesPanel({ notas, open, onAgregar }: {
+  notas: string | null
+  open: boolean
+  onAgregar: (nota: string) => void
+}) {
+  const [texto, setTexto] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  const entradas = notas ? notas.split("\n").filter(Boolean) : []
+
+  useEffect(() => { if (open) inputRef.current?.focus() }, [open])
+
+  function submit() {
+    if (!texto.trim()) return
+    onAgregar(texto.trim())
+    setTexto("")
+  }
+
+  if (!open && entradas.length === 0) return null
+
+  return (
+    <div className="mt-2 pl-0 border-t border-slate-800/60 pt-2 space-y-1.5">
+      {open && (
+        <div className="flex items-center gap-2">
+          <input
+            ref={inputRef}
+            value={texto}
+            onChange={e => setTexto(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit() } }}
+            placeholder="Anotar avance o pendiente..."
+            className="flex-1 h-7 rounded-md border border-slate-700 bg-slate-800/80 px-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50"
+          />
+          <button type="button" title="Agregar nota" onClick={submit}
+            className="h-7 w-7 flex items-center justify-center rounded-md bg-violet-600 hover:bg-violet-500 text-white transition shrink-0">
+            <Plus size={13} />
+          </button>
+        </div>
+      )}
+      {entradas.length > 0 && (
+        <ul className="space-y-0.5">
+          {entradas.map((e, i) => {
+            const sep = e.indexOf(" · ")
+            const fecha = sep !== -1 ? e.slice(0, sep) : null
+            const texto = sep !== -1 ? e.slice(sep + 3) : e
+            return (
+              <li key={i} className="flex items-start gap-1.5 text-[11px]">
+                {fecha && <span className="text-slate-600 shrink-0 font-mono">{fecha}</span>}
+                <span className="text-slate-400">{texto}</span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
 export function TareasEmpresaView() {
@@ -130,8 +188,9 @@ export function TareasEmpresaView() {
   const [form,      setForm]      = useState<FormData>(emptyForm())
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
-  const [filtroEst, setFiltroEst] = useState<EstadoTarea | "todas">("todas")
-  const [filtroCat, setFiltroCat] = useState("")
+  const [filtroEst,    setFiltroEst]    = useState<EstadoTarea | "todas">("todas")
+  const [filtroCat,    setFiltroCat]    = useState("")
+  const [avancesOpen,  setAvancesOpen]  = useState<string | null>(null)
 
   useEffect(() => {
     ;(async () => {
@@ -232,6 +291,19 @@ export function TareasEmpresaView() {
       setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
     } catch {
       toast.error("Error al guardar progreso")
+    }
+  }
+
+  async function agregarAvance(t: TareaType, nota: string) {
+    const fecha = new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+    const entrada = `${fecha} · ${nota}`
+    const nuevasNotas = t.notas ? `${entrada}\n${t.notas}` : entrada
+    setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, notas: nuevasNotas } : x))
+    try {
+      await updateTarea(t.documentId, { notas: nuevasNotas })
+    } catch {
+      setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, notas: t.notas } : x))
+      toast.error("Error al guardar la nota")
     }
   }
 
@@ -361,6 +433,13 @@ export function TareasEmpresaView() {
 
                     {/* Barra de progreso */}
                     <ProgresoBar value={pct} onSave={pct => actualizarProgreso(t, pct)} />
+
+                    {/* Panel de avances */}
+                    <AvancesPanel
+                      notas={t.notas ?? null}
+                      open={avancesOpen === t.documentId}
+                      onAgregar={nota => agregarAvance(t, nota)}
+                    />
                   </div>
 
                   {/* Estado rápido */}
@@ -372,6 +451,15 @@ export function TareasEmpresaView() {
 
                   {/* Acciones */}
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <button type="button" title="Anotar avance"
+                      onClick={() => setAvancesOpen(prev => prev === t.documentId ? null : t.documentId)}
+                      className={`p-1.5 rounded transition-colors ${
+                        avancesOpen === t.documentId
+                          ? "text-violet-400 bg-violet-500/10"
+                          : "text-slate-600 hover:text-violet-400 hover:bg-slate-800"
+                      }`}>
+                      <Plus size={12} />
+                    </button>
                     <button type="button" onClick={() => openEditar(t)} title="Editar"
                       className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
                       <Pencil size={12} />
