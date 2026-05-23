@@ -112,9 +112,11 @@ const BAR_COLORS: Record<string, { bar: string; bg: string }> = {
 const barColorOf = (cat: string | null | undefined) =>
   BAR_COLORS[normCat(cat)] ?? { bar: "bg-zinc-500", bg: "bg-zinc-500/10" }
 
-// Retorna YYYY-MM-DD del lunes de la semana que contiene dateStr
-function weekKey(dateStr: string): string {
-  const d = new Date(dateStr + "T12:00:00")
+// Retorna YYYY-MM-DD del lunes de la semana que contiene dateStr (vacío si fecha inválida)
+function weekKey(dateStr: string | null | undefined): string {
+  if (!dateStr) return ""
+  const d = new Date(dateStr.slice(0, 10) + "T12:00:00")
+  if (isNaN(d.getTime())) return ""
   const dow = d.getDay()
   d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
   return d.toISOString().split("T")[0]
@@ -122,6 +124,7 @@ function weekKey(dateStr: string): string {
 
 function weekShortLabel(mondayStr: string): string {
   const d = new Date(mondayStr + "T12:00:00")
+  if (isNaN(d.getTime())) return ""
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
 }
 
