@@ -82,6 +82,12 @@
       "relation": "oneToMany",
       "target": "api::venta.venta",
       "mappedBy": "cliente"
+    },
+    "cotizaciones": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::cotizacion.cotizacion",
+      "mappedBy": "cliente"
     }
   }
 }

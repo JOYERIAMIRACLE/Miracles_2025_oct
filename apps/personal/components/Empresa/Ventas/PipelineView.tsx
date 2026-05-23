@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle,
-  ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2,
+  ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
@@ -11,6 +11,9 @@ import {
   ClienteEmpresa, ClientePayload,
   FUNNEL_ETAPAS, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
 } from "@/types/clienteEmpresa"
+import { Cotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
+import { useGetCotizaciones } from "@/api/cotizacion/getCotizaciones"
+import { CotizacionModal } from "./CotizacionModal"
 
 // ─── Metadatos por etapa ──────────────────────────────────────────────────────
 
@@ -221,6 +224,18 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
 }) {
   const etapa = cliente.Funnel ?? "Lead"
+  const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
+  const { cotizaciones, setCotizaciones, loading: cotLoading } = useGetCotizaciones(cliente.documentId)
+
+  const handleCotizacionSaved = useCallback((saved: Cotizacion) => {
+    setCotizaciones(prev => {
+      const exists = prev.find(c => c.documentId === saved.documentId)
+      return exists
+        ? prev.map(c => c.documentId === saved.documentId ? saved : c)
+        : [...prev, saved]
+    })
+    setCotModalState(null)
+  }, [setCotizaciones])
 
   const moverFunnel = async (dir: 1 | -1) => {
     const idx    = FUNNEL_ETAPAS.indexOf(etapa)
@@ -280,6 +295,48 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
           </div>
         )}
 
+        {/* Cotizaciones */}
+        <div className="px-4 py-3 border-b border-slate-800">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600">Cotizaciones</p>
+            <button type="button"
+              onClick={() => setCotModalState("nueva")}
+              className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition">
+              <Plus size={10} /> Nueva
+            </button>
+          </div>
+          {cotLoading ? (
+            <p className="text-[10px] text-slate-700 py-1">Cargando...</p>
+          ) : cotizaciones.length === 0 ? (
+            <button type="button"
+              onClick={() => setCotModalState("nueva")}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[10px] text-slate-700 hover:text-amber-400 border border-dashed border-slate-800 hover:border-amber-800/50 rounded-lg transition">
+              <FileText size={11} /> Crear primera cotización
+            </button>
+          ) : (
+            <div className="space-y-0.5">
+              {cotizaciones.map(c => (
+                <button key={c.documentId} type="button"
+                  onClick={() => setCotModalState(c)}
+                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-800 transition text-left">
+                  <div>
+                    <p className="text-[11px] font-bold font-mono text-slate-300">{c.numero}</p>
+                    <p className="text-[9px] text-slate-600">{fmtDt(c.fecha ?? c.createdAt)}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-semibold text-slate-300">
+                      {c.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                    </span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>
+                      {c.estado}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <Timeline cliente={cliente} />
 
         <div className="px-4 py-3 border-b border-slate-800 flex gap-2">
@@ -304,6 +361,16 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
           </button>
         </div>
       </div>
+
+      {cotModalState && (
+        <CotizacionModal
+          cliente={cliente}
+          cotizacion={cotModalState === "nueva" ? null : cotModalState}
+          totalCotizaciones={cotizaciones.length}
+          onClose={() => setCotModalState(null)}
+          onSaved={handleCotizacionSaved}
+        />
+      )}
     </div>
   )
 }

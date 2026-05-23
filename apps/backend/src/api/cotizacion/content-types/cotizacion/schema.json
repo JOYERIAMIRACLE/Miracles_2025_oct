@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cotizaciones",
+  "info": {
+    "singularName": "cotizacion",
+    "pluralName": "cotizaciones",
+    "displayName": "Cotización"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "numero": {
+      "type": "string"
+    },
+    "cliente": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente.cliente",
+      "inversedBy": "cotizaciones"
+    },
+    "items": {
+      "type": "json"
+    },
+    "precioEnvio": {
+      "type": "decimal",
+      "default": 0
+    },
+    "total": {
+      "type": "decimal",
+      "default": 0
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["Borrador", "Enviada", "Aceptada", "Rechazada"],
+      "default": "Borrador"
+    },
+    "notas": {
+      "type": "text"
+    },
+    "fecha": {
+      "type": "datetime"
+    }
+  }
+}
