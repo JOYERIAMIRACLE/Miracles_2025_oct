@@ -79,11 +79,10 @@ export default function CuentasPage() {
   })
   const [transGuardando, setTransGuardando] = useState(false)
 
-  const cuentasDisponibles = activas.filter(c => c.tipo !== "Crédito")
-
   const activas  = cuentas.filter(c => c.activa)
   const inactivas = cuentas.filter(c => !c.activa)
   const liquidas  = activas.filter(c => c.tipo !== "Crédito")
+  const cuentasDisponibles = activas.filter(c => c.tipo !== "Crédito")
   const creditos  = activas.filter(c => c.tipo === "Crédito")
   const efectivo  = activas.filter(c => c.tipo === "Efectivo")
   const operativas = liquidas.filter(c => c.proposito === "Operativa")
