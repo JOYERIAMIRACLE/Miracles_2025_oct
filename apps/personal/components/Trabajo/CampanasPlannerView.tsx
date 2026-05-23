@@ -178,6 +178,27 @@ function CategoriaBadge({ cat }: { cat: string | null }) {
   return <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${cls}`}>{cat}</span>
 }
 
+const CAT_CHIP: Record<string, { letter: string; bg: string; text: string }> = {
+  MHS:   { letter: "M", bg: "bg-blue-500/20",   text: "text-blue-300"   },
+  Store: { letter: "S", bg: "bg-violet-500/20", text: "text-violet-300" },
+  Extra: { letter: "E", bg: "bg-amber-500/20",  text: "text-amber-300"  },
+}
+
+function CampanaChip({ titulo, categoria, fullWidth, onClick }: {
+  titulo: string; categoria: string | null; fullWidth?: boolean; onClick: () => void
+}) {
+  const cfg = (categoria && CAT_CHIP[categoria]) ?? { letter: "·", bg: "bg-slate-700", text: "text-slate-400" }
+  return (
+    <button type="button" onClick={onClick}
+      className={`flex items-center h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 transition-colors overflow-hidden shrink-0 ${fullWidth ? "w-full" : "w-[156px]"}`}>
+      <span className={`flex items-center justify-center h-full w-7 shrink-0 text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>
+        {cfg.letter}
+      </span>
+      <span className="text-[11px] text-slate-200 truncate px-2 flex-1 text-left leading-none">{titulo}</span>
+    </button>
+  )
+}
+
 function SectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="flex items-center gap-3 mb-4">
@@ -472,11 +493,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onNueva }: {
                 <span className="text-[11px] text-slate-500 w-44 shrink-0 leading-snug">{label}</span>
                 <div className="flex-1 flex flex-wrap items-center gap-2">
                   {items.map(({ c, titulo }) => (
-                    <button key={`${c.documentId}-${n}`} type="button" onClick={() => onEdit(c)}
-                      className="flex items-center gap-1.5 pl-2 pr-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-blue-500/40 transition-colors text-left max-w-[180px]">
-                      <CategoriaBadge cat={c.categoria} />
-                      <span className="text-xs text-slate-200 truncate">{titulo}</span>
-                    </button>
+                    <CampanaChip key={`${c.documentId}-${n}`} titulo={titulo} categoria={c.categoria} onClick={() => onEdit(c)} />
                   ))}
                 </div>
                 <button type="button" title="Agregar campaña" onClick={() => onNueva({ mes, anio })}
@@ -623,10 +640,7 @@ function VistaPlaneador({ campanas, onEdit, onAgregar }: {
                   <div key={di}
                     className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
-                      <button key={`${campana.documentId}-${n}`} type="button" onClick={() => onEdit(campana)}
-                        className="w-full text-left px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/50 hover:border-blue-500/40 transition-colors">
-                          <p className="text-[10px] font-medium text-slate-200 line-clamp-2 leading-snug">{titulo}</p>
-                      </button>
+                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} onClick={() => onEdit(campana)} />
                     ))}
                     <button type="button"
                       onClick={() => onAgregar({ categoria: fila.label, mes: MESES[day.getMonth()], anio: day.getFullYear(), fecha: toYMD(day) })}

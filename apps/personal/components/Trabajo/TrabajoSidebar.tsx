@@ -11,15 +11,15 @@ const SECTIONS = [
   {
     title: "Operación",
     items: [
-      { label: "Tareas",   href: "/trabajo/tareas",   icon: CheckSquare },
-      { label: "Campañas", href: "/trabajo/campanas", icon: Megaphone   },
+      { label: "Tareas",             href: "/trabajo/tareas",   icon: CheckSquare },
+      { label: "Campañas",           href: "/trabajo/campanas", icon: Megaphone   },
+      { label: "Registro de gastos", href: "/trabajo/pagos",    icon: Wallet      },
     ],
   },
   {
-    title: "Funnel",
+    title: "Indicadores",
     items: [
-      { label: "Ecosistema digital",    href: "/trabajo/mkt/ecosistema", icon: TrendingUp },
-      { label: "Costos de adquisición", href: "/trabajo/pagos",          icon: Wallet     },
+      { label: "Ecosistema marketing", href: "/trabajo/mkt/ecosistema", icon: TrendingUp },
     ],
   },
   {

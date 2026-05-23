@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "boxscore_semanas",
+  "info": {
+    "singularName": "boxscore-semana",
+    "pluralName": "boxscore-semanas",
+    "displayName": "BoxScore Semana"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "semana": { "type": "integer", "required": true },
+    "mes": { "type": "string", "required": true },
+    "anio": { "type": "integer", "required": true },
+    "tasaApertura": { "type": "decimal", "default": 0 },
+    "tasaClics": { "type": "decimal", "default": 0 },
+    "tasaRechazos": { "type": "decimal", "default": 0 },
+    "traficoDirectoCorp": { "type": "integer", "default": 0 },
+    "traficoDirectoStore": { "type": "integer", "default": 0 },
+    "impresionesCorp": { "type": "integer", "default": 0 },
+    "impresionesStore": { "type": "integer", "default": 0 },
+    "traficoOrganicoCorp": { "type": "integer", "default": 0 },
+    "traficoOrganicoStore": { "type": "integer", "default": 0 },
+    "impresionesSEM": { "type": "integer", "default": 0 },
+    "traficoPagaSEM": { "type": "integer", "default": 0 },
+    "clicsSEM": { "type": "integer", "default": 0 },
+    "conversionesSEM": { "type": "integer", "default": 0 },
+    "impresionesCYA": { "type": "integer", "default": 0 },
+    "clicsCYA": { "type": "integer", "default": 0 },
+    "conversionesCYA": { "type": "integer", "default": 0 },
+    "impresionesIC": { "type": "integer", "default": 0 },
+    "clicsIC": { "type": "integer", "default": 0 },
+    "conversionesIC": { "type": "integer", "default": 0 },
+    "traficoGeneral": { "type": "integer", "default": 0 }
+  }
+}

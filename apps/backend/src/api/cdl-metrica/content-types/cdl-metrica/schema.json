@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cdl_metricas",
+  "info": {
+    "singularName": "cdl-metrica",
+    "pluralName": "cdl-metricas",
+    "displayName": "CDL Métricas"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "semana": { "type": "integer" },
+    "mes": { "type": "string", "required": true },
+    "anio": { "type": "integer", "required": true },
+    "nuevosLeads": { "type": "integer", "default": 0 },
+    "cantidadCampanas": { "type": "integer", "default": 0 },
+    "ventasCuentasNuevas": { "type": "decimal", "default": 0 },
+    "porcentajeRetencion": { "type": "decimal", "default": 0 },
+    "clientesNuevos": { "type": "integer", "default": 0 },
+    "costoAdquisicion": { "type": "decimal", "default": 0 },
+    "contenidosNancy": { "type": "integer", "default": 0 },
+    "puntajeEncuestaNancy": { "type": "decimal", "default": 0 },
+    "contenidosRichard": { "type": "integer", "default": 0 },
+    "puntajeEncuestaRichard": { "type": "decimal", "default": 0 }
+  }
+}
