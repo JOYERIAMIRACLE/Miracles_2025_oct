@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import { Plus, X, Check, Pencil, Loader2, CheckSquare } from "lucide-react"
+import { useState, useMemo, useEffect, useRef, useCallback, useLayoutEffect } from "react"
+import { Plus, X, Check, Pencil, Loader2, CheckSquare, Tag } from "lucide-react"
 import { toast } from "sonner"
 import { TareaType, EstadoTarea, PrioridadTarea } from "@/types/tarea"
 import { createTarea } from "@/api/tarea/createTarea"
@@ -25,19 +25,101 @@ const PRIORIDADES: { key: PrioridadTarea; label: string; dot: string }[] = [
   { key: "urgente", label: "Urgente", dot: "bg-red-400" },
 ]
 
+const CATEGORIAS = ["Contenido", "Campaña", "Diseño", "SEO", "Analytics", "Social Media", "Email", "Otro"]
+
+const CATEGORIA_COLOR: Record<string, string> = {
+  "Contenido":    "bg-green-500/10 text-green-400 border-green-500/20",
+  "Campaña":      "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  "Diseño":       "bg-pink-500/10 text-pink-400 border-pink-500/20",
+  "SEO":          "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  "Analytics":    "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Social Media": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  "Email":        "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  "Otro":         "bg-slate-500/10 text-slate-400 border-slate-500/20",
+}
+
 type FormData = {
   titulo:           string
   descripcion:      string
   estado:           EstadoTarea
   prioridad:        PrioridadTarea
   fechaVencimiento: string
+  progreso:         number
+  categoria:        string
 }
 
 function emptyForm(): FormData {
-  return { titulo: "", descripcion: "", estado: "pendiente", prioridad: "media", fechaVencimiento: "" }
+  return { titulo: "", descripcion: "", estado: "pendiente", prioridad: "media", fechaVencimiento: "", progreso: 0, categoria: "" }
 }
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+
+// ─── Barra de progreso arrastrable ───────────────────────────────────────────
+
+function ProgresoBar({ value, onSave }: { value: number; onSave: (pct: number) => void }) {
+  const [local, setLocal] = useState(value)
+  const dragging  = useRef(false)
+  const barRef    = useRef<HTMLDivElement>(null)
+  const fillRef   = useRef<HTMLDivElement>(null)
+  const onSaveRef = useRef(onSave)
+  useEffect(() => { onSaveRef.current = onSave }, [onSave])
+  useEffect(() => { if (!dragging.current) setLocal(value) }, [value])
+
+  useLayoutEffect(() => {
+    if (fillRef.current) fillRef.current.style.width = `${local}%`
+  }, [local])
+
+  const calcPct = useCallback((clientX: number) => {
+    if (!barRef.current) return 0
+    const { left, width } = barRef.current.getBoundingClientRect()
+    return Math.min(Math.max(Math.round((clientX - left) / width * 100), 0), 100)
+  }, [])
+
+  useEffect(() => {
+    const onMove  = (e: MouseEvent) => { if (dragging.current) setLocal(calcPct(e.clientX)) }
+    const onUp    = (e: MouseEvent) => {
+      if (!dragging.current) return
+      const pct = calcPct(e.clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pct)
+    }
+    const onTMove = (e: TouchEvent) => { if (dragging.current) { e.preventDefault(); setLocal(calcPct(e.touches[0].clientX)) } }
+    const onTEnd  = (e: TouchEvent) => {
+      if (!dragging.current) return
+      const pct = calcPct(e.changedTouches[0].clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pct)
+    }
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup",   onUp)
+    window.addEventListener("touchmove", onTMove, { passive: false })
+    window.addEventListener("touchend",  onTEnd)
+    return () => {
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("mouseup",   onUp)
+      window.removeEventListener("touchmove", onTMove)
+      window.removeEventListener("touchend",  onTEnd)
+    }
+  }, [calcPct])
+
+  const color    = local >= 100 ? "bg-emerald-500" : local >= 60 ? "bg-blue-500" : local >= 30 ? "bg-amber-500" : "bg-red-400"
+  const txtColor = local >= 100 ? "text-emerald-400" : local >= 60 ? "text-blue-400" : local >= 30 ? "text-amber-400" : "text-red-400"
+
+  return (
+    <div className="flex items-center gap-2 mt-2.5">
+      <div
+        ref={barRef}
+        onMouseDown={e => { e.preventDefault(); dragging.current = true; setLocal(calcPct(e.clientX)) }}
+        onTouchStart={e => { dragging.current = true; setLocal(calcPct(e.touches[0].clientX)) }}
+        aria-label={`Progreso ${local}%`}
+        className="flex-1 h-2 bg-slate-800 border border-slate-700 rounded-full cursor-pointer select-none overflow-hidden"
+      >
+        <div ref={fillRef} className={`h-full rounded-full transition-colors ${color}`} />
+      </div>
+      <span className={`text-[10px] font-bold font-mono w-8 text-right shrink-0 tabular-nums ${txtColor}`}>
+        {local}%
+      </span>
+    </div>
+  )
+}
+
+// ─── Vista principal ──────────────────────────────────────────────────────────
 
 export function TareasEmpresaView() {
   const [tareas,    setTareas]    = useState<TareaType[]>([])
@@ -48,6 +130,7 @@ export function TareasEmpresaView() {
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
   const [filtroEst, setFiltroEst] = useState<EstadoTarea | "todas">("todas")
+  const [filtroCat, setFiltroCat] = useState("")
 
   useEffect(() => {
     ;(async () => {
@@ -67,16 +150,24 @@ export function TareasEmpresaView() {
   }, [])
 
   const filtradas = useMemo(() =>
-    tareas.filter(t => filtroEst === "todas" || t.estado === filtroEst),
-    [tareas, filtroEst]
+    tareas.filter(t =>
+      (filtroEst === "todas" || t.estado === filtroEst) &&
+      (!filtroCat || t.area === filtroCat)
+    ),
+    [tareas, filtroEst, filtroCat]
   )
 
   const stats = useMemo(() => ({
-    total:      tareas.length,
-    pendientes: tareas.filter(t => t.estado === "pendiente").length,
-    progreso:   tareas.filter(t => t.estado === "en_progreso").length,
+    total:       tareas.length,
+    pendientes:  tareas.filter(t => t.estado === "pendiente").length,
+    progreso:    tareas.filter(t => t.estado === "en_progreso").length,
     completadas: tareas.filter(t => t.estado === "completada").length,
   }), [tareas])
+
+  const categoriasUsadas = useMemo(() =>
+    [...new Set(tareas.map(t => t.area).filter(Boolean) as string[])].sort(),
+    [tareas]
+  )
 
   function openNuevo() { setEditing(null); setForm(emptyForm()); setModalOpen(true) }
   function openEditar(t: TareaType) {
@@ -87,6 +178,8 @@ export function TareasEmpresaView() {
       estado:           t.estado,
       prioridad:        t.prioridad,
       fechaVencimiento: t.fechaVencimiento ?? "",
+      progreso:         t.progreso ?? 0,
+      categoria:        t.area ?? "",
     })
     setModalOpen(true)
   }
@@ -95,28 +188,23 @@ export function TareasEmpresaView() {
     if (!form.titulo.trim()) { toast.error("El título es obligatorio"); return }
     setSaving(true)
     try {
+      const payload = {
+        titulo:           form.titulo.trim(),
+        descripcion:      form.descripcion.trim() || null,
+        estado:           form.estado,
+        prioridad:        form.prioridad,
+        fechaVencimiento: form.fechaVencimiento || null,
+        progreso:         form.progreso,
+        area:             form.categoria || null,
+        etiqueta:         ETIQUETA,
+        ambito:           "trabajo" as const,
+      }
       if (editing) {
-        const updated = await updateTarea(editing.documentId, {
-          titulo:           form.titulo.trim(),
-          descripcion:      form.descripcion.trim() || null,
-          estado:           form.estado,
-          prioridad:        form.prioridad,
-          fechaVencimiento: form.fechaVencimiento || null,
-          etiqueta:         ETIQUETA,
-          ambito:           "trabajo",
-        })
+        const updated = await updateTarea(editing.documentId, payload)
         setTareas(prev => prev.map(t => t.documentId === updated.documentId ? updated : t))
         toast.success("Tarea actualizada")
       } else {
-        const nueva = await createTarea({
-          titulo:           form.titulo.trim(),
-          descripcion:      form.descripcion.trim() || null,
-          estado:           form.estado,
-          prioridad:        form.prioridad,
-          fechaVencimiento: form.fechaVencimiento || null,
-          etiqueta:         ETIQUETA,
-          ambito:           "trabajo",
-        })
+        const nueva = await createTarea(payload)
         setTareas(prev => [nueva, ...prev])
         toast.success("Tarea creada")
       }
@@ -134,6 +222,15 @@ export function TareasEmpresaView() {
       setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
     } catch {
       toast.error("Error al actualizar")
+    }
+  }
+
+  async function actualizarProgreso(t: TareaType, pct: number) {
+    try {
+      const updated = await updateTarea(t.documentId, { progreso: pct })
+      setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+    } catch {
+      toast.error("Error al guardar progreso")
     }
   }
 
@@ -183,6 +280,14 @@ export function TareasEmpresaView() {
             {e.label}
           </button>
         ))}
+        {categoriasUsadas.length > 0 && (
+          <select title="Filtrar por categoría" value={filtroCat}
+            onChange={e => setFiltroCat(e.target.value)}
+            className="h-7 px-2 rounded-full text-xs border border-slate-700 bg-slate-900 text-slate-400 focus:outline-none">
+            <option value="">Todas las categorías</option>
+            {categoriasUsadas.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
         <button type="button" onClick={openNuevo}
           className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors ml-auto">
           <Plus size={15} /> Nueva tarea
@@ -206,6 +311,8 @@ export function TareasEmpresaView() {
             {filtradas.map(t => {
               const est   = ESTADOS.find(e => e.key === t.estado)
               const prior = PRIORIDADES.find(p => p.key === t.prioridad)
+              const pct   = t.progreso ?? 0
+              const barColor = pct >= 100 ? "bg-emerald-500" : pct >= 60 ? "bg-blue-500" : pct >= 30 ? "bg-amber-500" : "bg-red-400"
               return (
                 <div key={t.documentId} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors group">
                   {/* Toggle completada */}
@@ -239,12 +346,20 @@ export function TareasEmpresaView() {
                           {est.label}
                         </span>
                       )}
+                      {t.area && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium flex items-center gap-1 ${CATEGORIA_COLOR[t.area] ?? CATEGORIA_COLOR["Otro"]}`}>
+                          <Tag size={8} />{t.area}
+                        </span>
+                      )}
                       {t.fechaVencimiento && (
                         <span className="text-[10px] text-slate-600">
                           Vence: {new Date(t.fechaVencimiento + "T12:00:00").toLocaleDateString("es-MX", { day: "2-digit", month: "short" })}
                         </span>
                       )}
                     </div>
+
+                    {/* Barra de progreso */}
+                    <ProgresoBar value={pct} onSave={pct => actualizarProgreso(t, pct)} />
                   </div>
 
                   {/* Estado rápido */}
@@ -305,11 +420,12 @@ export function TareasEmpresaView() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estado</label>
-                  <select title="Estado" value={form.estado}
-                    onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoTarea }))}
+                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
+                  <select title="Categoría" value={form.categoria}
+                    onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}
                     className={inp + " cursor-pointer"}>
-                    {ESTADOS.map(e => <option key={e.key} value={e.key}>{e.label}</option>)}
+                    <option value="">— Sin categoría —</option>
+                    {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
@@ -321,10 +437,28 @@ export function TareasEmpresaView() {
                   </select>
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estado</label>
+                  <select title="Estado" value={form.estado}
+                    onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoTarea }))}
+                    className={inp + " cursor-pointer"}>
+                    {ESTADOS.map(e => <option key={e.key} value={e.key}>{e.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha límite</label>
+                  <input type="date" title="Fecha límite" value={form.fechaVencimiento}
+                    onChange={e => setForm(f => ({ ...f, fechaVencimiento: e.target.value }))} className={inp} />
+                </div>
+              </div>
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha límite</label>
-                <input type="date" title="Fecha límite" value={form.fechaVencimiento}
-                  onChange={e => setForm(f => ({ ...f, fechaVencimiento: e.target.value }))} className={inp} />
+                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
+                  Progreso — <span className="text-blue-400 font-mono">{form.progreso}%</span>
+                </label>
+                <input type="range" min={0} max={100} value={form.progreso} title="Porcentaje de progreso"
+                  onChange={e => setForm(f => ({ ...f, progreso: Number(e.target.value) }))}
+                  className="w-full accent-blue-500" />
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800">
