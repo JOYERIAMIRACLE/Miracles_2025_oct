@@ -112,6 +112,19 @@ const BAR_COLORS: Record<string, { bar: string; bg: string }> = {
 const barColorOf = (cat: string | null | undefined) =>
   BAR_COLORS[normCat(cat)] ?? { bar: "bg-zinc-500", bg: "bg-zinc-500/10" }
 
+// Retorna YYYY-MM-DD del lunes de la semana que contiene dateStr
+function weekKey(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00")
+  const dow = d.getDay()
+  d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
+  return d.toISOString().split("T")[0]
+}
+
+function weekShortLabel(mondayStr: string): string {
+  const d = new Date(mondayStr + "T12:00:00")
+  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
+}
+
 // ─── Página ────────────────────────────────────────────────────────────────────
 export default function PresupuestoPage() {
   // HOOKS
@@ -293,6 +306,34 @@ export default function PresupuestoPage() {
   const totalPresupuestadoGasto = comparativa.reduce((s, c) => s + c.presupuestado, 0)
   const totalGastadoReal = comparativa.reduce((s, c) => s + c.gastado, 0)
   const pctGastoTotal = totalPresupuestadoGasto > 0 ? (totalGastadoReal / totalPresupuestadoGasto) * 100 : 0
+
+  const semanaActualKey = weekKey(new Date().toISOString().split("T")[0])
+
+  const gastoPorSemana = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const tx of transacciones) {
+      if (tx.tipo !== "gasto") continue
+      const k = weekKey(tx.fecha)
+      map.set(k, (map.get(k) ?? 0) + Number(tx.monto))
+    }
+    return [...map.entries()]
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 6)
+      .reverse()
+      .map(([monday, total]) => ({ monday, label: weekShortLabel(monday), total: Math.round(total) }))
+  }, [transacciones])
+
+  const gastoSemanaActualCat = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const tx of transacciones) {
+      if (tx.tipo !== "gasto" || weekKey(tx.fecha) !== semanaActualKey) continue
+      const cat = tx.categoria ?? "Sin categoría"
+      map.set(cat, (map.get(cat) ?? 0) + Number(tx.monto))
+    }
+    return [...map.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, total]) => ({ cat, total: Math.round(total) }))
+  }, [transacciones, semanaActualKey])
 
   // ─── CRUD ─────────────────────────────────────────────────────────────────
   const handleNuevo = () => { setEditingPartida(null); setForm(EMPTY_FORM); setModalOpen(true) }
@@ -658,6 +699,58 @@ export default function PresupuestoPage() {
                 <Bar dataKey="Real" fill="#10b981" radius={[3, 3, 0, 0]} maxBarSize={20} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* ── Gasto por semana ──────────────────────────────────────────────── */}
+      {gastoPorSemana.length > 0 && (
+        <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+            Gasto por semana
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Barras por semana */}
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={gastoPorSemana} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "#64748b" }} tickLine={false} axisLine={false}
+                  tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                <Tooltip
+                  contentStyle={TOOLTIP_STYLE}
+                  formatter={(v: number) => [`$${v.toLocaleString("es-MX")}`, "Gasto"]}
+                />
+                <Bar dataKey="total" radius={[3, 3, 0, 0]} maxBarSize={36}>
+                  {gastoPorSemana.map((s, i) => (
+                    <Cell key={i} fill={s.monday === semanaActualKey ? "#6366f1" : "#1e293b"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+
+            {/* Desglose categorías semana actual */}
+            <div>
+              <p className="text-[11px] text-slate-500 mb-3">
+                Esta semana · {fmt(gastoPorSemana.find(s => s.monday === semanaActualKey)?.total ?? 0)}
+              </p>
+              {gastoSemanaActualCat.length === 0 ? (
+                <p className="text-xs text-slate-600">Sin gastos registrados esta semana</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {gastoSemanaActualCat.slice(0, 7).map(({ cat, total }, i) => {
+                    const pct = Math.round((total / gastoSemanaActualCat[0].total) * 100)
+                    return (
+                      <div key={cat} className="flex items-center gap-2 min-w-0">
+                        <ChartDot color={CHART_COLORS[i % CHART_COLORS.length]} />
+                        <span className="text-[11px] text-slate-400 capitalize truncate flex-1">{cat}</span>
+                        <span className="text-[10px] text-slate-600 shrink-0">{pct}%</span>
+                        <span className="text-[11px] font-medium text-slate-300 shrink-0 w-20 text-right">{fmt(total)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
