@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronLeft, ChevronRight, Plus, X, Search, Check, ArrowLeft, PlayCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, X, Search, Check, ArrowLeft, PlayCircle, ClipboardList } from "lucide-react"
 import { toast } from "sonner"
 import { useGetRecetas, createReceta } from "@/api/receta/getRecetas"
 import { useGetPlanSemana, createPlanComida, deletePlanComida } from "@/api/plan-comida/getPlanComidas"
@@ -51,6 +51,7 @@ export function PlaneadorView() {
   const [creandoReceta, setCreandoReceta] = useState(false)
   const [formReceta,    setFormReceta]    = useState<RecetaPayload>(emptyReceta())
   const [guardando,     setGuardando]     = useState(false)
+  const [detalleOpen,   setDetalleOpen]   = useState<RecetaType | null>(null)
 
   // Map[momento][dia] → PlanComidaType[]
   const grid = useMemo(() => {
@@ -170,12 +171,21 @@ export function PlaneadorView() {
             <div key={plan.documentId} className="group flex items-start gap-0.5">
               <div className="flex-1 min-w-0 bg-slate-800 rounded-lg px-2 py-1.5">
                 <p className="text-[10px] font-medium text-slate-200 leading-snug">{plan.receta.nombre}</p>
-                {plan.receta.videoUrl && (
-                  <a href={plan.receta.videoUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] text-amber-500 hover:text-amber-400 transition">
-                    <PlayCircle size={10} /> Ver video
-                  </a>
-                )}
+                <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                  {plan.receta.videoUrl && (
+                    <a href={plan.receta.videoUrl} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-0.5 text-[9px] text-amber-500 hover:text-amber-400 transition">
+                      <PlayCircle size={10} /> Ver video
+                    </a>
+                  )}
+                  {plan.receta.descripcion && (
+                    <button type="button"
+                      onClick={() => setDetalleOpen(plan.receta)}
+                      className="inline-flex items-center gap-0.5 text-[9px] text-slate-500 hover:text-slate-300 transition">
+                      <ClipboardList size={10} /> Ingredientes
+                    </button>
+                  )}
+                </div>
                 {plan.receta.categorias.length > 0 && (
                   <div className="flex gap-0.5 mt-1 flex-wrap">
                     {plan.receta.categorias.map(cat => (
@@ -234,6 +244,45 @@ export function PlaneadorView() {
           <div className="grid grid-cols-[52px_repeat(7,minmax(120px,1fr))] min-w-[700px]">
             {headerCells}
             {bodyCells}
+          </div>
+        </div>
+      )}
+
+      {/* Popup ingredientes / descripción */}
+      {detalleOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setDetalleOpen(null)}>
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-100">{detalleOpen.nombre}</h3>
+                {detalleOpen.categorias.length > 0 && (
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    {detalleOpen.categorias.map(cat => (
+                      <span key={cat} className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${CATEGORIA_COLOR[cat]}`}>
+                        {CATEGORIA_LABEL[cat]}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button type="button" title="Cerrar" onClick={() => setDetalleOpen(null)}
+                className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+                <X size={15} />
+              </button>
+            </div>
+            <div className="px-4 py-4 space-y-3 max-h-80 overflow-y-auto">
+              <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
+                {detalleOpen.descripcion}
+              </p>
+              {detalleOpen.videoUrl && (
+                <a href={detalleOpen.videoUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-amber-500 hover:text-amber-400 transition">
+                  <PlayCircle size={13} /> Ver video de la receta
+                </a>
+              )}
+            </div>
           </div>
         </div>
       )}
