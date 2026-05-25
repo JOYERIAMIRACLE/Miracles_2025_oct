@@ -466,6 +466,18 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   const firstMon = getFirstMonday(anio, mesIdx)
   const hoy      = new Date(); hoy.setHours(0,0,0,0)
 
+  const objetivoKey = `campana-objetivo-${mes}-${anio}`
+  const [objetivo,        setObjetivo]        = useState(() => (typeof window !== "undefined" ? localStorage.getItem(objetivoKey) ?? "" : ""))
+  const [editingObjetivo, setEditingObjetivo] = useState(false)
+  const [objetivoDraft,   setObjetivoDraft]   = useState("")
+
+  const saveObjetivo = () => {
+    const val = objetivoDraft.trim()
+    setObjetivo(val)
+    localStorage.setItem(objetivoKey, val)
+    setEditingObjetivo(false)
+  }
+
   const sinTitulosDocIds = new Set(
     campanas
       .filter(c => !SEMANAS.some(n => !!getSemana(c, n, "Titulo")))
@@ -481,6 +493,34 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
       </button>
 
       {!collapsed && (
+        <>
+        {/* Objetivo del mes */}
+        <div className="px-4 py-2 border-b border-slate-800/50 flex items-center gap-2 min-h-[36px]">
+          {editingObjetivo ? (
+            <input
+              autoFocus
+              value={objetivoDraft}
+              onChange={e => setObjetivoDraft(e.target.value)}
+              onBlur={saveObjetivo}
+              onKeyDown={e => { if (e.key === "Enter") saveObjetivo(); if (e.key === "Escape") setEditingObjetivo(false) }}
+              placeholder="Escribe el objetivo del mes..."
+              className="flex-1 text-xs bg-transparent border-b border-slate-600 text-slate-200 placeholder:text-slate-600 outline-none py-0.5"
+            />
+          ) : objetivo ? (
+            <button type="button" onClick={() => { setObjetivoDraft(objetivo); setEditingObjetivo(true) }}
+              className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-200 transition text-left group/obj">
+              <span className="text-slate-600">🎯</span>
+              <span>{objetivo}</span>
+              <Pencil size={10} className="opacity-0 group-hover/obj:opacity-100 text-slate-600 shrink-0" />
+            </button>
+          ) : (
+            <button type="button" onClick={() => { setObjetivoDraft(""); setEditingObjetivo(true) }}
+              className="text-[11px] text-slate-700 hover:text-slate-500 transition flex items-center gap-1">
+              <Plus size={10} /> Objetivo del mes
+            </button>
+          )}
+        </div>
+
         <div className="divide-y divide-slate-800/50">
           {SEMANAS.map(n => {
             const sStart = addDays(firstMon, (n - 1) * 7)
@@ -524,6 +564,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
             )
           })}
         </div>
+        </>
       )}
     </div>
   )
