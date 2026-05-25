@@ -7,14 +7,33 @@ import { AppLauncher } from "@/components/AppLauncher"
 import { removeToken } from "@/lib/auth"
 
 const titles: Record<string, string> = {
-  "/gestion-empresa":                           "Dashboard",
-  "/gestion-empresa/ventas/pipeline":           "Pipeline CRM",
-  "/gestion-empresa/ventas/pedidos":            "Pedidos",
-  "/gestion-empresa/almacen/inventario":        "Inventario",
-  "/gestion-empresa/marketing/campanas":        "Campañas",
-  "/gestion-empresa/marketing/tareas":          "Tareas de Marketing",
-  "/gestion-empresa/marketing/gastos":          "Gastos de Marketing",
-  "/gestion-empresa/marketing/promocionales":   "Promocionales e Impresos",
+  "/gestion-empresa":                                "Dashboard",
+  // Indicadores
+  "/gestion-empresa/indicadores/financieros":        "Indicadores Financieros",
+  "/gestion-empresa/indicadores/operativos":         "Indicadores Operativos",
+  "/gestion-empresa/indicadores/ecosistema":         "Ecosistema",
+  // Gestión General
+  "/gestion-empresa/general/identidad":              "Identidad Corporativa",
+  "/gestion-empresa/general/tareas":                 "Tareas",
+  "/gestion-empresa/general/gastos":                 "Registro de Gastos",
+  "/gestion-empresa/general/material-digital":       "Material Digital",
+  // Marketing
+  "/gestion-empresa/marketing/campanas":             "Campañas SEO",
+  "/gestion-empresa/marketing/blog":                 "Blog",
+  "/gestion-empresa/marketing/anuncios":             "Anuncios",
+  "/gestion-empresa/marketing/promocionales":        "Material y Branding",
+  "/gestion-empresa/marketing/tareas":               "Tareas de Marketing",
+  "/gestion-empresa/marketing/gastos":               "Gastos de Marketing",
+  // Ventas
+  "/gestion-empresa/ventas/pipeline":                "Pipeline CRM",
+  "/gestion-empresa/ventas/pedidos":                 "Pedidos",
+  // Suministro
+  "/gestion-empresa/almacen/inventario":             "Inventario",
+  "/gestion-empresa/suministro/envios":              "Envíos",
+  // Finanzas
+  "/gestion-empresa/finanzas/presupuestos":          "Presupuestos",
+  "/gestion-empresa/finanzas/cuentas":               "Cuentas",
+  "/gestion-empresa/finanzas/calendario":            "Calendario de Pagos",
 }
 
 export function EmpresaHeader({ onMenuClick }: { onMenuClick?: () => void }) {
