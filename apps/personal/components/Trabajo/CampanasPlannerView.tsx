@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import {
   Plus, Pencil, Trash2, X, Check,
   Calendar, LayoutGrid, ChevronLeft, ChevronRight,
-  FileText, Link2,
+  FileText, Link2, Paperclip,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetCampanas } from "@/api/campana/getCampanas"
@@ -184,18 +184,34 @@ const CAT_CHIP: Record<string, { letter: string; bg: string; text: string }> = {
   Extra: { letter: "E", bg: "bg-amber-500/20",  text: "text-amber-300"  },
 }
 
-function CampanaChip({ titulo, categoria, fullWidth, onClick }: {
-  titulo: string; categoria: string | null; fullWidth?: boolean; onClick: () => void
+function CampanaChip({ titulo, categoria, fullWidth, hasFiles, onClick, onDelete }: {
+  titulo: string; categoria: string | null; fullWidth?: boolean; hasFiles?: boolean
+  onClick: () => void; onDelete?: () => void
 }) {
   const cfg = (categoria && CAT_CHIP[categoria]) ?? { letter: "·", bg: "bg-slate-700", text: "text-slate-400" }
   return (
-    <button type="button" onClick={onClick}
-      className={`flex items-center h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 transition-colors overflow-hidden shrink-0 ${fullWidth ? "w-full" : "w-[156px]"}`}>
+    <div
+      onClick={onClick}
+      className={`group/chip flex items-center h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[156px]"}`}>
       <span className={`flex items-center justify-center h-full w-7 shrink-0 text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>
         {cfg.letter}
       </span>
       <span className="text-[11px] text-slate-200 truncate px-2 flex-1 text-left leading-none">{titulo}</span>
-    </button>
+      {hasFiles && (
+        <span className="flex items-center justify-center h-full w-6 shrink-0 text-slate-500">
+          <Paperclip size={10} />
+        </span>
+      )}
+      {onDelete && (
+        <span
+          role="button"
+          onClick={e => { e.stopPropagation(); onDelete() }}
+          title="Eliminar campaña"
+          className="flex items-center justify-center h-full w-6 shrink-0 text-slate-600 hover:text-red-400 opacity-0 group-hover/chip:opacity-100 transition">
+          <Trash2 size={10} />
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -437,9 +453,10 @@ function semanaLabel(semanaStart: Date, semanaEnd: Date, n: NSemana): string {
   return `Semana ${n}`
 }
 
-function MesGroup({ mes, anio, campanas, onEdit, onNueva }: {
+function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   mes: MesCampana; anio: number; campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
+  onDelete: (c: CampanaType) => void
   onNueva: (opts: { mes: MesCampana; anio: number }) => void
 }) {
   const isCurrentMonth = anio === ANIO_HOY && MESES.indexOf(mes) === MES_HOY_IDX
@@ -479,12 +496,15 @@ function MesGroup({ mes, anio, campanas, onEdit, onNueva }: {
               .filter(c => !!getSemana(c, n, "Titulo"))
               .map(c => ({ c, titulo: getSemana(c, n, "Titulo")! }))
 
-            // Campañas sin ningún título: mostrar en semana 1
-            const sinTitulo = n === 1
-              ? campanas
-                  .filter(c => sinTitulosDocIds.has(c.documentId))
-                  .map(c => ({ c, titulo: c.unidadNegocio }))
-              : []
+            // Campañas sin título: mostrar en la semana que coincide con su fecha, semana 1 como fallback
+            const sEndStr   = toYMD(sEnd)
+            const sStartStr = toYMD(sStart)
+            const sinTitulo = campanas
+              .filter(c => sinTitulosDocIds.has(c.documentId))
+              .filter(c => c.semana1Fecha
+                ? c.semana1Fecha >= sStartStr && c.semana1Fecha <= sEndStr
+                : n === 1)
+              .map(c => ({ c, titulo: c.unidadNegocio }))
 
             const items = [...conTitulo, ...sinTitulo]
 
@@ -493,7 +513,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onNueva }: {
                 <span className="text-[11px] text-slate-500 w-44 shrink-0 leading-snug">{label}</span>
                 <div className="flex-1 flex flex-wrap items-center gap-2">
                   {items.map(({ c, titulo }) => (
-                    <CampanaChip key={`${c.documentId}-${n}`} titulo={titulo} categoria={c.categoria} onClick={() => onEdit(c)} />
+                    <CampanaChip key={`${c.documentId}-${n}`} titulo={titulo} categoria={c.categoria} hasFiles={!!(c.semana1Archivo || c.semana2Archivo || c.semana3Archivo || c.semana4Archivo)} onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
                   ))}
                 </div>
                 <button type="button" title="Agregar campaña" onClick={() => onNueva({ mes, anio })}
@@ -509,7 +529,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onNueva }: {
   )
 }
 
-function VistaCatalogo({ campanas, onEdit, onDelete: _onDelete, onNueva }: {
+function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
   onDelete: (c: CampanaType) => void
@@ -552,8 +572,8 @@ function VistaCatalogo({ campanas, onEdit, onDelete: _onDelete, onNueva }: {
           key={`${mes}-${anio}`}
           mes={mes} anio={anio} campanas={items}
           onEdit={onEdit}
+          onDelete={onDelete}
           onNueva={({ mes: m, anio: a }) => {
-            // Re-use the parent onNueva trigger; parent will open modal
             onNueva()
           }}
         />
@@ -564,9 +584,10 @@ function VistaCatalogo({ campanas, onEdit, onDelete: _onDelete, onNueva }: {
 
 // ─── Tab: Planeador — calendario semanal por día ──────────────────────────────
 
-function VistaPlaneador({ campanas, onEdit, onAgregar }: {
+function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
+  onDelete: (c: CampanaType) => void
   onAgregar: (opts: { categoria: string; mes: MesCampana; anio: number; fecha: string }) => void
 }) {
   const [wStart, setWStart] = useState(() => weekStart(new Date()))
@@ -640,7 +661,7 @@ function VistaPlaneador({ campanas, onEdit, onAgregar }: {
                   <div key={di}
                     className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
-                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} onClick={() => onEdit(campana)} />
+                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} hasFiles={!!(campana.semana1Archivo || campana.semana2Archivo || campana.semana3Archivo || campana.semana4Archivo)} onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
                     ))}
                     <button type="button"
                       onClick={() => onAgregar({ categoria: fila.label, mes: MESES[day.getMonth()], anio: day.getFullYear(), fecha: toYMD(day) })}
@@ -740,6 +761,7 @@ export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: A
         <VistaPlaneador
           campanas={campanas}
           onEdit={abrirEditar}
+          onDelete={eliminar}
           onAgregar={opts => abrirNueva(opts)}
         />
       )}
