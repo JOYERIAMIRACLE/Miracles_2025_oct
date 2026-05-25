@@ -5,7 +5,7 @@ import { Plus, X, AlertTriangle, Pencil, Archive, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetMaterialesTrabajo }   from "@/api/material-trabajo/getMaterialesTrabajo"
 import { createMaterialTrabajo, updateMaterialTrabajo, deleteMaterialTrabajo } from "@/api/material-trabajo/mutateMaterialTrabajo"
-import { MaterialTrabajoType, CategoriaMaterial, MaterialTrabajoPayload } from "@/types/material-trabajo"
+import { MaterialTrabajoType, CategoriaMaterial, MaterialTrabajoPayload, AmbitoMaterial } from "@/types/material-trabajo"
 
 const CATEGORIA_LABEL: Record<CategoriaMaterial, string> = {
   promocional: "Promocional",
@@ -23,8 +23,8 @@ const CATEGORIA_BADGE: Record<CategoriaMaterial, string> = {
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
 
-export function PromocionalesView() {
-  const { materiales, setMateriales, loading } = useGetMaterialesTrabajo()
+export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMaterial }) {
+  const { materiales, setMateriales, loading } = useGetMaterialesTrabajo(ambito)
 
   const [filtro,    setFiltro]    = useState<CategoriaMaterial | "todos">("todos")
   const [modalOpen, setModalOpen] = useState(false)
@@ -63,7 +63,7 @@ export function PromocionalesView() {
         if (res?.data) setMateriales(prev => prev.map(x => x.documentId === editing.documentId ? res.data : x))
         toast.success("Material actualizado")
       } else {
-        const res = await createMaterialTrabajo(form)
+        const res = await createMaterialTrabajo({ ...form, ambito })
         if (res?.data) setMateriales(prev => [...prev, res.data].sort((a, b) => a.nombre.localeCompare(b.nombre)))
         toast.success("Material creado")
       }

@@ -1,4 +1,5 @@
-export type CategoriaMaterial = "promocional" | "folleto" | "camisa" | "otro"
+export type CategoriaMaterial  = "promocional" | "folleto" | "camisa" | "otro"
+export type AmbitoMaterial     = "trabajo" | "empresa"
 
 export type MaterialTrabajoType = {
   id:         number
@@ -8,6 +9,7 @@ export type MaterialTrabajoType = {
   cantidad:   number
   minimo:     number
   notas:      string | null
+  ambito:     AmbitoMaterial | null
   createdAt?: string
   updatedAt?: string
 }
@@ -18,4 +20,5 @@ export type MaterialTrabajoPayload = {
   cantidad?: number
   minimo?:   number
   notas?:    string | null
+  ambito?:   AmbitoMaterial | null
 }
