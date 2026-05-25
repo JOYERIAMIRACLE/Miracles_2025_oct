@@ -6,13 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-backend:
-    name: Deploy Strapi to Render
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Render deploy
-        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-
   deploy-personal:
     name: Deploy apps/personal
     runs-on: ubuntu-latest
@@ -34,8 +27,8 @@ jobs:
       - name: Build personal
         run: pnpm --filter @miracles/personal build
         env:
-          NEXT_PUBLIC_BACKEND_URL: https://miracles-strapi.onrender.com
-          NEXT_PUBLIC_STRAPI_URL: https://miracles-strapi.onrender.com
+          NEXT_PUBLIC_BACKEND_URL: https://miracles2025oct-production.up.railway.app
+          NEXT_PUBLIC_STRAPI_URL: https://miracles2025oct-production.up.railway.app
           NEXT_PUBLIC_SITE_URL: https://miracles-frontend.pages.dev
 
       - name: Deploy to Cloudflare Pages
