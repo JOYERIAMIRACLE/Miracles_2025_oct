@@ -5,9 +5,12 @@ export const MESES = [
 export type MesCampana  = typeof MESES[number]
 export type TipoCampana = "completa" | "titulos_extra"
 
+export type AmbitoCampana = "trabajo" | "empresa"
+
 export type CampanaType = {
   id:              number
   documentId:      string
+  ambito:          AmbitoCampana
   unidadNegocio:   string
   mes:             MesCampana
   anio:            number

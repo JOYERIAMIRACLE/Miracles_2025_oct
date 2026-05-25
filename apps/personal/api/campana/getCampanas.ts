@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react"
-import { CampanaType } from "@/types/campana"
+import { CampanaType, AmbitoCampana } from "@/types/campana"
 
-export function useGetCampanas() {
-  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/campanas?pagination[pageSize]=200&sort=anio:desc,mes:asc,createdAt:desc`
+export function useGetCampanas(ambito: AmbitoCampana = "trabajo") {
+  const filter = ambito === "empresa"
+    ? "&filters[ambito][$eq]=empresa"
+    : "&filters[ambito][$ne]=empresa"
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/campanas?pagination[pageSize]=200&sort=anio:desc,mes:asc,createdAt:desc${filter}`
   const [campanas, setCampanas] = useState<CampanaType[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState("")

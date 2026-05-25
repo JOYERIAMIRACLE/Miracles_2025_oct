@@ -9,7 +9,7 @@ import {
 import { toast } from "sonner"
 import { useGetCampanas } from "@/api/campana/getCampanas"
 import { createCampana, updateCampana, deleteCampana } from "@/api/campana/mutateCampana"
-import { CampanaType, CampanaPayload, MESES, MesCampana, TipoCampana } from "@/types/campana"
+import { CampanaType, CampanaPayload, AmbitoCampana, MESES, MesCampana, TipoCampana } from "@/types/campana"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -663,8 +663,8 @@ function VistaPlaneador({ campanas, onEdit, onAgregar }: {
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
-export default function CampanasPlannerView() {
-  const { campanas, setCampanas, loading } = useGetCampanas()
+export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: AmbitoCampana }) {
+  const { campanas, setCampanas, loading } = useGetCampanas(ambito)
   const [tab,      setTab]      = useState<"catalogo" | "planeador">("catalogo")
   const [modal,    setModal]    = useState(false)
   const [editando, setEditando] = useState<CampanaType | null>(null)
@@ -687,7 +687,7 @@ export default function CampanasPlannerView() {
         setCampanas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
         toast.success("Campaña actualizada")
       } else {
-        const nueva = await createCampana(payload)
+        const nueva = await createCampana({ ...payload, ambito })
         setCampanas(prev => [nueva, ...prev])
         toast.success("Campaña creada")
       }
