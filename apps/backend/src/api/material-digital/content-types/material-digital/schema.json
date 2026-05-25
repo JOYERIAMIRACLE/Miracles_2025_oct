@@ -1,0 +1,22 @@
+{
+  "kind": "collectionType",
+  "collectionName": "material_digitals",
+  "info": {
+    "singularName": "material-digital",
+    "pluralName": "material-digitals",
+    "displayName": "Material Digital"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":      { "type": "string", "required": true },
+    "tipo": {
+      "type": "enumeration",
+      "enum": ["logo", "manual", "presentacion", "fotografia", "video", "plantilla", "otro"],
+      "default": "otro"
+    },
+    "url":         { "type": "string" },
+    "descripcion": { "type": "text" },
+    "notas":       { "type": "text" }
+  }
+}

@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { MaterialDigitalView } from "@/components/Empresa/General/MaterialDigitalView"
 
 export default function MaterialDigitalPage() {
-  return (
-    <PlaceholderView
-      seccion="Gestión General"
-      titulo="Material Digital"
-      descripcion="Inventario de activos digitales: plantillas, imágenes, videos, documentos y recursos de marca."
-    />
-  )
+  return <MaterialDigitalView />
 }

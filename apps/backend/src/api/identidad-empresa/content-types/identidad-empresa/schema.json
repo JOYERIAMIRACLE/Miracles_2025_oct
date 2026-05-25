@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "identidad_empresas",
+  "info": {
+    "singularName": "identidad-empresa",
+    "pluralName": "identidad-empresas",
+    "displayName": "Identidad Empresa"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":      { "type": "string" },
+    "slogan":      { "type": "string" },
+    "mision":      { "type": "text" },
+    "vision":      { "type": "text" },
+    "valores":     { "type": "text" },
+    "colores":     { "type": "text" },
+    "tipografia":  { "type": "string" },
+    "sitioWeb":    { "type": "string" },
+    "redesSociales": { "type": "text" },
+    "notas":       { "type": "text" }
+  }
+}
