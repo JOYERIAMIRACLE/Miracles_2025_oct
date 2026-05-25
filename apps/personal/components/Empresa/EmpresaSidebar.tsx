@@ -108,7 +108,7 @@ export function EmpresaSidebar({ onNavigate }: { onNavigate?: () => void } = {})
   const pathname = usePathname()
 
   return (
-    <div className="flex flex-col w-64 bg-slate-950 min-h-screen h-full border-r border-slate-800/80">
+    <div className="flex flex-col w-64 bg-slate-950 h-full border-r border-slate-800/80">
       <div className="h-16 flex items-center px-5 border-b border-slate-800/80 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 bg-linear-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">

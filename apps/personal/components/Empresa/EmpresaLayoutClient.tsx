@@ -25,7 +25,7 @@ export function EmpresaLayoutClient({ children }: { children: React.ReactNode })
       )}
 
       {/* Mobile drawer */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 md:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col overflow-hidden transition-transform duration-300 md:hidden ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <EmpresaSidebar onNavigate={() => setOpen(false)} />
       </aside>
 
