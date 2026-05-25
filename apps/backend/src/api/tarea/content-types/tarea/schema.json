@@ -60,6 +60,9 @@
     "notas": {
       "type": "text"
     },
+    "links": {
+      "type": "text"
+    },
     "proyecto": {
       "type": "relation",
       "relation": "manyToOne",

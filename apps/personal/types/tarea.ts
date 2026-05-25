@@ -16,6 +16,7 @@ export type TareaType = {
   fechaVencimiento: string | null  // ISO date YYYY-MM-DD
   fechaCompletada:  string | null  // ISO datetime
   notas:            string | null
+  links:            string | null
   progreso?:        number | null
   responsable?:     string | null
   area?:            string | null
@@ -37,6 +38,7 @@ export type TareaPayload = {
   fechaVencimiento?: string | null
   fechaCompletada?:  string | null
   notas?:            string | null
+  links?:            string | null
   progreso?:         number | null
   responsable?:      string | null
   area?:             string | null

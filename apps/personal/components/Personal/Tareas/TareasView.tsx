@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
-import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket, ChevronDown, ClipboardList } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket, ChevronDown, ClipboardList, Link2, ExternalLink } from "lucide-react"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -128,6 +128,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [filtroTicket, setFiltroTicket] = useState(false)
   const [busqueda, setBusqueda] = useState("")
   const [avancesOpen, setAvancesOpen] = useState<string | null>(null)
+  const [linksOpen,   setLinksOpen]   = useState<string | null>(null)
   const [mesCalendario, setMesCalendario] = useState(new Date())
   const [modalOpen, setModalOpen] = useState(false)
   const [editando, setEditando] = useState<TareaType | null>(null)
@@ -321,6 +322,18 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       } else {
         toast.error("Error al guardar progreso")
       }
+    }
+  }
+
+  const agregarLink = async (t: TareaType, entrada: string) => {
+    const nuevosLinks = t.links ? `${entrada}\n${t.links}` : entrada
+    setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, links: nuevosLinks } : x))
+    try {
+      await updateTarea(t.documentId, { links: nuevosLinks })
+      toast.success("Link guardado")
+    } catch {
+      setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, links: t.links } : x))
+      toast.error("Error al guardar")
     }
   }
 
@@ -594,6 +607,20 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         </button>
                         <button
                           type="button"
+                          title="Agregar link"
+                          onClick={() => setLinksOpen(prev => prev === t.documentId ? null : t.documentId)}
+                          className={`p-1 rounded transition-colors ${
+                            linksOpen === t.documentId
+                              ? "text-blue-400 hover:text-blue-500"
+                              : t.links
+                              ? "text-blue-400/60 hover:text-blue-400"
+                              : "text-muted-foreground/40 hover:text-blue-400"
+                          }`}
+                        >
+                          <Link2 size={12} />
+                        </button>
+                        <button
+                          type="button"
                           title="Anotar avance"
                           onClick={() => setAvancesOpen(prev => prev === t.documentId ? null : t.documentId)}
                           className={`p-1 rounded transition-colors ${
@@ -691,6 +718,11 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                     <ProgresoBar
                       value={t.progreso ?? 0}
                       onSave={pct => actualizarProgreso(t, pct)}
+                    />
+                    <LinksPanel
+                      links={t.links}
+                      inputOpen={linksOpen === t.documentId}
+                      onAgregar={entrada => agregarLink(t, entrada)}
                     />
                     <AvancesPanel
                       notas={t.notas}
@@ -951,6 +983,89 @@ function ProgresoBar({ value, onSave }: { value: number; onSave: (pct: number) =
       <span className={`text-[10px] font-mono w-8 text-right shrink-0 tabular-nums ${local >= 100 ? "text-emerald-500" : "text-muted-foreground"}`}>
         {local}%
       </span>
+    </div>
+  )
+}
+
+// ─── Panel de links ──────────────────────────────────────────────────────────
+
+function LinksPanel({ links, inputOpen, onAgregar }: {
+  links: string | null
+  inputOpen: boolean
+  onAgregar: (entrada: string) => Promise<void>
+}) {
+  const [urlInput,   setUrlInput]   = useState("")
+  const [labelInput, setLabelInput] = useState("")
+  const [guardando,  setGuardando]  = useState(false)
+
+  const entradas = links ? links.split("\n").filter(Boolean) : []
+
+  const enviar = async () => {
+    const url = urlInput.trim()
+    if (!url) return
+    const entrada = labelInput.trim() ? `${labelInput.trim()} · ${url}` : url
+    setGuardando(true)
+    await onAgregar(entrada)
+    setUrlInput("")
+    setLabelInput("")
+    setGuardando(false)
+  }
+
+  const parseEntrada = (e: string) => {
+    const sep = e.indexOf(" · ")
+    if (sep !== -1) return { label: e.slice(0, sep), url: e.slice(sep + 3) }
+    return { label: null, url: e }
+  }
+
+  const dominio = (url: string) => { try { return new URL(url).hostname.replace("www.", "") } catch { return url.slice(0, 30) } }
+
+  if (entradas.length === 0 && !inputOpen) return null
+
+  return (
+    <div className="mt-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
+      {entradas.length > 0 && (
+        <div className="space-y-1 mb-2">
+          {entradas.map((e, i) => {
+            const { label, url } = parseEntrada(e)
+            return (
+              <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-[11px] text-blue-500 hover:text-blue-400 transition w-fit max-w-full">
+                <ExternalLink size={10} className="shrink-0" />
+                <span className="truncate">{label ?? dominio(url)}</span>
+              </a>
+            )
+          })}
+        </div>
+      )}
+      {inputOpen && (
+        <div className="space-y-1.5">
+          <div className="flex gap-2">
+            <Input
+              value={urlInput}
+              onChange={e => setUrlInput(e.target.value)}
+              placeholder="https://..."
+              className="h-7 text-xs flex-1"
+              onKeyDown={e => { if (e.key === "Enter") enviar() }}
+              autoFocus
+            />
+            <Input
+              value={labelInput}
+              onChange={e => setLabelInput(e.target.value)}
+              placeholder="Etiqueta (opcional)"
+              className="h-7 text-xs w-32"
+              onKeyDown={e => { if (e.key === "Enter") enviar() }}
+            />
+            <button
+              type="button"
+              onClick={enviar}
+              disabled={guardando || !urlInput.trim()}
+              className="h-7 px-2.5 text-xs rounded-md bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-500 transition shrink-0"
+            >
+              {guardando ? "..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
