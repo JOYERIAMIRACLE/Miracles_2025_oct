@@ -66,6 +66,10 @@
       "relation": "oneToMany",
       "target": "api::evento-calendario.evento-calendario",
       "mappedBy": "cuenta"
+    },
+    "ambito": {
+      "type": "enumeration",
+      "enum": ["trabajo", "empresa"]
     }
   }
 }

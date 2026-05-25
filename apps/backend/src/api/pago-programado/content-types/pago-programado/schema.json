@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pago_programados",
+  "info": {
+    "singularName": "pago-programado",
+    "pluralName": "pago-programados",
+    "displayName": "Pago Programado"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "concepto": {
+      "type": "string",
+      "required": true
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": ["pago", "cobro"],
+      "default": "pago"
+    },
+    "monto": {
+      "type": "decimal"
+    },
+    "fecha": {
+      "type": "date"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["pendiente", "pagado", "cancelado"],
+      "default": "pendiente"
+    },
+    "recurrente": {
+      "type": "boolean",
+      "default": false
+    },
+    "frecuencia": {
+      "type": "enumeration",
+      "enum": ["mensual", "trimestral", "anual", "unico"],
+      "default": "unico"
+    },
+    "categoria": {
+      "type": "string"
+    },
+    "notas": {
+      "type": "text"
+    }
+  }
+}

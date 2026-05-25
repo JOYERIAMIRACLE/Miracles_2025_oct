@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { EnviosView } from "@/components/Empresa/Suministro/EnviosView"
 
 export default function EnviosPage() {
-  return (
-    <PlaceholderView
-      seccion="Suministro"
-      titulo="Envíos"
-      descripcion="Registro y seguimiento de envíos a clientes. Estado, guía de rastreo, paquetería y fechas."
-    />
-  )
+  return <EnviosView />
 }

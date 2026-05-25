@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { CuentasEmpresaView } from "@/components/Empresa/Finanzas/CuentasEmpresaView"
 
-export default function CuentasPage() {
-  return (
-    <PlaceholderView
-      seccion="Finanzas"
-      titulo="Cuentas"
-      descripcion="Cuentas bancarias y de efectivo de la empresa. Saldos, movimientos y conciliación."
-    />
-  )
+export default function CuentasEmpresaPage() {
+  return <CuentasEmpresaView />
 }

@@ -5,6 +5,8 @@ export type TipoPartida      = "necesidad" | "gastos prescindibles" | "ahorro" |
 export type TipoPagoPartida  = "efectivo" | "TDC" | "apartado" | "transferencia" | "bonos" | "debito"
 export type FrecuenciaPartida = "diario" | "semanal" | "quincenal" | "mensual" | "anual"
 
+export type AmbitoPartida = "trabajo" | "empresa"
+
 export type PartidaPresupuestoType = {
   id:          number
   documentId:  string
@@ -15,6 +17,7 @@ export type PartidaPresupuestoType = {
   frecuencia:  FrecuenciaPartida | null
   monto:       number
   activo:      boolean | null
+  ambito?:     AmbitoPartida    | null
 }
 
 export type PartidaPresupuestoPayload = Omit<PartidaPresupuestoType, "id" | "documentId">

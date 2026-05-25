@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "envios",
+  "info": {
+    "singularName": "envio",
+    "pluralName": "envios",
+    "displayName": "Envío"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "numero_guia": {
+      "type": "string"
+    },
+    "paqueteria": {
+      "type": "enumeration",
+      "enum": ["fedex", "dhl", "estafeta", "ups", "correos_mex", "otro"],
+      "default": "otro"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["pendiente", "preparando", "enviado", "en_transito", "entregado", "devuelto", "cancelado"],
+      "default": "pendiente"
+    },
+    "cliente": {
+      "type": "string"
+    },
+    "concepto": {
+      "type": "string"
+    },
+    "fecha_envio": {
+      "type": "date"
+    },
+    "fecha_estimada": {
+      "type": "date"
+    },
+    "costo_envio": {
+      "type": "decimal"
+    },
+    "notas": {
+      "type": "text"
+    }
+  }
+}

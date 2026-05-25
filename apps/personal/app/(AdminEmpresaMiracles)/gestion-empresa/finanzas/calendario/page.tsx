@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { CalendarioPagosView } from "@/components/Empresa/Finanzas/CalendarioPagosView"
 
 export default function CalendarioPagosPage() {
-  return (
-    <PlaceholderView
-      seccion="Finanzas"
-      titulo="Calendario de Pagos"
-      descripcion="Vista calendario de pagos pendientes, cobros programados y compromisos financieros."
-    />
-  )
+  return <CalendarioPagosView />
 }

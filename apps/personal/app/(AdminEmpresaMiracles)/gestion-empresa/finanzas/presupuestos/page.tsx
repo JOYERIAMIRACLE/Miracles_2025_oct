@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { PresupuestosEmpresaView } from "@/components/Empresa/Finanzas/PresupuestosEmpresaView"
 
 export default function PresupuestosPage() {
-  return (
-    <PlaceholderView
-      seccion="Finanzas"
-      titulo="Presupuestos"
-      descripcion="Presupuesto por áreas y conceptos de gasto. Control de lo planeado vs lo ejecutado."
-    />
-  )
+  return <PresupuestosEmpresaView />
 }

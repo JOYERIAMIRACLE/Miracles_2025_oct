@@ -4,6 +4,8 @@
 export type TipoCuenta    = "Efectivo" | "Crédito" | "Debito"
 export type PropositoCuenta = "Operativa" | "Ahorro" | "Inversión" | "Apartado" | "Presupuesto 1"
 
+export type AmbitoCuenta = "trabajo" | "empresa"
+
 export type CuentaType = {
   id:            number
   documentId:    string
@@ -15,7 +17,8 @@ export type CuentaType = {
   metaDeCuenta:  number          | null
   color:         string          | null
   activa:        boolean         | null
-  saldoInicial?: number          | null  // obsoleto, se mantiene para compatibilidad
+  ambito?:       AmbitoCuenta   | null
+  saldoInicial?: number          | null
 }
 
 export type CuentaPayload = Omit<CuentaType, "id" | "documentId">

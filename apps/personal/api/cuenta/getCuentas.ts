@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react"
-import { CuentaType } from "@/types/cuenta"
+import { CuentaType, AmbitoCuenta } from "@/types/cuenta"
 
-export function useGetCuentas() {
-  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/cuentas`
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+
+function buildUrl(ambito?: AmbitoCuenta) {
+  const base = `${BASE}/api/cuentas?pagination[pageSize]=100`
+  if (!ambito || ambito === "trabajo") {
+    return `${base}&filters[$or][0][ambito][$eq]=trabajo&filters[$or][1][ambito][$null]=true`
+  }
+  return `${base}&filters[ambito][$eq]=empresa`
+}
+
+export function useGetCuentas(ambito?: AmbitoCuenta) {
+  const url = buildUrl(ambito)
   const [cuentas, setCuentas] = useState<CuentaType[]>([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string>("")
