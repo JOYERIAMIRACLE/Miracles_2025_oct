@@ -4,6 +4,8 @@ export const MESES_MKT = [
 ] as const
 export type MesEcosistema = typeof MESES_MKT[number]
 
+export type AmbitoEcosistema = "trabajo" | "empresa"
+
 export type EcosistemaType = {
   id:               number
   documentId:       string
@@ -18,6 +20,7 @@ export type EcosistemaType = {
   compras:          number
   montoCompras:     number
   notas:            string | null
+  ambito:           AmbitoEcosistema | null
   createdAt?:       string
   updatedAt?:       string
 }

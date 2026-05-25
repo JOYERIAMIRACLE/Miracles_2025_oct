@@ -24,6 +24,7 @@ export type BoxscoreType = {
   clicsIC:              number
   conversionesIC:       number
   traficoGeneral:       number
+  ambito:               "trabajo" | "empresa" | null
   createdAt?:           string
   updatedAt?:           string
 }

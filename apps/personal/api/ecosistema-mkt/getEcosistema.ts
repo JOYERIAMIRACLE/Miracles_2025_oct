@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react"
-import { EcosistemaType } from "@/types/ecosistema-mkt"
+import { EcosistemaType, AmbitoEcosistema } from "@/types/ecosistema-mkt"
 
-export function useGetEcosistema() {
-  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ecosistema-mkts?pagination[pageSize]=200&sort=anio:desc,mes:asc`
+export function useGetEcosistema(ambito: AmbitoEcosistema = "trabajo") {
+  const filter = ambito === "empresa"
+    ? "&filters[ambito][$eq]=empresa"
+    : "&filters[$or][0][ambito][$eq]=trabajo&filters[$or][1][ambito][$null]=true"
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ecosistema-mkts?pagination[pageSize]=200&sort=anio:desc,mes:asc${filter}`
   const [registros, setRegistros] = useState<EcosistemaType[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState("")

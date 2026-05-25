@@ -14,6 +14,7 @@ export type CdlType = {
   puntajeEncuestaNancy:    number
   contenidosRichard:       number
   puntajeEncuestaRichard:  number
+  ambito:                  "trabajo" | "empresa" | null
   createdAt?:              string
   updatedAt?:              string
 }

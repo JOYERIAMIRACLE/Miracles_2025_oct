@@ -1,5 +1,5 @@
 import { EcosistemaView } from "@/components/Trabajo/EcosistemaView"
 
 export default function EcosistemaEmpresaPage() {
-  return <EcosistemaView />
+  return <EcosistemaView ambito="empresa" />
 }

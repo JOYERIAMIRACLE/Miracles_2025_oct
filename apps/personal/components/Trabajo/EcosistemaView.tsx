@@ -171,8 +171,8 @@ function ModalFunnel({ editando, onGuardar, onCerrar }: {
   )
 }
 
-function TabFunnel() {
-  const { registros, setRegistros, loading } = useGetEcosistema()
+function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
+  const { registros, setRegistros, loading } = useGetEcosistema(ambito)
   const [modalOpen, setModalOpen] = useState(false)
   const [editando,  setEditando]  = useState<EcosistemaType | null>(null)
   const [filtroAnio, setFiltroAnio] = useState<number | "">(ANIO_ACTUAL)
@@ -607,8 +607,8 @@ function DrilldownModal({ row, semanas, onCerrar }: {
   )
 }
 
-function TabBoxscore() {
-  const { registros, setRegistros, loading } = useGetBoxscore()
+function TabBoxscore({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
+  const { registros, setRegistros, loading } = useGetBoxscore(ambito)
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editando,    setEditando]    = useState<BoxscoreType | null>(null)
   const [selectedRow, setSelectedRow] = useState<BSRow | null>(null)
@@ -938,8 +938,8 @@ const CDL_SECTIONS = [
   },
 ]
 
-function TabCdl() {
-  const { registros, setRegistros, loading } = useGetCdl()
+function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
+  const { registros, setRegistros, loading } = useGetCdl(ambito)
   const [modalOpen, setModalOpen] = useState(false)
   const [editando,  setEditando]  = useState<CdlType | null>(null)
   const [filtroAnio, setFiltroAnio] = useState<number | "">(ANIO_ACTUAL)
@@ -1129,7 +1129,7 @@ function TabCdl() {
 // VISTA PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
 
-export function EcosistemaView() {
+export function EcosistemaView({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
   const [tab, setTab] = useState<Tab>("funnel")
 
   return (
@@ -1141,9 +1141,9 @@ export function EcosistemaView() {
 
       <TabBar active={tab} onChange={setTab} />
 
-      {tab === "funnel"    && <TabFunnel />}
-      {tab === "boxscore"  && <TabBoxscore />}
-      {tab === "cdl"       && <TabCdl />}
+      {tab === "funnel"    && <TabFunnel   ambito={ambito} />}
+      {tab === "boxscore"  && <TabBoxscore ambito={ambito} />}
+      {tab === "cdl"       && <TabCdl      ambito={ambito} />}
     </div>
   )
 }
