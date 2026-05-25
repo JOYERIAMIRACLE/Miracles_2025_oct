@@ -4,6 +4,8 @@
 import { CuentaType } from "@/types/cuenta"
 import { CentroCostoType } from "@/types/centro-costo"
 
+export type AmbitoGasto = "trabajo" | "empresa"
+
 export type GastoType = {
   id:           number
   documentId:   string
@@ -13,6 +15,7 @@ export type GastoType = {
   cuenta:       CuentaType   | null
   centro_costo: CentroCostoType | null
   notas:        string        | null
+  ambito:       AmbitoGasto  | null
 }
 
 export type GastoPayload = {
@@ -22,4 +25,5 @@ export type GastoPayload = {
   cuenta:       number        | null  // id de la cuenta
   centro_costo: number        | null  // id del centro de costo
   notas:        string        | null
+  ambito?:      AmbitoGasto  | null
 }

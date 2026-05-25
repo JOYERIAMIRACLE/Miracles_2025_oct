@@ -34,7 +34,7 @@ function fmt(n: number) {
 
 export function FinancierosView() {
   const { ventas,  loading: lv } = useGetVentas()
-  const { gastos,  loading: lg } = useGetGastos()
+  const { gastos,  loading: lg } = useGetGastos("empresa")
   const [periodo, setPeriodo] = useState<Periodo>("mes_actual")
 
   const stats = useMemo(() => {
@@ -68,7 +68,7 @@ export function FinancierosView() {
         </div>
         <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
           {PERIODOS.map(p => (
-            <button key={p.value}
+            <button key={p.value} type="button"
               onClick={() => setPeriodo(p.value)}
               className={cn(
                 "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",

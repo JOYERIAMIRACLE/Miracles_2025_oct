@@ -7,7 +7,7 @@ import { useGetGastos }  from "@/api/gasto/getGastos"
 import { createGasto }   from "@/api/gasto/createGasto"
 import { updateGasto }   from "@/api/gasto/updateGasto"
 import { deleteGasto }   from "@/api/gasto/deleteGasto"
-import { GastoType, GastoPayload } from "@/types/gasto"
+import { GastoType, GastoPayload, AmbitoGasto } from "@/types/gasto"
 
 const fmt = (n: number | null) => n != null ? `$${Math.round(n).toLocaleString("es-MX")}` : "—"
 const fmtFecha = (iso: string | null) =>
@@ -19,8 +19,8 @@ function emptyForm(): GastoPayload {
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
 
-export function GastosEmpresaView() {
-  const { gastos: raw, loading } = useGetGastos()
+export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto }) {
+  const { gastos: raw, loading } = useGetGastos(ambito)
 
   const [gastos,    setGastos]    = useState<GastoType[]>([])
   const [search,    setSearch]    = useState("")
@@ -64,7 +64,7 @@ export function GastosEmpresaView() {
         setGastos(prev => prev.map(g => g.documentId === updated.documentId ? updated : g))
         toast.success("Gasto actualizado")
       } else {
-        const nuevo = await createGasto(form)
+        const nuevo = await createGasto({ ...form, ambito })
         setGastos(prev => [nuevo, ...prev])
         toast.success("Gasto registrado")
       }

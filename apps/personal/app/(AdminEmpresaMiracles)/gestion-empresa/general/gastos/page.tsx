@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { GastosEmpresaView } from "@/components/Empresa/Marketing/GastosEmpresaView"
 
 export default function GastosGeneralPage() {
-  return (
-    <PlaceholderView
-      seccion="Gestión General"
-      titulo="Registro de Gastos"
-      descripcion="Registro centralizado de gastos operativos por área, concepto y periodo."
-    />
-  )
+  return <GastosEmpresaView ambito="empresa" />
 }

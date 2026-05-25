@@ -46,6 +46,11 @@
     },
     "notas": {
       "type": "string"
+    },
+    "ambito": {
+      "type": "enumeration",
+      "enum": ["trabajo", "empresa"],
+      "default": "trabajo"
     }
   }
 }
