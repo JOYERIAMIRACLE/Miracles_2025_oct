@@ -22,7 +22,8 @@
       "type": "enumeration",
       "enum": [
         "personal",
-        "trabajo"
+        "trabajo",
+        "empresa"
       ],
       "required": true,
       "default": "personal"
