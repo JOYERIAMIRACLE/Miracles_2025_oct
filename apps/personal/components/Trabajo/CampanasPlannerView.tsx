@@ -184,11 +184,12 @@ const CAT_CHIP: Record<string, { letter: string; bg: string; text: string }> = {
   Extra: { letter: "E", bg: "bg-amber-500/20",  text: "text-amber-300"  },
 }
 
-function CampanaChip({ titulo, categoria, fullWidth, hasFiles, onClick, onDelete }: {
-  titulo: string; categoria: string | null; fullWidth?: boolean; hasFiles?: boolean
+function CampanaChip({ titulo, categoria, fullWidth, archivos, onClick, onDelete }: {
+  titulo: string; categoria: string | null; fullWidth?: boolean; archivos?: string[]
   onClick: () => void; onDelete?: () => void
 }) {
   const cfg = (categoria && CAT_CHIP[categoria]) ?? { letter: "·", bg: "bg-slate-700", text: "text-slate-400" }
+  const primerArchivo = archivos?.[0]
   return (
     <div
       onClick={onClick}
@@ -197,10 +198,16 @@ function CampanaChip({ titulo, categoria, fullWidth, hasFiles, onClick, onDelete
         {cfg.letter}
       </span>
       <span className="text-[11px] text-slate-200 truncate px-2 flex-1 text-left leading-none">{titulo}</span>
-      {hasFiles && (
-        <span className="flex items-center justify-center h-full w-6 shrink-0 text-slate-500">
+      {primerArchivo && (
+        <a
+          href={primerArchivo}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          title={`Abrir archivo${archivos && archivos.length > 1 ? ` (${archivos.length})` : ""}`}
+          className="flex items-center justify-center h-full w-6 shrink-0 text-slate-500 hover:text-blue-400 transition">
           <Paperclip size={10} />
-        </span>
+        </a>
       )}
       {onDelete && (
         <span
@@ -553,7 +560,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
                 <span className="text-[11px] text-slate-500 w-44 shrink-0 leading-snug">{label}</span>
                 <div className="flex-1 flex flex-wrap items-center gap-2">
                   {items.map(({ c, titulo }) => (
-                    <CampanaChip key={`${c.documentId}-${n}`} titulo={titulo} categoria={c.categoria} hasFiles={!!(c.semana1Archivo || c.semana2Archivo || c.semana3Archivo || c.semana4Archivo)} onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
+                    <CampanaChip key={`${c.documentId}-${n}`} titulo={titulo} categoria={c.categoria} archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
                   ))}
                 </div>
                 <button type="button" title="Agregar campaña" onClick={() => onNueva({ mes, anio })}
@@ -702,7 +709,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar }: {
                   <div key={di}
                     className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
-                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} hasFiles={!!(campana.semana1Archivo || campana.semana2Archivo || campana.semana3Archivo || campana.semana4Archivo)} onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
+                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
                     ))}
                     <button type="button"
                       onClick={() => onAgregar({ categoria: fila.label, mes: MESES[day.getMonth()], anio: day.getFullYear(), fecha: toYMD(day) })}
