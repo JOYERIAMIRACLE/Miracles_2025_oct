@@ -5,7 +5,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutGrid, X,
-  User, Building2, ShoppingBag, Briefcase, FileText, Dumbbell,
+  User, Building2, ShoppingBag, Briefcase,
 } from "lucide-react"
 
 type AppStatus = "active" | "coming"
@@ -37,35 +37,19 @@ const APPS: AppEntry[] = [
     status: "active",
   },
   {
-    name: "Tienda",
-    description: "Joyería Miracles",
-    icon: ShoppingBag,
-    href: "/",
-    color: "amber",
-    status: "active",
-  },
-  {
-    name: "Marketing team",
-    description: "Tareas · Reuniones · Inventario",
+    name: "Trabajo",
+    description: "Tareas · Campañas · Marketing",
     icon: Briefcase,
     href: "/trabajo/tareas",
     color: "blue",
     status: "active",
   },
   {
-    name: "Gym & Salud",
-    description: "Rutinas · Métricas · Progreso",
-    icon: Dumbbell,
-    href: "/gestion-personal/salud/gym",
-    color: "green",
-    status: "active",
-  },
-  {
-    name: "Blog",
-    description: "Artículos y contenido",
-    icon: FileText,
-    href: "/blog",
-    color: "pink",
+    name: "Tienda",
+    description: "Joyería Miracles",
+    icon: ShoppingBag,
+    href: "/",
+    color: "amber",
     status: "active",
   },
 ]
@@ -183,7 +167,7 @@ export function AppLauncher() {
                 </div>
 
                 {/* Grid */}
-                <div className="p-5 grid grid-cols-3 gap-3">
+                <div className="p-5 grid grid-cols-2 gap-3">
                   {APPS.map((app) => (
                     <AppCard key={app.name} app={app} onClose={close} />
                   ))}
