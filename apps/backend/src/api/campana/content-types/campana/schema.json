@@ -61,6 +61,9 @@
     "notas": {
       "type": "text"
     },
+    "keyword": {
+      "type": "string"
+    },
     "ambito": {
       "type": "enumeration",
       "enum": ["trabajo", "empresa"],

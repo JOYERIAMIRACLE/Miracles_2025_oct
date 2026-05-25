@@ -144,7 +144,7 @@ function buildSections(campanas: CampanaType[]) {
 function emptyPayload(mes: MesCampana, anio: number, categoria: string | null): CampanaPayload {
   return {
     unidadNegocio: "", mes, anio, tipo: "completa", orden: 0,
-    categoria, atributos: null, notas: null,
+    categoria, atributos: null, notas: null, keyword: null,
     semana1Fecha: null, semana1Titulo: null, semana1Partes: null, semana1Archivo: null,
     semana2Fecha: null, semana2Titulo: null, semana2Partes: null, semana2Archivo: null,
     semana3Fecha: null, semana3Titulo: null, semana3Partes: null, semana3Archivo: null,
@@ -155,7 +155,7 @@ function emptyPayload(mes: MesCampana, anio: number, categoria: string | null): 
 function payloadDe(c: CampanaType): CampanaPayload {
   return {
     unidadNegocio: c.unidadNegocio, mes: c.mes, anio: c.anio, tipo: c.tipo, orden: c.orden,
-    categoria: c.categoria, atributos: c.atributos, notas: c.notas,
+    categoria: c.categoria, atributos: c.atributos, notas: c.notas, keyword: c.keyword,
     semana1Fecha: c.semana1Fecha, semana1Titulo: c.semana1Titulo,
     semana1Partes: c.semana1Partes, semana1Archivo: c.semana1Archivo,
     semana2Fecha: c.semana2Fecha, semana2Titulo: c.semana2Titulo,
@@ -403,6 +403,15 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
               placeholder="Ej. PLC, HMI, Conveyor..."
               rows={3}
               className={`${inputCls} resize-y`}
+            />
+          )}
+
+          {/* Keyword */}
+          {field("Keyword",
+            <input value={form.keyword ?? ""}
+              onChange={e => setForm(f => ({ ...f, keyword: e.target.value || null }))}
+              placeholder="Ej. joyería plata, anillos, regalo..."
+              className={inputCls}
             />
           )}
 

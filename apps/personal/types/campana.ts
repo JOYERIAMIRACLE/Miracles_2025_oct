@@ -35,6 +35,7 @@ export type CampanaType = {
   semana4Partes:   string | null
   semana4Archivo:  string | null
   notas:           string | null
+  keyword:         string | null
   createdAt?:      string
   updatedAt?:      string
 }
