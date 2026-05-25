@@ -356,13 +356,13 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const hayFiltrosActivos = filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim() || filtroResponsable || filtroTicket
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">{titulo}</h1>
           <p className="text-sm text-muted-foreground">Gestiona y da seguimiento a tus tareas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle vista */}
           <div className="flex items-center gap-0 rounded-lg border border-zinc-200 dark:border-zinc-800 p-0.5">
             <button
@@ -400,7 +400,9 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
             </button>
           </div>
           <Button onClick={() => abrirCrear()} size="sm">
-            <Plus size={14} className="mr-1" /> Nueva tarea
+            <Plus size={14} className="mr-1" />
+            <span className="hidden sm:inline">Nueva tarea</span>
+            <span className="sm:hidden">Nueva</span>
           </Button>
         </div>
       </div>
@@ -722,7 +724,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 w-full max-w-md space-y-3 border border-zinc-200 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 sm:p-6 w-full max-w-md space-y-3 border border-zinc-200 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{editando ? "Editar tarea" : "Nueva tarea"}</h2>
               <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
@@ -746,7 +748,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs" htmlFor="t-estado">Estado</Label>
                 <select
@@ -776,7 +778,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs" htmlFor="t-inicio">
                   Fecha inicio {!editando && <span className="text-muted-foreground font-normal">(auto)</span>}
@@ -803,7 +805,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs" htmlFor="t-responsable">Responsable</Label>
                 <Input
@@ -834,7 +836,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs" htmlFor="t-etiqueta">Etiqueta</Label>
                 <Input
