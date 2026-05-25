@@ -4,13 +4,13 @@
   "private": true,
   "description": "A Strapi application",
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=460 strapi build",
+    "build": "node --max-old-space-size=460 node_modules/.bin/strapi build",
     "console": "strapi console",
     "deploy": "strapi deploy",
     "dev": "strapi develop",
     "develop": "strapi develop",
     "seed:example": "node ./scripts/seed.js",
-    "start": "NODE_OPTIONS=--max-old-space-size=460 strapi start",
+    "start": "node --max-old-space-size=460 node_modules/.bin/strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry"
