@@ -3,25 +3,20 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  Building2, LayoutDashboard,
+  Building2,
   BarChart3, Activity, Globe2,
   Target, CheckSquare, Receipt, HardDrive,
   Megaphone, BookOpen, Tv, Palette,
   Users, ShoppingBag,
   Package, Truck,
   PieChart, CreditCard, CalendarDays,
+  UserCog, ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-type NavItem = { name: string; href: string; icon: typeof LayoutDashboard; color: string }
+type NavItem = { name: string; href: string; icon: typeof Building2; color: string }
 
 const sections: { title: string | null; color: string; items: NavItem[] }[] = [
-  {
-    title: null, color: "emerald",
-    items: [
-      { name: "Dashboard", href: "/gestion-empresa", icon: LayoutDashboard, color: "emerald" },
-    ],
-  },
   {
     title: "Indicadores", color: "violet",
     items: [
@@ -70,6 +65,13 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
       { name: "Calendario de pagos",href: "/gestion-empresa/finanzas/calendario",   icon: CalendarDays, color: "rose" },
     ],
   },
+  {
+    title: "Administración", color: "slate",
+    items: [
+      { name: "Personas", href: "/gestion-empresa/admin/personas", icon: UserCog,    color: "slate" },
+      { name: "Roles",    href: "/gestion-empresa/admin/roles",    icon: ShieldCheck, color: "slate" },
+    ],
+  },
 ]
 
 const activeColors: Record<string, string> = {
@@ -79,6 +81,7 @@ const activeColors: Record<string, string> = {
   violet:  "bg-violet-500/10 text-violet-400 border-violet-500/30",
   rose:    "bg-rose-500/10 text-rose-400 border-rose-500/30",
   sky:     "bg-sky-500/10 text-sky-400 border-sky-500/30",
+  slate:   "bg-slate-500/10 text-slate-300 border-slate-500/30",
 }
 
 const iconActive: Record<string, string> = {
@@ -88,6 +91,7 @@ const iconActive: Record<string, string> = {
   violet:  "text-violet-400",
   rose:    "text-rose-400",
   sky:     "text-sky-400",
+  slate:   "text-slate-300",
 }
 
 const sectionLabel: Record<string, string> = {
@@ -97,6 +101,7 @@ const sectionLabel: Record<string, string> = {
   emerald: "text-emerald-700",
   amber:   "text-amber-700",
   rose:    "text-rose-700",
+  slate:   "text-slate-500",
 }
 
 export function EmpresaSidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
