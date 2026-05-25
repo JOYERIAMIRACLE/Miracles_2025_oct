@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { OperativosView } from "@/components/Empresa/Indicadores/OperativosView"
 
 export default function OperativosPage() {
-  return (
-    <PlaceholderView
-      seccion="Indicadores"
-      titulo="Operativos"
-      descripcion="Métricas de conversión del pipeline, tareas completadas, entregas y rendimiento del equipo."
-    />
-  )
+  return <OperativosView />
 }
