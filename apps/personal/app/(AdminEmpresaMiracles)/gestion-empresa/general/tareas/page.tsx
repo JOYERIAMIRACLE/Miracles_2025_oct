@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { TareasView } from "@/components/Personal/Tareas/TareasView"
 
 export default function TareasGeneralPage() {
-  return (
-    <PlaceholderView
-      seccion="Gestión General"
-      titulo="Tareas"
-      descripcion="Gestión de tareas operativas y administrativas de la empresa por área y responsable."
-    />
-  )
+  return <TareasView ambito="empresa" titulo="Tareas" />
 }
