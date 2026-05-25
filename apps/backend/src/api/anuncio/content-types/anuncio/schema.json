@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "anuncios",
+  "info": {
+    "singularName": "anuncio",
+    "pluralName": "anuncios",
+    "displayName": "Anuncio"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":      { "type": "string", "required": true },
+    "plataforma": {
+      "type": "enumeration",
+      "enum": ["Instagram", "Facebook", "Google", "TikTok", "Pinterest", "Otro"],
+      "required": true
+    },
+    "tipo": {
+      "type": "enumeration",
+      "enum": ["imagen", "video", "carousel", "stories", "otro"],
+      "default": "imagen"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["activo", "pausado", "finalizado", "borrador"],
+      "default": "borrador"
+    },
+    "presupuesto":   { "type": "decimal", "default": 0 },
+    "gastado":       { "type": "decimal", "default": 0 },
+    "impresiones":   { "type": "integer", "default": 0 },
+    "clics":         { "type": "integer", "default": 0 },
+    "conversiones":  { "type": "integer", "default": 0 },
+    "fecha_inicio":  { "type": "date" },
+    "fecha_fin":     { "type": "date" },
+    "objetivo":      { "type": "string" },
+    "notas":         { "type": "text" }
+  }
+}

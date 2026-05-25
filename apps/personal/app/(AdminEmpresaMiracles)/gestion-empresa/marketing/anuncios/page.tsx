@@ -1,11 +1,5 @@
-import { PlaceholderView } from "@/components/Empresa/PlaceholderView"
+import { AnunciosView } from "@/components/Empresa/Marketing/AnunciosView"
 
 export default function AnunciosPage() {
-  return (
-    <PlaceholderView
-      seccion="Marketing"
-      titulo="Anuncios"
-      descripcion="Seguimiento de campañas de pago: Meta Ads, Google Ads. Presupuesto, alcance y resultados."
-    />
-  )
+  return <AnunciosView />
 }
