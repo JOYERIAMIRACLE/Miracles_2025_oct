@@ -142,12 +142,20 @@ type CatStat  = { cat: CategoriaPagoType; total: number; count: number }
 type MesStat  = { mes: string; total: number; key: string }
 type DonutRow = { name: string; value: number; color: string }
 
-function MetricasPanel({ porCategoria, porMes, sinCategoria }: {
+function efectivoProv(p: PagoTrabajoType): string {
+  return p.proveedor?.trim() || p.descripcion?.trim() || "(sin proveedor)"
+}
+
+function MetricasPanel({ porCategoria, porMes, sinCategoria, pagos }: {
   porCategoria: CatStat[]
   porMes:       MesStat[]
   sinCategoria: number
+  pagos:        PagoTrabajoType[]
 }) {
-  const [activeIdx, setActiveIdx] = useState<number | null>(null)
+  const [activeIdx,   setActiveIdx]   = useState<number | null>(null)
+  const [selectedMes, setSelectedMes] = useState<string | null>(null)
+
+  const totalDonut = porCategoria.reduce((s, x) => s + x.total, 0) + sinCategoria
 
   const donutData: DonutRow[] = [
     ...porCategoria.map(({ cat, total }, i) => ({
@@ -158,24 +166,48 @@ function MetricasPanel({ porCategoria, porMes, sinCategoria }: {
     ...(sinCategoria > 0 ? [{ name: "Sin categoría", value: sinCategoria, color: "#475569" }] : []),
   ]
 
-  const catBarData = porCategoria.map(({ cat, total }, i) => ({
-    name:  cat.nombre.replace("MKT - ", "").replace("IT - ", ""),
-    total,
-    fill:  catHex(i)!,
-  }))
+  const topProveedores = useMemo(() => {
+    const map: Record<string, number> = {}
+    pagos.forEach(p => {
+      const prov = efectivoProv(p)
+      map[prov] = (map[prov] ?? 0) + p.monto
+    })
+    return Object.entries(map)
+      .map(([prov, total]) => ({ prov, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10)
+  }, [pagos])
+
+  const provsPorMes = useMemo(() => {
+    if (!selectedMes) return []
+    const map: Record<string, number> = {}
+    pagos.forEach(p => {
+      if (!p.fecha?.startsWith(selectedMes)) return
+      const prov = efectivoProv(p)
+      map[prov] = (map[prov] ?? 0) + p.monto
+    })
+    return Object.entries(map)
+      .map(([prov, total]) => ({ prov, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 8)
+  }, [pagos, selectedMes])
+
+  const totalMes = provsPorMes.reduce((s, x) => s + x.total, 0)
+  const mesMesLabel = porMes.find(m => m.key === selectedMes)?.mes ?? ""
 
   return (
     <div className="space-y-4">
-      {/* Fila 1: dona + barras por mes */}
+      {/* Fila 1: dona con % + top proveedores */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Dona — por categoría */}
+
+        {/* Dona con % */}
         <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por categoría</p>
           {donutData.length === 0 ? (
             <p className="text-xs text-slate-600 text-center py-10">Sin datos</p>
           ) : (
             <div className="flex items-center gap-4">
-              <ResponsiveContainer width={160} height={150}>
+              <ResponsiveContainer width={160} height={160}>
                 <PieChart>
                   <Pie
                     data={donutData} cx="50%" cy="50%"
@@ -185,29 +217,33 @@ function MetricasPanel({ porCategoria, porMes, sinCategoria }: {
                     onMouseLeave={() => setActiveIdx(null)}
                   >
                     {donutData.map((entry, i) => (
-                      <Cell
-                        key={i} fill={entry.color}
+                      <Cell key={i} fill={entry.color}
                         opacity={activeIdx === null || activeIdx === i ? 1 : 0.35}
                         style={{ cursor: "pointer", outline: "none" }}
                       />
                     ))}
                   </Pie>
                   <RCTooltip
-                    formatter={(v: number) => [fmt(v), ""]}
+                    formatter={(v: number) => [
+                      `${fmt(v)}  (${totalDonut > 0 ? ((v / totalDonut) * 100).toFixed(1) : 0}%)`,
+                      ""
+                    ]}
                     contentStyle={TOOLTIP_STYLE}
                     itemStyle={{ color: "#cbd5e1" }}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <ul className="space-y-1.5 flex-1 min-w-0">
+              <ul className="space-y-2 flex-1 min-w-0">
                 {donutData.map((d, i) => (
                   <li key={i}
                     className={`flex items-center gap-1.5 text-[11px] transition-opacity ${activeIdx !== null && activeIdx !== i ? "opacity-40" : ""}`}
-                    onMouseEnter={() => setActiveIdx(i)}
-                    onMouseLeave={() => setActiveIdx(null)}
+                    onMouseEnter={() => setActiveIdx(i)} onMouseLeave={() => setActiveIdx(null)}
                   >
                     <ColorDot color={d.color} />
                     <span className="text-slate-400 truncate flex-1">{d.name}</span>
+                    <span className="text-slate-500 tabular-nums shrink-0 text-[10px] w-8 text-right">
+                      {totalDonut > 0 ? ((d.value / totalDonut) * 100).toFixed(0) : 0}%
+                    </span>
                     <span className="text-slate-300 tabular-nums shrink-0">{fmt(d.value)}</span>
                   </li>
                 ))}
@@ -216,53 +252,92 @@ function MetricasPanel({ porCategoria, porMes, sinCategoria }: {
           )}
         </div>
 
-        {/* Barras — por mes */}
+        {/* Top proveedores */}
         <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por mes</p>
-          {porMes.length === 0 ? (
-            <p className="text-xs text-slate-600 text-center py-10">Sin gastos con fecha</p>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Top proveedores</p>
+          {topProveedores.length === 0 ? (
+            <p className="text-xs text-slate-600 text-center py-10">Sin datos</p>
           ) : (
-            <ResponsiveContainer width="100%" height={150}>
-              <BarChart data={porMes} margin={{ top: 0, right: 4, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="mes" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={38} />
+            <ResponsiveContainer width="100%" height={Math.min(topProveedores.length * 26 + 8, 220)}>
+              <BarChart data={topProveedores} layout="vertical" margin={{ top: 0, right: 8, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                <XAxis type="number" tickFormatter={fmtAxis} tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="prov" tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={110}
+                  tickFormatter={v => v.length > 14 ? v.slice(0, 14) + "…" : v} />
                 <RCTooltip
                   formatter={(v: number) => [fmt(v), "Total"]}
                   contentStyle={TOOLTIP_STYLE}
                   itemStyle={{ color: "#cbd5e1" }}
-                  labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
                 />
-                <Bar dataKey="total" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                <Bar dataKey="total" fill="#38bdf8" radius={[0, 4, 4, 0]} maxBarSize={16} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
       </div>
 
-      {/* Fila 2: barras horizontales por categoría */}
-      {catBarData.length > 0 && (
-        <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Monto por categoría</p>
-          <ResponsiveContainer width="100%" height={catBarData.length * 28 + 8}>
-            <BarChart data={catBarData} layout="vertical" margin={{ top: 0, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-              <XAxis type="number" tickFormatter={fmtAxis} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={90} />
+      {/* Fila 2: barras por mes (clic = desglose por proveedor) */}
+      <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Por mes</p>
+          <p className="text-[10px] text-slate-600">Clic en barra → desglose por proveedor</p>
+        </div>
+        {porMes.length === 0 ? (
+          <p className="text-xs text-slate-600 text-center py-10">Sin gastos con fecha</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={porMes} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
+              onClick={d => {
+                const key = d?.activePayload?.[0]?.payload?.key as string | undefined
+                if (key) setSelectedMes(prev => prev === key ? null : key)
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+              <XAxis dataKey="mes" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={38} />
               <RCTooltip
                 formatter={(v: number) => [fmt(v), "Total"]}
                 contentStyle={TOOLTIP_STYLE}
                 itemStyle={{ color: "#cbd5e1" }}
+                labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
               />
-              <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={18}>
-                {catBarData.map((entry, i) => (
-                  <Cell key={i} fill={entry.fill} />
+              <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={32} style={{ cursor: "pointer" }}>
+                {porMes.map((entry, i) => (
+                  <Cell key={i} fill={selectedMes === entry.key ? "#f59e0b" : "#34d399"} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
-      )}
+        )}
+
+        {/* Desglose por proveedor del mes seleccionado */}
+        {selectedMes && provsPorMes.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-slate-800/60">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">
+                Proveedores · {mesMesLabel}
+              </p>
+              <span className="text-[11px] text-slate-500">{fmt(totalMes)} total</span>
+            </div>
+            <div className="space-y-2.5">
+              {provsPorMes.map(({ prov, total }, i) => {
+                const pct = totalMes > 0 ? (total / totalMes) * 100 : 0
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] text-slate-300 w-4 text-right shrink-0">{i + 1}</span>
+                    <span className="text-[11px] text-slate-400 flex-1 truncate">{prov}</span>
+                    <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden shrink-0">
+                      <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-[10px] text-slate-500 tabular-nums shrink-0 w-8 text-right">{pct.toFixed(0)}%</span>
+                    <span className="text-[11px] text-slate-200 tabular-nums shrink-0 w-20 text-right">{fmt(total)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -512,7 +587,7 @@ export default function PagosPage() {
       <AnimatePresence>
         {showMetricas && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <MetricasPanel porCategoria={porCategoria} porMes={porMes} sinCategoria={sinCategoria} />
+            <MetricasPanel porCategoria={porCategoria} porMes={porMes} sinCategoria={sinCategoria} pagos={pagosFecha} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -699,7 +774,7 @@ export default function PagosPage() {
                       </select>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <p className="text-slate-400 text-xs truncate">{p.proveedor ?? "—"}</p>
+                      <p className="text-slate-400 text-xs truncate">{p.proveedor?.trim() || p.descripcion?.trim() || "—"}</p>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-500 hidden md:table-cell">{p.fecha ?? "—"}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-200 tabular-nums">{fmt(p.monto)}</td>
