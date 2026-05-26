@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "historial_tareas",
+  "info": {
+    "singularName": "historial-tarea",
+    "pluralName": "historial-tareas",
+    "displayName": "Historial Tarea"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "tareaDocumentId": {
+      "type": "string",
+      "required": true
+    },
+    "estadoAnterior": {
+      "type": "string"
+    },
+    "estadoNuevo": {
+      "type": "string",
+      "required": true
+    },
+    "timestamp": {
+      "type": "datetime",
+      "required": true
+    },
+    "ambito": {
+      "type": "string"
+    }
+  }
+}

@@ -12,6 +12,8 @@ import { createTarea } from "@/api/tarea/createTarea"
 import { updateTarea } from "@/api/tarea/updateTarea"
 import { deleteTarea } from "@/api/tarea/deleteTarea"
 import { TareaType, TareaPayload, AmbitoTarea, EstadoTarea, PrioridadTarea } from "@/types/tarea"
+import { useGetHistorialTarea } from "@/api/historial-tarea/getHistorialTarea"
+import { createHistorialTarea } from "@/api/historial-tarea/mutateHistorialTarea"
 
 const ESTADOS: { key: EstadoTarea | "todas"; label: string }[] = [
   { key: "todas",       label: "Todas" },
@@ -119,6 +121,7 @@ type Vista = "lista" | "calendario" | "metricas"
 
 export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: string }) {
   const { tareas, setTareas, loading } = useGetTareas(ambito)
+  const { historial, setHistorial }    = useGetHistorialTarea(ambito)
   const [vista, setVista] = useState<Vista>("lista")
   const [filtro, setFiltro] = useState<EstadoTarea | "todas">("todas")
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>("")
@@ -288,13 +291,22 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
   const cambiarEstado = async (t: TareaType, nuevoEstado: EstadoTarea) => {
     try {
+      const ahora = new Date().toISOString()
       const payload: Partial<TareaPayload> = {
         estado: nuevoEstado,
-        fechaCompletada: nuevoEstado === "completada" ? new Date().toISOString() : null,
-        ...(!t.fechaInicio && nuevoEstado === "en_progreso" ? { fechaInicio: new Date().toISOString() } : {}),
+        fechaCompletada: nuevoEstado === "completada" ? ahora : null,
+        ...(!t.fechaInicio && nuevoEstado === "en_progreso" ? { fechaInicio: ahora } : {}),
       }
       const updated = await updateTarea(t.documentId, payload)
       setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+      // Log del cambio de estado — fire and forget
+      createHistorialTarea({
+        tareaDocumentId: t.documentId,
+        estadoAnterior:  t.estado,
+        estadoNuevo:     nuevoEstado,
+        timestamp:       ahora,
+        ambito:          t.ambito,
+      }).then(entry => setHistorial(prev => [...prev, entry])).catch(() => {})
     } catch {
       toast.error("Error al actualizar")
     }
@@ -750,7 +762,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
       {/* VISTA: MÉTRICAS */}
       {vista === "metricas" && (
-        <MetricasView tareas={tareas} />
+        <MetricasView tareas={tareas} historial={historial} />
       )}
 
       {/* Modal */}

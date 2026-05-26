@@ -6,13 +6,29 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer,
 } from "recharts"
 import { TareaType, EstadoTarea } from "@/types/tarea"
+import { HistorialTareaType } from "@/types/historial-tarea"
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const ESTADO_COLOR: Record<EstadoTarea, string> = {
   pendiente:   "bg-amber-500",
   en_progreso: "bg-blue-500",
+  en_pausa:    "bg-violet-500",
   completada:  "bg-emerald-500",
+}
+
+const ESTADO_HEX: Record<EstadoTarea, string> = {
+  pendiente:   "#f59e0b",
+  en_progreso: "#3b82f6",
+  en_pausa:    "#8b5cf6",
+  completada:  "#10b981",
+}
+
+const ESTADO_LABEL: Record<EstadoTarea, string> = {
+  pendiente:   "Pendiente",
+  en_progreso: "En progreso",
+  en_pausa:    "En pausa",
+  completada:  "Completada",
 }
 
 const TOOLTIP_STYLE = {
@@ -20,12 +36,58 @@ const TOOLTIP_STYLE = {
   borderRadius: "8px", fontSize: "12px", color: "#a1a1aa",
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const diasEntre = (a: string, b: string) =>
-  Math.round((new Date(b + "T00:00:00").getTime() - new Date(a + "T00:00:00").getTime()) / 86400000)
+function parseTs(s: string): number {
+  return new Date(s).getTime()
+}
 
-const fmtDias = (d: number) => d === 1 ? "1 día" : `${d} días`
+function msAHoras(ms: number): number {
+  return ms / (1000 * 60 * 60)
+}
+
+function fmtDuracion(horas: number): string {
+  if (horas < 1)   return "< 1h"
+  if (horas < 24)  return `${Math.round(horas)}h`
+  const d = Math.floor(horas / 24)
+  const h = Math.round(horas % 24)
+  return h > 0 ? `${d}d ${h}h` : `${d}d`
+}
+
+function fmtHorasCorto(horas: number): string {
+  if (horas < 1)   return "< 1h"
+  if (horas < 24)  return `${Math.round(horas)}h`
+  return `${(horas / 24).toFixed(1)}d`
+}
+
+// Dado el historial de UNA tarea (ordenado por timestamp),
+// devuelve las horas acumuladas en cada estado.
+function calcularTiempoPorEstado(
+  entradas: HistorialTareaType[],
+  tarea: TareaType,
+): Record<EstadoTarea, number> {
+  const acc: Record<EstadoTarea, number> = { pendiente: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
+
+  if (entradas.length === 0) return acc
+
+  const sorted = [...entradas].sort((a, b) => parseTs(a.timestamp) - parseTs(b.timestamp))
+
+  for (let i = 0; i < sorted.length; i++) {
+    const desde = parseTs(sorted[i].timestamp)
+    const hasta = i + 1 < sorted.length
+      ? parseTs(sorted[i + 1].timestamp)
+      : tarea.fechaCompletada
+        ? parseTs(tarea.fechaCompletada)
+        : Date.now()
+
+    const estado = sorted[i].estadoNuevo as EstadoTarea
+    if (estado in acc) {
+      acc[estado] += msAHoras(Math.max(0, hasta - desde))
+    }
+  }
+
+  return acc
+}
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
 
@@ -64,7 +126,7 @@ type PeriodFilter = "todo" | "mes" | "semana"
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function MetricasView({ tareas }: { tareas: TareaType[] }) {
+export function MetricasView({ tareas, historial }: { tareas: TareaType[]; historial: HistorialTareaType[] }) {
   const [periodo, setPeriodo] = useState<PeriodFilter>("todo")
 
   const hoyMs = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime() }, [])
@@ -92,60 +154,20 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
   const completadas = tareasFiltradas.filter(t => t.estado === "completada").length
   const enProgreso  = tareasFiltradas.filter(t => t.estado === "en_progreso").length
   const pendientes  = tareasFiltradas.filter(t => t.estado === "pendiente").length
+  const enPausa     = tareasFiltradas.filter(t => t.estado === "en_pausa").length
   const tasaCompletado   = total ? Math.round(completadas / total * 100) : 0
   const progresoPromedio = total
     ? Math.round(tareasFiltradas.reduce((s, t) => s + (t.progreso ?? 0), 0) / total)
     : 0
-
-  const conRango = tareasFiltradas.filter(t => t.fechaInicio && t.fechaVencimiento)
-  const duracionPromedio = conRango.length
-    ? Math.round(conRango.reduce((s, t) => s + diasEntre(t.fechaInicio!, t.fechaVencimiento!), 0) / conRango.length)
-    : null
-
-  const enCursoHoy = tareasFiltradas.filter(t => {
-    if (t.estado === "completada") return false
-    const desde = t.fechaInicio ?? null
-    const hasta  = t.fechaVencimiento ?? null
-    if (!desde && !hasta) return false
-    return (desde ? desde <= hoyIso : true) && (hasta ? hoyIso <= hasta : true)
-  }).length
 
   // ── Donut estado ──────────────────────────────────────────────────────────
 
   const donutEstado = [
     { name: "Completadas", value: completadas, color: "#10b981" },
     { name: "En progreso", value: enProgreso,  color: "#3b82f6" },
+    { name: "En pausa",    value: enPausa,     color: "#8b5cf6" },
     { name: "Pendientes",  value: pendientes,  color: "#f59e0b" },
   ].filter(d => d.value > 0)
-
-  // ── Por responsable ────────────────────────────────────────────────────────
-
-  const porResponsable = useMemo(() => {
-    const map = new Map<string, TareaType[]>()
-    tareasFiltradas.forEach(t => {
-      const key = t.responsable?.trim() || "(Sin asignar)"
-      if (!map.has(key)) map.set(key, [])
-      map.get(key)!.push(t)
-    })
-    return [...map.entries()]
-      .map(([nombre, ts]) => {
-        const conDur = ts.filter(t => t.fechaInicio && t.fechaVencimiento)
-        return {
-          nombre,
-          total: ts.length,
-          completadas: ts.filter(t => t.estado === "completada").length,
-          enProgreso:  ts.filter(t => t.estado === "en_progreso").length,
-          pendientes:  ts.filter(t => t.estado === "pendiente").length,
-          progreso: ts.length
-            ? Math.round(ts.reduce((s, t) => s + (t.progreso ?? 0), 0) / ts.length)
-            : 0,
-          durPromedio: conDur.length
-            ? Math.round(conDur.reduce((s, t) => s + diasEntre(t.fechaInicio!, t.fechaVencimiento!), 0) / conDur.length)
-            : null,
-        }
-      })
-      .sort((a, b) => b.total - a.total)
-  }, [tareasFiltradas])
 
   // ── Por área ──────────────────────────────────────────────────────────────
 
@@ -187,42 +209,86 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
 
   const maxEtiqueta = porEtiqueta.reduce((m, e) => Math.max(m, e.total), 0)
 
-  // ── Duración por tarea ────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // TIEMPO POR ETAPA — usando historial
+  // ══════════════════════════════════════════════════════════════════════════
 
-  const tareasConRango = useMemo(() =>
-    tareasFiltradas
-      .filter(t => t.fechaInicio && t.fechaVencimiento)
-      .map(t => ({
-        ...t,
-        duracion: diasEntre(t.fechaInicio!, t.fechaVencimiento!),
-        vencida: t.fechaVencimiento! < hoyIso && t.estado !== "completada",
-      }))
-      .sort((a, b) => a.fechaInicio! < b.fechaInicio! ? -1 : a.fechaInicio! > b.fechaInicio! ? 1 : 0),
-  [tareasFiltradas, hoyIso])
+  const historialPorTarea = useMemo(() => {
+    const map = new Map<string, HistorialTareaType[]>()
+    historial.forEach(h => {
+      if (!map.has(h.tareaDocumentId)) map.set(h.tareaDocumentId, [])
+      map.get(h.tareaDocumentId)!.push(h)
+    })
+    return map
+  }, [historial])
 
-  const maxDuracion = tareasConRango.reduce((m, t) => Math.max(m, t.duracion), 0)
+  // Tareas con al menos una entrada de historial
+  const tareasConHistorial = useMemo(() =>
+    tareasFiltradas.filter(t => historialPorTarea.has(t.documentId)),
+  [tareasFiltradas, historialPorTarea])
 
-  // ── Completadas por mes — recharts ────────────────────────────────────────
+  // Acumulado global de horas por estado
+  const acumuladoGlobal = useMemo(() => {
+    const acc: Record<EstadoTarea, number> = { pendiente: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
+    tareasConHistorial.forEach(t => {
+      const entradas = historialPorTarea.get(t.documentId) ?? []
+      const tiempos  = calcularTiempoPorEstado(entradas, t)
+      ;(Object.keys(tiempos) as EstadoTarea[]).forEach(e => { acc[e] += tiempos[e] })
+    })
+    return acc
+  }, [tareasConHistorial, historialPorTarea])
 
-  const completadasPorMes = useMemo(() => {
-    const map = new Map<string, number>()
-    tareasFiltradas
-      .filter(t => t.estado === "completada" && t.fechaCompletada)
-      .forEach(t => {
-        const d = new Date(t.fechaCompletada!)
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-        map.set(key, (map.get(key) ?? 0) + 1)
-      })
+  const totalHorasHistorial = Object.values(acumuladoGlobal).reduce((s, v) => s + v, 0)
+
+  // Promedio por estado (solo sobre tareas con historial)
+  const promedioEstado = useMemo(() => {
+    const n = tareasConHistorial.length
+    if (!n) return null
+    return {
+      pendiente:   acumuladoGlobal.pendiente   / n,
+      en_progreso: acumuladoGlobal.en_progreso / n,
+      en_pausa:    acumuladoGlobal.en_pausa    / n,
+      completada:  acumuladoGlobal.completada  / n,
+    }
+  }, [acumuladoGlobal, tareasConHistorial])
+
+  // Tiempo por etapa agrupado por etiqueta — para gráfica de barras apiladas
+  const tiempoPorEtiqueta = useMemo(() => {
+    const map = new Map<string, Record<EstadoTarea, number>>()
+    tareasConHistorial.forEach(t => {
+      const key      = t.etiqueta?.trim() || "(Sin etiqueta)"
+      const entradas = historialPorTarea.get(t.documentId) ?? []
+      const tiempos  = calcularTiempoPorEstado(entradas, t)
+      const actual   = map.get(key) ?? { pendiente: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
+      ;(Object.keys(tiempos) as EstadoTarea[]).forEach(e => { actual[e] += tiempos[e] })
+      map.set(key, actual)
+    })
     return [...map.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-6)
-      .map(([key, count]) => {
-        const [anio, m] = key.split("-")
-        const label = new Date(Number(anio), Number(m) - 1, 1)
-          .toLocaleDateString("es-MX", { month: "short", year: "2-digit" })
-        return { mes: label, count }
+      .map(([etiqueta, t]) => ({
+        etiqueta: etiqueta.length > 14 ? etiqueta.slice(0, 13) + "…" : etiqueta,
+        etiquetaFull: etiqueta,
+        pendiente:   Math.round(t.pendiente),
+        en_progreso: Math.round(t.en_progreso),
+        en_pausa:    Math.round(t.en_pausa),
+      }))
+      .sort((a, b) => (b.pendiente + b.en_progreso + b.en_pausa) - (a.pendiente + a.en_progreso + a.en_pausa))
+  }, [tareasConHistorial, historialPorTarea])
+
+  // Ranking de tareas completadas por cycle time (en_progreso acumulado)
+  const rankingCycleTime = useMemo(() =>
+    tareasConHistorial
+      .filter(t => t.estado === "completada")
+      .map(t => {
+        const entradas = historialPorTarea.get(t.documentId) ?? []
+        const tiempos  = calcularTiempoPorEstado(entradas, t)
+        return { tarea: t, horas: tiempos.en_progreso, pausaHoras: tiempos.en_pausa }
       })
-  }, [tareasFiltradas])
+      .filter(x => x.horas > 0 || x.pausaHoras > 0)
+      .sort((a, b) => (b.horas + b.pausaHoras) - (a.horas + a.pausaHoras))
+      .slice(0, 10),
+  [tareasConHistorial, historialPorTarea])
+
+  const maxCycleTime = rankingCycleTime.reduce((m, x) => Math.max(m, x.horas + x.pausaHoras), 0)
 
   // ── Tickets de servicio ───────────────────────────────────────────────────
 
@@ -287,11 +353,6 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
       .slice(0, 6)
   }, [tickets])
 
-  const fmtFechaCort = (iso: string) => {
-    const d = new Date(iso + "T00:00:00")
-    return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
-  }
-
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -317,13 +378,12 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
         <StatCard label="Total"          value={total} />
         <StatCard label="Completadas"    value={completadas}  sub={`${tasaCompletado}% del total`} />
         <StatCard label="En progreso"    value={enProgreso} />
+        <StatCard label="En pausa"       value={enPausa} />
         <StatCard label="Pendientes"     value={pendientes} />
         <StatCard label="Progreso prom." value={`${progresoPromedio}%`} />
-        <StatCard label="En curso hoy"   value={enCursoHoy}
-          sub={duracionPromedio !== null ? `Dur. prom. ${fmtDias(duracionPromedio)}` : undefined} />
       </div>
 
-      {/* Tasa completado + donut estado */}
+      {/* Tasa completado + donut */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-3">
           <h3 className="text-sm font-semibold">Tasa de completado</h3>
@@ -331,21 +391,21 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
             <div className="flex-1 h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
               <Fill pct={tasaCompletado} color="bg-emerald-500" />
               <Fill pct={total ? Math.round(enProgreso / total * 100) : 0} color="bg-blue-500" />
+              <Fill pct={total ? Math.round(enPausa / total * 100) : 0} color="bg-violet-500" />
               <Fill pct={total ? Math.round(pendientes / total * 100) : 0} color="bg-amber-500" />
             </div>
             <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 w-10 text-right">{tasaCompletado}%</span>
           </div>
           <div className="flex gap-4 flex-wrap">
-            {(["completada","en_progreso","pendiente"] as EstadoTarea[]).map(e => (
+            {(["completada","en_progreso","en_pausa","pendiente"] as EstadoTarea[]).map(e => (
               <div key={e} className="flex items-center gap-1.5">
                 <span className={`h-2 w-2 rounded-full ${ESTADO_COLOR[e]}`} />
-                <span className="text-[11px] text-muted-foreground capitalize">{e.replace("_"," ")}</span>
+                <span className="text-[11px] text-muted-foreground capitalize">{ESTADO_LABEL[e]}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Donut distribución estado */}
         <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
           <h3 className="text-sm font-semibold mb-2">Distribución por estado</h3>
           {donutEstado.length === 0 ? (
@@ -375,36 +435,8 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
         </div>
       </div>
 
+      {/* Por área + Por etiqueta */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Por responsable */}
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm font-semibold mb-3">Por responsable</h3>
-          {porResponsable.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Sin datos</p>
-          ) : (
-            <div className="space-y-3">
-              {porResponsable.map(r => (
-                <div key={r.nombre}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium truncate max-w-[140px]" title={r.nombre}>{r.nombre}</span>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground shrink-0">
-                      <span className="text-emerald-600 dark:text-emerald-400">{r.completadas} ✓</span>
-                      <span>{r.progreso}% prog</span>
-                      {r.durPromedio !== null && <span>{fmtDias(r.durPromedio)} prom</span>}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <HBar value={r.completadas} max={r.total} color="bg-emerald-500" />
-                    <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">{r.total} t</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Por área */}
         <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
           <h3 className="text-sm font-semibold mb-3">Por área de solicitud</h3>
           {porArea.length === 0 ? (
@@ -416,14 +448,15 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                   <span className="text-xs truncate w-28 shrink-0" title={a.area}>{a.area}</span>
                   <HBar value={a.total} max={maxArea} color="bg-violet-500" />
                   <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">{a.total}</span>
-                  <span className="text-[10px] text-emerald-500 w-6 shrink-0">{a.completadas > 0 ? `${Math.round(a.completadas/a.total*100)}%` : ""}</span>
+                  <span className="text-[10px] text-emerald-500 w-10 shrink-0 text-right">
+                    {a.completadas > 0 ? `${Math.round(a.completadas/a.total*100)}%` : ""}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Por etiqueta */}
         <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
           <h3 className="text-sm font-semibold mb-3">Por categoría (etiqueta)</h3>
           {porEtiqueta.length === 0 ? (
@@ -435,56 +468,148 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                   <span className="text-xs truncate w-28 shrink-0" title={e.etiqueta}>{e.etiqueta}</span>
                   <HBar value={e.total} max={maxEtiqueta} color="bg-amber-500" />
                   <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">{e.total}</span>
-                  <span className="text-[10px] text-emerald-500 w-6 shrink-0">{e.completadas > 0 ? `${Math.round(e.completadas/e.total*100)}%` : ""}</span>
+                  <span className="text-[10px] text-emerald-500 w-10 shrink-0 text-right">
+                    {e.completadas > 0 ? `${Math.round(e.completadas/e.total*100)}%` : ""}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
-
-        {/* Completadas por mes — BarChart */}
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm font-semibold mb-3">Completadas por mes</h3>
-          {completadasPorMes.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Sin completadas registradas</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={completadasPorMes} margin={{ top: 0, right: 4, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="mes" tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} width={24} />
-                <RCTooltip formatter={(v: number) => [v, "Completadas"]} contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#a1a1aa" }} labelStyle={{ color: "#71717a", marginBottom: 4 }} />
-                <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={36} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
       </div>
 
-      {/* Duración por tarea */}
-      {tareasConRango.length > 0 && (
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm font-semibold mb-3">Duración de tareas (fecha inicio → fin)</h3>
-          <div className="space-y-2">
-            {tareasConRango.map(t => (
-              <div key={t.documentId} className="flex items-center gap-3">
-                <div className="w-44 shrink-0">
-                  <p className="text-xs truncate font-medium" title={t.titulo}>{t.titulo}</p>
-                  <p className="text-[10px] text-muted-foreground">{t.responsable ?? "—"}</p>
+      {/* ══════════════════ TIEMPO POR ETAPA ══════════════════════════════════ */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center gap-3">
+          <h2 className="text-base font-semibold">Tiempo por etapa</h2>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
+            {tareasConHistorial.length} tareas con historial
+          </span>
+        </div>
+
+        {tareasConHistorial.length === 0 ? (
+          <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 text-center">
+            <p className="text-sm text-muted-foreground">Sin historial aún.</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Cada vez que cambies el estado de una tarea, se registrará el tiempo en cada etapa.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Cards promedio por estado */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(["pendiente", "en_progreso", "en_pausa", "completada"] as EstadoTarea[]).map(e => (
+                <div key={e} className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${ESTADO_COLOR[e]}`} />
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{ESTADO_LABEL[e]}</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {promedioEstado ? fmtDuracion(promedioEstado[e]) : "—"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">promedio por tarea</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    total: {fmtDuracion(acumuladoGlobal[e])}
+                  </p>
                 </div>
-                <div className="flex-1 flex items-center gap-2">
-                  <HBar value={t.duracion} max={maxDuracion}
-                    color={t.estado === "completada" ? "bg-emerald-500" : t.vencida ? "bg-red-500" : t.estado === "en_progreso" ? "bg-blue-500" : "bg-amber-400"} />
-                  <span className="text-[10px] text-muted-foreground shrink-0 w-16 text-right">
-                    {fmtFechaCort(t.fechaInicio!)} → {fmtFechaCort(t.fechaVencimiento!)}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground shrink-0 w-12 text-right">{fmtDias(t.duracion)}</span>
+              ))}
+            </div>
+
+            {/* Barra de distribución global */}
+            {totalHorasHistorial > 0 && (
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-3">
+                <h3 className="text-sm font-semibold">Distribución global de tiempo</h3>
+                <div className="h-4 w-full rounded-full overflow-hidden flex gap-0.5">
+                  {(["pendiente","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => {
+                    const pct = Math.round(acumuladoGlobal[e] / totalHorasHistorial * 100)
+                    if (pct === 0) return null
+                    return (
+                      <div key={e} title={`${ESTADO_LABEL[e]}: ${pct}%`}
+                        style={{ width: `${pct}%`, backgroundColor: ESTADO_HEX[e] }}
+                        className="h-full rounded-sm transition-all" />
+                    )
+                  })}
+                </div>
+                <div className="flex gap-4 flex-wrap">
+                  {(["pendiente","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => {
+                    const pct = totalHorasHistorial ? Math.round(acumuladoGlobal[e] / totalHorasHistorial * 100) : 0
+                    if (pct === 0) return null
+                    return (
+                      <div key={e} className="flex items-center gap-1.5">
+                        <span className={`h-2 w-2 rounded-full ${ESTADO_COLOR[e]}`} />
+                        <span className="text-[11px] text-muted-foreground">{ESTADO_LABEL[e]}</span>
+                        <span className="text-[11px] font-medium">{pct}%</span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            )}
+
+            {/* Tiempo por etapa por categoría — stacked bar */}
+            {tiempoPorEtiqueta.length > 0 && (
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <h3 className="text-sm font-semibold mb-3">Tiempo por etapa por categoría (horas)</h3>
+                <ResponsiveContainer width="100%" height={Math.max(140, tiempoPorEtiqueta.length * 32)}>
+                  <BarChart data={tiempoPorEtiqueta} layout="vertical"
+                    margin={{ top: 0, right: 40, bottom: 0, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
+                    <XAxis type="number" allowDecimals={false}
+                      tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false}
+                      tickFormatter={v => fmtHorasCorto(v)} />
+                    <YAxis type="category" dataKey="etiqueta"
+                      tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} width={90} />
+                    <RCTooltip
+                      contentStyle={TOOLTIP_STYLE}
+                      itemStyle={{ color: "#a1a1aa" }}
+                      formatter={(v: number, name: string) => [fmtDuracion(v), name]}
+                    />
+                    <Bar dataKey="pendiente"   name="Pendiente"   stackId="a" fill={ESTADO_HEX.pendiente}   maxBarSize={16} />
+                    <Bar dataKey="en_pausa"    name="En pausa"    stackId="a" fill={ESTADO_HEX.en_pausa}    maxBarSize={16} />
+                    <Bar dataKey="en_progreso" name="En progreso" stackId="a" fill={ESTADO_HEX.en_progreso} maxBarSize={16} radius={[0,4,4,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Ranking de tareas por tiempo total activo */}
+            {rankingCycleTime.length > 0 && (
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <h3 className="text-sm font-semibold mb-3">Tareas completadas — tiempo activo (en progreso + pausa)</h3>
+                <div className="space-y-2">
+                  {rankingCycleTime.map(({ tarea, horas, pausaHoras }) => (
+                    <div key={tarea.documentId} className="flex items-center gap-3">
+                      <div className="w-44 shrink-0">
+                        <p className="text-xs truncate font-medium" title={tarea.titulo}>{tarea.titulo}</p>
+                        <p className="text-[10px] text-muted-foreground">{tarea.etiqueta ?? "—"}</p>
+                      </div>
+                      <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+                        <div style={{ width: `${maxCycleTime > 0 ? Math.round(horas / maxCycleTime * 100) : 0}%`, backgroundColor: ESTADO_HEX.en_progreso }}
+                          className="h-full" />
+                        <div style={{ width: `${maxCycleTime > 0 ? Math.round(pausaHoras / maxCycleTime * 100) : 0}%`, backgroundColor: ESTADO_HEX.en_pausa }}
+                          className="h-full" />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0 w-14 text-right">
+                        {fmtDuracion(horas + pausaHoras)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: ESTADO_HEX.en_progreso }} />
+                    <span className="text-[10px] text-muted-foreground">En progreso</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: ESTADO_HEX.en_pausa }} />
+                    <span className="text-[10px] text-muted-foreground">En pausa</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* ══════════════════ TICKETS DE SERVICIO ══════════════════════════════ */}
       <div className="space-y-4 pt-2">
@@ -497,11 +622,10 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
 
         {ticketStats.total === 0 ? (
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 text-center text-xs text-muted-foreground">
-            No hay tickets de servicio en este periodo. Marca tareas como tickets desde la vista de lista.
+            No hay tickets de servicio en este periodo.
           </div>
         ) : (
           <>
-            {/* Stat cards tickets */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="border border-blue-200 dark:border-blue-900/40 bg-blue-50/20 dark:bg-blue-950/10 rounded-xl p-4">
                 <p className="text-[10px] text-blue-500 uppercase tracking-wide">Tickets</p>
@@ -522,7 +646,6 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Donut tickets vs tareas */}
               <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-2">Tickets vs tareas normales</h3>
                 <div className="flex items-center gap-4">
@@ -550,7 +673,6 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                 </div>
               </div>
 
-              {/* Tickets por mes */}
               <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-3">Tickets por mes</h3>
                 {ticketsPorMes.length === 0 ? (
@@ -562,14 +684,13 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                       <XAxis dataKey="mes" tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} width={24} />
                       <RCTooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#a1a1aa" }} labelStyle={{ color: "#71717a", marginBottom: 4 }} />
-                      <Bar dataKey="total"      name="Total"     fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={24} />
-                      <Bar dataKey="completados" name="Resueltos" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                      <Bar dataKey="total"       name="Total"     fill="#3b82f6" radius={[4,4,0,0]} maxBarSize={24} />
+                      <Bar dataKey="completados" name="Resueltos" fill="#10b981" radius={[4,4,0,0]} maxBarSize={24} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
 
-              {/* Tickets por área */}
               {ticketsPorArea.length > 0 && (
                 <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
                   <h3 className="text-sm font-semibold mb-3">Tickets por área</h3>
@@ -579,14 +700,13 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                       <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} />
                       <YAxis type="category" dataKey="area" tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} width={80} />
                       <RCTooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#a1a1aa" }} />
-                      <Bar dataKey="total"       name="Total"     fill="#3b82f6" radius={[0, 4, 4, 0]} maxBarSize={14} />
-                      <Bar dataKey="completados" name="Resueltos" fill="#10b981" radius={[0, 4, 4, 0]} maxBarSize={14} />
+                      <Bar dataKey="total"       name="Total"     fill="#3b82f6" radius={[0,4,4,0]} maxBarSize={14} />
+                      <Bar dataKey="completados" name="Resueltos" fill="#10b981" radius={[0,4,4,0]} maxBarSize={14} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               )}
 
-              {/* Tickets por responsable */}
               {ticketsPorResp.length > 0 && (
                 <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
                   <h3 className="text-sm font-semibold mb-3">Tickets por responsable</h3>
@@ -596,8 +716,8 @@ export function MetricasView({ tareas }: { tareas: TareaType[] }) {
                       <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} />
                       <YAxis type="category" dataKey="resp" tick={{ fontSize: 10, fill: "#71717a" }} axisLine={false} tickLine={false} width={80} />
                       <RCTooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#a1a1aa" }} />
-                      <Bar dataKey="total"       name="Total"     fill="#8b5cf6" radius={[0, 4, 4, 0]} maxBarSize={14} />
-                      <Bar dataKey="completados" name="Resueltos" fill="#10b981" radius={[0, 4, 4, 0]} maxBarSize={14} />
+                      <Bar dataKey="total"       name="Total"     fill="#8b5cf6" radius={[0,4,4,0]} maxBarSize={14} />
+                      <Bar dataKey="completados" name="Resueltos" fill="#10b981" radius={[0,4,4,0]} maxBarSize={14} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

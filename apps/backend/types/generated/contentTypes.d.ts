@@ -435,6 +435,55 @@ export interface ApiActivoActivo extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAnuncioAnuncio extends Struct.CollectionTypeSchema {
+  collectionName: 'anuncios';
+  info: {
+    displayName: 'Anuncio';
+    pluralName: 'anuncios';
+    singularName: 'anuncio';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    clics: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    conversiones: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<
+      ['activo', 'pausado', 'finalizado', 'borrador']
+    > &
+      Schema.Attribute.DefaultTo<'borrador'>;
+    fecha_fin: Schema.Attribute.Date;
+    fecha_inicio: Schema.Attribute.Date;
+    gastado: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    impresiones: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::anuncio.anuncio'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    objetivo: Schema.Attribute.String;
+    plataforma: Schema.Attribute.Enumeration<
+      ['Instagram', 'Facebook', 'Google', 'TikTok', 'Pinterest', 'Otro']
+    > &
+      Schema.Attribute.Required;
+    presupuesto: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      ['imagen', 'video', 'carousel', 'stories', 'otro']
+    > &
+      Schema.Attribute.DefaultTo<'imagen'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiBlogPostBlogPost extends Struct.CollectionTypeSchema {
   collectionName: 'blog_posts';
   info: {
@@ -492,6 +541,8 @@ export interface ApiBoxscoreSemanaBoxscoreSemana
     draftAndPublish: false;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     anio: Schema.Attribute.Integer & Schema.Attribute.Required;
     clicsCYA: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     clicsIC: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
@@ -546,6 +597,8 @@ export interface ApiCampanaCampana extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     anio: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<2025>;
     atributos: Schema.Attribute.Text;
     categoria: Schema.Attribute.String;
@@ -682,6 +735,8 @@ export interface ApiCdlMetricaCdlMetrica extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     anio: Schema.Attribute.Integer & Schema.Attribute.Required;
     cantidadCampanas: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     clientesNuevos: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
@@ -833,15 +888,25 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    calificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     canalContacto: Schema.Attribute.String;
+    cotizaciones: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cotizacion.cotizacion'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     direccion: Schema.Attribute.String;
     email: Schema.Attribute.Email;
     Estado: Schema.Attribute.Enumeration<['Activo', 'Inactivo']>;
+    fechaCalificado: Schema.Attribute.DateTime;
+    fechaEntrega: Schema.Attribute.DateTime;
+    fechaLead: Schema.Attribute.DateTime;
+    fechaOferta: Schema.Attribute.DateTime;
+    fechaPedido: Schema.Attribute.DateTime;
     Funnel: Schema.Attribute.Enumeration<
-      ['Lead', 'Prospecto', 'Cotizacion', 'Pedido']
+      ['Lead', 'Oferta', 'Pedido', 'Entrega']
     >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -864,6 +929,44 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCotizacionCotizacion extends Struct.CollectionTypeSchema {
+  collectionName: 'cotizaciones';
+  info: {
+    displayName: 'Cotizaci\u00F3n';
+    pluralName: 'cotizaciones';
+    singularName: 'cotizacion';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<
+      ['Borrador', 'Enviada', 'Aceptada', 'Rechazada']
+    > &
+      Schema.Attribute.DefaultTo<'Borrador'>;
+    fecha: Schema.Attribute.DateTime;
+    items: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cotizacion.cotizacion'
+    > &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    numero: Schema.Attribute.String;
+    precioEnvio: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    total: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
   collectionName: 'cuentas';
   info: {
@@ -876,6 +979,7 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
   };
   attributes: {
     activa: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']>;
     color: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -919,6 +1023,8 @@ export interface ApiEcosistemaMktEcosistemaMkt
     draftAndPublish: false;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     anio: Schema.Attribute.Integer & Schema.Attribute.Required;
     canal: Schema.Attribute.String;
     clics: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
@@ -982,6 +1088,53 @@ export interface ApiEjercicioEjercicio extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiEnvioEnvio extends Struct.CollectionTypeSchema {
+  collectionName: 'envios';
+  info: {
+    displayName: 'Env\u00EDo';
+    pluralName: 'envios';
+    singularName: 'envio';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    cliente: Schema.Attribute.String;
+    concepto: Schema.Attribute.String;
+    costo_envio: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<
+      [
+        'pendiente',
+        'preparando',
+        'enviado',
+        'en_transito',
+        'entregado',
+        'devuelto',
+        'cancelado',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    fecha_envio: Schema.Attribute.Date;
+    fecha_estimada: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::envio.envio'> &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    numero_guia: Schema.Attribute.String;
+    paqueteria: Schema.Attribute.Enumeration<
+      ['fedex', 'dhl', 'estafeta', 'ups', 'correos_mex', 'otro']
+    > &
+      Schema.Attribute.DefaultTo<'otro'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiEventoCalendarioEventoCalendario
   extends Struct.CollectionTypeSchema {
   collectionName: 'evento_calendarios';
@@ -1033,6 +1186,8 @@ export interface ApiGastoGasto extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     centro_costo: Schema.Attribute.Relation<
       'manyToOne',
       'api::centro-costo.centro-costo'
@@ -1087,6 +1242,44 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiIdentidadEmpresaIdentidadEmpresa
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'identidad_empresas';
+  info: {
+    displayName: 'Identidad Empresa';
+    pluralName: 'identidad-empresas';
+    singularName: 'identidad-empresa';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    colores: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::identidad-empresa.identidad-empresa'
+    > &
+      Schema.Attribute.Private;
+    mision: Schema.Attribute.Text;
+    nombre: Schema.Attribute.String;
+    notas: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    redesSociales: Schema.Attribute.Text;
+    sitioWeb: Schema.Attribute.String;
+    slogan: Schema.Attribute.String;
+    tipografia: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    valores: Schema.Attribute.Text;
+    vision: Schema.Attribute.Text;
   };
 }
 
@@ -1177,6 +1370,50 @@ export interface ApiItemCompraItemCompra extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiMaterialDigitalMaterialDigital
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'material_digitals';
+  info: {
+    displayName: 'Material Digital';
+    pluralName: 'material-digitals';
+    singularName: 'material-digital';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::material-digital.material-digital'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      [
+        'logo',
+        'manual',
+        'presentacion',
+        'fotografia',
+        'video',
+        'plantilla',
+        'otro',
+      ]
+    > &
+      Schema.Attribute.DefaultTo<'otro'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    url: Schema.Attribute.String;
+  };
+}
+
 export interface ApiMaterialTrabajoMaterialTrabajo
   extends Struct.CollectionTypeSchema {
   collectionName: 'material_trabajos';
@@ -1189,6 +1426,8 @@ export interface ApiMaterialTrabajoMaterialTrabajo
     draftAndPublish: false;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     cantidad: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -1298,6 +1537,48 @@ export interface ApiMetricaCorporalMetricaCorporal
   };
 }
 
+export interface ApiPagoProgramadoPagoProgramado
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'pago_programados';
+  info: {
+    displayName: 'Pago Programado';
+    pluralName: 'pago-programados';
+    singularName: 'pago-programado';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    categoria: Schema.Attribute.String;
+    concepto: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<['pendiente', 'pagado', 'cancelado']> &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    fecha: Schema.Attribute.Date;
+    frecuencia: Schema.Attribute.Enumeration<
+      ['mensual', 'trimestral', 'anual', 'unico']
+    > &
+      Schema.Attribute.DefaultTo<'unico'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pago-programado.pago-programado'
+    > &
+      Schema.Attribute.Private;
+    monto: Schema.Attribute.Decimal;
+    notas: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    recurrente: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    tipo: Schema.Attribute.Enumeration<['pago', 'cobro']> &
+      Schema.Attribute.DefaultTo<'pago'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPagoTrabajoPagoTrabajo extends Struct.CollectionTypeSchema {
   collectionName: 'pago_trabajos';
   info: {
@@ -1355,6 +1636,7 @@ export interface ApiPartidaPresupuestoPartidaPresupuesto
   };
   attributes: {
     activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']>;
     categoria: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1976,7 +2258,7 @@ export interface ApiTareaTarea extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    ambito: Schema.Attribute.Enumeration<['personal', 'trabajo']> &
+    ambito: Schema.Attribute.Enumeration<['personal', 'trabajo', 'empresa']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'personal'>;
     area: Schema.Attribute.String;
@@ -2659,6 +2941,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
       'api::activo.activo': ApiActivoActivo;
+      'api::anuncio.anuncio': ApiAnuncioAnuncio;
       'api::blog-post.blog-post': ApiBlogPostBlogPost;
       'api::boxscore-semana.boxscore-semana': ApiBoxscoreSemanaBoxscoreSemana;
       'api::campana.campana': ApiCampanaCampana;
@@ -2669,17 +2952,22 @@ declare module '@strapi/strapi' {
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
       'api::cliente-trabajo.cliente-trabajo': ApiClienteTrabajoClienteTrabajo;
       'api::cliente.cliente': ApiClienteCliente;
+      'api::cotizacion.cotizacion': ApiCotizacionCotizacion;
       'api::cuenta.cuenta': ApiCuentaCuenta;
       'api::ecosistema-mkt.ecosistema-mkt': ApiEcosistemaMktEcosistemaMkt;
       'api::ejercicio.ejercicio': ApiEjercicioEjercicio;
+      'api::envio.envio': ApiEnvioEnvio;
       'api::evento-calendario.evento-calendario': ApiEventoCalendarioEventoCalendario;
       'api::gasto.gasto': ApiGastoGasto;
       'api::global.global': ApiGlobalGlobal;
+      'api::identidad-empresa.identidad-empresa': ApiIdentidadEmpresaIdentidadEmpresa;
       'api::ingrediente-despensa.ingrediente-despensa': ApiIngredienteDespensaIngredienteDespensa;
       'api::item-compra.item-compra': ApiItemCompraItemCompra;
+      'api::material-digital.material-digital': ApiMaterialDigitalMaterialDigital;
       'api::material-trabajo.material-trabajo': ApiMaterialTrabajoMaterialTrabajo;
       'api::meta-ahorro.meta-ahorro': ApiMetaAhorroMetaAhorro;
       'api::metrica-corporal.metrica-corporal': ApiMetricaCorporalMetricaCorporal;
+      'api::pago-programado.pago-programado': ApiPagoProgramadoPagoProgramado;
       'api::pago-trabajo.pago-trabajo': ApiPagoTrabajoPagoTrabajo;
       'api::partida-presupuesto.partida-presupuesto': ApiPartidaPresupuestoPartidaPresupuesto;
       'api::pasivo.pasivo': ApiPasivoPasivo;
