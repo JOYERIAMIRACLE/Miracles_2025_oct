@@ -158,78 +158,111 @@ function MetricasPanel({ porCategoria, porMes, sinCategoria }: {
     ...(sinCategoria > 0 ? [{ name: "Sin categoría", value: sinCategoria, color: "#475569" }] : []),
   ]
 
+  const catBarData = porCategoria.map(({ cat, total }, i) => ({
+    name:  cat.nombre.replace("MKT - ", "").replace("IT - ", ""),
+    total,
+    fill:  catHex(i)!,
+  }))
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Dona — por categoría */}
-      <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por categoría</p>
-        {donutData.length === 0 ? (
-          <p className="text-xs text-slate-600 text-center py-10">Sin datos</p>
-        ) : (
-          <div className="flex items-center gap-4">
-            <ResponsiveContainer width={160} height={140}>
-              <PieChart>
-                <Pie
-                  data={donutData} cx="50%" cy="50%"
-                  innerRadius={42} outerRadius={65}
-                  dataKey="value" nameKey="name" paddingAngle={2}
-                  onMouseEnter={(_, i) => setActiveIdx(i)}
-                  onMouseLeave={() => setActiveIdx(null)}
-                >
-                  {donutData.map((entry, i) => (
-                    <Cell
-                      key={i} fill={entry.color}
-                      opacity={activeIdx === null || activeIdx === i ? 1 : 0.35}
-                      style={{ cursor: "pointer", outline: "none" }}
-                    />
-                  ))}
-                </Pie>
+    <div className="space-y-4">
+      {/* Fila 1: dona + barras por mes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Dona — por categoría */}
+        <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por categoría</p>
+          {donutData.length === 0 ? (
+            <p className="text-xs text-slate-600 text-center py-10">Sin datos</p>
+          ) : (
+            <div className="flex items-center gap-4">
+              <ResponsiveContainer width={160} height={150}>
+                <PieChart>
+                  <Pie
+                    data={donutData} cx="50%" cy="50%"
+                    innerRadius={42} outerRadius={65}
+                    dataKey="value" nameKey="name" paddingAngle={2}
+                    onMouseEnter={(_, i) => setActiveIdx(i)}
+                    onMouseLeave={() => setActiveIdx(null)}
+                  >
+                    {donutData.map((entry, i) => (
+                      <Cell
+                        key={i} fill={entry.color}
+                        opacity={activeIdx === null || activeIdx === i ? 1 : 0.35}
+                        style={{ cursor: "pointer", outline: "none" }}
+                      />
+                    ))}
+                  </Pie>
+                  <RCTooltip
+                    formatter={(v: number) => [fmt(v), ""]}
+                    contentStyle={TOOLTIP_STYLE}
+                    itemStyle={{ color: "#cbd5e1" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <ul className="space-y-1.5 flex-1 min-w-0">
+                {donutData.map((d, i) => (
+                  <li key={i}
+                    className={`flex items-center gap-1.5 text-[11px] transition-opacity ${activeIdx !== null && activeIdx !== i ? "opacity-40" : ""}`}
+                    onMouseEnter={() => setActiveIdx(i)}
+                    onMouseLeave={() => setActiveIdx(null)}
+                  >
+                    <ColorDot color={d.color} />
+                    <span className="text-slate-400 truncate flex-1">{d.name}</span>
+                    <span className="text-slate-300 tabular-nums shrink-0">{fmt(d.value)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Barras — por mes */}
+        <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por mes</p>
+          {porMes.length === 0 ? (
+            <p className="text-xs text-slate-600 text-center py-10">Sin gastos con fecha</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={150}>
+              <BarChart data={porMes} margin={{ top: 0, right: 4, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 9, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={38} />
                 <RCTooltip
-                  formatter={(v: number) => [fmt(v), ""]}
+                  formatter={(v: number) => [fmt(v), "Total"]}
                   contentStyle={TOOLTIP_STYLE}
                   itemStyle={{ color: "#cbd5e1" }}
+                  labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
                 />
-              </PieChart>
+                <Bar dataKey="total" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              </BarChart>
             </ResponsiveContainer>
-            <ul className="space-y-1.5 flex-1 min-w-0">
-              {donutData.map((d, i) => (
-                <li key={i}
-                  className={`flex items-center gap-1.5 text-[11px] transition-opacity ${activeIdx !== null && activeIdx !== i ? "opacity-40" : ""}`}
-                  onMouseEnter={() => setActiveIdx(i)}
-                  onMouseLeave={() => setActiveIdx(null)}
-                >
-                  <ColorDot color={d.color} />
-                  <span className="text-slate-400 truncate flex-1">{d.name}</span>
-                  <span className="text-slate-300 tabular-nums shrink-0">{fmt(d.value)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Barras — por mes */}
-      <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Por mes</p>
-        {porMes.length === 0 ? (
-          <p className="text-xs text-slate-600 text-center py-10">Sin gastos con fecha</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={140}>
-            <BarChart data={porMes} margin={{ top: 0, right: 4, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="mes" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={38} />
+      {/* Fila 2: barras horizontales por categoría */}
+      {catBarData.length > 0 && (
+        <div className="bg-slate-900/60 border border-slate-700/40 rounded-xl p-4">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Monto por categoría</p>
+          <ResponsiveContainer width="100%" height={catBarData.length * 28 + 8}>
+            <BarChart data={catBarData} layout="vertical" margin={{ top: 0, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+              <XAxis type="number" tickFormatter={fmtAxis} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={90} />
               <RCTooltip
                 formatter={(v: number) => [fmt(v), "Total"]}
                 contentStyle={TOOLTIP_STYLE}
                 itemStyle={{ color: "#cbd5e1" }}
-                labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
               />
-              <Bar dataKey="total" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={18}>
+                {catBarData.map((entry, i) => (
+                  <Cell key={i} fill={entry.fill} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -328,7 +361,7 @@ export default function PagosPage() {
 
   const [formMode,      setFormMode]      = useState<FormMode | null>(null)
   const [showGestion,   setShowGestion]   = useState(false)
-  const [showMetricas,  setShowMetricas]  = useState(false)
+  const [showMetricas,  setShowMetricas]  = useState(true)
   const [filtroEst,     setFiltroEst]     = useState<EstadoPago | "todos">("todos")
   const [filtroCatId,   setFiltroCatId]   = useState<number | null>(null)
   const [busqueda,      setBusqueda]      = useState("")
