@@ -99,7 +99,7 @@ export function InventarioEmpresaView() {
   }
 
   function openEditar(it: ProductType) {
-    setEditing(it); setSkuAuto(false)
+    setEditing(it); setSkuAuto(true)
     setFotoPreview(it.imagenes?.[0] ? imgUrl(it.imagenes[0].url) : null)
     setFotoFile(null)
     setForm({
