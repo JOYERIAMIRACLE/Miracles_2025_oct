@@ -102,10 +102,14 @@ export function InventarioEmpresaView() {
     setEditing(it); setSkuAuto(true)
     setFotoPreview(it.imagenes?.[0] ? imgUrl(it.imagenes[0].url) : null)
     setFotoFile(null)
+    const cat = it.categoriaJoya ?? ""
+    const mat = it.materialProducto ?? ""
+    const tal = it.talla ?? ""
+    const sku = cat ? buildSku(cat, mat, tal, items, it.documentId) : (it.sku ?? "")
     setForm({
-      nombreProducto: it.nombreProducto, sku: it.sku ?? "", descripcion: it.descripcion ?? "",
-      figura: it.figura ?? "", categoriaJoya: it.categoriaJoya ?? "",
-      materialProducto: it.materialProducto ?? "", talla: it.talla ?? "",
+      nombreProducto: it.nombreProducto, sku, descripcion: it.descripcion ?? "",
+      figura: it.figura ?? "", categoriaJoya: cat,
+      materialProducto: mat, talla: tal,
       costoProduccion: it.costoProduccion != null ? String(it.costoProduccion) : "",
       costo: it.costo != null ? String(it.costo) : "",
       stock: String(it.stock ?? 0), material: it.material ?? "producto",
