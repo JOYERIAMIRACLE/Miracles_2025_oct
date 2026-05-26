@@ -18,7 +18,6 @@ import { createHistorialTarea } from "@/api/historial-tarea/mutateHistorialTarea
 const ESTADOS: { key: EstadoTarea | "todas"; label: string }[] = [
   { key: "todas",        label: "Todas" },
   { key: "sin_iniciar",  label: "Sin iniciar" },
-  { key: "pendiente",    label: "Pendientes" },
   { key: "en_progreso",  label: "En progreso" },
   { key: "en_pausa",     label: "En pausa" },
   { key: "completada",   label: "Completadas" },
@@ -53,7 +52,6 @@ const PRIORIDAD_DOT: Record<PrioridadTarea, string> = {
 
 const ESTADO_COLORS: Record<EstadoTarea, string> = {
   sin_iniciar: "bg-slate-500/10 text-slate-400 border-slate-500/20",
-  pendiente:   "bg-amber-500/10 text-amber-400 border-amber-500/20",
   en_progreso: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   en_pausa:    "bg-violet-500/10 text-violet-400 border-violet-500/20",
   completada:  "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -61,7 +59,6 @@ const ESTADO_COLORS: Record<EstadoTarea, string> = {
 
 const ESTADO_LABEL: Record<EstadoTarea, string> = {
   sin_iniciar: "Sin iniciar",
-  pendiente:   "Pendiente",
   en_progreso: "En progreso",
   en_pausa:    "En pausa",
   completada:  "Completada",
@@ -141,7 +138,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [guardando, setGuardando] = useState(false)
   const [form, setForm] = useState<TareaPayload>({
     titulo: "", descripcion: "", ambito,
-    estado: "pendiente", prioridad: "media",
+    estado: "sin_iniciar", prioridad: "media",
     etiqueta: null, fechaVencimiento: null, notas: null, responsable: null,
     area: null, fechaInicio: null, esTicket: false,
   })
@@ -194,7 +191,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         return true
       })
       .sort((a, b) => {
-        const orden = { sin_iniciar: 0, pendiente: 1, en_progreso: 2, en_pausa: 3, completada: 4 }
+        const orden: Record<string, number> = { sin_iniciar: 0, en_progreso: 1, en_pausa: 2, completada: 3 }
         if (orden[a.estado] !== orden[b.estado]) return orden[a.estado] - orden[b.estado]
         const aVenc = a.fechaVencimiento ? new Date(a.fechaVencimiento).getTime() : Infinity
         const bVenc = b.fechaVencimiento ? new Date(b.fechaVencimiento).getTime() : Infinity
@@ -205,7 +202,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const stats = {
     total:       tareas.length,
     sinIniciar:  tareas.filter(t => t.estado === "sin_iniciar").length,
-    pendientes:  tareas.filter(t => t.estado === "pendiente").length,
     enProgreso:  tareas.filter(t => t.estado === "en_progreso").length,
     enPausa:     tareas.filter(t => t.estado === "en_pausa").length,
     completadas: tareas.filter(t => t.estado === "completada").length,
@@ -438,14 +434,14 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
         <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
           <p className="text-[10px] text-muted-foreground uppercase">Total</p>
           <p className="text-xl font-bold">{stats.total}</p>
         </div>
-        <div className="border border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/20 rounded-xl p-3">
-          <p className="text-[10px] text-amber-600 dark:text-amber-400 uppercase">Pendientes</p>
-          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{stats.pendientes}</p>
+        <div className="border border-slate-300 dark:border-slate-700/60 bg-slate-50/30 dark:bg-slate-900/20 rounded-xl p-3">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase">Sin iniciar</p>
+          <p className="text-xl font-bold text-slate-600 dark:text-slate-300">{stats.sinIniciar}</p>
         </div>
         <div className="border border-blue-200 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/20 rounded-xl p-3">
           <p className="text-[10px] text-blue-600 dark:text-blue-400 uppercase">En progreso</p>
@@ -586,8 +582,8 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 >
                   <button
                     type="button"
-                    title={t.estado === "completada" ? "Marcar como pendiente" : "Marcar como completada"}
-                    onClick={() => cambiarEstado(t, t.estado === "completada" ? "pendiente" : "completada")}
+                    title={t.estado === "completada" ? "Marcar como sin iniciar" : "Marcar como completada"}
+                    onClick={() => cambiarEstado(t, t.estado === "completada" ? "sin_iniciar" : "completada")}
                     className={`mt-0.5 h-5 w-5 rounded border-2 shrink-0 flex items-center justify-center transition ${
                       t.estado === "completada"
                         ? "bg-emerald-500 border-emerald-500"
@@ -807,7 +803,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                   className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm"
                 >
                   <option value="sin_iniciar">Sin iniciar</option>
-                  <option value="pendiente">Pendiente</option>
                   <option value="en_progreso">En progreso</option>
                   <option value="en_pausa">En pausa</option>
                   <option value="completada">Completada</option>

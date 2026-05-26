@@ -12,7 +12,6 @@ import { HistorialTareaType } from "@/types/historial-tarea"
 
 const ESTADO_COLOR: Record<EstadoTarea, string> = {
   sin_iniciar: "bg-slate-500",
-  pendiente:   "bg-amber-500",
   en_progreso: "bg-blue-500",
   en_pausa:    "bg-violet-500",
   completada:  "bg-emerald-500",
@@ -20,7 +19,6 @@ const ESTADO_COLOR: Record<EstadoTarea, string> = {
 
 const ESTADO_HEX: Record<EstadoTarea, string> = {
   sin_iniciar: "#64748b",
-  pendiente:   "#f59e0b",
   en_progreso: "#3b82f6",
   en_pausa:    "#8b5cf6",
   completada:  "#10b981",
@@ -28,7 +26,6 @@ const ESTADO_HEX: Record<EstadoTarea, string> = {
 
 const ESTADO_LABEL: Record<EstadoTarea, string> = {
   sin_iniciar: "Sin iniciar",
-  pendiente:   "Pendiente",
   en_progreso: "En progreso",
   en_pausa:    "En pausa",
   completada:  "Completada",
@@ -63,15 +60,35 @@ function fmtHorasCorto(horas: number): string {
   return `${(horas / 24).toFixed(1)}d`
 }
 
+// Estimación para tareas sin historial, usando fechas del propio registro.
+function estimarTiempoPorEstado(tarea: TareaType): Record<EstadoTarea, number> {
+  const acc: Record<EstadoTarea, number> = { sin_iniciar: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
+  const creado     = tarea.createdAt       ? parseTs(tarea.createdAt)                       : null
+  const iniciado   = tarea.fechaInicio     ? parseTs(tarea.fechaInicio + "T00:00:00")       : null
+  const completado = tarea.fechaCompletada ? parseTs(tarea.fechaCompletada)                  : null
+  const ahora      = Date.now()
+  if (!creado) return acc
+  if (iniciado && iniciado > creado) {
+    acc.sin_iniciar = msAHoras(iniciado - creado)
+    acc.en_progreso = msAHoras(Math.max(0, (completado ?? ahora) - iniciado))
+  } else if (completado) {
+    acc.en_progreso = msAHoras(completado - creado)
+  } else {
+    acc.sin_iniciar = msAHoras(ahora - creado)
+  }
+  return acc
+}
+
 // Dado el historial de UNA tarea (ordenado por timestamp),
 // devuelve las horas acumuladas en cada estado.
+// Si no hay historial, estima a partir de las fechas del registro.
 function calcularTiempoPorEstado(
   entradas: HistorialTareaType[],
   tarea: TareaType,
 ): Record<EstadoTarea, number> {
-  const acc: Record<EstadoTarea, number> = { sin_iniciar: 0, pendiente: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
+  const acc: Record<EstadoTarea, number> = { sin_iniciar: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
 
-  if (entradas.length === 0) return acc
+  if (entradas.length === 0) return estimarTiempoPorEstado(tarea)
 
   const sorted = [...entradas].sort((a, b) => parseTs(a.timestamp) - parseTs(b.timestamp))
 
@@ -156,7 +173,6 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
   const total       = tareasFiltradas.length
   const completadas = tareasFiltradas.filter(t => t.estado === "completada").length
   const enProgreso  = tareasFiltradas.filter(t => t.estado === "en_progreso").length
-  const pendientes  = tareasFiltradas.filter(t => t.estado === "pendiente").length
   const enPausa     = tareasFiltradas.filter(t => t.estado === "en_pausa").length
   const sinIniciar  = tareasFiltradas.filter(t => t.estado === "sin_iniciar").length
   const tasaCompletado   = total ? Math.round(completadas / total * 100) : 0
@@ -167,11 +183,10 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
   // ── Donut estado ──────────────────────────────────────────────────────────
 
   const donutEstado = [
-    { name: "Completadas",  value: completadas, color: "#10b981" },
-    { name: "En progreso",  value: enProgreso,  color: "#3b82f6" },
-    { name: "En pausa",     value: enPausa,     color: "#8b5cf6" },
-    { name: "Pendientes",   value: pendientes,  color: "#f59e0b" },
-    { name: "Sin iniciar",  value: sinIniciar,  color: "#64748b" },
+    { name: "Completadas", value: completadas, color: "#10b981" },
+    { name: "En progreso", value: enProgreso,  color: "#3b82f6" },
+    { name: "En pausa",    value: enPausa,     color: "#8b5cf6" },
+    { name: "Sin iniciar", value: sinIniciar,  color: "#64748b" },
   ].filter(d => d.value > 0)
 
   // ── Por área ──────────────────────────────────────────────────────────────
@@ -227,46 +242,43 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
     return map
   }, [historial])
 
-  // Tareas con al menos una entrada de historial
-  const tareasConHistorial = useMemo(() =>
-    tareasFiltradas.filter(t => historialPorTarea.has(t.documentId)),
+  const conHistorial = useMemo(() =>
+    tareasFiltradas.filter(t => historialPorTarea.has(t.documentId)).length,
   [tareasFiltradas, historialPorTarea])
 
-  // Acumulado global de horas por estado
+  // Acumulado global de horas por estado (todas las tareas, exacto o estimado)
   const acumuladoGlobal = useMemo(() => {
-    const acc: Record<EstadoTarea, number> = { sin_iniciar: 0, pendiente: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
-    tareasConHistorial.forEach(t => {
+    const acc: Record<EstadoTarea, number> = { sin_iniciar: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
+    tareasFiltradas.forEach(t => {
       const entradas = historialPorTarea.get(t.documentId) ?? []
       const tiempos  = calcularTiempoPorEstado(entradas, t)
-      ;(Object.keys(tiempos) as EstadoTarea[]).forEach(e => { acc[e] += tiempos[e] })
+      ;(Object.keys(tiempos) as EstadoTarea[]).forEach(e => { acc[e as EstadoTarea] += tiempos[e as EstadoTarea] })
     })
     return acc
-  }, [tareasConHistorial, historialPorTarea])
+  }, [tareasFiltradas, historialPorTarea])
 
   const totalHorasHistorial = Object.values(acumuladoGlobal).reduce((s, v) => s + v, 0)
 
-  // Promedio por estado (solo sobre tareas con historial)
   const promedioEstado = useMemo(() => {
-    const n = tareasConHistorial.length
+    const n = tareasFiltradas.length
     if (!n) return null
     return {
       sin_iniciar: acumuladoGlobal.sin_iniciar / n,
-      pendiente:   acumuladoGlobal.pendiente   / n,
       en_progreso: acumuladoGlobal.en_progreso / n,
       en_pausa:    acumuladoGlobal.en_pausa    / n,
       completada:  acumuladoGlobal.completada  / n,
     }
-  }, [acumuladoGlobal, tareasConHistorial])
+  }, [acumuladoGlobal, tareasFiltradas])
 
   // Tiempo por etapa agrupado por etiqueta — para gráfica de barras apiladas
   const tiempoPorEtiqueta = useMemo(() => {
     const map = new Map<string, Record<EstadoTarea, number>>()
-    tareasConHistorial.forEach(t => {
+    tareasFiltradas.forEach(t => {
       const key      = t.etiqueta?.trim() || "(Sin etiqueta)"
       const entradas = historialPorTarea.get(t.documentId) ?? []
       const tiempos  = calcularTiempoPorEstado(entradas, t)
-      const actual   = map.get(key) ?? { sin_iniciar: 0, pendiente: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
-      ;(Object.keys(tiempos) as EstadoTarea[]).forEach(e => { actual[e] += tiempos[e] })
+      const actual   = map.get(key) ?? { sin_iniciar: 0, en_progreso: 0, en_pausa: 0, completada: 0 }
+      ;(Object.keys(tiempos) as EstadoTarea[]).forEach(e => { actual[e as EstadoTarea] += tiempos[e as EstadoTarea] })
       map.set(key, actual)
     })
     return [...map.entries()]
@@ -274,16 +286,15 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
         etiqueta: etiqueta.length > 14 ? etiqueta.slice(0, 13) + "…" : etiqueta,
         etiquetaFull: etiqueta,
         sin_iniciar: Math.round(t.sin_iniciar),
-        pendiente:   Math.round(t.pendiente),
         en_progreso: Math.round(t.en_progreso),
         en_pausa:    Math.round(t.en_pausa),
       }))
-      .sort((a, b) => (b.pendiente + b.en_progreso + b.en_pausa) - (a.pendiente + a.en_progreso + a.en_pausa))
-  }, [tareasConHistorial, historialPorTarea])
+      .sort((a, b) => (b.sin_iniciar + b.en_progreso + b.en_pausa) - (a.sin_iniciar + a.en_progreso + a.en_pausa))
+  }, [tareasFiltradas, historialPorTarea])
 
   // Ranking de tareas completadas por cycle time (en_progreso acumulado)
   const rankingCycleTime = useMemo(() =>
-    tareasConHistorial
+    tareasFiltradas
       .filter(t => t.estado === "completada")
       .map(t => {
         const entradas = historialPorTarea.get(t.documentId) ?? []
@@ -304,7 +315,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
   const ticketStats = useMemo(() => {
     const comp = tickets.filter(t => t.estado === "completada").length
-    const pend  = tickets.filter(t => t.estado === "pendiente").length
+    const pend  = tickets.filter(t => t.estado === "sin_iniciar").length
     const prog  = tickets.filter(t => t.estado === "en_progreso").length
     return { total: tickets.length, comp, pend, prog, tasa: tickets.length ? Math.round(comp / tickets.length * 100) : 0 }
   }, [tickets])
@@ -381,13 +392,12 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard label="Total"          value={total} />
-        <StatCard label="Completadas"    value={completadas}  sub={`${tasaCompletado}% del total`} />
-        <StatCard label="En progreso"    value={enProgreso} />
-        <StatCard label="En pausa"       value={enPausa} />
-        <StatCard label="Pendientes"     value={pendientes} />
-        <StatCard label="Sin iniciar"    value={sinIniciar} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <StatCard label="Total"        value={total} />
+        <StatCard label="Completadas"  value={completadas} sub={`${tasaCompletado}% del total`} />
+        <StatCard label="En progreso"  value={enProgreso} />
+        <StatCard label="En pausa"     value={enPausa} />
+        <StatCard label="Sin iniciar"  value={sinIniciar} />
       </div>
 
       {/* Tasa completado + donut */}
@@ -399,13 +409,12 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
               <Fill pct={tasaCompletado} color="bg-emerald-500" />
               <Fill pct={total ? Math.round(enProgreso / total * 100) : 0} color="bg-blue-500" />
               <Fill pct={total ? Math.round(enPausa / total * 100) : 0} color="bg-violet-500" />
-              <Fill pct={total ? Math.round(pendientes / total * 100) : 0} color="bg-amber-500" />
               <Fill pct={total ? Math.round(sinIniciar / total * 100) : 0} color="bg-slate-500" />
             </div>
             <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 w-10 text-right">{tasaCompletado}%</span>
           </div>
           <div className="flex gap-4 flex-wrap">
-            {(["completada","en_progreso","en_pausa","pendiente","sin_iniciar"] as EstadoTarea[]).map(e => (
+            {(["completada","en_progreso","en_pausa","sin_iniciar"] as EstadoTarea[]).map(e => (
               <div key={e} className="flex items-center gap-1.5">
                 <span className={`h-2 w-2 rounded-full ${ESTADO_COLOR[e]}`} />
                 <span className="text-[11px] text-muted-foreground capitalize">{ESTADO_LABEL[e]}</span>
@@ -491,11 +500,11 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
         <div className="flex items-center gap-3">
           <h2 className="text-base font-semibold">Tiempo por etapa</h2>
           <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
-            {tareasConHistorial.length} tareas con historial
+            {conHistorial} con historial exacto · {total - conHistorial} estimadas
           </span>
         </div>
 
-        {tareasConHistorial.length === 0 ? (
+        {total === 0 ? (
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 text-center">
             <p className="text-sm text-muted-foreground">Sin historial aún.</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -505,8 +514,8 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
         ) : (
           <>
             {/* Cards promedio por estado */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {(["sin_iniciar", "pendiente", "en_progreso", "en_pausa", "completada"] as EstadoTarea[]).map(e => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(["sin_iniciar", "en_progreso", "en_pausa", "completada"] as EstadoTarea[]).map(e => (
                 <div key={e} className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`w-2 h-2 rounded-full shrink-0 ${ESTADO_COLOR[e]}`} />
@@ -528,7 +537,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
               <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-3">
                 <h3 className="text-sm font-semibold">Distribución global de tiempo</h3>
                 <div className="h-4 w-full rounded-full overflow-hidden flex gap-0.5">
-                  {(["sin_iniciar","pendiente","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => {
+                  {(["sin_iniciar","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => {
                     const pct = Math.round(acumuladoGlobal[e] / totalHorasHistorial * 100)
                     if (pct === 0) return null
                     return (
@@ -539,7 +548,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                   })}
                 </div>
                 <div className="flex gap-4 flex-wrap">
-                  {(["sin_iniciar","pendiente","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => {
+                  {(["sin_iniciar","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => {
                     const pct = totalHorasHistorial ? Math.round(acumuladoGlobal[e] / totalHorasHistorial * 100) : 0
                     if (pct === 0) return null
                     return (
@@ -572,9 +581,8 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                       itemStyle={{ color: "#a1a1aa" }}
                       formatter={(v: number, name: string) => [fmtDuracion(v), name]}
                     />
-                    <Bar dataKey="sin_iniciar" name="Sin iniciar"  stackId="a" fill={ESTADO_HEX.sin_iniciar} maxBarSize={16} />
-                    <Bar dataKey="pendiente"   name="Pendiente"   stackId="a" fill={ESTADO_HEX.pendiente}   maxBarSize={16} />
-                    <Bar dataKey="en_pausa"    name="En pausa"    stackId="a" fill={ESTADO_HEX.en_pausa}    maxBarSize={16} />
+                    <Bar dataKey="sin_iniciar" name="Sin iniciar" stackId="a" fill={ESTADO_HEX.sin_iniciar} maxBarSize={16} />
+                    <Bar dataKey="en_pausa"    name="En pausa"   stackId="a" fill={ESTADO_HEX.en_pausa}    maxBarSize={16} />
                     <Bar dataKey="en_progreso" name="En progreso" stackId="a" fill={ESTADO_HEX.en_progreso} maxBarSize={16} radius={[0,4,4,0]} />
                   </BarChart>
                 </ResponsiveContainer>

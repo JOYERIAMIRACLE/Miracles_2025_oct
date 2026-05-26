@@ -32,7 +32,6 @@
       "type": "enumeration",
       "enum": [
         "sin_iniciar",
-        "pendiente",
         "en_progreso",
         "en_pausa",
         "completada"
