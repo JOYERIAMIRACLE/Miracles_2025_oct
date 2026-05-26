@@ -304,7 +304,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
       .filter(x => x.horas > 0 || x.pausaHoras > 0)
       .sort((a, b) => (b.horas + b.pausaHoras) - (a.horas + a.pausaHoras))
       .slice(0, 10),
-  [tareasConHistorial, historialPorTarea])
+  [tareasFiltradas, historialPorTarea])
 
   const maxCycleTime = rankingCycleTime.reduce((m, x) => Math.max(m, x.horas + x.pausaHoras), 0)
 
