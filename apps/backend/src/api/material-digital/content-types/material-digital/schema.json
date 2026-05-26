@@ -9,14 +9,41 @@
   "options": { "draftAndPublish": false },
   "pluginOptions": {},
   "attributes": {
-    "nombre":      { "type": "string", "required": true },
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "url": {
+      "type": "string",
+      "required": true
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "BRANDING",
+        "HERRAMIENTAS_VENTAS",
+        "FORMATOS_INTERNOS",
+        "INSTALACIONES_VEHICULOS",
+        "COLABORADOR",
+        "EVENTOS_PROYECTOS"
+      ],
+      "required": true
+    },
+    "subcategoria": {
+      "type": "string",
+      "required": true
+    },
     "tipo": {
       "type": "enumeration",
-      "enum": ["logo", "manual", "presentacion", "fotografia", "video", "plantilla", "otro"],
-      "default": "otro"
+      "enum": ["pdf", "imagen", "presentacion", "video", "documento", "link"],
+      "default": "link",
+      "required": true
     },
-    "url":         { "type": "string" },
-    "descripcion": { "type": "text" },
-    "notas":       { "type": "text" }
+    "descripcion": {
+      "type": "text"
+    },
+    "evento": {
+      "type": "string"
+    }
   }
 }
