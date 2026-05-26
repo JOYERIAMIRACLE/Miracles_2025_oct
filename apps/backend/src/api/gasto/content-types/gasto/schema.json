@@ -47,6 +47,27 @@
     "notas": {
       "type": "string"
     },
+    "categoria": {
+      "type": "enumeration",
+      "enum": [
+        "MKT - ADQUISICION",
+        "MKT - OPERACION",
+        "MKT - DIGITAL",
+        "MKT - IMPRENTA",
+        "MKT - PROMOCIONALES",
+        "MKT - PUBLICIDAD",
+        "MKT - NUTRIMIENTO",
+        "IT - SOPORTE HARDWARE",
+        "IT - LICENCIAS",
+        "IT - DESARROLLO"
+      ]
+    },
+    "proveedor": {
+      "type": "string"
+    },
+    "factura": {
+      "type": "string"
+    },
     "ambito": {
       "type": "enumeration",
       "enum": ["trabajo", "empresa"],
