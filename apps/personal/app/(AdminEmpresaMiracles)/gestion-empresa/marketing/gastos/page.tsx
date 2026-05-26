@@ -1,5 +1,5 @@
 import { GastosEmpresaView } from "@/components/Empresa/Marketing/GastosEmpresaView"
 
 export default function GastosPage() {
-  return <GastosEmpresaView />
+  return <GastosEmpresaView ambito="empresa" />
 }

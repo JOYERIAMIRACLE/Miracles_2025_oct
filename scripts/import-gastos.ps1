@@ -13,7 +13,7 @@ if (-not $ExcelPath) {
     Write-Host "No se encontro el archivo Excel en Downloads." -ForegroundColor Red
     exit 1
 }
-$Ambito = "trabajo"
+$Ambito = "empresa"
 
 # ─── Mapeo de categorias ──────────────────────────────────────────────────────
 function Get-Categoria($catRaw, $provRaw, $descRaw) {
