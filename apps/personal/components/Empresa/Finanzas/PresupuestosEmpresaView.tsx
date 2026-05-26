@@ -80,7 +80,7 @@ function ChartDot({ color }: { color: string }) {
 }
 
 type Form = { descripcion: string; categoria: string; tipo: string; frecuencia: string; monto: string }
-const emptyForm = (): Form => ({ descripcion: "", categoria: "Operaciones", tipo: "gasto", frecuencia: "mensual", monto: "" })
+const emptyForm = (): Form => ({ descripcion: "", categoria: "Operaciones", tipo: "necesidad", frecuencia: "mensual", monto: "" })
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
 
@@ -161,7 +161,7 @@ export function PresupuestosEmpresaView() {
   function openNuevo() { setEditing(null); setForm(emptyForm()); setModalOpen(true) }
   function openEditar(p: PartidaPresupuestoType) {
     setEditing(p)
-    setForm({ descripcion: p.descripcion, categoria: p.categoria ?? "Operaciones", tipo: p.tipo ?? "gasto", frecuencia: p.frecuencia ?? "mensual", monto: p.monto ? String(p.monto) : "" })
+    setForm({ descripcion: p.descripcion, categoria: p.categoria ?? "Operaciones", tipo: p.tipo ?? "necesidad", frecuencia: p.frecuencia ?? "mensual", monto: p.monto ? String(p.monto) : "" })
     setModalOpen(true)
   }
 
@@ -508,7 +508,7 @@ export function PresupuestosEmpresaView() {
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
                   <select title="Tipo" value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inp + " cursor-pointer"}>
-                    <option value="gasto">Gasto</option>
+                    <option value="necesidad">Gasto</option>
                     <option value="ingreso">Ingreso</option>
                   </select>
                 </div>
