@@ -331,14 +331,18 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
     setSaving(false)
   }
 
-  const field = (label: string, node: React.ReactNode) => (
+  const field = (label: string, node: React.ReactNode, highlight = false) => (
     <div>
-      <label className="block text-[11px] text-slate-500 mb-1">{label}</label>
+      <label className={`block mb-1 ${highlight ? "text-xs text-slate-200 font-semibold" : "text-[11px] text-slate-500"}`}>
+        {highlight && <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 mb-0.5 align-middle" />}
+        {label}
+      </label>
       {node}
     </div>
   )
 
   const inputCls = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
+  const inputHlCls = "w-full px-3 py-2 text-sm rounded-lg border border-blue-500/30 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-blue-500/60"
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -357,8 +361,8 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
             <input autoFocus value={form.unidadNegocio}
               onChange={e => setForm(f => ({ ...f, unidadNegocio: e.target.value }))}
               placeholder="Ej. Campaña Mayo 2026..."
-              className={inputCls}
-            />
+              className={inputHlCls}
+            />, true
           )}
 
           {/* Fecha */}
@@ -392,8 +396,8 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
             <input value={form.notas ?? ""}
               onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
               placeholder="Ej. Temporada, Promo, Lanzamiento..."
-              className={inputCls}
-            />
+              className={inputHlCls}
+            />, true
           )}
 
           {/* Productos */}
@@ -402,15 +406,15 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
               onChange={e => setForm(f => ({ ...f, atributos: e.target.value || null }))}
               placeholder="Ej. PLC, HMI, Conveyor..."
               rows={3}
-              className={`${inputCls} resize-y`}
-            />
+              className={`${inputHlCls} resize-y`}
+            />, true
           )}
 
           {/* Keyword */}
           {field("Keyword",
             <input value={form.keyword ?? ""}
               onChange={e => setForm(f => ({ ...f, keyword: e.target.value || null }))}
-              placeholder="Ej. joyería plata, anillos, regalo..."
+              placeholder="Ej. PLC, HMI, sensores..."
               className={inputCls}
             />
           )}
