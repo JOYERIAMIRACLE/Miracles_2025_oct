@@ -56,9 +56,11 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
     })
     if (!res.ok) return null
     const json = await res.json()
+    console.log("[auth] /me response:", JSON.stringify(json.role))
     const type = json.role?.type as string | undefined
-    // Normalizar guión a guión bajo para consistencia interna
-    return type ? type.replace(/-/g, "_") : null
+    const normalized = type ? type.toLowerCase().replace(/-/g, "_") : null
+    console.log("[auth] role normalized:", normalized)
+    return normalized
   } catch {
     return null
   }
