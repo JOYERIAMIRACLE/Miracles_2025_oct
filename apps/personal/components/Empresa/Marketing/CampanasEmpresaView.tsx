@@ -632,8 +632,9 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
     const q = busq.toLowerCase().trim()
     return campanas
       .filter(c => c.mes === mes && c.anio === anio)
-      .filter(c => !q || c.unidadNegocio.toLowerCase().includes(q) || (c.categoria ?? "").toLowerCase().includes(q))
-  }, [campanas, mes, anio, busq])
+      .filter(c => !c.categoria || c.categoria === categoria)
+      .filter(c => !q || c.unidadNegocio.toLowerCase().includes(q) || (c.notas ?? "").toLowerCase().includes(q))
+  }, [campanas, mes, anio, busq, categoria])
 
   const fmtDia = new Date(dayStr + "T00:00:00").toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })
 
@@ -851,8 +852,9 @@ export function CampanasEmpresaView() {
     }
   }
 
-  const asignarExistente = async (c: CampanaType, fecha: string, semanaNum: NSemana, categoriaFila: string) => {
-    const key = `semana${semanaNum}Fecha` as keyof CampanaPayload
+  const asignarExistente = async (c: CampanaType, fecha: string, _semanaNum: NSemana, categoriaFila: string) => {
+    const semanaTarget = SEMANAS.find(n => !!getSemana(c, n, "Titulo")) ?? 1
+    const key = `semana${semanaTarget}Fecha` as keyof CampanaPayload
     const payload: Partial<CampanaPayload> = { [key]: fecha }
     if (!c.categoria) payload.categoria = categoriaFila
     const optimistic = { ...c, [key]: fecha, ...(!c.categoria ? { categoria: categoriaFila } : {}) }
