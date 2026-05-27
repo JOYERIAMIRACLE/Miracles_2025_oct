@@ -49,6 +49,16 @@ export function isProveedorWeb(): boolean {
   return (role?.includes("proveedor") ?? false)
 }
 
+export function isMarketingTeam(): boolean {
+  const role = getUserRole()
+  return (role?.includes("marketing") ?? false)
+}
+
+// Roles que solo tienen acceso a /trabajo (no empresa ni personal)
+export function isSoloTrabajo(): boolean {
+  return isProveedorWeb() || isMarketingTeam()
+}
+
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   try {
     const res = await fetch(`${baseUrl}/api/users/me?populate=*`, {

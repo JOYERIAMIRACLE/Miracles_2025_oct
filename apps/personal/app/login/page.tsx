@@ -10,7 +10,8 @@ const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 function redirectForRole(role: string | null): string | null {
   if (!role) return null
   if (role.includes("proveedor")) return "/trabajo/sitio-web"
-  if (role === "authenticated") return "/gestion-empresa"
+  if (role.includes("marketing"))  return "/trabajo/tareas"
+  if (role === "authenticated")    return "/gestion-empresa"
   return null
 }
 

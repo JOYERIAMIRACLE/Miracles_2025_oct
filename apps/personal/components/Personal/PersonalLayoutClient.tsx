@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation"
 import { PersonalSidebar } from "./PersonalSidebar"
 import { PersonalHeader } from "./PersonalHeader"
 import { AuthGuard } from "@/components/AuthGuard"
-import { isProveedorWeb } from "@/lib/auth"
+import { isSoloTrabajo } from "@/lib/auth"
 
 export function PersonalLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    if (isProveedorWeb()) router.replace("/trabajo/sitio-web")
+    if (isSoloTrabajo()) router.replace("/trabajo/tareas")
   }, [router])
 
   return (

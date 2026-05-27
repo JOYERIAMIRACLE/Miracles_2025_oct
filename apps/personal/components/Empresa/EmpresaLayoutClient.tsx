@@ -5,7 +5,7 @@ import { Menu } from "lucide-react"
 import { EmpresaSidebar } from "./EmpresaSidebar"
 import { EmpresaHeader } from "./EmpresaHeader"
 import { AuthGuard } from "@/components/AuthGuard"
-import { isProveedorWeb } from "@/lib/auth"
+import { isSoloTrabajo } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 
 export function EmpresaLayoutClient({ children }: { children: React.ReactNode }) {
@@ -13,7 +13,7 @@ export function EmpresaLayoutClient({ children }: { children: React.ReactNode })
   const router = useRouter()
 
   useEffect(() => {
-    if (isProveedorWeb()) router.replace("/trabajo/sitio-web")
+    if (isSoloTrabajo()) router.replace("/trabajo/tareas")
   }, [router])
 
   return (
