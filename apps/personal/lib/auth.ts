@@ -54,13 +54,13 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
     const res = await fetch(`${baseUrl}/api/users/me?populate=role`, {
       headers: { Authorization: `Bearer ${token}` },
     })
+    // 403 = token válido pero el rol no tiene permiso para /users/me
+    // Solo ocurre con roles personalizados sin ese permiso → tratar como proveedor_web
+    if (res.status === 403) return "proveedor_web"
     if (!res.ok) return null
     const json = await res.json()
-    console.log("[auth] /me response:", JSON.stringify(json.role))
     const type = json.role?.type as string | undefined
-    const normalized = type ? type.toLowerCase().replace(/-/g, "_") : null
-    console.log("[auth] role normalized:", normalized)
-    return normalized
+    return type ? type.toLowerCase().replace(/-/g, "_") : null
   } catch {
     return null
   }
