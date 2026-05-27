@@ -7,8 +7,15 @@ import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRo
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
-function redirectForRole(role: string | null) {
-  return role === "proveedor_web" ? "/trabajo/sitio-web" : "/gestion-empresa"
+const ROLE_ROUTES: Record<string, string> = {
+  proveedor_web:  "/trabajo/sitio-web",
+  authenticated:  "/gestion-empresa",
+  // roles adicionales se agregan aquí
+}
+
+function redirectForRole(role: string | null): string | null {
+  if (!role) return null
+  return ROLE_ROUTES[role] ?? null
 }
 
 export default function LoginPage() {
@@ -20,7 +27,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isTokenValid(getToken())) {
-      router.replace(redirectForRole(getUserRole()))
+      const dest = redirectForRole(getUserRole())
+      if (dest) router.replace(dest)
     }
   }, [router])
 
@@ -41,8 +49,13 @@ export default function LoginPage() {
       }
       setToken(json.jwt)
       const role = await fetchUserRole(json.jwt, BASE)
+      const dest  = redirectForRole(role)
+      if (!dest) {
+        setError("Tu cuenta no tiene acceso asignado. Contacta al administrador.")
+        return
+      }
       if (role) setUserRole(role)
-      router.push(redirectForRole(role))
+      router.push(dest)
     } catch {
       setError("No se pudo conectar con el servidor")
     } finally {
