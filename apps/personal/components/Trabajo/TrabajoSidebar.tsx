@@ -7,7 +7,7 @@ import {
   CheckSquare, Wallet, ChevronRight, Archive, Megaphone,
   TrendingUp, FileImage, Users, BookOpen, Globe,
 } from "lucide-react"
-import { getUserRole } from "@/lib/auth"
+import { isProveedorWeb } from "@/lib/auth"
 
 const SECTIONS = [
   {
@@ -48,13 +48,11 @@ const SECTIONS = [
 
 export function TrabajoSidebar() {
   const pathname = usePathname()
-  const [role, setRole] = useState<string | null>(null)
+  const [isProveedor, setIsProveedor] = useState(false)
 
   useEffect(() => {
-    setRole(getUserRole())
+    setIsProveedor(isProveedorWeb())
   }, [])
-
-  const isProveedor = role === "proveedor_web"
   const visibleSections = isProveedor
     ? SECTIONS.filter(s => s.title === "Web")
     : SECTIONS

@@ -58,9 +58,7 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
     if (!res.ok) return null
     const json = await res.json()
     const raw = (json.role?.type || json.role?.name) as string | undefined
-    // Exponer JSON completo para debug (eliminar después)
-    if (!raw) return `DEBUG:${JSON.stringify(json).slice(0, 300)}`
-    return raw.toLowerCase().replace(/[\s-]/g, "_")
+    return raw ? raw.toLowerCase().replace(/[\s-]/g, "_") : null
   } catch {
     return null
   }
