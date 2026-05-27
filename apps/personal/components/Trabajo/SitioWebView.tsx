@@ -236,12 +236,15 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 
 const inp = "w-full text-[17px] text-slate-200 bg-transparent outline-none placeholder:text-slate-600 leading-relaxed"
 
-function DrawerPagina({ node, fp, onUpdate, onClose }: {
+function DrawerPagina({ node, fp, onUpdate, onClose, onSave, saving }: {
   node: PageNode; fp: string
   onUpdate: (p: Partial<PageNode>) => void
   onClose: () => void
+  onSave: () => void
+  saving: boolean
 }) {
-  const [tab, setTab] = useState<"seo" | "estructura" | "metricas">("seo")
+  const [tab,     setTab]     = useState<"seo" | "estructura" | "metricas">("seo")
+  const [saved,   setSaved]   = useState(false)
   const kw = node.keywords.split(",").filter(k => k.trim())
   const s  = ST[node.status]
 
@@ -250,6 +253,12 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
     { id: "estructura", label: "Estructura" },
     { id: "metricas",   label: "Métricas"   },
   ] as const
+
+  function handleSave() {
+    onSave()
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
 
   return (
     <div className="fixed right-0 inset-y-0 z-50 w-full max-w-[740px] bg-[#0b0d13] border-l border-white/[0.06] flex flex-col">
@@ -265,8 +274,17 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
           </p>
           <p className="text-[14px] font-mono text-slate-600 mt-0.5">{fp || "/"}</p>
         </div>
+        <button type="button" onClick={handleSave} disabled={saving}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition shrink-0 ${
+            saved
+              ? "bg-emerald-600/20 border border-emerald-500/30 text-emerald-400"
+              : "bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+          }`}>
+          {saving ? <Loader2 size={14} className="animate-spin" /> : null}
+          {saved ? "✓ Guardado" : saving ? "Guardando…" : "Guardar"}
+        </button>
         <button type="button" title="Cerrar" onClick={onClose}
-          className="p-2 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-white/[0.06] transition">
+          className="p-2 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-white/[0.06] transition shrink-0">
           <X size={18} />
         </button>
       </div>
@@ -610,6 +628,20 @@ export function SitioWebView() {
           fp={modal.fp || pathOf(tree, modal.id)}
           onUpdate={p => handleUpdate(modal.id, p)}
           onClose={() => setModal(null)}
+          saving={saving}
+          onSave={() => {
+            const token = getToken()
+            if (!token) return
+            setSaving(true)
+            fetch(`${BASE}/api/sitio-web`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ data: { arbol: tree } }),
+            })
+              .then(r => { if (!r.ok) setOffline(true) })
+              .catch(() => setOffline(true))
+              .finally(() => setSaving(false))
+          }}
         />
       )}
     </div>
