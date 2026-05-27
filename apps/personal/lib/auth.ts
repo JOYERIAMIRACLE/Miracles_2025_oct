@@ -62,17 +62,13 @@ export function isSoloTrabajo(): boolean {
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   const headers = { Authorization: `Bearer ${token}` }
   try {
-    // populate=role es más confiable que populate=* en Strapi v5 U&P plugin
     const res = await fetch(`${baseUrl}/api/users/me?populate=role`, { headers })
     if (res.status === 403) return "proveedor_web"
-    if (!res.ok) return null
+    if (!res.ok) return `HTTP_${res.status}`
     const json = await res.json()
-    const role = json.role
-    // Soporta formato flat (v4) y data/attributes (v5)
-    const raw = role?.type || role?.name
-      || role?.data?.attributes?.type || role?.data?.attributes?.name
-    return raw ? (raw as string).toLowerCase().replace(/[\s-]/g, "_") : null
-  } catch {
-    return null
+    // Debug: devuelve el JSON completo para inspección
+    return `DBG:${JSON.stringify(json).slice(0, 300)}`
+  } catch (e) {
+    return `CATCH:${e}`
   }
 }
