@@ -236,8 +236,8 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 
 const inp = "w-full text-[17px] text-slate-200 bg-transparent outline-none placeholder:text-slate-600 leading-relaxed"
 
-function DrawerPagina({ node, fp, onUpdate, onClose, onSave, saving }: {
-  node: PageNode; fp: string
+function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving }: {
+  node: PageNode; fp: string; siteDomain: string
   onUpdate: (p: Partial<PageNode>) => void
   onClose: () => void
   onSave: () => void
@@ -310,7 +310,7 @@ function DrawerPagina({ node, fp, onUpdate, onClose, onSave, saving }: {
         <div className="flex items-center gap-3 px-6 py-4 rounded-xl border border-white/[0.07] bg-[#0d1117]">
           <Globe size={16} className="text-slate-600 shrink-0" />
           <span className="text-[14px] font-mono text-slate-500 flex-1 truncate">
-            {node.title ? node.title.toLowerCase().replace(/\s/g, "") : "tu-dominio.com"}{fp !== "/" ? fp : ""}
+            {siteDomain || "tu-dominio.com"}{fp !== "/" ? fp : ""}
           </span>
           <div className="flex items-center gap-2 text-[13px] text-slate-600 shrink-0">
             <span className="text-slate-700">|</span>
@@ -326,22 +326,22 @@ function DrawerPagina({ node, fp, onUpdate, onClose, onSave, saving }: {
         {tab === "seo" && (
           <>
             <FieldCard>
-              <FieldRow label={node.id === "root" ? "Dominio" : "Title"}>
-                <input value={node.title} onChange={e => onUpdate({ title: e.target.value })}
-                  placeholder={node.id === "root" ? "ej. sdindustrial.com.mx" : "Nombre de la página..."} className={inp} />
-              </FieldRow>
-              <FieldRow label="Slug">
-                {node.id === "root" ? (
-                  <span className={`${inp} text-slate-700`}>/</span>
-                ) : (
-                  <>
-                    <input value={node.segment}
-                      onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
-                      placeholder="nombre-pagina" className={`${inp} font-mono`} />
-                    <p className="text-[12px] font-mono text-slate-600 mt-1.5">{fp}</p>
-                  </>
-                )}
-              </FieldRow>
+              {node.id === "root" ? (
+                <FieldRow label="Dominio">
+                  <input value={node.title} onChange={e => onUpdate({ title: e.target.value })}
+                    placeholder="ej. sdindustrial.com.mx" className={inp} />
+                </FieldRow>
+              ) : (
+                <FieldRow label="Slug">
+                  <input value={node.segment}
+                    onChange={e => {
+                      const slug = e.target.value.toLowerCase().replace(/\s+/g, "-")
+                      onUpdate({ segment: slug, title: slug })
+                    }}
+                    placeholder="nombre-pagina" className={`${inp} font-mono`} />
+                  <p className="text-[12px] font-mono text-slate-600 mt-1.5">{fp}</p>
+                </FieldRow>
+              )}
             </FieldCard>
 
             <FieldCard>
@@ -628,6 +628,7 @@ export function SitioWebView() {
         <DrawerPagina
           node={modalNode}
           fp={modal.fp || pathOf(tree, modal.id)}
+          siteDomain={find(tree, "root")?.title ?? ""}
           onUpdate={p => handleUpdate(modal.id, p)}
           onClose={() => setModal(null)}
           saving={saving}
