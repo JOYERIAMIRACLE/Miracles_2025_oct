@@ -436,7 +436,7 @@ export default function PagosPage() {
 
   const [formMode,      setFormMode]      = useState<FormMode | null>(null)
   const [showGestion,   setShowGestion]   = useState(false)
-  const [showMetricas,  setShowMetricas]  = useState(true)
+  const [showMetricas,  setShowMetricas]  = useState(false)
   const [filtroEst,     setFiltroEst]     = useState<EstadoPago | "todos">("todos")
   const [filtroCatId,   setFiltroCatId]   = useState<number | null>(null)
   const [busqueda,      setBusqueda]      = useState("")
