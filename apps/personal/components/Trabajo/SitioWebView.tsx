@@ -12,6 +12,7 @@ interface PageNode {
   id: string
   segment: string
   title: string
+  metaTitle: string
   h1: string
   metaDesc: string
   keywords: string
@@ -32,7 +33,7 @@ const uid = () => Math.random().toString(36).slice(2, 10)
 
 function blank(segment = "nueva-pagina"): PageNode {
   return {
-    id: uid(), segment, title: "", h1: "", metaDesc: "", keywords: "",
+    id: uid(), segment, title: "", metaTitle: "", h1: "", metaDesc: "", keywords: "",
     hero: "", sections: [], componentes: [], notas: "", status: "planning",
     trafico: "", ctrEstimado: "", formularios: 0, children: [],
   }
@@ -226,8 +227,8 @@ function FieldCard({ children }: { children: React.ReactNode }) {
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="px-4 py-3">
-      <p className="text-[11px] text-slate-500 mb-1.5">{label}</p>
+    <div className="px-4 py-4">
+      <p className="text-[11px] font-medium text-slate-400 mb-2">{label}</p>
       {children}
     </div>
   )
@@ -245,7 +246,7 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
   const s  = ST[node.status]
 
   const TABS = [
-    { id: "seo",        label: "SEO/meta"   },
+    { id: "seo",        label: "Slug/meta"  },
     { id: "estructura", label: "Estructura" },
     { id: "metricas",   label: "Métricas"   },
   ] as const
@@ -307,9 +308,9 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
         {tab === "seo" && (
           <>
             <FieldCard>
-              <FieldRow label="Titulo pagina">
+              <FieldRow label="Title">
                 <input value={node.title} onChange={e => onUpdate({ title: e.target.value })}
-                  placeholder="Título de la página..." className={inp} />
+                  placeholder="Nombre de la página..." className={inp} />
               </FieldRow>
               <FieldRow label="Slug">
                 {node.id === "root" ? (
@@ -319,26 +320,35 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
                     onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
                     placeholder="nombre-pagina" className={`${inp} font-mono`} />
                 )}
-                <p className="text-[10px] font-mono text-slate-700 mt-1">{fp}</p>
+                <p className="text-[10px] font-mono text-slate-600 mt-1.5">{fp}</p>
               </FieldRow>
             </FieldCard>
 
             <FieldCard>
-              <FieldRow label="Metadescripcion">
+              <FieldRow label="Meta title">
+                <input value={node.metaTitle ?? ""} onChange={e => onUpdate({ metaTitle: e.target.value })}
+                  placeholder="Título para Google (≤60 chars)..." className={inp} />
+                {(node.metaTitle?.length ?? 0) > 0 && (
+                  <p className={`text-[10px] mt-1.5 ${(node.metaTitle?.length ?? 0) > 60 ? "text-red-400" : "text-slate-600"}`}>
+                    {node.metaTitle?.length}/60
+                  </p>
+                )}
+              </FieldRow>
+              <FieldRow label="Meta description">
                 <textarea value={node.metaDesc} onChange={e => onUpdate({ metaDesc: e.target.value })}
                   placeholder="Descripción para Google (≤160 chars)..." rows={2}
                   className={`${inp} resize-none`} />
                 {node.metaDesc.length > 0 && (
-                  <p className={`text-[10px] mt-1 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-700"}`}>
+                  <p className={`text-[10px] mt-1.5 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-600"}`}>
                     {node.metaDesc.length}/160
                   </p>
                 )}
               </FieldRow>
-              <FieldRow label="Keyword">
+              <FieldRow label="Keywords">
                 <input value={node.keywords} onChange={e => onUpdate({ keywords: e.target.value })}
                   placeholder="keyword1, keyword2, keyword3..." className={inp} />
                 {kw.length > 0 && (
-                  <p className="text-[10px] text-slate-700 mt-1">{kw.length} keywords</p>
+                  <p className="text-[10px] text-slate-600 mt-1.5">{kw.length} keywords</p>
                 )}
               </FieldRow>
             </FieldCard>
