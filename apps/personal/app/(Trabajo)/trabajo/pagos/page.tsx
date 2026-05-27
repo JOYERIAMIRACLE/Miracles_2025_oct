@@ -153,7 +153,8 @@ function MetricasPanel({ porCategoria, porMes, sinCategoria, pagos }: {
   pagos:        PagoTrabajoType[]
 }) {
   const [activeIdx,   setActiveIdx]   = useState<number | null>(null)
-  const [selectedMes, setSelectedMes] = useState<string | null>(null)
+  const mesActualKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`
+  const [selectedMes, setSelectedMes] = useState<string | null>(mesActualKey)
 
   const totalDonut = porCategoria.reduce((s, x) => s + x.total, 0) + sinCategoria
 
