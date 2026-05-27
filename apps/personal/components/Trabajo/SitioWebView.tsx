@@ -326,9 +326,9 @@ function DrawerPagina({ node, fp, onUpdate, onClose, onSave, saving }: {
         {tab === "seo" && (
           <>
             <FieldCard>
-              <FieldRow label="Title">
+              <FieldRow label={node.id === "root" ? "Dominio" : "Title"}>
                 <input value={node.title} onChange={e => onUpdate({ title: e.target.value })}
-                  placeholder="Nombre de la página..." className={inp} />
+                  placeholder={node.id === "root" ? "ej. sdindustrial.com.mx" : "Nombre de la página..."} className={inp} />
               </FieldRow>
               <FieldRow label="Slug">
                 {node.id === "root" ? (
