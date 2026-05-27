@@ -700,7 +700,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
   onEdit: (c: CampanaType) => void
   onDelete: (c: CampanaType) => void
   onAgregar: (opts: { categoria: string; mes: MesCampana; anio: number; fecha: string }) => void
-  onAsignarExistente: (c: CampanaType, fecha: string, semanaNum: NSemana) => Promise<void>
+  onAsignarExistente: (c: CampanaType, fecha: string, semanaNum: NSemana, categoriaFila: string) => Promise<void>
 }) {
   const [wStart, setWStart] = useState(() => weekStart(new Date()))
   const [picker, setPicker] = useState<{ dayStr: string; categoria: string } | null>(null)
@@ -796,7 +796,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
           categoria={picker.categoria}
           campanas={campanas}
           onNueva={() => onAgregar({ categoria: picker.categoria, mes: MESES[new Date(picker.dayStr + "T00:00:00").getMonth()], anio: new Date(picker.dayStr + "T00:00:00").getFullYear(), fecha: picker.dayStr })}
-          onAsignar={(c, semanaNum) => { onAsignarExistente(c, picker.dayStr, semanaNum); setPicker(null) }}
+          onAsignar={(c, semanaNum) => { onAsignarExistente(c, picker.dayStr, semanaNum, picker.categoria); setPicker(null) }}
           onClose={() => setPicker(null)}
         />
       )}
@@ -851,11 +851,14 @@ export function CampanasEmpresaView() {
     }
   }
 
-  const asignarExistente = async (c: CampanaType, fecha: string, semanaNum: NSemana) => {
+  const asignarExistente = async (c: CampanaType, fecha: string, semanaNum: NSemana, categoriaFila: string) => {
     const key = `semana${semanaNum}Fecha` as keyof CampanaPayload
-    setCampanas(prev => prev.map(x => x.documentId === c.documentId ? { ...x, [key]: fecha } : x))
+    const payload: Partial<CampanaPayload> = { [key]: fecha }
+    if (!c.categoria) payload.categoria = categoriaFila
+    const optimistic = { ...c, [key]: fecha, ...(!c.categoria ? { categoria: categoriaFila } : {}) }
+    setCampanas(prev => prev.map(x => x.documentId === c.documentId ? optimistic : x))
     try {
-      const updated = await updateCampana(c.documentId, { [key]: fecha })
+      const updated = await updateCampana(c.documentId, payload)
       setCampanas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
       toast.success(`Fecha asignada · ${c.unidadNegocio}`)
     } catch {
