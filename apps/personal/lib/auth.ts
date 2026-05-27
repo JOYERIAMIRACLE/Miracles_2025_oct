@@ -51,17 +51,16 @@ export function isProveedorWeb(): boolean {
 
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   try {
-    const res = await fetch(`${baseUrl}/api/users/me?populate=role`, {
+    const res = await fetch(`${baseUrl}/api/users/me?populate=*`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    // 403 = token válido pero el rol no tiene permiso para /users/me
-    // Solo ocurre con roles personalizados sin ese permiso → tratar como proveedor_web
     if (res.status === 403) return "proveedor_web"
     if (!res.ok) return null
     const json = await res.json()
-    // Strapi v5 puede no incluir `type`; usamos `name` como fallback
     const raw = (json.role?.type || json.role?.name) as string | undefined
-    return raw ? raw.toLowerCase().replace(/[\s-]/g, "_") : null
+    // Exponer JSON completo para debug (eliminar después)
+    if (!raw) return `DEBUG:${JSON.stringify(json).slice(0, 300)}`
+    return raw.toLowerCase().replace(/[\s-]/g, "_")
   } catch {
     return null
   }
