@@ -806,11 +806,11 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
                   <div key={di}
                     className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
-                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
+                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} fullWidth archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
                     ))}
                     <button type="button"
                       onClick={() => setPicker({ dayStr: toYMD(day), categoria: fila.label })}
-                      className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto">
+                      className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto shrink-0">
                       <Plus size={8} /> Agregar
                     </button>
                   </div>
