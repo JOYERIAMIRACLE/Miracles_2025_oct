@@ -804,7 +804,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
                 const items  = getDiaItems(campanas, dayStr, fila.label)
                 return (
                   <div key={di}
-                    className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
+                    className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] min-w-0 overflow-hidden ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
                       <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} fullWidth archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
                     ))}
