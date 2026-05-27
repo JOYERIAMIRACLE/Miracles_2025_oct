@@ -214,245 +214,238 @@ function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
   )
 }
 
-// ─── Drawer de página (Railway-style) ────────────────────────────────────────
+// ─── Drawer de página ────────────────────────────────────────────────────────
+
+function FieldCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-[#0d1117] divide-y divide-white/[0.06] overflow-hidden">
+      {children}
+    </div>
+  )
+}
+
+function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="px-4 py-3">
+      <p className="text-[11px] text-slate-500 mb-1.5">{label}</p>
+      {children}
+    </div>
+  )
+}
+
+const inp = "w-full text-[13px] text-slate-200 bg-transparent outline-none placeholder:text-slate-700"
 
 function DrawerPagina({ node, fp, onUpdate, onClose }: {
   node: PageNode; fp: string
   onUpdate: (p: Partial<PageNode>) => void
   onClose: () => void
 }) {
-  const [tab, setTab] = useState<"seo" | "estructura">("seo")
-
-  const s  = ST[node.status]
+  const [tab, setTab] = useState<"seo" | "estructura" | "metricas">("seo")
   const kw = node.keywords.split(",").filter(k => k.trim())
+  const s  = ST[node.status]
 
-  // Clases reutilizables
-  const field = "w-full px-4 py-2.5 text-[13px] rounded-lg border border-white/[0.07] bg-white/[0.03] text-slate-200 placeholder:text-slate-700 outline-none focus:border-blue-500/40 focus:bg-white/[0.05] transition"
-  const label = "block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2"
-
-  // Colores sólidos tipo Railway para el badge de status
-  const BADGE: Record<PageNode["status"], string> = {
-    live:     "bg-emerald-600 text-white",
-    draft:    "bg-amber-500 text-white",
-    planning: "bg-slate-700 text-slate-300",
-  }
+  const TABS = [
+    { id: "seo",        label: "SEO/meta"   },
+    { id: "estructura", label: "Estructura" },
+    { id: "metricas",   label: "Métricas"   },
+  ] as const
 
   return (
-    <div className="fixed right-0 inset-y-0 z-50 w-full max-w-[500px] bg-[#0b0e14] border-l border-white/[0.06] flex flex-col">
+    <div className="fixed right-0 inset-y-0 z-50 w-full max-w-[500px] bg-[#0b0d13] border-l border-white/[0.06] flex flex-col">
 
-      {/* ── Barra superior ── */}
+      {/* ── Header ── */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06] shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-linear-to-br from-blue-500/25 to-violet-600/25 border border-blue-500/20 flex items-center justify-center shrink-0">
-          <Globe size={16} className="text-blue-400" />
+        <div className="w-8 h-8 rounded-lg bg-slate-800/80 border border-white/[0.08] flex items-center justify-center shrink-0">
+          <Globe size={15} className="text-slate-400" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-semibold text-slate-100 truncate leading-tight">
             {node.title || <span className="text-slate-600 font-normal italic">Sin título</span>}
           </p>
-          <p className="text-[11px] font-mono text-slate-600 truncate">{fp || "/"}</p>
+          <p className="text-[11px] font-mono text-slate-600">{fp || "/"}</p>
         </div>
         <button type="button" title="Cerrar" onClick={onClose}
-          className="p-2 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-white/[0.06] transition shrink-0">
-          <X size={15} />
+          className="p-1.5 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-white/[0.06] transition">
+          <X size={14} />
         </button>
       </div>
 
-      {/* ── Tabs (Deployments / Variables style) ── */}
-      <div className="flex gap-0 border-b border-white/[0.06] px-5 shrink-0">
-        {(["seo", "estructura"] as const).map(t => (
-          <button key={t} type="button" onClick={() => setTab(t)}
-            className={`px-4 py-3 text-[12px] font-medium border-b-2 transition -mb-px ${
-              tab === t
+      {/* ── Tabs ── */}
+      <div className="flex border-b border-white/[0.06] px-5 shrink-0">
+        {TABS.map(t => (
+          <button key={t.id} type="button" onClick={() => setTab(t.id)}
+            className={`px-4 py-3 text-[12px] font-medium border-b-2 -mb-px transition ${
+              tab === t.id
                 ? "border-blue-500 text-slate-100"
                 : "border-transparent text-slate-500 hover:text-slate-300"
             }`}>
-            {t === "seo" ? "SEO & Contenido" : "Estructura"}
+            {t.label}
           </button>
         ))}
       </div>
 
-      {/* ── Card principal (ACTIVE deployment style) ── */}
-      <div className="mx-4 mt-4 rounded-xl border border-white/[0.07] overflow-hidden shrink-0">
+      {/* ── Contenido scrollable ── */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
 
-        {/* Fila principal */}
-        <div className="flex items-start gap-4 px-5 py-4 bg-white/[0.02]">
-
-          {/* Badge sólido (como ACTIVE en Railway) */}
-          <span className={`shrink-0 mt-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${BADGE[node.status]}`}>
-            {s.lbl}
+        {/* URL bar — siempre visible */}
+        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-white/[0.07] bg-[#0d1117]">
+          <Globe size={13} className="text-slate-600 shrink-0" />
+          <span className="text-[12px] font-mono text-slate-500 flex-1 truncate">
+            {node.title ? node.title.toLowerCase().replace(/\s/g, "") : "tu-dominio.com"}{fp !== "/" ? fp : ""}
           </span>
-
-          {/* Info editable */}
-          <div className="flex-1 min-w-0">
-            <input
-              value={node.title}
-              onChange={e => onUpdate({ title: e.target.value })}
-              placeholder="Título SEO de la página..."
-              className="w-full text-[14px] font-semibold text-slate-100 bg-transparent outline-none placeholder:text-slate-700 leading-snug"
-            />
-            {node.h1
-              ? <p className="text-[12px] text-slate-400 mt-0.5 truncate">{node.h1}</p>
-              : <p className="text-[12px] text-slate-700 mt-0.5 italic">sin H1 configurado</p>
-            }
-            <p className="text-[11px] font-mono text-slate-600 mt-2 truncate">{fp || "/"}</p>
-          </div>
-
-          {/* Selector de status (como los 3 dots / acciones de Railway) */}
-          <div className="shrink-0 flex flex-col gap-1.5 pt-0.5">
-            {(["planning", "draft", "live"] as const).map(st => (
-              <button key={st} type="button"
-                onClick={() => onUpdate({ status: st })}
-                className={`text-[10px] font-semibold px-2.5 py-1 rounded-md border transition text-right ${
-                  node.status === st
-                    ? st === "live"  ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-300"
-                    : st === "draft" ? "bg-amber-500/20 border-amber-500/30 text-amber-300"
-                                    : "bg-slate-700/40 border-slate-600/30 text-slate-300"
-                    : "border-white/[0.05] text-slate-600 hover:text-slate-400 hover:border-white/10"
-                }`}>
-                {ST[st].lbl}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 text-[11px] text-slate-600 shrink-0">
+            <span className="text-slate-700">|</span>
+            <span>Visitas</span>
+            <span className="text-slate-700">|</span>
+            <span>Clics</span>
+            <span className="text-slate-700">|</span>
+            <span>Rank SEO</span>
           </div>
         </div>
 
-        {/* Fila resumen (Deployment successful style) */}
-        <div className="flex items-center gap-3 px-5 py-3 border-t border-white/[0.05] bg-black/20">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
-          <p className="text-[12px] text-slate-500 flex-1">
-            {node.sections.length > 0
-              ? `${node.sections.length} secciones · ${node.componentes.length} componentes · ${kw.length} keywords`
-              : "Sin contenido configurado aún"}
-          </p>
-          {node.trafico && (
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${
-              node.trafico === "alto"  ? "bg-emerald-500/10 text-emerald-400"
-            : node.trafico === "medio" ? "bg-amber-500/10 text-amber-400"
-                                       : "bg-slate-700/30 text-slate-500"
-            }`}>
-              ↑ Tráfico {node.trafico}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* ── Métricas ── */}
-      <div className="mx-4 mt-3 grid grid-cols-4 rounded-xl border border-white/[0.07] divide-x divide-white/[0.05] shrink-0">
-
-        {/* Tráfico */}
-        <div className="px-4 py-4">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-3">Tráfico</p>
-          <div className="flex flex-col gap-1.5">
-            {(["alto", "medio", "bajo"] as const).map(t => (
-              <button key={t} type="button"
-                onClick={() => onUpdate({ trafico: node.trafico === t ? "" : t })}
-                className={`text-left text-[11px] font-semibold capitalize px-2 py-1 rounded-md transition ${
-                  node.trafico === t
-                    ? t === "alto"  ? "bg-emerald-500/15 text-emerald-400"
-                    : t === "medio" ? "bg-amber-500/15 text-amber-400"
-                                    : "bg-slate-700/30 text-slate-400"
-                    : "text-slate-700 hover:text-slate-400 hover:bg-white/[0.03]"
-                }`}>{t}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Keywords */}
-        <div className="px-4 py-4">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-3">Keywords</p>
-          <span className="text-3xl font-bold text-slate-100 leading-none block">{kw.length}</span>
-          <span className="text-[9px] text-slate-700 mt-1.5 block">palabras clave</span>
-        </div>
-
-        {/* CTR */}
-        <div className="px-4 py-4">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-3">CTR est.</p>
-          <input value={node.ctrEstimado} onChange={e => onUpdate({ ctrEstimado: e.target.value })}
-            placeholder="2–4%" title="CTR estimado"
-            className="w-full text-xl font-bold text-slate-100 bg-transparent outline-none placeholder:text-slate-700 leading-none" />
-          <span className="text-[9px] text-slate-700 mt-1.5 block">estimado</span>
-        </div>
-
-        {/* Forms */}
-        <div className="px-4 py-4">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-3">Forms</p>
-          <input type="number" min={0} title="Número de formularios"
-            value={node.formularios}
-            onChange={e => onUpdate({ formularios: Math.max(0, Number(e.target.value)) })}
-            className="w-full text-3xl font-bold text-slate-100 bg-transparent outline-none leading-none" />
-          <span className="text-[9px] text-slate-700 mt-1.5 block">formularios</span>
-        </div>
-      </div>
-
-      {/* ── Cuerpo del tab ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-5">
-        {tab === "seo" ? (
-          <div className="space-y-5">
-            {node.id !== "root" && (
-              <div>
-                <label className={label}>Segmento URL</label>
-                <input value={node.segment}
-                  onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
-                  placeholder="nombre-pagina" className={field} />
-                <p className="text-[10px] font-mono text-slate-700 mt-1.5">{fp}</p>
-              </div>
-            )}
-            <div>
-              <label className={label}>H1 Principal</label>
-              <input value={node.h1} onChange={e => onUpdate({ h1: e.target.value })}
-                placeholder="Encabezado principal de la página..." className={field} />
-            </div>
-            <div>
-              <label className={label}>Keywords</label>
-              <input value={node.keywords} onChange={e => onUpdate({ keywords: e.target.value })}
-                placeholder="keyword1, keyword2, keyword3..." className={field} />
-              <p className="text-[10px] text-slate-700 mt-1.5">{kw.length} keywords · separadas por coma</p>
-            </div>
-            <div>
-              <label className={label}>Hero / Tagline</label>
-              <textarea value={node.hero} onChange={e => onUpdate({ hero: e.target.value })}
-                placeholder="Propuesta de valor del hero section..." rows={2}
-                className={`${field} resize-none`} />
-            </div>
-            <div>
-              <label className={label}>Meta descripción</label>
-              <textarea value={node.metaDesc} onChange={e => onUpdate({ metaDesc: e.target.value })}
-                placeholder="Descripción para Google (≤160 chars)..." rows={3}
-                className={`${field} resize-none`} />
-              {node.metaDesc.length > 0 && (
-                <p className={`text-[10px] mt-1.5 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-700"}`}>
-                  {node.metaDesc.length} / 160 caracteres
-                </p>
+        {/* ── Tab SEO/meta ── */}
+        {tab === "seo" && (
+          <>
+            <FieldCard>
+              <FieldRow label="Titulo pagina">
+                <input value={node.title} onChange={e => onUpdate({ title: e.target.value })}
+                  placeholder="Título de la página..." className={inp} />
+              </FieldRow>
+              {node.id !== "root" && (
+                <FieldRow label="Slug">
+                  <input value={node.segment}
+                    onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
+                    placeholder="nombre-pagina" className={`${inp} font-mono`} />
+                </FieldRow>
               )}
-            </div>
-            <div>
-              <label className={label}>Notas de diseño</label>
-              <textarea value={node.notas} onChange={e => onUpdate({ notas: e.target.value })}
-                placeholder="Referencias, decisiones de diseño, copy alternativo..." rows={3}
-                className={`${field} resize-none`} />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-7">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className={label}>Secciones</p>
-                <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.07] text-slate-500 text-[10px] font-bold">
-                  {node.sections.length}
-                </span>
-              </div>
-              <ListEditor items={node.sections} onUpdate={v => onUpdate({ sections: v })} ph="Ej: Hero, Productos, CTA..." />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className={label}>Componentes reutilizables</p>
-                <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.07] text-slate-500 text-[10px] font-bold">
-                  {node.componentes.length}
-                </span>
-              </div>
-              <ListEditor items={node.componentes} onUpdate={v => onUpdate({ componentes: v })} ph="Ej: Navbar, ProductCard, CTABanner..." />
-            </div>
-          </div>
+            </FieldCard>
+
+            <FieldCard>
+              <FieldRow label="Metadescripcion">
+                <textarea value={node.metaDesc} onChange={e => onUpdate({ metaDesc: e.target.value })}
+                  placeholder="Descripción para Google (≤160 chars)..." rows={2}
+                  className={`${inp} resize-none`} />
+                {node.metaDesc.length > 0 && (
+                  <p className={`text-[10px] mt-1 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-700"}`}>
+                    {node.metaDesc.length}/160
+                  </p>
+                )}
+              </FieldRow>
+              <FieldRow label="Keyword">
+                <input value={node.keywords} onChange={e => onUpdate({ keywords: e.target.value })}
+                  placeholder="keyword1, keyword2, keyword3..." className={inp} />
+                {kw.length > 0 && (
+                  <p className="text-[10px] text-slate-700 mt-1">{kw.length} keywords</p>
+                )}
+              </FieldRow>
+            </FieldCard>
+
+            <FieldCard>
+              <FieldRow label="H1 Principal">
+                <input value={node.h1} onChange={e => onUpdate({ h1: e.target.value })}
+                  placeholder="Encabezado principal de la página..." className={inp} />
+              </FieldRow>
+              <FieldRow label="Hero / Tagline">
+                <textarea value={node.hero} onChange={e => onUpdate({ hero: e.target.value })}
+                  placeholder="Propuesta de valor del hero section..." rows={2}
+                  className={`${inp} resize-none`} />
+              </FieldRow>
+              <FieldRow label="Notas">
+                <textarea value={node.notas} onChange={e => onUpdate({ notas: e.target.value })}
+                  placeholder="Referencias, decisiones de diseño..." rows={2}
+                  className={`${inp} resize-none`} />
+              </FieldRow>
+            </FieldCard>
+          </>
         )}
+
+        {/* ── Tab Estructura ── */}
+        {tab === "estructura" && (
+          <>
+            <FieldCard>
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] text-slate-500">Secciones</p>
+                  <span className="text-[10px] text-slate-600 font-mono">{node.sections.length}</span>
+                </div>
+                <ListEditor items={node.sections} onUpdate={v => onUpdate({ sections: v })} ph="Hero, Productos, CTA..." />
+              </div>
+            </FieldCard>
+            <FieldCard>
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] text-slate-500">Componentes reutilizables</p>
+                  <span className="text-[10px] text-slate-600 font-mono">{node.componentes.length}</span>
+                </div>
+                <ListEditor items={node.componentes} onUpdate={v => onUpdate({ componentes: v })} ph="Navbar, ProductCard, CTABanner..." />
+              </div>
+            </FieldCard>
+          </>
+        )}
+
+        {/* ── Tab Métricas ── */}
+        {tab === "metricas" && (
+          <>
+            <FieldCard>
+              <FieldRow label="Estado de la página">
+                <div className="flex gap-2 mt-1">
+                  {(["planning", "draft", "live"] as const).map(st => (
+                    <button key={st} type="button" onClick={() => onUpdate({ status: st })}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition ${
+                        node.status === st
+                          ? st === "live"     ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-300"
+                          : st === "draft"    ? "bg-amber-500/20 border-amber-500/30 text-amber-300"
+                                              : "bg-slate-700/40 border-slate-600/30 text-slate-300"
+                          : "border-white/[0.06] text-slate-600 hover:text-slate-400"
+                      }`}>
+                      {ST[st].lbl}
+                    </button>
+                  ))}
+                </div>
+              </FieldRow>
+              <FieldRow label="Tráfico estimado">
+                <div className="flex gap-2 mt-1">
+                  {(["alto", "medio", "bajo"] as const).map(t => (
+                    <button key={t} type="button"
+                      onClick={() => onUpdate({ trafico: node.trafico === t ? "" : t })}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border capitalize transition ${
+                        node.trafico === t
+                          ? t === "alto"  ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-400"
+                          : t === "medio" ? "bg-amber-500/15 border-amber-500/20 text-amber-400"
+                                          : "bg-slate-700/30 border-slate-600/20 text-slate-400"
+                          : "border-white/[0.06] text-slate-600 hover:text-slate-400"
+                      }`}>{t}</button>
+                  ))}
+                </div>
+              </FieldRow>
+            </FieldCard>
+
+            <FieldCard>
+              <FieldRow label="CTR estimado">
+                <input value={node.ctrEstimado} onChange={e => onUpdate({ ctrEstimado: e.target.value })}
+                  placeholder="2–4%" title="CTR estimado" className={inp} />
+              </FieldRow>
+              <FieldRow label="Formularios en la página">
+                <input type="number" min={0} title="Número de formularios"
+                  value={node.formularios}
+                  onChange={e => onUpdate({ formularios: Math.max(0, Number(e.target.value)) })}
+                  className={inp} />
+              </FieldRow>
+            </FieldCard>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-white/[0.07] bg-[#0d1117] px-4 py-4">
+                <p className="text-[10px] text-slate-600 mb-1">Keywords</p>
+                <p className="text-3xl font-bold text-slate-100">{kw.length}</p>
+              </div>
+              <div className="rounded-xl border border-white/[0.07] bg-[#0d1117] px-4 py-4">
+                <p className="text-[10px] text-slate-600 mb-1">Secciones</p>
+                <p className="text-3xl font-bold text-slate-100">{node.sections.length}</p>
+              </div>
+            </div>
+          </>
+        )}
+
       </div>
     </div>
   )
