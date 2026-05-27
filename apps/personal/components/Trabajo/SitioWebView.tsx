@@ -235,9 +235,16 @@ function ModalPagina({ node, fp, onUpdate, onClose }: {
   onUpdate: (p: Partial<PageNode>) => void
   onClose: () => void
 }) {
-  const ic = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700/60 bg-slate-800/50 text-slate-100 placeholder:text-slate-700 outline-none focus:border-blue-500/40 focus:bg-slate-800 transition"
+  const [tab, setTab] = useState<"seo" | "estructura">("seo")
+  const ic = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700/50 bg-slate-800/40 text-slate-100 placeholder:text-slate-700 outline-none focus:border-blue-500/40 focus:bg-slate-800/70 transition"
   const s  = ST[node.status]
   const kwCount = node.keywords.split(",").filter(k => k.trim()).length
+
+  const STATUS_BADGE = {
+    live:     "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300",
+    draft:    "bg-amber-500/20 border border-amber-500/40 text-amber-300",
+    planning: "bg-slate-700/40 border border-slate-600/40 text-slate-400",
+  }
 
   const TRAFICO_COLORS = {
     alto:  { bg: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30", dot: "bg-emerald-500" },
@@ -246,215 +253,183 @@ function ModalPagina({ node, fp, onUpdate, onClose }: {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+    // Drawer lateral derecho — sin overlay que oscurece
+    <div className="fixed right-0 inset-y-0 z-50 w-full max-w-[420px] bg-[#0d1117] border-l border-slate-800/70 flex flex-col shadow-2xl">
 
-        {/* ── Header ── */}
-        <div className="px-6 pt-5 pb-4 border-b border-slate-800/80 shrink-0 relative">
-          <button
-            type="button" title="Cerrar" onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 text-slate-600 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition">
-            <X size={14} />
-          </button>
+      {/* ── Top bar: servicio name style ── */}
+      <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-slate-800/60 shrink-0">
+        <div className="w-6 h-6 rounded-md bg-blue-500/15 border border-blue-500/20 flex items-center justify-center shrink-0">
+          <Globe size={12} className="text-blue-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-semibold text-slate-200 truncate block leading-tight">
+            {node.title || "Sin título"}
+          </span>
+          <span className="text-[10px] font-mono text-slate-600 truncate block">{fp || "/"}</span>
+        </div>
+        <button type="button" title="Cerrar" onClick={onClose}
+          className="p-1.5 text-slate-600 hover:text-slate-300 rounded-md hover:bg-slate-800 transition shrink-0">
+          <X size={14} />
+        </button>
+      </div>
 
-          {/* Breadcrumb + status */}
-          <div className="flex items-center gap-2 mb-2.5">
-            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
-            <span className="text-[10px] font-mono text-slate-500 truncate">{fp || "/"}</span>
-            <div className="flex gap-1 ml-auto mr-8">
-              {(["planning", "draft", "live"] as const).map(st => (
-                <button
-                  key={st} type="button"
-                  onClick={() => onUpdate({ status: st })}
-                  className={`px-2.5 py-1 text-[9px] font-bold rounded-md border transition ${
-                    node.status === st
-                      ? st === "live"  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                      : st === "draft" ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                                      : "bg-slate-600/20 border-slate-600/30 text-slate-300"
-                      : "border-transparent text-slate-700 hover:text-slate-500 hover:border-slate-700"
-                  }`}>
-                  {ST[st].lbl}
-                </button>
-              ))}
-            </div>
+      {/* ── Deployment-style card ── */}
+      <div className="mx-3 mt-3 rounded-xl border border-slate-800/60 overflow-hidden shrink-0">
+        <div className="flex items-start gap-3 px-4 py-3.5">
+          <span className={`shrink-0 mt-0.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${STATUS_BADGE[node.status]}`}>
+            {s.lbl}
+          </span>
+          <div className="flex-1 min-w-0">
+            <input
+              value={node.title}
+              onChange={e => onUpdate({ title: e.target.value })}
+              placeholder="Título de la página..."
+              className="w-full text-[13px] font-semibold text-slate-200 bg-transparent outline-none placeholder:text-slate-700 leading-snug"
+            />
+            <p className="text-[11px] font-mono text-slate-600 mt-0.5 truncate">{fp || "/"}</p>
           </div>
-
-          {/* Título editable inline */}
-          <input
-            value={node.title}
-            onChange={e => onUpdate({ title: e.target.value })}
-            placeholder="Título SEO de la página..."
-            className="w-full text-[18px] font-bold text-slate-100 bg-transparent border-none outline-none placeholder:text-slate-700 pr-10 leading-snug"
-          />
-          {node.h1 && (
-            <p className="text-[11px] text-slate-500 mt-1 truncate">{node.h1}</p>
+          <div className="shrink-0 flex flex-col items-end gap-1">
+            {(["planning", "draft", "live"] as const).map(st => (
+              <button key={st} type="button"
+                onClick={() => onUpdate({ status: st })}
+                className={`text-[9px] font-bold px-2 py-0.5 rounded transition ${
+                  node.status === st ? s.txt : "text-slate-700 hover:text-slate-500"
+                }`}>
+                {ST[st].lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* "Deployment successful" summary row */}
+        <div className="flex items-center gap-2 px-4 py-2.5 border-t border-slate-800/60 bg-slate-950/40">
+          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
+          <span className="text-[11px] text-slate-500 flex-1 truncate">
+            {node.sections.length > 0
+              ? `${node.sections.length} secc. · ${node.componentes.length} comp. · ${kwCount} kw`
+              : "Sin contenido configurado aún"}
+          </span>
+          {node.trafico && (
+            <span className={`text-[10px] font-semibold shrink-0 ${
+              node.trafico === "alto" ? "text-emerald-400"
+              : node.trafico === "medio" ? "text-amber-400" : "text-slate-500"
+            }`}>↑ {node.trafico}</span>
           )}
         </div>
+      </div>
 
-        {/* ── Metrics bar ── */}
-        <div className="grid grid-cols-4 divide-x divide-slate-800/80 border-b border-slate-800/80 shrink-0 bg-slate-950/40">
-
-          {/* Tráfico */}
-          <div className="px-5 py-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Eye size={10} className="text-slate-600" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Tráfico</span>
-            </div>
-            <div className="flex gap-1">
-              {(["alto", "medio", "bajo"] as const).map(t => (
-                <button
-                  key={t} type="button"
-                  onClick={() => onUpdate({ trafico: node.trafico === t ? "" : t })}
-                  className={`px-2 py-0.5 text-[9px] font-bold rounded border capitalize transition ${
-                    node.trafico === t
-                      ? TRAFICO_COLORS[t].bg
-                      : "border-transparent text-slate-700 hover:text-slate-500"
-                  }`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Keywords */}
-          <div className="px-5 py-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <TrendingUp size={10} className="text-slate-600" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Keywords</span>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-slate-200 leading-none">{kwCount}</span>
-              <span className="text-[9px] text-slate-600">palabras clave</span>
-            </div>
-          </div>
-
-          {/* CTR estimado */}
-          <div className="px-5 py-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <MousePointer2 size={10} className="text-slate-600" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">CTR est.</span>
-            </div>
-            <input
-              value={node.ctrEstimado}
-              onChange={e => onUpdate({ ctrEstimado: e.target.value })}
-              placeholder="2–4%"
-              className="w-full text-xl font-bold text-slate-200 bg-transparent outline-none placeholder:text-slate-700 leading-none"
-            />
-          </div>
-
-          {/* Formularios */}
-          <div className="px-5 py-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <FileText size={10} className="text-slate-600" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Formularios</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <input
-                type="number" min={0}
-                title="Número de formularios en la página"
-                value={node.formularios}
-                onChange={e => onUpdate({ formularios: Math.max(0, Number(e.target.value)) })}
-                className="w-16 text-2xl font-bold text-slate-200 bg-transparent outline-none leading-none"
-              />
-              <span className="text-[9px] text-slate-600">en página</span>
-            </div>
+      {/* ── Metrics ── */}
+      <div className="mx-3 mt-2 grid grid-cols-4 rounded-xl border border-slate-800/60 divide-x divide-slate-800/60 bg-slate-950/20 shrink-0">
+        <div className="px-3 py-2.5">
+          <p className="text-[8px] font-bold uppercase tracking-widest text-slate-700 mb-2">Tráfico</p>
+          <div className="flex flex-col gap-0.5">
+            {(["alto", "medio", "bajo"] as const).map(t => (
+              <button key={t} type="button"
+                onClick={() => onUpdate({ trafico: node.trafico === t ? "" : t })}
+                className={`text-left text-[9px] font-semibold capitalize rounded px-1 py-0.5 transition ${
+                  node.trafico === t
+                    ? t === "alto"  ? "text-emerald-400 bg-emerald-500/10"
+                    : t === "medio" ? "text-amber-400 bg-amber-500/10"
+                                    : "text-slate-400 bg-slate-700/20"
+                    : "text-slate-700 hover:text-slate-500"
+                }`}>{t}</button>
+            ))}
           </div>
         </div>
+        <div className="px-3 py-2.5">
+          <p className="text-[8px] font-bold uppercase tracking-widest text-slate-700 mb-1.5">Keywords</p>
+          <span className="text-2xl font-bold text-slate-200 leading-none block">{kwCount}</span>
+        </div>
+        <div className="px-3 py-2.5">
+          <p className="text-[8px] font-bold uppercase tracking-widest text-slate-700 mb-1.5">CTR est.</p>
+          <input value={node.ctrEstimado} onChange={e => onUpdate({ ctrEstimado: e.target.value })}
+            placeholder="—" title="CTR estimado"
+            className="w-full text-lg font-bold text-slate-200 bg-transparent outline-none placeholder:text-slate-700 leading-none" />
+        </div>
+        <div className="px-3 py-2.5">
+          <p className="text-[8px] font-bold uppercase tracking-widest text-slate-700 mb-1.5">Forms</p>
+          <input type="number" min={0} title="Número de formularios"
+            value={node.formularios} onChange={e => onUpdate({ formularios: Math.max(0, Number(e.target.value)) })}
+            className="w-full text-2xl font-bold text-slate-200 bg-transparent outline-none leading-none" />
+        </div>
+      </div>
 
-        {/* ── Body — 2 cols ── */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-2 divide-x divide-slate-800/60">
+      {/* ── Tabs ── */}
+      <div className="flex border-b border-slate-800/60 px-3 mt-3 shrink-0">
+        {(["seo", "estructura"] as const).map(t => (
+          <button key={t} type="button" onClick={() => setTab(t)}
+            className={`px-4 py-2.5 text-[11px] font-semibold border-b-2 transition -mb-px ${
+              tab === t
+                ? "border-blue-500 text-blue-400"
+                : "border-transparent text-slate-600 hover:text-slate-400"
+            }`}>
+            {t === "seo" ? "SEO & Contenido" : "Estructura"}
+          </button>
+        ))}
+      </div>
 
-            {/* SEO & Contenido */}
-            <div className="p-5 space-y-4">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">SEO & Contenido</p>
-
-              {node.id !== "root" && (
-                <div>
-                  <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Segmento URL</label>
-                  <input
-                    value={node.segment}
-                    onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
-                    placeholder="nombre-pagina"
-                    className={ic}
-                  />
-                  <p className="text-[9px] font-mono text-slate-700 mt-1">{fp}</p>
-                </div>
+      {/* ── Tab body ── */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {tab === "seo" ? (
+          <div className="space-y-4">
+            {node.id !== "root" && (
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1.5">Segmento URL</label>
+                <input value={node.segment}
+                  onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
+                  placeholder="nombre-pagina" className={ic} />
+                <p className="text-[9px] font-mono text-slate-700 mt-1">{fp}</p>
+              </div>
+            )}
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1.5">H1 Principal</label>
+              <input value={node.h1} onChange={e => onUpdate({ h1: e.target.value })}
+                placeholder="Encabezado principal..." className={ic} />
+            </div>
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1.5">Keywords</label>
+              <input value={node.keywords} onChange={e => onUpdate({ keywords: e.target.value })}
+                placeholder="keyword1, keyword2, keyword3..." className={ic} />
+              <p className="text-[9px] text-slate-700 mt-1">{kwCount} keywords · separadas por coma</p>
+            </div>
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1.5">Hero / Tagline</label>
+              <textarea value={node.hero} onChange={e => onUpdate({ hero: e.target.value })}
+                placeholder="Propuesta de valor del hero..." rows={2} className={`${ic} resize-none`} />
+            </div>
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1.5">Meta descripción</label>
+              <textarea value={node.metaDesc} onChange={e => onUpdate({ metaDesc: e.target.value })}
+                placeholder="Descripción para Google (≤160 chars)..." rows={3} className={`${ic} resize-none`} />
+              {node.metaDesc.length > 0 && (
+                <p className={`text-[9px] mt-1 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-700"}`}>
+                  {node.metaDesc.length} / 160
+                </p>
               )}
-
-              <div>
-                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">H1 Principal</label>
-                <input value={node.h1} onChange={e => onUpdate({ h1: e.target.value })}
-                  placeholder="Encabezado principal..." className={ic} />
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Keywords</label>
-                <input value={node.keywords} onChange={e => onUpdate({ keywords: e.target.value })}
-                  placeholder="keyword1, keyword2, keyword3..." className={ic} />
-                <p className="text-[9px] text-slate-700 mt-1">Separadas por coma · {kwCount} total</p>
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Hero / Tagline</label>
-                <textarea value={node.hero} onChange={e => onUpdate({ hero: e.target.value })}
-                  placeholder="Propuesta de valor del hero..." rows={2} className={`${ic} resize-none`} />
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Meta descripción</label>
-                <textarea value={node.metaDesc} onChange={e => onUpdate({ metaDesc: e.target.value })}
-                  placeholder="Descripción para Google (≤160 chars)..." rows={2} className={`${ic} resize-none`} />
-                {node.metaDesc.length > 0 && (
-                  <p className={`text-[9px] mt-1 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-700"}`}>
-                    {node.metaDesc.length} / 160
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Notas</label>
-                <textarea value={node.notas} onChange={e => onUpdate({ notas: e.target.value })}
-                  placeholder="Referencias, decisiones de diseño..." rows={2} className={`${ic} resize-none`} />
-              </div>
             </div>
-
-            {/* Estructura */}
-            <div className="p-5 space-y-6">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Estructura</p>
-
-              <div>
-                <p className="text-[10px] font-semibold text-slate-500 mb-2.5">
-                  Secciones{" "}
-                  <span className="px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-600 text-[9px] font-bold">
-                    {node.sections.length}
-                  </span>
-                </p>
-                <ListEditor
-                  items={node.sections}
-                  onUpdate={v => onUpdate({ sections: v })}
-                  ph="Ej: Hero, Productos, CTA..."
-                />
-              </div>
-
-              <div>
-                <p className="text-[10px] font-semibold text-slate-500 mb-2.5">
-                  Componentes reutilizables{" "}
-                  <span className="px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-600 text-[9px] font-bold">
-                    {node.componentes.length}
-                  </span>
-                </p>
-                <ListEditor
-                  items={node.componentes}
-                  onUpdate={v => onUpdate({ componentes: v })}
-                  ph="Ej: Navbar, ProductCard, CTABanner..."
-                />
-              </div>
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-1.5">Notas</label>
+              <textarea value={node.notas} onChange={e => onUpdate({ notas: e.target.value })}
+                placeholder="Referencias, decisiones de diseño..." rows={2} className={`${ic} resize-none`} />
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-6">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-3">
+                Secciones{" "}
+                <span className="ml-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-600 text-[9px]">{node.sections.length}</span>
+              </p>
+              <ListEditor items={node.sections} onUpdate={v => onUpdate({ sections: v })} ph="Ej: Hero, Productos, CTA..." />
+            </div>
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-3">
+                Componentes{" "}
+                <span className="ml-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-600 text-[9px]">{node.componentes.length}</span>
+              </p>
+              <ListEditor items={node.componentes} onUpdate={v => onUpdate({ componentes: v })} ph="Ej: Navbar, ProductCard, CTABanner..." />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
