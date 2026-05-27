@@ -7,14 +7,11 @@ import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRo
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
-const ROLE_ROUTES: Record<string, string> = {
-  proveedor_web: "/trabajo/sitio-web",
-  authenticated: "/gestion-empresa",
-}
-
 function redirectForRole(role: string | null): string | null {
   if (!role) return null
-  return ROLE_ROUTES[role] ?? null
+  if (role.includes("proveedor")) return "/trabajo/sitio-web"
+  if (role === "authenticated") return "/gestion-empresa"
+  return null
 }
 
 export default function LoginPage() {
@@ -70,7 +67,7 @@ export default function LoginPage() {
           <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4">
             <Gem className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-slate-100">Miracles Admin</h1>
+          <h1 className="text-xl font-bold text-slate-100">Panel Admin</h1>
           <p className="text-sm text-slate-500 mt-1">Inicia sesión para continuar</p>
         </div>
 

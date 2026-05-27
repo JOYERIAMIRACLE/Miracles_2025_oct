@@ -46,7 +46,7 @@ export function logout() {
 
 export function isProveedorWeb(): boolean {
   const role = getUserRole()
-  return role === "proveedor_web" || role === "proveedor-web"
+  return (role?.includes("proveedor") ?? false)
 }
 
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
@@ -59,8 +59,9 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
     if (res.status === 403) return "proveedor_web"
     if (!res.ok) return null
     const json = await res.json()
-    const type = json.role?.type as string | undefined
-    return type ? type.toLowerCase().replace(/-/g, "_") : null
+    // Strapi v5 puede no incluir `type`; usamos `name` como fallback
+    const raw = (json.role?.type || json.role?.name) as string | undefined
+    return raw ? raw.toLowerCase().replace(/[\s-]/g, "_") : null
   } catch {
     return null
   }
