@@ -461,7 +461,25 @@ export default function PagosPage() {
     }
   }
 
+  function aplicarAno(ano: number) {
+    setFechaDesde(`${ano}-01-01`)
+    setFechaHasta(`${ano}-12-31`)
+  }
+
   const hayFiltroFecha = fechaDesde !== "" || fechaHasta !== ""
+
+  const anosDisponibles = useMemo(() => {
+    const set = new Set<number>()
+    pagos.forEach(p => { if (p.fecha) set.add(parseInt(p.fecha.slice(0, 4))) })
+    return [...set].sort((a, b) => b - a)
+  }, [pagos])
+
+  const anoActivo = useMemo(() => {
+    if (!fechaDesde || !fechaHasta) return null
+    const y = parseInt(fechaDesde.slice(0, 4))
+    if (fechaDesde === `${y}-01-01` && fechaHasta === `${y}-12-31`) return y
+    return null
+  }, [fechaDesde, fechaHasta])
 
   // ── Datos derivados ────────────────────────────────────────────────────────
 
@@ -651,7 +669,7 @@ export default function PagosPage() {
 
         {/* Filtro de fechas */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Presets */}
+          {/* Presets rápidos */}
           {(["mes","mesAnt","anio","todo"] as const).map(p => {
             const labels = { mes: "Este mes", mesAnt: "Mes anterior", anio: "Este año", todo: "Todo" }
             return (
@@ -665,6 +683,23 @@ export default function PagosPage() {
               </button>
             )
           })}
+
+          {/* Botones por año (generados desde los datos) */}
+          {anosDisponibles.length > 0 && (
+            <>
+              <span className="text-slate-700 text-xs">·</span>
+              {anosDisponibles.map(ano => (
+                <button key={ano} type="button" onClick={() => aplicarAno(ano)}
+                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                    anoActivo === ano
+                      ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
+                      : "border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600"
+                  }`}>
+                  {ano}
+                </button>
+              ))}
+            </>
+          )}
 
           {/* Separador */}
           <span className="text-slate-700 text-xs">|</span>
