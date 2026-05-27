@@ -851,8 +851,10 @@ export function CampanasEmpresaView() {
     }
   }
 
-  const asignarExistente = async (c: CampanaType, fecha: string, semanaNum: NSemana) => {
-    const key = `semana${semanaNum}Fecha` as keyof CampanaPayload
+  const asignarExistente = async (c: CampanaType, fecha: string, _semanaNum: NSemana) => {
+    // Use the first semana that has a titulo (fallback: semana 1 for title-less campaigns)
+    const semanaTarget = SEMANAS.find(n => !!getSemana(c, n, "Titulo")) ?? 1
+    const key = `semana${semanaTarget}Fecha` as keyof CampanaPayload
     setCampanas(prev => prev.map(x => x.documentId === c.documentId ? { ...x, [key]: fecha } : x))
     try {
       const updated = await updateCampana(c.documentId, { [key]: fecha })
