@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff } from "lucide-react"
+import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff, ChevronDown } from "lucide-react"
 import { getToken } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -137,9 +137,10 @@ function ListEditor({ items, onUpdate, ph }: {
 
 // ─── NodeCard ─────────────────────────────────────────────────────────────────
 
-function NodeCard({ node, fp, onEdit, onAddChild, onDel }: {
+function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed, onToggle }: {
   node: PageNode; fp: string
   onEdit: () => void; onAddChild: () => void; onDel: () => void
+  hasChildren?: boolean; collapsed?: boolean; onToggle?: () => void
 }) {
   const s = ST[node.status]
   return (
@@ -164,7 +165,16 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel }: {
         )}
       </div>
       <div className="flex items-center justify-between px-3 pb-2.5 pt-1.5 border-t border-slate-800/50">
-        <span className={`text-[9px] font-medium ${s.txt}`}>{s.lbl}</span>
+        <div className="flex items-center gap-1">
+          <span className={`text-[9px] font-medium ${s.txt}`}>{s.lbl}</span>
+          {hasChildren && onToggle && (
+            <button type="button" title={collapsed ? "Expandir" : "Colapsar"}
+              onClick={e => { e.stopPropagation(); onToggle() }}
+              className="p-0.5 rounded text-slate-700 hover:text-slate-400 transition opacity-0 group-hover:opacity-100">
+              <ChevronDown size={10} className={`transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`} />
+            </button>
+          )}
+        </div>
         <div className="flex opacity-0 group-hover:opacity-100 transition">
           <button type="button" title="Agregar sub-página"
             onClick={e => { e.stopPropagation(); onAddChild() }}
@@ -192,7 +202,9 @@ function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
   onAddChild: (pid: string) => void
   onDel: (id: string) => void
 }) {
+  const [open, setOpen] = useState(true)
   const fp = node.segment === "" ? "/" : parentFp === "/" ? `/${node.segment}` : `${parentFp}/${node.segment}`
+  const hasChildren = node.children.length > 0
   return (
     <div>
       <NodeCard
@@ -200,8 +212,11 @@ function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
         onEdit={() => onEdit(node.id)}
         onAddChild={() => onAddChild(node.id)}
         onDel={() => onDel(node.id)}
+        hasChildren={hasChildren}
+        collapsed={!open}
+        onToggle={() => setOpen(v => !v)}
       />
-      {node.children.length > 0 && (
+      {hasChildren && open && (
         <div className="ml-6 mt-2 border-l border-slate-800 pl-5 space-y-2">
           {node.children.map(c => (
             <div key={c.id} className="relative">
