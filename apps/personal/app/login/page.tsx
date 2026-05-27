@@ -48,7 +48,7 @@ export default function LoginPage() {
       const role = await fetchUserRole(json.jwt, BASE)
       const dest  = redirectForRole(role)
       if (!dest) {
-        setError("Tu cuenta no tiene acceso asignado. Contacta al administrador.")
+        setError(`Sin acceso. Rol recibido: "${role ?? "null"}"`)
         return
       }
       if (role) setUserRole(role)
