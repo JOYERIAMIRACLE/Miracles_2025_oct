@@ -311,13 +311,16 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
                 <input value={node.title} onChange={e => onUpdate({ title: e.target.value })}
                   placeholder="Título de la página..." className={inp} />
               </FieldRow>
-              {node.id !== "root" && (
-                <FieldRow label="Slug">
+              <FieldRow label="Slug">
+                {node.id === "root" ? (
+                  <span className={`${inp} text-slate-700`}>/</span>
+                ) : (
                   <input value={node.segment}
                     onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
                     placeholder="nombre-pagina" className={`${inp} font-mono`} />
-                </FieldRow>
-              )}
+                )}
+                <p className="text-[10px] font-mono text-slate-700 mt-1">{fp}</p>
+              </FieldRow>
             </FieldCard>
 
             <FieldCard>
@@ -341,18 +344,9 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
             </FieldCard>
 
             <FieldCard>
-              <FieldRow label="H1 Principal">
-                <input value={node.h1} onChange={e => onUpdate({ h1: e.target.value })}
-                  placeholder="Encabezado principal de la página..." className={inp} />
-              </FieldRow>
-              <FieldRow label="Hero / Tagline">
-                <textarea value={node.hero} onChange={e => onUpdate({ hero: e.target.value })}
-                  placeholder="Propuesta de valor del hero section..." rows={2}
-                  className={`${inp} resize-none`} />
-              </FieldRow>
               <FieldRow label="Notas">
                 <textarea value={node.notas} onChange={e => onUpdate({ notas: e.target.value })}
-                  placeholder="Referencias, decisiones de diseño..." rows={2}
+                  placeholder="Referencias, decisiones de diseño..." rows={3}
                   className={`${inp} resize-none`} />
               </FieldRow>
             </FieldCard>
