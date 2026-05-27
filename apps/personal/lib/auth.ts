@@ -64,11 +64,14 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
   try {
     const res = await fetch(`${baseUrl}/api/users/me?populate=role`, { headers })
     if (res.status === 403) return "proveedor_web"
-    if (!res.ok) return `HTTP_${res.status}`
+    if (!res.ok) return null
     const json = await res.json()
-    // Debug: devuelve el JSON completo para inspección
-    return `DBG:${JSON.stringify(json).slice(0, 300)}`
-  } catch (e) {
-    return `CATCH:${e}`
+    const role = json.role
+    // Soporta formato flat (Strapi v4/v5) y data/attributes
+    const raw = role?.type || role?.name
+      || role?.data?.attributes?.type || role?.data?.attributes?.name
+    return raw ? (raw as string).toLowerCase().replace(/[\s-]/g, "_") : null
+  } catch {
+    return null
   }
 }
