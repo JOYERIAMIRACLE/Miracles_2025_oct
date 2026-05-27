@@ -65,11 +65,12 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
       headers: { Authorization: `Bearer ${token}` },
     })
     if (res.status === 403) return "proveedor_web"
-    if (!res.ok) return null
+    if (!res.ok) return `HTTP_${res.status}`
     const json = await res.json()
     const raw = (json.role?.type || json.role?.name) as string | undefined
-    return raw ? raw.toLowerCase().replace(/[\s-]/g, "_") : null
-  } catch {
-    return null
+    if (!raw) return `NO_ROLE:${JSON.stringify(json.role)}`
+    return raw.toLowerCase().replace(/[\s-]/g, "_")
+  } catch (e) {
+    return `CATCH:${e}`
   }
 }
