@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff } from "lucide-react"
+import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff, Eye, MousePointer2, TrendingUp, FileText } from "lucide-react"
 import { getToken } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -20,6 +20,9 @@ interface PageNode {
   componentes: string[]
   notas: string
   status: "planning" | "draft" | "live"
+  trafico: "" | "alto" | "medio" | "bajo"
+  ctrEstimado: string
+  formularios: number
   children: PageNode[]
 }
 
@@ -30,7 +33,8 @@ const uid = () => Math.random().toString(36).slice(2, 10)
 function blank(segment = "nueva-pagina"): PageNode {
   return {
     id: uid(), segment, title: "", h1: "", metaDesc: "", keywords: "",
-    hero: "", sections: [], componentes: [], notas: "", status: "planning", children: [],
+    hero: "", sections: [], componentes: [], notas: "", status: "planning",
+    trafico: "", ctrEstimado: "", formularios: 0, children: [],
   }
 }
 
@@ -231,131 +235,223 @@ function ModalPagina({ node, fp, onUpdate, onClose }: {
   onUpdate: (p: Partial<PageNode>) => void
   onClose: () => void
 }) {
-  const ic = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-700 bg-slate-800/60 text-slate-100 placeholder:text-slate-600 outline-none focus:border-blue-500/50 transition"
-  const lc = "block text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-1.5"
+  const ic = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700/60 bg-slate-800/50 text-slate-100 placeholder:text-slate-700 outline-none focus:border-blue-500/40 focus:bg-slate-800 transition"
+  const s  = ST[node.status]
+  const kwCount = node.keywords.split(",").filter(k => k.trim()).length
+
+  const TRAFICO_COLORS = {
+    alto:  { bg: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30", dot: "bg-emerald-500" },
+    medio: { bg: "bg-amber-500/15 text-amber-400 border-amber-500/30",       dot: "bg-amber-500"   },
+    bajo:  { bg: "bg-slate-600/20 text-slate-400 border-slate-600/30",       dot: "bg-slate-500"   },
+  }
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-slate-900 border border-slate-700/60 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
+      <div className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
 
-        {/* Header */}
-        <div className="flex items-center gap-4 px-6 py-4 border-b border-slate-800 shrink-0">
-          <Globe size={15} className="text-slate-600 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-mono text-slate-500 truncate">{fp}</p>
-            <p className="text-base font-bold text-slate-100 mt-0.5 truncate">
-              {node.title || "Sin título"}
-            </p>
-          </div>
-
-          {/* Status pills */}
-          <div className="flex gap-1.5 shrink-0">
-            {(["planning", "draft", "live"] as const).map(s => (
-              <button
-                key={s} type="button"
-                onClick={() => onUpdate({ status: s })}
-                className={`px-3 py-1.5 text-[10px] font-semibold rounded-full border transition ${
-                  node.status === s
-                    ? s === "live"  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                    : s === "draft" ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                                   : "bg-slate-600/30 border-slate-500/30 text-slate-300"
-                    : "border-slate-700 text-slate-600 hover:text-slate-400 hover:border-slate-600"
-                }`}>
-                {ST[s].lbl}
-              </button>
-            ))}
-          </div>
-
+        {/* ── Header ── */}
+        <div className="px-6 pt-5 pb-4 border-b border-slate-800/80 shrink-0 relative">
           <button
             type="button" title="Cerrar" onClick={onClose}
-            className="p-2 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition shrink-0">
-            <X size={16} />
+            className="absolute top-4 right-4 p-1.5 text-slate-600 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition">
+            <X size={14} />
           </button>
+
+          {/* Breadcrumb + status */}
+          <div className="flex items-center gap-2 mb-2.5">
+            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
+            <span className="text-[10px] font-mono text-slate-500 truncate">{fp || "/"}</span>
+            <div className="flex gap-1 ml-auto mr-8">
+              {(["planning", "draft", "live"] as const).map(st => (
+                <button
+                  key={st} type="button"
+                  onClick={() => onUpdate({ status: st })}
+                  className={`px-2.5 py-1 text-[9px] font-bold rounded-md border transition ${
+                    node.status === st
+                      ? st === "live"  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                      : st === "draft" ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                                      : "bg-slate-600/20 border-slate-600/30 text-slate-300"
+                      : "border-transparent text-slate-700 hover:text-slate-500 hover:border-slate-700"
+                  }`}>
+                  {ST[st].lbl}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Título editable inline */}
+          <input
+            value={node.title}
+            onChange={e => onUpdate({ title: e.target.value })}
+            placeholder="Título SEO de la página..."
+            className="w-full text-[18px] font-bold text-slate-100 bg-transparent border-none outline-none placeholder:text-slate-700 pr-10 leading-snug"
+          />
+          {node.h1 && (
+            <p className="text-[11px] text-slate-500 mt-1 truncate">{node.h1}</p>
+          )}
         </div>
 
-        {/* Body — 2 columns */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+        {/* ── Metrics bar ── */}
+        <div className="grid grid-cols-4 divide-x divide-slate-800/80 border-b border-slate-800/80 shrink-0 bg-slate-950/40">
 
-            {/* ── Columna izquierda ── */}
-
-            {node.id !== "root" && (
-              <div className="col-span-1">
-                <label className={lc}>Segmento URL</label>
-                <input
-                  value={node.segment}
-                  onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
-                  placeholder="nombre-pagina"
-                  className={ic}
-                />
-                <p className="text-[9px] font-mono text-slate-600 mt-1">{fp}</p>
-              </div>
-            )}
-
-            <div className={node.id !== "root" ? "col-span-1" : "col-span-2"}>
-              <label className={lc}>Título SEO</label>
-              <input value={node.title} onChange={e => onUpdate({ title: e.target.value })}
-                placeholder="Título de la página para Google..." className={ic} />
+          {/* Tráfico */}
+          <div className="px-5 py-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Eye size={10} className="text-slate-600" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Tráfico</span>
             </div>
-
-            <div className="col-span-1">
-              <label className={lc}>H1 principal</label>
-              <input value={node.h1} onChange={e => onUpdate({ h1: e.target.value })}
-                placeholder="Encabezado principal de la página..." className={ic} />
+            <div className="flex gap-1">
+              {(["alto", "medio", "bajo"] as const).map(t => (
+                <button
+                  key={t} type="button"
+                  onClick={() => onUpdate({ trafico: node.trafico === t ? "" : t })}
+                  className={`px-2 py-0.5 text-[9px] font-bold rounded border capitalize transition ${
+                    node.trafico === t
+                      ? TRAFICO_COLORS[t].bg
+                      : "border-transparent text-slate-700 hover:text-slate-500"
+                  }`}>
+                  {t}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="col-span-1">
-              <label className={lc}>Keywords</label>
-              <input value={node.keywords} onChange={e => onUpdate({ keywords: e.target.value })}
-                placeholder="vfd monterrey, plc siemens, automatizacion..." className={ic} />
+          {/* Keywords */}
+          <div className="px-5 py-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <TrendingUp size={10} className="text-slate-600" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Keywords</span>
             </div>
-
-            <div className="col-span-2">
-              <label className={lc}>Hero / Tagline</label>
-              <textarea value={node.hero} onChange={e => onUpdate({ hero: e.target.value })}
-                placeholder="Propuesta de valor del hero section. Ej: Automatización industrial con soporte técnico desde Monterrey..."
-                rows={2} className={`${ic} resize-none`} />
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-slate-200 leading-none">{kwCount}</span>
+              <span className="text-[9px] text-slate-600">palabras clave</span>
             </div>
+          </div>
 
-            <div className="col-span-1">
-              <label className={lc}>Meta descripción</label>
-              <textarea value={node.metaDesc} onChange={e => onUpdate({ metaDesc: e.target.value })}
-                placeholder="Descripción para Google (≤160 chars)..."
-                rows={3} className={`${ic} resize-none`} />
-              {node.metaDesc.length > 0 && (
-                <p className={`text-[9px] mt-1 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-600"}`}>
-                  {node.metaDesc.length} / 160
-                </p>
+          {/* CTR estimado */}
+          <div className="px-5 py-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <MousePointer2 size={10} className="text-slate-600" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">CTR est.</span>
+            </div>
+            <input
+              value={node.ctrEstimado}
+              onChange={e => onUpdate({ ctrEstimado: e.target.value })}
+              placeholder="2–4%"
+              className="w-full text-xl font-bold text-slate-200 bg-transparent outline-none placeholder:text-slate-700 leading-none"
+            />
+          </div>
+
+          {/* Formularios */}
+          <div className="px-5 py-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <FileText size={10} className="text-slate-600" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Formularios</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <input
+                type="number" min={0}
+                title="Número de formularios en la página"
+                value={node.formularios}
+                onChange={e => onUpdate({ formularios: Math.max(0, Number(e.target.value)) })}
+                className="w-16 text-2xl font-bold text-slate-200 bg-transparent outline-none leading-none"
+              />
+              <span className="text-[9px] text-slate-600">en página</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Body — 2 cols ── */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 divide-x divide-slate-800/60">
+
+            {/* SEO & Contenido */}
+            <div className="p-5 space-y-4">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">SEO & Contenido</p>
+
+              {node.id !== "root" && (
+                <div>
+                  <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Segmento URL</label>
+                  <input
+                    value={node.segment}
+                    onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
+                    placeholder="nombre-pagina"
+                    className={ic}
+                  />
+                  <p className="text-[9px] font-mono text-slate-700 mt-1">{fp}</p>
+                </div>
               )}
+
+              <div>
+                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">H1 Principal</label>
+                <input value={node.h1} onChange={e => onUpdate({ h1: e.target.value })}
+                  placeholder="Encabezado principal..." className={ic} />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Keywords</label>
+                <input value={node.keywords} onChange={e => onUpdate({ keywords: e.target.value })}
+                  placeholder="keyword1, keyword2, keyword3..." className={ic} />
+                <p className="text-[9px] text-slate-700 mt-1">Separadas por coma · {kwCount} total</p>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Hero / Tagline</label>
+                <textarea value={node.hero} onChange={e => onUpdate({ hero: e.target.value })}
+                  placeholder="Propuesta de valor del hero..." rows={2} className={`${ic} resize-none`} />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Meta descripción</label>
+                <textarea value={node.metaDesc} onChange={e => onUpdate({ metaDesc: e.target.value })}
+                  placeholder="Descripción para Google (≤160 chars)..." rows={2} className={`${ic} resize-none`} />
+                {node.metaDesc.length > 0 && (
+                  <p className={`text-[9px] mt-1 ${node.metaDesc.length > 160 ? "text-red-400" : "text-slate-700"}`}>
+                    {node.metaDesc.length} / 160
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Notas</label>
+                <textarea value={node.notas} onChange={e => onUpdate({ notas: e.target.value })}
+                  placeholder="Referencias, decisiones de diseño..." rows={2} className={`${ic} resize-none`} />
+              </div>
             </div>
 
-            <div className="col-span-1">
-              <label className={lc}>Notas de diseño</label>
-              <textarea value={node.notas} onChange={e => onUpdate({ notas: e.target.value })}
-                placeholder="Decisiones de diseño, referencias, copy alternativo..."
-                rows={3} className={`${ic} resize-none`} />
-            </div>
+            {/* Estructura */}
+            <div className="p-5 space-y-6">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Estructura</p>
 
-            {/* ── Secciones y Componentes ── */}
+              <div>
+                <p className="text-[10px] font-semibold text-slate-500 mb-2.5">
+                  Secciones{" "}
+                  <span className="px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-600 text-[9px] font-bold">
+                    {node.sections.length}
+                  </span>
+                </p>
+                <ListEditor
+                  items={node.sections}
+                  onUpdate={v => onUpdate({ sections: v })}
+                  ph="Ej: Hero, Productos, CTA..."
+                />
+              </div>
 
-            <div className="col-span-1">
-              <label className={lc}>Secciones de la página</label>
-              <ListEditor
-                items={node.sections}
-                onUpdate={v => onUpdate({ sections: v })}
-                ph="Ej: Hero, ¿Qué buscas?, Productos..."
-              />
-            </div>
-
-            <div className="col-span-1">
-              <label className={lc}>Componentes reutilizables</label>
-              <ListEditor
-                items={node.componentes}
-                onUpdate={v => onUpdate({ componentes: v })}
-                ph="Ej: Navbar, ProductCard, CTABanner..."
-              />
+              <div>
+                <p className="text-[10px] font-semibold text-slate-500 mb-2.5">
+                  Componentes reutilizables{" "}
+                  <span className="px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-600 text-[9px] font-bold">
+                    {node.componentes.length}
+                  </span>
+                </p>
+                <ListEditor
+                  items={node.componentes}
+                  onUpdate={v => onUpdate({ componentes: v })}
+                  ph="Ej: Navbar, ProductCard, CTABanner..."
+                />
+              </div>
             </div>
           </div>
         </div>
