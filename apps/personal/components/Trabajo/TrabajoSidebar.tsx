@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   CheckSquare, Wallet, ChevronRight, Archive, Megaphone,
-  TrendingUp, FileImage, Users, BookOpen,
+  TrendingUp, FileImage, Users, BookOpen, Globe,
 } from "lucide-react"
 
 const SECTIONS = [
@@ -34,6 +34,12 @@ const SECTIONS = [
     items: [
       { label: "Roles",        href: "/trabajo/mkt/roles",       icon: Users    },
       { label: "Tutorial de procesos mkt", href: "/trabajo/mkt/tutoriales", icon: BookOpen },
+    ],
+  },
+  {
+    title: "Web",
+    items: [
+      { label: "Sitio web", href: "/trabajo/sitio-web", icon: Globe },
     ],
   },
 ]
