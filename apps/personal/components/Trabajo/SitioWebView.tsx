@@ -334,11 +334,13 @@ function DrawerPagina({ node, fp, onUpdate, onClose, onSave, saving }: {
                 {node.id === "root" ? (
                   <span className={`${inp} text-slate-700`}>/</span>
                 ) : (
-                  <input value={node.segment}
-                    onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
-                    placeholder="nombre-pagina" className={`${inp} font-mono`} />
+                  <>
+                    <input value={node.segment}
+                      onChange={e => onUpdate({ segment: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
+                      placeholder="nombre-pagina" className={`${inp} font-mono`} />
+                    <p className="text-[12px] font-mono text-slate-600 mt-1.5">{fp}</p>
+                  </>
                 )}
-                <p className="text-[10px] font-mono text-slate-600 mt-1.5">{fp}</p>
               </FieldRow>
             </FieldCard>
 
