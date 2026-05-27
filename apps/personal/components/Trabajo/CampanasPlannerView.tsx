@@ -248,7 +248,7 @@ function CampanaCard({ c, onEdit, onDelete }: {
     .filter(s => !!s.titulo)
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden group hover:border-slate-700 transition-colors">
+    <div className="bg-slate-900/60 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden group hover:border-slate-600/60 transition-colors">
       {/* Header */}
       <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-2">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -505,9 +505,9 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   )
 
   return (
-    <div className="border border-slate-800 rounded-xl overflow-hidden">
+    <div className="border border-slate-700/50 rounded-xl overflow-hidden backdrop-blur-sm">
       <button type="button" onClick={() => setCollapsed(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/60 hover:bg-slate-800/40 transition">
+        className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/70 hover:bg-slate-800/50 transition">
         <span className="text-sm font-bold text-slate-200">{mes} {anio}</span>
         <ChevronRight className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${collapsed ? "" : "rotate-90"}`} />
       </button>
@@ -770,10 +770,10 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto rounded-xl border border-slate-800">
+      <div className="overflow-x-auto rounded-xl border border-slate-700/50 backdrop-blur-sm">
         <div className="min-w-[860px]">
           {/* Cabecera días */}
-          <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-800 bg-slate-900/60">
+          <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-700/40 bg-slate-900/70">
             <div />
             {days.map((d, i) => (
               <div key={i} className={`px-2 py-2.5 border-l border-slate-800 text-center ${isHoy(d) ? "bg-blue-500/5" : ""}`}>
@@ -928,7 +928,7 @@ export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: A
         </button>
       </div>
 
-      <div className="flex gap-1 mb-6 bg-slate-900 p-1 rounded-lg w-fit border border-slate-800">
+      <div className="flex gap-1 mb-6 bg-slate-900/60 backdrop-blur-sm p-1 rounded-lg w-fit border border-slate-700/50">
         <button type="button" onClick={() => setTab("catalogo")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "catalogo" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"}`}>
           <LayoutGrid size={14} /> Catálogo
