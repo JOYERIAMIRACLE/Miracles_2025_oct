@@ -371,6 +371,52 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
       .slice(0, 6)
   }, [tickets])
 
+  // ── Tiempo activo por ticket ───────────────────────────────────────────────
+
+  const ticketsConTiempo = useMemo(() =>
+    tickets.map(t => {
+      const entradas = historialPorTarea.get(t.documentId) ?? []
+      const tiempos  = calcularTiempoPorEstado(entradas, t)
+      return {
+        tarea:       t,
+        activo:      tiempos.en_progreso + tiempos.en_pausa,
+        en_progreso: tiempos.en_progreso,
+        en_pausa:    tiempos.en_pausa,
+      }
+    }).sort((a, b) => b.activo - a.activo),
+  [tickets, historialPorTarea])
+
+  const ticketsCompConTiempo = useMemo(() =>
+    ticketsConTiempo.filter(x => x.tarea.estado === "completada"),
+  [ticketsConTiempo])
+
+  const promedioResolucion = ticketsCompConTiempo.length
+    ? ticketsCompConTiempo.reduce((s, x) => s + x.activo, 0) / ticketsCompConTiempo.length
+    : 0
+
+  const masLento = ticketsCompConTiempo[0] ?? null
+
+  const maxActivoTicket = ticketsConTiempo.reduce((m, x) => Math.max(m, x.activo), 0)
+
+  const resolucionPorCategoria = useMemo(() => {
+    const map = new Map<string, { total: number; count: number }>()
+    ticketsCompConTiempo.forEach(x => {
+      const key = x.tarea.etiqueta?.trim() || "(Sin categoría)"
+      const e   = map.get(key) ?? { total: 0, count: 0 }
+      map.set(key, { total: e.total + x.activo, count: e.count + 1 })
+    })
+    return [...map.entries()]
+      .map(([cat, v]) => ({
+        cat:     cat.length > 18 ? cat.slice(0, 17) + "…" : cat,
+        catFull: cat,
+        promedio: Math.round(v.total / v.count),
+        count:   v.count,
+      }))
+      .sort((a, b) => b.promedio - a.promedio)
+  }, [ticketsCompConTiempo])
+
+  const maxResolucion = resolucionPorCategoria.reduce((m, x) => Math.max(m, x.promedio), 0)
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -643,7 +689,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className="border border-blue-200 dark:border-blue-900/40 bg-blue-50/20 dark:bg-blue-950/10 rounded-xl p-4">
                 <p className="text-[10px] text-blue-500 uppercase tracking-wide">Tickets</p>
                 <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">{ticketStats.total}</p>
@@ -660,6 +706,23 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tasa resolución</p>
                 <p className="text-2xl font-bold mt-1">{ticketStats.tasa}%</p>
               </div>
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tiempo promedio</p>
+                <p className="text-2xl font-bold mt-1">{promedioResolucion > 0 ? fmtDuracion(promedioResolucion) : "—"}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">por ticket resuelto</p>
+              </div>
+              {masLento ? (
+                <div className="border border-red-200 dark:border-red-900/30 rounded-xl p-4">
+                  <p className="text-[10px] text-red-500 uppercase tracking-wide">Ticket más lento</p>
+                  <p className="text-sm font-bold mt-1 truncate leading-snug" title={masLento.tarea.titulo}>{masLento.tarea.titulo}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDuracion(masLento.activo)}</p>
+                </div>
+              ) : (
+                <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Ticket más lento</p>
+                  <p className="text-2xl font-bold mt-1">—</p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -740,6 +803,76 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                 </div>
               )}
             </div>
+
+            {/* Tabla: tiempo activo por ticket */}
+            {ticketsConTiempo.length > 0 && (
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <h3 className="text-sm font-semibold mb-1">Tiempo activo por ticket</h3>
+                <p className="text-[11px] text-muted-foreground mb-3">Tiempo en progreso + en pausa, de mayor a menor</p>
+                <div className="space-y-2.5">
+                  {ticketsConTiempo.map(({ tarea, activo, en_progreso, en_pausa }) => (
+                    <div key={tarea.documentId} className="flex items-center gap-3">
+                      <div className="w-44 shrink-0">
+                        <p className="text-xs truncate font-medium" title={tarea.titulo}>{tarea.titulo}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{tarea.etiqueta ?? "(Sin categoría)"}</p>
+                      </div>
+                      <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+                        <div
+                          style={{ width: `${maxActivoTicket > 0 ? Math.round(en_progreso / maxActivoTicket * 100) : 0}%`, backgroundColor: ESTADO_HEX.en_progreso }}
+                          className="h-full" />
+                        <div
+                          style={{ width: `${maxActivoTicket > 0 ? Math.round(en_pausa / maxActivoTicket * 100) : 0}%`, backgroundColor: ESTADO_HEX.en_pausa }}
+                          className="h-full" />
+                      </div>
+                      <span className="text-[10px] font-mono shrink-0 w-14 text-right text-muted-foreground">
+                        {activo > 0 ? fmtDuracion(activo) : "—"}
+                      </span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
+                        tarea.estado === "completada"  ? "bg-emerald-500/15 text-emerald-400"
+                        : tarea.estado === "en_progreso" ? "bg-blue-500/15 text-blue-400"
+                        : tarea.estado === "en_pausa"    ? "bg-violet-500/15 text-violet-400"
+                        : "bg-zinc-800 text-zinc-500"
+                      }`}>
+                        {ESTADO_LABEL[tarea.estado]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: ESTADO_HEX.en_progreso }} />
+                    <span className="text-[10px] text-muted-foreground">En progreso</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: ESTADO_HEX.en_pausa }} />
+                    <span className="text-[10px] text-muted-foreground">En pausa</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Resolución por categoría */}
+            {resolucionPorCategoria.length > 0 && (
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <h3 className="text-sm font-semibold mb-1">Tiempo de resolución por categoría</h3>
+                <p className="text-[11px] text-muted-foreground mb-3">Promedio de tiempo activo — solo tickets resueltos</p>
+                <div className="space-y-2.5">
+                  {resolucionPorCategoria.map(x => (
+                    <div key={x.catFull} className="flex items-center gap-2">
+                      <span className="text-xs truncate w-32 shrink-0" title={x.catFull}>{x.cat}</span>
+                      <HBar value={x.promedio} max={maxResolucion} color="bg-blue-500" />
+                      <span className="text-[10px] font-mono text-muted-foreground w-14 text-right shrink-0">
+                        {fmtDuracion(x.promedio)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground w-6 text-right shrink-0">
+                        {x.count}t
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-3">"t" = número de tickets resueltos en esa categoría</p>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -386,6 +386,10 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
         {/* ── Tab Estructura ── */}
         {tab === "estructura" && (
           <>
+            <div className="px-1 mb-2">
+              <p className="text-[16px] font-semibold text-slate-200">Estructura de la página</p>
+              <p className="text-[13px] text-slate-600 mt-0.5">Secciones y componentes que conforman esta página</p>
+            </div>
             <FieldCard>
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-3">

@@ -74,9 +74,11 @@ const fmtFecha = (iso: string | null) => {
 }
 
 const fmtFechaHora = (iso: string) => {
-  const d = new Date(iso)
+  const soloFecha = !iso.includes("T")
+  const d = soloFecha ? new Date(iso + "T00:00:00") : new Date(iso)
   const fecha = d.toLocaleDateString("es-MX", { day: "2-digit", month: "short" })
-  const hora  = d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false })
+  if (soloFecha) return fecha
+  const hora = d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false })
   return `${fecha} ${hora}`
 }
 
