@@ -712,10 +712,10 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                               <> · {fmtDuracion(t.fechaInicio, t.fechaCompletada)}</>
                             )}
                           </span>
-                        ) : t.fechaInicio ? (
+                        ) : (t.fechaInicio || t.createdAt) ? (
                           <span className="text-[10px] flex items-center gap-1 text-muted-foreground">
                             <Clock size={9} />
-                            {fmtFechaHora(t.fechaInicio)}
+                            {fmtFechaHora(t.createdAt ?? t.fechaInicio!)}
                             {t.fechaVencimiento && (
                               <> → {fmtFecha(t.fechaVencimiento)}</>
                             )}
