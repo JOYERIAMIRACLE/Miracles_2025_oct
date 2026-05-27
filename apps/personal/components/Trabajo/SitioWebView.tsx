@@ -227,14 +227,14 @@ function FieldCard({ children }: { children: React.ReactNode }) {
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="px-4 py-4">
-      <p className="text-[11px] font-medium text-slate-400 mb-2">{label}</p>
+    <div className="px-5 py-5">
+      <p className="text-[13px] font-medium text-slate-400 mb-2.5">{label}</p>
       {children}
     </div>
   )
 }
 
-const inp = "w-full text-[13px] text-slate-200 bg-transparent outline-none placeholder:text-slate-700"
+const inp = "w-full text-[15px] text-slate-200 bg-transparent outline-none placeholder:text-slate-600 leading-relaxed"
 
 function DrawerPagina({ node, fp, onUpdate, onClose }: {
   node: PageNode; fp: string
@@ -252,30 +252,30 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
   ] as const
 
   return (
-    <div className="fixed right-0 inset-y-0 z-50 w-full max-w-[500px] bg-[#0b0d13] border-l border-white/[0.06] flex flex-col">
+    <div className="fixed right-0 inset-y-0 z-50 w-full max-w-[620px] bg-[#0b0d13] border-l border-white/[0.06] flex flex-col">
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06] shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-slate-800/80 border border-white/[0.08] flex items-center justify-center shrink-0">
-          <Globe size={15} className="text-slate-400" />
+      <div className="flex items-center gap-4 px-6 py-5 border-b border-white/[0.06] shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-slate-800/80 border border-white/[0.08] flex items-center justify-center shrink-0">
+          <Globe size={18} className="text-slate-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-semibold text-slate-100 truncate leading-tight">
+          <p className="text-[18px] font-semibold text-slate-100 truncate leading-tight">
             {node.title || <span className="text-slate-600 font-normal italic">Sin título</span>}
           </p>
-          <p className="text-[11px] font-mono text-slate-600">{fp || "/"}</p>
+          <p className="text-[13px] font-mono text-slate-600 mt-0.5">{fp || "/"}</p>
         </div>
         <button type="button" title="Cerrar" onClick={onClose}
-          className="p-1.5 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-white/[0.06] transition">
-          <X size={14} />
+          className="p-2 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-white/[0.06] transition">
+          <X size={16} />
         </button>
       </div>
 
       {/* ── Tabs ── */}
-      <div className="flex border-b border-white/[0.06] px-5 shrink-0">
+      <div className="flex border-b border-white/[0.06] px-6 shrink-0">
         {TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
-            className={`px-4 py-3 text-[12px] font-medium border-b-2 -mb-px transition ${
+            className={`px-5 py-3.5 text-[13px] font-medium border-b-2 -mb-px transition ${
               tab === t.id
                 ? "border-blue-500 text-slate-100"
                 : "border-transparent text-slate-500 hover:text-slate-300"
@@ -286,15 +286,15 @@ function DrawerPagina({ node, fp, onUpdate, onClose }: {
       </div>
 
       {/* ── Contenido scrollable ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
 
         {/* URL bar — siempre visible */}
-        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-white/[0.07] bg-[#0d1117]">
-          <Globe size={13} className="text-slate-600 shrink-0" />
-          <span className="text-[12px] font-mono text-slate-500 flex-1 truncate">
+        <div className="flex items-center gap-3 px-5 py-3.5 rounded-xl border border-white/[0.07] bg-[#0d1117]">
+          <Globe size={15} className="text-slate-600 shrink-0" />
+          <span className="text-[13px] font-mono text-slate-500 flex-1 truncate">
             {node.title ? node.title.toLowerCase().replace(/\s/g, "") : "tu-dominio.com"}{fp !== "/" ? fp : ""}
           </span>
-          <div className="flex items-center gap-2 text-[11px] text-slate-600 shrink-0">
+          <div className="flex items-center gap-2 text-[12px] text-slate-600 shrink-0">
             <span className="text-slate-700">|</span>
             <span>Visitas</span>
             <span className="text-slate-700">|</span>
