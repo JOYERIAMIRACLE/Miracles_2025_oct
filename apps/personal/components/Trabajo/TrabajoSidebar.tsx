@@ -1,11 +1,13 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   CheckSquare, Wallet, ChevronRight, Archive, Megaphone,
   TrendingUp, FileImage, Users, BookOpen, Globe,
 } from "lucide-react"
+import { getUserRole } from "@/lib/auth"
 
 const SECTIONS = [
   {
@@ -46,24 +48,38 @@ const SECTIONS = [
 
 export function TrabajoSidebar() {
   const pathname = usePathname()
+  const [role, setRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    setRole(getUserRole())
+  }, [])
+
+  const isProveedor = role === "proveedor_web"
+  const visibleSections = isProveedor
+    ? SECTIONS.filter(s => s.title === "Web")
+    : SECTIONS
 
   return (
     <div className="flex flex-col h-full bg-slate-950 border-r border-slate-800/60">
       {/* Logo */}
       <div className="h-14 flex items-center gap-3 px-5 border-b border-slate-800/60 shrink-0">
         <div className="h-7 w-7 rounded-lg bg-linear-to-br from-blue-500 to-violet-600 flex items-center justify-center shrink-0">
-          <Megaphone className="h-3.5 w-3.5 text-white" />
+          {isProveedor ? <Globe className="h-3.5 w-3.5 text-white" /> : <Megaphone className="h-3.5 w-3.5 text-white" />}
         </div>
-        <span className="text-sm font-bold text-slate-100">Marketing team</span>
+        <span className="text-sm font-bold text-slate-100">
+          {isProveedor ? "Sitio Web" : "Marketing team"}
+        </span>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
-        {SECTIONS.map(({ title, items }) => (
+        {visibleSections.map(({ title, items }) => (
           <div key={title}>
-            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-              {title}
-            </p>
+            {!isProveedor && (
+              <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+                {title}
+              </p>
+            )}
             <div className="space-y-0.5">
               {items.map(({ label, href, icon: Icon }) => {
                 const active = pathname === href || pathname.startsWith(href + "/")
@@ -91,7 +107,9 @@ export function TrabajoSidebar() {
 
       {/* Footer */}
       <div className="px-4 py-3 border-t border-slate-800/60">
-        <p className="text-[10px] text-slate-600">Miracles · Marketing team</p>
+        <p className="text-[10px] text-slate-600">
+          {isProveedor ? "Miracles · Proveedor Web" : "Miracles · Marketing team"}
+        </p>
       </div>
     </div>
   )

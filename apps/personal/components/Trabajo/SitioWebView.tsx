@@ -1,7 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Plus, Trash2, X, Download, Globe } from "lucide-react"
+import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff } from "lucide-react"
+import { getToken } from "@/lib/auth"
+
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,7 +35,6 @@ function blank(segment = "nueva-pagina"): PageNode {
 }
 
 const ROOT: PageNode = { ...blank(""), id: "root" }
-const LS = "miracles-sitio-web-v1"
 
 function upd(ns: PageNode[], id: string, p: Partial<PageNode>): PageNode[] {
   return ns.map(n => n.id === id ? { ...n, ...p } : { ...n, children: upd(n.children, id, p) })
@@ -95,10 +97,7 @@ function ListEditor({ items, onUpdate, ph }: {
 
   const add = () => {
     const v = draft.trim()
-    if (!v) {
-      inputRef.current?.focus()
-      return
-    }
+    if (!v) { inputRef.current?.focus(); return }
     onUpdate([...items, v])
     setDraft("")
     inputRef.current?.focus()
@@ -113,6 +112,7 @@ function ListEditor({ items, onUpdate, ph }: {
           <span className="flex-1 text-sm text-slate-300">{item}</span>
           <button
             type="button"
+            title="Quitar"
             onClick={() => onUpdate(items.filter((_, j) => j !== i))}
             className="shrink-0 p-1 rounded text-slate-600 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition">
             <X size={12} />
@@ -150,7 +150,7 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel }: {
   return (
     <div
       onClick={onEdit}
-      className="group w-52 rounded-xl border border-slate-700/60 bg-slate-900 hover:border-blue-500/40 hover:bg-blue-500/5 cursor-pointer transition-all duration-150 select-none">
+      className="group w-52 rounded-xl border border-slate-700/60 bg-slate-900/90 backdrop-blur-sm hover:border-blue-500/40 hover:bg-blue-500/5 cursor-pointer transition-all duration-150 select-none">
       <div className="px-3 pt-3 pb-2">
         <div className="flex items-center gap-1.5 mb-1.5">
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
@@ -231,8 +231,8 @@ function ModalPagina({ node, fp, onUpdate, onClose }: {
   onUpdate: (p: Partial<PageNode>) => void
   onClose: () => void
 }) {
-  const ic   = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-700 bg-slate-800/60 text-slate-100 placeholder:text-slate-600 outline-none focus:border-blue-500/50 transition"
-  const lc   = "block text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-1.5"
+  const ic = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-700 bg-slate-800/60 text-slate-100 placeholder:text-slate-600 outline-none focus:border-blue-500/50 transition"
+  const lc = "block text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-1.5"
 
   return (
     <div
@@ -367,25 +367,55 @@ function ModalPagina({ node, fp, onUpdate, onClose }: {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function SitioWebView() {
-  const [tree,  setTree]  = useState<PageNode[]>([ROOT])
-  const [modal, setModal] = useState<{ id: string; fp: string } | null>(null)
+  const [tree,    setTree]    = useState<PageNode[]>([ROOT])
+  const [modal,   setModal]   = useState<{ id: string; fp: string } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving,  setSaving]  = useState(false)
+  const [offline, setOffline] = useState(false)
+  const initialized = useRef(false)
+  const justLoaded  = useRef(false)
 
+  // Load from Strapi
   useEffect(() => {
-    try {
-      const s = localStorage.getItem(LS)
-      if (s) setTree(JSON.parse(s))
-    } catch {}
+    const token = getToken()
+    if (!token) { setLoading(false); setOffline(true); return }
+    fetch(`${BASE}/api/sitio-web`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => (r.status === 404 ? null : r.json()))
+      .then(json => {
+        const arbol = json?.data?.arbol
+        if (Array.isArray(arbol) && arbol.length > 0) {
+          justLoaded.current = true
+          setTree(arbol)
+        }
+      })
+      .catch(() => setOffline(true))
+      .finally(() => setLoading(false))
   }, [])
 
+  // Auto-save to Strapi (debounced 800ms)
   useEffect(() => {
-    localStorage.setItem(LS, JSON.stringify(tree))
-  }, [tree])
+    if (!initialized.current) { initialized.current = true; return }
+    if (justLoaded.current)   { justLoaded.current = false; return }
+    const token = getToken()
+    if (!token || offline) return
+    const t = setTimeout(() => {
+      setSaving(true)
+      fetch(`${BASE}/api/sitio-web`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ data: { arbol: tree } }),
+      })
+        .catch(() => setOffline(true))
+        .finally(() => setSaving(false))
+    }, 800)
+    return () => clearTimeout(t)
+  }, [tree, offline])
 
   const modalNode = modal ? find(tree, modal.id) : null
 
-  const handleUpdate = (id: string, p: Partial<PageNode>) => {
-    setTree(t => upd(t, id, p))
-  }
+  const handleUpdate = (id: string, p: Partial<PageNode>) => setTree(t => upd(t, id, p))
 
   const handleAdd = (pid: string) => {
     const c = blank()
@@ -411,52 +441,84 @@ export function SitioWebView() {
   const nlive = countSt(tree, "live")
   const ndrft = countSt(tree, "draft")
 
+  if (loading) return (
+    <div className="flex items-center justify-center h-64 text-slate-500">
+      <Loader2 size={20} className="animate-spin mr-2" /> Cargando árbol...
+    </div>
+  )
+
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100">Sitio web</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {total} página{total !== 1 ? "s" : ""} ·{" "}
-            <span className="text-emerald-400">{nlive} live</span> ·{" "}
-            <span className="text-amber-400">{ndrft} borrador</span>
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button" onClick={exportJson}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition">
-            <Download size={14} /> Exportar
-          </button>
-          <button
-            type="button" onClick={() => handleAdd("root")}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">
-            <Plus size={14} /> Nueva página
-          </button>
-        </div>
-      </div>
+    // Railway-style: dot grid + radial gradient depth
+    <div
+      className="-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden"
+      style={{
+        backgroundColor: "#020617",
+        backgroundImage: "radial-gradient(circle, #1e293b 1px, transparent 1px)",
+        backgroundSize: "28px 28px",
+      }}>
 
-      {/* Tree */}
-      <div className="space-y-2">
-        {tree.map(node => (
-          <TreeRow
-            key={node.id} node={node} parentFp="/"
-            onEdit={(id, fp) => setModal({ id, fp })}
-            onAddChild={handleAdd}
-            onDel={handleDel}
-          />
-        ))}
+      {/* Depth glow */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(59,130,246,0.07) 0%, transparent 55%)" }}
+      />
 
-        {total === 1 && (
-          <div className="mt-6 ml-1">
+      <div className="relative p-4 md:p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-100">Sitio web</h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {total} página{total !== 1 ? "s" : ""} ·{" "}
+              <span className="text-emerald-400">{nlive} live</span> ·{" "}
+              <span className="text-amber-400">{ndrft} borrador</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {saving && (
+              <span className="text-[10px] text-slate-500 flex items-center gap-1.5">
+                <Loader2 size={11} className="animate-spin" /> Guardando...
+              </span>
+            )}
+            {offline && (
+              <span className="text-[10px] text-amber-500 flex items-center gap-1.5">
+                <CloudOff size={11} /> Sin conexión
+              </span>
+            )}
+            <button
+              type="button" onClick={exportJson}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 rounded-lg bg-slate-900/60 backdrop-blur-sm transition">
+              <Download size={14} /> Exportar
+            </button>
             <button
               type="button" onClick={() => handleAdd("root")}
-              className="flex items-center gap-2 px-4 py-3 border border-dashed border-slate-700 rounded-xl text-slate-600 hover:text-slate-400 hover:border-slate-600 transition text-sm">
-              <Plus size={13} /> Agregar primera sub-página
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">
+              <Plus size={14} /> Nueva página
             </button>
           </div>
-        )}
+        </div>
+
+        {/* Tree */}
+        <div className="space-y-2">
+          {tree.map(node => (
+            <TreeRow
+              key={node.id} node={node} parentFp="/"
+              onEdit={(id, fp) => setModal({ id, fp })}
+              onAddChild={handleAdd}
+              onDel={handleDel}
+            />
+          ))}
+
+          {total === 1 && (
+            <div className="mt-6 ml-1">
+              <button
+                type="button" onClick={() => handleAdd("root")}
+                className="flex items-center gap-2 px-4 py-3 border border-dashed border-slate-700/60 rounded-xl text-slate-600 hover:text-slate-400 hover:border-slate-600 transition text-sm bg-slate-900/30">
+                <Plus size={13} /> Agregar primera sub-página
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modal */}

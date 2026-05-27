@@ -1,0 +1,19 @@
+{
+  "kind": "singleType",
+  "collectionName": "sitio_webs",
+  "info": {
+    "singularName": "sitio-web",
+    "pluralName": "sitio-webs",
+    "displayName": "Sitio Web",
+    "description": "Árbol de arquitectura del sitio web"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "arbol": {
+      "type": "json"
+    }
+  }
+}

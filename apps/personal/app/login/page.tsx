@@ -3,9 +3,13 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Gem } from "lucide-react"
-import { setToken, isTokenValid, getToken } from "@/lib/auth"
+import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRole } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+
+function redirectForRole(role: string | null) {
+  return role === "proveedor_web" ? "/trabajo/sitio-web" : "/gestion-empresa"
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -15,7 +19,9 @@ export default function LoginPage() {
   const [error,    setError]    = useState("")
 
   useEffect(() => {
-    if (isTokenValid(getToken())) router.replace("/gestion-empresa")
+    if (isTokenValid(getToken())) {
+      router.replace(redirectForRole(getUserRole()))
+    }
   }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -34,7 +40,9 @@ export default function LoginPage() {
         return
       }
       setToken(json.jwt)
-      router.push("/gestion-empresa")
+      const role = await fetchUserRole(json.jwt, BASE)
+      if (role) setUserRole(role)
+      router.push(redirectForRole(role))
     } catch {
       setError("No se pudo conectar con el servidor")
     } finally {
@@ -47,7 +55,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
 
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4">
+          <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4">
             <Gem className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-xl font-bold text-slate-100">Miracles Admin</h1>

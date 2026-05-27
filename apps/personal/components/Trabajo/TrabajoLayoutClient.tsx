@@ -1,10 +1,23 @@
 "use client"
 
+import { useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { TrabajoSidebar } from "./TrabajoSidebar"
 import { TrabajoHeader } from "./TrabajoHeader"
 import { AuthGuard } from "@/components/AuthGuard"
+import { getUserRole } from "@/lib/auth"
 
 export function TrabajoLayoutClient({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const router   = useRouter()
+
+  useEffect(() => {
+    const role = getUserRole()
+    if (role === "proveedor_web" && !pathname.startsWith("/trabajo/sitio-web")) {
+      router.replace("/trabajo/sitio-web")
+    }
+  }, [pathname, router])
+
   return (
     <AuthGuard>
       <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 z-50 w-64">
