@@ -188,7 +188,7 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel }: {
 
 function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
   node: PageNode; parentFp: string
-  onEdit: (id: string, fp: string) => void
+  onEdit: (id: string) => void
   onAddChild: (pid: string) => void
   onDel: (id: string) => void
 }) {
@@ -197,7 +197,7 @@ function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
     <div>
       <NodeCard
         node={node} fp={fp}
-        onEdit={() => onEdit(node.id, fp)}
+        onEdit={() => onEdit(node.id)}
         onAddChild={() => onAddChild(node.id)}
         onDel={() => onDel(node.id)}
       />
@@ -479,7 +479,7 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
 
 export function SitioWebView() {
   const [tree,    setTree]    = useState<PageNode[]>([ROOT])
-  const [modal,   setModal]   = useState<{ id: string; fp: string } | null>(null)
+  const [modal,   setModal]   = useState<{ id: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving,  setSaving]  = useState(false)
   const [offline, setOffline] = useState(false)
@@ -528,7 +528,7 @@ export function SitioWebView() {
   const handleAdd    = (pid: string) => {
     const c = blank()
     setTree(t => ins(t, pid, c))
-    setModal({ id: c.id, fp: "" })
+    setModal({ id: c.id })
   }
   const handleDel = (id: string) => {
     if (!confirm("¿Eliminar esta página y todas sus sub-páginas?")) return
@@ -607,7 +607,7 @@ export function SitioWebView() {
           {tree.map(node => (
             <TreeRow
               key={node.id} node={node} parentFp="/"
-              onEdit={(id, fp) => setModal({ id, fp })}
+              onEdit={(id) => setModal({ id })}
               onAddChild={handleAdd}
               onDel={handleDel}
             />
@@ -627,7 +627,7 @@ export function SitioWebView() {
       {modalNode && modal && (
         <DrawerPagina
           node={modalNode}
-          fp={modal.fp || pathOf(tree, modal.id)}
+          fp={pathOf(tree, modal.id)}
           siteDomain={find(tree, "root")?.title ?? ""}
           onUpdate={p => handleUpdate(modal.id, p)}
           onClose={() => setModal(null)}
