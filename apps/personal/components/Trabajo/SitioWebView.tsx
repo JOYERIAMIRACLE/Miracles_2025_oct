@@ -405,15 +405,15 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
           <>
             <div className="px-1 mb-2">
               <input
-                value={node.estructuraTitulo}
+                value={node.estructuraTitulo ?? ""}
                 onChange={e => onUpdate({ estructuraTitulo: e.target.value })}
-                placeholder="Estructura de la página"
+                placeholder="Título de esta estructura…"
                 className="w-full text-[16px] font-semibold text-slate-200 bg-transparent outline-none placeholder:text-slate-600 focus:placeholder:text-slate-700 border-b border-transparent focus:border-slate-700/60 transition-colors pb-0.5"
               />
               <input
-                value={node.estructuraDesc}
+                value={node.estructuraDesc ?? ""}
                 onChange={e => onUpdate({ estructuraDesc: e.target.value })}
-                placeholder="Descripción o concepto de esta estructura…"
+                placeholder="Concepto o descripción de esta estructura…"
                 className="w-full text-[13px] text-slate-500 bg-transparent outline-none placeholder:text-slate-700 focus:placeholder:text-slate-600 border-b border-transparent focus:border-slate-700/60 transition-colors mt-1 pb-0.5"
               />
             </div>
