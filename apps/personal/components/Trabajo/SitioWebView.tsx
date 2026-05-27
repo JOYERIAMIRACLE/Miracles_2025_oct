@@ -20,6 +20,8 @@ interface PageNode {
   sections: string[]
   componentes: string[]
   notas: string
+  estructuraTitulo: string
+  estructuraDesc: string
   status: "planning" | "draft" | "live"
   trafico: "" | "alto" | "medio" | "bajo"
   ctrEstimado: string
@@ -34,7 +36,7 @@ const uid = () => Math.random().toString(36).slice(2, 10)
 function blank(segment = "nueva-pagina"): PageNode {
   return {
     id: uid(), segment, title: "", metaTitle: "", h1: "", metaDesc: "", keywords: "",
-    hero: "", sections: [], componentes: [], notas: "", status: "planning",
+    hero: "", sections: [], componentes: [], notas: "", estructuraTitulo: "", estructuraDesc: "", status: "planning",
     trafico: "", ctrEstimado: "", formularios: 0, children: [],
   }
 }
@@ -402,8 +404,18 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
         {tab === "estructura" && (
           <>
             <div className="px-1 mb-2">
-              <p className="text-[16px] font-semibold text-slate-200">Estructura de la página</p>
-              <p className="text-[13px] text-slate-600 mt-0.5">Secciones y componentes que conforman esta página</p>
+              <input
+                value={node.estructuraTitulo}
+                onChange={e => onUpdate({ estructuraTitulo: e.target.value })}
+                placeholder="Estructura de la página"
+                className="w-full text-[16px] font-semibold text-slate-200 bg-transparent outline-none placeholder:text-slate-600 focus:placeholder:text-slate-700 border-b border-transparent focus:border-slate-700/60 transition-colors pb-0.5"
+              />
+              <input
+                value={node.estructuraDesc}
+                onChange={e => onUpdate({ estructuraDesc: e.target.value })}
+                placeholder="Descripción o concepto de esta estructura…"
+                className="w-full text-[13px] text-slate-500 bg-transparent outline-none placeholder:text-slate-700 focus:placeholder:text-slate-600 border-b border-transparent focus:border-slate-700/60 transition-colors mt-1 pb-0.5"
+              />
             </div>
             <FieldCard>
               <div className="px-4 py-3">
