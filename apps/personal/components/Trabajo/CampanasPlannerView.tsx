@@ -905,7 +905,18 @@ export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: A
   if (loading) return <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div
+      className="-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden"
+      style={{
+        backgroundColor: "#020617",
+        backgroundImage: "radial-gradient(circle, #1e293b 1px, transparent 1px)",
+        backgroundSize: "28px 28px",
+      }}>
+
+      <div className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(59,130,246,0.07) 0%, transparent 55%)" }} />
+
+      <div className="relative p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Planeador de campañas</h1>
@@ -951,6 +962,7 @@ export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: A
           onCerrar={() => setModal(false)}
         />
       )}
+      </div>
     </div>
   )
 }
