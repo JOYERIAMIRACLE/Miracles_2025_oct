@@ -1,5 +1,5 @@
-import CampanasPlannerView from "@/components/Trabajo/CampanasPlannerView"
+import { CampanasEmpresaView } from "@/components/Empresa/Marketing/CampanasEmpresaView"
 
 export default function CampanasPage() {
-  return <CampanasPlannerView ambito="empresa" />
+  return <CampanasEmpresaView />
 }

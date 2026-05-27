@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import {
   Plus, Pencil, Trash2, X, Check,
   Calendar, LayoutGrid, ChevronLeft, ChevronRight,
-  FileText, Link2, Paperclip,
+  FileText, Link2, Paperclip, Search,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetCampanas } from "@/api/campana/getCampanas"
@@ -643,15 +643,98 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
   )
 }
 
+// ─── Popup picker campaña existente ──────────────────────────────────────────
+
+function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose }: {
+  dayStr:    string
+  categoria: string
+  campanas:  CampanaType[]
+  onNueva:   () => void
+  onAsignar: (c: CampanaType, semanaNum: NSemana) => void
+  onClose:   () => void
+}) {
+  const [busq, setBusq] = useState("")
+
+  const mes  = MESES[new Date(dayStr + "T00:00:00").getMonth()]
+  const anio = new Date(dayStr + "T00:00:00").getFullYear()
+  const semanaNum = Math.min(Math.ceil(new Date(dayStr + "T00:00:00").getDate() / 7), 4) as NSemana
+
+  const opciones = useMemo(() => {
+    const q = busq.toLowerCase().trim()
+    return campanas
+      .filter(c => c.mes === mes && c.anio === anio)
+      .filter(c => !q || c.unidadNegocio.toLowerCase().includes(q) || (c.categoria ?? "").toLowerCase().includes(q))
+  }, [campanas, mes, anio, busq])
+
+  const fmtDia = new Date(dayStr + "T00:00:00").toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+          <div>
+            <p className="text-sm font-semibold text-slate-100">Agregar al planeador</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{fmtDia} · {categoria} · Semana {semanaNum}</p>
+          </div>
+          <button type="button" title="Cerrar" onClick={onClose}
+            className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="px-4 pt-3 pb-2">
+          <button type="button" onClick={() => { onClose(); onNueva() }}
+            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition mb-3">
+            <Plus size={14} /> Nueva campaña
+          </button>
+
+          <div className="relative mb-2">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
+            <input value={busq} onChange={e => setBusq(e.target.value)}
+              placeholder={`Buscar en ${mes} ${anio}…`}
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-slate-800 text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 transition" />
+          </div>
+
+          <p className="text-[10px] text-slate-600 uppercase tracking-wider mb-1.5">O elige del catálogo ({opciones.length})</p>
+        </div>
+
+        <div className="max-h-56 overflow-y-auto px-4 pb-3 space-y-1">
+          {opciones.length === 0 ? (
+            <p className="text-xs text-slate-600 text-center py-4">Sin campañas en {mes} {anio}</p>
+          ) : (
+            opciones.map(c => {
+              const semanaFechaActual = c[`semana${semanaNum}Fecha` as keyof CampanaType] as string | null
+              return (
+                <button key={c.documentId} type="button" onClick={() => onAsignar(c, semanaNum)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 hover:border-slate-600 transition text-left group">
+                  <CategoriaBadge cat={c.categoria} />
+                  <span className="flex-1 text-xs text-slate-200 truncate">{c.unidadNegocio || "Sin título"}</span>
+                  {semanaFechaActual ? (
+                    <span className="text-[9px] text-amber-500 shrink-0">↺ reemplaza fecha</span>
+                  ) : (
+                    <span className="text-[9px] text-emerald-600 shrink-0 opacity-0 group-hover:opacity-100">+ asignar</span>
+                  )}
+                </button>
+              )
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Tab: Planeador — calendario semanal por día ──────────────────────────────
 
-function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar }: {
+function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExistente }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
   onDelete: (c: CampanaType) => void
   onAgregar: (opts: { categoria: string; mes: MesCampana; anio: number; fecha: string }) => void
+  onAsignarExistente: (c: CampanaType, fecha: string, semanaNum: NSemana) => Promise<void>
 }) {
   const [wStart, setWStart] = useState(() => weekStart(new Date()))
+  const [picker, setPicker] = useState<{ dayStr: string; categoria: string } | null>(null)
 
   const days   = Array.from({ length: 5 }, (_, i) => addDays(wStart, i))
   const wEnd   = addDays(wStart, 6)
@@ -725,7 +808,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar }: {
                       <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
                     ))}
                     <button type="button"
-                      onClick={() => onAgregar({ categoria: fila.label, mes: MESES[day.getMonth()], anio: day.getFullYear(), fecha: toYMD(day) })}
+                      onClick={() => setPicker({ dayStr: toYMD(day), categoria: fila.label })}
                       className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto">
                       <Plus size={8} /> Agregar
                     </button>
@@ -739,6 +822,17 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar }: {
       <p className="text-[11px] text-slate-700 mt-3">
         Campañas con fecha exacta aparecen en su día. Sin fecha, se posicionan el lunes de su semana dentro del mes.
       </p>
+
+      {picker && (
+        <PopupAsignar
+          dayStr={picker.dayStr}
+          categoria={picker.categoria}
+          campanas={campanas}
+          onNueva={() => onAgregar({ categoria: picker.categoria, mes: MESES[new Date(picker.dayStr + "T00:00:00").getMonth()], anio: new Date(picker.dayStr + "T00:00:00").getFullYear(), fecha: picker.dayStr })}
+          onAsignar={(c, semanaNum) => { onAsignarExistente(c, picker.dayStr, semanaNum); setPicker(null) }}
+          onClose={() => setPicker(null)}
+        />
+      )}
     </div>
   )
 }
@@ -790,6 +884,19 @@ export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: A
     }
   }
 
+  const asignarExistente = async (c: CampanaType, fecha: string, semanaNum: NSemana) => {
+    const key = `semana${semanaNum}Fecha` as keyof CampanaPayload
+    setCampanas(prev => prev.map(x => x.documentId === c.documentId ? { ...x, [key]: fecha } : x))
+    try {
+      const updated = await updateCampana(c.documentId, { [key]: fecha })
+      setCampanas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+      toast.success(`Fecha asignada · ${c.unidadNegocio}`)
+    } catch {
+      setCampanas(prev => prev.map(x => x.documentId === c.documentId ? c : x))
+      toast.error("Error al asignar fecha")
+    }
+  }
+
   if (loading) return <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
 
   return (
@@ -824,6 +931,7 @@ export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: A
           onEdit={abrirEditar}
           onDelete={eliminar}
           onAgregar={opts => abrirNueva(opts)}
+          onAsignarExistente={asignarExistente}
         />
       )}
 
