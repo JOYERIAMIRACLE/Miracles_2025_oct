@@ -496,6 +496,7 @@ export function SitioWebView() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ data: { arbol: tree } }),
       })
+        .then(r => { if (!r.ok) setOffline(true) })
         .catch(() => setOffline(true))
         .finally(() => setSaving(false))
     }, 800)
@@ -557,14 +558,18 @@ export function SitioWebView() {
           </div>
           <div className="flex items-center gap-3">
             {saving && (
-              <span className="text-[10px] text-slate-500 flex items-center gap-1.5">
-                <Loader2 size={11} className="animate-spin" /> Guardando...
+              <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                <Loader2 size={12} className="animate-spin" /> Guardando...
               </span>
             )}
             {offline && (
-              <span className="text-[10px] text-amber-500 flex items-center gap-1.5">
-                <CloudOff size={11} /> Sin conexión
-              </span>
+              <button
+                type="button"
+                onClick={() => setOffline(false)}
+                className="text-xs text-amber-400 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition"
+                title="Haz clic para reintentar">
+                <CloudOff size={12} /> Error al guardar — reintentar
+              </button>
             )}
             <button type="button" onClick={exportJson}
               className="flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 rounded-lg bg-slate-900/60 backdrop-blur-sm transition">
