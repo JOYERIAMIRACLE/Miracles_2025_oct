@@ -8,9 +8,8 @@ import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRo
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 const ROLE_ROUTES: Record<string, string> = {
-  proveedor_web:  "/trabajo/sitio-web",
-  authenticated:  "/gestion-empresa",
-  // roles adicionales se agregan aquí
+  proveedor_web: "/trabajo/sitio-web",
+  authenticated: "/gestion-empresa",
 }
 
 function redirectForRole(role: string | null): string | null {

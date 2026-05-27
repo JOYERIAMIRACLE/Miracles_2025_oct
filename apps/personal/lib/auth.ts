@@ -44,6 +44,11 @@ export function logout() {
   removeUserRole()
 }
 
+export function isProveedorWeb(): boolean {
+  const role = getUserRole()
+  return role === "proveedor_web" || role === "proveedor-web"
+}
+
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   try {
     const res = await fetch(`${baseUrl}/api/users/me?populate=role`, {
@@ -51,7 +56,9 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
     })
     if (!res.ok) return null
     const json = await res.json()
-    return (json.role?.type as string) ?? null
+    const type = json.role?.type as string | undefined
+    // Normalizar guión a guión bajo para consistencia interna
+    return type ? type.replace(/-/g, "_") : null
   } catch {
     return null
   }
