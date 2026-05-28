@@ -709,6 +709,8 @@ function MensualTable({ title, accent, semanas, metricas }: {
   semanas: BoxscoreType[]
   metricas: MensualMetrica[]
 }) {
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+
   const meses = useMemo(() => {
     const map = new Map<string, { label: string; rows: BoxscoreType[] }>()
     semanas.forEach(s => {
@@ -728,11 +730,26 @@ function MensualTable({ title, accent, semanas, metricas }: {
     ])) as Record<string, number>,
   }))
 
+  const totalesPorMes = tableData.map(m => ({
+    label: m.label,
+    total: metricas.reduce((s, mt) => s + (m.vals[String(mt.key)] ?? 0), 0),
+  }))
+
   const chartData = tableData.map(m => ({ label: m.label, ...m.vals }))
+  const visibleMetricas = selectedKey ? metricas.filter(mt => String(mt.key) === selectedKey) : metricas
+
+  const handleRowClick = (key: string) => setSelectedKey(prev => prev === key ? null : key)
 
   return (
     <div className="space-y-3">
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{title}</p>
+      {selectedKey && (
+        <p className="text-[10px] text-slate-500">
+          Mostrando: <span className="text-slate-300">{metricas.find(m => String(m.key) === selectedKey)?.label}</span>
+          {" · "}
+          <button type="button" onClick={() => setSelectedKey(null)} className="text-blue-400 hover:text-blue-300">Ver todas</button>
+        </p>
+      )}
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="text-sm min-w-max w-full">
@@ -745,20 +762,43 @@ function MensualTable({ title, accent, semanas, metricas }: {
             </tr>
           </thead>
           <tbody>
-            {metricas.map(mt => (
-              <tr key={String(mt.key)} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                <td className={`px-4 py-2.5 sticky left-0 bg-slate-950 border-l-2 ${accent} z-10`}>
-                  <p className="text-xs text-slate-300">{mt.label}</p>
-                </td>
-                {tableData.map(m => (
-                  <td key={m.label} className="px-3 py-2.5 text-center">
-                    <span className="text-xs font-medium text-slate-200">
-                      {mt.fmt ? mt.fmt(m.vals[String(mt.key)]) : fmt(m.vals[String(mt.key)])}
-                    </span>
+            {metricas.map(mt => {
+              const isSelected = selectedKey === String(mt.key)
+              return (
+                <tr
+                  key={String(mt.key)}
+                  onClick={() => handleRowClick(String(mt.key))}
+                  className={`border-b border-slate-800/50 cursor-pointer transition-colors ${
+                    isSelected ? "bg-slate-800/60" : selectedKey ? "opacity-40 hover:opacity-70 hover:bg-slate-800/20" : "hover:bg-slate-800/30"
+                  }`}
+                >
+                  <td className={`px-4 py-2.5 sticky left-0 z-10 border-l-2 ${isSelected ? `${accent} bg-slate-950` : "border-slate-700/40 bg-slate-950"}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: mt.color }} />
+                      <p className="text-xs text-slate-300">{mt.label}</p>
+                    </div>
                   </td>
-                ))}
-              </tr>
-            ))}
+                  {tableData.map(m => (
+                    <td key={m.label} className="px-3 py-2.5 text-center">
+                      <span className="text-xs font-medium text-slate-200">
+                        {mt.fmt ? mt.fmt(m.vals[String(mt.key)]) : fmt(m.vals[String(mt.key)])}
+                      </span>
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+            {/* Fila de totales */}
+            <tr className="border-t-2 border-slate-700/60 bg-slate-900/60">
+              <td className="px-4 py-2.5 sticky left-0 bg-slate-900/80 z-10">
+                <p className="text-xs font-semibold text-slate-300">Total</p>
+              </td>
+              {totalesPorMes.map(m => (
+                <td key={m.label} className="px-3 py-2.5 text-center">
+                  <span className="text-xs font-semibold text-white">{fmt(m.total)}</span>
+                </td>
+              ))}
+            </tr>
           </tbody>
         </table>
       </div>
@@ -778,8 +818,8 @@ function MensualTable({ title, accent, semanas, metricas }: {
                 }}
               />
               <Legend wrapperStyle={{ fontSize: 10 }} />
-              {metricas.map(mt => (
-                <Line key={String(mt.key)} type="monotone" dataKey={String(mt.key)} stroke={mt.color} strokeWidth={2} dot={false} name={mt.label} />
+              {visibleMetricas.map(mt => (
+                <Line key={String(mt.key)} type="monotone" dataKey={String(mt.key)} stroke={mt.color} strokeWidth={selectedKey ? 2.5 : 2} dot={false} name={mt.label} />
               ))}
             </LineChart>
           </ResponsiveContainer>
