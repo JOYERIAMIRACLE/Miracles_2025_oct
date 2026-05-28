@@ -480,7 +480,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   onNueva: (opts: { mes: MesCampana; anio: number }) => void
 }) {
   const isCurrentMonth = anio === ANIO_HOY && MESES.indexOf(mes) === MES_HOY_IDX
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(anio > ANIO_HOY)
 
   const mesIdx   = MESES.indexOf(mes)
   const firstMon = getFirstMonday(anio, mesIdx)
