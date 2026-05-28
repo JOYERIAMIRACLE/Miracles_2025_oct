@@ -125,7 +125,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const { tareas, setTareas, loading } = useGetTareas(ambito)
   const { historial, setHistorial }    = useGetHistorialTarea(ambito)
   const [vista, setVista] = useState<Vista>("lista")
-  const [filtro, setFiltro] = useState<EstadoTarea | "todas">("todas")
+  const [filtro, setFiltro] = useState<EstadoTarea | "todas">("en_progreso")
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>("")
   const [filtroPrioridad, setFiltroPrioridad] = useState<PrioridadTarea | "">("")
   const [filtroRango, setFiltroRango] = useState<RangoFecha>("todas")
