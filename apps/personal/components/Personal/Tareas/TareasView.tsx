@@ -486,7 +486,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                   filtro === e.key
                     ? "bg-slate-700 text-white border-slate-600"
-                    : "border-slate-700/50 text-slate-500 hover:text-slate-300 hover:border-slate-600"
+                    : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600"
                 }`}
               >
                 {e.label}
@@ -497,7 +497,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por rango de fecha"
               value={filtroRango}
               onChange={e => setFiltroRango(e.target.value as RangoFecha)}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
             >
               {RANGOS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
             </select>
@@ -506,7 +506,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por prioridad"
               value={filtroPrioridad}
               onChange={e => setFiltroPrioridad(e.target.value as PrioridadTarea | "")}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
             >
               <option value="">Toda prioridad</option>
               {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -517,7 +517,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por etiqueta"
                 value={filtroEtiqueta}
                 onChange={e => setFiltroEtiqueta(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
               >
                 <option value="">Todas las etiquetas</option>
                 {etiquetasUsadas.map(et => <option key={et} value={et}>{et}</option>)}
@@ -529,7 +529,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por responsable"
                 value={filtroResponsable}
                 onChange={e => setFiltroResponsable(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
               >
                 <option value="">Todos los responsables</option>
                 {responsablesUsados.map(r => <option key={r} value={r}>{r}</option>)}
@@ -542,7 +542,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 ${
                 filtroTicket
                   ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
-                  : "border-slate-700/50 text-muted-foreground hover:text-foreground"
+                  : "bg-slate-800 border-slate-700 text-muted-foreground hover:text-foreground"
               }`}
             >
               <Ticket size={11} /> Solo tickets
@@ -580,7 +580,8 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 <div
                   key={t.documentId}
                   className={`flex items-start gap-3 p-3 rounded-xl border bg-slate-900/60 backdrop-blur-sm ${
-                    vencida ? "border-red-500/40"
+                    t.prioridad === "urgente" ? "border-slate-700/50"
+                    : vencida ? "border-red-500/40"
                     : proxima ? "border-amber-500/40"
                     : "border-slate-700/50"
                   } ${t.estado === "completada" ? "opacity-50" : ""}`}
