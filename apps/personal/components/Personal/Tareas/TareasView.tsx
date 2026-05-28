@@ -464,7 +464,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
       {/* Filtros (solo en vista lista) */}
       {vista === "lista" && (
-        <div className="space-y-2 mb-4">
+        <div className="space-y-3 mb-6 mt-2">
           {/* Búsqueda */}
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
