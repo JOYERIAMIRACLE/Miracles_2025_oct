@@ -579,12 +579,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               return (
                 <div
                   key={t.documentId}
-                  className={`flex items-start gap-3 p-3 rounded-xl border bg-slate-900/60 backdrop-blur-sm ${
-                    t.prioridad === "urgente" ? "border-slate-700/50"
-                    : vencida ? "border-red-500/40"
-                    : proxima ? "border-amber-500/40"
-                    : "border-slate-700/50"
-                  } ${t.estado === "completada" ? "opacity-50" : ""}`}
+                  className={`flex items-start gap-3 p-3 rounded-xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm ${t.estado === "completada" ? "opacity-50" : ""}`}
                 >
                   <button
                     type="button"
