@@ -585,7 +585,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               return (
                 <div
                   key={t.documentId}
-                  className={`flex items-start gap-3 p-3 rounded-xl border bg-slate-900/70 backdrop-blur-sm ${
+                  className={`flex items-start gap-3 p-3 rounded-xl border bg-slate-900/60 backdrop-blur-sm ${
                     vencida ? "border-red-500/40"
                     : proxima ? "border-amber-500/40"
                     : "border-slate-700/50"
@@ -1226,7 +1226,7 @@ function CalendarioVista({
               className={`min-h-[72px] p-1 rounded border text-left flex flex-col gap-0.5 transition ${
                 esHoy
                   ? "border-cyan-500/60 bg-cyan-500/10"
-                  : "border-slate-800/60 bg-slate-900/40 hover:bg-slate-800/50"
+                  : "border-slate-700/50 bg-slate-900/60 hover:bg-slate-800/60"
               }`}
               title={`Crear tarea el ${iso}`}
             >
