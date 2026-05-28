@@ -14,7 +14,7 @@ export const CATEGORIA_CONFIG: Record<CategoriaDigital, { label: string; color: 
   HERRAMIENTAS_VENTAS:   { label: "Herramientas de ventas",    color: "blue",   accent: "bg-blue-500/10 text-blue-400 border-blue-500/20"       },
   FORMATOS_INTERNOS:     { label: "Formatos internos",         color: "amber",  accent: "bg-amber-500/10 text-amber-400 border-amber-500/20"    },
   INSTALACIONES_VEHICULOS:{ label: "Instalaciones y vehículos", color: "cyan",  accent: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"       },
-  COLABORADOR:           { label: "Colaborador",               color: "emerald",accent: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"},
+  COLABORADOR:           { label: "Branding Colaborador",      color: "emerald",accent: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"},
   EVENTOS_PROYECTOS:     { label: "Eventos y proyectos",       color: "rose",   accent: "bg-rose-500/10 text-rose-400 border-rose-500/20"       },
 }
 
