@@ -405,7 +405,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               type="button"
               onClick={() => setVista("lista")}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition ${
-                vista === "lista" ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900" : "text-muted-foreground"
+                vista === "lista" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
               }`}
               title="Vista lista"
             >
@@ -416,7 +416,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               type="button"
               onClick={() => setVista("calendario")}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition ${
-                vista === "calendario" ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900" : "text-muted-foreground"
+                vista === "calendario" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
               }`}
               title="Vista calendario"
             >
@@ -427,7 +427,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               type="button"
               onClick={() => setVista("metricas")}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition ${
-                vista === "metricas" ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900" : "text-muted-foreground"
+                vista === "metricas" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
               }`}
               title="Vista métricas"
             >
@@ -450,21 +450,21 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
           <p className="text-[10px] text-muted-foreground uppercase">Total</p>
           <p className="text-xl font-bold">{stats.total}</p>
         </div>
-        <div className="border border-slate-300 dark:border-slate-700/60 bg-slate-50/30 dark:bg-slate-900/20 rounded-xl p-3">
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase">Sin iniciar</p>
-          <p className="text-xl font-bold text-slate-600 dark:text-slate-300">{stats.sinIniciar}</p>
+        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
+          <p className="text-[10px] text-slate-500 uppercase">Sin iniciar</p>
+          <p className="text-xl font-bold text-slate-300">{stats.sinIniciar}</p>
         </div>
-        <div className="border border-blue-200 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/20 rounded-xl p-3">
-          <p className="text-[10px] text-blue-600 dark:text-blue-400 uppercase">En progreso</p>
-          <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{stats.enProgreso}</p>
+        <div className="border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm rounded-xl p-3">
+          <p className="text-[10px] text-blue-400 uppercase">En progreso</p>
+          <p className="text-xl font-bold text-blue-300">{stats.enProgreso}</p>
         </div>
-        <div className="border border-violet-200 dark:border-violet-900/40 bg-violet-50/30 dark:bg-violet-950/20 rounded-xl p-3">
-          <p className="text-[10px] text-violet-600 dark:text-violet-400 uppercase">En pausa</p>
-          <p className="text-xl font-bold text-violet-700 dark:text-violet-300">{stats.enPausa}</p>
+        <div className="border border-violet-500/30 bg-violet-500/10 backdrop-blur-sm rounded-xl p-3">
+          <p className="text-[10px] text-violet-400 uppercase">En pausa</p>
+          <p className="text-xl font-bold text-violet-300">{stats.enPausa}</p>
         </div>
-        <div className="border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-xl p-3">
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase">Completadas</p>
-          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{stats.completadas}</p>
+        <div className="border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm rounded-xl p-3">
+          <p className="text-[10px] text-emerald-400 uppercase">Completadas</p>
+          <p className="text-xl font-bold text-emerald-300">{stats.completadas}</p>
         </div>
       </div>
 
@@ -478,7 +478,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar por título, descripción o etiqueta..."
-              className="h-9 pl-9 text-sm"
+              className="h-9 pl-9 text-sm bg-slate-900/60 border-slate-700/50 text-slate-200 placeholder:text-slate-600"
             />
           </div>
 
@@ -491,8 +491,8 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 onClick={() => setFiltro(e.key)}
                 className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                   filtro === e.key
-                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100"
-                    : "border-slate-700/50 text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
+                    ? "bg-slate-700 text-white border-slate-600"
+                    : "border-slate-700/50 text-slate-500 hover:text-slate-300 hover:border-slate-600"
                 }`}
               >
                 {e.label}
@@ -503,7 +503,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por rango de fecha"
               value={filtroRango}
               onChange={e => setFiltroRango(e.target.value as RangoFecha)}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
             >
               {RANGOS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
             </select>
@@ -512,7 +512,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por prioridad"
               value={filtroPrioridad}
               onChange={e => setFiltroPrioridad(e.target.value as PrioridadTarea | "")}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
             >
               <option value="">Toda prioridad</option>
               {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -523,7 +523,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por etiqueta"
                 value={filtroEtiqueta}
                 onChange={e => setFiltroEtiqueta(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
               >
                 <option value="">Todas las etiquetas</option>
                 {etiquetasUsadas.map(et => <option key={et} value={et}>{et}</option>)}
@@ -535,7 +535,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por responsable"
                 value={filtroResponsable}
                 onChange={e => setFiltroResponsable(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 text-slate-300 backdrop-blur-sm"
               >
                 <option value="">Todos los responsables</option>
                 {responsablesUsados.map(r => <option key={r} value={r}>{r}</option>)}
