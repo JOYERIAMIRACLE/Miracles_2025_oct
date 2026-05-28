@@ -144,8 +144,8 @@ function ModalFunnel({ editando, onGuardar, onCerrar }: {
             placeholder="Instagram, Email, Google Ads…" className={inputCls} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {([["Impresiones","impresiones"],["Visitas","visitas"],["Clics","clics"],["Leads","leads"],
-             ["Contactos nuevos","contactosNuevos"],["Compras","compras"]] as const).map(([label, key]) => (
+          {([["Impresiones","impresiones"],["Visitas","visitas"],["Clics","clics"],["Contactos","contactosNuevos"],
+             ["Oportunidades","leads"],["Compras","compras"]] as const).map(([label, key]) => (
             <div key={key}><label className={labelCls}>{label}</label>{num(key)}</div>
           ))}
           <div className="col-span-2">
@@ -217,11 +217,17 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
     } catch { toast.error("Error al eliminar") }
   }
 
-  // Gráfica de tendencia
+  // Datos para gráficas de tendencia
   const chartData = useMemo(() =>
     [...filtrados].reverse().map(r => ({
       label: `${r.mes.slice(0,3)} ${r.anio}`,
-      Visitas: r.visitas, Leads: r.leads, Compras: r.compras,
+      Impresiones: r.impresiones,
+      Visitas: r.visitas,
+      Clics: r.clics,
+      Contactos: r.contactosNuevos,
+      Oportunidades: r.leads,
+      Compras: r.compras,
+      Montos: r.montoCompras,
     })), [filtrados])
 
   if (loading) return <p className="text-sm text-slate-500 text-center py-12">Cargando...</p>
@@ -250,7 +256,7 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
             <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/60">
-                  {["Período","Impresiones","Visitas","Clics","Leads","Contactos","Compras","Revenue",""].map((h,i) => (
+                  {["Período","Impresiones","Visitas","Clics","Contactos","Oportunidades","Compras","Revenue",""].map((h,i) => (
                     <th key={i} className={`px-3 py-3 ${i === 0 ? "text-left" : "text-center"} text-[10px] font-semibold uppercase tracking-wider ${i === 7 ? "text-emerald-600" : "text-slate-500"}`}>{h}</th>
                   ))}
                 </tr>
@@ -265,9 +271,9 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
                     <MetricaCell value={r.impresiones} />
                     <MetricaCell value={r.visitas}         sub={r.visitas}         subDen={r.impresiones} />
                     <MetricaCell value={r.clics}           sub={r.clics}           subDen={r.visitas} />
-                    <MetricaCell value={r.leads}           sub={r.leads}           subDen={r.clics} />
-                    <MetricaCell value={r.contactosNuevos} sub={r.contactosNuevos} subDen={r.leads} />
-                    <MetricaCell value={r.compras}         sub={r.compras}         subDen={r.contactosNuevos} />
+                    <MetricaCell value={r.contactosNuevos} sub={r.contactosNuevos} subDen={r.clics} />
+                    <MetricaCell value={r.leads}           sub={r.leads}           subDen={r.contactosNuevos} />
+                    <MetricaCell value={r.compras}         sub={r.compras}         subDen={r.leads} />
                     <td className="px-3 py-3 text-center">
                       {r.montoCompras > 0
                         ? <span className="text-sm font-semibold text-emerald-400">{fmtPeso(r.montoCompras)}</span>
@@ -291,9 +297,9 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
                     <MetricaCell value={totales.impresiones} />
                     <MetricaCell value={totales.visitas}         sub={totales.visitas}         subDen={totales.impresiones} />
                     <MetricaCell value={totales.clics}           sub={totales.clics}           subDen={totales.visitas} />
-                    <MetricaCell value={totales.leads}           sub={totales.leads}           subDen={totales.clics} />
-                    <MetricaCell value={totales.contactosNuevos} sub={totales.contactosNuevos} subDen={totales.leads} />
-                    <MetricaCell value={totales.compras}         sub={totales.compras}         subDen={totales.contactosNuevos} />
+                    <MetricaCell value={totales.contactosNuevos} sub={totales.contactosNuevos} subDen={totales.clics} />
+                    <MetricaCell value={totales.leads}           sub={totales.leads}           subDen={totales.contactosNuevos} />
+                    <MetricaCell value={totales.compras}         sub={totales.compras}         subDen={totales.leads} />
                     <td className="px-3 py-3 text-center">
                       <span className="text-sm font-bold text-emerald-400">{fmtPeso(totales.montoCompras)}</span>
                     </td>
@@ -304,22 +310,42 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
             </table>
           </div>
 
-          {/* Gráfica tendencia */}
+          {/* Tendencias individuales */}
           {chartData.length >= 2 && (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-              <p className="text-xs font-semibold text-slate-400 mb-4 uppercase tracking-wider">Tendencia mensual</p>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} />
-                  <YAxis tick={{ fontSize: 10, fill: "#64748b" }} width={40} />
-                  <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="Visitas"  stroke="#3b82f6" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="Leads"    stroke="#f59e0b" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="Compras"  stroke="#10b981" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Tendencias</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {([
+                  { key: "Impresiones",   color: "#94a3b8", label: "Impresiones"   },
+                  { key: "Visitas",       color: "#3b82f6", label: "Visitas"       },
+                  { key: "Clics",         color: "#a78bfa", label: "Clics"         },
+                  { key: "Contactos",     color: "#f59e0b", label: "Contactos"     },
+                  { key: "Oportunidades", color: "#fb923c", label: "Oportunidades" },
+                  { key: "Compras",       color: "#10b981", label: "Compras"       },
+                  { key: "Montos",        color: "#34d399", label: "Montos (MXN)", fmt: fmtPeso },
+                ] as { key: string; color: string; label: string; fmt?: (n: number) => string }[]).map(({ key, color, label, fmt: fmtFn }) => {
+                  const vals = chartData.map(d => (d as Record<string, unknown>)[key] as number)
+                  const total = vals.reduce((s, v) => s + v, 0)
+                  return (
+                    <div key={key} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
+                      <p className="text-base font-bold text-slate-100 mb-2">
+                        {fmtFn ? fmtFn(total) : fmt(total)}
+                      </p>
+                      <ResponsiveContainer width="100%" height={56}>
+                        <LineChart data={chartData} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
+                          <Tooltip
+                            contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 6, fontSize: 11 }}
+                            formatter={(v: number) => [fmtFn ? fmtFn(v) : fmt(v), label]}
+                            labelStyle={{ color: "#94a3b8" }}
+                          />
+                          <Line type="monotone" dataKey={key} stroke={color} strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </>
