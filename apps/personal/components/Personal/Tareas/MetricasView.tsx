@@ -113,7 +113,7 @@ function calcularTiempoPorEstado(
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+    <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-bold mt-1">{value}</p>
       {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
@@ -136,7 +136,7 @@ function ColorDot({ color }: { color: string }) {
 function HBar({ value, max, color = "bg-blue-500" }: { value: number; max: number; color?: string }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
-    <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+    <div className="flex-1 h-2 bg-slate-800/70 rounded-full overflow-hidden">
       <Fill pct={pct} color={color} />
     </div>
   )
@@ -448,10 +448,10 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
       {/* Tasa completado + donut */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-3">
+        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4 space-y-3">
           <h3 className="text-sm font-semibold">Tasa de completado</h3>
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+            <div className="flex-1 h-3 bg-slate-800/70 rounded-full overflow-hidden flex">
               <Fill pct={tasaCompletado} color="bg-emerald-500" />
               <Fill pct={total ? Math.round(enProgreso / total * 100) : 0} color="bg-blue-500" />
               <Fill pct={total ? Math.round(enPausa / total * 100) : 0} color="bg-violet-500" />
@@ -469,7 +469,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
           </div>
         </div>
 
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
           <h3 className="text-sm font-semibold mb-2">Distribución por estado</h3>
           {donutEstado.length === 0 ? (
             <p className="text-xs text-muted-foreground py-8 text-center">Sin datos</p>
@@ -500,7 +500,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
       {/* Por área + Por etiqueta */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
           <h3 className="text-sm font-semibold mb-3">Por área de solicitud</h3>
           {porArea.length === 0 ? (
             <p className="text-xs text-muted-foreground">Sin datos</p>
@@ -520,7 +520,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
           )}
         </div>
 
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
           <h3 className="text-sm font-semibold mb-3">Por categoría (etiqueta)</h3>
           {porEtiqueta.length === 0 ? (
             <p className="text-xs text-muted-foreground">Sin datos</p>
@@ -551,7 +551,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
         </div>
 
         {total === 0 ? (
-          <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 text-center">
+          <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-8 text-center">
             <p className="text-sm text-muted-foreground">Sin historial aún.</p>
             <p className="text-xs text-muted-foreground mt-1">
               Cada vez que cambies el estado de una tarea, se registrará el tiempo en cada etapa.
@@ -562,7 +562,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
             {/* Cards promedio por estado */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {(["sin_iniciar", "en_progreso", "en_pausa", "completada"] as EstadoTarea[]).map(e => (
-                <div key={e} className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <div key={e} className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`w-2 h-2 rounded-full shrink-0 ${ESTADO_COLOR[e]}`} />
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{ESTADO_LABEL[e]}</p>
@@ -580,7 +580,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
             {/* Barra de distribución global */}
             {totalHorasHistorial > 0 && (
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-3">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4 space-y-3">
                 <h3 className="text-sm font-semibold">Distribución global de tiempo</h3>
                 <div className="h-4 w-full rounded-full overflow-hidden flex gap-0.5">
                   {(["sin_iniciar","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => {
@@ -611,7 +611,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
             {/* Tiempo por etapa por categoría — stacked bar */}
             {tiempoPorEtiqueta.length > 0 && (
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-3">Tiempo por etapa por categoría (horas)</h3>
                 <ResponsiveContainer width="100%" height={Math.max(140, tiempoPorEtiqueta.length * 32)}>
                   <BarChart data={tiempoPorEtiqueta} layout="vertical"
@@ -637,7 +637,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
             {/* Ranking de tareas por tiempo total activo */}
             {rankingCycleTime.length > 0 && (
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-3">Tareas completadas — tiempo activo (en progreso + pausa)</h3>
                 <div className="space-y-2">
                   {rankingCycleTime.map(({ tarea, horas, pausaHoras }) => (
@@ -646,7 +646,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                         <p className="text-xs truncate font-medium" title={tarea.titulo}>{tarea.titulo}</p>
                         <p className="text-[10px] text-muted-foreground">{tarea.etiqueta ?? "—"}</p>
                       </div>
-                      <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+                      <div className="flex-1 h-2 bg-slate-800/70 rounded-full overflow-hidden flex">
                         <div style={{ width: `${maxCycleTime > 0 ? Math.round(horas / maxCycleTime * 100) : 0}%`, backgroundColor: ESTADO_HEX.en_progreso }}
                           className="h-full" />
                         <div style={{ width: `${maxCycleTime > 0 ? Math.round(pausaHoras / maxCycleTime * 100) : 0}%`, backgroundColor: ESTADO_HEX.en_pausa }}
@@ -658,7 +658,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700/50">
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: ESTADO_HEX.en_progreso }} />
                     <span className="text-[10px] text-muted-foreground">En progreso</span>
@@ -684,29 +684,29 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
         </div>
 
         {ticketStats.total === 0 ? (
-          <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 text-center text-xs text-muted-foreground">
+          <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-8 text-center text-xs text-muted-foreground">
             No hay tickets de servicio en este periodo.
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <div className="border border-blue-200 dark:border-blue-900/40 bg-blue-50/20 dark:bg-blue-950/10 rounded-xl p-4">
+              <div className="border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm rounded-xl p-4">
                 <p className="text-[10px] text-blue-500 uppercase tracking-wide">Tickets</p>
                 <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">{ticketStats.total}</p>
               </div>
-              <div className="border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20 dark:bg-emerald-950/10 rounded-xl p-4">
+              <div className="border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm rounded-xl p-4">
                 <p className="text-[10px] text-emerald-500 uppercase tracking-wide">Resueltos</p>
                 <p className="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">{ticketStats.comp}</p>
               </div>
-              <div className="border border-amber-200 dark:border-amber-900/40 bg-amber-50/20 dark:bg-amber-950/10 rounded-xl p-4">
+              <div className="border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm rounded-xl p-4">
                 <p className="text-[10px] text-amber-500 uppercase tracking-wide">Pendientes</p>
                 <p className="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">{ticketStats.pend}</p>
               </div>
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tasa resolución</p>
                 <p className="text-2xl font-bold mt-1">{ticketStats.tasa}%</p>
               </div>
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tiempo promedio</p>
                 <p className="text-2xl font-bold mt-1">{promedioResolucion > 0 ? fmtDuracion(promedioResolucion) : "—"}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">por ticket resuelto</p>
@@ -718,7 +718,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                   <p className="text-[10px] text-muted-foreground mt-0.5">{fmtDuracion(masLento.activo)}</p>
                 </div>
               ) : (
-                <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Ticket más lento</p>
                   <p className="text-2xl font-bold mt-1">—</p>
                 </div>
@@ -726,7 +726,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-2">Tickets vs tareas normales</h3>
                 <div className="flex items-center gap-4">
                   <ResponsiveContainer width={130} height={120}>
@@ -753,7 +753,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                 </div>
               </div>
 
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-3">Tickets por mes</h3>
                 {ticketsPorMes.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-8 text-center">Sin datos con fecha</p>
@@ -772,7 +772,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
               </div>
 
               {ticketsPorArea.length > 0 && (
-                <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                   <h3 className="text-sm font-semibold mb-3">Tickets por área</h3>
                   <ResponsiveContainer width="100%" height={Math.max(100, ticketsPorArea.length * 28)}>
                     <BarChart data={ticketsPorArea} layout="vertical" margin={{ top: 0, right: 40, bottom: 0, left: 0 }}>
@@ -788,7 +788,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
               )}
 
               {ticketsPorResp.length > 0 && (
-                <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+                <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                   <h3 className="text-sm font-semibold mb-3">Tickets por responsable</h3>
                   <ResponsiveContainer width="100%" height={Math.max(100, ticketsPorResp.length * 28)}>
                     <BarChart data={ticketsPorResp} layout="vertical" margin={{ top: 0, right: 40, bottom: 0, left: 0 }}>
@@ -806,7 +806,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
             {/* Tabla: tiempo activo por ticket */}
             {ticketsConTiempo.length > 0 && (
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-1">Tiempo activo por ticket</h3>
                 <p className="text-[11px] text-muted-foreground mb-3">Tiempo en progreso + en pausa, de mayor a menor</p>
                 <div className="space-y-2.5">
@@ -816,7 +816,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                         <p className="text-xs truncate font-medium" title={tarea.titulo}>{tarea.titulo}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{tarea.etiqueta ?? "(Sin categoría)"}</p>
                       </div>
-                      <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+                      <div className="flex-1 h-2 bg-slate-800/70 rounded-full overflow-hidden flex">
                         <div
                           style={{ width: `${maxActivoTicket > 0 ? Math.round(en_progreso / maxActivoTicket * 100) : 0}%`, backgroundColor: ESTADO_HEX.en_progreso }}
                           className="h-full" />
@@ -838,7 +838,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700/50">
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: ESTADO_HEX.en_progreso }} />
                     <span className="text-[10px] text-muted-foreground">En progreso</span>
@@ -853,7 +853,7 @@ export function MetricasView({ tareas, historial }: { tareas: TareaType[]; histo
 
             {/* Resolución por categoría */}
             {resolucionPorCategoria.length > 0 && (
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-4">
                 <h3 className="text-sm font-semibold mb-1">Tiempo de resolución por categoría</h3>
                 <p className="text-[11px] text-muted-foreground mb-3">Promedio de tiempo activo — solo tickets resueltos</p>
                 <div className="space-y-2.5">

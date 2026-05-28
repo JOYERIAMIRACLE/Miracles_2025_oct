@@ -400,7 +400,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle vista */}
-          <div className="flex items-center gap-0 rounded-lg border border-zinc-200 dark:border-zinc-800 p-0.5">
+          <div className="flex items-center gap-0 rounded-lg border border-slate-700/50 p-0.5">
             <button
               type="button"
               onClick={() => setVista("lista")}
@@ -446,7 +446,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
+        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
           <p className="text-[10px] text-muted-foreground uppercase">Total</p>
           <p className="text-xl font-bold">{stats.total}</p>
         </div>
@@ -492,7 +492,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                   filtro === e.key
                     ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100"
-                    : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
+                    : "border-slate-700/50 text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
                 }`}
               >
                 {e.label}
@@ -503,7 +503,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por rango de fecha"
               value={filtroRango}
               onChange={e => setFiltroRango(e.target.value as RangoFecha)}
-              className="text-xs px-2 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
             >
               {RANGOS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
             </select>
@@ -512,7 +512,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por prioridad"
               value={filtroPrioridad}
               onChange={e => setFiltroPrioridad(e.target.value as PrioridadTarea | "")}
-              className="text-xs px-2 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
             >
               <option value="">Toda prioridad</option>
               {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -523,7 +523,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por etiqueta"
                 value={filtroEtiqueta}
                 onChange={e => setFiltroEtiqueta(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
               >
                 <option value="">Todas las etiquetas</option>
                 {etiquetasUsadas.map(et => <option key={et} value={et}>{et}</option>)}
@@ -535,7 +535,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por responsable"
                 value={filtroResponsable}
                 onChange={e => setFiltroResponsable(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-background"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700/50 bg-background"
               >
                 <option value="">Todos los responsables</option>
                 {responsablesUsados.map(r => <option key={r} value={r}>{r}</option>)}
@@ -548,7 +548,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 ${
                 filtroTicket
                   ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
-                  : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:text-foreground"
+                  : "border-slate-700/50 text-muted-foreground hover:text-foreground"
               }`}
             >
               <Ticket size={11} /> Solo tickets
@@ -585,11 +585,11 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               return (
                 <div
                   key={t.documentId}
-                  className={`flex items-start gap-3 p-3 rounded-xl border bg-white dark:bg-card ${
-                    vencida ? "border-red-300 dark:border-red-900/50"
-                    : proxima ? "border-amber-300 dark:border-amber-900/50"
-                    : "border-zinc-200 dark:border-zinc-800"
-                  } ${t.estado === "completada" ? "opacity-60" : ""}`}
+                  className={`flex items-start gap-3 p-3 rounded-xl border bg-slate-900/70 backdrop-blur-sm ${
+                    vencida ? "border-red-500/40"
+                    : proxima ? "border-amber-500/40"
+                    : "border-slate-700/50"
+                  } ${t.estado === "completada" ? "opacity-50" : ""}`}
                 >
                   <button
                     type="button"
@@ -685,7 +685,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         <span className={`text-[10px] px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
                           vencida ? "border-red-300 bg-red-50 dark:bg-red-950/20 text-red-500"
                           : proxima ? "border-amber-300 bg-amber-50 dark:bg-amber-950/20 text-amber-500"
-                          : "border-zinc-200 dark:border-zinc-800 text-muted-foreground"
+                          : "border-slate-700/50 text-muted-foreground"
                         }`}>
                           <CalIcon size={9} />
                           {fmtFecha(t.fechaVencimiento)}
@@ -779,7 +779,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 sm:p-6 w-full max-w-md space-y-3 border border-zinc-200 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 sm:p-6 w-full max-w-md space-y-3 border border-slate-700/50 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{editando ? "Editar tarea" : "Nueva tarea"}</h2>
               <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
@@ -1185,7 +1185,7 @@ function CalendarioVista({
   while (celdas.length % 7 !== 0) celdas.push(null)
 
   return (
-    <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
+    <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
       <div className="flex items-center justify-between mb-3">
         <button
           type="button"
@@ -1225,8 +1225,8 @@ function CalendarioVista({
               onClick={() => onClickDia(iso)}
               className={`min-h-[72px] p-1 rounded border text-left flex flex-col gap-0.5 transition ${
                 esHoy
-                  ? "border-cyan-400 bg-cyan-50/30 dark:bg-cyan-950/20"
-                  : "border-zinc-200 dark:border-zinc-800 hover:bg-muted"
+                  ? "border-cyan-500/60 bg-cyan-500/10"
+                  : "border-slate-800/60 bg-slate-900/40 hover:bg-slate-800/50"
               }`}
               title={`Crear tarea el ${iso}`}
             >
