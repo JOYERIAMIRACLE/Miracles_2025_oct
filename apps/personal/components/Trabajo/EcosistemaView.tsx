@@ -571,9 +571,11 @@ function Sparkline({ data, dataKey, color }: { data: object[]; dataKey: string; 
 type BSRow = { label: string; section: string; key: keyof BoxscoreType; color: string; fmt?: (v: number) => string }
 
 const BS_ROWS: BSRow[] = [
-  { label: "Apertura",    section: "Nutrimiento", key: "tasaApertura",  color: "#3b82f6", fmt: v => `${v}%` },
-  { label: "Clics",       section: "Nutrimiento", key: "tasaClics",     color: "#6366f1", fmt: v => `${v}%` },
-  { label: "Rechazos",    section: "Nutrimiento", key: "tasaRechazos",  color: "#ef4444", fmt: v => `${v}%` },
+  { label: "Tasa Apertura",       section: "Nutrimiento",       key: "tasaApertura",         color: "#3b82f6", fmt: v => `${v}%` },
+  { label: "Tasa Clics",          section: "Nutrimiento",       key: "tasaClics",             color: "#6366f1", fmt: v => `${v}%` },
+  { label: "Tasa Rechazos",       section: "Nutrimiento",       key: "tasaRechazos",          color: "#ef4444", fmt: v => `${v}%` },
+  { label: "Tráfico Dir. Corp",   section: "Nutrimiento",       key: "traficoDirectoCorp",    color: "#3b82f6" },
+  { label: "Tráfico Dir. Store",  section: "Nutrimiento",       key: "traficoDirectoStore",   color: "#8b5cf6" },
   { label: "Impresiones Corp",    section: "Autoridad (SEO)",   key: "impresionesCorp",       color: "#3b82f6" },
   { label: "Impresiones Store",   section: "Autoridad (SEO)",   key: "impresionesStore",      color: "#8b5cf6" },
   { label: "Tráf. Orgánico Corp", section: "Autoridad (SEO)",   key: "traficoOrganicoCorp",   color: "#3b82f6" },
