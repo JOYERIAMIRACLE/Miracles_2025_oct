@@ -571,11 +571,9 @@ function Sparkline({ data, dataKey, color }: { data: object[]; dataKey: string; 
 type BSRow = { label: string; section: string; key: keyof BoxscoreType; color: string; fmt?: (v: number) => string }
 
 const BS_ROWS: BSRow[] = [
-  { label: "Tasa Apertura",       section: "Nutrimiento",       key: "tasaApertura",         color: "#3b82f6", fmt: v => `${v}%` },
-  { label: "Tasa Clics",          section: "Nutrimiento",       key: "tasaClics",             color: "#6366f1", fmt: v => `${v}%` },
-  { label: "Tasa Rechazos",       section: "Nutrimiento",       key: "tasaRechazos",          color: "#ef4444", fmt: v => `${v}%` },
-  { label: "Tráfico Dir. Corp",   section: "Nutrimiento",       key: "traficoDirectoCorp",    color: "#3b82f6" },
-  { label: "Tráfico Dir. Store",  section: "Nutrimiento",       key: "traficoDirectoStore",   color: "#8b5cf6" },
+  { label: "Apertura",    section: "Nutrimiento", key: "tasaApertura",  color: "#3b82f6", fmt: v => `${v}%` },
+  { label: "Clics",       section: "Nutrimiento", key: "tasaClics",     color: "#6366f1", fmt: v => `${v}%` },
+  { label: "Rechazos",    section: "Nutrimiento", key: "tasaRechazos",  color: "#ef4444", fmt: v => `${v}%` },
   { label: "Impresiones Corp",    section: "Autoridad (SEO)",   key: "impresionesCorp",       color: "#3b82f6" },
   { label: "Impresiones Store",   section: "Autoridad (SEO)",   key: "impresionesStore",      color: "#8b5cf6" },
   { label: "Tráf. Orgánico Corp", section: "Autoridad (SEO)",   key: "traficoOrganicoCorp",   color: "#3b82f6" },
@@ -696,6 +694,95 @@ function DrilldownModal({ row, semanas, onCerrar }: {
           </table>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Tabla mensual agrupada ───────────────────────────────────────────────────
+
+type MensualMetrica = { label: string; key: keyof BoxscoreType; color: string; fmt?: (v: number) => string }
+
+function MensualTable({ title, accent, semanas, metricas }: {
+  title: string; accent: string
+  semanas: BoxscoreType[]
+  metricas: MensualMetrica[]
+}) {
+  const meses = useMemo(() => {
+    const map = new Map<string, { label: string; rows: BoxscoreType[] }>()
+    semanas.forEach(s => {
+      const key = `${s.anio}-${String(MESES_MKT.indexOf(s.mes as typeof MESES_MKT[number])).padStart(2, "0")}`
+      if (!map.has(key)) map.set(key, { label: `${s.mes.slice(0, 3)} ${s.anio}`, rows: [] })
+      map.get(key)!.rows.push(s)
+    })
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v)
+  }, [semanas])
+
+  if (!meses.length) return null
+
+  const tableData = meses.map(m => ({
+    label: m.label,
+    vals: Object.fromEntries(metricas.map(mt => [
+      mt.key, m.rows.reduce((s, r) => s + ((r[mt.key] as number) ?? 0), 0),
+    ])) as Record<string, number>,
+  }))
+
+  const chartData = tableData.map(m => ({ label: m.label, ...m.vals }))
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{title}</p>
+
+      <div className="overflow-x-auto rounded-xl border border-slate-800">
+        <table className="text-sm min-w-max w-full">
+          <thead>
+            <tr className="border-b border-slate-800 bg-slate-900/80">
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 sticky left-0 bg-slate-900/80 w-44 z-10">Métrica</th>
+              {meses.map(m => (
+                <th key={m.label} className="px-3 py-2.5 text-center text-[10px] font-semibold text-slate-400 min-w-[80px]">{m.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {metricas.map(mt => (
+              <tr key={String(mt.key)} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                <td className={`px-4 py-2.5 sticky left-0 bg-slate-950 border-l-2 ${accent} z-10`}>
+                  <p className="text-xs text-slate-300">{mt.label}</p>
+                </td>
+                {tableData.map(m => (
+                  <td key={m.label} className="px-3 py-2.5 text-center">
+                    <span className="text-xs font-medium text-slate-200">
+                      {mt.fmt ? mt.fmt(m.vals[String(mt.key)]) : fmt(m.vals[String(mt.key)])}
+                    </span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {chartData.length >= 2 && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis dataKey="label" tick={{ fontSize: 9, fill: "#64748b" }} />
+              <YAxis tick={{ fontSize: 10, fill: "#64748b" }} width={44} tickFormatter={v => fmt(v as number)} />
+              <Tooltip
+                contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 11 }}
+                formatter={(v: number, name: string) => {
+                  const mt = metricas.find(m => String(m.key) === name)
+                  return [mt?.fmt ? mt.fmt(v) : fmt(v), mt?.label ?? name]
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              {metricas.map(mt => (
+                <Line key={String(mt.key)} type="monotone" dataKey={String(mt.key)} stroke={mt.color} strokeWidth={2} dot={false} name={mt.label} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   )
 }
@@ -871,6 +958,48 @@ function TabBoxscore({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" })
               <Bar dataKey="traficoGeneral" fill="#22d3ee" radius={[3,3,0,0]} name="Tráfico" />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* ── Resumen mensual por concepto ── */}
+      {semanas.length > 0 && (
+        <div className="space-y-8 pt-2 border-t border-slate-800">
+          <MensualTable
+            title="Impresiones por mes"
+            accent="border-l-blue-500/60"
+            semanas={semanas}
+            metricas={[
+              { label: "Impresiones Corp",  key: "impresionesCorp",  color: "#3b82f6" },
+              { label: "Impresiones Store", key: "impresionesStore", color: "#8b5cf6" },
+              { label: "Impresiones SEM",   key: "impresionesSEM",   color: "#f59e0b" },
+              { label: "Impresiones CYA",   key: "impresionesCYA",   color: "#fb923c" },
+              { label: "Impresiones IC",    key: "impresionesIC",    color: "#ec4899" },
+            ]}
+          />
+          <MensualTable
+            title="Tráfico por mes"
+            accent="border-l-violet-500/60"
+            semanas={semanas}
+            metricas={[
+              { label: "Tráfico Dir. Corp",     key: "traficoDirectoCorp",   color: "#3b82f6" },
+              { label: "Tráfico Dir. Store",    key: "traficoDirectoStore",  color: "#8b5cf6" },
+              { label: "Tráf. Orgánico Corp",   key: "traficoOrganicoCorp",  color: "#10b981" },
+              { label: "Tráf. Orgánico Store",  key: "traficoOrganicoStore", color: "#34d399" },
+              { label: "Tráfico Paga (SEM)",    key: "traficoPagaSEM",       color: "#f59e0b" },
+              { label: "Clics CYA",             key: "clicsCYA",             color: "#fb923c" },
+              { label: "Clics IC",              key: "clicsIC",              color: "#ec4899" },
+            ]}
+          />
+          <MensualTable
+            title="Conversiones por mes"
+            accent="border-l-emerald-500/60"
+            semanas={semanas}
+            metricas={[
+              { label: "Conv. SEM", key: "conversionesSEM", color: "#f59e0b" },
+              { label: "Conv. CYA", key: "conversionesCYA", color: "#fb923c" },
+              { label: "Conv. IC",  key: "conversionesIC",  color: "#ec4899" },
+            ]}
+          />
         </div>
       )}
 
