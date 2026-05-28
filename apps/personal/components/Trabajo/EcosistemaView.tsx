@@ -89,82 +89,58 @@ function FunnelVisual({ tot }: {
   const pagado   = tot.clics
   const organico = Math.max(0, tot.visitas - tot.clics)
 
-  const stages = [
-    { etapa: "Atracción",   metrica: "Tráfico total",  value: tot.visitas,      prev: null,              border: "border-blue-500/30",    bg: "bg-blue-500/10",    txt: "text-blue-300"    },
-    { etapa: "Calificados", metrica: "Oportunidades",  value: tot.leads,         prev: tot.visitas,       border: "border-violet-500/30",  bg: "bg-violet-500/10",  txt: "text-violet-300"  },
-    { etapa: "Convertidos", metrica: "Órdenes",        value: tot.compras,       prev: tot.leads,         border: "border-emerald-500/30", bg: "bg-emerald-500/10", txt: "text-emerald-300" },
-    { etapa: "Experiencia", metrica: "Revenue total",  value: tot.montoCompras,  prev: null, currency: true, border: "border-teal-500/30", bg: "bg-teal-500/10",    txt: "text-teal-300"    },
-  ]
-
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
       <p className="text-xs font-semibold text-slate-400 mb-6 uppercase tracking-wider">Funnel de conversión</p>
 
-      <div className="flex gap-3">
-        {/* Funnel column */}
-        <div className="flex-1">
-          {/* Top sources */}
-          <div className="flex gap-3 mb-2">
-            {[
-              { label: "Tráfico pagado",   sub: "clics",           value: pagado   },
-              { label: "Tráfico orgánico", sub: "visitas directas", value: organico },
-            ].map(s => (
-              <div key={s.label} className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-center">
-                <p className="text-[9px] text-slate-500 uppercase tracking-wider">{s.label}</p>
-                <p className="text-lg font-bold text-slate-100 mt-0.5">{fmt(s.value)}</p>
-                <p className="text-[9px] text-slate-600">{s.sub}</p>
-              </div>
-            ))}
+      {/* Top sources */}
+      <div className="flex gap-3 mb-2">
+        {[
+          { label: "Tráfico pagado",   sub: "clics",            value: pagado   },
+          { label: "Tráfico orgánico", sub: "visitas directas",  value: organico },
+        ].map(s => (
+          <div key={s.label} className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-center">
+            <p className="text-[9px] text-slate-500 uppercase tracking-wider">{s.label}</p>
+            <p className="text-lg font-bold text-slate-100 mt-0.5">{fmt(s.value)}</p>
+            <p className="text-[9px] text-slate-600">{s.sub}</p>
           </div>
-
-          {/* Converging line */}
-          <div className="flex justify-center mb-0.5">
-            <svg width="80" height="20" viewBox="0 0 80 20">
-              <line x1="20" y1="0" x2="40" y2="20" stroke="#334155" strokeWidth="1.5"/>
-              <line x1="60" y1="0" x2="40" y2="20" stroke="#334155" strokeWidth="1.5"/>
-            </svg>
-          </div>
-
-          {/* Stages */}
-          {stages.map((s, i) => (
-            <div key={s.etapa}>
-              {i > 0 && (
-                <div className="flex flex-col items-center py-1 gap-0.5">
-                  <span className="text-[10px] font-semibold text-slate-500">
-                    {s.prev ? pct(s.value, s.prev) : ""}
-                  </span>
-                  <div className="w-px h-3 bg-slate-700" />
-                </div>
-              )}
-              <div className={`flex items-center gap-4 px-5 py-3 rounded-xl border ${s.border} ${s.bg}`}>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-[9px] font-bold uppercase tracking-wider ${s.txt}`}>{s.etapa}</p>
-                  <p className="text-[12px] font-medium text-slate-200 mt-0.5">{s.metrica}</p>
-                </div>
-                <p className="text-base font-bold text-slate-100 shrink-0">
-                  {"currency" in s && s.currency ? fmtPeso(s.value) : fmt(s.value)}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Circular arrow — right side */}
-        <div className="w-10 relative flex items-stretch">
-          <svg viewBox="0 0 40 310" preserveAspectRatio="none" className="w-full h-full overflow-visible">
-            <defs>
-              <marker id="arrowUp" markerWidth="7" markerHeight="7" refX="3.5" refY="6" orient="auto">
-                <path d="M0,7 L3.5,0 L7,7" fill="none" stroke="#475569" strokeWidth="1.5"/>
-              </marker>
-            </defs>
-            <path
-              d="M 4,300 C 4,300 40,300 40,155 C 40,10 4,10 4,10"
-              stroke="#334155" strokeWidth="1.5" fill="none"
-              markerEnd="url(#arrowUp)"
-            />
-          </svg>
-        </div>
+        ))}
       </div>
+
+      {/* Converging arrow */}
+      <div className="flex justify-center mb-0.5">
+        <svg width="80" height="20" viewBox="0 0 80 20">
+          <line x1="20" y1="0" x2="40" y2="20" stroke="#334155" strokeWidth="1.5"/>
+          <line x1="60" y1="0" x2="40" y2="20" stroke="#334155" strokeWidth="1.5"/>
+        </svg>
+      </div>
+
+      {/* Stages */}
+      {[
+        { etapa: "Atracción",   metrica: "Tráfico total",                     value: fmt(tot.visitas),    prev: null,        border: "border-blue-500/30",    bg: "bg-blue-500/10",    txt: "text-blue-300"    },
+        { etapa: "Calificados", metrica: "Oportunidades",                     value: fmt(tot.leads),       prev: tot.visitas && tot.leads ? pct(tot.leads, tot.visitas) : null, border: "border-violet-500/30",  bg: "bg-violet-500/10",  txt: "text-violet-300"  },
+        { etapa: "Convertidos", metrica: `Órdenes · ${fmtPeso(tot.montoCompras)}`, value: fmt(tot.compras), prev: tot.leads && tot.compras ? pct(tot.compras, tot.leads) : null, border: "border-emerald-500/30", bg: "bg-emerald-500/10", txt: "text-emerald-300" },
+        { etapa: "Experiencia", metrica: "Satisfacción del cliente",          value: null,                prev: null,        border: "border-amber-500/30",   bg: "bg-amber-500/10",   txt: "text-amber-300"   },
+      ].map((s, i) => (
+        <div key={s.etapa}>
+          {i > 0 && (
+            <div className="flex flex-col items-center py-1 gap-0.5">
+              {s.prev && <span className="text-[10px] font-semibold text-slate-500">{s.prev}</span>}
+              <div className="w-px h-3 bg-slate-700" />
+            </div>
+          )}
+          <div className={`flex items-center gap-4 px-5 py-3 rounded-xl border ${s.border} ${s.bg}`}>
+            <div className="flex-1 min-w-0">
+              <p className={`text-[9px] font-bold uppercase tracking-wider ${s.txt}`}>{s.etapa}</p>
+              <p className="text-[12px] font-medium text-slate-200 mt-0.5">{s.metrica}</p>
+            </div>
+            {s.value !== null
+              ? <p className="text-base font-bold text-slate-100 shrink-0">{s.value}</p>
+              : <p className="text-[11px] text-slate-500 italic shrink-0">Cualitativo</p>
+            }
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -398,9 +374,6 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
             </table>
           </div>
 
-          {/* Funnel visual */}
-          <FunnelVisual tot={totales} />
-
           {/* Tendencias individuales */}
           {chartData.length >= 2 && (
             <div>
@@ -439,6 +412,9 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
               </div>
             </div>
           )}
+
+          {/* Funnel visual */}
+          <FunnelVisual tot={totales} />
         </>
       )}
 
