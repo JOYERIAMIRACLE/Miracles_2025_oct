@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff, ChevronDown } from "lucide-react"
+import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff, ChevronDown, ChevronUp } from "lucide-react"
 import { getToken } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -71,6 +71,17 @@ function pathOf(ns: PageNode[], id: string, pre = ""): string {
   }
   return ""
 }
+function mov(ns: PageNode[], id: string, dir: -1 | 1): PageNode[] {
+  const idx = ns.findIndex(n => n.id === id)
+  if (idx !== -1) {
+    const ni = idx + dir
+    if (ni < 0 || ni >= ns.length) return ns
+    const arr = [...ns];
+    [arr[idx], arr[ni]] = [arr[ni], arr[idx]]
+    return arr
+  }
+  return ns.map(n => ({ ...n, children: mov(n.children, id, dir) }))
+}
 function countAll(ns: PageNode[]): number {
   return ns.reduce((s, n) => s + 1 + countAll(n.children), 0)
 }
@@ -139,10 +150,11 @@ function ListEditor({ items, onUpdate, ph }: {
 
 // ─── NodeCard ─────────────────────────────────────────────────────────────────
 
-function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed, onToggle }: {
+function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed, onToggle, onMoveUp, onMoveDown }: {
   node: PageNode; fp: string
   onEdit: () => void; onAddChild: () => void; onDel: () => void
   hasChildren?: boolean; collapsed?: boolean; onToggle?: () => void
+  onMoveUp?: () => void; onMoveDown?: () => void
 }) {
   const s = ST[node.status]
   return (
@@ -178,6 +190,20 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
           )}
         </div>
         <div className="flex opacity-0 group-hover:opacity-100 transition">
+          {onMoveUp && (
+            <button type="button" title="Subir"
+              onClick={e => { e.stopPropagation(); onMoveUp() }}
+              className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
+              <ChevronUp size={12} />
+            </button>
+          )}
+          {onMoveDown && (
+            <button type="button" title="Bajar"
+              onClick={e => { e.stopPropagation(); onMoveDown() }}
+              className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
+              <ChevronDown size={12} />
+            </button>
+          )}
           <button type="button" title="Agregar sub-página"
             onClick={e => { e.stopPropagation(); onAddChild() }}
             className="p-1 text-slate-600 hover:text-blue-400 rounded transition">
@@ -198,11 +224,13 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
 
 // ─── TreeRow ──────────────────────────────────────────────────────────────────
 
-function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
+function TreeRow({ node, parentFp, idx, siblingCount, onEdit, onAddChild, onDel, onMove }: {
   node: PageNode; parentFp: string
+  idx: number; siblingCount: number
   onEdit: (id: string) => void
   onAddChild: (pid: string) => void
   onDel: (id: string) => void
+  onMove: (id: string, dir: -1 | 1) => void
 }) {
   const [open, setOpen] = useState(false)
   const fp = node.segment === "" ? "/" : parentFp === "/" ? `/${node.segment}` : `${parentFp}/${node.segment}`
@@ -217,13 +245,15 @@ function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
         hasChildren={hasChildren}
         collapsed={!open}
         onToggle={() => setOpen(v => !v)}
+        onMoveUp={idx > 0 ? () => onMove(node.id, -1) : undefined}
+        onMoveDown={idx < siblingCount - 1 ? () => onMove(node.id, 1) : undefined}
       />
       {hasChildren && open && (
         <div className="ml-6 mt-2 border-l border-slate-800 pl-5 space-y-2">
-          {node.children.map(c => (
+          {node.children.map((c, i) => (
             <div key={c.id} className="relative">
               <div className="absolute -left-5 top-[42px] w-5 h-px bg-slate-800" />
-              <TreeRow node={c} parentFp={fp} onEdit={onEdit} onAddChild={onAddChild} onDel={onDel} />
+              <TreeRow node={c} parentFp={fp} idx={i} siblingCount={node.children.length} onEdit={onEdit} onAddChild={onAddChild} onDel={onDel} onMove={onMove} />
             </div>
           ))}
         </div>
@@ -595,6 +625,7 @@ export function SitioWebView() {
     setTree(t => del(t, id))
     if (modal?.id === id) setModal(null)
   }
+  const handleMove = (id: string, dir: -1 | 1) => setTree(t => mov(t, id, dir))
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(tree, null, 2)], { type: "application/json" })
     const url  = URL.createObjectURL(blob)
@@ -664,12 +695,14 @@ export function SitioWebView() {
 
         {/* Tree */}
         <div className="space-y-2">
-          {tree.map(node => (
+          {tree.map((node, i) => (
             <TreeRow
               key={node.id} node={node} parentFp="/"
+              idx={i} siblingCount={tree.length}
               onEdit={(id) => setModal({ id })}
               onAddChild={handleAdd}
               onDel={handleDel}
+              onMove={handleMove}
             />
           ))}
           {total === 1 && (
