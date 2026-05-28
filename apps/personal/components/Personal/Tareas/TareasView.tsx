@@ -400,39 +400,33 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle vista */}
-          <div className="flex items-center gap-0 rounded-lg border border-slate-700/50 p-0.5">
+          <div className="flex gap-1 bg-slate-900/60 backdrop-blur-sm p-1 rounded-lg border border-slate-700/50">
             <button
               type="button"
               onClick={() => setVista("lista")}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition ${
-                vista === "lista" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                vista === "lista" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"
               }`}
-              title="Vista lista"
             >
-              <List size={12} />
-              Lista
+              <List size={14} /> Lista
             </button>
             <button
               type="button"
               onClick={() => setVista("calendario")}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition ${
-                vista === "calendario" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                vista === "calendario" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"
               }`}
-              title="Vista calendario"
             >
-              <CalIcon size={12} />
-              Calendario
+              <CalIcon size={14} /> Calendario
             </button>
             <button
               type="button"
               onClick={() => setVista("metricas")}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md transition ${
-                vista === "metricas" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                vista === "metricas" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"
               }`}
-              title="Vista métricas"
             >
-              <BarChart2 size={12} />
-              Métricas
+              <BarChart2 size={14} /> Métricas
             </button>
           </div>
           <Button onClick={() => abrirCrear()} size="sm">
