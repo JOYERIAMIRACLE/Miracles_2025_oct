@@ -204,7 +204,7 @@ function TreeRow({ node, parentFp, onEdit, onAddChild, onDel }: {
   onAddChild: (pid: string) => void
   onDel: (id: string) => void
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const fp = node.segment === "" ? "/" : parentFp === "/" ? `/${node.segment}` : `${parentFp}/${node.segment}`
   const hasChildren = node.children.length > 0
   return (
