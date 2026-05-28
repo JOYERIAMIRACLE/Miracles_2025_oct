@@ -973,7 +973,6 @@ function TabBoxscore({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" })
             metricas={[
               { label: "Impresiones Corp",  key: "impresionesCorp",  color: "#3b82f6" },
               { label: "Impresiones Store", key: "impresionesStore", color: "#8b5cf6" },
-              { label: "Impresiones SEM",   key: "impresionesSEM",   color: "#f59e0b" },
               { label: "Impresiones CYA",   key: "impresionesCYA",   color: "#fb923c" },
               { label: "Impresiones IC",    key: "impresionesIC",    color: "#ec4899" },
             ]}
@@ -987,7 +986,6 @@ function TabBoxscore({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" })
               { label: "Tráfico Dir. Store",    key: "traficoDirectoStore",  color: "#8b5cf6" },
               { label: "Tráf. Orgánico Corp",   key: "traficoOrganicoCorp",  color: "#10b981" },
               { label: "Tráf. Orgánico Store",  key: "traficoOrganicoStore", color: "#34d399" },
-              { label: "Tráfico Paga (SEM)",    key: "traficoPagaSEM",       color: "#f59e0b" },
               { label: "Clics CYA",             key: "clicsCYA",             color: "#fb923c" },
               { label: "Clics IC",              key: "clicsIC",              color: "#ec4899" },
             ]}
@@ -997,7 +995,6 @@ function TabBoxscore({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" })
             accent="border-l-emerald-500/60"
             semanas={semanas}
             metricas={[
-              { label: "Conv. SEM", key: "conversionesSEM", color: "#f59e0b" },
               { label: "Conv. CYA", key: "conversionesCYA", color: "#fb923c" },
               { label: "Conv. IC",  key: "conversionesIC",  color: "#ec4899" },
             ]}
