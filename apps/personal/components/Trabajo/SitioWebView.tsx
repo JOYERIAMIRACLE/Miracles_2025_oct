@@ -397,6 +397,35 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
                   className={`${inp} resize-none`} />
               </FieldRow>
             </FieldCard>
+
+            <button
+              type="button"
+              onClick={() => {
+                const domain = siteDomain || "tu-dominio.com"
+                const fullUrl = `${domain}${fp !== "/" ? fp : ""}`
+                const lines = [
+                  `URL: ${fullUrl}`,
+                  `Slug: ${fp}`,
+                  "",
+                  `Meta title: ${node.metaTitle || "(vacío)"}`,
+                  `Meta description: ${node.metaDesc || "(vacío)"}`,
+                  `Keywords: ${node.keywords || "(vacío)"}`,
+                  "",
+                  `Notas: ${node.notas || "(vacío)"}`,
+                ]
+                const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = `${node.segment || "home"}-meta.txt`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-700/50 bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors text-sm"
+            >
+              <Download size={14} />
+              Descargar Slug/Meta (.txt)
+            </button>
           </>
         )}
 
