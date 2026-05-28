@@ -603,6 +603,14 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
       if (!map.has(key)) map.set(key, { mes: c.mes, anio: c.anio, items: [] })
       map.get(key)!.items.push(c)
     })
+    // Agregar meses vacíos desde el mes actual hasta diciembre del año siguiente
+    for (let offsetMes = 0; offsetMes < 20; offsetMes++) {
+      const d = new Date(ANIO_HOY, MES_HOY_IDX + offsetMes, 1)
+      const anio = d.getFullYear()
+      const mesIdx = d.getMonth()
+      const key = `${anio}-${String(mesIdx).padStart(2, "0")}`
+      if (!map.has(key)) map.set(key, { mes: MESES[mesIdx], anio, items: [] })
+    }
     const nowKey = `${ANIO_HOY}-${String(MES_HOY_IDX).padStart(2, "0")}`
     return [...map.entries()]
       .sort(([a], [b]) => {
@@ -613,18 +621,6 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
       })
       .map(([, v]) => v)
   }, [campanas])
-
-  if (campanas.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-slate-500 text-sm mb-3">No hay campañas</p>
-        <button type="button" onClick={onNueva}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700 rounded-lg text-slate-400 hover:text-slate-200 transition">
-          <Plus size={14} /> Crear primera campaña
-        </button>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-3">
