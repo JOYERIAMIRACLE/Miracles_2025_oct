@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff, ChevronDown, ChevronUp } from "lucide-react"
+import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff, ChevronDown, ChevronUp, ExternalLink } from "lucide-react"
 import { getToken } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -87,6 +87,26 @@ function countAll(ns: PageNode[]): number {
 }
 function countSt(ns: PageNode[], st: string): number {
   return ns.reduce((s, n) => s + (n.status === st ? 1 : 0) + countSt(n.children, st), 0)
+}
+
+// Garantiza que nodos guardados antes de agregar campos nuevos no tengan undefined
+function normalizeNode(n: PageNode): PageNode {
+  return {
+    ...n,
+    sections:         Array.isArray(n.sections)    ? n.sections    : [],
+    componentes:      Array.isArray(n.componentes) ? n.componentes : [],
+    hero:             n.hero             ?? "",
+    notas:            n.notas            ?? "",
+    estructuraTitulo: n.estructuraTitulo ?? "",
+    estructuraDesc:   n.estructuraDesc   ?? "",
+    ctrEstimado:      n.ctrEstimado      ?? "",
+    formularios:      n.formularios      ?? 0,
+    trafico:          n.trafico          ?? "",
+    metaTitle:        n.metaTitle        ?? "",
+    metaDesc:         n.metaDesc         ?? "",
+    keywords:         n.keywords         ?? "",
+    children:         (Array.isArray(n.children) ? n.children : []).map(normalizeNode),
+  }
 }
 
 // ─── Status ───────────────────────────────────────────────────────────────────
@@ -477,21 +497,33 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
               />
             </div>
             <FieldCard>
+              <FieldRow label="Imagen de referencia (URL)">
+                <input value={node.hero ?? ""} onChange={e => onUpdate({ hero: e.target.value })}
+                  placeholder="https://drive.google.com/… o https://figma.com/…" className={inp} />
+                {node.hero && (
+                  <a href={node.hero} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 mt-2 transition">
+                    <ExternalLink size={10} /> Ver imagen
+                  </a>
+                )}
+              </FieldRow>
+            </FieldCard>
+            <FieldCard>
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[11px] text-slate-500">Secciones</p>
-                  <span className="text-[10px] text-slate-600 font-mono">{node.sections.length}</span>
+                  <span className="text-[10px] text-slate-600 font-mono">{(node.sections ?? []).length}</span>
                 </div>
-                <ListEditor items={node.sections} onUpdate={v => onUpdate({ sections: v })} ph="Hero, Productos, CTA..." />
+                <ListEditor items={node.sections ?? []} onUpdate={v => onUpdate({ sections: v })} ph="Hero, Productos, CTA..." />
               </div>
             </FieldCard>
             <FieldCard>
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[11px] text-slate-500">Componentes reutilizables</p>
-                  <span className="text-[10px] text-slate-600 font-mono">{node.componentes.length}</span>
+                  <span className="text-[10px] text-slate-600 font-mono">{(node.componentes ?? []).length}</span>
                 </div>
-                <ListEditor items={node.componentes} onUpdate={v => onUpdate({ componentes: v })} ph="Navbar, ProductCard, CTABanner..." />
+                <ListEditor items={node.componentes ?? []} onUpdate={v => onUpdate({ componentes: v })} ph="Navbar, ProductCard, CTABanner..." />
               </div>
             </FieldCard>
           </>
@@ -587,7 +619,7 @@ export function SitioWebView() {
         const arbol = json?.data?.arbol
         if (Array.isArray(arbol) && arbol.length > 0) {
           justLoaded.current = true
-          setTree(arbol)
+          setTree(arbol.map(normalizeNode))
         }
       })
       .catch(() => setOffline(true))
