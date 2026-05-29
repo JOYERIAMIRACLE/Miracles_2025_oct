@@ -1173,18 +1173,12 @@ function ModalCdl({ editando, onGuardar, onCerrar }: {
 
         <div>
           <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Comportamiento Nancy</p>
-          <div className="grid grid-cols-2 gap-3">
-            {numF("Contenidos publicados", "contenidosNancy")}
-            {numF("Puntaje encuesta", "puntajeEncuestaNancy", 0.1)}
-          </div>
+          {numF("Puntaje encuesta", "puntajeEncuestaNancy", 0.1)}
         </div>
 
         <div>
           <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Comportamiento Richard</p>
-          <div className="grid grid-cols-2 gap-3">
-            {numF("Contenidos publicados", "contenidosRichard")}
-            {numF("Puntaje encuesta", "puntajeEncuestaRichard", 0.1)}
-          </div>
+          {numF("Puntaje encuesta", "puntajeEncuestaRichard", 0.1)}
         </div>
 
         <div className="flex gap-2 justify-end pt-1">
