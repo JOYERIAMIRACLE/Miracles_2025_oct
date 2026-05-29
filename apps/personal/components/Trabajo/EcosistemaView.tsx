@@ -1242,19 +1242,17 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
 
   const aniosUsados = useMemo(() => [...new Set(registros.map(r => r.anio))].sort((a,b)=>b-a), [registros])
 
-  // Agrupar por mes — una columna por mes
+  // Agrupar por mes — una columna por mes, usando el registro más reciente
+  const latestOf = (arr: CdlType[]) =>
+    arr.reduce((best, r) => (r.updatedAt ?? "") >= (best.updatedAt ?? "") ? r : best, arr[0])
+
   const mesesCdl = useMemo((): CdlMes[] => {
-    const map = new Map<string, { mes: string; anio: number; registros: CdlType[]; sums: Record<string, number>; count: number }>()
+    const map = new Map<string, { mes: string; anio: number; registros: CdlType[] }>()
     const filtered = registros.filter(r => !filtroAnio || r.anio === filtroAnio)
     filtered.forEach(r => {
       const key = `${r.anio}|||${r.mes.trim()}`
-      if (!map.has(key)) map.set(key, { mes: r.mes.trim(), anio: r.anio, registros: [], sums: {}, count: 0 })
-      const cur = map.get(key)!
-      cur.registros.push(r)
-      cur.count++
-      ;[...CDL_SUM_KEYS, ...CDL_AVG_KEYS].forEach(k => {
-        cur.sums[k] = (cur.sums[k] ?? 0) + ((r[k as keyof CdlType] as number) ?? 0)
-      })
+      if (!map.has(key)) map.set(key, { mes: r.mes.trim(), anio: r.anio, registros: [] })
+      map.get(key)!.registros.push(r)
     })
     return [...map.entries()]
       .sort(([a], [b]) => {
@@ -1265,9 +1263,12 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
           : MESES_MKT.indexOf(mesA as typeof MESES_MKT[number]) - MESES_MKT.indexOf(mesB as typeof MESES_MKT[number])
       })
       .map(([key, v]) => {
+        // CDL es mensual: si hay duplicados, usar solo el más reciente
+        const r = latestOf(v.registros)
         const agg: Record<string, number> = {}
-        CDL_SUM_KEYS.forEach(k => { agg[k] = v.sums[k] ?? 0 })
-        CDL_AVG_KEYS.forEach(k => { agg[k] = v.count > 0 ? (v.sums[k] ?? 0) / v.count : 0 })
+        ;[...CDL_SUM_KEYS, ...CDL_AVG_KEYS].forEach(k => {
+          agg[k] = (r[k as keyof CdlType] as number) ?? 0
+        })
         return { key, mes: v.mes, anio: v.anio, registros: v.registros, ...agg } as CdlMes
       })
   }, [registros, filtroAnio])
@@ -1289,9 +1290,18 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
         setRegistros(prev => prev.map(r => r.documentId === u.documentId ? u : r))
         toast.success("Actualizado")
       } else {
-        const n = await createCdl(payload)
-        setRegistros(prev => [...prev, n])
-        toast.success("Creado")
+        // Si ya existe un registro para ese mes/año, actualizar el más reciente en vez de crear duplicado
+        const existentes = registros.filter(r => r.mes === payload.mes && r.anio === payload.anio)
+        if (existentes.length > 0) {
+          const target = latestOf(existentes)
+          const u = await updateCdl(target.documentId, payload)
+          setRegistros(prev => prev.map(r => r.documentId === u.documentId ? u : r))
+          toast.success("Período actualizado")
+        } else {
+          const n = await createCdl(payload)
+          setRegistros(prev => [...prev, n])
+          toast.success("Período registrado")
+        }
       }
       setModalOpen(false)
     } catch { toast.error("Error al guardar") }
@@ -1336,7 +1346,7 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
                   {mesesCdl.map(m => (
                     <th key={m.key} className="px-3 py-3 text-center text-[10px] font-semibold text-slate-400 min-w-[80px]">
                       <button type="button"
-                        onClick={() => { setEditando(m.registros[0] ?? null); setModalOpen(true) }}
+                        onClick={() => { setEditando(latestOf(m.registros) ?? null); setModalOpen(true) }}
                         className="hover:text-blue-400 transition">
                         {m.mes.slice(0,3)}
                       </button>
