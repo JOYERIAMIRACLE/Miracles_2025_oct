@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, Pencil, Trash2, X, Check, Search, FolderOpen, FileText, ImageIcon, Monitor, Video, File, Link2 } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Search, FolderOpen, FileText, ImageIcon, Monitor, Video, File, Link2, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import {
   CategoriaDigital, CATEGORIAS_DIGITAL, CATEGORIA_CONFIG,
-  SUBCATEGORIAS, TIPOS_MATERIAL, TIPO_CONFIG,
+  SUBCATEGORIAS, TIPOS_MATERIAL, TIPO_CONFIG, GRUPOS_MATERIAL,
   MaterialDigitalType, MaterialDigitalPayload, TipoMaterial,
 } from "@/types/material-digital"
 import { useGetMaterialDigital } from "@/api/material-digital/getMaterialDigital"
@@ -177,6 +177,8 @@ const CAT_DOT: Record<string, string> = {
   cyan:    "bg-cyan-400",
   emerald: "bg-emerald-400",
   rose:    "bg-rose-400",
+  orange:  "bg-orange-400",
+  teal:    "bg-teal-400",
 }
 
 const TIPO_ICON = {
@@ -243,6 +245,71 @@ function MaterialCard({ material, onEdit, onDelete }: {
         </div>
       </div>
     </a>
+  )
+}
+
+// ─── Sidebar con grupos colapsables ──────────────────────────────────────────
+
+function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
+  categoriaActiva: CategoriaDigital
+  materiales: MaterialDigitalType[]
+  onSelect: (cat: CategoriaDigital) => void
+}) {
+  const [abiertos, setAbiertos] = useState<Record<string, boolean>>({})
+
+  const toggle = (id: string) => setAbiertos(p => ({ ...p, [id]: !p[id] }))
+
+  return (
+    <div className="flex flex-col gap-1 px-2">
+      {GRUPOS_MATERIAL.map(grupo => {
+        const isOpen = grupo.collapsible ? (abiertos[grupo.id] ?? false) : true
+        return (
+          <div key={grupo.id}>
+            {/* Cabecera del grupo */}
+            {grupo.collapsible ? (
+              <button
+                type="button"
+                onClick={() => toggle(grupo.id)}
+                className="w-full flex items-center justify-between px-2 py-2 text-[11px] font-semibold text-slate-400 hover:text-slate-200 transition mt-1">
+                <span>{grupo.label}</span>
+                <ChevronDown size={12} className={`transition-transform duration-150 ${isOpen ? "" : "-rotate-90"}`} />
+              </button>
+            ) : (
+              <p className="px-2 py-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">
+                {grupo.label}
+              </p>
+            )}
+
+            {/* Ítems del grupo */}
+            {isOpen && (
+              <div className="space-y-0.5">
+                {grupo.categorias.map(cat => {
+                  const c      = CATEGORIA_CONFIG[cat]
+                  const qty    = materiales.filter(m => m.categoria === cat).length
+                  const active = cat === categoriaActiva
+                  return (
+                    <button key={cat} type="button"
+                      onClick={() => onSelect(cat)}
+                      className={[
+                        "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-all text-left",
+                        grupo.collapsible ? "pl-4" : "",
+                        active
+                          ? "bg-slate-800 text-slate-100 font-medium"
+                          : "text-slate-500 hover:text-slate-300 hover:bg-slate-900",
+                      ].join(" ")}>
+                      <span className="truncate">{c.label}</span>
+                      {qty > 0 && (
+                        <span className="text-[10px] text-slate-600 shrink-0">{qty}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -332,27 +399,13 @@ export function InventarioDigitalView() {
   return (
     <div className="flex h-full min-h-0 -m-4 md:-m-6 bg-dot-pattern">
 
-      {/* Sidebar de categorías */}
-      <aside className="w-56 shrink-0 border-r border-slate-800/60 py-4 pr-2 space-y-0.5 hidden lg:block bg-slate-950">
-        {CATEGORIAS_DIGITAL.map(cat => {
-          const c    = CATEGORIA_CONFIG[cat]
-          const qty  = materiales.filter(m => m.categoria === cat).length
-          const active = cat === categoriaActiva
-          return (
-            <button key={cat} type="button" onClick={() => { setCategoriaActiva(cat); setBusqueda("") }}
-              className={[
-                "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left",
-                active
-                  ? "bg-slate-800 text-slate-100"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-slate-900",
-              ].join(" ")}>
-              <span className="truncate">{c.label}</span>
-              {qty > 0 && (
-                <span className="text-[10px] text-slate-600 shrink-0">{qty}</span>
-              )}
-            </button>
-          )
-        })}
+      {/* Sidebar de categorías con grupos */}
+      <aside className="w-60 shrink-0 border-r border-slate-800/60 py-3 hidden lg:flex flex-col gap-3 bg-slate-950 overflow-y-auto">
+        <SidebarGrupos
+          categoriaActiva={categoriaActiva}
+          materiales={materiales}
+          onSelect={cat => { setCategoriaActiva(cat); setBusqueda("") }}
+        />
       </aside>
 
       {/* Selector mobile */}
@@ -360,8 +413,12 @@ export function InventarioDigitalView() {
         <select aria-label="Categoría" value={categoriaActiva}
           onChange={e => { setCategoriaActiva(e.target.value as CategoriaDigital); setBusqueda("") }}
           className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 outline-none">
-          {CATEGORIAS_DIGITAL.map(c => (
-            <option key={c} value={c}>{CATEGORIA_CONFIG[c].label}</option>
+          {GRUPOS_MATERIAL.map(g => (
+            <optgroup key={g.id} label={g.label}>
+              {g.categorias.map(c => (
+                <option key={c} value={c}>{CATEGORIA_CONFIG[c].label}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>
