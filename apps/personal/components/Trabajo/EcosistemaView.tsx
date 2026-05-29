@@ -84,7 +84,7 @@ function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void 
 // ─── Funnel visual ────────────────────────────────────────────────────────────
 
 function FunnelVisual({ tot }: {
-  tot: { impresiones: number; visitas: number; clics: number; leads: number; contactosNuevos: number; compras: number; montoCompras: number }
+  tot: { impresiones: number; visitas: number; clics: number; contactos: number; oportunidades: number; compras: number; revenue: number }
 }) {
   const pagado   = tot.clics
   const organico = Math.max(0, tot.visitas - tot.clics)
@@ -93,10 +93,9 @@ function FunnelVisual({ tot }: {
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
       <p className="text-xs font-semibold text-slate-400 mb-6 uppercase tracking-wider">Funnel de conversión</p>
 
-      {/* Top sources */}
       <div className="flex gap-3 mb-2">
         {[
-          { label: "Tráfico pagado",   sub: "clics",            value: pagado   },
+          { label: "Tráfico pagado",   sub: "clics CYA + IC",   value: pagado   },
           { label: "Tráfico orgánico", sub: "visitas directas",  value: organico },
         ].map(s => (
           <div key={s.label} className="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-center">
@@ -107,7 +106,6 @@ function FunnelVisual({ tot }: {
         ))}
       </div>
 
-      {/* Converging arrow */}
       <div className="flex justify-center mb-0.5">
         <svg width="80" height="20" viewBox="0 0 80 20">
           <line x1="20" y1="0" x2="40" y2="20" stroke="#334155" strokeWidth="1.5"/>
@@ -115,12 +113,11 @@ function FunnelVisual({ tot }: {
         </svg>
       </div>
 
-      {/* Stages */}
       {[
-        { etapa: "Atracción",   metrica: "Tráfico total",                     value: fmt(tot.visitas),    prev: null,        border: "border-blue-500/30",    bg: "bg-blue-500/10",    txt: "text-blue-300"    },
-        { etapa: "Calificados", metrica: "Oportunidades",                     value: fmt(tot.leads),       prev: tot.visitas && tot.leads ? pct(tot.leads, tot.visitas) : null, border: "border-violet-500/30",  bg: "bg-violet-500/10",  txt: "text-violet-300"  },
-        { etapa: "Convertidos", metrica: `Órdenes · ${fmtPeso(tot.montoCompras)}`, value: fmt(tot.compras), prev: tot.leads && tot.compras ? pct(tot.compras, tot.leads) : null, border: "border-emerald-500/30", bg: "bg-emerald-500/10", txt: "text-emerald-300" },
-        { etapa: "Experiencia", metrica: "Satisfacción del cliente",          value: null,                prev: null,        border: "border-amber-500/30",   bg: "bg-amber-500/10",   txt: "text-amber-300"   },
+        { etapa: "Atracción",   metrica: "Tráfico total",                          value: fmt(tot.visitas),        prev: null,                                                                    border: "border-blue-500/30",    bg: "bg-blue-500/10",    txt: "text-blue-300"    },
+        { etapa: "Calificados", metrica: "Oportunidades (CDL)",                    value: fmt(tot.oportunidades),  prev: tot.visitas && tot.oportunidades ? pct(tot.oportunidades, tot.visitas) : null, border: "border-violet-500/30",  bg: "bg-violet-500/10",  txt: "text-violet-300"  },
+        { etapa: "Convertidos", metrica: `Clientes nuevos · ${fmtPeso(tot.revenue)}`, value: fmt(tot.compras),    prev: tot.oportunidades && tot.compras ? pct(tot.compras, tot.oportunidades) : null, border: "border-emerald-500/30", bg: "bg-emerald-500/10", txt: "text-emerald-300" },
+        { etapa: "Experiencia", metrica: "Satisfacción del cliente",               value: null,                    prev: null,                                                                    border: "border-amber-500/30",   bg: "bg-amber-500/10",   txt: "text-amber-300"   },
       ].map((s, i) => (
         <div key={s.etapa}>
           {i > 0 && (
@@ -235,66 +232,94 @@ function ModalFunnel({ editando, onGuardar, onCerrar }: {
   )
 }
 
+type FunnelRow = {
+  key: string; mes: string; anio: number
+  impresiones: number; visitas: number; clics: number; contactos: number
+  oportunidades: number; compras: number; revenue: number
+}
+
 function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
-  const { registros, setRegistros, loading } = useGetEcosistema(ambito)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editando,  setEditando]  = useState<EcosistemaType | null>(null)
+  const { registros: semanas, loading: bsLoading } = useGetBoxscore(ambito)
+  const { registros: cdlData, loading: cdlLoading } = useGetCdl(ambito)
   const [filtroAnio, setFiltroAnio] = useState<number | "">(ANIO_ACTUAL)
 
-  const aniosUsados = useMemo(() => [...new Set(registros.map(r => r.anio))].sort((a,b)=>b-a), [registros])
-  const filtrados   = useMemo(() =>
-    registros.filter(r => !filtroAnio || r.anio === filtroAnio)
-      .sort((a,b) => a.anio !== b.anio ? b.anio - a.anio : MESES_MKT.indexOf(a.mes) - MESES_MKT.indexOf(b.mes)),
-    [registros, filtroAnio])
+  // Agrupar BoxScore semanal por mes
+  const bsMensual = useMemo(() => {
+    const map = new Map<string, { mes: string; anio: number; rows: BoxscoreType[] }>()
+    semanas.forEach(s => {
+      const idx = MESES_MKT.indexOf(s.mes as typeof MESES_MKT[number])
+      const key = `${s.anio}-${String(idx).padStart(2, "0")}`
+      if (!map.has(key)) map.set(key, { mes: s.mes, anio: s.anio, rows: [] })
+      map.get(key)!.rows.push(s)
+    })
+    return map
+  }, [semanas])
+
+  // Indexar CDL mensual por key
+  const cdlMensual = useMemo(() => {
+    const map = new Map<string, CdlType>()
+    cdlData.forEach(c => {
+      const idx = MESES_MKT.indexOf(c.mes as typeof MESES_MKT[number])
+      const key = `${c.anio}-${String(idx).padStart(2, "0")}`
+      map.set(key, c)
+    })
+    return map
+  }, [cdlData])
+
+  // Merge por mes: BoxScore (impresiones, visitas, clics, contactos) + CDL (oportunidades, compras, revenue)
+  const merged: FunnelRow[] = useMemo(() => {
+    const keys = [...new Set([...bsMensual.keys(), ...cdlMensual.keys()])].sort()
+    return keys.map(key => {
+      const bs  = bsMensual.get(key)
+      const cdl = cdlMensual.get(key)
+      const sum = (f: keyof BoxscoreType) =>
+        bs ? bs.rows.reduce((s, r) => s + ((r[f] as number) ?? 0), 0) : 0
+      return {
+        key,
+        mes:  bs?.mes  ?? cdl?.mes  ?? "",
+        anio: bs?.anio ?? cdl?.anio ?? 0,
+        impresiones:  sum("impresionesCorp") + sum("impresionesStore") + sum("impresionesCYA") + sum("impresionesIC"),
+        visitas:      sum("traficoGeneral") || (sum("traficoDirectoCorp") + sum("traficoDirectoStore") + sum("traficoOrganicoCorp") + sum("traficoOrganicoStore") + sum("clicsCYA") + sum("clicsIC")),
+        clics:        sum("clicsCYA") + sum("clicsIC"),
+        contactos:    sum("conversionesCYA") + sum("conversionesIC"),
+        oportunidades: cdl?.nuevosLeads         ?? 0,
+        compras:       cdl?.clientesNuevos      ?? 0,
+        revenue:       cdl?.ventasCuentasNuevas ?? 0,
+      }
+    })
+  }, [bsMensual, cdlMensual])
+
+  const aniosUsados = useMemo(() => [...new Set(merged.map(r => r.anio))].filter(Boolean).sort((a,b)=>b-a), [merged])
+
+  const filtrados = useMemo(() =>
+    merged
+      .filter(r => !filtroAnio || r.anio === filtroAnio)
+      .sort((a,b) => a.anio !== b.anio ? b.anio - a.anio : MESES_MKT.indexOf(a.mes as typeof MESES_MKT[number]) - MESES_MKT.indexOf(b.mes as typeof MESES_MKT[number])),
+    [merged, filtroAnio])
 
   const totales = useMemo(() => ({
-    impresiones: filtrados.reduce((s,r)=>s+r.impresiones,0),
-    visitas: filtrados.reduce((s,r)=>s+r.visitas,0),
-    clics: filtrados.reduce((s,r)=>s+r.clics,0),
-    leads: filtrados.reduce((s,r)=>s+r.leads,0),
-    contactosNuevos: filtrados.reduce((s,r)=>s+r.contactosNuevos,0),
-    compras: filtrados.reduce((s,r)=>s+r.compras,0),
-    montoCompras: filtrados.reduce((s,r)=>s+r.montoCompras,0),
+    impresiones:   filtrados.reduce((s,r)=>s+r.impresiones,0),
+    visitas:       filtrados.reduce((s,r)=>s+r.visitas,0),
+    clics:         filtrados.reduce((s,r)=>s+r.clics,0),
+    contactos:     filtrados.reduce((s,r)=>s+r.contactos,0),
+    oportunidades: filtrados.reduce((s,r)=>s+r.oportunidades,0),
+    compras:       filtrados.reduce((s,r)=>s+r.compras,0),
+    revenue:       filtrados.reduce((s,r)=>s+r.revenue,0),
   }), [filtrados])
 
-  const guardar = async (payload: EcosistemaPayload) => {
-    try {
-      if (editando) {
-        const u = await updateEcosistema(editando.documentId, payload)
-        setRegistros(prev => prev.map(r => r.documentId === u.documentId ? u : r))
-        toast.success("Actualizado")
-      } else {
-        const n = await createEcosistema(payload)
-        setRegistros(prev => [...prev, n])
-        toast.success("Creado")
-      }
-      setModalOpen(false)
-    } catch { toast.error("Error al guardar") }
-  }
-
-  const borrar = async (r: EcosistemaType) => {
-    if (!confirm(`¿Eliminar ${r.mes} ${r.anio}?`)) return
-    try {
-      await deleteEcosistema(r.documentId)
-      setRegistros(prev => prev.filter(x => x.documentId !== r.documentId))
-      toast.success("Eliminado")
-    } catch { toast.error("Error al eliminar") }
-  }
-
-  // Datos para gráficas de tendencia
   const chartData = useMemo(() =>
     [...filtrados].reverse().map(r => ({
       label: `${r.mes.slice(0,3)} ${r.anio}`,
-      Impresiones: r.impresiones,
-      Visitas: r.visitas,
-      Clics: r.clics,
-      Contactos: r.contactosNuevos,
-      Oportunidades: r.leads,
-      Compras: r.compras,
-      Montos: r.montoCompras,
+      Impresiones:   r.impresiones,
+      Visitas:       r.visitas,
+      Clics:         r.clics,
+      Contactos:     r.contactos,
+      Oportunidades: r.oportunidades,
+      Compras:       r.compras,
+      Revenue:       r.revenue,
     })), [filtrados])
 
-  if (loading) return <p className="text-sm text-slate-500 text-center py-12">Cargando...</p>
+  if (bsLoading || cdlLoading) return <p className="text-sm text-slate-500 text-center py-12">Cargando...</p>
 
   return (
     <div className="space-y-6">
@@ -305,14 +330,11 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
           <option value="">Todos los años</option>
           {aniosUsados.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-        <button type="button" onClick={() => { setEditando(null); setModalOpen(true) }}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition ml-auto">
-          <Plus size={13} /> Registrar período
-        </button>
+        <p className="text-[10px] text-slate-600 ml-2">Datos: BoxScore + CDL</p>
       </div>
 
-      {registros.length === 0 ? (
-        <p className="text-slate-500 text-sm text-center py-12">Sin registros aún.</p>
+      {merged.length === 0 ? (
+        <p className="text-slate-500 text-sm text-center py-12">Sin datos — registra semanas en BoxScore y períodos en CDL.</p>
       ) : (
         <>
           {/* Tabla */}
@@ -320,36 +342,41 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
             <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/60">
-                  {["Período","Impresiones","Visitas","Clics","Contactos","Oportunidades","Compras","Revenue",""].map((h,i) => (
-                    <th key={i} className={`px-3 py-3 ${i === 0 ? "text-left" : "text-center"} text-[10px] font-semibold uppercase tracking-wider ${i === 7 ? "text-emerald-600" : "text-slate-500"}`}>{h}</th>
+                  {[
+                    { h: "Período",       cls: "text-left text-slate-500" },
+                    { h: "Impresiones",   cls: "text-center text-slate-500" },
+                    { h: "Visitas",       cls: "text-center text-slate-500" },
+                    { h: "Clics",         cls: "text-center text-slate-500" },
+                    { h: "Contactos",     cls: "text-center text-slate-500" },
+                    { h: "Oportunidades", cls: "text-center text-violet-600" },
+                    { h: "Compras",       cls: "text-center text-violet-600" },
+                    { h: "Revenue",       cls: "text-center text-emerald-600" },
+                  ].map(({ h, cls }) => (
+                    <th key={h} className={`px-3 py-3 ${cls} text-[10px] font-semibold uppercase tracking-wider`}>{h}</th>
+                  ))}
+                </tr>
+                <tr className="border-b border-slate-800/40 bg-slate-900/30">
+                  {["", "BoxScore", "BoxScore", "BoxScore", "BoxScore", "CDL", "CDL", "CDL"].map((src, i) => (
+                    <td key={i} className={`px-3 py-0.5 text-center text-[9px] ${src === "CDL" ? "text-violet-700" : src ? "text-slate-700" : ""}`}>{src}</td>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {filtrados.map(r => (
-                  <tr key={r.documentId} className="hover:bg-slate-800/30 transition-colors group">
+                  <tr key={r.key} className="hover:bg-slate-800/30 transition-colors">
                     <td className="px-4 py-3">
                       <p className="text-sm font-medium text-slate-200">{r.mes} {r.anio}</p>
-                      {r.canal && <p className="text-[10px] text-slate-500">{r.canal}</p>}
                     </td>
                     <MetricaCell value={r.impresiones} />
-                    <MetricaCell value={r.visitas}         sub={r.visitas}         subDen={r.impresiones} />
-                    <MetricaCell value={r.clics}           sub={r.clics}           subDen={r.visitas} />
-                    <MetricaCell value={r.contactosNuevos} sub={r.contactosNuevos} subDen={r.clics} />
-                    <MetricaCell value={r.leads}           sub={r.leads}           subDen={r.contactosNuevos} />
-                    <MetricaCell value={r.compras}         sub={r.compras}         subDen={r.leads} />
+                    <MetricaCell value={r.visitas}       sub={r.visitas}       subDen={r.impresiones} />
+                    <MetricaCell value={r.clics}         sub={r.clics}         subDen={r.visitas} />
+                    <MetricaCell value={r.contactos}     sub={r.contactos}     subDen={r.clics} />
+                    <MetricaCell value={r.oportunidades} sub={r.oportunidades} subDen={r.contactos} />
+                    <MetricaCell value={r.compras}       sub={r.compras}       subDen={r.oportunidades} />
                     <td className="px-3 py-3 text-center">
-                      {r.montoCompras > 0
-                        ? <span className="text-sm font-semibold text-emerald-400">{fmtPeso(r.montoCompras)}</span>
+                      {r.revenue > 0
+                        ? <span className="text-sm font-semibold text-emerald-400">{fmtPeso(r.revenue)}</span>
                         : <span className="text-slate-700">—</span>}
-                    </td>
-                    <td className="px-2 py-3">
-                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
-                        <button type="button" onClick={() => { setEditando(r); setModalOpen(true) }} title="Editar"
-                          className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-700 transition"><Pencil size={13} /></button>
-                        <button type="button" onClick={() => borrar(r)} title="Eliminar"
-                          className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-700 transition"><Trash2 size={13} /></button>
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -359,15 +386,14 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
                   <tr className="border-t-2 border-slate-700 bg-slate-900/80">
                     <td className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Total {filtroAnio || ""}</td>
                     <MetricaCell value={totales.impresiones} />
-                    <MetricaCell value={totales.visitas}         sub={totales.visitas}         subDen={totales.impresiones} />
-                    <MetricaCell value={totales.clics}           sub={totales.clics}           subDen={totales.visitas} />
-                    <MetricaCell value={totales.contactosNuevos} sub={totales.contactosNuevos} subDen={totales.clics} />
-                    <MetricaCell value={totales.leads}           sub={totales.leads}           subDen={totales.contactosNuevos} />
-                    <MetricaCell value={totales.compras}         sub={totales.compras}         subDen={totales.leads} />
+                    <MetricaCell value={totales.visitas}       sub={totales.visitas}       subDen={totales.impresiones} />
+                    <MetricaCell value={totales.clics}         sub={totales.clics}         subDen={totales.visitas} />
+                    <MetricaCell value={totales.contactos}     sub={totales.contactos}     subDen={totales.clics} />
+                    <MetricaCell value={totales.oportunidades} sub={totales.oportunidades} subDen={totales.contactos} />
+                    <MetricaCell value={totales.compras}       sub={totales.compras}       subDen={totales.oportunidades} />
                     <td className="px-3 py-3 text-center">
-                      <span className="text-sm font-bold text-emerald-400">{fmtPeso(totales.montoCompras)}</span>
+                      <span className="text-sm font-bold text-emerald-400">{fmtPeso(totales.revenue)}</span>
                     </td>
-                    <td />
                   </tr>
                 </tfoot>
               )}
@@ -384,18 +410,16 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
                   { key: "Visitas",       color: "#3b82f6", label: "Visitas"       },
                   { key: "Clics",         color: "#a78bfa", label: "Clics"         },
                   { key: "Contactos",     color: "#f59e0b", label: "Contactos"     },
-                  { key: "Oportunidades", color: "#fb923c", label: "Oportunidades" },
+                  { key: "Oportunidades", color: "#c084fc", label: "Oportunidades" },
                   { key: "Compras",       color: "#10b981", label: "Compras"       },
-                  { key: "Montos",        color: "#34d399", label: "Montos (MXN)", fmt: fmtPeso },
-                ] as { key: string; color: string; label: string; fmt?: (n: number) => string }[]).map(({ key, color, label, fmt: fmtFn }) => {
+                  { key: "Revenue",       color: "#34d399", label: "Revenue (MXN)", fmtFn: fmtPeso },
+                ] as { key: string; color: string; label: string; fmtFn?: (n: number) => string }[]).map(({ key, color, label, fmtFn }) => {
                   const vals = chartData.map(d => (d as Record<string, unknown>)[key] as number)
                   const total = vals.reduce((s, v) => s + v, 0)
                   return (
                     <div key={key} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
                       <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
-                      <p className="text-base font-bold text-slate-100 mb-2">
-                        {fmtFn ? fmtFn(total) : fmt(total)}
-                      </p>
+                      <p className="text-base font-bold text-slate-100 mb-2">{fmtFn ? fmtFn(total) : fmt(total)}</p>
                       <ResponsiveContainer width="100%" height={56}>
                         <LineChart data={chartData} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
                           <Tooltip
@@ -416,10 +440,6 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
           {/* Funnel visual */}
           <FunnelVisual tot={totales} />
         </>
-      )}
-
-      {modalOpen && (
-        <ModalFunnel editando={editando} onGuardar={guardar} onCerrar={() => setModalOpen(false)} />
       )}
     </div>
   )
