@@ -78,6 +78,21 @@ const PUBLIC_ACTIONS_TRABAJO = [
   'api::boxscore-semana.boxscore-semana.create',
   'api::boxscore-semana.boxscore-semana.update',
   'api::boxscore-semana.boxscore-semana.delete',
+  'api::material-digital.material-digital.find',
+  'api::material-digital.material-digital.findOne',
+  'api::material-digital.material-digital.create',
+  'api::material-digital.material-digital.update',
+  'api::material-digital.material-digital.delete',
+  'api::campana.campana.find',
+  'api::campana.campana.findOne',
+  'api::campana.campana.create',
+  'api::campana.campana.update',
+  'api::campana.campana.delete',
+  'api::ecosistema-mkt.ecosistema-mkt.find',
+  'api::ecosistema-mkt.ecosistema-mkt.findOne',
+  'api::ecosistema-mkt.ecosistema-mkt.create',
+  'api::ecosistema-mkt.ecosistema-mkt.update',
+  'api::ecosistema-mkt.ecosistema-mkt.delete',
 ];
 
 const CATEGORIAS_PAGO_SEED = [
