@@ -1233,6 +1233,11 @@ const CDL_SECTIONS = [
   },
 ]
 
+// Campos que se suman vs promedian al agrupar por mes
+const CDL_SUM_KEYS  = new Set(["nuevosLeads","cantidadCampanas","ventasCuentasNuevas","clientesNuevos","contenidosNancy","contenidosRichard"])
+const CDL_AVG_KEYS  = new Set(["porcentajeRetencion","costoAdquisicion","puntajeEncuestaNancy","puntajeEncuestaRichard"])
+type CdlMes = { key: string; mes: string; anio: number; registros: CdlType[] } & Record<string, number>
+
 function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
   const { registros, setRegistros, loading } = useGetCdl(ambito)
   const [modalOpen, setModalOpen] = useState(false)
@@ -1241,28 +1246,45 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
 
   const aniosUsados = useMemo(() => [...new Set(registros.map(r => r.anio))].sort((a,b)=>b-a), [registros])
 
-  const periodos = useMemo(() =>
-    registros
-      .filter(r => !filtroAnio || r.anio === filtroAnio)
-      .sort((a,b) => {
-        if (a.anio !== b.anio) return a.anio - b.anio
-        if (MESES_MKT.indexOf(a.mes) !== MESES_MKT.indexOf(b.mes))
-          return MESES_MKT.indexOf(a.mes) - MESES_MKT.indexOf(b.mes)
-        return (a.semana ?? 0) - (b.semana ?? 0)
-      }),
-    [registros, filtroAnio])
-
-  const colLabel = (r: CdlType) => r.semana ? `WK${r.semana}` : r.mes.slice(0,3)
+  // Agrupar por mes — una columna por mes
+  const mesesCdl = useMemo((): CdlMes[] => {
+    const map = new Map<string, { mes: string; anio: number; registros: CdlType[]; sums: Record<string, number>; count: number }>()
+    const filtered = registros.filter(r => !filtroAnio || r.anio === filtroAnio)
+    filtered.forEach(r => {
+      const key = `${r.anio}|||${r.mes.trim()}`
+      if (!map.has(key)) map.set(key, { mes: r.mes.trim(), anio: r.anio, registros: [], sums: {}, count: 0 })
+      const cur = map.get(key)!
+      cur.registros.push(r)
+      cur.count++
+      ;[...CDL_SUM_KEYS, ...CDL_AVG_KEYS].forEach(k => {
+        cur.sums[k] = (cur.sums[k] ?? 0) + ((r[k as keyof CdlType] as number) ?? 0)
+      })
+    })
+    return [...map.entries()]
+      .sort(([a], [b]) => {
+        const [anioA, mesA] = a.split("|||")
+        const [anioB, mesB] = b.split("|||")
+        return anioA !== anioB
+          ? Number(anioA) - Number(anioB)
+          : MESES_MKT.indexOf(mesA as typeof MESES_MKT[number]) - MESES_MKT.indexOf(mesB as typeof MESES_MKT[number])
+      })
+      .map(([key, v]) => {
+        const agg: Record<string, number> = {}
+        CDL_SUM_KEYS.forEach(k => { agg[k] = v.sums[k] ?? 0 })
+        CDL_AVG_KEYS.forEach(k => { agg[k] = v.count > 0 ? (v.sums[k] ?? 0) / v.count : 0 })
+        return { key, mes: v.mes, anio: v.anio, registros: v.registros, ...agg } as CdlMes
+      })
+  }, [registros, filtroAnio])
 
   const chartData = useMemo(() =>
-    periodos.map(r => ({
-      label: colLabel(r),
-      Leads: r.nuevosLeads,
-      Campañas: r.cantidadCampanas,
-      "Clientes nuevos": r.clientesNuevos,
-      "Nancy contenidos": r.contenidosNancy,
-      "Richard contenidos": r.contenidosRichard,
-    })), [periodos])
+    mesesCdl.map(m => ({
+      label: m.mes.slice(0,3),
+      Leads: m.nuevosLeads,
+      Campañas: m.cantidadCampanas,
+      "Clientes nuevos": m.clientesNuevos,
+      "Nancy contenidos": m.contenidosNancy,
+      "Richard contenidos": m.contenidosRichard,
+    })), [mesesCdl])
 
   const guardar = async (payload: CdlPayload) => {
     try {
@@ -1305,21 +1327,24 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
         </button>
       </div>
 
-      {periodos.length === 0 ? (
+      {mesesCdl.length === 0 ? (
         <p className="text-slate-500 text-sm text-center py-12">Sin registros CDL aún.</p>
       ) : (
         <>
-          {/* Tabla CDL estilo BoxScore */}
+          {/* Tabla CDL — una columna por mes */}
           <div className="overflow-x-auto rounded-xl border border-slate-800">
             <table className="text-sm min-w-max">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/80">
                   <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 w-48 sticky left-0 bg-slate-900/80">Careabout</th>
-                  {periodos.map(r => (
-                    <th key={r.documentId} className="px-3 py-3 text-center text-[10px] font-semibold text-slate-400 min-w-[72px]">
-                      <button type="button" onClick={() => { setEditando(r); setModalOpen(true) }}
-                        className="hover:text-blue-400 transition">{colLabel(r)}</button>
-                      <p className="text-[9px] text-slate-600 font-normal">{r.mes.slice(0,3)} {r.anio}</p>
+                  {mesesCdl.map(m => (
+                    <th key={m.key} className="px-3 py-3 text-center text-[10px] font-semibold text-slate-400 min-w-[80px]">
+                      <button type="button"
+                        onClick={() => { setEditando(m.registros[0] ?? null); setModalOpen(true) }}
+                        className="hover:text-blue-400 transition">
+                        {m.mes.slice(0,3)}
+                      </button>
+                      <p className="text-[9px] text-slate-600 font-normal">{m.mes.slice(0,3)} {m.anio}</p>
                     </th>
                   ))}
                 </tr>
@@ -1328,18 +1353,15 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
                 {CDL_SECTIONS.map(sec => (
                   sec.rows.map((row, ri) => (
                     <tr key={`${sec.title}-${row.key}`}
-                      className={`border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors
-                        ${ri === 0 ? "border-t border-slate-700" : ""}`}>
+                      className={`border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors ${ri === 0 ? "border-t border-slate-700" : ""}`}>
                       <td className={`px-4 py-2.5 sticky left-0 bg-slate-950 border-l-2 ${sec.color}`}>
-                        {ri === 0 && (
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">{sec.title}</p>
-                        )}
+                        {ri === 0 && <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">{sec.title}</p>}
                         <p className="text-xs text-slate-300">{row.label}</p>
                       </td>
-                      {periodos.map(r => {
-                        const v = r[row.key] as number
+                      {mesesCdl.map(m => {
+                        const v = m[row.key as string] as number
                         return (
-                          <td key={r.documentId} className="px-3 py-2.5 text-center">
+                          <td key={m.key} className="px-3 py-2.5 text-center">
                             <span className="text-xs font-medium text-slate-200">
                               {"fmt" in row ? row.fmt!(v) : fmt(v)}
                             </span>
@@ -1353,14 +1375,16 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
             </table>
           </div>
 
-          {/* Acciones en la tabla — eliminar al hover */}
+          {/* Botones de eliminar — uno por registro individual */}
           <div className="flex flex-wrap gap-2">
-            {periodos.map(r => (
-              <button key={r.documentId} type="button" onClick={() => borrar(r)}
-                className="flex items-center gap-1 px-2 py-1 text-[10px] text-slate-600 hover:text-red-400 rounded border border-slate-800 hover:border-red-900/40 transition">
-                <Trash2 size={10} /> {colLabel(r)} {r.mes.slice(0,3)} {r.anio}
-              </button>
-            ))}
+            {registros
+              .filter(r => !filtroAnio || r.anio === filtroAnio)
+              .map(r => (
+                <button key={r.documentId} type="button" onClick={() => borrar(r)}
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] text-slate-600 hover:text-red-400 rounded border border-slate-800 hover:border-red-900/40 transition">
+                  <Trash2 size={10} /> {r.mes.slice(0,3)} {r.anio}{r.semana ? ` S${r.semana}` : ""}
+                </button>
+              ))}
           </div>
 
           {/* Gráficas CDL */}
