@@ -25,7 +25,10 @@
         "FORMATOS_INTERNOS",
         "INSTALACIONES_VEHICULOS",
         "COLABORADOR",
-        "EVENTOS_PROYECTOS"
+        "EVENTOS_PROYECTOS",
+        "ASSETS",
+        "LINKS_UTILIDAD",
+        "BASES_DATOS"
       ],
       "required": true
     },
