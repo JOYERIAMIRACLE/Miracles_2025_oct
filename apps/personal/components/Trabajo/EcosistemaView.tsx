@@ -243,32 +243,46 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
   const { registros: cdlData, loading: cdlLoading } = useGetCdl(ambito)
   const [filtroAnio, setFiltroAnio] = useState<number | "">(ANIO_ACTUAL)
 
-  // Agrupar BoxScore semanal por mes
+  const mkKey = (mes: string, anio: number) => `${anio}|||${mes.trim()}`
+  const mesOrden = (mes: string) => {
+    const idx = MESES_MKT.indexOf(mes.trim() as typeof MESES_MKT[number])
+    return idx === -1 ? 99 : idx
+  }
+
+  // Agrupar BoxScore semanal por mes (clave estable: anio|||mes)
   const bsMensual = useMemo(() => {
     const map = new Map<string, { mes: string; anio: number; rows: BoxscoreType[] }>()
     semanas.forEach(s => {
-      const idx = MESES_MKT.indexOf(s.mes as typeof MESES_MKT[number])
-      const key = `${s.anio}-${String(idx).padStart(2, "0")}`
-      if (!map.has(key)) map.set(key, { mes: s.mes, anio: s.anio, rows: [] })
+      const key = mkKey(s.mes, s.anio)
+      if (!map.has(key)) map.set(key, { mes: s.mes.trim(), anio: s.anio, rows: [] })
       map.get(key)!.rows.push(s)
     })
     return map
   }, [semanas])
 
-  // Indexar CDL mensual por key
+  // Agrupar CDL por mes sumando entradas del mismo período
   const cdlMensual = useMemo(() => {
-    const map = new Map<string, CdlType>()
+    type CdlAgg = { mes: string; anio: number; nuevosLeads: number; clientesNuevos: number; ventasCuentasNuevas: number }
+    const map = new Map<string, CdlAgg>()
     cdlData.forEach(c => {
-      const idx = MESES_MKT.indexOf(c.mes as typeof MESES_MKT[number])
-      const key = `${c.anio}-${String(idx).padStart(2, "0")}`
-      map.set(key, c)
+      const key = mkKey(c.mes, c.anio)
+      if (!map.has(key)) map.set(key, { mes: c.mes.trim(), anio: c.anio, nuevosLeads: 0, clientesNuevos: 0, ventasCuentasNuevas: 0 })
+      const cur = map.get(key)!
+      cur.nuevosLeads         += c.nuevosLeads         ?? 0
+      cur.clientesNuevos      += c.clientesNuevos      ?? 0
+      cur.ventasCuentasNuevas += c.ventasCuentasNuevas ?? 0
     })
     return map
   }, [cdlData])
 
-  // Merge por mes: BoxScore (impresiones, visitas, clics, contactos) + CDL (oportunidades, compras, revenue)
+  // Merge por mes: BoxScore + CDL
   const merged: FunnelRow[] = useMemo(() => {
-    const keys = [...new Set([...bsMensual.keys(), ...cdlMensual.keys()])].sort()
+    const keys = [...new Set([...bsMensual.keys(), ...cdlMensual.keys()])]
+      .sort((a, b) => {
+        const [anioA, mesA] = a.split("|||")
+        const [anioB, mesB] = b.split("|||")
+        return anioA !== anioB ? Number(anioA) - Number(anioB) : mesOrden(mesA) - mesOrden(mesB)
+      })
     return keys.map(key => {
       const bs  = bsMensual.get(key)
       const cdl = cdlMensual.get(key)
@@ -294,7 +308,7 @@ function TabFunnel({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
   const filtrados = useMemo(() =>
     merged
       .filter(r => !filtroAnio || r.anio === filtroAnio)
-      .sort((a,b) => a.anio !== b.anio ? b.anio - a.anio : MESES_MKT.indexOf(a.mes as typeof MESES_MKT[number]) - MESES_MKT.indexOf(b.mes as typeof MESES_MKT[number])),
+      .sort((a,b) => a.anio !== b.anio ? b.anio - a.anio : mesOrden(a.mes) - mesOrden(b.mes)),
     [merged, filtroAnio])
 
   const totales = useMemo(() => ({
