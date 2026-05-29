@@ -1220,15 +1220,13 @@ const CDL_SECTIONS = [
   {
     title: "Comportamiento Nancy", color: "border-l-violet-500/60",
     rows: [
-      { label: "Contenidos publicados",  key: "contenidosNancy"       as const, color: "#8b5cf6" },
-      { label: "Puntaje encuesta",       key: "puntajeEncuestaNancy"  as const, color: "#a78bfa", fmt: (v: number) => v.toFixed(1) },
+      { label: "Puntaje encuesta", key: "puntajeEncuestaNancy" as const, color: "#a78bfa", fmt: (v: number) => v.toFixed(1) },
     ],
   },
   {
     title: "Comportamiento Richard", color: "border-l-rose-500/60",
     rows: [
-      { label: "Contenidos publicados",  key: "contenidosRichard"       as const, color: "#f43f5e" },
-      { label: "Puntaje encuesta",       key: "puntajeEncuestaRichard"  as const, color: "#fb7185", fmt: (v: number) => v.toFixed(1) },
+      { label: "Puntaje encuesta", key: "puntajeEncuestaRichard" as const, color: "#fb7185", fmt: (v: number) => v.toFixed(1) },
     ],
   },
 ]
