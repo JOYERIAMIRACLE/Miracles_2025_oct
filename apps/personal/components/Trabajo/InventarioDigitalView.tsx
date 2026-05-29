@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, Pencil, Trash2, X, Check, ExternalLink, Search, FolderOpen } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Search, FolderOpen } from "lucide-react"
 import { toast } from "sonner"
 import {
   CategoriaDigital, CATEGORIAS_DIGITAL, CATEGORIA_CONFIG,
@@ -170,41 +170,54 @@ function Modal({ editando, categoriaInicial, onGuardar, onCerrar }: {
 
 // ─── Tarjeta de material ──────────────────────────────────────────────────────
 
+const CAT_DOT: Record<string, string> = {
+  violet:  "bg-violet-400",
+  blue:    "bg-blue-400",
+  amber:   "bg-amber-400",
+  cyan:    "bg-cyan-400",
+  emerald: "bg-emerald-400",
+  rose:    "bg-rose-400",
+}
+
 function MaterialCard({ material, onEdit, onDelete }: {
   material: MaterialDigitalType
   onEdit:   () => void
   onDelete: () => void
 }) {
   const tipo = TIPO_CONFIG[material.tipo]
+  const cat  = CATEGORIA_CONFIG[material.categoria]
+  const dot  = CAT_DOT[cat.color] ?? "bg-slate-400"
+
   return (
-    <div className="group flex items-start gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800/60 hover:border-slate-700/60 transition-all">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium text-slate-200 truncate">{material.nombre}</p>
-          <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${tipo.badge}`}>
-            {tipo.label}
-          </span>
+    <a href={material.url} target="_blank" rel="noopener noreferrer"
+      className="group block rounded-xl border border-slate-700/60 bg-slate-900/90 backdrop-blur-sm hover:border-slate-600/60 hover:bg-slate-800/40 transition-all duration-150 cursor-pointer">
+      <div className="px-3 pt-3 pb-2">
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+          <span className="text-[10px] font-mono text-slate-500 truncate leading-none">{material.subcategoria || material.evento}</span>
         </div>
+        <p className="text-[13px] font-semibold text-slate-200 leading-snug line-clamp-2">{material.nombre}</p>
         {material.descripcion && (
-          <p className="text-xs text-slate-500 mt-0.5 truncate">{material.descripcion}</p>
+          <p className="text-[10px] text-slate-600 mt-1 line-clamp-1">{material.descripcion}</p>
         )}
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
-        <a href={material.url} target="_blank" rel="noopener noreferrer"
-          className="p-1.5 text-slate-500 hover:text-blue-400 rounded hover:bg-slate-800 transition" title="Abrir">
-          <ExternalLink size={13} />
-        </a>
-        <button type="button" onClick={onEdit}
-          className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition opacity-0 group-hover:opacity-100" title="Editar">
-          <Pencil size={13} />
-        </button>
-        <button type="button" onClick={onDelete}
-          className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition opacity-0 group-hover:opacity-100" title="Eliminar">
-          <Trash2 size={13} />
-        </button>
+      <div className="flex items-center justify-between px-3 pb-2.5 pt-1.5 border-t border-slate-800/50">
+        <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${tipo.badge}`}>
+          {tipo.label}
+        </span>
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
+          <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); onEdit() }}
+            className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition" title="Editar">
+            <Pencil size={12} />
+          </button>
+          <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); onDelete() }}
+            className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition" title="Eliminar">
+            <Trash2 size={12} />
+          </button>
+        </div>
       </div>
-    </div>
+    </a>
   )
 }
 
@@ -377,7 +390,7 @@ export function InventarioDigitalView() {
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{grupo}</p>
                   <span className="text-[10px] text-slate-700">{items.length}</span>
                 </div>
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                   {items.map(m => (
                     <MaterialCard key={m.documentId} material={m}
                       onEdit={() => abrirEditar(m)}
