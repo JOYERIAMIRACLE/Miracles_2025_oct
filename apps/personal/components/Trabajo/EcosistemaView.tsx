@@ -1280,8 +1280,8 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
       Leads: m.nuevosLeads,
       Campañas: m.cantidadCampanas,
       "Clientes nuevos": m.clientesNuevos,
-      "Nancy contenidos": m.contenidosNancy,
-      "Richard contenidos": m.contenidosRichard,
+      "Nancy encuesta": m.puntajeEncuestaNancy,
+      "Richard encuesta": m.puntajeEncuestaRichard,
     })), [mesesCdl])
 
   const guardar = async (payload: CdlPayload) => {
@@ -1417,17 +1417,18 @@ function TabCdl({ ambito = "trabajo" }: { ambito?: "trabajo" | "empresa" }) {
               </div>
 
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 md:col-span-2">
-                <p className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Contenidos publicados — Nancy vs Richard</p>
+                <p className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Puntaje encuesta — Nancy vs Richard</p>
                 <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+                  <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                     <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} />
-                    <YAxis tick={{ fontSize: 10, fill: "#64748b" }} width={36} />
-                    <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 10, fill: "#64748b" }} width={36} domain={[0, 5]} />
+                    <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
+                      formatter={(v: number) => v.toFixed(1)} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Bar dataKey="Nancy contenidos"   fill="#8b5cf6" radius={[3,3,0,0]} />
-                    <Bar dataKey="Richard contenidos" fill="#f43f5e" radius={[3,3,0,0]} />
-                  </BarChart>
+                    <Line type="monotone" dataKey="Nancy encuesta"   stroke="#a78bfa" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="Richard encuesta" stroke="#fb7185" strokeWidth={2} dot={{ r: 3 }} />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
