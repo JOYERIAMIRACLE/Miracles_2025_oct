@@ -61,16 +61,27 @@ export function isSoloTrabajo(): boolean {
 
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   const headers = { Authorization: `Bearer ${token}` }
+  const extractRaw = (role: Record<string, unknown> | null | undefined): string | null => {
+    if (!role) return null
+    const raw = (role.type || role.name
+      || (role.data as Record<string, unknown>)?.attributes?.type
+      || (role.data as Record<string, unknown>)?.attributes?.name) as string | undefined
+    return raw ? raw.toLowerCase().replace(/[\s-]/g, "_") : null
+  }
   try {
+    // Intento 1: con populate
     const res = await fetch(`${baseUrl}/api/users/me?populate=role`, { headers })
     if (res.status === 403) return "proveedor_web"
     if (!res.ok) return null
     const json = await res.json()
-    const role = json.role
-    // Soporta formato flat (Strapi v4/v5) y data/attributes
-    const raw = role?.type || role?.name
-      || role?.data?.attributes?.type || role?.data?.attributes?.name
-    return raw ? (raw as string).toLowerCase().replace(/[\s-]/g, "_") : null
+    const fromPopulate = extractRaw(json.role)
+    if (fromPopulate) return fromPopulate
+
+    // Intento 2: sin populate (Strapi v5 puede incluir role por defecto)
+    const res2 = await fetch(`${baseUrl}/api/users/me`, { headers })
+    if (!res2.ok) return null
+    const json2 = await res2.json()
+    return extractRaw(json2.role)
   } catch {
     return null
   }

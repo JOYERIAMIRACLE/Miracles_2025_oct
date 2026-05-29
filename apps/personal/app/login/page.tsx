@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Gem } from "lucide-react"
-import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRole } from "@/lib/auth"
+import { setToken, removeToken, isTokenValid, getToken, setUserRole, removeUserRole, getUserRole, fetchUserRole } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -44,13 +44,13 @@ export default function LoginPage() {
         setError("Email o contraseña incorrectos")
         return
       }
-      setToken(json.jwt)
       const role = await fetchUserRole(json.jwt, BASE)
       const dest  = redirectForRole(role)
       if (!dest) {
         setError("Tu cuenta no tiene acceso asignado. Contacta al administrador.")
         return
       }
+      setToken(json.jwt)
       if (role) setUserRole(role)
       router.push(dest)
     } catch {

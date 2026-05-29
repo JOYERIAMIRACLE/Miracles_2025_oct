@@ -5,13 +5,18 @@ import { usePathname, useRouter } from "next/navigation"
 import { TrabajoSidebar } from "./TrabajoSidebar"
 import { TrabajoHeader } from "./TrabajoHeader"
 import { AuthGuard } from "@/components/AuthGuard"
-import { isProveedorWeb } from "@/lib/auth"
+import { isProveedorWeb, isMarketingTeam, getUserRole } from "@/lib/auth"
 
 export function TrabajoLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router   = useRouter()
 
   useEffect(() => {
+    const role = getUserRole()
+    if (role && !isMarketingTeam() && !isProveedorWeb()) {
+      router.replace("/gestion-empresa")
+      return
+    }
     if (isProveedorWeb() && !pathname.startsWith("/trabajo/sitio-web")) {
       router.replace("/trabajo/sitio-web")
     }
