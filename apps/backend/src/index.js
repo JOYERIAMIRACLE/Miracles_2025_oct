@@ -226,7 +226,30 @@ async function normalizarCategorias(strapi) {
 }
 
 module.exports = {
-  register(/*{ strapi }*/) {},
+  register({ strapi }) {
+    strapi.server.routes([
+      {
+        method: 'GET',
+        path: '/api/my-role',
+        handler: async (ctx) => {
+          try {
+            const token = (ctx.request.headers.authorization || '').replace('Bearer ', '').trim()
+            if (!token) { ctx.status = 401; ctx.body = { error: 'No token' }; return }
+            const { id } = await strapi.plugins['users-permissions'].services.jwt.verify(token)
+            const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+              where: { id },
+              populate: { role: true },
+            })
+            if (!user || !user.role) { ctx.status = 401; ctx.body = { error: 'No role' }; return }
+            ctx.body = { type: user.role.type, name: user.role.name }
+          } catch (e) {
+            ctx.status = 401; ctx.body = { error: 'Invalid token' }
+          }
+        },
+        config: { auth: false },
+      },
+    ])
+  },
 
   async bootstrap({ strapi }) {
     try {

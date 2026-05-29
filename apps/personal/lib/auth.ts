@@ -61,35 +61,24 @@ export function isSoloTrabajo(): boolean {
 
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   const headers = { Authorization: `Bearer ${token}` }
-  const extractRaw = (role: Record<string, unknown> | null | undefined): string | null => {
-    if (!role) return null
-    const raw = (role.type || role.name
-      || (role.data as Record<string, unknown>)?.attributes?.type
-      || (role.data as Record<string, unknown>)?.attributes?.name) as string | undefined
-    return raw ? raw.toLowerCase().replace(/[\s-]/g, "_") : null
-  }
+  const normalize = (raw: string) => raw.toLowerCase().replace(/[\s-]/g, "_")
   try {
-    // Intento 1: con populate
-    const res = await fetch(`${baseUrl}/api/users/me?populate=role`, { headers })
-    console.log("[auth] /me?populate=role status:", res.status)
-    if (res.status === 403) return "proveedor_web"
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "")
-      console.log("[auth] /me error body:", errText)
-      return null
+    // Endpoint custom que devuelve el rol directo desde la DB (sin restricciones de sanitize)
+    const res = await fetch(`${baseUrl}/api/my-role`, { headers })
+    if (res.ok) {
+      const json = await res.json() as { type?: string; name?: string }
+      const raw = json.type || json.name
+      if (raw) return normalize(raw)
     }
-    const json = await res.json()
-    console.log("[auth] /me?populate=role →", JSON.stringify(json, null, 2))
-    const fromPopulate = extractRaw(json.role)
-    if (fromPopulate) return fromPopulate
 
-    // Intento 2: sin populate (Strapi v5 puede incluir role por defecto)
-    const res2 = await fetch(`${baseUrl}/api/users/me`, { headers })
-    console.log("[auth] /me sin populate status:", res2.status)
+    // Fallback: /api/users/me con populate
+    const res2 = await fetch(`${baseUrl}/api/users/me?populate=role`, { headers })
+    if (res2.status === 403) return "proveedor_web"
     if (!res2.ok) return null
-    const json2 = await res2.json()
-    console.log("[auth] /me (sin populate) →", JSON.stringify(json2, null, 2))
-    return extractRaw(json2.role)
+    const json2 = await res2.json() as { role?: { type?: string; name?: string } }
+    const role2 = json2.role
+    const raw2 = role2?.type || role2?.name
+    return raw2 ? normalize(raw2) : null
   } catch {
     return null
   }
