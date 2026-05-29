@@ -74,6 +74,7 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
     if (res.status === 403) return "proveedor_web"
     if (!res.ok) return null
     const json = await res.json()
+    console.log("[auth] /me?populate=role →", JSON.stringify(json, null, 2))
     const fromPopulate = extractRaw(json.role)
     if (fromPopulate) return fromPopulate
 
@@ -81,6 +82,7 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
     const res2 = await fetch(`${baseUrl}/api/users/me`, { headers })
     if (!res2.ok) return null
     const json2 = await res2.json()
+    console.log("[auth] /me (sin populate) →", JSON.stringify(json2, null, 2))
     return extractRaw(json2.role)
   } catch {
     return null
