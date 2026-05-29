@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, Pencil, Trash2, X, Check, Search, FolderOpen } from "lucide-react"
+import { Plus, Pencil, Trash2, X, Check, Search, FolderOpen, FileText, ImageIcon, Monitor, Video, File, Link2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   CategoriaDigital, CATEGORIAS_DIGITAL, CATEGORIA_CONFIG,
@@ -179,20 +179,45 @@ const CAT_DOT: Record<string, string> = {
   rose:    "bg-rose-400",
 }
 
+const TIPO_ICON = {
+  pdf:          FileText,
+  imagen:       ImageIcon,
+  presentacion: Monitor,
+  video:        Video,
+  documento:    File,
+  link:         Link2,
+} as const
+
+const TIPO_ICON_BG: Record<TipoMaterial, string> = {
+  pdf:          "bg-red-500/15 text-red-400",
+  imagen:       "bg-rose-500/15 text-rose-400",
+  presentacion: "bg-blue-500/15 text-blue-400",
+  video:        "bg-amber-500/15 text-amber-400",
+  documento:    "bg-sky-500/15 text-sky-400",
+  link:         "bg-slate-500/15 text-slate-400",
+}
+
 function MaterialCard({ material, onEdit, onDelete }: {
   material: MaterialDigitalType
   onEdit:   () => void
   onDelete: () => void
 }) {
-  const tipo = TIPO_CONFIG[material.tipo]
-  const cat  = CATEGORIA_CONFIG[material.categoria]
-  const dot  = CAT_DOT[cat.color] ?? "bg-slate-400"
+  const tipo     = TIPO_CONFIG[material.tipo]
+  const cat      = CATEGORIA_CONFIG[material.categoria]
+  const dot      = CAT_DOT[cat.color] ?? "bg-slate-400"
+  const Icon     = TIPO_ICON[material.tipo]
+  const iconBg   = TIPO_ICON_BG[material.tipo]
 
   return (
     <a href={material.url} target="_blank" rel="noopener noreferrer"
-      className="group block rounded-xl border border-slate-700/60 bg-slate-900/90 backdrop-blur-sm hover:border-slate-600/60 hover:bg-slate-800/40 transition-all duration-150 cursor-pointer">
-      <div className="px-3 pt-3 pb-2">
-        <div className="flex items-center gap-1.5 mb-1.5">
+      className="group block rounded-xl border border-slate-700/60 bg-[#0d1117]/90 backdrop-blur-sm hover:border-slate-600/60 hover:bg-[#111827]/90 transition-all duration-150 cursor-pointer">
+      <div className="px-3 pt-3 pb-2.5">
+        {/* Icono de tipo */}
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 ${iconBg}`}>
+          <Icon size={15} />
+        </div>
+        {/* Subcategoría con dot de categoria */}
+        <div className="flex items-center gap-1.5 mb-1">
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
           <span className="text-[10px] font-mono text-slate-500 truncate leading-none">{material.subcategoria || material.evento}</span>
         </div>
@@ -202,7 +227,7 @@ function MaterialCard({ material, onEdit, onDelete }: {
         )}
       </div>
 
-      <div className="flex items-center justify-between px-3 pb-2.5 pt-1.5 border-t border-slate-800/50">
+      <div className="flex items-center justify-between px-3 pb-2.5 pt-1.5 border-t border-white/6">
         <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${tipo.badge}`}>
           {tipo.label}
         </span>
@@ -305,7 +330,7 @@ export function InventarioDigitalView() {
   const cfg = CATEGORIA_CONFIG[categoriaActiva]
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="flex h-full min-h-0 -m-4 md:-m-6 bg-dot-pattern">
 
       {/* Sidebar de categorías */}
       <aside className="w-56 shrink-0 border-r border-slate-800/60 py-4 pr-2 space-y-0.5 hidden lg:block">
