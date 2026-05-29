@@ -333,7 +333,7 @@ export function InventarioDigitalView() {
     <div className="flex h-full min-h-0 -m-4 md:-m-6 bg-dot-pattern">
 
       {/* Sidebar de categorías */}
-      <aside className="w-56 shrink-0 border-r border-slate-800/60 py-4 pr-2 space-y-0.5 hidden lg:block">
+      <aside className="w-56 shrink-0 border-r border-slate-800/60 py-4 pr-2 space-y-0.5 hidden lg:block bg-slate-950">
         {CATEGORIAS_DIGITAL.map(cat => {
           const c    = CATEGORIA_CONFIG[cat]
           const qty  = materiales.filter(m => m.categoria === cat).length
