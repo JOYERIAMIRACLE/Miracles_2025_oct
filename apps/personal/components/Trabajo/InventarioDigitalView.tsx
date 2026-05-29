@@ -262,44 +262,66 @@ function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
   return (
     <div className="flex flex-col gap-1 px-2">
       {GRUPOS_MATERIAL.map(grupo => {
-        const isOpen = grupo.collapsible ? (abiertos[grupo.id] ?? false) : true
+        const isOpen  = grupo.collapsible ? (abiertos[grupo.id] ?? false) : true
+        const single  = grupo.categorias.length === 1
+        const soloCat = single ? grupo.categorias[0] : null
+        const active  = soloCat ? categoriaActiva === soloCat : false
+        const qty     = soloCat ? materiales.filter(m => m.categoria === soloCat).length : 0
+
         return (
           <div key={grupo.id}>
             {/* Cabecera del grupo */}
             {grupo.collapsible ? (
-              <button
-                type="button"
-                onClick={() => toggle(grupo.id)}
-                className="w-full flex items-center justify-between px-2 py-2 text-[11px] font-semibold text-slate-400 hover:text-slate-200 transition mt-1">
-                <span>{grupo.label}</span>
-                <ChevronDown size={12} className={`transition-transform duration-150 ${isOpen ? "" : "-rotate-90"}`} />
-              </button>
+              // Grupo con 1 categoría: header es selector + toggle
+              single ? (
+                <button type="button"
+                  onClick={() => { toggle(grupo.id); if (soloCat) onSelect(soloCat) }}
+                  className={[
+                    "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mt-1",
+                    active
+                      ? "bg-slate-800 text-slate-100"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-900",
+                  ].join(" ")}>
+                  <span className="truncate">{grupo.label}</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {qty > 0 && <span className="text-[10px] text-slate-600">{qty}</span>}
+                    <ChevronDown size={11} className={`transition-transform duration-150 ${isOpen ? "" : "-rotate-90"}`} />
+                  </div>
+                </button>
+              ) : (
+                // Grupo con múltiples categorías: header solo togglea
+                <button type="button"
+                  onClick={() => toggle(grupo.id)}
+                  className="w-full flex items-center justify-between px-2 py-2 text-[11px] font-semibold text-slate-400 hover:text-slate-200 transition mt-1">
+                  <span>{grupo.label}</span>
+                  <ChevronDown size={12} className={`transition-transform duration-150 ${isOpen ? "" : "-rotate-90"}`} />
+                </button>
+              )
             ) : (
               <p className="px-2 py-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">
                 {grupo.label}
               </p>
             )}
 
-            {/* Ítems del grupo */}
-            {isOpen && (
+            {/* Ítems del grupo — solo si tiene múltiples categorías */}
+            {isOpen && !single && (
               <div className="space-y-0.5">
                 {grupo.categorias.map(cat => {
-                  const c      = CATEGORIA_CONFIG[cat]
-                  const qty    = materiales.filter(m => m.categoria === cat).length
-                  const active = cat === categoriaActiva
+                  const c       = CATEGORIA_CONFIG[cat]
+                  const catQty  = materiales.filter(m => m.categoria === cat).length
+                  const catActive = cat === categoriaActiva
                   return (
                     <button key={cat} type="button"
                       onClick={() => onSelect(cat)}
                       className={[
                         "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-all text-left",
-                        grupo.collapsible ? "pl-4" : "",
-                        active
+                        catActive
                           ? "bg-slate-800 text-slate-100 font-medium"
                           : "text-slate-500 hover:text-slate-300 hover:bg-slate-900",
                       ].join(" ")}>
                       <span className="truncate">{c.label}</span>
-                      {qty > 0 && (
-                        <span className="text-[10px] text-slate-600 shrink-0">{qty}</span>
+                      {catQty > 0 && (
+                        <span className="text-[10px] text-slate-600 shrink-0">{catQty}</span>
                       )}
                     </button>
                   )
