@@ -71,8 +71,13 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
   try {
     // Intento 1: con populate
     const res = await fetch(`${baseUrl}/api/users/me?populate=role`, { headers })
+    console.log("[auth] /me?populate=role status:", res.status)
     if (res.status === 403) return "proveedor_web"
-    if (!res.ok) return null
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "")
+      console.log("[auth] /me error body:", errText)
+      return null
+    }
     const json = await res.json()
     console.log("[auth] /me?populate=role →", JSON.stringify(json, null, 2))
     const fromPopulate = extractRaw(json.role)
@@ -80,6 +85,7 @@ export async function fetchUserRole(token: string, baseUrl: string): Promise<str
 
     // Intento 2: sin populate (Strapi v5 puede incluir role por defecto)
     const res2 = await fetch(`${baseUrl}/api/users/me`, { headers })
+    console.log("[auth] /me sin populate status:", res2.status)
     if (!res2.ok) return null
     const json2 = await res2.json()
     console.log("[auth] /me (sin populate) →", JSON.stringify(json2, null, 2))
