@@ -68,6 +68,16 @@ const PUBLIC_ACTIONS_TRABAJO = [
   'api::categoria-pago.categoria-pago.create',
   'api::categoria-pago.categoria-pago.update',
   'api::categoria-pago.categoria-pago.delete',
+  'api::cdl-metrica.cdl-metrica.find',
+  'api::cdl-metrica.cdl-metrica.findOne',
+  'api::cdl-metrica.cdl-metrica.create',
+  'api::cdl-metrica.cdl-metrica.update',
+  'api::cdl-metrica.cdl-metrica.delete',
+  'api::boxscore-semana.boxscore-semana.find',
+  'api::boxscore-semana.boxscore-semana.findOne',
+  'api::boxscore-semana.boxscore-semana.create',
+  'api::boxscore-semana.boxscore-semana.update',
+  'api::boxscore-semana.boxscore-semana.delete',
 ];
 
 const CATEGORIAS_PAGO_SEED = [
