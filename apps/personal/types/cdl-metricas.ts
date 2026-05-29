@@ -19,4 +19,4 @@ export type CdlType = {
   updatedAt?:              string
 }
 
-export type CdlPayload = Omit<CdlType, "id" | "documentId" | "createdAt" | "updatedAt">
+export type CdlPayload = Omit<CdlType, "id" | "documentId" | "createdAt" | "updatedAt" | "ambito">

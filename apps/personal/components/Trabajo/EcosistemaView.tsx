@@ -1106,9 +1106,13 @@ function ModalCdl({ editando, onGuardar, onCerrar }: {
   onGuardar: (p: CdlPayload) => Promise<void>
   onCerrar: () => void
 }) {
-  const [form, setForm] = useState<CdlPayload>(
-    editando ? { ...editando } : emtpyCdlPayload()
-  )
+  const [form, setForm] = useState<CdlPayload>(() => {
+    if (!editando) return emtpyCdlPayload()
+    // Excluir ambito (puede ser null en registros viejos → Strapi rechaza PUT)
+    // y también id/documentId/createdAt/updatedAt que no deben ir en el payload
+    const { id: _i, documentId: _d, createdAt: _c, updatedAt: _u, ambito: _a, ...rest } = editando
+    return rest
+  })
   const [saving, setSaving] = useState(false)
   const guardar = async () => { setSaving(true); try { await onGuardar(form) } finally { setSaving(false) } }
 
