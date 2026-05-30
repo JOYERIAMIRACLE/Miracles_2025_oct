@@ -1,0 +1,19 @@
+{
+  "kind": "singleType",
+  "collectionName": "sitio_web_miracles",
+  "info": {
+    "singularName": "sitio-web-miracles",
+    "pluralName": "sitio-web-miracles",
+    "displayName": "Sitio Web Miracles",
+    "description": "Árbol de arquitectura del sitio web de Joyería Miracles"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "arbol": {
+      "type": "json"
+    }
+  }
+}

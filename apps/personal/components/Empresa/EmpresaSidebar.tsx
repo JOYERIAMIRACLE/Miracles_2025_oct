@@ -6,7 +6,7 @@ import {
   Building2,
   BarChart3, Activity, Globe2,
   Target, CheckSquare, Receipt, HardDrive,
-  Megaphone, BookOpen, Tv, Palette,
+  Globe, Megaphone, BookOpen, Tv, Palette,
   Users, ShoppingBag,
   Package, Truck,
   PieChart, CreditCard, CalendarDays,
@@ -37,6 +37,7 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
   {
     title: "Marketing", color: "blue",
     items: [
+      { name: "Sitio web",        href: "/gestion-empresa/marketing/sitio-web",     icon: Globe,     color: "blue" },
       { name: "Campañas SEO",     href: "/gestion-empresa/marketing/campanas",      icon: Megaphone, color: "blue" },
       { name: "Blog",             href: "/gestion-empresa/marketing/blog",           icon: BookOpen,  color: "blue" },
       { name: "Anuncios",         href: "/gestion-empresa/marketing/anuncios",       icon: Tv,        color: "blue" },
