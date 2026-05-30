@@ -412,22 +412,24 @@ export function MaterialDigitalView() {
   const cfg = CATEGORIA_CONFIG[categoriaActiva]
 
   return (
-    <div className="flex h-full min-h-0 bg-dot-pattern">
+    <div className="flex bg-dot-pattern min-h-[calc(100vh-3.5rem)]">
 
-      {/* Sidebar de categorías — solo desktop */}
-      <aside className="w-56 shrink-0 border-r border-slate-800/60 py-3 hidden lg:flex flex-col gap-3 bg-slate-950 overflow-y-auto">
-        <SidebarGrupos
-          categoriaActiva={categoriaActiva}
-          materiales={materiales}
-          onSelect={cat => { setCategoriaActiva(cat); setBusqueda("") }}
-        />
+      {/* Sidebar de categorías — solo desktop, sticky bajo el header */}
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-slate-800/60 bg-slate-950 self-start sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+        <div className="py-3">
+          <SidebarGrupos
+            categoriaActiva={categoriaActiva}
+            materiales={materiales}
+            onSelect={cat => { setCategoriaActiva(cat); setBusqueda("") }}
+          />
+        </div>
       </aside>
 
-      {/* Columna principal (scroll independiente) */}
-      <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
+      {/* Columna principal — scroll de página */}
+      <div className="flex-1 min-w-0">
 
         {/* Selector de categoría — mobile y tablet */}
-        <div className="lg:hidden px-4 pt-4 pb-1">
+        <div className="lg:hidden px-4 pt-4 pb-2">
           <select aria-label="Categoría" value={categoriaActiva}
             onChange={e => { setCategoriaActiva(e.target.value as CategoriaDigital); setBusqueda("") }}
             className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 outline-none focus:border-slate-600 transition">
@@ -442,7 +444,7 @@ export function MaterialDigitalView() {
         </div>
 
         {/* Contenido */}
-        <div className="flex-1 p-4 lg:p-6 space-y-5">
+        <div className="p-4 lg:p-6 space-y-5">
 
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
