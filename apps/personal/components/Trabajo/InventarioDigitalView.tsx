@@ -16,11 +16,13 @@ import { createMaterialDigital, updateMaterialDigital, deleteMaterialDigital } f
 const inputCls = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 transition"
 const labelCls = "block text-[11px] text-slate-500 mb-1"
 
+const AMBITO = "trabajo" as const
+
 function emptyPayload(categoria: CategoriaDigital): MaterialDigitalPayload {
   return {
     nombre: "", url: "", categoria,
     subcategoria: SUBCATEGORIAS[categoria][0] ?? "",
-    tipo: "link", descripcion: null, evento: null,
+    tipo: "link", descripcion: null, evento: null, ambito: AMBITO,
   }
 }
 
@@ -338,7 +340,7 @@ function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
 export function InventarioDigitalView() {
-  const { materiales, setMateriales, loading } = useGetMaterialDigital()
+  const { materiales, setMateriales, loading } = useGetMaterialDigital("trabajo")
   const [categoriaActiva, setCategoriaActiva] = useState<CategoriaDigital>("BRANDING")
   const [busqueda,  setBusqueda]  = useState("")
   const [modalOpen, setModalOpen] = useState(false)
