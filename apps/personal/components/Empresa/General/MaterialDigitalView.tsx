@@ -412,7 +412,7 @@ export function MaterialDigitalView() {
   const cfg = CATEGORIA_CONFIG[categoriaActiva]
 
   return (
-    <div className="flex h-full min-h-0 -m-4 md:-m-6 bg-dot-pattern">
+    <div className="flex h-full min-h-0 bg-dot-pattern">
 
       {/* Sidebar de categorías — solo desktop */}
       <aside className="w-56 shrink-0 border-r border-slate-800/60 py-3 hidden lg:flex flex-col gap-3 bg-slate-950 overflow-y-auto">
