@@ -423,8 +423,8 @@ export function InventarioDigitalView() {
   return (
     <div className="flex h-full min-h-0 -m-4 md:-m-6 bg-dot-pattern">
 
-      {/* Sidebar de categorías con grupos */}
-      <aside className="w-60 shrink-0 border-r border-slate-800/60 py-3 hidden lg:flex flex-col gap-3 bg-slate-950 overflow-y-auto">
+      {/* Sidebar de categorías — solo desktop */}
+      <aside className="w-56 shrink-0 border-r border-slate-800/60 py-3 hidden lg:flex flex-col gap-3 bg-slate-950 overflow-y-auto">
         <SidebarGrupos
           categoriaActiva={categoriaActiva}
           materiales={materiales}
@@ -432,81 +432,84 @@ export function InventarioDigitalView() {
         />
       </aside>
 
-      {/* Selector mobile */}
-      <div className="lg:hidden w-full px-4 pt-4 pb-2">
-        <select aria-label="Categoría" value={categoriaActiva}
-          onChange={e => { setCategoriaActiva(e.target.value as CategoriaDigital); setBusqueda("") }}
-          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 outline-none">
-          {GRUPOS_MATERIAL.map(g => (
-            <optgroup key={g.id} label={g.label}>
-              {g.categorias.map(c => (
-                <option key={c} value={c}>{CATEGORIA_CONFIG[c].label}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </div>
+      {/* Columna principal (scroll independiente) */}
+      <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
 
-      {/* Contenido principal */}
-      <div className="flex-1 min-w-0 p-4 lg:p-6 space-y-5 overflow-y-auto">
-
-        {/* Header de categoría */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-base font-bold text-slate-100">{cfg.label}</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {totalCategoria} {totalCategoria === 1 ? "material" : "materiales"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
-              <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-                placeholder="Buscar…"
-                className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-slate-900 text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 w-40 transition" />
-            </div>
-            <button type="button" onClick={abrirNuevo}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">
-              <Plus size={13} /> Agregar
-            </button>
-          </div>
+        {/* Selector de categoría — mobile y tablet */}
+        <div className="lg:hidden px-4 pt-4 pb-1">
+          <select aria-label="Categoría" value={categoriaActiva}
+            onChange={e => { setCategoriaActiva(e.target.value as CategoriaDigital); setBusqueda("") }}
+            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 outline-none focus:border-slate-600 transition">
+            {GRUPOS_MATERIAL.map(g => (
+              <optgroup key={g.id} label={g.label}>
+                {g.categorias.map(c => (
+                  <option key={c} value={c}>{CATEGORIA_CONFIG[c].label}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
         </div>
 
         {/* Contenido */}
-        {loading ? (
-          <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
-        ) : grupos.size === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <FolderOpen className="h-8 w-8 text-slate-700 mb-3" />
-            <p className="text-sm text-slate-500">
-              {busqueda ? "Sin resultados para esa búsqueda" : "Sin materiales en esta categoría"}
-            </p>
-            {!busqueda && (
-              <button type="button" onClick={abrirNuevo}
-                className="mt-3 text-xs text-blue-500 hover:text-blue-400 underline underline-offset-2 transition">
-                Agregar el primero
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {[...grupos.entries()].map(([grupo, items]) => (
-              <div key={grupo}>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{grupo}</p>
-                  <span className="text-[10px] text-slate-700">{items.length}</span>
-                </div>
-                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
-                  {items.map(m => (
-                    <MaterialCard key={m.documentId} material={m}
-                      onEdit={() => abrirEditar(m)}
-                      onDelete={() => borrar(m)} />
-                  ))}
-                </div>
+        <div className="flex-1 p-4 lg:p-6 space-y-5">
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-100">{cfg.label}</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {totalCategoria} {totalCategoria === 1 ? "material" : "materiales"}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
+                <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
+                  placeholder="Buscar…"
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-slate-900 text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 w-full sm:w-44 transition" />
               </div>
-            ))}
+              <button type="button" onClick={abrirNuevo}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition shrink-0">
+                <Plus size={13} /> Agregar
+              </button>
+            </div>
           </div>
-        )}
+
+          {loading ? (
+            <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
+          ) : grupos.size === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <FolderOpen className="h-8 w-8 text-slate-700 mb-3" />
+              <p className="text-sm text-slate-500">
+                {busqueda ? "Sin resultados para esa búsqueda" : "Sin materiales en esta categoría"}
+              </p>
+              {!busqueda && (
+                <button type="button" onClick={abrirNuevo}
+                  className="mt-3 text-xs text-blue-500 hover:text-blue-400 underline underline-offset-2 transition">
+                  Agregar el primero
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {[...grupos.entries()].map(([grupo, items]) => (
+                <div key={grupo}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{grupo}</p>
+                    <span className="text-[10px] text-slate-700">{items.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {items.map(m => (
+                      <MaterialCard key={m.documentId} material={m}
+                        onEdit={() => abrirEditar(m)}
+                        onDelete={() => borrar(m)} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {modalOpen && (
