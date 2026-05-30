@@ -40,7 +40,7 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
       { name: "Campañas SEO",     href: "/gestion-empresa/marketing/campanas",      icon: Megaphone, color: "blue" },
       { name: "Blog",             href: "/gestion-empresa/marketing/blog",           icon: BookOpen,  color: "blue" },
       { name: "Anuncios",         href: "/gestion-empresa/marketing/anuncios",       icon: Tv,        color: "blue" },
-      { name: "Material y branding", href: "/gestion-empresa/marketing/promocionales", icon: Palette, color: "blue" },
+      { name: "Merch",                href: "/gestion-empresa/marketing/promocionales", icon: Palette, color: "blue" },
     ],
   },
   {
