@@ -36,12 +36,18 @@ type RowMes = {
 function buildMonthRows(clientes: ClienteEmpresa[], yearFilter: number): RowMes[] {
   const rows: RowMes[] = []
   for (let m = 0; m < 12; m++) {
-    const leads       = clientes.filter(c => matchYM(c.fechaLead,       yearFilter, m)).length
-    const calificados = clientes.filter(c => matchYM(c.fechaCalificado, yearFilter, m)).length
-    const ofertas     = clientes.filter(c => matchYM(c.fechaOferta,     yearFilter, m)).length
-    const pedidos     = clientes.filter(c => matchYM(c.fechaPedido,     yearFilter, m)).length
-    const entregas    = clientes.filter(c => matchYM(c.fechaEntrega,    yearFilter, m)).length
-    const rechazadas  = clientes.filter(c => matchYM(c.fechaRechazada,  yearFilter, m)).length
+    const leads       = clientes.filter(c => matchYM(c.fechaLead, yearFilter, m)).length
+    // Si tiene fechaCalificado → contar en su mes; si solo tiene calificado:true sin fecha → contar en el mes del lead
+    const calificados = clientes.filter(c =>
+      c.calificado === true && (
+        matchYM(c.fechaCalificado, yearFilter, m) ||
+        (!c.fechaCalificado && matchYM(c.fechaLead, yearFilter, m))
+      )
+    ).length
+    const ofertas     = clientes.filter(c => matchYM(c.fechaOferta,    yearFilter, m)).length
+    const pedidos     = clientes.filter(c => matchYM(c.fechaPedido,    yearFilter, m)).length
+    const entregas    = clientes.filter(c => matchYM(c.fechaEntrega,   yearFilter, m)).length
+    const rechazadas  = clientes.filter(c => matchYM(c.fechaRechazada, yearFilter, m)).length
     rows.push({ year: yearFilter, month: m, leads, calificados, ofertas, pedidos, entregas, rechazadas })
   }
   return rows
@@ -214,30 +220,44 @@ export function HistorialPipelineView() {
 
       {/* Embudo de conversión */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <TrendingUp size={13} className="text-slate-500" />
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Conversión {año}</p>
         </div>
-        <div className="flex items-end gap-3 h-16">
+        {/* Barras — separadas de labels para que no desborden sobre el título */}
+        <div className="flex items-end gap-2 h-14">
           {[
-            { label: "Leads",      value: totalesAño.leads,       color: "bg-slate-600" },
-            { label: "Calific.",   value: totalesAño.calificados, color: "bg-blue-600" },
-            { label: "Ofertas",    value: totalesAño.ofertas,     color: "bg-amber-600" },
-            { label: "Pedidos",    value: totalesAño.pedidos,     color: "bg-emerald-600" },
-            { label: "Entregas",   value: totalesAño.entregas,    color: "bg-violet-600" },
-            { label: "Rechaz.",    value: totalesAño.rechazadas,  color: "bg-red-700" },
-          ].map((b, i) => {
+            { label: "Leads",    value: totalesAño.leads,       color: "bg-slate-600" },
+            { label: "Calific.", value: totalesAño.calificados, color: "bg-blue-600" },
+            { label: "Ofertas",  value: totalesAño.ofertas,     color: "bg-amber-600" },
+            { label: "Pedidos",  value: totalesAño.pedidos,     color: "bg-emerald-600" },
+            { label: "Entregas", value: totalesAño.entregas,    color: "bg-violet-600" },
+            { label: "Rechaz.",  value: totalesAño.rechazadas,  color: "bg-red-700" },
+          ].map((b) => {
             const maxVal = totalesAño.leads || 1
-            const h = Math.max(4, Math.round((b.value / maxVal) * 56))
+            const h = Math.max(4, Math.round((b.value / maxVal) * 52))
             return (
-              <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
-                {i > 0 && <span className="text-[8px] text-slate-700 self-start -ml-1">▶</span>}
+              <div key={b.label} className="flex-1">
                 <div className={`w-full rounded-t ${b.color} transition-all`} style={{ height: h }} />
-                <span className="text-[9px] text-slate-500 text-center leading-tight">{b.label}</span>
-                <span className="text-[10px] font-bold text-slate-300">{b.value}</span>
               </div>
             )
           })}
+        </div>
+        {/* Labels y valores debajo de las barras */}
+        <div className="flex gap-2 mt-1.5">
+          {[
+            { label: "Leads",    value: totalesAño.leads },
+            { label: "Calific.", value: totalesAño.calificados },
+            { label: "Ofertas",  value: totalesAño.ofertas },
+            { label: "Pedidos",  value: totalesAño.pedidos },
+            { label: "Entregas", value: totalesAño.entregas },
+            { label: "Rechaz.",  value: totalesAño.rechazadas },
+          ].map((b) => (
+            <div key={b.label} className="flex-1 text-center">
+              <div className="text-[9px] text-slate-500 truncate">{b.label}</div>
+              <div className="text-[10px] font-bold text-slate-300">{b.value}</div>
+            </div>
+          ))}
         </div>
       </div>
 
