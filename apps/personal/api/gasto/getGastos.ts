@@ -15,7 +15,11 @@ export function useGetGastos(ambito: AmbitoGasto = "trabajo") {
       try {
         const res = await fetch(url)
         const json = await res.json()
-        setGastos(json.data ?? [])
+        const all: GastoType[] = json.data ?? []
+        const filtered = ambito === "empresa"
+          ? all.filter(g => g.ambito === "empresa")
+          : all.filter(g => g.ambito === "trabajo" || g.ambito == null)
+        setGastos(filtered)
       } catch (err: any) {
         setError(err.message)
       } finally {
