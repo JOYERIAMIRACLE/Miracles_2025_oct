@@ -32,5 +32,9 @@ export async function saveIdentidad(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err?.error?.message ?? "Error al guardar identidad")
+  }
   return (await res.json()).data
 }

@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
 
-import { ThemeProvider } from "@/app/(Tienda)/1tiendacomponentes/theme-provider";
+import { ThemeProvider } from "@/app/(Tienda)/1tiendacomponentes/theme-provider"
+import ChatWidget from "@/components/Shared/ChatWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <ChatWidget />
         </ThemeProvider>
         <Toaster richColors position="top-right" />
       </body>
