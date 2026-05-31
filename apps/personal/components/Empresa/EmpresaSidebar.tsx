@@ -49,7 +49,7 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
     items: [
       { name: "Pipeline",      href: "/gestion-empresa/ventas/pipeline",      icon: Users,       color: "emerald" },
       { name: "Leads",         href: "/gestion-empresa/ventas/leads",          icon: UserSearch,  color: "emerald" },
-      { name: "Clientes",      href: "/gestion-empresa/ventas/clientes",       icon: UserCheck,   color: "emerald" },
+      { name: "Contactos",     href: "/gestion-empresa/ventas/clientes",       icon: UserCheck,   color: "emerald" },
       { name: "Cotizaciones",  href: "/gestion-empresa/ventas/cotizaciones",   icon: FileText,    color: "emerald" },
       { name: "Pedidos",       href: "/gestion-empresa/ventas/pedidos",        icon: ShoppingBag, color: "emerald" },
     ],

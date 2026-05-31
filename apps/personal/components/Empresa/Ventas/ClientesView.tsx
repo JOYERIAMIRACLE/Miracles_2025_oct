@@ -200,7 +200,7 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-100">{editando ? "Editar cliente" : "Nuevo cliente"}</h2>
+          <h2 className="text-base font-semibold text-slate-100">{editando ? "Editar contacto" : "Nuevo contacto"}</h2>
           <button type="button" onClick={onCerrar}
             className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={16} /></button>
         </div>
@@ -342,7 +342,7 @@ export function ClientesView() {
       } else {
         const nuevo = await createCliente(form)
         setClientes(prev => [...prev, nuevo])
-        toast.success("Cliente creado")
+        toast.success("Contacto creado")
       }
       setModalOpen(false)
     } catch { toast.error("Error al guardar") } finally { setGuardando(false) }
@@ -371,15 +371,15 @@ export function ClientesView() {
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <UserCheck size={18} className="text-emerald-400" />
-            <h1 className="text-2xl font-bold text-slate-100">Clientes</h1>
+            <h1 className="text-2xl font-bold text-slate-100">Contactos</h1>
           </div>
           <p className="text-sm text-slate-500">
-            Contactos en proceso de venta o ya entregados
+            Prospectos con oferta · Cliente = quien llegó a Pedido
           </p>
         </div>
         <button type="button" onClick={abrirCrear}
           className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">
-          <Plus size={15} /> Nuevo cliente
+          <Plus size={15} /> Nuevo contacto
         </button>
       </div>
 
@@ -495,7 +495,7 @@ export function ClientesView() {
             <div className="py-14 text-center">
               <UserCheck size={32} className="mx-auto mb-3 text-slate-700" />
               <p className="text-slate-600 text-sm">
-                {filtroEtapa === "todos" ? "No hay clientes activos. Los leads se muestran en el módulo Leads." : `Sin clientes en etapa ${FUNNEL_LABEL[filtroEtapa as FunnelEtapa]}.`}
+                {filtroEtapa === "todos" ? "No hay contactos activos. Los leads se muestran en el módulo Leads." : `Sin contactos en etapa ${FUNNEL_LABEL[filtroEtapa as FunnelEtapa]}.`}
               </p>
             </div>
           )}
