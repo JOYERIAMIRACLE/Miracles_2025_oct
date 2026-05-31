@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
 const navigation = [
   { name: "Dashboard", href: "/gestion-empresa", icon: LayoutDashboard },
   { name: "Finanzas", href: "/gestion-empresa/finanzas", icon: Wallet },
-  { name: "Gastos", href: "/gestion-empresa/gastos", icon: Banknote },
+  { name: "Gastos", href: "/gestion-empresa/general/gastos", icon: Banknote },
   { name: "Ventas", href: "/gestion-empresa/ventas", icon: ShoppingCart },
   { name: "Inventario", href: "/gestion-empresa/inventario", icon: Box },
   { name: "Calendario", href: "/gestion-empresa/calendario", icon: Calendar },

@@ -58,7 +58,13 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
 
-  useMemo(() => { setGastos(raw ?? []) }, [raw])
+  useMemo(() => {
+    const data = raw ?? []
+    const filtered = ambito === "empresa"
+      ? data.filter(g => g.ambito === "empresa")
+      : data.filter(g => g.ambito === "trabajo" || g.ambito == null)
+    setGastos(filtered)
+  }, [raw, ambito])
 
   const hoy    = new Date()
   const mesStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`
