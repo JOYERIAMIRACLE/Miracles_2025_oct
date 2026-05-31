@@ -197,6 +197,11 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
   return (
     <div className="p-4 md:p-6 space-y-5">
 
+      {/* DEBUG — quitar después */}
+      <div className="text-[10px] text-slate-600 bg-slate-900 border border-slate-800 rounded px-3 py-1.5">
+        ambito={ambito} | raw={raw?.length ?? 0} | gastos={gastos.length} | sample_ambito={raw?.[0]?.ambito ?? "—"}
+      </div>
+
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
