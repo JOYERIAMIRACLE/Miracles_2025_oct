@@ -100,6 +100,27 @@ const CATEGORIAS_PAGO_SEED = [
 ];
 
 
+async function migrarGastosAmbitoTrabajo(strapi) {
+  // Solo corre si NO hay ningún gasto con ambito="trabajo"
+  // (estado roto: todos tienen "empresa" por default incorrecto de migración)
+  const hayTrabajo = await strapi.db.query('api::gasto.gasto').count({
+    where: { ambito: 'trabajo' },
+  });
+  if (hayTrabajo > 0) {
+    strapi.log.info('[bootstrap] Gastos ambito — skip (ya hay registros trabajo)');
+    return;
+  }
+  const gastos = await strapi.db.query('api::gasto.gasto').findMany({});
+  if (gastos.length === 0) return;
+  for (const g of gastos) {
+    await strapi.db.query('api::gasto.gasto').update({
+      where: { id: g.id },
+      data: { ambito: 'trabajo' },
+    });
+  }
+  strapi.log.info(`[bootstrap] ${gastos.length} gastos migrados a ambito=trabajo`);
+}
+
 async function sembrarCategoriasPagoSiVacio(strapi) {
   const count = await strapi.db.query('api::categoria-pago.categoria-pago').count({});
   if (count > 0) {
@@ -283,6 +304,7 @@ module.exports = {
       await backfillColoresCategorias(strapi);
       await normalizarCategorias(strapi);
       await sembrarCategoriasPagoSiVacio(strapi);
+      await migrarGastosAmbitoTrabajo(strapi);
     } catch (err) {
       strapi.log.error('[bootstrap] Error: ' + err.message);
     }
