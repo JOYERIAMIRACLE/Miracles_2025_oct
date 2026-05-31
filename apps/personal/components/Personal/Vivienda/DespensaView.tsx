@@ -46,8 +46,8 @@ export function DespensaView() {
   // ── derived ──────────────────────────────────────────────────────────────
 
   const filtrados = useMemo(() =>
-    ingredientes.filter(i => !filtrocat || i.categoria === filtrocat),
-  [ingredientes, filtrocat])
+    ingredientes.filter(i => !filtroCat || i.categoria === filtroCat),
+  [ingredientes, filtroCat])
 
   const listaCompras = useMemo(() =>
     ingredientes.filter(i => i.cantidad < i.cantidadMinima),
@@ -169,10 +169,10 @@ export function DespensaView() {
         <div className="space-y-4">
           {/* Filtro categoría */}
           <div className="flex gap-1.5 flex-wrap">
-            <CatBtn active={filtrocat === ""} onClick={() => setFiltrocat("")}>Todos</CatBtn>
+            <CatBtn active={filtroCat === ""} onClick={() => setFiltrocat("")}>Todos</CatBtn>
             {CATEGORIAS_DESPENSA.map(cat => (
-              <CatBtn key={cat} active={filtrocat === cat} color={CATEGORIA_COLOR[cat]}
-                onClick={() => setFiltrocat(filtrocat === cat ? "" : cat)}>
+              <CatBtn key={cat} active={filtroCat === cat} color={CATEGORIA_COLOR[cat]}
+                onClick={() => setFiltrocat(filtroCat === cat ? "" : cat)}>
                 {CATEGORIA_LABEL[cat]}
               </CatBtn>
             ))}
@@ -183,7 +183,7 @@ export function DespensaView() {
           ) : filtrados.length === 0 ? (
             <div className="text-center py-14 text-slate-600">
               <Package size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Sin ingredientes{filtrocat ? " en esta categoría" : ""}.</p>
+              <p className="text-sm">Sin ingredientes{filtroCat ? " en esta categoría" : ""}.</p>
               <button onClick={abrirNuevo} className="mt-3 text-xs text-amber-500 hover:text-amber-400">
                 + Agregar el primero
               </button>
