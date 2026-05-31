@@ -30,18 +30,19 @@ const matchYM = (iso: string | null | undefined, year: number, month: number) =>
 // ─── Tabla de evolución mensual ───────────────────────────────────────────────
 type RowMes = {
   year: number; month: number
-  leads: number; calificados: number; ofertas: number; pedidos: number; entregas: number
+  leads: number; calificados: number; ofertas: number; pedidos: number; entregas: number; rechazadas: number
 }
 
 function buildMonthRows(clientes: ClienteEmpresa[], yearFilter: number): RowMes[] {
   const rows: RowMes[] = []
   for (let m = 0; m < 12; m++) {
-    const leads      = clientes.filter(c => matchYM(c.fechaLead,       yearFilter, m)).length
+    const leads       = clientes.filter(c => matchYM(c.fechaLead,       yearFilter, m)).length
     const calificados = clientes.filter(c => matchYM(c.fechaCalificado, yearFilter, m)).length
-    const ofertas    = clientes.filter(c => matchYM(c.fechaOferta,      yearFilter, m)).length
-    const pedidos    = clientes.filter(c => matchYM(c.fechaPedido,      yearFilter, m)).length
-    const entregas   = clientes.filter(c => matchYM(c.fechaEntrega,     yearFilter, m)).length
-    rows.push({ year: yearFilter, month: m, leads, calificados, ofertas, pedidos, entregas })
+    const ofertas     = clientes.filter(c => matchYM(c.fechaOferta,     yearFilter, m)).length
+    const pedidos     = clientes.filter(c => matchYM(c.fechaPedido,     yearFilter, m)).length
+    const entregas    = clientes.filter(c => matchYM(c.fechaEntrega,    yearFilter, m)).length
+    const rechazadas  = clientes.filter(c => matchYM(c.fechaRechazada,  yearFilter, m)).length
+    rows.push({ year: yearFilter, month: m, leads, calificados, ofertas, pedidos, entregas, rechazadas })
   }
   return rows
 }
@@ -104,6 +105,7 @@ export function HistorialPipelineView() {
     ofertas:     rowsMes.reduce((s, r) => s + r.ofertas,     0),
     pedidos:     rowsMes.reduce((s, r) => s + r.pedidos,     0),
     entregas:    rowsMes.reduce((s, r) => s + r.entregas,    0),
+    rechazadas:  rowsMes.reduce((s, r) => s + r.rechazadas,  0),
   }), [rowsMes])
 
   // Tasas de conversión (respecto a leads del año)
@@ -132,7 +134,8 @@ export function HistorialPipelineView() {
             matchYM(c.fechaCalificado,  año, mesFiltro) ||
             matchYM(c.fechaOferta,      año, mesFiltro) ||
             matchYM(c.fechaPedido,      año, mesFiltro) ||
-            matchYM(c.fechaEntrega,     año, mesFiltro)
+            matchYM(c.fechaEntrega,     año, mesFiltro) ||
+            matchYM(c.fechaRechazada,   año, mesFiltro)
           if (!tieneActividad) return false
         } else {
           // Sin filtro de mes: mostrar solo los que tienen alguna actividad en el año
@@ -157,7 +160,7 @@ export function HistorialPipelineView() {
       })
   }, [clientes, busqueda, etapaFiltro, mesFiltro, año])
 
-  const ETAPAS: FunnelEtapa[] = ["Lead", "Oferta", "Pedido", "Entrega"]
+  const ETAPAS: FunnelEtapa[] = ["Lead", "Oferta", "Pedido", "Entrega", "Rechazada"]
   const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
 
   return (
@@ -177,12 +180,12 @@ export function HistorialPipelineView() {
 
         {/* Selector de año */}
         <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5">
-          <button type="button" onClick={() => setAño(a => a - 1)}
+          <button type="button" title="Año anterior" onClick={() => setAño(a => a - 1)}
             className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
             <ChevronLeft size={14} />
           </button>
           <span className="text-sm font-semibold text-slate-200 w-12 text-center">{año}</span>
-          <button type="button" onClick={() => setAño(a => Math.min(a + 1, hoy.getFullYear()))}
+          <button type="button" title="Año siguiente" onClick={() => setAño(a => Math.min(a + 1, hoy.getFullYear()))}
             className={`p-1 rounded transition ${año >= hoy.getFullYear() ? "text-slate-700 cursor-default" : "text-slate-600 hover:text-slate-300"}`}>
             <ChevronRight size={14} />
           </button>
@@ -190,13 +193,14 @@ export function HistorialPipelineView() {
       </div>
 
       {/* KPIs del año */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Leads",      value: totalesAño.leads,       color: "text-slate-300", bar: "bg-slate-500",   pct: null },
-          { label: "Calificados", value: totalesAño.calificados, color: "text-blue-400",  bar: "bg-blue-500",   pct: conv.cal },
-          { label: "Ofertas",    value: totalesAño.ofertas,     color: "text-amber-400", bar: "bg-amber-500",  pct: conv.of },
-          { label: "Pedidos",    value: totalesAño.pedidos,     color: "text-emerald-400", bar: "bg-emerald-500", pct: conv.ped },
-          { label: "Entregas",   value: totalesAño.entregas,    color: "text-violet-400", bar: "bg-violet-500", pct: conv.ent },
+          { label: "Leads",       value: totalesAño.leads,       color: "text-slate-300",   pct: null },
+          { label: "Calificados", value: totalesAño.calificados, color: "text-blue-400",    pct: conv.cal },
+          { label: "Ofertas",     value: totalesAño.ofertas,     color: "text-amber-400",   pct: conv.of },
+          { label: "Pedidos",     value: totalesAño.pedidos,     color: "text-emerald-400", pct: conv.ped },
+          { label: "Entregas",    value: totalesAño.entregas,    color: "text-violet-400",  pct: conv.ent },
+          { label: "Rechazadas",  value: totalesAño.rechazadas,  color: "text-red-400",     pct: Math.round((totalesAño.rechazadas / (totalesAño.leads || 1)) * 100) },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -221,6 +225,7 @@ export function HistorialPipelineView() {
             { label: "Ofertas",    value: totalesAño.ofertas,     color: "bg-amber-600" },
             { label: "Pedidos",    value: totalesAño.pedidos,     color: "bg-emerald-600" },
             { label: "Entregas",   value: totalesAño.entregas,    color: "bg-violet-600" },
+            { label: "Rechaz.",    value: totalesAño.rechazadas,  color: "bg-red-700" },
           ].map((b, i) => {
             const maxVal = totalesAño.leads || 1
             const h = Math.max(4, Math.round((b.value / maxVal) * 56))
@@ -257,12 +262,13 @@ export function HistorialPipelineView() {
                 <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Ofertas</th>
                 <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Pedidos</th>
                 <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Entregas</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-red-800 uppercase tracking-widest w-28">Rechazadas</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
               {rowsMes.map(row => {
                 const esMesFiltrado = mesFiltro === row.month
-                const tieneData    = row.leads + row.calificados + row.ofertas + row.pedidos + row.entregas > 0
+                const tieneData    = row.leads + row.calificados + row.ofertas + row.pedidos + row.entregas + row.rechazadas > 0
                 const esMesActual  = row.year === hoy.getFullYear() && row.month === hoy.getMonth()
                 return (
                   <tr key={row.month}
@@ -297,6 +303,9 @@ export function HistorialPipelineView() {
                     <td className="px-4 py-2.5 min-w-[100px]">
                       <MiniBar value={row.entregas}    max={maxLeads} color="bg-violet-500" />
                     </td>
+                    <td className="px-4 py-2.5 min-w-[100px]">
+                      <MiniBar value={row.rechazadas}  max={maxLeads} color="bg-red-700" />
+                    </td>
                   </tr>
                 )
               })}
@@ -304,7 +313,7 @@ export function HistorialPipelineView() {
               {/* Fila de totales */}
               <tr className="bg-slate-800/40 font-semibold">
                 <td className="px-4 py-2.5 text-[11px] text-slate-400 font-bold uppercase tracking-widest">Total</td>
-                {[totalesAño.leads, totalesAño.calificados, totalesAño.ofertas, totalesAño.pedidos, totalesAño.entregas].map((v, i) => (
+                {[totalesAño.leads, totalesAño.calificados, totalesAño.ofertas, totalesAño.pedidos, totalesAño.entregas, totalesAño.rechazadas].map((v, i) => (
                   <td key={i} className="px-4 py-2.5">
                     <span className="text-sm font-bold text-slate-200">{v}</span>
                   </td>
@@ -361,8 +370,8 @@ export function HistorialPipelineView() {
           <table className="w-full text-xs">
             <thead className="border-b border-slate-800 bg-slate-950/50">
               <tr>
-                {["Contacto", "Lead", "Calificado", "Oferta", "Pedido", "Entrega", "Etapa actual"].map(h => (
-                  <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                {["Contacto", "Lead", "Calificado", "Oferta", "Pedido", "Entrega", "Rechazada", "Etapa actual"].map(h => (
+                  <th key={h} className={`h-9 px-4 text-left text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap ${h === "Rechazada" ? "text-red-800" : "text-slate-500"}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -431,6 +440,13 @@ export function HistorialPipelineView() {
                       {c.fechaEntrega
                         ? <p className="text-[11px] text-violet-400">{fmtDt(c.fechaEntrega)}</p>
                         : <span className="text-slate-700">—</span>}
+                    </td>
+
+                    {/* Rechazada */}
+                    <td className="px-4 py-2.5">
+                      {c.fechaRechazada
+                        ? <p className="text-[11px] text-red-400">{fmtDt(c.fechaRechazada)}</p>
+                        : <span className="text-slate-800">—</span>}
                     </td>
 
                     {/* Etapa actual */}

@@ -287,7 +287,7 @@ export function ClientesView() {
   const loading = cloading || cotLoading
 
   const clientesActivos = useMemo(() =>
-    clientes.filter(c => c.Funnel !== "Lead" && c.Funnel != null)
+    clientes.filter(c => c.Funnel !== "Lead" && c.Funnel !== "Rechazada" && c.Funnel != null)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [clientes]
   )

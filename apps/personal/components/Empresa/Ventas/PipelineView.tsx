@@ -3,13 +3,13 @@
 import { useState, useMemo, useCallback } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle,
-  ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText,
+  ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
 import {
   ClienteEmpresa, ClientePayload,
-  FUNNEL_ETAPAS, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
+  FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
 } from "@/types/clienteEmpresa"
 import { Cotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
 import { useGetCotizaciones } from "@/api/cotizacion/getCotizaciones"
@@ -21,17 +21,19 @@ const STAGE_META: Record<FunnelEtapa, {
   prefix: string; desc: string; numColor: string; dot: string
   fechaKey: keyof ClienteEmpresa; nextLabel?: string
 }> = {
-  Lead:    { prefix: "L",   desc: "Contacto que llegó por algún medio",      fechaKey: "fechaLead",    nextLabel: "Enviar oferta",      numColor: "text-slate-400 bg-slate-800 border-slate-700",              dot: "bg-slate-400" },
-  Oferta:  { prefix: "OF",  desc: "Oferta de venta enviada al cliente",       fechaKey: "fechaOferta",  nextLabel: "Confirmar pedido",   numColor: "text-amber-400 bg-amber-950/40 border-amber-800/50",        dot: "bg-amber-400" },
-  Pedido:  { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",  fechaKey: "fechaPedido",  nextLabel: "Registrar entrega",  numColor: "text-emerald-400 bg-emerald-950/40 border-emerald-800/50",  dot: "bg-emerald-400" },
-  Entrega: { prefix: "ENT", desc: "Pedido entregado al cliente",              fechaKey: "fechaEntrega",                                  numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",    dot: "bg-violet-400" },
+  Lead:      { prefix: "L",   desc: "Contacto que llegó por algún medio",      fechaKey: "fechaLead",      nextLabel: "Enviar oferta",      numColor: "text-slate-400 bg-slate-800 border-slate-700",              dot: "bg-slate-400" },
+  Oferta:    { prefix: "OF",  desc: "Oferta de venta enviada al cliente",       fechaKey: "fechaOferta",    nextLabel: "Confirmar pedido",   numColor: "text-amber-400 bg-amber-950/40 border-amber-800/50",        dot: "bg-amber-400" },
+  Pedido:    { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",  fechaKey: "fechaPedido",    nextLabel: "Registrar entrega",  numColor: "text-emerald-400 bg-emerald-950/40 border-emerald-800/50",  dot: "bg-emerald-400" },
+  Entrega:   { prefix: "ENT", desc: "Pedido entregado al cliente",              fechaKey: "fechaEntrega",                                    numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",    dot: "bg-violet-400" },
+  Rechazada: { prefix: "REJ", desc: "Oportunidad perdida o rechazada",          fechaKey: "fechaRechazada",                                  numColor: "text-red-400 bg-red-950/40 border-red-800/50",             dot: "bg-red-400" },
 }
 
 const FECHA_FIELD: Record<FunnelEtapa, keyof ClientePayload> = {
-  Lead:    "fechaLead",
-  Oferta:  "fechaOferta",
-  Pedido:  "fechaPedido",
-  Entrega: "fechaEntrega",
+  Lead:      "fechaLead",
+  Oferta:    "fechaOferta",
+  Pedido:    "fechaPedido",
+  Entrega:   "fechaEntrega",
+  Rechazada: "fechaRechazada",
 }
 
 const CANALES = ["WhatsApp", "Instagram", "Facebook", "Llamada", "Email", "Referido", "Visita", "Otro"]
@@ -147,10 +149,11 @@ function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
-function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onCalificar }: {
+function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onCalificar, onRechazar, onRecuperar }: {
   c: ClienteEmpresa; num: string; etapa: FunnelEtapa
   onEdit: () => void; onDelete: () => void; onSelect: () => void
   onAvanzar?: () => void; onCalificar?: () => void
+  onRechazar?: () => void; onRecuperar?: () => void
 }) {
   const meta = STAGE_META[etapa]
 
@@ -206,12 +209,30 @@ function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onC
         </button>
       )}
 
+      {/* Recuperar (solo en Rechazada) */}
+      {onRecuperar && (
+        <button type="button"
+          onClick={e => { e.stopPropagation(); onRecuperar() }}
+          className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-blue-500 hover:text-blue-300 border border-dashed border-blue-900/50 hover:border-blue-700 rounded-lg transition">
+          <RotateCcw size={10} /> Recuperar
+        </button>
+      )}
+
       {/* Avanzar */}
       {onAvanzar && meta.nextLabel && (
         <button type="button"
           onClick={e => { e.stopPropagation(); onAvanzar() }}
           className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-slate-600 hover:text-slate-300 border border-dashed border-slate-800 hover:border-slate-600 rounded-lg transition">
           <ArrowRight size={10} /> {meta.nextLabel}
+        </button>
+      )}
+
+      {/* Rechazar */}
+      {onRechazar && (
+        <button type="button"
+          onClick={e => { e.stopPropagation(); onRechazar() }}
+          className="flex items-center justify-center gap-1 w-full py-1 text-[10px] text-red-700 hover:text-red-400 border border-dashed border-red-900/30 hover:border-red-800/50 rounded-lg transition">
+          <XCircle size={10} /> Rechazar
         </button>
       )}
     </div>
@@ -339,17 +360,51 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
 
         <Timeline cliente={cliente} />
 
-        <div className="px-4 py-3 border-b border-slate-800 flex gap-2">
-          {etapa !== "Lead" && (
-            <button type="button" onClick={() => moverFunnel(-1)}
-              className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
-              <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
+        <div className="px-4 py-3 border-b border-slate-800 space-y-2">
+          {/* Navegación lineal (solo etapas de progresión) */}
+          {etapa !== "Rechazada" && (
+            <div className="flex gap-2">
+              {etapa !== "Lead" && (
+                <button type="button" onClick={() => moverFunnel(-1)}
+                  className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
+                  <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
+                </button>
+              )}
+              {etapa !== "Entrega" && (
+                <button type="button" onClick={() => moverFunnel(1)}
+                  className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-emerald-800/50 hover:border-emerald-600 hover:text-emerald-300 rounded-lg transition text-emerald-500/70">
+                  {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Rechazar / Recuperar */}
+          {etapa !== "Entrega" && etapa !== "Rechazada" && (
+            <button type="button"
+              onClick={async () => {
+                const extra = !cliente.fechaRechazada ? { fechaRechazada: new Date().toISOString() } : {}
+                try {
+                  const updated = await updateCliente(cliente.documentId, { Funnel: "Rechazada", ...extra })
+                  onUpdate(updated)
+                  toast.success("Marcado como rechazada")
+                } catch { toast.error("Error al actualizar") }
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium border border-red-900/40 hover:border-red-700 text-red-700 hover:text-red-400 rounded-lg transition">
+              <XCircle size={12} /> Marcar como rechazada
             </button>
           )}
-          {etapa !== "Entrega" && (
-            <button type="button" onClick={() => moverFunnel(1)}
-              className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-emerald-800/50 hover:border-emerald-600 hover:text-emerald-300 rounded-lg transition text-emerald-500/70">
-              {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
+          {etapa === "Rechazada" && (
+            <button type="button"
+              onClick={async () => {
+                try {
+                  const updated = await updateCliente(cliente.documentId, { Funnel: "Lead" })
+                  onUpdate(updated)
+                  toast.success("Recuperado → Lead")
+                } catch { toast.error("Error al actualizar") }
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium border border-blue-800/50 hover:border-blue-600 text-blue-500 hover:text-blue-300 rounded-lg transition">
+              <RotateCcw size={12} /> Recuperar (volver a Lead)
             </button>
           )}
         </div>
@@ -531,7 +586,7 @@ export function PipelineView() {
 
   const porFunnel = useMemo(() => {
     const map = new Map<FunnelEtapa, ClienteEmpresa[]>()
-    FUNNEL_ETAPAS.forEach(e => map.set(e, []))
+    FUNNEL_ALL.forEach(e => map.set(e, []))
     clientes
       .slice()
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
@@ -541,7 +596,7 @@ export function PipelineView() {
 
   const numMap = useMemo(() => {
     const m = new Map<string, string>()
-    FUNNEL_ETAPAS.forEach(etapa => {
+    FUNNEL_ALL.forEach(etapa => {
       porFunnel.get(etapa)?.forEach((c, i) => m.set(c.documentId, numDisplay(etapa, i)))
     })
     return m
@@ -603,6 +658,25 @@ export function PipelineView() {
     } catch { toast.error("Error al avanzar") }
   }
 
+  const rechazar = async (c: ClienteEmpresa) => {
+    const extra = !c.fechaRechazada ? { fechaRechazada: new Date().toISOString() } : {}
+    try {
+      const updated = await updateCliente(c.documentId, { Funnel: "Rechazada", ...extra })
+      setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+      if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
+      toast.success("Marcado como rechazada")
+    } catch { toast.error("Error al rechazar") }
+  }
+
+  const recuperar = async (c: ClienteEmpresa) => {
+    try {
+      const updated = await updateCliente(c.documentId, { Funnel: "Lead" })
+      setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+      if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
+      toast.success("Recuperado → Lead")
+    } catch { toast.error("Error al recuperar") }
+  }
+
   const toggleCalificado = async (c: ClienteEmpresa) => {
     const nuevoValor = !c.calificado
     const extra      = nuevoValor && !c.fechaCalificado ? { fechaCalificado: new Date().toISOString() } : {}
@@ -620,6 +694,7 @@ export function PipelineView() {
   }
 
   const leadsCalificados = clientes.filter(c => c.Funnel === "Lead" && c.calificado).length
+  const rechazados       = clientes.filter(c => c.Funnel === "Rechazada").length
 
   return (
     <div className="p-6 max-w-full mx-auto">
@@ -627,9 +702,10 @@ export function PipelineView() {
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Pipeline de ventas</h1>
           <p className="text-sm text-slate-500">
-            {clientes.filter(c => c.Funnel !== "Entrega").length} en proceso ·{" "}
-            {leadsCalificados} leads calificados ·{" "}
-            {clientes.filter(c => c.Funnel === "Entrega").length} entregas
+            {clientes.filter(c => c.Funnel !== "Entrega" && c.Funnel !== "Rechazada").length} en proceso ·{" "}
+            {leadsCalificados} calificados ·{" "}
+            {clientes.filter(c => c.Funnel === "Entrega").length} entregas ·{" "}
+            <span className="text-red-600">{rechazados} rechazadas</span>
           </p>
         </div>
         <button type="button" onClick={() => abrirCrear("Lead")}
@@ -642,13 +718,14 @@ export function PipelineView() {
         <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
       ) : (
         <div className="overflow-x-auto pb-4">
-          <div className="flex gap-3 min-w-[860px]">
-            {FUNNEL_ETAPAS.map(etapa => {
+          <div className="flex gap-3 min-w-[1100px]">
+            {FUNNEL_ALL.map(etapa => {
               const items = porFunnel.get(etapa) ?? []
               const calificadosEnCol = etapa === "Lead" ? items.filter(c => c.calificado).length : null
+              const esRechazada = etapa === "Rechazada"
               return (
-                <div key={etapa} className="flex-1 min-w-[190px] flex flex-col gap-2">
-                  <div className={`px-3 py-2.5 rounded-xl border ${FUNNEL_COLOR[etapa]}`}>
+                <div key={etapa} className={`flex flex-col gap-2 ${esRechazada ? "min-w-[180px] w-[180px]" : "flex-1 min-w-[190px]"}`}>
+                  <div className={`px-3 py-2.5 rounded-xl border ${FUNNEL_COLOR[etapa]} ${esRechazada ? "opacity-70" : ""}`}>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold">{FUNNEL_LABEL[etapa]}</span>
                       <div className="flex items-center gap-1">
@@ -670,16 +747,20 @@ export function PipelineView() {
                         onEdit={() => abrirEditar(c)}
                         onDelete={() => borrar(c)}
                         onSelect={() => setSelectedCliente(c)}
-                        onAvanzar={etapa !== "Entrega" ? () => avanzar(c) : undefined}
+                        onAvanzar={!esRechazada && etapa !== "Entrega" ? () => avanzar(c) : undefined}
                         onCalificar={etapa === "Lead" ? () => toggleCalificado(c) : undefined}
+                        onRechazar={!esRechazada && etapa !== "Entrega" ? () => rechazar(c) : undefined}
+                        onRecuperar={esRechazada ? () => recuperar(c) : undefined}
                       />
                     ))}
                   </div>
 
-                  <button type="button" onClick={() => abrirCrear(etapa)}
-                    className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-700 hover:text-slate-500 border border-dashed border-slate-800 hover:border-slate-700 rounded-xl transition mt-1">
-                    <Plus size={10} /> Agregar
-                  </button>
+                  {!esRechazada && (
+                    <button type="button" onClick={() => abrirCrear(etapa)}
+                      className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-700 hover:text-slate-500 border border-dashed border-slate-800 hover:border-slate-700 rounded-xl transition mt-1">
+                      <Plus size={10} /> Agregar
+                    </button>
+                  )}
                 </div>
               )
             })}

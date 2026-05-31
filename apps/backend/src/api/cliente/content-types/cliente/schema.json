@@ -39,7 +39,8 @@
         "Lead",
         "Oferta",
         "Pedido",
-        "Entrega"
+        "Entrega",
+        "Rechazada"
       ]
     },
     "calificado": {
@@ -59,6 +60,9 @@
       "type": "datetime"
     },
     "fechaEntrega": {
+      "type": "datetime"
+    },
+    "fechaRechazada": {
       "type": "datetime"
     },
     "canalContacto": {
