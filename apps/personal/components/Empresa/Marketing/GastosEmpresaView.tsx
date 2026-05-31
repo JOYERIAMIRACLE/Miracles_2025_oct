@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Plus, Search, X, Pencil, Loader2, Wallet, BarChart2 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -58,7 +58,7 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
 
-  useMemo(() => {
+  useEffect(() => {
     const data = raw ?? []
     const filtered = ambito === "empresa"
       ? data.filter(g => g.ambito === "empresa")
