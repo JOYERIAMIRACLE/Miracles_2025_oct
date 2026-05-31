@@ -7,7 +7,7 @@ import {
   BarChart3, Activity, Globe2,
   Target, CheckSquare, Receipt, HardDrive,
   Globe, Megaphone, BookOpen, Tv, Palette,
-  Users, ShoppingBag, UserSearch, UserCheck, FileText,
+  Users, ShoppingBag, UserSearch, UserCheck, FileText, History,
   Package, Truck,
   PieChart, CreditCard, CalendarDays,
   UserCog, ShieldCheck,
@@ -52,6 +52,7 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
       { name: "Contactos",     href: "/gestion-empresa/ventas/clientes",       icon: UserCheck,   color: "emerald" },
       { name: "Cotizaciones",  href: "/gestion-empresa/ventas/cotizaciones",   icon: FileText,    color: "emerald" },
       { name: "Pedidos",       href: "/gestion-empresa/ventas/pedidos",        icon: ShoppingBag, color: "emerald" },
+      { name: "Historial",     href: "/gestion-empresa/ventas/historial",      icon: History,     color: "emerald" },
     ],
   },
   {
