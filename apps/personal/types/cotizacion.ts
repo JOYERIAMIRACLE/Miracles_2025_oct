@@ -28,6 +28,7 @@ export type Cotizacion = {
   notas:       string | null
   fecha:       string | null
   createdAt:   string
+  cliente?:    { documentId: string; nombre: string; telefono: string | null; email: string | null } | null
 }
 
 export type CotizacionPayload = {

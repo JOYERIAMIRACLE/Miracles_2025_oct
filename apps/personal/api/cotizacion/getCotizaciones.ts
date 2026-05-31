@@ -4,6 +4,24 @@ import { Cotizacion, CotizacionPayload } from "@/types/cotizacion"
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL  = `${BASE}/api/cotizaciones`
 
+export function useGetAllCotizaciones() {
+  const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
+  const [loading,      setLoading]      = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    ;(async () => {
+      try {
+        const res  = await fetch(`${URL}?populate=*&sort=createdAt:desc&pagination[pageSize]=500`)
+        const json = await res.json()
+        setCotizaciones(json.data ?? [])
+      } finally { setLoading(false) }
+    })()
+  }, [])
+
+  return { cotizaciones, setCotizaciones, loading }
+}
+
 export function useGetCotizaciones(clienteDocumentId: string | null) {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
   const [loading,      setLoading]      = useState(false)
