@@ -12,6 +12,7 @@ import {
   ChefHat,
   Dumbbell,
   CalendarRange,
+  ShoppingCart,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -43,8 +44,9 @@ const sections: { title: string; items: NavItem[] }[] = [
   {
     title: "Salud - Alimentación",
     items: [
-      { name: "Recetario",  href: "/gestion-personal/vivienda/recetario",  icon: ChefHat,      color: "amber" },
-      { name: "Planeador",  href: "/gestion-personal/vivienda/planeador",  icon: CalendarRange, color: "amber" },
+      { name: "Recetario",  href: "/gestion-personal/vivienda/recetario",  icon: ChefHat,       color: "amber" },
+      { name: "Planeador",  href: "/gestion-personal/vivienda/planeador",  icon: CalendarRange,  color: "amber" },
+      { name: "Despensa",   href: "/gestion-personal/vivienda/despensa",   icon: ShoppingCart,   color: "amber" },
     ],
   },
 ]
