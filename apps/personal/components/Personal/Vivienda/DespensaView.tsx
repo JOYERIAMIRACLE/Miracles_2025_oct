@@ -86,16 +86,19 @@ export function DespensaView() {
     try {
       if (editando) {
         const updated = await updateIngrediente(editando.documentId, form)
+        if (!updated) throw new Error("Sin respuesta del servidor")
         setIngredientes(prev => prev.map(i => i.documentId === editando.documentId ? updated : i))
         toast.success("Ingrediente actualizado")
       } else {
         const nuevo = await createIngrediente(form)
+        if (!nuevo) throw new Error("Sin respuesta del servidor")
         setIngredientes(prev => [...prev, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)))
         toast.success("Ingrediente agregado")
       }
       cerrarModal()
-    } catch {
-      toast.error("Error al guardar")
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al guardar"
+      toast.error(msg)
     } finally {
       setSaving(false)
     }
