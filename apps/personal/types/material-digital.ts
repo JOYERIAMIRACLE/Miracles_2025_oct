@@ -27,7 +27,7 @@ export const CATEGORIA_CONFIG: Record<CategoriaDigital, { label: string; color: 
 }
 
 export const SUBCATEGORIAS: Record<CategoriaDigital, string[]> = {
-  BRANDING:               ["Logos", "Logos de aliados estratégicos", "Iconografía", "Tipografía", "Manual de identidad", "Packaging"],
+  BRANDING:               ["Logos", "Iconografía", "Tipografía", "Manual de identidad", "Packaging"],
   HERRAMIENTAS_VENTAS:    ["Presentaciones", "Folletos", "Brochures", "Demos", "Promocionales", "Lonas"],
   FORMATOS_INTERNOS:      [
     "Plantilla de presentación", "Hoja membretada", "Folder de proyectos",
@@ -37,7 +37,7 @@ export const SUBCATEGORIAS: Record<CategoriaDigital, string[]> = {
   INSTALACIONES_VEHICULOS: ["Branding edificio", "Branding autos"],
   COLABORADOR:             ["Fotografías", "Gafetes", "Tarjetas", "Firmas digitales", "Vestimenta"],
   EVENTOS_PROYECTOS:       [],
-  ASSETS:                  ["Machinery", "Control", "Cómputo", "Conveyors"],
+  ASSETS:                  ["Machinery", "Control", "Cómputo", "Conveyors", "Logos de aliados estratégicos"],
   LINKS_UTILIDAD:          ["App corrección ortografía", "App calendarios", "App WordPress", "App sistema de mail", "App contraseñas", "App de QR digital"],
   BASES_DATOS:             ["Base MKT 2023", "Base MKT 2024", "Base MKT 2025", "Base MKT 2026"],
 }
