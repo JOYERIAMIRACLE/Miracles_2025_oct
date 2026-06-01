@@ -77,18 +77,23 @@ function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string)
   const isMonday = dayDate.getDay() === 1
 
   for (const c of campanas) {
-    if (c.categoria !== categoria) continue
+    // Campañas con categoría explícita diferente → ignorar en esta fila
+    if (c.categoria && c.categoria !== categoria) continue
+
     const cMesIdx  = MESES.indexOf(c.mes)
     const firstMon = getFirstMonday(c.anio, cMesIdx)
-
     const hasAnyTitulo = SEMANAS.some(n => !!getSemana(c, n, "Titulo"))
 
     if (hasAnyTitulo) {
-      // Campaña con títulos: mostrar en su fecha exacta, o en el lunes de su semana si no tiene fecha
       for (const n of SEMANAS) {
         const fecha  = getSemana(c, n, "Fecha")
         const titulo = getSemana(c, n, "Titulo")
         if (!titulo) continue
+
+        // Sin categoría: mostrar solo en la fila cuyo label coincida con el título (ej. "mhs" → MHS)
+        // Con categoría: mostrar en su fila sin importar el título
+        if (!c.categoria && titulo.toLowerCase() !== categoria.toLowerCase()) continue
+
         if (fecha) {
           if (fecha === dayStr) out.push({ campana: c, n, titulo })
         } else if (isMonday) {
@@ -97,7 +102,8 @@ function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string)
         }
       }
     } else {
-      // Sin títulos (creada desde planeador): solo mostrar si tiene semana1Fecha exacta
+      // Sin títulos: solo mostrar si tiene semana1Fecha exacta y categoría coincide
+      if (c.categoria !== categoria) continue
       const fecha = getSemana(c, 1, "Fecha")
       if (fecha && fecha === dayStr && c.unidadNegocio) {
         out.push({ campana: c, n: 1, titulo: c.unidadNegocio })
