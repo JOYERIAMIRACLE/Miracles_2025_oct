@@ -579,6 +579,12 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
               .map(c => ({ c, titulo: c.unidadNegocio, fecha: c.semana1Fecha, sn: 1 }))
 
             const items: RowItem[] = [...conTitulo, ...sinTitulo]
+              .sort((a, b) => {
+                if (!a.fecha && !b.fecha) return 0
+                if (!a.fecha) return 1
+                if (!b.fecha) return -1
+                return a.fecha.localeCompare(b.fecha)
+              })
 
             return (
               <div key={n} className="flex items-center gap-3 px-4 py-3 min-h-[52px]">
