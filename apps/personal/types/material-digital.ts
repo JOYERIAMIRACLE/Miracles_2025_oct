@@ -27,7 +27,7 @@ export const CATEGORIA_CONFIG: Record<CategoriaDigital, { label: string; color: 
 }
 
 export const SUBCATEGORIAS: Record<CategoriaDigital, string[]> = {
-  BRANDING:               ["Logos", "Iconografía", "Tipografía", "Manual de identidad", "Packaging"],
+  BRANDING:               ["Logos", "Logos de aliados estratégicos", "Iconografía", "Tipografía", "Manual de identidad", "Packaging"],
   HERRAMIENTAS_VENTAS:    ["Presentaciones", "Folletos", "Brochures", "Demos", "Promocionales", "Lonas"],
   FORMATOS_INTERNOS:      [
     "Plantilla de presentación", "Hoja membretada", "Folder de proyectos",
