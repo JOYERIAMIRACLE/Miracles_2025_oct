@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function TrabajoLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="dark flex min-h-screen bg-slate-950 text-slate-100">
+    <div className="flex min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <TrabajoLayoutClient>{children}</TrabajoLayoutClient>
     </div>
   )
