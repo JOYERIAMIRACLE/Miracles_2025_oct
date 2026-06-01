@@ -543,37 +543,56 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
 
         <div className="divide-y divide-slate-800/50">
           {SEMANAS.map(n => {
-            const sStart = addDays(firstMon, (n - 1) * 7)
-            const sEnd   = addDays(sStart, 6)
+            const sStart    = addDays(firstMon, (n - 1) * 7)
+            const sEnd      = addDays(sStart, 6)
+            const sStartStr = toYMD(sStart)
+            const sEndStr   = toYMD(sEnd)
 
             // Para el mes actual, ocultar semanas completamente pasadas
             if (isCurrentMonth && sEnd < hoy) return null
 
             const label = semanaLabel(sStart, sEnd, n)
 
-            // Campañas con título en esta semana
-            const conTitulo = campanas
-              .filter(c => !!getSemana(c, n, "Titulo"))
-              .map(c => ({ c, titulo: getSemana(c, n, "Titulo")! }))
+            type RowItem = { c: CampanaType; titulo: string; fecha: string | null; sn: number }
 
-            // Campañas sin título: mostrar en la semana que coincide con su fecha, semana 1 como fallback
-            const sEndStr   = toYMD(sEnd)
-            const sStartStr = toYMD(sStart)
-            const sinTitulo = campanas
+            // Campañas con título: si la semana tiene fecha, usarla para decidir fila; si no, usar número de semana
+            const conTitulo: RowItem[] = []
+            for (const camp of campanas) {
+              for (const sn of SEMANAS) {
+                const titulo = getSemana(camp, sn, "Titulo")
+                const fecha  = getSemana(camp, sn, "Fecha")
+                if (!titulo) continue
+                if (fecha) {
+                  if (fecha >= sStartStr && fecha <= sEndStr) conTitulo.push({ c: camp, titulo, fecha, sn })
+                } else if (sn === n) {
+                  conTitulo.push({ c: camp, titulo, fecha: null, sn })
+                }
+              }
+            }
+
+            // Campañas sin título: usar fecha exacta para la fila, semana 1 como fallback
+            const sinTitulo: RowItem[] = campanas
               .filter(c => sinTitulosDocIds.has(c.documentId))
               .filter(c => c.semana1Fecha
                 ? c.semana1Fecha >= sStartStr && c.semana1Fecha <= sEndStr
                 : n === 1)
-              .map(c => ({ c, titulo: c.unidadNegocio }))
+              .map(c => ({ c, titulo: c.unidadNegocio, fecha: c.semana1Fecha, sn: 1 }))
 
-            const items = [...conTitulo, ...sinTitulo]
+            const items: RowItem[] = [...conTitulo, ...sinTitulo]
 
             return (
               <div key={n} className="flex items-center gap-3 px-4 py-3 min-h-[52px]">
                 <span className="text-[11px] text-slate-500 w-44 shrink-0 leading-snug">{label}</span>
                 <div className="flex-1 flex flex-wrap items-center gap-2">
-                  {items.map(({ c, titulo }) => (
-                    <CampanaChip key={`${c.documentId}-${n}`} titulo={titulo} categoria={c.categoria} archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
+                  {items.map(({ c, titulo, fecha, sn }) => (
+                    <div key={`${c.documentId}-${sn}`} className="flex items-center gap-1">
+                      {fecha && (
+                        <span className="text-[9px] text-slate-500 font-medium shrink-0 tabular-nums">
+                          {fmtFecha(fecha)}
+                        </span>
+                      )}
+                      <CampanaChip titulo={titulo} categoria={c.categoria} archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo].filter(Boolean) as string[]} onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
+                    </div>
                   ))}
                 </div>
                 <button type="button" title="Agregar campaña" onClick={() => onNueva({ mes, anio })}
