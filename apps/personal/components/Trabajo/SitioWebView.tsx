@@ -8,6 +8,8 @@ const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type Section = { texto: string; imagen: string }
+
 interface PageNode {
   id: string
   segment: string
@@ -17,7 +19,7 @@ interface PageNode {
   metaDesc: string
   keywords: string
   hero: string
-  sections: string[]
+  sections: Section[]
   componentes: string[]
   notas: string
   estructuraTitulo: string
@@ -93,7 +95,11 @@ function countSt(ns: PageNode[], st: string): number {
 function normalizeNode(n: PageNode): PageNode {
   return {
     ...n,
-    sections:         Array.isArray(n.sections)    ? n.sections    : [],
+    sections: Array.isArray(n.sections)
+      ? n.sections.map((s: unknown) =>
+          typeof s === "string" ? { texto: s, imagen: "" } : (s as Section)
+        )
+      : [],
     componentes:      Array.isArray(n.componentes) ? n.componentes : [],
     hero:             n.hero             ?? "",
     notas:            n.notas            ?? "",
@@ -164,6 +170,63 @@ function ListEditor({ items, onUpdate, ph }: {
           <Plus size={14} /> Agregar
         </button>
       </div>
+    </div>
+  )
+}
+
+// ─── SectionEditor ────────────────────────────────────────────────────────────
+
+function SectionEditor({ items, onUpdate }: {
+  items: Section[]
+  onUpdate: (v: Section[]) => void
+}) {
+  const addNew = () => onUpdate([...items, { texto: "", imagen: "" }])
+  const change = (i: number, patch: Partial<Section>) =>
+    onUpdate(items.map((s, j) => j === i ? { ...s, ...patch } : s))
+  const remove = (i: number) => onUpdate(items.filter((_, j) => j !== i))
+
+  return (
+    <div className="space-y-3">
+      {items.map((sec, i) => (
+        <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 group relative">
+          <button
+            type="button" title="Quitar sección"
+            onClick={() => remove(i)}
+            className="absolute top-2 right-2 p-1 rounded text-slate-700 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition">
+            <X size={12} />
+          </button>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] text-slate-700 font-mono shrink-0">{i + 1}.</span>
+            <textarea
+              value={sec.texto}
+              onChange={e => change(i, { texto: e.target.value })}
+              placeholder="Nombre o descripción de la sección…"
+              rows={2}
+              className="flex-1 px-2.5 py-1.5 text-[13px] text-slate-200 rounded-md border border-white/[0.06] bg-white/[0.02] placeholder:text-slate-700 outline-none focus:border-blue-500/40 resize-none transition"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-slate-700 shrink-0 w-4" />
+            <input
+              value={sec.imagen}
+              onChange={e => change(i, { imagen: e.target.value })}
+              placeholder="URL imagen de referencia (opcional)…"
+              className="flex-1 px-2.5 py-1.5 text-[12px] text-slate-400 rounded-md border border-white/[0.06] bg-white/[0.02] placeholder:text-slate-700 outline-none focus:border-blue-500/40 transition"
+            />
+            {sec.imagen && (
+              <a href={sec.imagen} target="_blank" rel="noopener noreferrer" title="Ver imagen"
+                className="shrink-0 p-1.5 rounded text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 transition">
+                <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
+        </div>
+      ))}
+      <button
+        type="button" onClick={addNew}
+        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-white/[0.09] text-sm text-slate-600 hover:text-slate-300 hover:border-blue-500/30 hover:bg-blue-500/5 transition">
+        <Plus size={13} /> Agregar sección
+      </button>
     </div>
   )
 }
@@ -497,33 +560,12 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
               />
             </div>
             <FieldCard>
-              <FieldRow label="Imagen de referencia (URL)">
-                <input value={node.hero ?? ""} onChange={e => onUpdate({ hero: e.target.value })}
-                  placeholder="https://drive.google.com/… o https://figma.com/…" className={inp} />
-                {node.hero && (
-                  <a href={node.hero} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 mt-2 transition">
-                    <ExternalLink size={10} /> Ver imagen
-                  </a>
-                )}
-              </FieldRow>
-            </FieldCard>
-            <FieldCard>
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[11px] text-slate-500">Secciones</p>
                   <span className="text-[10px] text-slate-600 font-mono">{(node.sections ?? []).length}</span>
                 </div>
-                <ListEditor items={node.sections ?? []} onUpdate={v => onUpdate({ sections: v })} ph="Hero, Productos, CTA..." />
-              </div>
-            </FieldCard>
-            <FieldCard>
-              <div className="px-4 py-3">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[11px] text-slate-500">Componentes reutilizables</p>
-                  <span className="text-[10px] text-slate-600 font-mono">{(node.componentes ?? []).length}</span>
-                </div>
-                <ListEditor items={node.componentes ?? []} onUpdate={v => onUpdate({ componentes: v })} ph="Navbar, ProductCard, CTABanner..." />
+                <SectionEditor items={node.sections ?? []} onUpdate={v => onUpdate({ sections: v })} />
               </div>
             </FieldCard>
           </>
