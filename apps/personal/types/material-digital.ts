@@ -38,7 +38,7 @@ export const SUBCATEGORIAS: Record<CategoriaDigital, string[]> = {
   COLABORADOR:             ["Fotografías", "Gafetes", "Tarjetas", "Firmas digitales", "Vestimenta"],
   EVENTOS_PROYECTOS:       [],
   ASSETS:                  ["Machinery", "Control", "Cómputo", "Conveyors"],
-  LINKS_UTILIDAD:          ["App corrección ortografía", "App calendarios", "App WordPress", "App sistema de mail", "App contraseñas"],
+  LINKS_UTILIDAD:          ["App corrección ortografía", "App calendarios", "App WordPress", "App sistema de mail", "App contraseñas", "App de QR digital"],
   BASES_DATOS:             ["Base MKT 2023", "Base MKT 2024", "Base MKT 2025", "Base MKT 2026"],
 }
 
