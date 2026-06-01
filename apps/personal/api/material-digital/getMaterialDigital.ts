@@ -6,6 +6,8 @@ const BASE = () => `${process.env.NEXT_PUBLIC_BACKEND_URL}`
 export function useGetMaterialDigital(ambito: AmbitoMaterialDigital = "trabajo") {
   const filter = ambito === "empresa"
     ? "&filters[ambito][$eq]=empresa"
+    : ambito === "personal"
+    ? "&filters[ambito][$eq]=personal"
     : "&filters[$or][0][ambito][$eq]=trabajo&filters[$or][1][ambito][$null]=true"
 
   const [materiales, setMateriales] = useState<MaterialDigitalType[]>([])

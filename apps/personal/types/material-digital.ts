@@ -80,7 +80,7 @@ export const TIPO_CONFIG: Record<TipoMaterial, { label: string; badge: string }>
   link:         { label: "Link",          badge: "bg-slate-500/10 text-slate-400 border-slate-500/20"   },
 }
 
-export type AmbitoMaterialDigital = "trabajo" | "empresa"
+export type AmbitoMaterialDigital = "trabajo" | "empresa" | "personal"
 
 export type MaterialDigitalType = {
   id:           number

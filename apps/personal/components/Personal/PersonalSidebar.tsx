@@ -13,6 +13,7 @@ import {
   Dumbbell,
   CalendarRange,
   ShoppingCart,
+  FolderOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -31,7 +32,8 @@ const sections: { title: string; items: NavItem[] }[] = [
   {
     title: "Productividad",
     items: [
-      { name: "Tareas", href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
+      { name: "Tareas",           href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
+      { name: "Material Digital", href: "/gestion-personal/material-digital",  icon: FolderOpen,  color: "purple" },
     ],
   },
   {

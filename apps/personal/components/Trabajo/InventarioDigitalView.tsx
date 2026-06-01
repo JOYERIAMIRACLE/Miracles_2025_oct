@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import {
   CategoriaDigital, CATEGORIAS_DIGITAL, CATEGORIA_CONFIG,
   SUBCATEGORIAS, TIPOS_MATERIAL, TIPO_CONFIG, GRUPOS_MATERIAL,
-  MaterialDigitalType, MaterialDigitalPayload, TipoMaterial,
+  MaterialDigitalType, MaterialDigitalPayload, TipoMaterial, AmbitoMaterialDigital,
 } from "@/types/material-digital"
 import { useGetMaterialDigital } from "@/api/material-digital/getMaterialDigital"
 import { createMaterialDigital, updateMaterialDigital, deleteMaterialDigital } from "@/api/material-digital/mutateMaterialDigital"
@@ -16,30 +16,29 @@ import { createMaterialDigital, updateMaterialDigital, deleteMaterialDigital } f
 const inputCls = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 transition"
 const labelCls = "block text-[11px] text-slate-500 mb-1"
 
-const AMBITO = "trabajo" as const
-
-function emptyPayload(categoria: CategoriaDigital): MaterialDigitalPayload {
+function emptyPayload(categoria: CategoriaDigital, ambito: AmbitoMaterialDigital): MaterialDigitalPayload {
   return {
     nombre: "", url: "", categoria,
     subcategoria: SUBCATEGORIAS[categoria][0] ?? "",
-    tipo: "link", descripcion: null, evento: null, ambito: AMBITO,
+    tipo: "link", descripcion: null, evento: null, ambito,
   }
 }
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
-function Modal({ editando, categoriaInicial, onGuardar, onCerrar }: {
-  editando:        MaterialDigitalType | null
+function Modal({ editando, categoriaInicial, ambito, onGuardar, onCerrar }: {
+  editando:         MaterialDigitalType | null
   categoriaInicial: CategoriaDigital
-  onGuardar:       (p: MaterialDigitalPayload) => Promise<void>
-  onCerrar:        () => void
+  ambito:           AmbitoMaterialDigital
+  onGuardar:        (p: MaterialDigitalPayload) => Promise<void>
+  onCerrar:         () => void
 }) {
   const [form, setForm] = useState<MaterialDigitalPayload>(
     editando
       ? { nombre: editando.nombre, url: editando.url, categoria: editando.categoria,
           subcategoria: editando.subcategoria, tipo: editando.tipo,
-          descripcion: editando.descripcion, evento: editando.evento }
-      : emptyPayload(categoriaInicial)
+          descripcion: editando.descripcion, evento: editando.evento, ambito: editando.ambito }
+      : emptyPayload(categoriaInicial, ambito)
   )
   const [saving, setSaving] = useState(false)
 
@@ -78,7 +77,7 @@ function Modal({ editando, categoriaInicial, onGuardar, onCerrar }: {
           <select aria-label="Categoría" value={form.categoria}
             onChange={e => {
               const cat = e.target.value as CategoriaDigital
-              setForm(f => ({ ...f, categoria: cat, subcategoria: SUBCATEGORIAS[cat][0] ?? "" }))
+              setForm(f => ({ ...f, categoria: cat, subcategoria: SUBCATEGORIAS[cat][0] ?? "", ambito: f.ambito }))
             }}
             className={inputCls}>
             {CATEGORIAS_DIGITAL.map(c => (
@@ -339,8 +338,8 @@ function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
-export function InventarioDigitalView() {
-  const { materiales, setMateriales, loading } = useGetMaterialDigital("trabajo")
+export function InventarioDigitalView({ ambito = "trabajo" }: { ambito?: AmbitoMaterialDigital }) {
+  const { materiales, setMateriales, loading } = useGetMaterialDigital(ambito)
   const [categoriaActiva, setCategoriaActiva] = useState<CategoriaDigital>("BRANDING")
   const [busqueda,  setBusqueda]  = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -516,6 +515,7 @@ export function InventarioDigitalView() {
         <Modal
           editando={editando}
           categoriaInicial={categoriaActiva}
+          ambito={ambito}
           onGuardar={guardar}
           onCerrar={() => setModalOpen(false)}
         />

@@ -50,7 +50,7 @@
     },
     "ambito": {
       "type": "enumeration",
-      "enum": ["trabajo", "empresa"],
+      "enum": ["trabajo", "empresa", "personal"],
       "default": "trabajo"
     }
   }
