@@ -444,8 +444,16 @@ export function CampanasView() {
       .sort(([a], [b]) => {
         const [mesA, anioA] = a.split(" ")
         const [mesB, anioB] = b.split(" ")
-        if (anioA !== anioB) return Number(anioB) - Number(anioA)
-        return MESES.indexOf(mesA as MesCampana) - MESES.indexOf(mesB as MesCampana)
+        const hoy = new Date()
+        const hoyAbs = hoy.getFullYear() * 12 + hoy.getMonth()
+        const absA = Number(anioA) * 12 + MESES.indexOf(mesA as MesCampana)
+        const absB = Number(anioB) * 12 + MESES.indexOf(mesB as MesCampana)
+        const dA = absA - hoyAbs  // positivo = futuro/actual, negativo = pasado
+        const dB = absB - hoyAbs
+        // futuro/actual antes que pasado; dentro de cada grupo, más próximo primero
+        if (dA >= 0 && dB < 0) return -1
+        if (dA < 0 && dB >= 0) return 1
+        return dA - dB
       })
   }, [filtradas])
 
