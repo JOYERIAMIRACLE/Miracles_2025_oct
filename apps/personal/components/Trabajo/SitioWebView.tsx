@@ -439,17 +439,9 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
         {/* URL bar — siempre visible */}
         <div className="flex items-center gap-3 px-6 py-4 rounded-xl border border-white/[0.07] bg-[#0d1117]">
           <Globe size={16} className="text-slate-600 shrink-0" />
-          <span className="text-[14px] font-mono text-slate-500 flex-1 truncate">
+          <span className="text-[14px] font-mono text-slate-500 truncate">
             {siteDomain || "tu-dominio.com"}{fp !== "/" ? fp : ""}
           </span>
-          <div className="flex items-center gap-2 text-[13px] text-slate-600 shrink-0">
-            <span className="text-slate-700">|</span>
-            <span>Visitas</span>
-            <span className="text-slate-700">|</span>
-            <span>Clics</span>
-            <span className="text-slate-700">|</span>
-            <span>Rank SEO</span>
-          </div>
         </div>
 
         {/* ── Tab SEO/meta ── */}
