@@ -738,6 +738,9 @@ function DrilldownModal({ row, semanas, onCerrar }: {
 
 type MensualMetrica = { label: string; key: keyof BoxscoreType; color: string; fmt?: (v: number) => string }
 
+const TOTAL_KEY = "__total__"
+const TOTAL_COLOR = "#e2e8f0"
+
 function MensualTable({ title, accent, semanas, metricas }: {
   title: string; accent: string
   semanas: BoxscoreType[]
@@ -769,17 +772,31 @@ function MensualTable({ title, accent, semanas, metricas }: {
     total: metricas.reduce((s, mt) => s + (m.vals[String(mt.key)] ?? 0), 0),
   }))
 
-  const chartData = tableData.map(m => ({ label: m.label, ...m.vals }))
-  const visibleMetricas = selectedKey ? metricas.filter(mt => String(mt.key) === selectedKey) : metricas
+  const chartData = tableData.map((m, i) => ({
+    label: m.label,
+    ...m.vals,
+    [TOTAL_KEY]: totalesPorMes[i]!.total,
+  }))
+
+  const isTotalSelected = selectedKey === TOTAL_KEY
+  const visibleMetricas = isTotalSelected
+    ? []
+    : selectedKey
+      ? metricas.filter(mt => String(mt.key) === selectedKey)
+      : metricas
 
   const handleRowClick = (key: string) => setSelectedKey(prev => prev === key ? null : key)
+
+  const selectedLabel = isTotalSelected
+    ? "Total"
+    : metricas.find(m => String(m.key) === selectedKey)?.label
 
   return (
     <div className="space-y-3">
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{title}</p>
       {selectedKey && (
         <p className="text-[10px] text-slate-500">
-          Mostrando: <span className="text-slate-300">{metricas.find(m => String(m.key) === selectedKey)?.label}</span>
+          Mostrando: <span className="text-slate-300">{selectedLabel}</span>
           {" · "}
           <button type="button" onClick={() => setSelectedKey(null)} className="text-blue-400 hover:text-blue-300">Ver todas</button>
         </p>
@@ -822,10 +839,18 @@ function MensualTable({ title, accent, semanas, metricas }: {
                 </tr>
               )
             })}
-            {/* Fila de totales */}
-            <tr className="border-t-2 border-slate-700/60 bg-slate-900/60">
-              <td className="px-4 py-2.5 sticky left-0 bg-slate-900/80 z-10">
-                <p className="text-xs font-semibold text-slate-300">Total</p>
+            {/* Fila de totales — seleccionable */}
+            <tr
+              onClick={() => handleRowClick(TOTAL_KEY)}
+              className={`border-t-2 border-slate-700/60 cursor-pointer transition-colors ${
+                isTotalSelected ? "bg-slate-800/60" : selectedKey ? "opacity-40 hover:opacity-70 hover:bg-slate-800/20" : "hover:bg-slate-800/30"
+              }`}
+            >
+              <td className={`px-4 py-2.5 sticky left-0 z-10 border-l-2 ${isTotalSelected ? "border-slate-300/60 bg-slate-950" : "border-slate-700/40 bg-slate-900/80"}`}>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: TOTAL_COLOR }} />
+                  <p className="text-xs font-semibold text-slate-300">Total</p>
+                </div>
               </td>
               {totalesPorMes.map(m => (
                 <td key={m.label} className="px-3 py-2.5 text-center">
@@ -847,14 +872,29 @@ function MensualTable({ title, accent, semanas, metricas }: {
               <Tooltip
                 contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 11 }}
                 formatter={(v: number, name: string) => {
+                  if (name === TOTAL_KEY) return [fmt(v), "Total"]
                   const mt = metricas.find(m => String(m.key) === name)
                   return [mt?.fmt ? mt.fmt(v) : fmt(v), mt?.label ?? name]
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <Legend
+                wrapperStyle={{ fontSize: 10 }}
+                formatter={(name: string) => name === TOTAL_KEY ? "Total" : (metricas.find(m => String(m.key) === name)?.label ?? name)}
+              />
               {visibleMetricas.map(mt => (
                 <Line key={String(mt.key)} type="monotone" dataKey={String(mt.key)} stroke={mt.color} strokeWidth={selectedKey ? 2.5 : 2} dot={false} name={mt.label} />
               ))}
+              {(isTotalSelected || !selectedKey) && (
+                <Line
+                  type="monotone"
+                  dataKey={TOTAL_KEY}
+                  stroke={TOTAL_COLOR}
+                  strokeWidth={isTotalSelected ? 2.5 : 1.5}
+                  strokeDasharray={selectedKey ? undefined : "5 3"}
+                  dot={false}
+                  name="Total"
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>
