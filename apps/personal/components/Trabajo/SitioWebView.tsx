@@ -373,7 +373,7 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
   onSave: () => void
   saving: boolean
 }) {
-  const [tab,     setTab]     = useState<"seo" | "estructura" | "metricas">("seo")
+  const [tab,     setTab]     = useState<"seo" | "estructura">("seo")
   const [saved,   setSaved]   = useState(false)
   const kw = node.keywords.split(",").filter(k => k.trim())
   const s  = ST[node.status]
@@ -381,7 +381,6 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
   const TABS = [
     { id: "seo",        label: "Slug/meta"  },
     { id: "estructura", label: "Estructura" },
-    { id: "metricas",   label: "Métricas"   },
   ] as const
 
   function handleSave() {
@@ -563,68 +562,6 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
           </>
         )}
 
-        {/* ── Tab Métricas ── */}
-        {tab === "metricas" && (
-          <>
-            <FieldCard>
-              <FieldRow label="Estado de la página">
-                <div className="flex gap-2 mt-1">
-                  {(["planning", "draft", "live"] as const).map(st => (
-                    <button key={st} type="button" onClick={() => onUpdate({ status: st })}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition ${
-                        node.status === st
-                          ? st === "live"     ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-300"
-                          : st === "draft"    ? "bg-amber-500/20 border-amber-500/30 text-amber-300"
-                                              : "bg-slate-700/40 border-slate-600/30 text-slate-300"
-                          : "border-white/[0.06] text-slate-600 hover:text-slate-400"
-                      }`}>
-                      {ST[st].lbl}
-                    </button>
-                  ))}
-                </div>
-              </FieldRow>
-              <FieldRow label="Tráfico estimado">
-                <div className="flex gap-2 mt-1">
-                  {(["alto", "medio", "bajo"] as const).map(t => (
-                    <button key={t} type="button"
-                      onClick={() => onUpdate({ trafico: node.trafico === t ? "" : t })}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border capitalize transition ${
-                        node.trafico === t
-                          ? t === "alto"  ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-400"
-                          : t === "medio" ? "bg-amber-500/15 border-amber-500/20 text-amber-400"
-                                          : "bg-slate-700/30 border-slate-600/20 text-slate-400"
-                          : "border-white/[0.06] text-slate-600 hover:text-slate-400"
-                      }`}>{t}</button>
-                  ))}
-                </div>
-              </FieldRow>
-            </FieldCard>
-
-            <FieldCard>
-              <FieldRow label="CTR estimado">
-                <input value={node.ctrEstimado} onChange={e => onUpdate({ ctrEstimado: e.target.value })}
-                  placeholder="2–4%" title="CTR estimado" className={inp} />
-              </FieldRow>
-              <FieldRow label="Formularios en la página">
-                <input type="number" min={0} title="Número de formularios"
-                  value={node.formularios}
-                  onChange={e => onUpdate({ formularios: Math.max(0, Number(e.target.value)) })}
-                  className={inp} />
-              </FieldRow>
-            </FieldCard>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-white/[0.07] bg-[#0d1117] px-4 py-4">
-                <p className="text-[10px] text-slate-600 mb-1">Keywords</p>
-                <p className="text-3xl font-bold text-slate-100">{kw.length}</p>
-              </div>
-              <div className="rounded-xl border border-white/[0.07] bg-[#0d1117] px-4 py-4">
-                <p className="text-[10px] text-slate-600 mb-1">Secciones</p>
-                <p className="text-3xl font-bold text-slate-100">{node.sections.length}</p>
-              </div>
-            </div>
-          </>
-        )}
 
       </div>
     </div>
