@@ -441,8 +441,8 @@ export default function PagosPage() {
   const [filtroEst,     setFiltroEst]     = useState<EstadoPago | "todos">("todos")
   const [filtroCatId,   setFiltroCatId]   = useState<number | null>(null)
   const [busqueda,      setBusqueda]      = useState("")
-  const [fechaDesde,    setFechaDesde]    = useState(() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}-01` })
-  const [fechaHasta,    setFechaHasta]    = useState(() => new Date().toISOString().slice(0, 10))
+  const [fechaDesde,    setFechaDesde]    = useState("")
+  const [fechaHasta,    setFechaHasta]    = useState("")
 
   function aplicarPreset(preset: "mes" | "mesAnt" | "anio" | "todo") {
     const hoy = new Date()
