@@ -37,33 +37,26 @@ export default function ChatWidget() {
     setMessages(prev => [...prev, { role: "assistant", content: "" }])
 
     try {
-      const response = await fetch("/api/chat", {
+      const base = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+      const response = await fetch(`${base}/api/miracles-chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
       })
 
-      if (!response.ok) throw new Error("Error del servidor")
+      if (!response.ok) throw new Error(`Error ${response.status}`)
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-      let assistantContent = ""
-
-      while (reader) {
-        const { done, value } = await reader.read()
-        if (done) break
-        assistantContent += decoder.decode(value, { stream: true })
-        setMessages(prev => [
-          ...prev.slice(0, -1),
-          { role: "assistant", content: assistantContent },
-        ])
-      }
-    } catch {
+      const json = await response.json()
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { role: "assistant", content: json.content ?? "Sin respuesta" },
+      ])
+    } catch (err) {
       setMessages(prev => [
         ...prev.slice(0, -1),
         {
           role: "assistant",
-          content: "Error al conectar. Asegúrate de que ANTHROPIC_API_KEY está configurada en .env.local.",
+          content: err instanceof Error ? err.message : "Error al conectar con el asistente.",
         },
       ])
     } finally {

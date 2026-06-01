@@ -1,5 +1,24 @@
 'use strict';
 
+const CHAT_SYSTEM_PROMPT = `Eres el asistente personal de Ricardo para la app de gestión interna Miracles.
+
+Contexto de la app:
+- App de gestión personal y empresarial para Joyería Miracles (joyería de oro y plata en México)
+- Stack técnico: Next.js 15 + React 19, Strapi 5, Tailwind CSS v4, PostgreSQL, Cloudflare Pages, Render
+
+Módulos implementados:
+1. Gestión Personal: calendario, cuentas, presupuesto, tareas, vivienda, salud, ejercicio, alimentación (planeador/recetario/despensa), material digital personal
+2. Gestión Empresa: gastos, ventas (pedidos/pipeline/cotizaciones), almacén, finanzas, catálogos, indicadores, marketing
+3. Trabajo: tareas, reuniones, proyectos, calendario, equipos, inventario, sitio web, tickets, campañas, pagos, tutoriales
+4. Tienda: e-commerce público de joyería
+
+Tu rol:
+- Ayudar a Ricardo a dar seguimiento al desarrollo de esta app
+- Responder preguntas sobre módulos, estado y planes futuros
+- Dar orientación técnica sobre el stack
+- Ser conciso, práctico y directo
+- Siempre responder en español`;
+
 // Acciones del API Categoria que queremos abrir al rol Public
 const PUBLIC_ACTIONS_PRODUCT = [
   'api::product.product.find',
@@ -274,6 +293,31 @@ async function normalizarCategorias(strapi) {
 module.exports = {
   register({ strapi }) {
     strapi.server.routes([
+      {
+        method: 'POST',
+        path: '/api/miracles-chat',
+        handler: async (ctx) => {
+          try {
+            const { messages } = ctx.request.body
+            if (!Array.isArray(messages) || messages.length === 0) {
+              ctx.status = 400; ctx.body = { error: 'messages required' }; return
+            }
+            const Anthropic = require('@anthropic-ai/sdk')
+            const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY })
+            const response = await client.messages.create({
+              model: 'claude-sonnet-4-6',
+              max_tokens: 1024,
+              system: CHAT_SYSTEM_PROMPT,
+              messages,
+            })
+            ctx.body = { content: response.content[0]?.text ?? '' }
+          } catch (e) {
+            strapi.log.error('[miracles-chat] ' + e.message)
+            ctx.status = 500; ctx.body = { error: e.message }
+          }
+        },
+        config: { auth: false },
+      },
       {
         method: 'GET',
         path: '/api/my-role',
