@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket, ChevronDown, ClipboardList, Link2, ExternalLink } from "lucide-react"
+import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -122,6 +123,8 @@ const finSemana = (date: Date) => {
 type Vista = "lista" | "calendario" | "metricas"
 
 export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: string }) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
   const { tareas, setTareas, loading } = useGetTareas(ambito)
   const { historial, setHistorial }    = useGetHistorialTarea(ambito)
   const [vista, setVista] = useState<Vista>("lista")
@@ -384,10 +387,12 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
   return (
     <div
-      className="-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden"
+      className="-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden transition-colors duration-300"
       style={{
-        backgroundColor: "#020617",
-        backgroundImage: "radial-gradient(circle, #1e293b 1px, transparent 1px)",
+        backgroundColor: isDark ? "#020617" : "#f8fafc",
+        backgroundImage: isDark
+          ? "radial-gradient(circle, #1e293b 1px, transparent 1px)"
+          : "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
         backgroundSize: "28px 28px",
       }}>
       <div className="pointer-events-none absolute inset-0"
@@ -400,12 +405,12 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Toggle vista */}
-          <div className="flex gap-1 bg-slate-900/60 backdrop-blur-sm p-1 rounded-lg border border-slate-700/50">
+          <div className="flex gap-1 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700/50">
             <button
               type="button"
               onClick={() => setVista("lista")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "lista" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"
+                vista === "lista" ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
               <List size={14} /> Lista
@@ -414,7 +419,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               type="button"
               onClick={() => setVista("calendario")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "calendario" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"
+                vista === "calendario" ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
               <CalIcon size={14} /> Calendario
@@ -423,7 +428,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               type="button"
               onClick={() => setVista("metricas")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "metricas" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"
+                vista === "metricas" ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
               <BarChart2 size={14} /> Métricas
@@ -440,11 +445,11 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
+        <div className="border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
           <p className="text-[10px] text-muted-foreground uppercase">Total</p>
           <p className="text-xl font-bold">{stats.total}</p>
         </div>
-        <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
+        <div className="border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
           <p className="text-[10px] text-slate-500 uppercase">Sin iniciar</p>
           <p className="text-xl font-bold text-slate-300">{stats.sinIniciar}</p>
         </div>
@@ -472,7 +477,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar por título, descripción o etiqueta..."
-              className="h-9 pl-9 text-sm bg-slate-900/60 border-slate-700/50 text-slate-200 placeholder:text-slate-600"
+              className="h-9 pl-9 text-sm bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600"
             />
           </div>
 
@@ -485,8 +490,8 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 onClick={() => setFiltro(e.key)}
                 className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                   filtro === e.key
-                    ? "bg-slate-700 text-white border-slate-600"
-                    : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600"
+                    ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
                 }`}
               >
                 {e.label}
@@ -497,7 +502,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por rango de fecha"
               value={filtroRango}
               onChange={e => setFiltroRango(e.target.value as RangoFecha)}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             >
               {RANGOS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
             </select>
@@ -506,7 +511,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               title="Filtrar por prioridad"
               value={filtroPrioridad}
               onChange={e => setFiltroPrioridad(e.target.value as PrioridadTarea | "")}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
+              className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             >
               <option value="">Toda prioridad</option>
               {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -517,7 +522,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por etiqueta"
                 value={filtroEtiqueta}
                 onChange={e => setFiltroEtiqueta(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
               >
                 <option value="">Todas las etiquetas</option>
                 {etiquetasUsadas.map(et => <option key={et} value={et}>{et}</option>)}
@@ -529,7 +534,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                 title="Filtrar por responsable"
                 value={filtroResponsable}
                 onChange={e => setFiltroResponsable(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300"
+                className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
               >
                 <option value="">Todos los responsables</option>
                 {responsablesUsados.map(r => <option key={r} value={r}>{r}</option>)}
@@ -579,7 +584,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               return (
                 <div
                   key={t.documentId}
-                  className={`flex items-start gap-3 p-3 rounded-xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm ${t.estado === "completada" ? "opacity-50" : ""}`}
+                  className={`flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm ${t.estado === "completada" ? "opacity-50" : ""}`}
                 >
                   <button
                     type="button"
@@ -1175,7 +1180,7 @@ function CalendarioVista({
   while (celdas.length % 7 !== 0) celdas.push(null)
 
   return (
-    <div className="border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
+    <div className="border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
       <div className="flex items-center justify-between mb-3">
         <button
           type="button"
@@ -1216,7 +1221,7 @@ function CalendarioVista({
               className={`min-h-[72px] p-1 rounded border text-left flex flex-col gap-0.5 transition ${
                 esHoy
                   ? "border-cyan-500/60 bg-cyan-500/10"
-                  : "border-slate-700/50 bg-slate-900/60 hover:bg-slate-800/60"
+                  : "border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               }`}
               title={`Crear tarea el ${iso}`}
             >
