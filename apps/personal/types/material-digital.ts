@@ -5,6 +5,7 @@ export const CATEGORIAS_DIGITAL = [
   "FORMATOS_INTERNOS",
   "INSTALACIONES_VEHICULOS",
   "COLABORADOR",
+  "DOCUMENTOS_COLABORADOR",
   "EVENTOS_PROYECTOS",
   // Nuevos grupos
   "ASSETS",
@@ -20,7 +21,8 @@ export const CATEGORIA_CONFIG: Record<CategoriaDigital, { label: string; color: 
   FORMATOS_INTERNOS:      { label: "Formatos internos",         color: "amber",   accent: "bg-amber-500/10 text-amber-400 border-amber-500/20"     },
   INSTALACIONES_VEHICULOS:{ label: "Instalaciones y vehículos", color: "cyan",    accent: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"        },
   COLABORADOR:            { label: "Branding Colaborador",      color: "emerald", accent: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"},
-  EVENTOS_PROYECTOS:      { label: "Eventos y proyectos",       color: "rose",    accent: "bg-rose-500/10 text-rose-400 border-rose-500/20"        },
+  DOCUMENTOS_COLABORADOR: { label: "Documentos de colaborador", color: "teal",    accent: "bg-teal-500/10 text-teal-400 border-teal-500/20"         },
+  EVENTOS_PROYECTOS:      { label: "Eventos y proyectos",       color: "rose",    accent: "bg-rose-500/10 text-rose-400 border-rose-500/20"         },
   ASSETS:                 { label: "assets",                    color: "orange",  accent: "bg-orange-500/10 text-orange-400 border-orange-500/20"  },
   LINKS_UTILIDAD:         { label: "links de utilidad",         color: "teal",    accent: "bg-teal-500/10 text-teal-400 border-teal-500/20"        },
   BASES_DATOS:            { label: "bases de datos",            color: "blue",    accent: "bg-blue-500/10 text-blue-400 border-blue-500/20"        },
@@ -36,6 +38,7 @@ export const SUBCATEGORIAS: Record<CategoriaDigital, string[]> = {
   ],
   INSTALACIONES_VEHICULOS: ["Branding edificio", "Branding autos"],
   COLABORADOR:             ["Fotografías", "Gafetes", "Tarjetas", "Firmas digitales", "Vestimenta"],
+  DOCUMENTOS_COLABORADOR:  ["Contrato", "NDA", "Reglamento interno", "Políticas", "Onboarding", "Evaluación", "Otros"],
   EVENTOS_PROYECTOS:       [],
   ASSETS:                  ["Machinery", "Control", "Cómputo", "Conveyors", "Logos de aliados estratégicos"],
   LINKS_UTILIDAD:          ["App corrección ortografía", "App calendarios", "App WordPress", "App sistema de mail", "App contraseñas", "App de QR digital"],
@@ -52,7 +55,7 @@ export type GrupoMaterial = {
 export const GRUPOS_MATERIAL: GrupoMaterial[] = [
   {
     id: "identidad", label: "Identidad", collapsible: false,
-    categorias: ["BRANDING", "HERRAMIENTAS_VENTAS", "FORMATOS_INTERNOS", "INSTALACIONES_VEHICULOS", "COLABORADOR", "EVENTOS_PROYECTOS"],
+    categorias: ["BRANDING", "HERRAMIENTAS_VENTAS", "FORMATOS_INTERNOS", "INSTALACIONES_VEHICULOS", "COLABORADOR", "DOCUMENTOS_COLABORADOR", "EVENTOS_PROYECTOS"],
   },
   {
     id: "assets", label: "assets", collapsible: true,
