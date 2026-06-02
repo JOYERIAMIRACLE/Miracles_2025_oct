@@ -251,7 +251,8 @@ function MaterialCard({ material, onEdit, onDelete }: {
 
 // ─── Sidebar con grupos colapsables ──────────────────────────────────────────
 
-function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
+function SidebarGrupos({ grupos, categoriaActiva, materiales, onSelect }: {
+  grupos: typeof GRUPOS_MATERIAL
   categoriaActiva: CategoriaDigital
   materiales: MaterialDigitalType[]
   onSelect: (cat: CategoriaDigital) => void
@@ -262,7 +263,7 @@ function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
 
   return (
     <div className="flex flex-col gap-1 px-2">
-      {GRUPOS_MATERIAL.map(grupo => {
+      {grupos.map(grupo => {
         const isOpen  = grupo.collapsible ? (abiertos[grupo.id] ?? false) : true
         const single  = grupo.categorias.length === 1
         const soloCat = single ? grupo.categorias[0] : null
@@ -338,9 +339,20 @@ function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
+const CATS_SOLO_PERSONAL: CategoriaDigital[] = ["DOCUMENTOS_COLABORADOR"]
+
 export function InventarioDigitalView({ ambito = "trabajo" }: { ambito?: AmbitoMaterialDigital }) {
   const { materiales, setMateriales, loading } = useGetMaterialDigital(ambito)
   const [categoriaActiva, setCategoriaActiva] = useState<CategoriaDigital>("BRANDING")
+
+  const gruposFiltrados = useMemo(() =>
+    ambito === "personal"
+      ? GRUPOS_MATERIAL
+      : GRUPOS_MATERIAL.map(g => ({
+          ...g,
+          categorias: g.categorias.filter(c => !CATS_SOLO_PERSONAL.includes(c)),
+        })).filter(g => g.categorias.length > 0),
+  [ambito])
   const [busqueda,  setBusqueda]  = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [editando,  setEditando]  = useState<MaterialDigitalType | null>(null)
@@ -425,6 +437,7 @@ export function InventarioDigitalView({ ambito = "trabajo" }: { ambito?: AmbitoM
       {/* Sidebar de categorías — solo desktop */}
       <aside className="w-56 shrink-0 border-r border-slate-800/60 py-3 hidden lg:flex flex-col gap-3 bg-slate-950 overflow-y-auto">
         <SidebarGrupos
+          grupos={gruposFiltrados}
           categoriaActiva={categoriaActiva}
           materiales={materiales}
           onSelect={cat => { setCategoriaActiva(cat); setBusqueda("") }}
@@ -439,7 +452,7 @@ export function InventarioDigitalView({ ambito = "trabajo" }: { ambito?: AmbitoM
           <select aria-label="Categoría" value={categoriaActiva}
             onChange={e => { setCategoriaActiva(e.target.value as CategoriaDigital); setBusqueda("") }}
             className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 outline-none focus:border-slate-600 transition">
-            {GRUPOS_MATERIAL.map(g => (
+            {gruposFiltrados.map(g => (
               <optgroup key={g.id} label={g.label}>
                 {g.categorias.map(c => (
                   <option key={c} value={c}>{CATEGORIA_CONFIG[c].label}</option>
