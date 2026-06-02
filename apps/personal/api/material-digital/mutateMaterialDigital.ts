@@ -8,7 +8,10 @@ export async function createMaterialDigital(payload: MaterialDigitalPayload): Pr
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
-  if (!res.ok) throw new Error(`${res.status}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.error?.message ?? `Error ${res.status}`)
+  }
   return (await res.json()).data
 }
 
@@ -18,7 +21,10 @@ export async function updateMaterialDigital(documentId: string, payload: Partial
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
-  if (!res.ok) throw new Error(`${res.status}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err?.error?.message ?? `Error ${res.status}`)
+  }
   return (await res.json()).data
 }
 

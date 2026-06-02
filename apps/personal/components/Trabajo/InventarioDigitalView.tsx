@@ -402,7 +402,7 @@ export function InventarioDigitalView({ ambito = "trabajo" }: { ambito?: AmbitoM
         toast.success("Material agregado")
       }
       setModalOpen(false)
-    } catch { toast.error("Error al guardar") }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Error al guardar") }
   }
 
   const borrar = async (m: MaterialDigitalType) => {
