@@ -231,9 +231,16 @@ function SectionEditor({ items, onUpdate }: {
 
 // ─── NodeCard ─────────────────────────────────────────────────────────────────
 
-function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed, onToggle, onMoveUp, onMoveDown }: {
+const STATUS_CYCLE: Record<PageNode["status"], PageNode["status"]> = {
+  planning: "draft",
+  draft:    "live",
+  live:     "planning",
+}
+
+function NodeCard({ node, fp, onEdit, onAddChild, onDel, onStatusChange, hasChildren, collapsed, onToggle, onMoveUp, onMoveDown }: {
   node: PageNode; fp: string
   onEdit: () => void; onAddChild: () => void; onDel: () => void
+  onStatusChange: (s: PageNode["status"]) => void
   hasChildren?: boolean; collapsed?: boolean; onToggle?: () => void
   onMoveUp?: () => void; onMoveDown?: () => void
 }) {
@@ -261,7 +268,18 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
       </div>
       <div className="flex items-center justify-between px-3 pb-2.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/50">
         <div className="flex items-center gap-1">
-          <span className={`text-[9px] font-medium ${s.txt}`}>{s.lbl}</span>
+          <button
+            type="button"
+            title={`Estado: ${s.lbl} — clic para cambiar`}
+            onClick={e => { e.stopPropagation(); onStatusChange(STATUS_CYCLE[node.status]) }}
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold border transition-colors hover:opacity-80 ${
+              node.status === "live"     ? "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" :
+              node.status === "draft"    ? "bg-amber-500/15 border-amber-500/25 text-amber-400" :
+                                          "bg-slate-500/10 border-slate-500/20 text-slate-400"
+            }`}>
+            <div className={`w-1 h-1 rounded-full shrink-0 ${s.dot}`} />
+            {s.lbl}
+          </button>
           {hasChildren && onToggle && (
             <button type="button" title={collapsed ? "Expandir" : "Colapsar"}
               onClick={e => { e.stopPropagation(); onToggle() }}
@@ -305,13 +323,14 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
 
 // ─── TreeRow ──────────────────────────────────────────────────────────────────
 
-function TreeRow({ node, parentFp, idx, siblingCount, onEdit, onAddChild, onDel, onMove }: {
+function TreeRow({ node, parentFp, idx, siblingCount, onEdit, onAddChild, onDel, onMove, onStatusChange }: {
   node: PageNode; parentFp: string
   idx: number; siblingCount: number
   onEdit: (id: string) => void
   onAddChild: (pid: string) => void
   onDel: (id: string) => void
   onMove: (id: string, dir: -1 | 1) => void
+  onStatusChange: (id: string, s: PageNode["status"]) => void
 }) {
   const [open, setOpen] = useState(false)
   const fp = node.segment === "" ? "/" : parentFp === "/" ? `/${node.segment}` : `${parentFp}/${node.segment}`
@@ -323,6 +342,7 @@ function TreeRow({ node, parentFp, idx, siblingCount, onEdit, onAddChild, onDel,
         onEdit={() => onEdit(node.id)}
         onAddChild={() => onAddChild(node.id)}
         onDel={() => onDel(node.id)}
+        onStatusChange={s => onStatusChange(node.id, s)}
         hasChildren={hasChildren}
         collapsed={!open}
         onToggle={() => setOpen(v => !v)}
@@ -334,7 +354,7 @@ function TreeRow({ node, parentFp, idx, siblingCount, onEdit, onAddChild, onDel,
           {node.children.map((c, i) => (
             <div key={c.id} className="relative">
               <div className="absolute -left-5 top-[42px] w-5 h-px bg-slate-200 dark:bg-slate-800" />
-              <TreeRow node={c} parentFp={fp} idx={i} siblingCount={node.children.length} onEdit={onEdit} onAddChild={onAddChild} onDel={onDel} onMove={onMove} />
+              <TreeRow node={c} parentFp={fp} idx={i} siblingCount={node.children.length} onEdit={onEdit} onAddChild={onAddChild} onDel={onDel} onMove={onMove} onStatusChange={onStatusChange} />
             </div>
           ))}
         </div>
@@ -626,7 +646,8 @@ export function SitioWebView() {
     setTree(t => del(t, id))
     if (modal?.id === id) setModal(null)
   }
-  const handleMove = (id: string, dir: -1 | 1) => setTree(t => mov(t, id, dir))
+  const handleMove         = (id: string, dir: -1 | 1) => setTree(t => mov(t, id, dir))
+  const handleStatusChange = (id: string, s: PageNode["status"]) => setTree(t => upd(t, id, { status: s }))
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(tree, null, 2)], { type: "application/json" })
     const url  = URL.createObjectURL(blob)
@@ -706,6 +727,7 @@ export function SitioWebView() {
               onAddChild={handleAdd}
               onDel={handleDel}
               onMove={handleMove}
+              onStatusChange={handleStatusChange}
             />
           ))}
           {total === 1 && (
