@@ -10,6 +10,7 @@ export type IngredienteDespensa = {
   categoria:     CategoriaDespensa
   cantidadMinima: number
   notas:         string | null
+  enProceso:     boolean
 }
 
 export type IngredientePayload = Omit<IngredienteDespensa, "id" | "documentId">

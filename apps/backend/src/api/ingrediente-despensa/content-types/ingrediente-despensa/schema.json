@@ -14,6 +14,7 @@
     "unidad":          { "type": "enumeration", "enum": ["pz","kg","g","L","ml","taza","bolsa","lata","caja","botella"], "default": "pz" },
     "categoria":       { "type": "enumeration", "enum": ["verduras","frutas","carnes","lácteos","granos","especias","aceites","bebidas","enlatados","otros"], "default": "otros" },
     "cantidadMinima":  { "type": "decimal", "default": 1 },
-    "notas":           { "type": "string" }
+    "notas":           { "type": "string" },
+    "enProceso":       { "type": "boolean", "default": false }
   }
 }

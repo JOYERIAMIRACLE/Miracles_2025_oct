@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import {
   Plus, X, ShoppingCart, Package, Pencil, Trash2,
-  AlertTriangle, CheckCircle2, Loader2, Check,
+  AlertTriangle, CheckCircle2, Loader2, Check, ShoppingBag,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -18,7 +18,7 @@ import {
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function emptyForm(): IngredientePayload {
-  return { nombre: "", cantidad: 0, unidad: "pz", categoria: "otros", cantidadMinima: 1, notas: null }
+  return { nombre: "", cantidad: 0, unidad: "pz", categoria: "otros", cantidadMinima: 1, notas: null, enProceso: false }
 }
 
 function stockPct(ing: IngredienteDespensa) {
@@ -42,6 +42,7 @@ export function DespensaView() {
   const [saving,       setSaving]       = useState(false)
   const [deletingId,   setDeletingId]   = useState<string | null>(null)
   const [comprando,    setComprando]    = useState<Set<string>>(new Set())
+  const [procesando,   setProcesando]   = useState<Set<string>>(new Set())
 
   // ── derived ──────────────────────────────────────────────────────────────
 
@@ -49,11 +50,10 @@ export function DespensaView() {
     ingredientes.filter(i => !filtroCat || i.categoria === filtroCat),
   [ingredientes, filtroCat])
 
-  const listaCompras = useMemo(() =>
-    ingredientes.filter(i => i.cantidad < i.cantidadMinima),
-  [ingredientes])
+  const listaCompras   = useMemo(() => ingredientes.filter(i => i.cantidad < i.cantidadMinima && !i.enProceso), [ingredientes])
+  const enProcesoLista = useMemo(() => ingredientes.filter(i => i.enProceso), [ingredientes])
 
-  const bajoStock = listaCompras.length
+  const bajoStock = listaCompras.length + enProcesoLista.length
 
   // ── modal helpers ─────────────────────────────────────────────────────────
 
@@ -120,13 +120,26 @@ export function DespensaView() {
   async function marcarComprado(ing: IngredienteDespensa) {
     setComprando(prev => new Set(prev).add(ing.documentId))
     try {
-      const updated = await updateIngrediente(ing.documentId, { cantidad: ing.cantidadMinima })
+      const updated = await updateIngrediente(ing.documentId, { cantidad: ing.cantidadMinima, enProceso: false })
       setIngredientes(prev => prev.map(i => i.documentId === ing.documentId ? updated : i))
-      toast.success(`${ing.nombre} actualizado`)
+      toast.success(`${ing.nombre} comprado`)
     } catch {
       toast.error("Error al actualizar")
     } finally {
       setComprando(prev => { const s = new Set(prev); s.delete(ing.documentId); return s })
+    }
+  }
+
+  async function toggleEnProceso(ing: IngredienteDespensa) {
+    const nuevo = !ing.enProceso
+    setProcesando(prev => new Set(prev).add(ing.documentId))
+    try {
+      const updated = await updateIngrediente(ing.documentId, { enProceso: nuevo })
+      setIngredientes(prev => prev.map(i => i.documentId === ing.documentId ? updated : i))
+    } catch {
+      toast.error("Error al actualizar")
+    } finally {
+      setProcesando(prev => { const s = new Set(prev); s.delete(ing.documentId); return s })
     }
   }
 
@@ -251,46 +264,137 @@ export function DespensaView() {
 
       {/* ── Tab: Lista de compras ── */}
       {tab === "compras" && (
-        <div className="space-y-3">
-          {listaCompras.length === 0 ? (
+        <div className="space-y-4">
+          {bajoStock === 0 ? (
             <div className="text-center py-14 text-slate-600">
               <CheckCircle2 size={32} className="mx-auto mb-2 opacity-40 text-emerald-500" />
               <p className="text-sm text-slate-400">¡Todo en stock! No hay ingredientes por comprar.</p>
             </div>
           ) : (
             <>
-              <p className="text-xs text-slate-500">{listaCompras.length} ingrediente{listaCompras.length !== 1 ? "s" : ""} por comprar</p>
-              <div className="bg-slate-900 border border-slate-800 rounded-xl divide-y divide-slate-800 overflow-hidden">
-                {listaCompras.map(ing => {
-                  const falta = ing.cantidadMinima - ing.cantidad
-                  const enProceso = comprando.has(ing.documentId)
-                  return (
-                    <div key={ing.documentId} className="flex items-center gap-3 px-4 py-3">
-                      <button
-                        onClick={() => marcarComprado(ing)}
-                        disabled={enProceso}
-                        title="Marcar como comprado"
-                        className="w-5 h-5 rounded border-2 border-amber-500/50 hover:bg-amber-500/20 flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
-                      >
-                        {enProceso && <Loader2 size={11} className="animate-spin text-amber-400" />}
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-200">{ing.nombre}</p>
-                        <p className="text-[11px] text-slate-500">
-                          Comprar <span className="text-amber-400 font-medium">{falta} {ing.unidad}</span>
-                          {" "}· tienes {ing.cantidad} {ing.unidad}
-                        </p>
-                      </div>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold shrink-0 ${CATEGORIA_COLOR[ing.categoria]}`}>
-                        {CATEGORIA_LABEL[ing.categoria]}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-              <p className="text-[11px] text-slate-600">
-                Toca el círculo de cada ingrediente para marcarlo como comprado (actualiza la cantidad al mínimo).
-              </p>
+              {/* ── Sección: En proceso ── */}
+              {enProcesoLista.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag size={13} className="text-blue-400" />
+                    <p className="text-xs font-semibold text-blue-400 uppercase tracking-widest">
+                      En proceso de compra
+                    </p>
+                    <span className="text-[10px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/30">
+                      {enProcesoLista.length}
+                    </span>
+                  </div>
+                  <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl divide-y divide-blue-500/10 overflow-hidden">
+                    {enProcesoLista.map(ing => {
+                      const falta = Math.max(0, ing.cantidadMinima - ing.cantidad)
+                      const cargando = comprando.has(ing.documentId) || procesando.has(ing.documentId)
+                      return (
+                        <div key={ing.documentId} className="flex items-center gap-3 px-4 py-3">
+                          {/* Marcar como comprado */}
+                          <button
+                            type="button"
+                            onClick={() => marcarComprado(ing)}
+                            disabled={cargando}
+                            title="Marcar como comprado"
+                            className="w-5 h-5 rounded border-2 border-emerald-500/50 hover:bg-emerald-500/20 flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
+                          >
+                            {comprando.has(ing.documentId)
+                              ? <Loader2 size={11} className="animate-spin text-emerald-400" />
+                              : <Check size={10} className="text-emerald-400 opacity-50" />
+                            }
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-200">{ing.nombre}</p>
+                            <p className="text-[11px] text-slate-500">
+                              {falta > 0
+                                ? <>Comprar <span className="text-amber-400 font-medium">{falta} {ing.unidad}</span> · tienes {ing.cantidad} {ing.unidad}</>
+                                : <span className="text-emerald-400">Stock completo — pendiente confirmar</span>
+                              }
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${CATEGORIA_COLOR[ing.categoria]}`}>
+                              {CATEGORIA_LABEL[ing.categoria]}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => toggleEnProceso(ing)}
+                              disabled={cargando}
+                              title="Quitar de proceso"
+                              className="text-[10px] text-blue-400/60 hover:text-blue-300 disabled:opacity-40 transition-colors"
+                            >
+                              {procesando.has(ing.documentId) ? <Loader2 size={11} className="animate-spin" /> : <X size={12} />}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Sección: Pendiente ── */}
+              {listaCompras.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={13} className="text-amber-400" />
+                    <p className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
+                      Pendiente de compra
+                    </p>
+                    <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full border border-amber-500/30">
+                      {listaCompras.length}
+                    </span>
+                  </div>
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl divide-y divide-slate-800 overflow-hidden">
+                    {listaCompras.map(ing => {
+                      const falta = ing.cantidadMinima - ing.cantidad
+                      const cargando = comprando.has(ing.documentId) || procesando.has(ing.documentId)
+                      return (
+                        <div key={ing.documentId} className="flex items-center gap-3 px-4 py-3">
+                          {/* Marcar como comprado directo */}
+                          <button
+                            type="button"
+                            onClick={() => marcarComprado(ing)}
+                            disabled={cargando}
+                            title="Marcar como comprado"
+                            className="w-5 h-5 rounded border-2 border-amber-500/50 hover:bg-amber-500/20 flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
+                          >
+                            {comprando.has(ing.documentId) && <Loader2 size={11} className="animate-spin text-amber-400" />}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-200">{ing.nombre}</p>
+                            <p className="text-[11px] text-slate-500">
+                              Comprar <span className="text-amber-400 font-medium">{falta} {ing.unidad}</span>
+                              {" "}· tienes {ing.cantidad} {ing.unidad}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${CATEGORIA_COLOR[ing.categoria]}`}>
+                              {CATEGORIA_LABEL[ing.categoria]}
+                            </span>
+                            {/* Mover a "en proceso" */}
+                            <button
+                              type="button"
+                              onClick={() => toggleEnProceso(ing)}
+                              disabled={cargando}
+                              title="Marcar en proceso de compra"
+                              className="p-1 rounded text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 disabled:opacity-40 transition-colors"
+                            >
+                              {procesando.has(ing.documentId)
+                                ? <Loader2 size={12} className="animate-spin" />
+                                : <ShoppingBag size={12} />
+                              }
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Toca 🛍 para mover a "en proceso" · toca el círculo para marcar como comprado.
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>
