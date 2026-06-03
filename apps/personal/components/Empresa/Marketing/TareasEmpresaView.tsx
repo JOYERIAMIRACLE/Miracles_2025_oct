@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef, useCallback, useLayoutEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Plus, X, Check, Pencil, Loader2, CheckSquare, Tag } from "lucide-react"
 import { toast } from "sonner"
 import { TareaType, EstadoTarea, PrioridadTarea } from "@/types/tarea"
 import { createTarea } from "@/api/tarea/createTarea"
 import { updateTarea } from "@/api/tarea/updateTarea"
 import { deleteTarea } from "@/api/tarea/deleteTarea"
+import { ProgresoBar, AvancesPanel } from "@/components/Shared/TareasWidgets"
 
 const ETIQUETA = "empresa-mkt"
 const BASE     = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -54,129 +55,6 @@ function emptyForm(): FormData {
 }
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-
-// ─── Barra de progreso arrastrable ───────────────────────────────────────────
-
-function ProgresoBar({ value, onSave }: { value: number; onSave: (pct: number) => void }) {
-  const [local, setLocal] = useState(value)
-  const dragging  = useRef(false)
-  const barRef    = useRef<HTMLDivElement>(null)
-  const fillRef   = useRef<HTMLDivElement>(null)
-  const onSaveRef = useRef(onSave)
-  useEffect(() => { onSaveRef.current = onSave }, [onSave])
-  useEffect(() => { if (!dragging.current) setLocal(value) }, [value])
-
-  useLayoutEffect(() => {
-    if (fillRef.current) fillRef.current.style.width = `${local}%`
-  }, [local])
-
-  const calcPct = useCallback((clientX: number) => {
-    if (!barRef.current) return 0
-    const { left, width } = barRef.current.getBoundingClientRect()
-    return Math.min(Math.max(Math.round((clientX - left) / width * 100), 0), 100)
-  }, [])
-
-  useEffect(() => {
-    const onMove  = (e: MouseEvent) => { if (dragging.current) setLocal(calcPct(e.clientX)) }
-    const onUp    = (e: MouseEvent) => {
-      if (!dragging.current) return
-      const pct = calcPct(e.clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pct)
-    }
-    const onTMove = (e: TouchEvent) => { if (dragging.current) { e.preventDefault(); setLocal(calcPct(e.touches[0].clientX)) } }
-    const onTEnd  = (e: TouchEvent) => {
-      if (!dragging.current) return
-      const pct = calcPct(e.changedTouches[0].clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pct)
-    }
-    window.addEventListener("mousemove", onMove)
-    window.addEventListener("mouseup",   onUp)
-    window.addEventListener("touchmove", onTMove, { passive: false })
-    window.addEventListener("touchend",  onTEnd)
-    return () => {
-      window.removeEventListener("mousemove", onMove)
-      window.removeEventListener("mouseup",   onUp)
-      window.removeEventListener("touchmove", onTMove)
-      window.removeEventListener("touchend",  onTEnd)
-    }
-  }, [calcPct])
-
-  const color    = local >= 100 ? "bg-emerald-500" : local >= 60 ? "bg-blue-500" : local >= 30 ? "bg-amber-500" : "bg-red-400"
-  const txtColor = local >= 100 ? "text-emerald-400" : local >= 60 ? "text-blue-400" : local >= 30 ? "text-amber-400" : "text-red-400"
-
-  return (
-    <div className="flex items-center gap-2 mt-2.5">
-      <div
-        ref={barRef}
-        onMouseDown={e => { e.preventDefault(); dragging.current = true; setLocal(calcPct(e.clientX)) }}
-        onTouchStart={e => { dragging.current = true; setLocal(calcPct(e.touches[0].clientX)) }}
-        aria-label={`Progreso ${local}%`}
-        className="flex-1 h-2 bg-slate-800 border border-slate-700 rounded-full cursor-pointer select-none overflow-hidden"
-      >
-        <div ref={fillRef} className={`h-full rounded-full transition-colors ${color}`} />
-      </div>
-      <span className={`text-[10px] font-bold font-mono w-8 text-right shrink-0 tabular-nums ${txtColor}`}>
-        {local}%
-      </span>
-    </div>
-  )
-}
-
-// ─── Panel de avances ────────────────────────────────────────────────────────
-
-function AvancesPanel({ notas, open, onAgregar }: {
-  notas: string | null
-  open: boolean
-  onAgregar: (nota: string) => void
-}) {
-  const [texto, setTexto] = useState("")
-  const inputRef = useRef<HTMLInputElement>(null)
-  const entradas = notas ? notas.split("\n").filter(Boolean) : []
-
-  useEffect(() => { if (open) inputRef.current?.focus() }, [open])
-
-  function submit() {
-    if (!texto.trim()) return
-    onAgregar(texto.trim())
-    setTexto("")
-  }
-
-  if (!open && entradas.length === 0) return null
-
-  return (
-    <div className="mt-2 pl-0 border-t border-slate-800/60 pt-2 space-y-1.5">
-      {open && (
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            value={texto}
-            onChange={e => setTexto(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit() } }}
-            placeholder="Anotar avance o pendiente..."
-            className="flex-1 h-7 rounded-md border border-slate-700 bg-slate-800/80 px-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/50"
-          />
-          <button type="button" title="Agregar nota" onClick={submit}
-            className="h-7 w-7 flex items-center justify-center rounded-md bg-violet-600 hover:bg-violet-500 text-white transition shrink-0">
-            <Plus size={13} />
-          </button>
-        </div>
-      )}
-      {entradas.length > 0 && (
-        <ul className="space-y-0.5">
-          {entradas.map((e, i) => {
-            const sep = e.indexOf(" · ")
-            const fecha = sep !== -1 ? e.slice(0, sep) : null
-            const texto = sep !== -1 ? e.slice(sep + 3) : e
-            return (
-              <li key={i} className="flex items-start gap-1.5 text-[11px]">
-                {fecha && <span className="text-slate-600 shrink-0 font-mono">{fecha}</span>}
-                <span className="text-slate-400">{texto}</span>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </div>
-  )
-}
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
