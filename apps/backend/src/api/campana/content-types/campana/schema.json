@@ -68,6 +68,9 @@
       "type": "enumeration",
       "enum": ["trabajo", "empresa"],
       "default": "trabajo"
+    },
+    "etapas": {
+      "type": "string"
     }
   }
 }
