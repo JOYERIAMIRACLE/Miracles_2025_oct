@@ -27,14 +27,14 @@ const Navbar = () =>{
 
             {/* LOGO — Medallita de Oro */}
             <div
-                className="cursor-pointer shrink-0 select-none"
+                className="cursor-pointer shrink-0 select-none bg-[#1a1a1a] rounded-md px-3 py-1.5"
                 onClick={() => router.push("/")}
             >
                 <Image
                     src="/logo oficial oficial.png"
                     alt="Medallita de Oro"
                     width={160}
-                    height={56}
+                    height={52}
                     className="object-contain"
                 />
             </div>
