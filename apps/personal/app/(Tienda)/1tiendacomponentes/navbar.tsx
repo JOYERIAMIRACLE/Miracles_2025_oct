@@ -9,9 +9,6 @@ import ModeToggle from "./toggle";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavirites";
 import Image from "next/image";
-import { Cinzel } from "next/font/google";
-
-const cinzel = Cinzel({ subsets: ["latin"], weight: ["400", "700", "900"] });
 
 // COMPONENTE BARRA DE NAVEGACION
 const Navbar = () =>{
@@ -30,26 +27,16 @@ const Navbar = () =>{
 
             {/* LOGO — Medallita de Oro */}
             <div
-                className="flex items-center gap-2.5 cursor-pointer shrink-0 select-none"
+                className="cursor-pointer shrink-0 select-none"
                 onClick={() => router.push("/")}
             >
-                {/* Icono izquierda */}
                 <Image
-                    src="/logo medallita de oro.png"
+                    src="/logo oficial medallita de oro.png"
                     alt="Medallita de Oro"
-                    width={44}
-                    height={44}
+                    width={160}
+                    height={56}
                     className="object-contain"
                 />
-                {/* Texto derecha */}
-                <div className="flex flex-col justify-center leading-none">
-                    <span className={`text-[18px] font-bold tracking-[0.15em] leading-none ${cinzel.className}`}>
-                        MEDALLITA
-                    </span>
-                    <span className={`text-[11px] tracking-[0.35em] leading-none mt-[5px] text-yellow-600 ${cinzel.className}`}>
-                        DE ORO
-                    </span>
-                </div>
             </div>
 
             {/* BOTONES DE NAVEGACION/APARECE EN PANTALLAS GRANDES */}
