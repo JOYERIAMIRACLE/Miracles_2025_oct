@@ -31,7 +31,7 @@ const Navbar = () =>{
                 onClick={() => router.push("/")}
             >
                 <Image
-                    src="/logo oficial medallita de oro.png"
+                    src="/logo oficial oficial.png"
                     alt="Medallita de Oro"
                     width={160}
                     height={56}
