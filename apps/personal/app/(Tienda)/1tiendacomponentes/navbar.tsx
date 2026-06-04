@@ -30,12 +30,21 @@ const Navbar = () =>{
                 className="cursor-pointer shrink-0 select-none"
                 onClick={() => router.push("/")}
             >
+                {/* Modo claro: logo fondo blanco */}
                 <Image
                     src="/logo medallita de oro fondo blanco.png"
                     alt="Medallita de Oro"
                     width={160}
                     height={52}
-                    className="object-contain"
+                    className="object-contain block dark:hidden"
+                />
+                {/* Modo oscuro: logo fondo oscuro */}
+                <Image
+                    src="/logo oficial oficial.png"
+                    alt="Medallita de Oro"
+                    width={160}
+                    height={52}
+                    className="object-contain hidden dark:block"
                 />
             </div>
 
