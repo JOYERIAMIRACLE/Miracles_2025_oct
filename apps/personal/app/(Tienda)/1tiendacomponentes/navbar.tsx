@@ -8,6 +8,9 @@ import ItemsMenuMobile from "./items-mobile";
 import ModeToggle from "./toggle";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavirites";
+import { Cinzel } from "next/font/google";
+
+const cinzel = Cinzel({ subsets: ["latin"], weight: ["400", "700", "900"] });
 
 // COMPONENTE BARRA DE NAVEGACION
 const Navbar = () =>{
@@ -24,10 +27,36 @@ const Navbar = () =>{
         // BARRA BASE DE COMPONENTE/FLEX/SEPARACION/MARGEN/PADING/CURSOR/RESPONSIVE-EXTENSIVO/
         <div className="flex  justify-between p-4 mx-10  sm:max-w-4xl md:max-w-screen ">
 
-            {/* LOGO */}
-            <h1 className="text-3xl cursor-pointer " onClick={()=>router.push("/")}>
-                <span className="font-bold ">Miracles</span>
-            </h1>
+            {/* LOGO — Medallita de Oro */}
+            <div
+                className="flex items-center gap-2.5 cursor-pointer shrink-0 select-none"
+                onClick={() => router.push("/")}
+            >
+                {/* Monograma: arco + M */}
+                <div className="flex flex-col items-center leading-none">
+                    <svg width="34" height="10" viewBox="0 0 34 10" fill="none">
+                        <polyline
+                            points="1,9 17,1 33,9"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                    <span className={`text-[30px] font-bold leading-none tracking-tight ${cinzel.className}`}>
+                        M
+                    </span>
+                </div>
+                {/* Nombre de marca */}
+                <div className="flex flex-col justify-center leading-none">
+                    <span className={`text-[13px] font-bold tracking-[0.22em] leading-none ${cinzel.className}`}>
+                        MEDALLITA
+                    </span>
+                    <span className={`text-[9px] tracking-[0.32em] leading-none mt-[5px] opacity-70 ${cinzel.className}`}>
+                        DE ORO
+                    </span>
+                </div>
+            </div>
 
             {/* BOTONES DE NAVEGACION/APARECE EN PANTALLAS GRANDES */}
             <div className="items-center justify-between hidden md:flex">
