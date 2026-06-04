@@ -30,24 +30,26 @@ const Navbar = () =>{
 
             {/* LOGO — Medallita de Oro */}
             <div
-                className="flex flex-col items-center cursor-pointer shrink-0 select-none"
+                className="flex items-center gap-2.5 cursor-pointer shrink-0 select-none"
                 onClick={() => router.push("/")}
             >
-                {/* Icono M */}
+                {/* Icono izquierda */}
                 <Image
                     src="/logo medallita de oro.png"
                     alt="Medallita de Oro"
-                    width={48}
-                    height={48}
+                    width={44}
+                    height={44}
                     className="object-contain"
                 />
-                {/* Texto centrado */}
-                <span className={`text-[11px] font-bold tracking-[0.22em] leading-none mt-1 ${cinzel.className}`}>
-                    MEDALLITA
-                </span>
-                <span className={`text-[8px] tracking-[0.3em] leading-none mt-[3px] text-yellow-600 ${cinzel.className}`}>
-                    DE ORO
-                </span>
+                {/* Texto derecha */}
+                <div className="flex flex-col justify-center leading-none">
+                    <span className={`text-[12px] font-bold tracking-[0.22em] leading-none ${cinzel.className}`}>
+                        MEDALLITA
+                    </span>
+                    <span className={`text-[9px] tracking-[0.3em] leading-none mt-[4px] text-yellow-600 ${cinzel.className}`}>
+                        DE ORO
+                    </span>
+                </div>
             </div>
 
             {/* BOTONES DE NAVEGACION/APARECE EN PANTALLAS GRANDES */}
