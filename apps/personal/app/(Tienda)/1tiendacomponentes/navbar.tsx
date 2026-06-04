@@ -43,10 +43,10 @@ const Navbar = () =>{
                 />
                 {/* Texto derecha */}
                 <div className="flex flex-col justify-center leading-none">
-                    <span className={`text-[12px] font-bold tracking-[0.22em] leading-none ${cinzel.className}`}>
+                    <span className={`text-[18px] font-bold tracking-[0.15em] leading-none ${cinzel.className}`}>
                         MEDALLITA
                     </span>
-                    <span className={`text-[9px] tracking-[0.3em] leading-none mt-[4px] text-yellow-600 ${cinzel.className}`}>
+                    <span className={`text-[11px] tracking-[0.35em] leading-none mt-[5px] text-yellow-600 ${cinzel.className}`}>
                         DE ORO
                     </span>
                 </div>
