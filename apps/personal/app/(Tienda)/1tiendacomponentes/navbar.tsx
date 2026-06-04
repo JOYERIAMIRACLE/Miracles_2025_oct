@@ -45,7 +45,7 @@ const Navbar = () =>{
                 <span className={`text-[11px] font-bold tracking-[0.22em] leading-none mt-1 ${cinzel.className}`}>
                     MEDALLITA
                 </span>
-                <span className={`text-[8px] tracking-[0.3em] leading-none mt-[3px] opacity-70 ${cinzel.className}`}>
+                <span className={`text-[8px] tracking-[0.3em] leading-none mt-[3px] text-yellow-600 ${cinzel.className}`}>
                     DE ORO
                 </span>
             </div>
