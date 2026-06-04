@@ -35,7 +35,7 @@ const Navbar = () =>{
             >
                 {/* Icono M */}
                 <Image
-                    src="/logo-m.png"
+                    src="/logo medallita de oro.png"
                     alt="Medallita de Oro"
                     width={48}
                     height={48}
