@@ -3,17 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  Gamepad2,
-  Swords,
-  Package,
-  CalendarDays,
-  LayoutDashboard,
-  CheckSquare,
-  ChefHat,
-  Dumbbell,
-  CalendarRange,
-  ShoppingCart,
-  FolderOpen,
+  Gamepad2, Swords, Package, CalendarDays, LayoutDashboard,
+  CheckSquare, ChefHat, Dumbbell, CalendarRange, ShoppingCart,
+  FolderOpen, Users, CalendarHeart,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -21,7 +13,14 @@ type NavItem = { name: string; href: string; icon: typeof LayoutDashboard; color
 
 const sections: { title: string; items: NavItem[] }[] = [
   {
-    title: "Finanzas Personales",
+    title: "Productividad",
+    items: [
+      { name: "Tareas",           href: "/gestion-personal/tareas-personales", icon: CheckSquare,    color: "purple" },
+      { name: "Material Digital", href: "/gestion-personal/material-digital",  icon: FolderOpen,     color: "purple" },
+    ],
+  },
+  {
+    title: "Salud - Financiera",
     items: [
       { name: "Dashboard",   href: "/gestion-personal",             icon: LayoutDashboard, color: "cyan"  },
       { name: "Presupuesto", href: "/gestion-personal/presupuesto", icon: Swords,          color: "cyan"  },
@@ -30,25 +29,25 @@ const sections: { title: string; items: NavItem[] }[] = [
     ],
   },
   {
-    title: "Productividad",
-    items: [
-      { name: "Tareas",           href: "/gestion-personal/tareas-personales", icon: CheckSquare, color: "purple" },
-      { name: "Material Digital", href: "/gestion-personal/material-digital",  icon: FolderOpen,  color: "purple" },
-    ],
-  },
-  {
     title: "Salud - Ejercicio",
     items: [
-      { name: "Ejercicio",  href: "/gestion-personal/salud/ejercicio",           icon: Dumbbell,     color: "green" },
-      { name: "Planeador",  href: "/gestion-personal/salud/planeador-ejercicio", icon: CalendarRange, color: "green" },
+      { name: "Ejercicio", href: "/gestion-personal/salud/ejercicio",           icon: Dumbbell,      color: "green" },
+      { name: "Planeador", href: "/gestion-personal/salud/planeador-ejercicio", icon: CalendarRange, color: "green" },
     ],
   },
   {
-    title: "Salud - Alimentación",
+    title: "Salud - Alimento y Hogar",
     items: [
-      { name: "Recetario",  href: "/gestion-personal/vivienda/recetario",  icon: ChefHat,       color: "amber" },
-      { name: "Planeador",  href: "/gestion-personal/vivienda/planeador",  icon: CalendarRange,  color: "amber" },
-      { name: "Despensa",   href: "/gestion-personal/vivienda/despensa",   icon: ShoppingCart,   color: "amber" },
+      { name: "Recetario", href: "/gestion-personal/vivienda/recetario", icon: ChefHat,      color: "amber" },
+      { name: "Planeador", href: "/gestion-personal/vivienda/planeador", icon: CalendarRange, color: "amber" },
+      { name: "Compras",   href: "/gestion-personal/vivienda/despensa",  icon: ShoppingCart,  color: "amber" },
+    ],
+  },
+  {
+    title: "Salud - Social",
+    items: [
+      { name: "Personas", href: "/gestion-personal/social/personas", icon: Users,        color: "pink" },
+      { name: "Eventos",  href: "/gestion-personal/social/eventos",  icon: CalendarHeart, color: "pink" },
     ],
   },
 ]
@@ -95,16 +94,15 @@ export function PersonalSidebar() {
         <div className="px-3 space-y-5">
           {sections.map((section, sIdx) => (
             <div key={section.title}>
-              {/* Separador entre secciones */}
               {sIdx > 0 && <div className="h-px bg-slate-800/80 mx-2 mb-4" />}
               <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3 px-2">
                 {section.title}
               </p>
               <ul className="space-y-1">
                 {section.items.map(item => {
-                  const isActive = pathname === item.href
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
                   return (
-                    <li key={item.name}>
+                    <li key={item.href}>
                       <Link
                         href={item.href}
                         className={cn(
