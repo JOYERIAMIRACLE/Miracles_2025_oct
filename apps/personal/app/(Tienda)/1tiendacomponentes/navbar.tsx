@@ -8,6 +8,7 @@ import ItemsMenuMobile from "./items-mobile";
 import ModeToggle from "./toggle";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavirites";
+import Image from "next/image";
 import { Cinzel } from "next/font/google";
 
 const cinzel = Cinzel({ subsets: ["latin"], weight: ["400", "700", "900"] });
@@ -29,33 +30,24 @@ const Navbar = () =>{
 
             {/* LOGO — Medallita de Oro */}
             <div
-                className="flex items-center gap-2.5 cursor-pointer shrink-0 select-none"
+                className="flex flex-col items-center cursor-pointer shrink-0 select-none"
                 onClick={() => router.push("/")}
             >
-                {/* Monograma: arco + M */}
-                <div className="flex flex-col items-center leading-none">
-                    <svg width="34" height="10" viewBox="0 0 34 10" fill="none">
-                        <polyline
-                            points="1,9 17,1 33,9"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                    <span className={`text-[30px] font-bold leading-none tracking-tight ${cinzel.className}`}>
-                        M
-                    </span>
-                </div>
-                {/* Nombre de marca */}
-                <div className="flex flex-col justify-center leading-none">
-                    <span className={`text-[13px] font-bold tracking-[0.22em] leading-none ${cinzel.className}`}>
-                        MEDALLITA
-                    </span>
-                    <span className={`text-[9px] tracking-[0.32em] leading-none mt-[5px] opacity-70 ${cinzel.className}`}>
-                        DE ORO
-                    </span>
-                </div>
+                {/* Icono M */}
+                <Image
+                    src="/logo-m.png"
+                    alt="Medallita de Oro"
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                />
+                {/* Texto centrado */}
+                <span className={`text-[11px] font-bold tracking-[0.22em] leading-none mt-1 ${cinzel.className}`}>
+                    MEDALLITA
+                </span>
+                <span className={`text-[8px] tracking-[0.3em] leading-none mt-[3px] opacity-70 ${cinzel.className}`}>
+                    DE ORO
+                </span>
             </div>
 
             {/* BOTONES DE NAVEGACION/APARECE EN PANTALLAS GRANDES */}
