@@ -41,7 +41,7 @@ export const SUBCATEGORIAS: Record<CategoriaDigital, string[]> = {
   DOCUMENTOS_COLABORADOR:  ["Contrato", "NDA", "Reglamento interno", "Políticas", "Onboarding", "Evaluación", "Otros"],
   EVENTOS_PROYECTOS:       [],
   ASSETS:                  ["Machinery", "Control", "Cómputo", "Conveyors", "Logos de aliados estratégicos", "Página web"],
-  LINKS_UTILIDAD:          ["App corrección ortografía", "App calendarios", "App WordPress", "App sistema de mail", "App contraseñas", "App de QR digital"],
+  LINKS_UTILIDAD:          ["App corrección ortografía", "App calendarios", "App WordPress", "App sistema de mail", "App contraseñas", "App de QR digital", "Utility"],
   BASES_DATOS:             ["Base actual", "Base MKT 2023", "Base MKT 2024", "Base MKT 2025", "Base MKT 2026"],
 }
 
