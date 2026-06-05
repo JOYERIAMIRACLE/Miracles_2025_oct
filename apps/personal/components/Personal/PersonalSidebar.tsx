@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   Gamepad2, Swords, Package, CalendarDays, LayoutDashboard,
   CheckSquare, ChefHat, Dumbbell, CalendarRange, ShoppingCart,
-  FolderOpen, Users, CalendarHeart,
+  FolderOpen, Users, CalendarHeart, Sofa, Wrench, Car,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -36,11 +36,19 @@ const sections: { title: string; items: NavItem[] }[] = [
     ],
   },
   {
-    title: "Salud - Alimento y Hogar",
+    title: "Salud - Alimentación",
     items: [
-      { name: "Recetario", href: "/gestion-personal/vivienda/recetario", icon: ChefHat,      color: "amber" },
-      { name: "Planeador", href: "/gestion-personal/vivienda/planeador", icon: CalendarRange, color: "amber" },
-      { name: "Compras",   href: "/gestion-personal/vivienda/despensa",  icon: ShoppingCart,  color: "amber" },
+      { name: "Recetario", href: "/gestion-personal/vivienda/recetario", icon: ChefHat,       color: "amber" },
+      { name: "Planeador", href: "/gestion-personal/vivienda/planeador", icon: CalendarRange,  color: "amber" },
+      { name: "Compras",   href: "/gestion-personal/vivienda/despensa",  icon: ShoppingCart,   color: "amber" },
+    ],
+  },
+  {
+    title: "Salud - Hogar y Vehículos",
+    items: [
+      { name: "Inventario",    href: "/gestion-personal/hogar/inventario",    icon: Sofa,   color: "teal" },
+      { name: "Mantenimiento", href: "/gestion-personal/hogar/mantenimiento", icon: Wrench, color: "teal" },
+      { name: "Vehículos",     href: "/gestion-personal/hogar/vehiculos",     icon: Car,    color: "teal" },
     ],
   },
   {
@@ -60,6 +68,7 @@ const activeColors: Record<string, string> = {
   blue:   "bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-blue-500/5",
   pink:   "bg-pink-500/10 text-pink-400 border-pink-500/30 shadow-pink-500/5",
   red:    "bg-red-500/10 text-red-400 border-red-500/30 shadow-red-500/5",
+  teal:   "bg-teal-500/10 text-teal-400 border-teal-500/30 shadow-teal-500/5",
 }
 
 const iconActiveColors: Record<string, string> = {
@@ -70,6 +79,7 @@ const iconActiveColors: Record<string, string> = {
   blue:   "text-blue-400",
   pink:   "text-pink-400",
   red:    "text-red-400",
+  teal:   "text-teal-400",
 }
 
 export function PersonalSidebar() {
