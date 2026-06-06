@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "evento_socials",
+  "info": {
+    "singularName": "evento-social",
+    "pluralName": "evento-socials",
+    "displayName": "Evento Social"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "fecha":       { "type": "date", "required": true },
+    "tipo":        { "type": "enumeration", "enum": ["familiar", "amigos", "pareja", "trabajo", "otro"], "default": "amigos" },
+    "lugar":       { "type": "string" },
+    "descripcion": { "type": "text" },
+    "personas":    { "type": "string" },
+    "notas":       { "type": "text" },
+    "estado":      { "type": "enumeration", "enum": ["pendiente", "realizado"], "default": "realizado" }
+  }
+}

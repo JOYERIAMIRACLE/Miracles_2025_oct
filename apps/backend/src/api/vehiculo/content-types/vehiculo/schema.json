@@ -1,0 +1,20 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vehiculos",
+  "info": {
+    "singularName": "vehiculo",
+    "pluralName": "vehiculos",
+    "displayName": "Vehículo"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "nombre":     { "type": "string", "required": true },
+    "marca":      { "type": "string" },
+    "modelo":     { "type": "string" },
+    "año":        { "type": "integer" },
+    "placas":     { "type": "string" },
+    "color":      { "type": "string" },
+    "kmActuales": { "type": "integer", "default": 0 },
+    "notas":      { "type": "text" }
+  }
+}

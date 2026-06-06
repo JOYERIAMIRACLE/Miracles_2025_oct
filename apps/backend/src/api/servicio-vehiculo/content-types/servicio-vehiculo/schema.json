@@ -1,0 +1,20 @@
+{
+  "kind": "collectionType",
+  "collectionName": "servicio_vehiculos",
+  "info": {
+    "singularName": "servicio-vehiculo",
+    "pluralName": "servicio-vehiculos",
+    "displayName": "Servicio Vehículo"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "vehiculoDocumentId": { "type": "string", "required": true },
+    "tipo":               { "type": "enumeration", "enum": ["lavado", "aceite", "afinación", "llantas", "frenos", "verificación", "gasolina", "seguro", "otro"], "required": true },
+    "fecha":              { "type": "date", "required": true },
+    "costo":              { "type": "decimal" },
+    "km":                 { "type": "integer" },
+    "notas":              { "type": "string" },
+    "proximaFecha":       { "type": "date" },
+    "proximoKm":          { "type": "integer" }
+  }
+}

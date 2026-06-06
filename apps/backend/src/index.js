@@ -56,6 +56,29 @@ const PUBLIC_ACTIONS_SNAPSHOT = [
   'api::snapshot-mes.snapshot-mes.delete',
 ];
 
+const PUBLIC_ACTIONS_SOCIAL = [
+  'api::persona-social.persona-social.find',
+  'api::persona-social.persona-social.findOne',
+  'api::persona-social.persona-social.create',
+  'api::persona-social.persona-social.update',
+  'api::persona-social.persona-social.delete',
+  'api::evento-social.evento-social.find',
+  'api::evento-social.evento-social.findOne',
+  'api::evento-social.evento-social.create',
+  'api::evento-social.evento-social.update',
+  'api::evento-social.evento-social.delete',
+  'api::vehiculo.vehiculo.find',
+  'api::vehiculo.vehiculo.findOne',
+  'api::vehiculo.vehiculo.create',
+  'api::vehiculo.vehiculo.update',
+  'api::vehiculo.vehiculo.delete',
+  'api::servicio-vehiculo.servicio-vehiculo.find',
+  'api::servicio-vehiculo.servicio-vehiculo.findOne',
+  'api::servicio-vehiculo.servicio-vehiculo.create',
+  'api::servicio-vehiculo.servicio-vehiculo.update',
+  'api::servicio-vehiculo.servicio-vehiculo.delete',
+];
+
 const PUBLIC_ACTIONS_TRABAJO = [
   'api::cliente-trabajo.cliente-trabajo.find',
   'api::cliente-trabajo.cliente-trabajo.findOne',
@@ -213,7 +236,7 @@ async function aplicarPermisosPublic(strapi) {
     .findOne({ where: { type: 'public' } });
   if (!publicRole) return;
 
-  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO];
+  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL];
   for (const action of todas) {
     const existing = await strapi.db
       .query('plugin::users-permissions.permission')

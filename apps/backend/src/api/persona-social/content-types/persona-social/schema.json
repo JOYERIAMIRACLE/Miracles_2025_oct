@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "persona_socials",
+  "info": {
+    "singularName": "persona-social",
+    "pluralName": "persona-socials",
+    "displayName": "Persona Social"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "nombre":    { "type": "string", "required": true },
+    "relacion":  { "type": "enumeration", "enum": ["familia", "amigo", "pareja", "compañero", "conocido", "otro"], "default": "amigo" },
+    "telefono":  { "type": "string" },
+    "cumpleaños":{ "type": "date" },
+    "ultimaVez": { "type": "date" },
+    "notas":     { "type": "text" }
+  }
+}
