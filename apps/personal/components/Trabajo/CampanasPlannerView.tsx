@@ -540,7 +540,8 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   onNueva: (opts: { mes: MesCampana; anio: number }) => void
 }) {
   const isCurrentMonth = anio === ANIO_HOY && MESES.indexOf(mes) === MES_HOY_IDX
-  const [collapsed, setCollapsed] = useState(anio > ANIO_HOY)
+  const [collapsed,     setCollapsed]     = useState(anio > ANIO_HOY)
+  const [showPasadas,   setShowPasadas]   = useState(false)
 
   const mesIdx   = MESES.indexOf(mes)
   const firstMon = getFirstMonday(anio, mesIdx)
@@ -601,15 +602,29 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
           )}
         </div>
 
+        {/* Toggle semanas pasadas */}
+        {isCurrentMonth && (() => {
+          const hayPasadas = SEMANAS.some(n => addDays(addDays(firstMon, (n - 1) * 7), 6) < hoy)
+          if (!hayPasadas) return null
+          return (
+            <button type="button" onClick={() => setShowPasadas(v => !v)}
+              className="w-full px-4 py-1.5 text-[10px] text-slate-600 hover:text-slate-400 border-b border-slate-800/50 bg-slate-900/40 transition text-left flex items-center gap-1.5">
+              <span>{showPasadas ? "▲" : "▼"}</span>
+              {showPasadas ? "Ocultar semanas pasadas" : "Mostrar semanas pasadas"}
+            </button>
+          )
+        })()}
+
         <div className="divide-y divide-slate-800/50">
           {SEMANAS.map(n => {
             const sStart    = addDays(firstMon, (n - 1) * 7)
             const sEnd      = addDays(sStart, 6)
             const sStartStr = toYMD(sStart)
             const sEndStr   = toYMD(sEnd)
+            const esPasada  = isCurrentMonth && sEnd < hoy
 
-            // Para el mes actual, ocultar semanas completamente pasadas
-            if (isCurrentMonth && sEnd < hoy) return null
+            // Ocultar semanas pasadas del mes actual salvo que el toggle esté activo
+            if (esPasada && !showPasadas) return null
 
             const label = semanaLabel(sStart, sEnd, n)
 
@@ -647,8 +662,8 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
               })
 
             return (
-              <div key={n} className="flex items-center gap-3 px-4 py-3 min-h-[52px]">
-                <span className="text-[11px] text-slate-500 w-44 shrink-0 leading-snug">{label}</span>
+              <div key={n} className={`flex items-center gap-3 px-4 py-3 min-h-[52px] ${esPasada ? "opacity-50" : ""}`}>
+                <span className="text-[11px] text-slate-500 w-44 shrink-0 leading-snug">{label}{esPasada && <span className="ml-1 text-[9px] text-slate-700">· pasada</span>}</span>
                 <div className="flex-1 flex flex-wrap items-center gap-2">
                   {items.map(({ c, titulo, fecha, sn }) => (
                     <div key={`${c.documentId}-${sn}`} className="flex items-center gap-1">
