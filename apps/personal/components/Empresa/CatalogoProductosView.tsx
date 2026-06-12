@@ -21,17 +21,17 @@ type PageNode = {
   children: PageNode[]
 }
 
-// ─── Secciones que queremos mostrar como catálogo ─────────────────────────────
-
-const CATALOGO_SEGMENTS = new Set([
-  "automatizacion-y-control",
-  "manejo-de-materiales",
-  "conveyors",
-  "computo-industrial",
-  "soluciones-y-servicios",
-  "marcas-y-aliados-estrategicos",
-  "refacciones-industriales-spare-parts",
-])
+// Paleta de colores rotativa para categorías dinámicas
+const PALETTE = [
+  { bg: "bg-violet-500/10",  text: "text-violet-400",  border: "border-violet-500/30"  },
+  { bg: "bg-blue-500/10",    text: "text-blue-400",    border: "border-blue-500/30"    },
+  { bg: "bg-cyan-500/10",    text: "text-cyan-400",    border: "border-cyan-500/30"    },
+  { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/30" },
+  { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/30"   },
+  { bg: "bg-rose-500/10",    text: "text-rose-400",    border: "border-rose-500/30"    },
+  { bg: "bg-sky-500/10",     text: "text-sky-400",     border: "border-sky-500/30"     },
+  { bg: "bg-pink-500/10",    text: "text-pink-400",    border: "border-pink-500/30"    },
+] as const
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -41,17 +41,7 @@ const ST: Record<Status, { dot: string; badge: string; label: string }> = {
   planning: { dot: "bg-slate-500",   badge: "bg-slate-500/10 text-slate-400 border-slate-500/20",       label: "Planeando" },
 }
 
-const CAT_COLOR: Record<string, { bg: string; text: string; border: string }> = {
-  "automatizacion-y-control":         { bg: "bg-blue-500/10",    text: "text-blue-400",    border: "border-blue-500/30"    },
-  "manejo-de-materiales":             { bg: "bg-cyan-500/10",    text: "text-cyan-400",    border: "border-cyan-500/30"    },
-  "conveyors":                        { bg: "bg-violet-500/10",  text: "text-violet-400",  border: "border-violet-500/30"  },
-  "computo-industrial":               { bg: "bg-sky-500/10",     text: "text-sky-400",     border: "border-sky-500/30"     },
-  "soluciones-y-servicios":           { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/30"   },
-  "marcas-y-aliados-estrategicos":    { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/30" },
-  "refacciones-industriales-spare-parts": { bg: "bg-rose-500/10", text: "text-rose-400",  border: "border-rose-500/30"    },
-}
-
-const DEFAULT_COLOR = { bg: "bg-slate-700/20", text: "text-slate-400", border: "border-slate-700/40" }
+const catColor = (idx: number) => PALETTE[idx % PALETTE.length]!
 
 function countByStatus(node: PageNode): { live: number; draft: number; planning: number; total: number } {
   let live = 0, draft = 0, planning = 0
@@ -73,13 +63,13 @@ function buildPath(segment: string, parentPath = ""): string {
 // ─── TreeNode component ───────────────────────────────────────────────────────
 
 function TreeNode({
-  node, depth, parentPath, busqueda, catColor,
+  node, depth, parentPath, busqueda, color,
 }: {
   node: PageNode
   depth: number
   parentPath: string
   busqueda: string
-  catColor: { bg: string; text: string; border: string }
+  color: { bg: string; text: string; border: string }
 }) {
   const [open, setOpen] = useState(depth === 0)
   const fp = buildPath(node.segment, parentPath)
@@ -161,7 +151,7 @@ function TreeNode({
 
       {/* Children */}
       {hasChildren && (open || forceOpen) && (
-        <div className={`border-l border-slate-800/60 ml-${depth === 0 ? 5 : 6}`}
+        <div className="border-l border-slate-800/60"
           style={{ marginLeft: `${20 + depth * 20}px` }}>
           {node.children.map(child => (
             <TreeNode
@@ -170,7 +160,7 @@ function TreeNode({
               depth={depth + 1}
               parentPath={fp}
               busqueda={busqueda}
-              catColor={catColor}
+              color={color}
             />
           ))}
         </div>
@@ -182,14 +172,15 @@ function TreeNode({
 // ─── Category card ────────────────────────────────────────────────────────────
 
 function CatCard({
-  node, isActive, onClick,
+  node, idx, isActive, onClick,
 }: {
   node: PageNode
+  idx: number
   isActive: boolean
   onClick: () => void
 }) {
   const stats = countByStatus(node)
-  const col = CAT_COLOR[node.segment] ?? DEFAULT_COLOR
+  const col = catColor(idx)
 
   return (
     <button
@@ -230,27 +221,24 @@ export function CatalogoProductosView() {
   useEffect(() => {
     const token = getToken()
     if (!token) { setLoading(false); return }
-    fetch(`${BASE}/api/sitio-web`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${BASE}/api/sitio-web-miracles`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => (r.status === 404 ? null : r.json()))
       .then(json => {
         const arbol: PageNode[] = json?.data?.arbol ?? []
-        setTree(arbol)
-        const first = arbol.find(n => CATALOGO_SEGMENTS.has(n.segment))
-        if (first) setSelected(first.segment)
+        // Mostrar todos los nodos de primer nivel (children del root)
+        const root = arbol[0]
+        const nodes = root?.children ?? arbol
+        setTree(nodes)
+        if (nodes[0]) setSelected(nodes[0].segment)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
-  const catalogoNodes = useMemo(
-    () => tree.filter(n => CATALOGO_SEGMENTS.has(n.segment)),
-    [tree]
-  )
+  const catalogoNodes = tree
 
-  const selectedNode = useMemo(
-    () => catalogoNodes.find(n => n.segment === selected) ?? null,
-    [catalogoNodes, selected]
-  )
+  const selectedIdx  = catalogoNodes.findIndex(n => n.segment === selected)
+  const selectedNode = selectedIdx >= 0 ? catalogoNodes[selectedIdx] : null
 
   const totalStats = useMemo(() => {
     let live = 0, draft = 0, planning = 0, total = 0
@@ -316,10 +304,11 @@ export function CatalogoProductosView() {
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 px-1 mb-3">
             Categorías
           </p>
-          {catalogoNodes.map(node => (
+          {catalogoNodes.map((node, i) => (
             <CatCard
               key={node.id}
               node={node}
+              idx={i}
               isActive={selected === node.segment}
               onClick={() => { setSelected(node.segment); setBusqueda("") }}
             />
@@ -332,10 +321,10 @@ export function CatalogoProductosView() {
             <>
               {/* Header categoría */}
               <div className={`px-5 py-4 border-b border-slate-800/60 flex items-center justify-between gap-3 ${
-                (CAT_COLOR[selectedNode.segment] ?? DEFAULT_COLOR).bg
+                catColor(selectedIdx).bg
               }`}>
                 <div>
-                  <p className={`text-base font-bold ${(CAT_COLOR[selectedNode.segment] ?? DEFAULT_COLOR).text}`}>
+                  <p className={`text-base font-bold ${catColor(selectedIdx).text}`}>
                     {selectedNode.title || selectedNode.segment}
                   </p>
                   <p className="text-[11px] text-slate-500 font-mono mt-0.5">
@@ -363,7 +352,7 @@ export function CatalogoProductosView() {
                       depth={0}
                       parentPath={`/${selectedNode.segment}`}
                       busqueda={busqueda}
-                      catColor={CAT_COLOR[selectedNode.segment] ?? DEFAULT_COLOR}
+                      color={catColor(selectedIdx)}
                     />
                   ))
                 )}
