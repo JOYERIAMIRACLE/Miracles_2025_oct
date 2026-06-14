@@ -1,0 +1,19 @@
+{
+  "kind": "singleType",
+  "collectionName": "catalogo_joyeria",
+  "info": {
+    "singularName": "catalogo-joyeria",
+    "pluralName": "catalogo-joyerias",
+    "displayName": "Catálogo Joyería",
+    "description": "Árbol jerárquico del catálogo de joyería: Material → Categoría → Producto"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "arbol": {
+      "type": "json"
+    }
+  }
+}

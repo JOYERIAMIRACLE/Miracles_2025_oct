@@ -1,5 +1,5 @@
-import { CatalogoProductosView } from "@/components/Empresa/CatalogoProductosView"
+import { CatalogoJoyeriaView } from "@/components/Empresa/Suministro/CatalogoJoyeriaView"
 
-export default function CatalogoProductosPage() {
-  return <CatalogoProductosView />
+export default function CatalogoPage() {
+  return <CatalogoJoyeriaView />
 }
