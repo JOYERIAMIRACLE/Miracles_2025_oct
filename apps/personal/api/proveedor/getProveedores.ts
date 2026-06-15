@@ -12,7 +12,7 @@ export function useGetProveedores() {
   useEffect(() => {
     fetch(`${BASE}/api/proveedores?sort=nombre:asc&pagination[pageSize]=500`, { headers: hdrs() })
       .then(r => r.json())
-      .then(j => setProveedores(j.data ?? []))
+      .then(j => setProveedores((j.data ?? []).filter(Boolean)))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])

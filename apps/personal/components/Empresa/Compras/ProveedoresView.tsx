@@ -21,8 +21,8 @@ export function ProveedoresView() {
   const [saving,     setSaving]    = useState(false)
   const [delId,      setDelId]     = useState<string | null>(null)
 
-  const filtrados = proveedores.filter(p =>
-    !search || p.nombre.toLowerCase().includes(search.toLowerCase()) ||
+  const filtrados = proveedores.filter(Boolean).filter(p =>
+    !search || p.nombre?.toLowerCase().includes(search.toLowerCase()) ||
     (p.contacto ?? "").toLowerCase().includes(search.toLowerCase())
   )
 
@@ -71,7 +71,7 @@ export function ProveedoresView() {
           <Building2 size={18} className="text-amber-400" />
           <div>
             <h1 className="text-xl font-bold text-slate-100">Proveedores</h1>
-            <p className="text-[11px] text-slate-500">{proveedores.length} registrados · {proveedores.filter(p => p.activo).length} activos</p>
+            <p className="text-[11px] text-slate-500">{proveedores.length} registrados · {proveedores.filter(p => p?.activo).length} activos</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
