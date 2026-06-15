@@ -13,7 +13,7 @@ import {
 } from "@/api/ordenCompra/getOrdenesCompra"
 import { useGetProveedores } from "@/api/proveedor/getProveedores"
 import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
-import { patchStock, createProducto } from "@/api/inventarioEmpresa/getInventario"
+import { createProducto, updateProducto } from "@/api/inventarioEmpresa/getInventario"
 import { OrdenCompra, LineaOrden, EstadoOrden, ESTADO_CONFIG, OrdenPayload } from "@/types/ordenCompra"
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
 
@@ -22,6 +22,18 @@ const inp       = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px
 const fmt       = (n: number | null) => n != null ? `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : "—"
 const fmtDate   = (s: string | null) => s ? new Date(s + "T12:00:00").toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" }) : "—"
 const uid       = () => crypto.randomUUID()
+
+function slugify(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-")
+}
+
+const CAT_MAP: Record<string, string> = {
+  "Anillos":"Anillos","Arracadas":"Aretes","Broqueles":"Broqueles",
+  "Aretes":"Aretes","Cadenas":"Cadenas","Esclavas":"Esclavas",
+  "Pulsos":"Pulsos","Dijes":"Dijes","Rosarios":"Rosarios",
+}
+const MAT_MAP: Record<string, string> = { "Oro 10k":"Oro 10k","Plata 925":"Plata 925" }
 
 function buildNumero(ordenes: OrdenCompra[]) {
   const n = ordenes.length + 1
@@ -61,7 +73,19 @@ function OrdenModal({
 
   function addFromCat(matN: string, catN: string, prod: CatalogoNodo, modeloNombre: string, sku: string) {
     const nombre = `${prod.nombre}${modeloNombre ? ` ${modeloNombre}` : ""} - ${matN}`
-    setLineas(prev => [...prev, { id: uid(), sku, nombre, cantidad: 1, cantidadRecibida: 0, costoUnitario: 0 }])
+    setLineas(prev => [...prev, {
+      id:               uid(),
+      sku,
+      nombre,
+      cantidad:         1,
+      cantidadRecibida: 0,
+      costoUnitario:    0,
+      categoriaJoya:    CAT_MAP[catN] ?? "",
+      materialProducto: MAT_MAP[matN] ?? "",
+      talla:            modeloNombre || "",
+      descripcion:      prod.descripcion || prod.notas || "",
+      fotoId:           prod.fotoId ?? null,
+    }])
     setCatOpen(false); setCatQ("")
   }
 
@@ -368,58 +392,86 @@ function OrdenModal({
 // ─── RecibirModal ─────────────────────────────────────────────────────────────
 
 function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose: () => void; onDone: (o: OrdenCompra) => void }) {
-  const [cantidades, setCantidades] = useState<Record<string, number>>(
+  const [cantidades,    setCantidades]    = useState<Record<string, number>>(
     Object.fromEntries(orden.lineas.map(l => [l.id, l.cantidad]))
   )
-  const [saving, setSaving]   = useState(false)
-  const [step,   setStep]     = useState<"form" | "done">("form")
+  const [costosLocales, setCostosLocales] = useState<Record<string, number>>(
+    Object.fromEntries(orden.lineas.map(l => [l.id, l.costoUnitario]))
+  )
+  const [margen, setMargen] = useState(50)
+  const [saving, setSaving] = useState(false)
+  const [step,   setStep]   = useState<"form" | "done">("form")
 
-  const totalPiezas   = orden.lineas.reduce((s, l) => s + (cantidades[l.id] ?? 0), 0)
-  const totalImporte  = orden.lineas.reduce((s, l) => s + (cantidades[l.id] ?? 0) * l.costoUnitario, 0)
+  const pventa = (costo: number) => Math.round(costo * (1 + margen / 100) * 100) / 100
+  const getCosto = (id: string) => costosLocales[id] ?? 0
+
+  const totalPiezas  = orden.lineas.reduce((s, l) => s + (cantidades[l.id] ?? 0), 0)
+  const totalImporte = orden.lineas.reduce((s, l) => s + (cantidades[l.id] ?? 0) * getCosto(l.id), 0)
+  const totalVenta   = orden.lineas.reduce((s, l) => {
+    const c = getCosto(l.id)
+    return s + (c > 0 ? (cantidades[l.id] ?? 0) * pventa(c) : 0)
+  }, 0)
 
   async function handleRecibir() {
     setSaving(true)
     try {
       const inventario = await fetchInventarioRaw()
 
-      for (const linea of orden.lineas) {
-        const cant = cantidades[linea.id] ?? 0
-        if (cant <= 0) continue
+      if (process.env.NODE_ENV === "development") {
+        console.log("[Recibir] inventario cargado:", inventario.length, "productos")
+      }
 
-        const existing = inventario.find(i => i.sku === linea.sku)
+      for (const linea of orden.lineas) {
+        const cant    = cantidades[linea.id] ?? 0
+        if (cant <= 0) continue
+        const costoReal = getCosto(linea.id)
+        const costoOk   = costoReal > 0
+        const existing  = inventario.find(i => i.sku != null && i.sku === linea.sku)
+
+        if (process.env.NODE_ENV === "development") {
+          console.log("[Recibir] linea:", linea.sku, "| cant:", cant, "| costo:", costoReal, "| pventa:", costoOk ? pventa(costoReal) : null, "| existing:", existing?.documentId ?? "NUEVO")
+        }
+
         if (existing) {
-          await patchStock(existing.documentId, (existing.stock ?? 0) + cant)
+          await updateProducto(existing.documentId, {
+            stock: (existing.stock ?? 0) + cant,
+            ...(costoOk ? {
+              costoProduccion: costoReal,
+              costo:           pventa(costoReal),
+            } : {}),
+          })
         } else {
           await createProducto({
-            nombreProducto: linea.nombre,
-            sku:            linea.sku || null,
-            stock:          cant,
-            costoProduccion: linea.costoUnitario || null,
-            material:       "producto",
+            nombreProducto:   linea.nombre,
+            slug:             slugify(linea.nombre),
+            sku:              linea.sku || null,
+            stock:            cant,
+            costoProduccion:  costoOk ? costoReal : null,
+            costo:            costoOk ? pventa(costoReal) : null,
+            material:         "producto",
+            categoriaJoya:    linea.categoriaJoya    || null,
+            materialProducto: linea.materialProducto || null,
+            talla:            linea.talla             || null,
+            descripcion:      linea.descripcion       || null,
+            ...(linea.fotoId ? { imagenes: [linea.fotoId] } : {}),
           } as any)
         }
       }
 
-      // Calcular estado de la orden
-      const totalPedido    = orden.lineas.reduce((s, l) => s + l.cantidad, 0)
-      const totalRecibido  = orden.lineas.reduce((s, l) => s + (cantidades[l.id] ?? 0), 0)
+      const totalPedido   = orden.lineas.reduce((s, l) => s + l.cantidad, 0)
+      const totalRecibido = orden.lineas.reduce((s, l) => s + (cantidades[l.id] ?? 0), 0)
       const nuevoEstado: EstadoOrden = totalRecibido >= totalPedido ? "recibida" : "recibida_parcial"
-
       const lineasActualizadas = orden.lineas.map(l => ({ ...l, cantidadRecibida: cantidades[l.id] ?? 0 }))
-      const ordenActualizada   = await updateOrden(orden.documentId, {
-        estado: nuevoEstado,
-        lineas: lineasActualizadas,
-      })
+      const ordenActualizada   = await updateOrden(orden.documentId, { estado: nuevoEstado, lineas: lineasActualizadas })
 
-      // Crear gasto automáticamente
       if (totalImporte > 0) {
         await createGastoCompra({
-          concepto:   `Compra de mercancía - ${orden.numero}`,
-          monto:      totalImporte,
-          fecha:      new Date().toISOString().split("T")[0],
-          proveedor:  orden.proveedor?.nombre ?? "",
-          factura:    orden.numero,
-        }).catch(() => {}) // no bloquear si falla el gasto
+          concepto:  `Compra de mercancía - ${orden.numero}`,
+          monto:     totalImporte,
+          fecha:     new Date().toISOString().split("T")[0],
+          proveedor: orden.proveedor?.nombre ?? "",
+          factura:   orden.numero,
+        }).catch(() => {})
       }
 
       onDone(ordenActualizada)
@@ -432,52 +484,100 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+      <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
 
+        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
           <div>
             <h2 className="text-sm font-semibold text-slate-100">Recibir mercancía</h2>
             <p className="text-[11px] text-slate-500 mt-0.5">{orden.numero} · {orden.proveedor?.nombre}</p>
           </div>
-          <button type="button" onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300 rounded"><X size={15}/></button>
+          <button type="button" title="Cerrar" onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300 rounded"><X size={15}/></button>
         </div>
 
         {step === "done" ? (
           <div className="px-5 py-10 text-center">
             <CheckCircle size={36} className="mx-auto mb-3 text-emerald-400" />
             <p className="text-slate-100 font-semibold mb-1">¡Mercancía recibida!</p>
-            <p className="text-slate-500 text-sm">{totalPiezas} piezas · Inventario actualizado · Gasto registrado</p>
-            <button type="button" onClick={onClose} className="mt-5 h-8 px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition">Cerrar</button>
+            <p className="text-slate-500 text-sm">{totalPiezas} piezas · Costo {fmt(totalImporte)} · Venta {fmt(totalVenta)}</p>
+            <p className="text-slate-600 text-xs mt-1">Inventario actualizado · Gasto registrado</p>
+            <button type="button" onClick={onClose}
+              className="mt-5 h-8 px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition">
+              Cerrar
+            </button>
           </div>
         ) : (
           <>
-            <div className="px-5 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
-              <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2 px-1 mb-2">
-                {["Producto","SKU","Pedido","Recibir"].map(h => (
+            {/* Margen global */}
+            <div className="px-5 pt-4 pb-3 border-b border-slate-800/60 flex items-center gap-3">
+              <span className="text-[11px] text-slate-500 shrink-0">Margen global</span>
+              <div className="flex items-center gap-1.5">
+                <input type="number" min={0} max={500} step={5}
+                  title="Margen global (%)"
+                  placeholder="50"
+                  value={margen}
+                  onChange={e => setMargen(Math.max(0, Number(e.target.value)))}
+                  className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-slate-100 text-center focus:outline-none focus:ring-2 focus:ring-amber-500/40 font-mono" />
+                <span className="text-sm text-slate-400">%</span>
+              </div>
+              <span className="text-[11px] text-slate-600">
+                P.Venta = Costo × <span className="text-amber-500 font-mono">{(1 + margen / 100).toFixed(2)}</span>
+              </span>
+            </div>
+
+            {/* Tabla de líneas */}
+            <div className="px-5 py-4 space-y-2 max-h-[45vh] overflow-y-auto">
+              <div className="grid grid-cols-[2fr_1fr_60px_80px_72px] gap-2 px-1 mb-1">
+                {["Producto","SKU","Recibir","Costo/u ✏","P.Venta"].map(h => (
                   <span key={h} className="text-[9px] font-bold text-slate-600 uppercase tracking-wider">{h}</span>
                 ))}
               </div>
-              {orden.lineas.map(l => (
-                <div key={l.id} className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2 items-center">
-                  <span className="text-xs text-slate-300 truncate">{l.nombre}</span>
-                  <span className="text-[10px] font-mono text-slate-500 truncate">{l.sku}</span>
-                  <span className="text-xs text-slate-400 text-center">{l.cantidad}</span>
-                  <input type="number" min={0} max={l.cantidad}
-                    className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/60 text-center"
-                    value={cantidades[l.id] ?? l.cantidad}
-                    onChange={e => setCantidades(prev => ({ ...prev, [l.id]: Number(e.target.value) }))} />
-                </div>
-              ))}
+              {orden.lineas.map(l => {
+                const c  = getCosto(l.id)
+                const pv = c > 0 ? pventa(c) : null
+                return (
+                  <div key={l.id} className="grid grid-cols-[2fr_1fr_60px_80px_72px] gap-2 items-center">
+                    <span className="text-xs text-slate-300 truncate">{l.nombre}</span>
+                    <span className="text-[10px] font-mono text-slate-500 truncate">{l.sku || "—"}</span>
+                    <input type="number" min={0} max={l.cantidad}
+                      title={`Cantidad a recibir: ${l.nombre}`}
+                      placeholder="0"
+                      className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500/60 text-center"
+                      value={cantidades[l.id] ?? l.cantidad}
+                      onChange={e => setCantidades(prev => ({ ...prev, [l.id]: Number(e.target.value) }))} />
+                    <input type="number" min={0} step="0.01"
+                      title={`Costo unitario: ${l.nombre}`}
+                      placeholder="0.00"
+                      className="bg-slate-800 border border-amber-500/30 rounded px-2 py-1 text-xs text-amber-300 focus:outline-none focus:border-amber-500/70 text-right tabular-nums"
+                      value={c || ""}
+                      onChange={e => setCostosLocales(prev => ({ ...prev, [l.id]: Number(e.target.value) }))} />
+                    <span className={`text-xs text-right tabular-nums font-medium ${pv ? "text-emerald-400" : "text-slate-700"}`}>
+                      {pv ? fmt(pv) : "—"}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
 
             {/* Resumen */}
-            <div className="px-5 py-3 bg-slate-800/50 border-y border-slate-800 text-xs text-slate-400 flex justify-between">
-              <span>{totalPiezas} piezas · {fmt(totalImporte)}</span>
-              <span className="text-slate-600">Se registrará como gasto en Finanzas</span>
+            <div className="px-5 py-3 bg-slate-800/40 border-y border-slate-800 text-xs flex flex-col gap-1">
+              <div className="flex items-center justify-between text-slate-400">
+                <span>{totalPiezas} piezas</span>
+                <div className="flex gap-4">
+                  <span>Costo: <span className="text-amber-400 font-medium tabular-nums">{fmt(totalImporte)}</span></span>
+                  {totalVenta > 0 && (
+                    <span>Venta: <span className="text-emerald-400 font-medium tabular-nums">{fmt(totalVenta)}</span></span>
+                  )}
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-600">Costo y precio de venta se actualizarán en inventario · Gasto en Finanzas</p>
             </div>
 
             <div className="flex justify-end gap-2 px-5 py-4">
-              <button type="button" onClick={onClose} className="h-8 px-4 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-slate-200 transition">Cancelar</button>
+              <button type="button" onClick={onClose}
+                className="h-8 px-4 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-slate-200 transition">
+                Cancelar
+              </button>
               <button type="button" onClick={handleRecibir} disabled={saving}
                 className="h-8 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition disabled:opacity-50 flex items-center gap-1.5">
                 {saving ? <Loader2 size={11} className="animate-spin"/> : <PackageCheck size={11}/>}

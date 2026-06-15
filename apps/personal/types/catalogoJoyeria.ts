@@ -17,6 +17,7 @@ export type CatalogoNodo = {
   tipo:            TipoNodo
   nombre:          string
   notas:           string
+  descripcion:     string
   // Solo producto
   sku:             string
   caracteristicas: Caracteristica[]
@@ -42,6 +43,7 @@ export function nodoVacio(tipo: TipoNodo, nombre = ""): CatalogoNodo {
     tipo,
     nombre,
     notas:           "",
+    descripcion:     "",
     sku:             "",
     caracteristicas: [],
     modelos:         [],

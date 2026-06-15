@@ -169,6 +169,10 @@ function TreeRow({
             className="p-0.5 text-slate-600 hover:text-slate-400 rounded">
             <ChevronUp size={11} />
           </button>
+          <button type="button" title="Bajar" onClick={e => { e.stopPropagation(); onMov(node.id, 1) }}
+            className="p-0.5 text-slate-600 hover:text-slate-400 rounded">
+            <ChevronDown size={11} />
+          </button>
           <button type="button" title="Eliminar" onClick={e => { e.stopPropagation(); onDel(node.id) }}
             className="p-0.5 text-slate-600 hover:text-red-400 rounded">
             <Trash2 size={11} />
@@ -303,6 +307,15 @@ function DetailPanel({
               onChange={e => onUpdate({ sku: e.target.value })}
               placeholder="Ej. ANI-O10K" />
           </div>
+
+          <div>
+            <label className={lbl}>Descripción pública</label>
+            <textarea className={`${inp} resize-none`} rows={2}
+              value={node.descripcion ?? ""}
+              onChange={e => onUpdate({ descripcion: e.target.value })}
+              placeholder="Descripción que aparece en inventario y tienda…" />
+            <p className="text-[9px] text-slate-700 mt-1">Se pre-llena al agregar al inventario</p>
+          </div>
         </>
       )}
 
@@ -344,7 +357,7 @@ function DetailPanel({
                     value={c.valor}
                     onChange={e => updCaract(c.id, { valor: e.target.value })}
                   />
-                  <button type="button" onClick={() => delCaract(c.id)}
+                  <button type="button" title="Eliminar característica" onClick={() => delCaract(c.id)}
                     className="text-slate-700 hover:text-red-400 transition p-1">
                     <X size={12} />
                   </button>
@@ -388,7 +401,7 @@ function DetailPanel({
                     placeholder="0" value={m.stock ?? ""} onChange={e => updModelo(m.id, { stock: e.target.value === "" ? null : Number(e.target.value) })} />
                   <input type="number" className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
                     placeholder="0.00" value={m.precio ?? ""} onChange={e => updModelo(m.id, { precio: e.target.value === "" ? null : Number(e.target.value) })} />
-                  <button type="button" onClick={() => delModelo(m.id)}
+                  <button type="button" title="Eliminar modelo" onClick={() => delModelo(m.id)}
                     className="text-slate-700 hover:text-red-400 transition p-1">
                     <X size={12} />
                   </button>
@@ -527,7 +540,7 @@ export function CatalogoJoyeriaView() {
               placeholder="Buscar…"
               className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-amber-500/40 w-44 transition" />
             {busqueda && (
-              <button type="button" onClick={() => setBusqueda("")}
+              <button type="button" title="Limpiar búsqueda" onClick={() => setBusqueda("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
                 <X size={11} />
               </button>

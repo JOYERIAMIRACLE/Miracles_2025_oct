@@ -12,7 +12,7 @@ const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const imgUrl  = (url: string) => url.startsWith("http") ? url : `${BACKEND}${url}`
 
 function slugify(text: string): string {
-  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-")
 }
 
@@ -132,7 +132,8 @@ export function InventarioEmpresaView() {
   ) {
     const cat = CAT_MAP[catNombre] ?? "" as CategoriaJoya | ""
     const mat = MAT_MAP[matNombre] ?? "" as MaterialProducto | ""
-    const desc = [prod.notas, ...prod.caracteristicas.map(c => `${c.clave}: ${c.valor}`)].filter(Boolean).join(" · ")
+    const desc = prod.descripcion?.trim()
+      || [prod.notas, ...prod.caracteristicas.map(c => `${c.clave}: ${c.valor}`)].filter(Boolean).join(" · ")
     const nombre = `${prod.nombre}${modeloNombre ? ` ${modeloNombre}` : ""}`
     const sku    = catalogSku || buildSku(cat, mat, prod.nombre, modeloNombre)
     setForm(f => ({

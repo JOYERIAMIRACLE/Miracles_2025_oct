@@ -7,6 +7,12 @@ export type LineaOrden = {
   cantidad:         number
   cantidadRecibida: number
   costoUnitario:    number
+  // metadatos del catálogo — se llenan al agregar desde catálogo
+  categoriaJoya?:    string
+  materialProducto?: string
+  talla?:            string
+  descripcion?:      string
+  fotoId?:           number | null
 }
 
 export type OrdenCompra = {
