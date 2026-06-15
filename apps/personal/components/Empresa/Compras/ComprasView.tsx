@@ -46,9 +46,11 @@ function OrdenModal({
   const [notas,    setNotas]    = useState(orden?.notas ?? "")
   const [lineas,   setLineas]   = useState<LineaOrden[]>(orden?.lineas ?? [])
   const [saving,   setSaving]   = useState(false)
-  const [catalogo, setCatalogo] = useState<CatalogoNodo[]>([])
-  const [catOpen,  setCatOpen]  = useState(false)
-  const [catQ,     setCatQ]     = useState("")
+  const [catalogo,   setCatalogo]   = useState<CatalogoNodo[]>([])
+  const [catOpen,    setCatOpen]    = useState(false)
+  const [catQ,       setCatQ]       = useState("")
+  const [showFormula,setShowFormula] = useState(false)
+  const [catMat,     setCatMat]     = useState<string | null>(null)
 
   const loadCat = useCallback(() => {
     if (catalogo.length === 0) fetchCatalogo().then(setCatalogo).catch(() => {})
@@ -131,57 +133,165 @@ function OrdenModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Productos</p>
-              <div className="relative">
-                <button type="button" onClick={() => { setCatOpen(v => !v); loadCat() }}
-                  className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded-lg px-2.5 py-1 transition">
-                  <BookOpen size={11}/> Desde catálogo
-                </button>
-                {catOpen && (
-                  <div className="absolute right-0 top-8 z-50 w-80 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-64 flex flex-col">
-                    <div className="p-2 border-b border-slate-800 shrink-0">
-                      <input autoFocus placeholder="Buscar producto…" value={catQ}
-                        onChange={e => setCatQ(e.target.value)}
-                        className="w-full h-8 rounded-lg border border-slate-700 bg-slate-800 px-3 text-xs text-slate-200 placeholder:text-slate-600 outline-none" />
+              <button type="button" onClick={() => { setCatOpen(true); loadCat() }}
+                className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 bg-amber-500/5 rounded-lg px-3 py-1.5 transition">
+                <BookOpen size={12}/> Buscar en catálogo
+              </button>
+            </div>
+
+            {/* Modal catálogo — centrado, grande */}
+            {catOpen && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+                onClick={e => { if (e.target === e.currentTarget) { setCatOpen(false); setCatQ(""); setCatMat(null) } }}>
+                <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <BookOpen size={14} className="text-amber-400"/>
+                      <p className="text-sm font-semibold text-slate-100">Catálogo de productos</p>
                     </div>
-                    <div className="overflow-y-auto flex-1 p-1">
-                      {catalogo.map(mat => mat.children.map(cat => {
+                    <button type="button" title="Cerrar catálogo" onClick={() => { setCatOpen(false); setCatQ(""); setCatMat(null) }}
+                      className="p-1 text-slate-500 hover:text-slate-300 rounded"><X size={15}/></button>
+                  </div>
+
+                  {/* Fórmula SKU colapsable */}
+                  <div className="px-5 pt-3 pb-2 border-b border-slate-800/50 shrink-0">
+                    <button type="button" onClick={() => setShowFormula(v => !v)}
+                      className="flex items-center gap-1.5 text-[10px] text-slate-600 hover:text-slate-400 transition w-full">
+                      {showFormula ? <ChevronUp size={10}/> : <ChevronDown size={10}/>}
+                      <span className="font-bold uppercase tracking-widest">Fórmula SKU</span>
+                      <span className="ml-2 font-mono text-amber-600">[MAT]-[CAT]-[TIPO]-[VARIANTE]</span>
+                    </button>
+                    {showFormula && (
+                      <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1">
+                        <div>
+                          <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">Material</p>
+                          {[["O10","Oro 10k"],["P92","Plata 925"]].map(([c,l]) => (
+                            <div key={c} className="flex items-center gap-2 text-[10px]">
+                              <span className="font-mono text-amber-500 w-8">{c}</span>
+                              <span className="text-slate-500">{l}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">Categoría</p>
+                          {[["ANI","Anillos"],["CAD","Cadenas"],["ARC","Arracadas"],["BRQ","Broqueles"],["ARE","Aretes"],["ESC","Esclavas"],["PUL","Pulsos"],["DIJ","Dijes"],["ROS","Rosarios"]].map(([c,l]) => (
+                            <div key={c} className="flex items-center gap-2 text-[10px]">
+                              <span className="font-mono text-blue-400 w-8">{c}</span>
+                              <span className="text-slate-500">{l}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="col-span-2 mt-1 pt-1 border-t border-slate-800/50">
+                          <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">Ejemplos</p>
+                          <div className="flex flex-wrap gap-2">
+                            {["O10-ANI-LIS-T6","P92-CAD-CAR-45","O10-DIJ-VIR-MED","P92-ARC-LIS-3CM","O10-ESC-LIS-18"].map(e => (
+                              <span key={e} className="font-mono text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5">{e}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Búsqueda + filtro material */}
+                  <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-800 shrink-0">
+                    <div className="relative flex-1">
+                      <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600"/>
+                      <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catQ}
+                        onChange={e => setCatQ(e.target.value)}
+                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-8 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/40" />
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      {[null, ...catalogo.map(m => m.nombre)].map(m => (
+                        <button key={m ?? "todas"} type="button"
+                          onClick={() => setCatMat(m)}
+                          className={`h-8 px-2.5 rounded-lg text-[11px] font-medium border transition-all ${
+                            catMat === m
+                              ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                              : "border-slate-700 text-slate-500 hover:text-slate-300"
+                          }`}>
+                          {m ?? "Todos"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Lista de productos */}
+                  <div className="overflow-y-auto flex-1 p-3 space-y-3">
+                    {catalogo.length === 0 && (
+                      <div className="py-8 text-center">
+                        <Loader2 size={20} className="mx-auto mb-2 text-slate-700 animate-spin"/>
+                        <p className="text-xs text-slate-600">Cargando catálogo…</p>
+                      </div>
+                    )}
+                    {catalogo
+                      .filter(mat => !catMat || mat.nombre === catMat)
+                      .map(mat => mat.children.map(cat => {
                         const prods = cat.children.filter(p =>
-                          !catQ || p.nombre.toLowerCase().includes(catQ.toLowerCase()) ||
+                          !catQ ||
+                          p.nombre.toLowerCase().includes(catQ.toLowerCase()) ||
+                          p.sku.toLowerCase().includes(catQ.toLowerCase()) ||
                           cat.nombre.toLowerCase().includes(catQ.toLowerCase()) ||
-                          mat.nombre.toLowerCase().includes(catQ.toLowerCase())
+                          mat.nombre.toLowerCase().includes(catQ.toLowerCase()) ||
+                          p.modelos.some(m => m.sku.toLowerCase().includes(catQ.toLowerCase()))
                         )
                         if (!prods.length) return null
                         return (
                           <div key={`${mat.id}-${cat.id}`}>
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-2 py-1">{mat.nombre} › {cat.nombre}</p>
-                            {prods.map(prod =>
-                              prod.modelos.length > 0
-                                ? prod.modelos.map(mod => (
-                                    <button key={mod.id} type="button"
-                                      onClick={() => addFromCat(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
-                                      className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition">
-                                      <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre} <span className="text-slate-500">{mod.nombre}</span></span>
-                                      <span className="text-[9px] font-mono text-amber-500 shrink-0">{mod.sku || prod.sku}</span>
+                            {/* Grupo header */}
+                            <div className="flex items-center gap-2 mb-1.5 px-1">
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">{mat.nombre}</span>
+                              <span className="text-slate-700">›</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{cat.nombre}</span>
+                            </div>
+                            <div className="bg-slate-800/30 rounded-xl border border-slate-800/60 divide-y divide-slate-800/60 overflow-hidden">
+                              {prods.map(prod =>
+                                prod.modelos.length > 0
+                                  ? prod.modelos.map(mod => (
+                                      <button key={mod.id} type="button"
+                                        onClick={() => addFromCat(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
+                                        className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/50 transition-colors group">
+                                        <div className="flex-1 min-w-0">
+                                          <span className="text-sm text-slate-200 font-medium">{prod.nombre}</span>
+                                          {mod.nombre && <span className="text-slate-400 text-xs ml-1.5">{mod.nombre}</span>}
+                                          {mod.variedad && <span className="text-slate-600 text-xs ml-1">· {mod.variedad}</span>}
+                                        </div>
+                                        <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                                          {mod.sku || prod.sku}
+                                        </span>
+                                        <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                      </button>
+                                    ))
+                                  : (
+                                    <button key={prod.id} type="button"
+                                      onClick={() => addFromCat(mat.nombre, cat.nombre, prod, "", prod.sku)}
+                                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/50 transition-colors group">
+                                      <span className="flex-1 text-sm text-slate-200">{prod.nombre}</span>
+                                      <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                                        {prod.sku}
+                                      </span>
+                                      <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
                                     </button>
-                                  ))
-                                : (
-                                  <button key={prod.id} type="button"
-                                    onClick={() => addFromCat(mat.nombre, cat.nombre, prod, "", prod.sku)}
-                                    className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition">
-                                    <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre}</span>
-                                    <span className="text-[9px] font-mono text-amber-500 shrink-0">{prod.sku}</span>
-                                  </button>
-                                )
-                            )}
+                                  )
+                              )}
+                            </div>
                           </div>
                         )
-                      }))}
-                      {catalogo.length === 0 && <p className="text-xs text-slate-600 text-center py-4">Cargando catálogo…</p>}
-                    </div>
+                      }))
+                    }
                   </div>
-                )}
+
+                  {/* Footer hint */}
+                  <div className="px-5 py-3 border-t border-slate-800 shrink-0 flex items-center justify-between">
+                    <p className="text-[10px] text-slate-700">Haz clic en un producto para agregarlo a la orden</p>
+                    <button type="button" onClick={() => { setCatOpen(false); setCatQ(""); setCatMat(null) }}
+                      className="text-xs text-slate-500 hover:text-slate-300 transition">Cerrar</button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Cabecera tabla líneas */}
             {lineas.length > 0 && (
