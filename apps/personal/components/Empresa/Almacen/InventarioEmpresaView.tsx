@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen } from "lucide-react"
 import { toast } from "sonner"
 import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem } from "@/types/product"
+import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
+import { CatalogoNodo } from "@/types/catalogoJoyeria"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const imgUrl  = (url: string) => url.startsWith("http") ? url : `${BACKEND}${url}`
@@ -77,6 +79,9 @@ export function InventarioEmpresaView() {
   const [fotoFile,    setFotoFile]    = useState<File | null>(null)
   const [publishing,  setPublishing]  = useState<string | null>(null)
   const [featuring,   setFeaturing]   = useState<string | null>(null)
+  const [catalogo,    setCatalogo]    = useState<CatalogoNodo[]>([])
+  const [showCatPick, setShowCatPick] = useState(false)
+  const [catSearch,   setCatSearch]   = useState("")
 
   const filtrados = useMemo(() => items.filter(it => {
     const matchSearch = !search || it.nombreProducto.toLowerCase().includes(search.toLowerCase()) || (it.sku ?? "").toLowerCase().includes(search.toLowerCase())
@@ -93,13 +98,42 @@ export function InventarioEmpresaView() {
     enTienda:   items.filter(i => i.activo).length,
   }), [items])
 
+  // Carga catálogo cuando abre el modal (una sola vez)
+  function openModal() {
+    if (catalogo.length === 0) fetchCatalogo().then(setCatalogo).catch(() => {})
+  }
+
   function openNuevo() {
     setEditing(null); setForm(emptyForm()); setSkuAuto(true)
-    setFotoPreview(null); setFotoFile(null); setModalOpen(true)
+    setFotoPreview(null); setFotoFile(null); setModalOpen(true); openModal()
+  }
+
+  // Mapeo catálogo → inventario
+  const CAT_MAP: Record<string, CategoriaJoya> = {
+    "Anillos":"Anillos","Arracadas":"Aretes","Broqueles":"Broqueles",
+    "Aretes":"Aretes","Cadenas":"Cadenas","Esclavas":"Esclavas",
+    "Pulsos":"Pulsos","Dijes":"Dijes","Rosarios":"Rosarios",
+  }
+  const MAT_MAP: Record<string, MaterialProducto> = { "Oro 10k":"Oro 10k","Plata 925":"Plata 925" }
+
+  function applyFromCatalogo(
+    matNombre: string, catNombre: string,
+    prod: CatalogoNodo, modeloNombre: string
+  ) {
+    const cat = CAT_MAP[catNombre] ?? "" as CategoriaJoya | ""
+    const mat = MAT_MAP[matNombre] ?? "" as MaterialProducto | ""
+    const desc = [prod.notas, ...prod.caracteristicas.map(c => `${c.clave}: ${c.valor}`)].filter(Boolean).join(" · ")
+    const nombre = `${prod.nombre}${modeloNombre ? ` ${modeloNombre}` : ""}`
+    setForm(f => ({
+      ...f, nombreProducto: nombre, descripcion: desc,
+      categoriaJoya: cat, materialProducto: mat, talla: modeloNombre,
+      sku: buildSku(cat, mat, modeloNombre, items, editing?.documentId),
+    }))
+    setShowCatPick(false); setCatSearch("")
   }
 
   function openEditar(it: ProductType) {
-    setEditing(it); setSkuAuto(true)
+    openModal(); setEditing(it); setSkuAuto(true)
     setFotoPreview(it.imagenes?.[0] ? imgUrl(it.imagenes[0].url) : null)
     setFotoFile(null)
     const cat = it.categoriaJoya ?? ""
@@ -438,6 +472,67 @@ export function InventarioEmpresaView() {
             </div>
 
             <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+
+              {/* Desde catálogo */}
+              <div className="relative">
+                <button type="button"
+                  onClick={() => setShowCatPick(v => !v)}
+                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-dashed border-amber-500/40 bg-amber-500/5 text-amber-400 text-xs font-medium hover:bg-amber-500/10 transition-colors">
+                  <BookOpen size={13}/> Autocompletar desde catálogo
+                </button>
+
+                {showCatPick && (
+                  <div className="absolute top-10 left-0 right-0 z-50 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-72 flex flex-col">
+                    <div className="p-2 border-b border-slate-800 shrink-0">
+                      <input autoFocus placeholder="Buscar producto del catálogo…" value={catSearch}
+                        onChange={e => setCatSearch(e.target.value)}
+                        className="w-full h-8 rounded-lg border border-slate-700 bg-slate-800 px-3 text-xs text-slate-200 placeholder:text-slate-600 outline-none"/>
+                    </div>
+                    <div className="overflow-y-auto flex-1 p-1">
+                      {catalogo.map(mat => mat.children.map(cat => {
+                        const prods = cat.children.filter(p =>
+                          !catSearch || p.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                          cat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                          mat.nombre.toLowerCase().includes(catSearch.toLowerCase())
+                        )
+                        if (prods.length === 0) return null
+                        return (
+                          <div key={`${mat.id}-${cat.id}`}>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-2 py-1">
+                              {mat.nombre} › {cat.nombre}
+                            </p>
+                            {prods.map(prod => (
+                              <div key={prod.id}>
+                                {prod.modelos.length > 0
+                                  ? prod.modelos.map(mod => (
+                                      <button key={mod.id} type="button"
+                                        onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, mod.nombre)}
+                                        className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+                                        <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre} <span className="text-slate-500">{mod.nombre}</span></span>
+                                        <span className="text-[9px] font-mono text-amber-500 shrink-0">{mod.sku || prod.sku}</span>
+                                      </button>
+                                    ))
+                                  : (
+                                    <button type="button"
+                                      onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "")}
+                                      className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+                                      <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre}</span>
+                                      <span className="text-[9px] font-mono text-amber-500 shrink-0">{prod.sku}</span>
+                                    </button>
+                                  )
+                                }
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      }))}
+                      {catalogo.length === 0 && (
+                        <p className="text-xs text-slate-600 text-center py-4">Catálogo vacío — inicializa primero</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Foto */}
               <div>

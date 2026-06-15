@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 import {
   CatalogoNodo, TipoNodo, Caracteristica, Modelo,
-  TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia,
+  TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia, arbolInicial,
 } from "@/types/catalogoJoyeria"
 import { fetchCatalogo, saveCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
 
@@ -486,6 +486,15 @@ export function CatalogoJoyeriaView() {
               </button>
             )}
           </div>
+
+          {/* Inicializar plantilla */}
+          {tree.length === 0 && (
+            <button type="button"
+              onClick={() => { const t = arbolInicial(); setTree(t); scheduleSave(t) }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
+              <Layers size={13} /> Inicializar plantilla
+            </button>
+          )}
 
           {/* Agregar material */}
           <button type="button" onClick={handleAddMaterial}
