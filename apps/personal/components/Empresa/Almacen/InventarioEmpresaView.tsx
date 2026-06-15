@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent } from "lucide-react"
 import { toast } from "sonner"
 import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem } from "@/types/product"
@@ -82,8 +82,12 @@ export function InventarioEmpresaView() {
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [fotoFile,    setFotoFile]    = useState<File | null>(null)
   const [publishing,  setPublishing]  = useState<string | null>(null)
-  const [featuring,   setFeaturing]   = useState<string | null>(null)
-  const [catalogo,    setCatalogo]    = useState<CatalogoNodo[]>([])
+  const [featuring,    setFeaturing]    = useState<string | null>(null)
+  const [catalogo,     setCatalogo]     = useState<CatalogoNodo[]>([])
+  const [margenPanel,  setMargenPanel]  = useState(false)
+  const [globalMargen, setGlobalMargen] = useState(70)
+  const [applyingMar,  setApplyingMar]  = useState(false)
+  const [marProgress,  setMarProgress]  = useState({ done: 0, total: 0 })
   const [showCatPick, setShowCatPick] = useState(false)
   const [catSearch,   setCatSearch]   = useState("")
   const [catalogCard, setCatalogCard] = useState<{
@@ -277,6 +281,30 @@ export function InventarioEmpresaView() {
     finally { setFeaturing(null) }
   }
 
+  async function handleAplicarMargen() {
+    const targets = items.filter(i => (i.costoProduccion ?? 0) > 0)
+    if (!targets.length) { toast.error("No hay productos con costo registrado"); return }
+    setApplyingMar(true)
+    setMarProgress({ done: 0, total: targets.length })
+    let done = 0
+    try {
+      for (const item of targets) {
+        const nuevo = Math.round((item.costoProduccion!) * (1 + globalMargen / 100) * 100) / 100
+        await updateProducto(item.documentId, { costo: nuevo })
+        setItems(prev => prev.map(i => i.documentId === item.documentId ? { ...i, costo: nuevo } : i))
+        done++
+        setMarProgress({ done, total: targets.length })
+      }
+      toast.success(`Precio de venta actualizado en ${targets.length} productos`)
+      setMargenPanel(false)
+    } catch {
+      toast.error("Error al actualizar precios")
+    } finally {
+      setApplyingMar(false)
+      setMarProgress({ done: 0, total: 0 })
+    }
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-5">
 
@@ -313,11 +341,51 @@ export function InventarioEmpresaView() {
               className={`h-7 px-2.5 rounded-lg text-[11px] font-medium border transition-all ${filtroCat===c?`${CAT_COLOR[c]} shadow-sm`:"border-slate-700 text-slate-500 hover:text-slate-300"}`}>{c}</button>
           ))}
         </div>
-        <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-colors ml-auto">
-          <Plus size={15} /> Nuevo producto
-        </button>
+        <div className="flex items-center gap-2 ml-auto">
+          <button type="button" onClick={() => setMargenPanel(v => !v)}
+            className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium border transition-all ${
+              margenPanel
+                ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                : "border-slate-700 text-slate-500 hover:text-slate-300"
+            }`}>
+            <Percent size={13}/> Margen global
+          </button>
+          <button type="button" onClick={openNuevo}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-colors">
+            <Plus size={15} /> Nuevo producto
+          </button>
+        </div>
       </div>
+
+      {/* Panel margen global */}
+      {margenPanel && (
+        <div className="bg-slate-900 border border-amber-500/20 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-slate-400 shrink-0">Margen global</span>
+            <input type="number" min={0} max={500} step={5}
+              title="Margen (%)"
+              value={globalMargen}
+              onChange={e => setGlobalMargen(Math.max(0, Number(e.target.value)))}
+              className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-center font-mono text-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40" />
+            <span className="text-sm text-slate-500">%</span>
+          </div>
+          <span className="text-xs text-slate-600">
+            P.Venta = Costo ×{" "}
+            <span className="font-mono text-amber-500">{(1 + globalMargen / 100).toFixed(2)}</span>
+          </span>
+          <div className="flex items-center gap-3 ml-auto">
+            <span className="text-[11px] text-slate-600">
+              {items.filter(i => (i.costoProduccion ?? 0) > 0).length} productos con costo
+            </span>
+            <button type="button" onClick={handleAplicarMargen} disabled={applyingMar}
+              className="flex items-center gap-1.5 h-8 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition-colors disabled:opacity-50">
+              {applyingMar
+                ? <><Loader2 size={11} className="animate-spin"/> {marProgress.done}/{marProgress.total}</>
+                : <><TrendingUp size={11}/> Aplicar a todos</>}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabla */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
