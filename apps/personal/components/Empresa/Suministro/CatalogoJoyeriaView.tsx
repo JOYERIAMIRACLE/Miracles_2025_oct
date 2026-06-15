@@ -97,7 +97,7 @@ function TreeRow({
   onMov:    (id: string, dir: 1 | -1) => void
   busqueda: string
 }) {
-  const [open, setOpen] = useState(depth < 2)
+  const [open, setOpen] = useState(depth === 0)
   const cfg   = TIPO_CONFIG[node.tipo]
   const childTipo = cfg.childTipo
   const hasChildren = node.children.length > 0
