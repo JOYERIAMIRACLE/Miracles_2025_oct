@@ -24,19 +24,23 @@ const margen = (costo: number | null, precio: number | null) => {
 
 const CAT_ABBR: Record<CategoriaJoya, string> = {
   "Anillos":"ANI","Cadenas":"CAD","Esclavas":"ESC","Dijes":"DIJ",
-  "Broqueles":"BRO","Aretes":"ARE","Pulsos":"PUL","Rosarios":"ROS","Argollas":"ARG",
+  "Broqueles":"BRQ","Aretes":"ARE","Pulsos":"PUL","Rosarios":"ROS","Argollas":"ARG",
 }
-const MAT_ABBR: Record<MaterialProducto, string> = { "Oro 10k":"O10K","Plata 925":"P925" }
+const MAT_ABBR: Record<MaterialProducto, string> = { "Oro 10k":"O10","Plata 925":"P92" }
 
-function buildSku(cat: CategoriaJoya | "", mat: MaterialProducto | "", talla: string, allItems: ProductType[], excludeId?: string): string {
+// Formato: [MAT]-[CAT]-[FIGURA]-[TALLA]   ej. O10-ANI-LIS-T6 / P92-CAD-CUB-45
+function buildSku(cat: CategoriaJoya | "", mat: MaterialProducto | "", figura: string, talla: string): string {
   if (!cat) return ""
-  const catCode   = CAT_ABBR[cat]
-  const matCode   = mat ? MAT_ABBR[mat] : null
-  const tallaCode = talla.trim() ? talla.trim().toUpperCase().replace(/\s+/g,"") : null
-  const pool      = excludeId ? allItems.filter(i => i.documentId !== excludeId) : allItems
-  const count     = pool.filter(i => i.sku?.startsWith(catCode+"-") || i.sku === catCode).length
-  const base      = [catCode,...(matCode?[matCode]:[])].join("-")
-  return [base,...(tallaCode?[tallaCode]:[]),String(count+1).padStart(3,"0")].join("-")
+  const matCode = mat ? MAT_ABBR[mat] : null
+  const catCode = CAT_ABBR[cat]
+  const figCode = figura.trim() ? figura.trim().slice(0, 3).toUpperCase() : null
+  const talCode = talla.trim() ? talla.trim().toUpperCase().replace(/\s+/g, "") : null
+  return [
+    ...(matCode ? [matCode] : []),
+    catCode,
+    ...(figCode ? [figCode] : []),
+    ...(talCode ? [talCode] : []),
+  ].join("-")
 }
 
 const CAT_COLOR: Record<CategoriaJoya, string> = {
@@ -118,7 +122,7 @@ export function InventarioEmpresaView() {
 
   function applyFromCatalogo(
     matNombre: string, catNombre: string,
-    prod: CatalogoNodo, modeloNombre: string
+    prod: CatalogoNodo, modeloNombre: string, catalogSku?: string
   ) {
     const cat = CAT_MAP[catNombre] ?? "" as CategoriaJoya | ""
     const mat = MAT_MAP[matNombre] ?? "" as MaterialProducto | ""
@@ -127,7 +131,7 @@ export function InventarioEmpresaView() {
     setForm(f => ({
       ...f, nombreProducto: nombre, descripcion: desc,
       categoriaJoya: cat, materialProducto: mat, talla: modeloNombre,
-      sku: buildSku(cat, mat, modeloNombre, items, editing?.documentId),
+      sku: catalogSku || buildSku(cat, mat, prod.nombre, modeloNombre),
     }))
     setShowCatPick(false); setCatSearch("")
   }
@@ -139,7 +143,7 @@ export function InventarioEmpresaView() {
     const cat = it.categoriaJoya ?? ""
     const mat = it.materialProducto ?? ""
     const tal = it.talla ?? ""
-    const sku = cat ? buildSku(cat, mat, tal, items, it.documentId) : (it.sku ?? "")
+    const sku = cat ? buildSku(cat, mat, it.figura ?? "", tal) : (it.sku ?? "")
     setForm({
       nombreProducto: it.nombreProducto, sku, descripcion: it.descripcion ?? "",
       figura: it.figura ?? "", categoriaJoya: cat,
@@ -506,7 +510,7 @@ export function InventarioEmpresaView() {
                                 {prod.modelos.length > 0
                                   ? prod.modelos.map(mod => (
                                       <button key={mod.id} type="button"
-                                        onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, mod.nombre)}
+                                        onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
                                         className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
                                         <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre} <span className="text-slate-500">{mod.nombre}</span></span>
                                         <span className="text-[9px] font-mono text-amber-500 shrink-0">{mod.sku || prod.sku}</span>
@@ -514,7 +518,7 @@ export function InventarioEmpresaView() {
                                     ))
                                   : (
                                     <button type="button"
-                                      onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "")}
+                                      onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "", prod.sku)}
                                       className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
                                       <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre}</span>
                                       <span className="text-[9px] font-mono text-amber-500 shrink-0">{prod.sku}</span>
@@ -578,7 +582,7 @@ export function InventarioEmpresaView() {
                       {skuAuto && form.categoriaJoya
                         ? <span className="text-[10px] font-medium text-emerald-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
                         : form.categoriaJoya
-                          ? <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya, f.materialProducto, f.talla, items, editing?.documentId)})) }}
+                          ? <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya, f.materialProducto, f.figura, f.talla)})) }}
                               className="text-[10px] text-slate-500 hover:text-emerald-400 flex items-center gap-0.5 transition-colors">
                               <RefreshCw size={9}/> Regenerar
                             </button>
@@ -615,7 +619,7 @@ export function InventarioEmpresaView() {
                     <select title="Categoría" value={form.categoriaJoya}
                       onChange={e => {
                         const cat = e.target.value as CategoriaJoya|""
-                        setForm(f => ({...f, categoriaJoya:cat, sku:skuAuto?buildSku(cat,f.materialProducto,f.talla,items,editing?.documentId):f.sku}))
+                        setForm(f => ({...f, categoriaJoya:cat, sku:skuAuto?buildSku(cat,f.materialProducto,f.figura,f.talla):f.sku}))
                       }} className={inp+" cursor-pointer"}>
                       <option value="">— Seleccionar —</option>
                       {CATEGORIAS_JOYA.map(c => <option key={c} value={c}>{c}</option>)}
@@ -626,7 +630,7 @@ export function InventarioEmpresaView() {
                     <select title="Material" value={form.materialProducto}
                       onChange={e => {
                         const mat = e.target.value as MaterialProducto|""
-                        setForm(f => ({...f, materialProducto:mat, sku:skuAuto?buildSku(f.categoriaJoya,mat,f.talla,items,editing?.documentId):f.sku}))
+                        setForm(f => ({...f, materialProducto:mat, sku:skuAuto?buildSku(f.categoriaJoya,mat,f.figura,f.talla):f.sku}))
                       }} className={inp+" cursor-pointer"}>
                       <option value="">— Seleccionar —</option>
                       {MATERIALES.map(m => <option key={m} value={m}>{m}</option>)}
@@ -637,13 +641,13 @@ export function InventarioEmpresaView() {
                     <input type="text" placeholder="Ej. T6, 45cm" value={form.talla}
                       onChange={e => {
                         const t = e.target.value
-                        setForm(f => ({...f, talla:t, sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,t,items,editing?.documentId):f.sku}))
+                        setForm(f => ({...f, talla:t, sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,f.figura,t):f.sku}))
                       }} className={inp}/>
                   </div>
                   <div className="col-span-3">
                     <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estilo / Figura / Tejido</label>
                     <input type="text" placeholder="Ej. Cartier, Figaro, Corazón…" value={form.figura}
-                      onChange={e => setForm(f => ({...f, figura:e.target.value}))} className={inp}/>
+                      onChange={e => { const fig = e.target.value; setForm(f => ({...f, figura:fig, sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,fig,f.talla):f.sku})) }} className={inp}/>
                   </div>
                 </div>
               </div>
