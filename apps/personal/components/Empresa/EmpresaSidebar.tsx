@@ -8,7 +8,7 @@ import {
   Target, CheckSquare, Receipt, HardDrive,
   Globe, Megaphone, BookOpen, Tv, Palette,
   Users, ShoppingBag, UserSearch, UserCheck, FileText, History,
-  Package, Truck, LayoutList,
+  Package, Truck, LayoutList, ShoppingCart, Store,
   PieChart, CreditCard, CalendarDays,
   UserCog, ShieldCheck,
 } from "lucide-react"
@@ -58,9 +58,11 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
   {
     title: "Suministro", color: "amber",
     items: [
-      { name: "Catálogo de productos", href: "/gestion-empresa/suministro/catalogo", icon: LayoutList, color: "amber" },
-      { name: "Inventario",            href: "/gestion-empresa/almacen/inventario",  icon: Package,    color: "amber" },
-      { name: "Envíos",                href: "/gestion-empresa/suministro/envios",   icon: Truck,      color: "amber" },
+      { name: "Catálogo de productos", href: "/gestion-empresa/suministro/catalogo",    icon: LayoutList,  color: "amber" },
+      { name: "Inventario",            href: "/gestion-empresa/almacen/inventario",     icon: Package,     color: "amber" },
+      { name: "Compras",               href: "/gestion-empresa/suministro/compras",     icon: ShoppingCart,color: "amber" },
+      { name: "Proveedores",           href: "/gestion-empresa/suministro/proveedores", icon: Store,       color: "amber" },
+      { name: "Envíos",                href: "/gestion-empresa/suministro/envios",      icon: Truck,       color: "amber" },
     ],
   },
   {

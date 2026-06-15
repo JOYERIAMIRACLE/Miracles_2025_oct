@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ordenes_compra",
+  "info": {
+    "singularName": "orden-compra",
+    "pluralName": "ordenes-compra",
+    "displayName": "Orden de Compra"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "numero":                { "type": "string" },
+    "fecha":                 { "type": "date" },
+    "fechaEntregaEstimada":  { "type": "date" },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["borrador", "enviada", "recibida_parcial", "recibida", "cancelada"],
+      "default": "borrador"
+    },
+    "lineas":         { "type": "json" },
+    "totalEstimado":  { "type": "decimal" },
+    "notas":          { "type": "text" },
+    "proveedor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::proveedor.proveedor",
+      "inversedBy": "ordenes"
+    }
+  }
+}

@@ -59,7 +59,10 @@
         "MKT - NUTRIMIENTO",
         "IT - SOPORTE HARDWARE",
         "IT - LICENCIAS",
-        "IT - DESARROLLO"
+        "IT - DESARROLLO",
+        "SUMINISTRO - COMPRA MERCANCÍA",
+        "SUMINISTRO - MATERIA PRIMA",
+        "SUMINISTRO - HERRAMIENTAS"
       ]
     },
     "proveedor": {
