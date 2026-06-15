@@ -138,17 +138,17 @@ function TreeRow({
         {/* Icono tipo */}
         <TipoIcon size={11} className={`shrink-0 ${cfg.color}`} />
 
-        {/* Nombre */}
-        <span className={`flex-1 text-[12px] truncate ${isActive ? "text-slate-100 font-medium" : "text-slate-400"}`}>
-          {node.nombre || <span className="italic text-slate-600">sin nombre</span>}
-        </span>
-
-        {/* SKU badge */}
-        {node.sku && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700/50 shrink-0">
-            {node.sku}
+        {/* Nombre + SKU apilados */}
+        <span className="flex-1 min-w-0 leading-tight">
+          <span className={`block text-[12px] truncate ${isActive ? "text-slate-100 font-medium" : "text-slate-300"}`}>
+            {node.nombre || <span className="italic text-slate-600">sin nombre</span>}
           </span>
-        )}
+          {node.sku && (
+            <span className="block text-[9px] font-mono text-slate-600 truncate">
+              {node.sku}
+            </span>
+          )}
+        </span>
 
         {/* Modelos count */}
         {node.modelos.length > 0 && (
