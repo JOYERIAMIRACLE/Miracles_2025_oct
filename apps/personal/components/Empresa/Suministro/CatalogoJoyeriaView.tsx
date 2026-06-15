@@ -140,7 +140,7 @@ function TreeRow({
 
         {/* Nombre + SKU apilados */}
         <span className="flex-1 min-w-0 leading-tight">
-          <span className={`block text-[12px] truncate ${isActive ? "text-slate-100 font-medium" : "text-slate-300"}`}>
+          <span className={`block text-[12px] wrap-break-word ${isActive ? "text-slate-100 font-medium" : "text-slate-300"}`}>
             {node.nombre || <span className="italic text-slate-600">sin nombre</span>}
           </span>
           {node.sku && (
