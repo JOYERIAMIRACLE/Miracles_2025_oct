@@ -20,18 +20,33 @@ export function useGetProveedores() {
   return { proveedores, setProveedores, loading }
 }
 
+function clean(payload: ProveedorPayload) {
+  return {
+    nombre:    payload.nombre.trim(),
+    contacto:  payload.contacto?.trim()  || null,
+    telefono:  payload.telefono?.trim()  || null,
+    email:     payload.email?.trim()     || null,
+    rfc:       payload.rfc?.trim()       || null,
+    direccion: payload.direccion?.trim() || null,
+    notas:     payload.notas?.trim()     || null,
+    activo:    payload.activo ?? true,
+  }
+}
+
 export async function createProveedor(payload: ProveedorPayload): Promise<Proveedor> {
   const r = await fetch(`${BASE}/api/proveedores`, {
-    method: "POST", headers: hdrs(), body: JSON.stringify({ data: payload }),
+    method: "POST", headers: hdrs(), body: JSON.stringify({ data: clean(payload) }),
   })
+  if (!r.ok) { const e = await r.json(); throw new Error(e?.error?.message ?? "Error al crear") }
   const j = await r.json()
   return j.data
 }
 
 export async function updateProveedor(documentId: string, payload: Partial<ProveedorPayload>): Promise<Proveedor> {
   const r = await fetch(`${BASE}/api/proveedores/${documentId}`, {
-    method: "PUT", headers: hdrs(), body: JSON.stringify({ data: payload }),
+    method: "PUT", headers: hdrs(), body: JSON.stringify({ data: clean(payload as ProveedorPayload) }),
   })
+  if (!r.ok) { const e = await r.json(); throw new Error(e?.error?.message ?? "Error al actualizar") }
   const j = await r.json()
   return j.data
 }
