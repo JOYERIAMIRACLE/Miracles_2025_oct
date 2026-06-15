@@ -86,6 +86,9 @@ export function InventarioEmpresaView() {
   const [catalogo,    setCatalogo]    = useState<CatalogoNodo[]>([])
   const [showCatPick, setShowCatPick] = useState(false)
   const [catSearch,   setCatSearch]   = useState("")
+  const [catalogCard, setCatalogCard] = useState<{
+    sku: string; nombre: string; categoria: string; material: string; notas: string
+  } | null>(null)
 
   const filtrados = useMemo(() => items.filter(it => {
     const matchSearch = !search || it.nombreProducto.toLowerCase().includes(search.toLowerCase()) || (it.sku ?? "").toLowerCase().includes(search.toLowerCase())
@@ -109,7 +112,9 @@ export function InventarioEmpresaView() {
 
   function openNuevo() {
     setEditing(null); setForm(emptyForm()); setSkuAuto(true)
-    setFotoPreview(null); setFotoFile(null); setModalOpen(true); openModal()
+    setFotoPreview(null); setFotoFile(null)
+    setCatalogCard(null); setCatSearch("")
+    setModalOpen(true); openModal()
   }
 
   // Mapeo catálogo → inventario
@@ -128,11 +133,12 @@ export function InventarioEmpresaView() {
     const mat = MAT_MAP[matNombre] ?? "" as MaterialProducto | ""
     const desc = [prod.notas, ...prod.caracteristicas.map(c => `${c.clave}: ${c.valor}`)].filter(Boolean).join(" · ")
     const nombre = `${prod.nombre}${modeloNombre ? ` ${modeloNombre}` : ""}`
+    const sku    = catalogSku || buildSku(cat, mat, prod.nombre, modeloNombre)
     setForm(f => ({
       ...f, nombreProducto: nombre, descripcion: desc,
-      categoriaJoya: cat, materialProducto: mat, talla: modeloNombre,
-      sku: catalogSku || buildSku(cat, mat, prod.nombre, modeloNombre),
+      categoriaJoya: cat, materialProducto: mat, talla: modeloNombre, sku,
     }))
+    setCatalogCard({ sku, nombre, categoria: catNombre, material: matNombre, notas: prod.notas })
     setShowCatPick(false); setCatSearch("")
   }
 
@@ -468,230 +474,335 @@ export function InventarioEmpresaView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target===e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+          <div className={`w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col ${
+            !editing && !catalogCard ? "max-w-xl" : "max-w-lg"
+          }`}>
+
+            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
-              <h2 className="text-sm font-semibold text-slate-100">{editing?"Editar producto":"Dar de alta producto"}</h2>
+              <h2 className="text-sm font-semibold text-slate-100">
+                {editing ? "Editar producto" : catalogCard ? catalogCard.nombre : "Nuevo producto"}
+              </h2>
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
                 className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16}/></button>
             </div>
 
-            <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
-
-              {/* Desde catálogo */}
-              <div className="relative">
-                <button type="button"
-                  onClick={() => setShowCatPick(v => !v)}
-                  className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-dashed border-amber-500/40 bg-amber-500/5 text-amber-400 text-xs font-medium hover:bg-amber-500/10 transition-colors">
-                  <BookOpen size={13}/> Autocompletar desde catálogo
-                </button>
-
-                {showCatPick && (
-                  <div className="absolute top-10 left-0 right-0 z-50 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-72 flex flex-col">
-                    <div className="p-2 border-b border-slate-800 shrink-0">
-                      <input autoFocus placeholder="Buscar producto del catálogo…" value={catSearch}
-                        onChange={e => setCatSearch(e.target.value)}
-                        className="w-full h-8 rounded-lg border border-slate-700 bg-slate-800 px-3 text-xs text-slate-200 placeholder:text-slate-600 outline-none"/>
-                    </div>
-                    <div className="overflow-y-auto flex-1 p-1">
-                      {catalogo.map(mat => mat.children.map(cat => {
-                        const prods = cat.children.filter(p =>
-                          !catSearch || p.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
-                          cat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
-                          mat.nombre.toLowerCase().includes(catSearch.toLowerCase())
-                        )
-                        if (prods.length === 0) return null
-                        return (
-                          <div key={`${mat.id}-${cat.id}`}>
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-2 py-1">
-                              {mat.nombre} › {cat.nombre}
-                            </p>
-                            {prods.map(prod => (
-                              <div key={prod.id}>
-                                {prod.modelos.length > 0
-                                  ? prod.modelos.map(mod => (
-                                      <button key={mod.id} type="button"
-                                        onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
-                                        className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
-                                        <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre} <span className="text-slate-500">{mod.nombre}</span></span>
-                                        <span className="text-[9px] font-mono text-amber-500 shrink-0">{mod.sku || prod.sku}</span>
-                                      </button>
-                                    ))
-                                  : (
-                                    <button type="button"
-                                      onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "", prod.sku)}
-                                      className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
-                                      <span className="flex-1 text-xs text-slate-300 truncate">{prod.nombre}</span>
-                                      <span className="text-[9px] font-mono text-amber-500 shrink-0">{prod.sku}</span>
-                                    </button>
-                                  )
-                                }
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      }))}
-                      {catalogo.length === 0 && (
-                        <p className="text-xs text-slate-600 text-center py-4">Catálogo vacío — inicializa primero</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Foto */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Foto del producto</p>
-                <div className="flex items-center gap-4">
-                  {fotoPreview ? (
-                    <div className="relative shrink-0">
-                      <img src={fotoPreview} alt="preview" className="w-20 h-20 rounded-xl object-cover border border-slate-700"/>
-                      <button type="button" title="Quitar foto"
-                        onClick={() => { setFotoPreview(null); setFotoFile(null); if (fileRef.current) fileRef.current.value="" }}
-                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
-                        <X size={10}/>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center shrink-0">
-                      <Package size={22} className="text-slate-600"/>
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <button type="button" onClick={() => fileRef.current?.click()}
-                      className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors">
-                      <ImagePlus size={14}/> {fotoPreview?"Cambiar foto":"Subir foto"}
-                    </button>
-                    <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
-                    <input ref={fileRef} type="file" accept="image/*" title="Foto" className="hidden" onChange={handleFotoChange}/>
+            {/* ── ESTADO 1: Picker de catálogo (nuevo sin selección) ── */}
+            {!editing && !catalogCard && (
+              <>
+                <div className="px-5 pt-4 pb-2 shrink-0">
+                  <p className="text-xs text-slate-500 mb-3">Selecciona el producto del catálogo para continuar</p>
+                  <div className="relative">
+                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"/>
+                    <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catSearch}
+                      onChange={e => setCatSearch(e.target.value)}
+                      className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/40"/>
                   </div>
                 </div>
-              </div>
-
-              {/* Identificación */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Identificación</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Nombre <span className="text-red-400">*</span></label>
-                    <input type="text" placeholder="Ej. Cadena cubana pesada" value={form.nombreProducto}
-                      onChange={e => setForm(f => ({...f, nombreProducto:e.target.value}))} className={inp} autoFocus/>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-medium text-slate-400">SKU</label>
-                      {skuAuto && form.categoriaJoya
-                        ? <span className="text-[10px] font-medium text-emerald-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
-                        : form.categoriaJoya
-                          ? <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya, f.materialProducto, f.figura, f.talla)})) }}
-                              className="text-[10px] text-slate-500 hover:text-emerald-400 flex items-center gap-0.5 transition-colors">
-                              <RefreshCw size={9}/> Regenerar
-                            </button>
-                          : null}
+                <div className="overflow-y-auto flex-1 px-3 pb-3 space-y-3">
+                  {catalogo.length === 0 && (
+                    <div className="py-8 text-center">
+                      <Loader2 size={20} className="mx-auto mb-2 text-slate-700 animate-spin"/>
+                      <p className="text-xs text-slate-600">Cargando catálogo…</p>
                     </div>
-                    <input type="text" placeholder="Auto al seleccionar categoría" value={form.sku}
-                      onChange={e => { setSkuAuto(false); setForm(f => ({...f, sku:e.target.value})) }}
-                      className={inp+" font-mono"}/>
+                  )}
+                  {catalogo.map(mat => mat.children.map(cat => {
+                    const prods = cat.children.filter(p =>
+                      !catSearch ||
+                      p.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                      p.sku.toLowerCase().includes(catSearch.toLowerCase()) ||
+                      cat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                      mat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                      p.modelos.some(m => m.sku.toLowerCase().includes(catSearch.toLowerCase()))
+                    )
+                    if (!prods.length) return null
+                    return (
+                      <div key={`${mat.id}-${cat.id}`}>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-1 mb-1">
+                          {mat.nombre} › {cat.nombre}
+                        </p>
+                        <div className="bg-slate-800/40 rounded-xl border border-slate-800 divide-y divide-slate-800 overflow-hidden">
+                          {prods.map(prod =>
+                            prod.modelos.length > 0
+                              ? prod.modelos.map(mod => (
+                                  <button key={mod.id} type="button"
+                                    onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
+                                    className="w-full text-left flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700/50 transition-colors group">
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-sm text-slate-200">{prod.nombre}</span>
+                                      {mod.nombre && <span className="text-slate-500 text-xs ml-1.5">{mod.nombre}</span>}
+                                    </div>
+                                    <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">
+                                      {mod.sku || prod.sku}
+                                    </span>
+                                    <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                  </button>
+                                ))
+                              : (
+                                <button key={prod.id} type="button"
+                                  onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "", prod.sku)}
+                                  className="w-full text-left flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700/50 transition-colors group">
+                                  <span className="flex-1 text-sm text-slate-200">{prod.nombre}</span>
+                                  <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">{prod.sku}</span>
+                                  <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                </button>
+                              )
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }))}
+                </div>
+                <div className="px-5 py-3 border-t border-slate-800 shrink-0 text-center">
+                  <button type="button" onClick={() => setModalOpen(false)} className="text-xs text-slate-600 hover:text-slate-400 transition">Cancelar</button>
+                </div>
+              </>
+            )}
+
+            {/* ── ESTADO 2: Producto del catálogo seleccionado — form simplificado ── */}
+            {!editing && catalogCard && (
+              <>
+                <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+
+                  {/* Card del producto del catálogo */}
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-100 leading-snug">{catalogCard.nombre}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{catalogCard.material} · {catalogCard.categoria}</p>
+                      <p className="font-mono text-[11px] text-amber-400 mt-1">{catalogCard.sku}</p>
+                    </div>
+                    <button type="button" onClick={() => setCatalogCard(null)}
+                      className="text-[10px] text-slate-600 hover:text-amber-400 border border-slate-700 rounded-lg px-2.5 py-1 transition shrink-0">
+                      Cambiar
+                    </button>
                   </div>
+
+                  {/* Foto */}
+                  <div className="flex items-center gap-4">
+                    {fotoPreview ? (
+                      <div className="relative shrink-0">
+                        <img src={fotoPreview} alt="preview" className="w-20 h-20 rounded-xl object-cover border border-slate-700"/>
+                        <button type="button" title="Quitar foto"
+                          onClick={() => { setFotoPreview(null); setFotoFile(null); if (fileRef.current) fileRef.current.value="" }}
+                          className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
+                          <X size={10}/>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center shrink-0">
+                        <Package size={22} className="text-slate-600"/>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <button type="button" onClick={() => fileRef.current?.click()}
+                        className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors">
+                        <ImagePlus size={14}/> {fotoPreview ? "Cambiar foto" : "Subir foto"}
+                      </button>
+                      <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
+                      <input ref={fileRef} type="file" accept="image/*" title="Foto" className="hidden" onChange={handleFotoChange}/>
+                    </div>
+                  </div>
+
+                  {/* Precios y stock */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Costo ($)</label>
+                      <input type="number" placeholder="0" value={form.costoProduccion}
+                        onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))} className={inp}/>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Precio venta ($)</label>
+                      <input type="number" placeholder="0" value={form.costo}
+                        onChange={e => setForm(f => ({...f, costo:e.target.value}))} className={inp}/>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Stock inicial</label>
+                      <input type="number" min={0} placeholder="0" value={form.stock}
+                        onChange={e => setForm(f => ({...f, stock:e.target.value}))} className={inp}/>
+                    </div>
+                  </div>
+                  {form.costoProduccion && form.costo && (
+                    <p className="text-[11px] text-slate-500">
+                      Margen: <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=40?"text-emerald-400":"text-amber-400"}`}>
+                        {margen(Number(form.costoProduccion),Number(form.costo))??0}%
+                      </span>
+                    </p>
+                  )}
+
+                  {/* Descripción */}
                   <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
-                    <select title="Tipo" value={form.material}
-                      onChange={e => setForm(f => ({...f, material:e.target.value as MaterialItem}))}
-                      className={inp+" cursor-pointer"}>
-                      <option value="producto">Producto</option>
-                      <option value="servicio">Servicio</option>
-                    </select>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Descripción</label>
-                    <textarea placeholder="Detalles, observaciones…" value={form.descripcion}
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Descripción / Notas</label>
+                    <textarea placeholder="Detalles adicionales…" value={form.descripcion}
                       onChange={e => setForm(f => ({...f, descripcion:e.target.value}))}
                       rows={2} className={inp+" resize-none h-auto py-2"}/>
                   </div>
                 </div>
-              </div>
 
-              {/* Atributos */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos de joyería</p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
+                  <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
+                    className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                  <button type="button" onClick={handleSave} disabled={saving}
+                    className="flex items-center gap-2 h-8 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition">
+                    {saving && <Loader2 size={14} className="animate-spin"/>}
+                    Agregar al inventario
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ── ESTADO 3: Editar producto existente — form completo ── */}
+            {editing && (
+              <>
+                <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+
+                  {/* Foto */}
                   <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
-                    <select title="Categoría" value={form.categoriaJoya}
-                      onChange={e => {
-                        const cat = e.target.value as CategoriaJoya|""
-                        setForm(f => ({...f, categoriaJoya:cat, sku:skuAuto?buildSku(cat,f.materialProducto,f.figura,f.talla):f.sku}))
-                      }} className={inp+" cursor-pointer"}>
-                      <option value="">— Seleccionar —</option>
-                      {CATEGORIAS_JOYA.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Foto</p>
+                    <div className="flex items-center gap-4">
+                      {fotoPreview ? (
+                        <div className="relative shrink-0">
+                          <img src={fotoPreview} alt="preview" className="w-20 h-20 rounded-xl object-cover border border-slate-700"/>
+                          <button type="button" title="Quitar foto"
+                            onClick={() => { setFotoPreview(null); setFotoFile(null); if (fileRef.current) fileRef.current.value="" }}
+                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
+                            <X size={10}/>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center shrink-0">
+                          <Package size={22} className="text-slate-600"/>
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <button type="button" onClick={() => fileRef.current?.click()}
+                          className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors">
+                          <ImagePlus size={14}/> {fotoPreview?"Cambiar foto":"Subir foto"}
+                        </button>
+                        <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
+                        <input ref={fileRef} type="file" accept="image/*" title="Foto" className="hidden" onChange={handleFotoChange}/>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Identificación */}
                   <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
-                    <select title="Material" value={form.materialProducto}
-                      onChange={e => {
-                        const mat = e.target.value as MaterialProducto|""
-                        setForm(f => ({...f, materialProducto:mat, sku:skuAuto?buildSku(f.categoriaJoya,mat,f.figura,f.talla):f.sku}))
-                      }} className={inp+" cursor-pointer"}>
-                      <option value="">— Seleccionar —</option>
-                      {MATERIALES.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
+                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Identificación</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2">
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Nombre <span className="text-red-400">*</span></label>
+                        <input type="text" placeholder="Ej. Cadena cubana pesada" value={form.nombreProducto}
+                          onChange={e => setForm(f => ({...f, nombreProducto:e.target.value}))} className={inp} autoFocus/>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[11px] font-medium text-slate-400">SKU</label>
+                          {skuAuto && form.categoriaJoya
+                            ? <span className="text-[10px] font-medium text-emerald-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
+                            : form.categoriaJoya
+                              ? <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya,f.materialProducto,f.figura,f.talla)})) }}
+                                  className="text-[10px] text-slate-500 hover:text-emerald-400 flex items-center gap-0.5 transition-colors">
+                                  <RefreshCw size={9}/> Regenerar
+                                </button>
+                              : null}
+                        </div>
+                        <input type="text" placeholder="Auto" value={form.sku}
+                          onChange={e => { setSkuAuto(false); setForm(f => ({...f, sku:e.target.value})) }}
+                          className={inp+" font-mono"}/>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
+                        <select title="Tipo" value={form.material}
+                          onChange={e => setForm(f => ({...f, material:e.target.value as MaterialItem}))}
+                          className={inp+" cursor-pointer"}>
+                          <option value="producto">Producto</option>
+                          <option value="servicio">Servicio</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Descripción</label>
+                        <textarea placeholder="Detalles…" value={form.descripcion}
+                          onChange={e => setForm(f => ({...f, descripcion:e.target.value}))}
+                          rows={2} className={inp+" resize-none h-auto py-2"}/>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Atributos */}
                   <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Talla / Medida</label>
-                    <input type="text" placeholder="Ej. T6, 45cm" value={form.talla}
-                      onChange={e => {
-                        const t = e.target.value
-                        setForm(f => ({...f, talla:t, sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,f.figura,t):f.sku}))
-                      }} className={inp}/>
+                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
+                        <select title="Categoría" value={form.categoriaJoya}
+                          onChange={e => { const cat=e.target.value as CategoriaJoya|""; setForm(f => ({...f,categoriaJoya:cat,sku:skuAuto?buildSku(cat,f.materialProducto,f.figura,f.talla):f.sku})) }}
+                          className={inp+" cursor-pointer"}>
+                          <option value="">— —</option>
+                          {CATEGORIAS_JOYA.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
+                        <select title="Material" value={form.materialProducto}
+                          onChange={e => { const mat=e.target.value as MaterialProducto|""; setForm(f => ({...f,materialProducto:mat,sku:skuAuto?buildSku(f.categoriaJoya,mat,f.figura,f.talla):f.sku})) }}
+                          className={inp+" cursor-pointer"}>
+                          <option value="">— —</option>
+                          {MATERIALES.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Talla / Medida</label>
+                        <input type="text" placeholder="T6, 45cm" value={form.talla}
+                          onChange={e => { const t=e.target.value; setForm(f => ({...f,talla:t,sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,f.figura,t):f.sku})) }} className={inp}/>
+                      </div>
+                      <div className="col-span-3">
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estilo / Figura</label>
+                        <input type="text" placeholder="Cartier, Figaro, Corazón…" value={form.figura}
+                          onChange={e => { const fig=e.target.value; setForm(f => ({...f,figura:fig,sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,fig,f.talla):f.sku})) }} className={inp}/>
+                      </div>
+                    </div>
                   </div>
-                  <div className="col-span-3">
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estilo / Figura / Tejido</label>
-                    <input type="text" placeholder="Ej. Cartier, Figaro, Corazón…" value={form.figura}
-                      onChange={e => { const fig = e.target.value; setForm(f => ({...f, figura:fig, sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,fig,f.talla):f.sku})) }} className={inp}/>
+
+                  {/* Precios y stock */}
+                  <div>
+                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Precios y Stock</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Costo ($)</label>
+                        <input type="number" placeholder="0" value={form.costoProduccion}
+                          onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))} className={inp}/>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Precio venta ($)</label>
+                        <input type="number" placeholder="0" value={form.costo}
+                          onChange={e => setForm(f => ({...f, costo:e.target.value}))} className={inp}/>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Stock</label>
+                        <input type="number" min={0} placeholder="0" value={form.stock}
+                          onChange={e => setForm(f => ({...f, stock:e.target.value}))} className={inp}/>
+                      </div>
+                    </div>
+                    {form.costoProduccion && form.costo && (
+                      <p className="text-[11px] mt-2 text-slate-500">
+                        Margen: <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=40?"text-emerald-400":"text-amber-400"}`}>
+                          {margen(Number(form.costoProduccion),Number(form.costo))??0}%
+                        </span>
+                      </p>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Precios y stock */}
-              <div>
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Precios y Stock</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Costo ($)</label>
-                    <input type="number" placeholder="0" value={form.costoProduccion}
-                      onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))} className={inp}/>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Precio venta ($)</label>
-                    <input type="number" placeholder="0" value={form.costo}
-                      onChange={e => setForm(f => ({...f, costo:e.target.value}))} className={inp}/>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Stock</label>
-                    <input type="number" min={0} placeholder="0" value={form.stock}
-                      onChange={e => setForm(f => ({...f, stock:e.target.value}))} className={inp}/>
-                  </div>
+                <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
+                  <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
+                    className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                  <button type="button" onClick={handleSave} disabled={saving}
+                    className="flex items-center gap-2 h-8 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition">
+                    {saving && <Loader2 size={14} className="animate-spin"/>}
+                    Guardar cambios
+                  </button>
                 </div>
-                {form.costoProduccion && form.costo && (
-                  <p className="text-[11px] mt-2 text-slate-500">
-                    Margen estimado:{" "}
-                    <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=40?"text-emerald-400":"text-amber-400"}`}>
-                      {margen(Number(form.costoProduccion),Number(form.costo))??0}%
-                    </span>
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
-              <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
-              <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition">
-                {saving && <Loader2 size={14} className="animate-spin"/>}
-                {editing?"Guardar cambios":"Dar de alta"}
-              </button>
-            </div>
+              </>
+            )}
           </div>
         </div>
       )}
