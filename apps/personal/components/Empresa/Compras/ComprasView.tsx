@@ -43,6 +43,7 @@ function OrdenModal({
   const [fecha,    setFecha]    = useState(orden?.fecha ?? new Date().toISOString().split("T")[0])
   const [fechaEst, setFechaEst] = useState(orden?.fechaEntregaEstimada ?? "")
   const [provDoc,  setProvDoc]  = useState(orden?.proveedor?.documentId ?? "")
+  const [estado,   setEstado]   = useState<EstadoOrden>(orden?.estado ?? "borrador")
   const [notas,    setNotas]    = useState(orden?.notas ?? "")
   const [lineas,   setLineas]   = useState<LineaOrden[]>(orden?.lineas ?? [])
   const [saving,   setSaving]   = useState(false)
@@ -75,7 +76,7 @@ function OrdenModal({
     try {
       const payload: OrdenPayload = {
         numero: num, fecha, fechaEntregaEstimada: fechaEst || null,
-        estado: orden?.estado ?? "borrador",
+        estado,
         lineas, totalEstimado: total || null, notas: notas || null, proveedor: provDoc,
       }
       const saved = orden
@@ -121,6 +122,20 @@ function OrdenModal({
             <div>
               <label className="text-[11px] text-slate-400 mb-1 block">Entrega estimada</label>
               <input type="date" className={inp} value={fechaEst} onChange={e => setFechaEst(e.target.value)} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-[11px] text-slate-400 mb-1 block">Estado</label>
+              <div className="flex gap-2 flex-wrap">
+                {(Object.entries(ESTADO_CONFIG) as [EstadoOrden, typeof ESTADO_CONFIG[EstadoOrden]][]).map(([est, cfg]) => (
+                  <button key={est} type="button" onClick={() => setEstado(est)}
+                    className={`h-8 px-3 rounded-lg text-[11px] font-medium border transition-all flex items-center gap-1.5 ${
+                      estado === est ? cfg.color : "border-slate-700 text-slate-500 hover:text-slate-300"
+                    }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}/>
+                    {cfg.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="col-span-2">
               <label className="text-[11px] text-slate-400 mb-1 block">Notas</label>

@@ -5,6 +5,16 @@ import { OrdenCompra, OrdenPayload } from "@/types/ordenCompra"
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const hdrs = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` })
 
+// Normaliza la relación proveedor que Strapi puede devolver flat o anidada
+function normalizeOrden(d: any): OrdenCompra {
+  const prov = d.proveedor?.data ?? d.proveedor ?? null
+  return {
+    ...d,
+    lineas:    d.lineas    ?? [],
+    proveedor: prov ? { id: prov.id, documentId: prov.documentId, nombre: prov.nombre ?? prov.attributes?.nombre ?? "" } : null,
+  }
+}
+
 export function useGetOrdenesCompra() {
   const [ordenes,  setOrdenes]  = useState<OrdenCompra[]>([])
   const [loading,  setLoading]  = useState(true)
@@ -12,11 +22,7 @@ export function useGetOrdenesCompra() {
   useEffect(() => {
     fetch(`${BASE}/api/ordenes-compra?populate=proveedor&sort=createdAt:desc&pagination[pageSize]=500`, { headers: hdrs() })
       .then(r => r.json())
-      .then(j => setOrdenes((j.data ?? []).map((d: any) => ({
-        ...d,
-        lineas: d.lineas ?? [],
-        proveedor: d.proveedor ?? null,
-      }))))
+      .then(j => setOrdenes((j.data ?? []).filter(Boolean).map(normalizeOrden)))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -25,19 +31,19 @@ export function useGetOrdenesCompra() {
 }
 
 export async function createOrden(payload: OrdenPayload): Promise<OrdenCompra> {
-  const r = await fetch(`${BASE}/api/ordenes-compra`, {
+  const r = await fetch(`${BASE}/api/ordenes-compra?populate=proveedor`, {
     method: "POST", headers: hdrs(), body: JSON.stringify({ data: payload }),
   })
   const j = await r.json()
-  return { ...j.data, lineas: j.data.lineas ?? [], proveedor: j.data.proveedor ?? null }
+  return normalizeOrden(j.data)
 }
 
 export async function updateOrden(documentId: string, payload: Partial<OrdenPayload>): Promise<OrdenCompra> {
-  const r = await fetch(`${BASE}/api/ordenes-compra/${documentId}`, {
+  const r = await fetch(`${BASE}/api/ordenes-compra/${documentId}?populate=proveedor`, {
     method: "PUT", headers: hdrs(), body: JSON.stringify({ data: payload }),
   })
   const j = await r.json()
-  return { ...j.data, lineas: j.data.lineas ?? [], proveedor: j.data.proveedor ?? null }
+  return normalizeOrden(j.data)
 }
 
 export async function deleteOrden(documentId: string): Promise<void> {
