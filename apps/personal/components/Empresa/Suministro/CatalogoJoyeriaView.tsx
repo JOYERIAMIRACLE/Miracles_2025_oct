@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
   BookOpen, ChevronRight, ChevronDown, Plus, Trash2,
-  ChevronUp, Save, Loader2, Search, X, SlidersHorizontal,
-  Tag, Gem, Layers, FileText, CheckCircle, WifiOff,
+  ChevronUp, Loader2, Search, X, SlidersHorizontal,
+  Tag, Gem, Layers, CheckCircle, WifiOff, ImagePlus, Package,
 } from "lucide-react"
+import { uploadFoto } from "@/api/inventarioEmpresa/getInventario"
 import {
   CatalogoNodo, TipoNodo, Caracteristica, Modelo,
   TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia, arbolInicial,
@@ -207,6 +208,20 @@ function DetailPanel({
 }) {
   const cfg = TIPO_CONFIG[node.tipo]
 
+  const fotoRef = useRef<HTMLInputElement>(null)
+  const [uploadingFoto, setUploadingFoto] = useState(false)
+
+  async function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingFoto(true)
+    try {
+      const data = await uploadFoto(file)
+      onUpdate({ fotoUrl: data.url, fotoId: data.id })
+    } catch { /* silencioso */ }
+    finally { setUploadingFoto(false) }
+  }
+
   const updCaract = (id: string, patch: Partial<Caracteristica>) =>
     onUpdate({ caracteristicas: node.caracteristicas.map(c => c.id === id ? { ...c, ...patch } : c) })
 
@@ -249,14 +264,46 @@ function DetailPanel({
           placeholder={`Nombre del ${cfg.label.toLowerCase()}`} />
       </div>
 
-      {/* SKU — solo producto */}
+      {/* Foto + SKU — solo producto */}
       {node.tipo === "producto" && (
-        <div>
-          <label className={lbl}>SKU base</label>
-          <input className={inp} value={node.sku}
-            onChange={e => onUpdate({ sku: e.target.value })}
-            placeholder="Ej. ANI-O10K" />
-        </div>
+        <>
+          <div>
+            <label className={lbl}>Foto del producto</label>
+            <div className="flex items-center gap-3">
+              {node.fotoUrl ? (
+                <div className="relative shrink-0">
+                  <img src={node.fotoUrl.startsWith("http") ? node.fotoUrl : `${process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}${node.fotoUrl}`}
+                    alt={node.nombre} className="w-16 h-16 rounded-lg object-cover border border-slate-700"/>
+                  <button type="button" title="Quitar foto"
+                    onClick={() => onUpdate({ fotoUrl: "", fotoId: null })}
+                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white flex items-center justify-center shadow text-[8px]">
+                    <X size={8}/>
+                  </button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-lg bg-slate-800 border border-dashed border-slate-700 flex items-center justify-center shrink-0">
+                  <Package size={18} className="text-slate-600"/>
+                </div>
+              )}
+              <div>
+                <button type="button" onClick={() => fotoRef.current?.click()} disabled={uploadingFoto}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg px-2.5 py-1.5 transition disabled:opacity-50">
+                  {uploadingFoto ? <Loader2 size={11} className="animate-spin"/> : <ImagePlus size={11}/>}
+                  {node.fotoUrl ? "Cambiar" : "Subir foto"}
+                </button>
+                <input ref={fotoRef} type="file" accept="image/*" title="Foto" className="hidden" onChange={handleFotoChange}/>
+                <p className="text-[9px] text-slate-700 mt-1">Se usará en inventario y tienda</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className={lbl}>SKU base</label>
+            <input className={inp} value={node.sku}
+              onChange={e => onUpdate({ sku: e.target.value })}
+              placeholder="Ej. ANI-O10K" />
+          </div>
+        </>
       )}
 
       {/* Notas */}

@@ -88,6 +88,7 @@ export function InventarioEmpresaView() {
   const [catSearch,   setCatSearch]   = useState("")
   const [catalogCard, setCatalogCard] = useState<{
     sku: string; nombre: string; categoria: string; material: string; notas: string
+    fotoUrl: string; fotoId: number | null
   } | null>(null)
 
   const filtrados = useMemo(() => items.filter(it => {
@@ -138,7 +139,12 @@ export function InventarioEmpresaView() {
       ...f, nombreProducto: nombre, descripcion: desc,
       categoriaJoya: cat, materialProducto: mat, talla: modeloNombre, sku,
     }))
-    setCatalogCard({ sku, nombre, categoria: catNombre, material: matNombre, notas: prod.notas })
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+    const fotoUrl = prod.fotoUrl
+      ? prod.fotoUrl.startsWith("http") ? prod.fotoUrl : `${backendUrl}${prod.fotoUrl}`
+      : ""
+    setCatalogCard({ sku, nombre, categoria: catNombre, material: matNombre, notas: prod.notas, fotoUrl, fotoId: prod.fotoId ?? null })
+    if (fotoUrl) setFotoPreview(fotoUrl)
     setShowCatPick(false); setCatSearch("")
   }
 
@@ -173,6 +179,8 @@ export function InventarioEmpresaView() {
     try {
       let fotoData: { id: number; url: string } | undefined
       if (fotoFile) fotoData = await uploadFoto(fotoFile)
+      else if (!editing && catalogCard?.fotoId && catalogCard.fotoUrl)
+        fotoData = { id: catalogCard.fotoId, url: catalogCard.fotoUrl }
 
       const needsSlug = !editing || !editing.slug
       const payload: Record<string, unknown> = {

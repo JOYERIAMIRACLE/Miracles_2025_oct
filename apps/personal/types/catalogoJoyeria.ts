@@ -21,6 +21,8 @@ export type CatalogoNodo = {
   sku:             string
   caracteristicas: Caracteristica[]
   modelos:         Modelo[]
+  fotoUrl:         string   // URL de imagen (Strapi media o externa)
+  fotoId:          number | null  // ID de media en Strapi para publicar en tienda
   // Árbol
   children:        CatalogoNodo[]
 }
@@ -43,6 +45,8 @@ export function nodoVacio(tipo: TipoNodo, nombre = ""): CatalogoNodo {
     sku:             "",
     caracteristicas: [],
     modelos:         [],
+    fotoUrl:         "",
+    fotoId:          null,
     children:        [],
   }
 }
