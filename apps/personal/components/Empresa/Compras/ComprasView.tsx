@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react"
 import {
   ShoppingBag, Plus, Pencil, Trash2, X, Loader2, Search,
-  CheckCircle, PackageCheck, ChevronDown, ChevronUp, BookOpen,
+  CheckCircle, PackageCheck, ChevronDown, ChevronUp, ChevronRight, BookOpen,
   Truck, WifiOff,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -59,11 +59,15 @@ function OrdenModal({
   const [notas,    setNotas]    = useState(orden?.notas ?? "")
   const [lineas,   setLineas]   = useState<LineaOrden[]>(orden?.lineas ?? [])
   const [saving,   setSaving]   = useState(false)
-  const [catalogo,   setCatalogo]   = useState<CatalogoNodo[]>([])
-  const [catOpen,    setCatOpen]    = useState(false)
-  const [catQ,       setCatQ]       = useState("")
-  const [showFormula,setShowFormula] = useState(false)
-  const [catMat,     setCatMat]     = useState<string | null>(null)
+  const [catalogo,     setCatalogo]     = useState<CatalogoNodo[]>([])
+  const [catOpen,      setCatOpen]      = useState(false)
+  const [catQ,         setCatQ]         = useState("")
+  const [showFormula,  setShowFormula]  = useState(false)
+  const [catMat,       setCatMat]       = useState<string | null>(null)
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set())
+
+  const toggleSection = (key: string) =>
+    setOpenSections(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
 
   const loadCat = useCallback(() => {
     if (catalogo.length === 0) fetchCatalogo().then(setCatalogo).catch(() => {})
@@ -257,8 +261,8 @@ function OrdenModal({
                     </div>
                   </div>
 
-                  {/* Lista de productos */}
-                  <div className="overflow-y-auto flex-1 p-3 space-y-3">
+                  {/* Lista de productos — acordeón por categoría */}
+                  <div className="overflow-y-auto flex-1 px-3 py-2 space-y-0.5">
                     {catalogo.length === 0 && (
                       <div className="py-8 text-center">
                         <Loader2 size={20} className="mx-auto mb-2 text-slate-700 animate-spin"/>
@@ -268,54 +272,71 @@ function OrdenModal({
                     {catalogo
                       .filter(mat => !catMat || mat.nombre === catMat)
                       .map(mat => mat.children.map(cat => {
+                        const lq = catQ.toLowerCase()
                         const prods = cat.children.filter(p =>
                           !catQ ||
-                          p.nombre.toLowerCase().includes(catQ.toLowerCase()) ||
-                          p.sku.toLowerCase().includes(catQ.toLowerCase()) ||
-                          cat.nombre.toLowerCase().includes(catQ.toLowerCase()) ||
-                          mat.nombre.toLowerCase().includes(catQ.toLowerCase()) ||
-                          p.modelos.some(m => m.sku.toLowerCase().includes(catQ.toLowerCase()))
+                          p.nombre.toLowerCase().includes(lq) ||
+                          p.sku.toLowerCase().includes(lq) ||
+                          cat.nombre.toLowerCase().includes(lq) ||
+                          mat.nombre.toLowerCase().includes(lq) ||
+                          p.modelos.some(m => m.sku.toLowerCase().includes(lq) || m.nombre.toLowerCase().includes(lq))
                         )
                         if (!prods.length) return null
+
+                        const key      = `${mat.id}-${cat.id}`
+                        const isOpen   = catQ ? true : openSections.has(key)
+                        const nModelos = prods.reduce((s, p) => s + Math.max(p.modelos.length, 1), 0)
+
                         return (
-                          <div key={`${mat.id}-${cat.id}`}>
-                            {/* Grupo header */}
-                            <div className="flex items-center gap-2 mb-1.5 px-1">
-                              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">{mat.nombre}</span>
-                              <span className="text-slate-700">›</span>
-                              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{cat.nombre}</span>
-                            </div>
-                            <div className="bg-slate-800/30 rounded-xl border border-slate-800/60 divide-y divide-slate-800/60 overflow-hidden">
-                              {prods.map(prod =>
-                                prod.modelos.length > 0
-                                  ? prod.modelos.map(mod => (
-                                      <button key={mod.id} type="button"
-                                        onClick={() => addFromCat(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
-                                        className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/50 transition-colors group">
-                                        <div className="flex-1 min-w-0">
-                                          <span className="text-sm text-slate-200 font-medium">{prod.nombre}</span>
-                                          {mod.nombre && <span className="text-slate-400 text-xs ml-1.5">{mod.nombre}</span>}
-                                          {mod.variedad && <span className="text-slate-600 text-xs ml-1">· {mod.variedad}</span>}
-                                        </div>
-                                        <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                                          {mod.sku || prod.sku}
-                                        </span>
-                                        <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
-                                      </button>
-                                    ))
-                                  : (
-                                    <button key={prod.id} type="button"
-                                      onClick={() => addFromCat(mat.nombre, cat.nombre, prod, "", prod.sku)}
-                                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/50 transition-colors group">
-                                      <span className="flex-1 text-sm text-slate-200">{prod.nombre}</span>
-                                      <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                                        {prod.sku}
-                                      </span>
-                                      <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
-                                    </button>
-                                  )
+                          <div key={key}>
+                            {/* Header de categoría — toggle */}
+                            <button type="button" onClick={() => toggleSection(key)}
+                              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-800/60 transition-colors group">
+                              {isOpen
+                                ? <ChevronDown  size={12} className="text-slate-500 shrink-0"/>
+                                : <ChevronRight size={12} className="text-slate-600 shrink-0"/>}
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-300">
+                                {cat.nombre}
+                              </span>
+                              {!catMat && (
+                                <span className="text-[9px] text-slate-700 font-mono">{mat.nombre === "Oro 10k" ? "O10" : "P92"}</span>
                               )}
-                            </div>
+                              <span className="ml-auto text-[9px] text-slate-600 tabular-nums">{nModelos} pzs</span>
+                            </button>
+
+                            {/* Productos (acordeón) */}
+                            {isOpen && (
+                              <div className="ml-4 mb-1 bg-slate-800/30 rounded-xl border border-slate-800/60 divide-y divide-slate-800/40 overflow-hidden">
+                                {prods.map(prod =>
+                                  prod.modelos.length > 0
+                                    ? prod.modelos.map(mod => (
+                                        <button key={mod.id} type="button"
+                                          onClick={() => addFromCat(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
+                                          className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-slate-700/50 transition-colors group">
+                                          <div className="flex-1 min-w-0">
+                                            <span className="text-xs text-slate-200 font-medium">{prod.nombre}</span>
+                                            {mod.nombre && <span className="text-slate-500 text-xs ml-1.5">{mod.nombre}</span>}
+                                          </div>
+                                          <span className="font-mono text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                                            {mod.sku || prod.sku}
+                                          </span>
+                                          <Plus size={12} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                        </button>
+                                      ))
+                                    : (
+                                      <button key={prod.id} type="button"
+                                        onClick={() => addFromCat(mat.nombre, cat.nombre, prod, "", prod.sku)}
+                                        className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-slate-700/50 transition-colors group">
+                                        <span className="flex-1 text-xs text-slate-200">{prod.nombre}</span>
+                                        <span className="font-mono text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                                          {prod.sku}
+                                        </span>
+                                        <Plus size={12} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                      </button>
+                                    )
+                                )}
+                              </div>
+                            )}
                           </div>
                         )
                       }))
