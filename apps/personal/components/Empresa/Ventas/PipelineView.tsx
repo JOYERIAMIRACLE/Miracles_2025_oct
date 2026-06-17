@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
+  DollarSign, Banknote, AlertCircle,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
@@ -14,6 +15,8 @@ import {
 import { Cotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
 import { useGetCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { CotizacionModal } from "./CotizacionModal"
+import { useGetIngresosByCliente, createIngreso, deleteIngreso } from "@/api/ingreso/getIngresos"
+import { Ingreso, METODOS_PAGO_INGRESO, CATEGORIAS_INGRESO, METODO_COLOR, MetodoPagoIngreso, CategoriaIngreso } from "@/types/ingreso"
 
 // ─── Metadatos por etapa ──────────────────────────────────────────────────────
 
@@ -240,13 +243,141 @@ function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onC
 }
 
 // ─── Panel lateral ────────────────────────────────────────────────────────────
+// ─── Modal Registrar Pago ─────────────────────────────────────────────────────
+type PagoForm = {
+  monto:      string
+  fecha:      string
+  metodoPago: MetodoPagoIngreso
+  categoria:  CategoriaIngreso
+  concepto:   string
+  notas:      string
+}
+
+function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
+  clienteNombre:     string
+  clienteDocumentId: string
+  onClose:           () => void
+  onSaved:           (i: Ingreso) => void
+}) {
+  const hoy = new Date().toISOString().split("T")[0]
+  const [form, setForm] = useState<PagoForm>({
+    monto:      "",
+    fecha:      hoy,
+    metodoPago: "Transferencia",
+    categoria:  "VENTA - JOYERÍA",
+    concepto:   `Pago — ${clienteNombre}`,
+    notas:      "",
+  })
+  const [guardando, setGuardando] = useState(false)
+  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
+  const lbl = "block text-[11px] text-slate-500 mb-1"
+
+  const guardar = async () => {
+    const monto = parseFloat(form.monto)
+    if (!form.monto || isNaN(monto) || monto <= 0) { toast.error("Monto inválido"); return }
+    if (!form.fecha)   { toast.error("Fecha requerida"); return }
+    if (!form.concepto.trim()) { toast.error("Concepto requerido"); return }
+    setGuardando(true)
+    try {
+      const saved = await createIngreso({
+        concepto:          form.concepto.trim(),
+        monto,
+        fecha:             form.fecha,
+        metodoPago:        form.metodoPago,
+        categoria:         form.categoria,
+        notas:             form.notas || null,
+        referencia:        clienteNombre,
+        clienteDocumentId,
+        ambito:            "empresa",
+      })
+      onSaved(saved)
+      toast.success("Pago registrado")
+    } catch { toast.error("Error al registrar pago") } finally { setGuardando(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-60 p-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-100">Registrar pago</h3>
+            <p className="text-[11px] text-slate-500">{clienteNombre}</p>
+          </div>
+          <button type="button" title="Cerrar" onClick={onClose}
+            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={15} /></button>
+        </div>
+
+        <div>
+          <label className={lbl}>Concepto</label>
+          <input value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))}
+            placeholder="Pago total, Anticipo 50%…" className={inp} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={lbl}>Monto *</label>
+            <input type="number" min="0" step="0.01" value={form.monto}
+              onChange={e => setForm(f => ({ ...f, monto: e.target.value }))}
+              placeholder="0.00" className={inp} />
+          </div>
+          <div>
+            <label className={lbl}>Fecha *</label>
+            <input type="date" title="Fecha del pago" value={form.fecha}
+              onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
+              className={inp} />
+          </div>
+        </div>
+
+        <div>
+          <label className={lbl}>Método de pago</label>
+          <div className="flex flex-wrap gap-1.5">
+            {METODOS_PAGO_INGRESO.map(m => (
+              <button key={m} type="button"
+                onClick={() => setForm(f => ({ ...f, metodoPago: m }))}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded-lg border transition ${
+                  form.metodoPago === m ? METODO_COLOR[m] : "border-slate-700 text-slate-500 hover:text-slate-300"
+                }`}>{m}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className={lbl}>Categoría</label>
+          <select value={form.categoria} title="Categoría"
+            onChange={e => setForm(f => ({ ...f, categoria: e.target.value as CategoriaIngreso }))}
+            className={inp}>
+            {CATEGORIAS_INGRESO.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className={lbl}>Notas</label>
+          <input value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+            placeholder="Anticipo para pedido especial…" className={inp} />
+        </div>
+
+        <div className="flex gap-2 justify-end pt-1">
+          <button type="button" onClick={onClose}
+            className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">Cancelar</button>
+          <button type="button" onClick={guardar} disabled={guardando}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition">
+            <Check size={14} />{guardando ? "Guardando..." : "Registrar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
   cliente: ClienteEmpresa; num: string
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
+  const [pagoModalOpen, setPagoModalOpen] = useState(false)
   const { cotizaciones, setCotizaciones, loading: cotLoading } = useGetCotizaciones(cliente.documentId)
+  const { ingresos, setIngresos, loading: ingLoading } = useGetIngresosByCliente(cliente.documentId)
 
   const handleCotizacionSaved = useCallback((saved: Cotizacion) => {
     setCotizaciones(prev => {
@@ -358,6 +489,95 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
           )}
         </div>
 
+        {/* Pagos */}
+        <div className="px-4 py-3 border-b border-slate-800">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600">Pagos</p>
+            <button type="button"
+              onClick={() => setPagoModalOpen(true)}
+              className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 transition">
+              <Plus size={10} /> Registrar
+            </button>
+          </div>
+
+          {/* Saldo */}
+          {(() => {
+            const cotAceptada = cotizaciones.find(c => c.estado === "Aceptada")
+            const totalAcordado = cotAceptada?.total ?? null
+            const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
+            const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
+            return totalAcordado !== null || totalPagado > 0 ? (
+              <div className="flex gap-2 mb-2 flex-wrap">
+                {totalAcordado !== null && (
+                  <span className="text-[10px] text-slate-500">
+                    Total: <span className="text-slate-300 font-mono">
+                      {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                    </span>
+                  </span>
+                )}
+                <span className="text-[10px] text-emerald-400 font-mono">
+                  Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                </span>
+                {saldo !== null && saldo > 0 && (
+                  <span className="flex items-center gap-0.5 text-[10px] text-amber-400 font-mono">
+                    <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                  </span>
+                )}
+                {saldo !== null && saldo <= 0 && (
+                  <span className="text-[10px] text-emerald-400">✓ Liquidado</span>
+                )}
+              </div>
+            ) : null
+          })()}
+
+          {ingLoading ? (
+            <p className="text-[10px] text-slate-700 py-1">Cargando...</p>
+          ) : ingresos.length === 0 ? (
+            <button type="button"
+              onClick={() => setPagoModalOpen(true)}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[10px] text-slate-700 hover:text-emerald-400 border border-dashed border-slate-800 hover:border-emerald-800/50 rounded-lg transition">
+              <Banknote size={11} /> Registrar primer pago
+            </button>
+          ) : (
+            <div className="space-y-1">
+              {ingresos.map(ing => (
+                <div key={ing.documentId}
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/60 group">
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-200">{ing.concepto}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
+                      {ing.metodoPago && (
+                        <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
+                          {ing.metodoPago}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-bold text-emerald-400 font-mono">
+                      {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                    </span>
+                    <button type="button"
+                      onClick={async () => {
+                        if (!confirm("¿Eliminar este pago?")) return
+                        try {
+                          await deleteIngreso(ing.documentId)
+                          setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
+                          toast.success("Pago eliminado")
+                        } catch { toast.error("Error al eliminar") }
+                      }}
+                      title="Eliminar pago"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
+                      <Trash2 size={10} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <Timeline cliente={cliente} />
 
         <div className="px-4 py-3 border-b border-slate-800 space-y-2">
@@ -424,6 +644,18 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
           totalCotizaciones={cotizaciones.length}
           onClose={() => setCotModalState(null)}
           onSaved={handleCotizacionSaved}
+        />
+      )}
+
+      {pagoModalOpen && (
+        <PagoModal
+          clienteNombre={cliente.nombre}
+          clienteDocumentId={cliente.documentId}
+          onClose={() => setPagoModalOpen(false)}
+          onSaved={ing => {
+            setIngresos(prev => [...prev, ing])
+            setPagoModalOpen(false)
+          }}
         />
       )}
     </div>

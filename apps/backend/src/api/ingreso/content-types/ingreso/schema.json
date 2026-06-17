@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ingresos",
+  "info": {
+    "singularName": "ingreso",
+    "pluralName": "ingresos",
+    "displayName": "ingreso"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "concepto": {
+      "type": "string",
+      "required": true
+    },
+    "monto": {
+      "type": "decimal"
+    },
+    "fecha": {
+      "type": "date",
+      "required": true
+    },
+    "metodoPago": {
+      "type": "enumeration",
+      "enum": ["Efectivo", "Transferencia", "Tarjeta", "Otro"]
+    },
+    "categoria": {
+      "type": "enumeration",
+      "enum": ["VENTA - JOYERÍA", "VENTA - ANTICIPO", "VENTA - SALDO", "OTRO"]
+    },
+    "notas": {
+      "type": "string"
+    },
+    "referencia": {
+      "type": "string"
+    },
+    "clienteDocumentId": {
+      "type": "string"
+    },
+    "ambito": {
+      "type": "enumeration",
+      "enum": ["trabajo", "empresa"],
+      "default": "empresa"
+    }
+  }
+}

@@ -92,7 +92,7 @@ export function InventarioEmpresaView() {
   const [catSearch,   setCatSearch]   = useState("")
   const [catalogCard, setCatalogCard] = useState<{
     sku: string; nombre: string; categoria: string; material: string; notas: string
-    fotoUrl: string; fotoId: number | null
+    descripcion: string; fotoUrl: string; fotoId: number | null
   } | null>(null)
 
   const filtrados = useMemo(() => items.filter(it => {
@@ -148,7 +148,7 @@ export function InventarioEmpresaView() {
     const fotoUrl = prod.fotoUrl
       ? prod.fotoUrl.startsWith("http") ? prod.fotoUrl : `${backendUrl}${prod.fotoUrl}`
       : ""
-    setCatalogCard({ sku, nombre, categoria: catNombre, material: matNombre, notas: prod.notas, fotoUrl, fotoId: prod.fotoId ?? null })
+    setCatalogCard({ sku, nombre, categoria: catNombre, material: matNombre, notas: prod.notas, descripcion: prod.descripcion ?? "", fotoUrl, fotoId: prod.fotoId ?? null })
     if (fotoUrl) setFotoPreview(fotoUrl)
     setShowCatPick(false); setCatSearch("")
   }

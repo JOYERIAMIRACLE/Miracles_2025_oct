@@ -9,7 +9,7 @@ import {
   Globe, Megaphone, BookOpen, Tv, Palette,
   Users, ShoppingBag, UserSearch, UserCheck, FileText, History,
   Package, Truck, LayoutList, ShoppingCart, Store,
-  PieChart, CreditCard, CalendarDays,
+  PieChart, CreditCard, CalendarDays, TrendingUp,
   UserCog, ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -68,6 +68,7 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
   {
     title: "Finanzas", color: "rose",
     items: [
+      { name: "Ingresos",           href: "/gestion-empresa/finanzas/ingresos",     icon: TrendingUp,   color: "rose" },
       { name: "Presupuestos",       href: "/gestion-empresa/finanzas/presupuestos", icon: PieChart,     color: "rose" },
       { name: "Cuentas",            href: "/gestion-empresa/finanzas/cuentas",      icon: CreditCard,   color: "rose" },
       { name: "Calendario de pagos",href: "/gestion-empresa/finanzas/calendario",   icon: CalendarDays, color: "rose" },
