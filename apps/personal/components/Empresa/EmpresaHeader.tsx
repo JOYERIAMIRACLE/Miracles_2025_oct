@@ -1,8 +1,9 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { Menu, LogOut } from "lucide-react"
+import { Menu, LogOut, Gamepad2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { AppLauncher } from "@/components/AppLauncher"
 import { removeToken } from "@/lib/auth"
 
@@ -58,6 +59,13 @@ export function EmpresaHeader({ onMenuClick }: { onMenuClick?: () => void }) {
         <h1 className="text-sm md:text-base font-semibold text-slate-300 tracking-tight">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
+        <Link
+          href="/empresa-rpg"
+          className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-slate-800 rounded-lg transition-colors"
+          title="Modo Juego"
+        >
+          <Gamepad2 size={15} />
+        </Link>
         <AppLauncher />
         <button type="button" onClick={handleLogout} title="Cerrar sesión"
           className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors">

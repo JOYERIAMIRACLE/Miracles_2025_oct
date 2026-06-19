@@ -13,6 +13,7 @@ node_modules/
 apps/*/out/
 apps/*/.next/
 apps/*/dist/
+apps/backend/build/
 
 # Env
 .env

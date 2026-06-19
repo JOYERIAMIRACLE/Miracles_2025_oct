@@ -13,7 +13,8 @@ export function TrabajoLayoutClient({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const role = getUserRole()
-    if (role && !isMarketingTeam() && !isProveedorWeb()) {
+    const isAdmin = role === "authenticated"
+    if (role && !isAdmin && !isMarketingTeam() && !isProveedorWeb()) {
       router.replace("/gestion-empresa")
       return
     }
