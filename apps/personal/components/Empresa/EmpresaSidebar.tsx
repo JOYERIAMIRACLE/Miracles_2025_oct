@@ -36,11 +36,12 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
   {
     title: "Marketing", color: "blue",
     items: [
-      { name: "Sitio web",        href: "/gestion-empresa/marketing/sitio-web",     icon: Globe,     color: "blue" },
-      { name: "Campañas SEO",     href: "/gestion-empresa/marketing/campanas",      icon: Megaphone, color: "blue" },
-      { name: "Blog",             href: "/gestion-empresa/marketing/blog",           icon: BookOpen,  color: "blue" },
-      { name: "Anuncios",         href: "/gestion-empresa/marketing/anuncios",       icon: Tv,        color: "blue" },
-      { name: "Merch",                href: "/gestion-empresa/marketing/promocionales", icon: Palette, color: "blue" },
+      { name: "Sitio web",    href: "/gestion-empresa/marketing/sitio-web",     icon: Globe,     color: "blue" },
+      { name: "Campañas SEO", href: "/gestion-empresa/marketing/campanas",      icon: Megaphone, color: "blue" },
+      { name: "Blog",          href: "/gestion-empresa/marketing/blog",           icon: BookOpen,  color: "blue" },
+      { name: "Anuncios",      href: "/gestion-empresa/marketing/anuncios",       icon: Tv,        color: "blue" },
+      { name: "Merch",         href: "/gestion-empresa/marketing/promocionales",  icon: Palette,   color: "blue" },
+      { name: "Tareas",        href: "/gestion-empresa/marketing/tareas",         icon: CheckSquare, color: "blue" },
     ],
   },
   {
@@ -67,7 +68,8 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
   {
     title: "Finanzas", color: "rose",
     items: [
-      { name: "Ingresos",           href: "/gestion-empresa/finanzas/ingresos",     icon: TrendingUp,   color: "rose" },
+      { name: "Resumen",            href: "/gestion-empresa/finanzas",              icon: BarChart3,    color: "rose" },
+      { name: "Ingresos",          href: "/gestion-empresa/finanzas/ingresos",     icon: TrendingUp,   color: "rose" },
       { name: "Gastos",             href: "/gestion-empresa/finanzas/gastos",       icon: Receipt,      color: "rose" },
       { name: "Presupuestos",       href: "/gestion-empresa/finanzas/presupuestos", icon: PieChart,     color: "rose" },
       { name: "Cuentas",            href: "/gestion-empresa/finanzas/cuentas",      icon: CreditCard,   color: "rose" },
