@@ -30,7 +30,6 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
     items: [
       { name: "Identidad",        href: "/gestion-empresa/general/identidad",        icon: Target,      color: "sky" },
       { name: "Tareas",           href: "/gestion-empresa/general/tareas",            icon: CheckSquare, color: "sky" },
-      { name: "Gastos",           href: "/gestion-empresa/general/gastos",            icon: Receipt,     color: "sky" },
       { name: "Material digital", href: "/gestion-empresa/general/material-digital",  icon: HardDrive,   color: "sky" },
     ],
   },
@@ -69,6 +68,7 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
     title: "Finanzas", color: "rose",
     items: [
       { name: "Ingresos",           href: "/gestion-empresa/finanzas/ingresos",     icon: TrendingUp,   color: "rose" },
+      { name: "Gastos",             href: "/gestion-empresa/finanzas/gastos",       icon: Receipt,      color: "rose" },
       { name: "Presupuestos",       href: "/gestion-empresa/finanzas/presupuestos", icon: PieChart,     color: "rose" },
       { name: "Cuentas",            href: "/gestion-empresa/finanzas/cuentas",      icon: CreditCard,   color: "rose" },
       { name: "Calendario de pagos",href: "/gestion-empresa/finanzas/calendario",   icon: CalendarDays, color: "rose" },
