@@ -41,7 +41,6 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
       { name: "Blog",          href: "/gestion-empresa/marketing/blog",           icon: BookOpen,  color: "blue" },
       { name: "Anuncios",      href: "/gestion-empresa/marketing/anuncios",       icon: Tv,        color: "blue" },
       { name: "Merch",         href: "/gestion-empresa/marketing/promocionales",  icon: Palette,   color: "blue" },
-      { name: "Tareas",        href: "/gestion-empresa/marketing/tareas",         icon: CheckSquare, color: "blue" },
     ],
   },
   {
