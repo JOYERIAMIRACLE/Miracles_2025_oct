@@ -32,7 +32,7 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://miracles-frontend.pages.dev
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy apps/personal/out --project-name miracles-frontend --commit-dirty=true
+        run: npx wrangler pages deploy apps/personal/out --project-name richard-avrod --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 5b0a6ff7def6c2a2db4c33869b490353
