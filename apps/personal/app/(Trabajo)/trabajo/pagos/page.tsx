@@ -792,13 +792,14 @@ export default function PagosPage() {
               <AnimatePresence mode="popLayout">
                 {filtrados.map(p => (
                   <motion.tr key={p.documentId} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="border-b border-slate-800/30 last:border-0 group hover:bg-slate-800/20 transition-colors">
+                    onClick={() => setFormMode({ type: "edit", pago: p })}
+                    className="border-b border-slate-800/30 last:border-0 group hover:bg-slate-800/20 transition-colors cursor-pointer">
                     <td className="px-4 py-3">
                       <p className="text-slate-200 font-medium truncate max-w-[140px]">{p.concepto}</p>
                       {p.descripcion && <p className="text-[10px] text-slate-500 truncate max-w-[140px]">{p.descripcion}</p>}
                       {p.notas       && <p className="text-[10px] text-slate-600 truncate max-w-[140px] italic">{p.notas}</p>}
                     </td>
-                    <td className="px-4 py-3 text-center hidden sm:table-cell">
+                    <td className="px-4 py-3 text-center hidden sm:table-cell" onClick={e => e.stopPropagation()}>
                       <select title="Categoría del pago"
                         value={p.categoriaPago?.id ?? ""}
                         onChange={e => handleCategoria(p, e.target.value ? Number(e.target.value) : "")}
@@ -814,7 +815,7 @@ export default function PagosPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-500 hidden md:table-cell">{p.fecha ?? "—"}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-200 tabular-nums">{fmt(p.monto)}</td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                       <select title="Estado del pago" value={p.estado}
                         onChange={e => handleEstado(p, e.target.value as EstadoPago)}
                         className={`text-[10px] px-2 py-1 rounded-full border font-medium bg-transparent cursor-pointer ${ESTADO_BADGE[p.estado]}`}>
@@ -823,13 +824,8 @@ export default function PagosPage() {
                         <option value="parcial">Parcial</option>
                       </select>
                     </td>
-                    <td className="px-2 py-3">
+                    <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" aria-label="Editar pago"
-                          onClick={() => setFormMode({ type: "edit", pago: p })}
-                          className="text-slate-500 hover:text-emerald-400 transition-colors">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
                         <button type="button" aria-label="Eliminar pago"
                           onClick={() => handleDelete(p)}
                           className="text-slate-600 hover:text-red-400 transition-colors">
