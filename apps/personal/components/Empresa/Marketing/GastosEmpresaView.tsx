@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Plus, Search, X, Pencil, Loader2, Wallet, BarChart2 } from "lucide-react"
+import { Plus, Search, X, Loader2, Wallet, BarChart2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -276,7 +276,9 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                   ))}</tr>
                 ))}
                 {!loading && filtrados.map(g => (
-                  <tr key={g.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                  <tr key={g.documentId}
+                    className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    onClick={() => delId !== g.documentId && openEditar(g)}>
                     <td className="px-4 py-3 text-slate-400 whitespace-nowrap text-xs">{fmtFecha(g.fecha)}</td>
                     <td className="px-4 py-3">
                       {g.categoria && (
@@ -290,7 +292,7 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                     <td className="px-4 py-3 text-slate-400 text-xs max-w-[140px] truncate">{g.proveedor ?? "—"}</td>
                     <td className="px-4 py-3 text-slate-500 text-xs max-w-[160px] truncate">{g.notas ?? "—"}</td>
                     <td className="px-4 py-3 text-red-400 font-semibold tabular-nums whitespace-nowrap">{fmt(g.monto)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       {delId === g.documentId ? (
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] text-slate-500">¿Eliminar?</span>
@@ -299,9 +301,6 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                         </div>
                       ) : (
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button type="button" title="Editar" onClick={() => openEditar(g)} className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
-                            <Pencil size={13} />
-                          </button>
                           <button type="button" title="Eliminar" onClick={() => setDelId(g.documentId)} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
                             <X size={13} />
                           </button>
@@ -406,7 +405,7 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
           <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar gasto" : "Nuevo gasto"}</h2>
-              <button type="button" onClick={() => setModalOpen(false)}
+              <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
                 className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
@@ -446,7 +445,7 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha</label>
-                  <input type="date" value={form.fecha ?? ""}
+                  <input type="date" title="Fecha" value={form.fecha ?? ""}
                     onChange={e => setForm(f => ({ ...f, fecha: e.target.value || null }))} className={inp} />
                 </div>
               </div>
