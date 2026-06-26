@@ -1,9 +1,9 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "buildCommand": "npm run build && node ./copy-admin-build.js"
+    "buildCommand": "node ./copy-admin-build.js"
   },
   "deploy": {
-    "startCommand": "node ./node_modules/@strapi/strapi/bin/strapi.js start"
+    "startCommand": "node ./copy-admin-build.js ; node ./node_modules/@strapi/strapi/bin/strapi.js start"
   }
 }
