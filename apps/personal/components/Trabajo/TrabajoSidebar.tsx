@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   CheckSquare, Wallet, ChevronRight, Archive, Megaphone,
-  TrendingUp, FileImage, Users, BookOpen, Globe,
+  TrendingUp, FileImage, Users, BookOpen, Globe, Building2,
 } from "lucide-react"
 import { isProveedorWeb } from "@/lib/auth"
 
@@ -42,6 +42,12 @@ const SECTIONS = [
     title: "Web",
     items: [
       { label: "Sitio web", href: "/trabajo/sitio-web", icon: Globe },
+    ],
+  },
+  {
+    title: "Organización",
+    items: [
+      { label: "Portal SDI", href: "/trabajo/portal", icon: Building2 },
     ],
   },
 ]
