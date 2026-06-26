@@ -733,7 +733,7 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
           onEdit={onEdit}
           onDelete={onDelete}
           onNueva={({ mes: m, anio: a }) => {
-            onNueva()
+            onNueva({ mes: m, anio: a })
           }}
         />
       ))}
