@@ -374,7 +374,10 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-100">{editando ? "Editar campaña" : "Nueva campaña"}</h2>
+          <div>
+            <h2 className="text-base font-semibold text-slate-100">{editando ? "Editar campaña" : "Nueva campaña"}</h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">{form.mes} {form.anio}</p>
+          </div>
           <button type="button" title="Cerrar" onClick={onCerrar}
             className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
             <X size={16} />
