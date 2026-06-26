@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import {
   Home, Building2, Users, Monitor, Shield, ShoppingBag,
   Megaphone, Wallet, ChevronDown, Bell, Search,
@@ -93,7 +94,7 @@ function SeccionInicio() {
         <h2 className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Accesos rápidos</h2>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
           {ACCESOS.map(({ label, icon: Icon, color, bg, border, desc }) => (
-            <button key={label} className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${bg} ${border} hover:scale-[1.03] hover:brightness-110 transition-all cursor-pointer`}>
+            <button type="button" key={label} className={`flex flex-col items-center gap-2 p-3 rounded-xl border ${bg} ${border} hover:scale-[1.03] hover:brightness-110 transition-all cursor-pointer`}>
               <Icon className={`h-5 w-5 ${color}`} />
               <span className="text-[11px] font-medium text-slate-200">{label}</span>
               <span className="text-[9px] text-slate-500 text-center leading-tight hidden sm:block">{desc}</span>
@@ -109,7 +110,7 @@ function SeccionInicio() {
         <div className="lg:col-span-2 rounded-xl bg-[#0d1b2e] border border-[#1e3a5f] p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Comunicados recientes</h2>
-            <button className="text-[10px] text-orange-400 hover:text-orange-300 flex items-center gap-1">
+            <button type="button" className="text-[10px] text-orange-400 hover:text-orange-300 flex items-center gap-1">
               Ver todos <ArrowRight className="h-3 w-3" />
             </button>
           </div>
@@ -314,13 +315,10 @@ export function PortalSDIView() {
   }
 
   return (
-    <div
-      className="flex rounded-xl overflow-hidden border border-[#1e3a5f] bg-[#0b1426]"
-      style={{ minHeight: "calc(100vh - 7rem)" }}
-    >
+    <div className="flex min-h-screen bg-[#0b1426]">
       {/* ---- Sidebar ---- */}
       {sidebarOpen && (
-        <aside className="w-52 shrink-0 bg-[#0d1b2e] border-r border-[#1e3a5f] flex flex-col">
+        <aside className="w-52 shrink-0 bg-[#0d1b2e] border-r border-[#1e3a5f] flex flex-col fixed inset-y-0 left-0 z-40">
           {/* Logo */}
           <div className="h-11 flex items-center gap-2.5 px-4 border-b border-[#1e3a5f] shrink-0">
             <div className="h-6 w-6 rounded-lg bg-orange-500 flex items-center justify-center shrink-0">
@@ -333,13 +331,14 @@ export function PortalSDIView() {
           <nav className="flex-1 overflow-y-auto py-2">
             {NAV.map(item => {
               const Icon = item.icon
-              const active   = seccion === item.id
-              const expanded = expandidos.has(item.id)
+              const active      = seccion === item.id
+              const expanded    = expandidos.has(item.id)
               const hasChildren = item.children.length > 0
 
               return (
                 <div key={item.id}>
                   <button
+                    type="button"
                     onClick={() => {
                       navegar(item.id)
                       if (hasChildren) toggleExpand(item.id)
@@ -363,6 +362,7 @@ export function PortalSDIView() {
                       {item.children.map(child => (
                         <button
                           key={child}
+                          type="button"
                           className="w-full text-left px-2 py-1.5 text-[11px] text-slate-500 hover:text-slate-300 hover:bg-[#112240] rounded transition-colors truncate block"
                         >
                           {child}
@@ -375,19 +375,29 @@ export function PortalSDIView() {
             })}
           </nav>
 
-          {/* Footer sidebar */}
-          <div className="px-3 py-3 border-t border-[#1e3a5f]">
-            <p className="text-[10px] text-slate-600 text-center">SDI · Portal interno v1.0</p>
+          {/* Acceso a Team Marketing */}
+          <div className="border-t border-[#1e3a5f] p-2">
+            <Link
+              href="/trabajo"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-orange-300 hover:bg-[#112240] transition-all group"
+            >
+              <Megaphone className="h-3.5 w-3.5 shrink-0 group-hover:text-orange-400 transition-colors" />
+              <span className="flex-1">Team Marketing</span>
+              <ArrowRight className="h-3 w-3 text-slate-600 group-hover:text-orange-400 transition-colors" />
+            </Link>
+            <p className="text-[10px] text-slate-700 text-center mt-2">SDI · Portal interno v1.0</p>
           </div>
         </aside>
       )}
 
       {/* ---- Main ---- */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 ${sidebarOpen ? "ml-52" : ""}`}>
 
         {/* Top bar */}
-        <div className="h-11 bg-[#0d1b2e] border-b border-[#1e3a5f] flex items-center gap-3 px-4 shrink-0">
+        <div className="h-11 bg-[#0d1b2e] border-b border-[#1e3a5f] flex items-center gap-3 px-4 sticky top-0 z-30">
           <button
+            type="button"
+            title="Alternar menú"
             onClick={() => setSidebarOpen(o => !o)}
             className="h-7 w-7 rounded flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-[#112240] transition-colors"
           >
@@ -417,7 +427,11 @@ export function PortalSDIView() {
           </div>
 
           {/* Notificaciones */}
-          <button className="relative h-7 w-7 rounded flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-[#112240] transition-colors">
+          <button
+            type="button"
+            title="Notificaciones"
+            className="relative h-7 w-7 rounded flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-[#112240] transition-colors"
+          >
             <Bell className="h-4 w-4" />
             <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-orange-500" />
           </button>
@@ -429,7 +443,7 @@ export function PortalSDIView() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 p-5">
           {renderContent()}
         </div>
       </div>
