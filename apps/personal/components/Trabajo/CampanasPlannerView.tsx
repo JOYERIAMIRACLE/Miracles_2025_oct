@@ -574,7 +574,12 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
     <div className="border border-slate-700/50 rounded-xl overflow-hidden backdrop-blur-sm">
       <button type="button" onClick={() => setCollapsed(v => !v)}
         className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/70 hover:bg-slate-800/50 transition">
-        <span className="text-sm font-bold text-slate-200">{mes} {anio}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-200">{mes} {anio}</span>
+          {campanas.length > 0 && (
+            <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded font-mono">{campanas.length}</span>
+          )}
+        </div>
         <ChevronRight className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${collapsed ? "" : "rotate-90"}`} />
       </button>
 
