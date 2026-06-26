@@ -106,7 +106,7 @@ export function TrabajoSidebar() {
       {/* Footer */}
       <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-800/60">
         <p className="text-[10px] text-slate-400 dark:text-slate-600">
-          {isProveedor ? "Miracles · Proveedor Web" : "Miracles · Marketing team"}
+          {isProveedor ? "Proveedor Web" : "Marketing team"}
         </p>
       </div>
     </div>
