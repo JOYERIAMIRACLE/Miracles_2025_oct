@@ -102,10 +102,12 @@ function getDiaItems(campanas: CampanaType[], dayStr: string, categoria: string)
         }
       }
     } else {
-      // Sin títulos: solo mostrar si tiene semana1Fecha exacta y categoría coincide
-      if (c.categoria !== categoria) continue
+      // Sin títulos: mostrar en el primer lunes del mes (o en semana1Fecha si existe)
+      if (!c.unidadNegocio) continue
       const fecha = getSemana(c, 1, "Fecha")
-      if (fecha && fecha === dayStr && c.unidadNegocio) {
+      if (fecha) {
+        if (fecha === dayStr) out.push({ campana: c, n: 1, titulo: c.unidadNegocio })
+      } else if (isMonday && toYMD(firstMon) === dayStr) {
         out.push({ campana: c, n: 1, titulo: c.unidadNegocio })
       }
     }
