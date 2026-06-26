@@ -376,7 +376,24 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-slate-100">{editando ? "Editar campaña" : "Nueva campaña"}</h2>
-            <p className="text-[11px] text-slate-500 mt-0.5">{form.mes} {form.anio}</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <select
+                title="Mes"
+                value={form.mes}
+                onChange={e => setForm(f => ({ ...f, mes: e.target.value as MesCampana }))}
+                className="text-[11px] bg-slate-800 border border-slate-700 text-slate-300 rounded px-2 py-0.5 outline-none focus:border-slate-500"
+              >
+                {MESES.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <select
+                title="Año"
+                value={form.anio}
+                onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))}
+                className="text-[11px] bg-slate-800 border border-slate-700 text-slate-300 rounded px-2 py-0.5 outline-none focus:border-slate-500"
+              >
+                {[ANIO_ACTUAL - 1, ANIO_ACTUAL, ANIO_ACTUAL + 1].map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
           </div>
           <button type="button" title="Cerrar" onClick={onCerrar}
             className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
