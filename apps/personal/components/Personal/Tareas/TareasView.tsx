@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, Pencil, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket, ChevronDown, ClipboardList, Link2, ExternalLink } from "lucide-react"
+import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket, ChevronDown, ClipboardList, Link2, ExternalLink } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
@@ -585,12 +585,13 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               return (
                 <div
                   key={t.documentId}
-                  className={`flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm ${t.estado === "completada" ? "opacity-50" : ""}`}
+                  onClick={() => abrirEditar(t)}
+                  className={`flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 transition-colors ${t.estado === "completada" ? "opacity-50" : ""}`}
                 >
                   <button
                     type="button"
                     title={t.estado === "completada" ? "Marcar como sin iniciar" : "Marcar como completada"}
-                    onClick={() => cambiarEstado(t, t.estado === "completada" ? "sin_iniciar" : "completada")}
+                    onClick={e => { e.stopPropagation(); cambiarEstado(t, t.estado === "completada" ? "sin_iniciar" : "completada") }}
                     className={`mt-0.5 h-5 w-5 rounded border-2 shrink-0 flex items-center justify-center transition ${
                       t.estado === "completada"
                         ? "bg-emerald-500 border-emerald-500"
@@ -605,7 +606,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       <p className={`text-sm font-medium ${t.estado === "completada" ? "line-through text-muted-foreground" : ""}`}>
                         {t.titulo}
                       </p>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                         <button
                           type="button"
                           title={t.esTicket ? "Quitar ticket de servicio" : "Marcar como ticket de servicio"}
@@ -617,9 +618,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                           }`}
                         >
                           <Ticket size={12} />
-                        </button>
-                        <button type="button" title="Editar" onClick={() => abrirEditar(t)} className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted">
-                          <Pencil size={12} />
                         </button>
                         <button type="button" title="Eliminar" onClick={() => borrar(t)} className="p-1 text-muted-foreground hover:text-red-500 rounded hover:bg-muted">
                           <Trash2 size={12} />
@@ -734,20 +732,22 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       </div>
                     )}
 
-                    <ProgresoBar
-                      value={t.progreso ?? 0}
-                      onSave={pct => actualizarProgreso(t, pct)}
-                    />
-                    <LinksPanel
-                      links={t.links}
-                      inputOpen={linksOpen === t.documentId}
-                      onAgregar={entrada => agregarLink(t, entrada)}
-                    />
-                    <AvancesPanel
-                      notas={t.notas}
-                      open={avancesOpen === t.documentId}
-                      onAgregar={nota => agregarAvance(t, nota)}
-                    />
+                    <div onClick={e => e.stopPropagation()}>
+                      <ProgresoBar
+                        value={t.progreso ?? 0}
+                        onSave={pct => actualizarProgreso(t, pct)}
+                      />
+                      <LinksPanel
+                        links={t.links}
+                        inputOpen={linksOpen === t.documentId}
+                        onAgregar={entrada => agregarLink(t, entrada)}
+                      />
+                      <AvancesPanel
+                        notas={t.notas}
+                        open={avancesOpen === t.documentId}
+                        onAgregar={nota => agregarAvance(t, nota)}
+                      />
+                    </div>
                   </div>
                 </div>
               )
