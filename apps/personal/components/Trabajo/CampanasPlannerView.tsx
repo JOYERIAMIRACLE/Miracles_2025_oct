@@ -721,7 +721,7 @@ function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
   campanas: CampanaType[]
   onEdit: (c: CampanaType) => void
   onDelete: (c: CampanaType) => void
-  onNueva: () => void
+  onNueva: (opts: { mes: MesCampana; anio: number }) => void
 }) {
   const grupos = useMemo(() => {
     const map = new Map<string, { mes: MesCampana; anio: number; items: CampanaType[] }>()
@@ -1063,7 +1063,7 @@ export default function CampanasPlannerView({ ambito = "trabajo" }: { ambito?: A
       </div>
 
       {tab === "catalogo" ? (
-        <VistaCatalogo campanas={campanas} onEdit={abrirEditar} onDelete={eliminar} onNueva={() => abrirNueva()} />
+        <VistaCatalogo campanas={campanas} onEdit={abrirEditar} onDelete={eliminar} onNueva={(opts) => abrirNueva(opts)} />
       ) : (
         <VistaPlaneador
           campanas={campanas}
