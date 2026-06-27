@@ -619,7 +619,12 @@ function SeccionTI() {
           <Card>
             <h3 className="text-sm font-bold text-slate-800 mb-3">Cómo reportar un problema correctamente</h3>
             <div className="space-y-3">
-              {[["¿Qué pasó?","Describe el error con exactitud. Ej: "Odoo no me deja guardar una orden de compra — aparece error 403"."],["¿Desde cuándo?","Hora y fecha aproximada en que comenzó el problema."],["¿Impacto?","¿Solo te afecta a ti o a todo el equipo? ¿Puedes seguir trabajando?"],["Captura de pantalla","Si hay un mensaje de error, adjunta una imagen. Ahorra 2 correos de ida y vuelta."]].map(([t,d],i) => (
+              {[
+                ["¿Qué pasó?",         "Describe el error con exactitud. Ej: Odoo no deja guardar una orden de compra, aparece error 403."],
+                ["¿Desde cuándo?",     "Hora y fecha aproximada en que comenzó el problema."],
+                ["¿Impacto?",          "¿Solo te afecta a ti o a todo el equipo? ¿Puedes seguir trabajando?"],
+                ["Captura de pantalla","Si hay un mensaje de error, adjunta una imagen. Ahorra 2 correos de ida y vuelta."],
+              ].map(([t, d], i) => (
                 <div key={t} className="flex gap-3 items-start p-3 bg-slate-50 rounded-lg">
                   <span className="h-7 w-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">{i+1}</span>
                   <div><p className="text-sm font-semibold text-slate-800">{t}</p><p className="text-xs text-slate-500 mt-0.5">{d}</p></div>
@@ -827,7 +832,7 @@ export function PortalSDIView() {
               <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar…"
                 className="bg-transparent text-xs text-slate-700 placeholder:text-slate-400 outline-none flex-1" />
             </div>
-            <button type="button" className="relative h-8 w-8 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+            <button type="button" aria-label="Notificaciones" className="relative h-8 w-8 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
               <Bell className="h-4 w-4" />
               <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-orange-500" />
             </button>
