@@ -825,11 +825,201 @@ function SeccionTI() {
   )
 }
 
+// ─── MARKETING ────────────────────────────────────────────────────────────────
+const MKT_TABS = [
+  { id: "marca",      label: "Identidad de Marca"    },
+  { id: "plantillas", label: "Plantillas"             },
+  { id: "galeria",    label: "Galería Multimedia"     },
+  { id: "materiales", label: "Materiales Comerciales" },
+  { id: "gobernanza", label: "Gobernanza"             },
+]
+
+const COLORES_SDI = [
+  { name: "Naranja SDI", hex: "#D95F02", uso: "Color primario · CTAs · Énfasis" },
+  { name: "Navy SDI",    hex: "#0F172A", uso: "Fondos · Headers · Texto principal" },
+  { name: "Dorado",      hex: "#F59E0B", uso: "Acentos · Highlights" },
+  { name: "Blanco",      hex: "#FFFFFF", uso: "Fondos · Texto sobre oscuro" },
+  { name: "Gris claro",  hex: "#F1F5F9", uso: "Fondos secundarios · Cards" },
+]
+
+const PLANTILLAS_MKT = [
+  { icon: "📄", name: "Hoja membretada",          fmt: "Word (.docx)",       desc: "Para cartas y comunicados oficiales. No modificar márgenes ni encabezado." },
+  { icon: "📧", name: "Firma de correo",           fmt: "HTML",               desc: "Firma corporativa con datos de contacto. Solicitar a Marketing para instalar." },
+  { icon: "📊", name: "Presentación corporativa",  fmt: "PowerPoint (.pptx)", desc: "Plantilla para presentaciones a clientes y stakeholders." },
+  { icon: "📋", name: "Formato de correo",         fmt: "Word (.docx)",       desc: "Estructura estándar para comunicados internos formales." },
+  { icon: "🏷️", name: "Tarjeta de presentación",  fmt: "PDF (para imprimir)",desc: "Solicitar impresión a Marketing con tus datos." },
+  { icon: "📑", name: "Propuesta comercial",       fmt: "PowerPoint (.pptx)", desc: "Para cotizaciones y propuestas formales a clientes." },
+]
+
+const GALERIA_MKT = [
+  "Evento Q1 2026","Company Feb 2026","Instalaciones SDI","Equipo Comercial",
+  "Planta CEDEP","Proyectos MHS","Aniversario SDI","Team Building",
+]
+
+const MATERIALES_MKT = [
+  { name: "Brochure SDI General",              desc: "Presentación de la empresa, unidades de negocio y diferenciadores.",           owner: "Marketing" },
+  { name: "Brochure Automatización Industrial",desc: "Productos y soluciones de la unidad de automatización.",                       owner: "Marketing + Sergio" },
+  { name: "Brochure MHS — Manejo de Materiales",desc:"Soluciones de manejo de materiales y ergonomía.",                             owner: "Marketing + Rogelio" },
+  { name: "Presentación Company SDI",          desc: "Deck corporativo para presentar SDI a clientes y socios.",                     owner: "Marketing" },
+  { name: "Casos de éxito",                    desc: "Repositorio de proyectos ejecutados. Dueño: Comercial (Rogelio).",             owner: "Rogelio → Marketing enlaza" },
+  { name: "Encuesta de satisfacción",          desc: "Formato de encuesta post-servicio/proyecto.",                                  owner: "Marketing" },
+]
+
+function SeccionMarketing() {
+  const [tab, setTab] = useState("marca")
+  return (
+    <div className="space-y-4">
+      <PageHeader title="Marketing e Identidad de Marca" />
+      <TabBar tabs={MKT_TABS} active={tab} onChange={setTab} />
+
+      {/* ── IDENTIDAD DE MARCA ── */}
+      {tab === "marca" && (
+        <div className="space-y-5">
+          <p className="text-sm text-slate-500 leading-relaxed">La identidad de marca de SDI define cómo nos vemos y comunicamos hacia afuera y hacia adentro. Úsala de forma consistente — cada comunicación refleja quiénes somos.</p>
+
+          {/* Sistema de color */}
+          <Card>
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Sistema de color</h3>
+            <div className="flex gap-4 flex-wrap">
+              {COLORES_SDI.map(c => (
+                <div key={c.hex} className="flex flex-col gap-1.5 w-28">
+                  <div className="w-full h-16 rounded-lg border border-black/10" style={{ background: c.hex }} />
+                  <p className="text-xs font-semibold text-slate-800">{c.name}</p>
+                  <p className="text-[11px] font-mono text-slate-400">{c.hex}</p>
+                  <p className="text-[11px] text-slate-400 leading-tight">{c.uso}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Tipografía */}
+          <Card>
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tipografía</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="border border-slate-200 rounded-xl p-5">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Títulos y encabezados</p>
+                <p className="text-2xl font-extrabold text-slate-900 leading-tight mb-1">Barlow Condensed</p>
+                <p className="text-xs text-slate-400">Bold 700/800 · Mayúsculas en encabezados principales</p>
+              </div>
+              <div className="border border-slate-200 rounded-xl p-5">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Cuerpo de texto</p>
+                <p className="text-xl text-slate-900 leading-tight mb-1">Barlow Regular</p>
+                <p className="text-xs text-slate-400">Regular 400 · Medium 500 para énfasis · 14px base</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Logos */}
+          <Card>
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Logos</h3>
+            <Pending owner="Ricardo / Nancy" desc="Carpeta con todas las variantes del logo SDI (fondo blanco, fondo oscuro, solo símbolo, solo texto, versión horizontal y vertical) en PNG y SVG." />
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button type="button" className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                <Download className="h-3.5 w-3.5" /> Manual de Identidad de Marca SDI
+              </button>
+              <button type="button" className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                <ExternalLink className="h-3.5 w-3.5" /> Carpeta de logos (Drive)
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ── PLANTILLAS ── */}
+      {tab === "plantillas" && (
+        <div className="space-y-4">
+          <p className="text-sm text-slate-500 leading-relaxed">Plantillas oficiales de SDI. Úsalas siempre — no crees versiones propias. Cualquier modificación debe coordinarse con Marketing.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PLANTILLAS_MKT.map(p => (
+              <div key={p.name} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col gap-3">
+                <span className="text-3xl">{p.icon}</span>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">{p.name}</p>
+                  <p className="text-[11px] font-semibold text-orange-500 mt-0.5">{p.fmt}</p>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed flex-1">{p.desc}</p>
+                <button type="button" className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-200 text-orange-600 text-xs font-semibold rounded-lg hover:bg-orange-100 transition-colors">
+                  <Download className="h-3 w-3" /> Descargar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── GALERÍA ── */}
+      {tab === "galeria" && (
+        <div className="space-y-4">
+          <p className="text-sm text-slate-500 leading-relaxed">Repositorio de fotografías corporativas, eventos e instalaciones. Uso exclusivo para comunicaciones oficiales de SDI.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {GALERIA_MKT.map((nombre, i) => (
+              <div key={i} className={`aspect-[4/3] rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity ${["bg-slate-800","bg-slate-900","bg-slate-700","bg-slate-800"][i % 4]}`}>
+                <span className="text-2xl">📷</span>
+                <p className="text-[10px] text-white/50 text-center px-2 leading-tight">{nombre}</p>
+              </div>
+            ))}
+          </div>
+          <Pending owner="Ricardo / Nancy" desc="Galería completa de fotografías de colaboradores, eventos y conferencias. Marketing organiza y sube al repositorio antes del lanzamiento." />
+        </div>
+      )}
+
+      {/* ── MATERIALES COMERCIALES ── */}
+      {tab === "materiales" && (
+        <div className="space-y-3">
+          <p className="text-sm text-slate-500 leading-relaxed">Materiales de ventas y comunicación comercial. Para uso de los equipos de Comercial y Proyectos.</p>
+          {MATERIALES_MKT.map(m => (
+            <div key={m.name} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4">
+              <div className="h-10 w-10 bg-orange-100 rounded-lg flex items-center justify-center text-xl shrink-0">📊</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800">{m.name}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{m.desc}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[10px] text-slate-400 mb-1.5">Dueño: {m.owner}</p>
+                <button type="button" className="flex items-center gap-1 px-2.5 py-1 bg-orange-50 border border-orange-200 text-orange-600 text-[11px] font-semibold rounded-lg hover:bg-orange-100 transition-colors">
+                  <Download className="h-3 w-3" /> Descargar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── GOBERNANZA ── */}
+      {tab === "gobernanza" && (
+        <Card>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-slate-100">
+              {[
+                ["Dueño",          "Ricardo / Nancy — Marketing"],
+                ["Respaldo",       "Pendiente definir"],
+                ["Frecuencia",     "Cuando cambie (marca, logos) · Trimestral (brochures) · Al evento (galería)"],
+                ["Casos de éxito", "Dueño: Comercial (Rogelio). Marketing enlaza — no duplica ni crea su propia versión."],
+              ].map(([k, v]) => (
+                <tr key={k} className="hover:bg-slate-50">
+                  <td className="py-3 pr-4 font-semibold text-slate-700 align-top w-40 text-xs uppercase tracking-wide">{k}</td>
+                  <td className="py-3 text-slate-600 text-xs leading-relaxed">{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="mt-4 flex gap-3 items-start bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <span className="text-lg shrink-0">✅</span>
+            <div>
+              <p className="text-xs font-bold text-emerald-800 mb-0.5">Plantillas listas para MVP</p>
+              <p className="text-xs text-emerald-700 leading-relaxed">Hoja membretada, firma digital, logos y presentación corporativa ya existen. Marketing solo necesita subirlos. Cero tiempo de creación.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 // ─── DEPT GENÉRICO CON TABS ──────────────────────────────────────────────────
 const DEPT_CONFIG: Partial<Record<SectionId, { titulo: string; tabs: string[]; owner: string }>> = {
   cadena:    { titulo: "Cadena de Suministros",  tabs: ["Importación","Proveedores","Compras","Logística","Inventario"], owner: "Carolina" },
   comercial: { titulo: "Comercial",              tabs: ["Visión general","Producto (Store)","Servicios Industriales","Proyectos (MHS)"], owner: "Sergio · Rogelio" },
-  marketing: { titulo: "Marketing",             tabs: ["Identidad de marca","Plantillas","Galería multimedia","Materiales comerciales"], owner: "Ricardo · Nancy" },
   seguridad: { titulo: "Seguridad Industrial",  tabs: ["Protocolos HSE","Normativas y certs.","Layouts de planta","Formatos de mejora"], owner: "Elias Arias" },
 }
 
@@ -911,9 +1101,9 @@ export function PortalSDIView() {
       case "rh":             return <SeccionRH />
       case "administracion": return <SeccionAdministracion />
       case "ti":             return <SeccionTI />
+      case "marketing":      return <SeccionMarketing />
       case "cadena":
       case "comercial":
-      case "marketing":
       case "seguridad":      return <SeccionDeptGenerico id={seccion} />
       default:               return <SeccionServicio id={seccion} />
     }
