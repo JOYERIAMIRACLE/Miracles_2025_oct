@@ -8,6 +8,7 @@ import {
   ShoppingBag, DollarSign, Shield, Monitor, Calendar,
   ClipboardList, MessageSquare, Ticket, Database, Globe,
   Building2, Flag, Download, ExternalLink,
+  LayoutDashboard, Info, Briefcase, Layers,
 } from "lucide-react"
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
@@ -18,15 +19,15 @@ type SectionId =
   | "vacaciones" | "evaluaciones" | "encuestas" | "tickets" | "odoo" | "intranet" | "repositorios"
 
 type NavItem  = { id: SectionId; label: string; icon: React.ElementType }
-type NavGroup = { id: string; label: string; items: NavItem[] }
+type NavGroup = { id: string; label: string; icon: React.ElementType; items: NavItem[] }
 
 const GRUPOS: NavGroup[] = [
   {
-    id: "portal", label: "Portal principal",
+    id: "portal", label: "Portal principal", icon: LayoutDashboard,
     items: [],
   },
   {
-    id: "conoce", label: "Conoce a SDI",
+    id: "conoce", label: "Conoce a SDI", icon: Info,
     items: [
       { id: "quienes-somos", label: "¿Quiénes somos?", icon: Building2 },
       { id: "organigrama",   label: "Organigrama",      icon: GitBranch },
@@ -34,7 +35,7 @@ const GRUPOS: NavGroup[] = [
     ],
   },
   {
-    id: "departamentos", label: "Departamentos",
+    id: "departamentos", label: "Departamentos", icon: Briefcase,
     items: [
       { id: "mision",         label: "Misión",                icon: Flag        },
       { id: "rh",             label: "Recursos Humanos",      icon: Users       },
@@ -47,7 +48,7 @@ const GRUPOS: NavGroup[] = [
     ],
   },
   {
-    id: "servicios", label: "Servicios y aplicaciones",
+    id: "servicios", label: "Servicios y aplicaciones", icon: Layers,
     items: [
       { id: "vacaciones",   label: "Vacaciones",           icon: Calendar      },
       { id: "evaluaciones", label: "Evaluaciones",         icon: ClipboardList },
@@ -836,10 +837,9 @@ const MKT_TABS = [
 
 const COLORES_SDI = [
   { name: "Naranja SDI", hex: "#D95F02", uso: "Color primario · CTAs · Énfasis" },
-  { name: "Navy SDI",    hex: "#0F172A", uso: "Fondos · Headers · Texto principal" },
-  { name: "Dorado",      hex: "#F59E0B", uso: "Acentos · Highlights" },
+  { name: "Negro",       hex: "#0F172A", uso: "Fondos · Headers · Texto principal" },
   { name: "Blanco",      hex: "#FFFFFF", uso: "Fondos · Texto sobre oscuro" },
-  { name: "Gris claro",  hex: "#F1F5F9", uso: "Fondos secundarios · Cards" },
+  { name: "Gris",        hex: "#94A3B8", uso: "Fondos secundarios · Cards · Separadores" },
 ]
 
 const PLANTILLAS_MKT = [
@@ -877,39 +877,7 @@ function SeccionMarketing() {
         <div className="space-y-5">
           <p className="text-sm text-slate-500 leading-relaxed">La identidad de marca de SDI define cómo nos vemos y comunicamos hacia afuera y hacia adentro. Úsala de forma consistente — cada comunicación refleja quiénes somos.</p>
 
-          {/* Sistema de color */}
-          <Card>
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Sistema de color</h3>
-            <div className="flex gap-4 flex-wrap">
-              {COLORES_SDI.map(c => (
-                <div key={c.hex} className="flex flex-col gap-1.5 w-28">
-                  <div className="w-full h-16 rounded-lg border border-black/10" style={{ background: c.hex }} />
-                  <p className="text-xs font-semibold text-slate-800">{c.name}</p>
-                  <p className="text-[11px] font-mono text-slate-400">{c.hex}</p>
-                  <p className="text-[11px] text-slate-400 leading-tight">{c.uso}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Tipografía */}
-          <Card>
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tipografía</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="border border-slate-200 rounded-xl p-5">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Títulos y encabezados</p>
-                <p className="text-2xl font-extrabold text-slate-900 leading-tight mb-1">Barlow Condensed</p>
-                <p className="text-xs text-slate-400">Bold 700/800 · Mayúsculas en encabezados principales</p>
-              </div>
-              <div className="border border-slate-200 rounded-xl p-5">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Cuerpo de texto</p>
-                <p className="text-xl text-slate-900 leading-tight mb-1">Barlow Regular</p>
-                <p className="text-xs text-slate-400">Regular 400 · Medium 500 para énfasis · 14px base</p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Logos */}
+          {/* Logos — primero */}
           <Card>
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Logos</h3>
             <Pending owner="Ricardo / Nancy" desc="Carpeta con todas las variantes del logo SDI (fondo blanco, fondo oscuro, solo símbolo, solo texto, versión horizontal y vertical) en PNG y SVG." />
@@ -922,6 +890,39 @@ function SeccionMarketing() {
               </button>
             </div>
           </Card>
+
+          {/* Sistema de color + Tipografía al mismo nivel */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Card>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Sistema de color</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {COLORES_SDI.map(c => (
+                  <div key={c.hex} className="flex flex-col gap-1.5">
+                    <div className="w-full h-14 rounded-lg border border-black/10" style={{ background: c.hex }} />
+                    <p className="text-xs font-semibold text-slate-800">{c.name}</p>
+                    <p className="text-[11px] font-mono text-slate-400">{c.hex}</p>
+                    <p className="text-[11px] text-slate-400 leading-tight">{c.uso}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tipografía</h3>
+              <div className="flex flex-col gap-3">
+                <div className="border border-slate-200 rounded-xl p-5">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Títulos y encabezados</p>
+                  <p className="text-2xl font-extrabold text-slate-900 leading-tight mb-1">Barlow Condensed</p>
+                  <p className="text-xs text-slate-400">Bold 700/800 · Mayúsculas en encabezados principales</p>
+                </div>
+                <div className="border border-slate-200 rounded-xl p-5">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Cuerpo de texto</p>
+                  <p className="text-xl text-slate-900 leading-tight mb-1">Barlow Regular</p>
+                  <p className="text-xs text-slate-400">Regular 400 · Medium 500 para énfasis · 14px base</p>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -1094,9 +1095,9 @@ export function PortalSDIView() {
       return <SeccionPortalHome scrollTo={anchor} />
     }
     switch (seccion) {
-      case "quienes-somos":  return <SeccionConoceSDI initialTab="quienes"    />
-      case "organigrama":    return <SeccionConoceSDI initialTab="organigrama" />
-      case "onboarding":     return <SeccionConoceSDI initialTab="onboarding"  />
+      case "quienes-somos":  return <SeccionConoceSDI key="quienes"    initialTab="quienes"    />
+      case "organigrama":    return <SeccionConoceSDI key="organigrama" initialTab="organigrama" />
+      case "onboarding":     return <SeccionConoceSDI key="onboarding"  initialTab="onboarding"  />
       case "mision":         return <SeccionMision />
       case "rh":             return <SeccionRH />
       case "administracion": return <SeccionAdministracion />
@@ -1143,10 +1144,11 @@ export function PortalSDIView() {
                       type="button"
                       onClick={() => { navigate(grupo.id === "portal" ? "portal-home" : grupo.items[0].id) }}
                       className={[
-                        "flex-1 text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors",
+                        "flex-1 flex items-center gap-2 text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors",
                         headerActive ? "text-orange-600" : "text-slate-900 hover:text-orange-600",
                       ].join(" ")}
                     >
+                      {(() => { const GIcon = grupo.icon; return <GIcon className="h-3.5 w-3.5 shrink-0" /> })()}
                       {grupo.label}
                     </button>
                     {grupo.items.length > 0 && (
