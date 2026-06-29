@@ -23,11 +23,7 @@ type NavGroup = { id: string; label: string; items: NavItem[] }
 const GRUPOS: NavGroup[] = [
   {
     id: "portal", label: "Portal principal",
-    items: [
-      { id: "comunicados",    label: "Comunicados",     icon: Bell        },
-      { id: "indicadores",    label: "Indicadores",     icon: BarChart2   },
-      { id: "accesos-rapidos",label: "Accesos rápidos", icon: Zap         },
-    ],
+    items: [],
   },
   {
     id: "conoce", label: "Conoce a SDI",
@@ -275,6 +271,19 @@ function SeccionPortalHome({ scrollTo }: { scrollTo?: string }) {
         </Card>
       </div>
 
+      {/* ── SECCIÓN: ACCESOS RÁPIDOS ── */}
+      <section id="accesos-rapidos" className="scroll-mt-14">
+        <h2 className="text-base font-bold text-slate-800 mb-3">Accesos rápidos</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {ACCESOS.map(a => (
+            <button type="button" key={a.label} className={`flex flex-col items-center gap-2 p-5 rounded-xl border transition-all hover:shadow-sm ${a.bg}`}>
+              <span className="text-3xl">{a.emoji}</span>
+              <span className={`text-xs font-semibold text-center ${a.color}`}>{a.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* ── SECCIÓN: INDICADORES / DASHBOARD ── */}
       <section id="indicadores" className="scroll-mt-14">
         <Card className="!p-0 overflow-hidden">
@@ -336,18 +345,6 @@ function SeccionPortalHome({ scrollTo }: { scrollTo?: string }) {
         </Card>
       </section>
 
-      {/* ── SECCIÓN: ACCESOS RÁPIDOS ── */}
-      <section id="accesos-rapidos" className="scroll-mt-14">
-        <h2 className="text-base font-bold text-slate-800 mb-3">Accesos rápidos</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {ACCESOS.map(a => (
-            <button type="button" key={a.label} className={`flex flex-col items-center gap-2 p-5 rounded-xl border transition-all hover:shadow-sm ${a.bg}`}>
-              <span className="text-3xl">{a.emoji}</span>
-              <span className={`text-xs font-semibold text-center ${a.color}`}>{a.label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }
@@ -962,17 +959,19 @@ export function PortalSDIView() {
                     >
                       {grupo.label}
                     </button>
-                    <button
-                      type="button"
-                      aria-label={isOpen ? "Colapsar" : "Expandir"}
-                      onClick={() => toggleGrupo(grupo.id)}
-                      className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
-                    >
-                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                    </button>
+                    {grupo.items.length > 0 && (
+                      <button
+                        type="button"
+                        aria-label={isOpen ? "Colapsar" : "Expandir"}
+                        onClick={() => toggleGrupo(grupo.id)}
+                        className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+                      >
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                      </button>
+                    )}
                   </div>
 
-                  {isOpen && (
+                  {grupo.items.length > 0 && isOpen && (
                     <div className="pb-1">
                       {grupo.items.map(item => {
                         const Icon = item.icon
