@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   ChevronDown, Bell, Search, Menu, Megaphone, ArrowRight,
@@ -12,7 +12,7 @@ import {
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type SectionId =
-  | "comunicados" | "indicadores" | "accesos-rapidos"
+  | "portal-home" | "comunicados" | "indicadores" | "accesos-rapidos"
   | "quienes-somos" | "organigrama" | "onboarding"
   | "mision" | "rh" | "cadena" | "comercial" | "marketing" | "administracion" | "seguridad" | "ti"
   | "vacaciones" | "evaluaciones" | "encuestas" | "tickets" | "odoo" | "intranet" | "repositorios"
@@ -105,7 +105,7 @@ function Pending({ owner, desc }: { owner: string; desc: string }) {
   )
 }
 
-// ─── COMUNICADOS ──────────────────────────────────────────────────────────────
+// ─── PORTAL HOME (comunicados + indicadores + accesos en una sola página) ─────
 const AVISOS = [
   { color: "border-l-orange-500 bg-orange-50",   chip: "bg-orange-100 text-orange-700", emoji: "📋", area: "TI · Comunicado",        titulo: "Migración SAP → Odoo: activación módulos compras y logística", desc: "El 15 de junio se activan los nuevos módulos. Capacitaciones disponibles en TI y Soporte.", meta: "Cruz · Vigente hasta 30 jun 2026" },
   { color: "border-l-emerald-500 bg-emerald-50", chip: "bg-emerald-100 text-emerald-700",emoji: "🗓️",area: "Habilitamiento · Evento",  titulo: "Convivencia Q2 — 20 de junio",                                  desc: "Confirma asistencia antes del 10 de junio. Formulario disponible en Habilitamiento.",     meta: "Yaz · Vigente hasta 20 jun 2026" },
@@ -113,78 +113,215 @@ const AVISOS = [
   { color: "border-l-orange-500 bg-orange-50",   chip: "bg-orange-100 text-orange-700", emoji: "💻", area: "TI · Actualización",       titulo: "Nuevo acceso a Power BI para área Comercial",                   desc: "Credenciales disponibles a través del formulario de solicitudes de TI.",                meta: "Cruz · Vigente hasta 15 jul 2026" },
 ]
 
-function SeccionComunicados() {
-  return (
-    <div className="space-y-4">
-      <PageHeader title="Comunicados" />
-      <p className="text-sm text-slate-500">Avisos vigentes para todos los colaboradores SDI. Actualización semanal · Dueño: Habilitamiento</p>
-      <div className="space-y-3">
-        {AVISOS.map((a, i) => (
-          <div key={i} className={`flex gap-4 p-4 rounded-xl border-l-4 border border-slate-200 ${a.color}`}>
-            <span className="text-2xl shrink-0">{a.emoji}</span>
-            <div className="flex-1 min-w-0">
-              <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1 ${a.chip}`}>{a.area}</span>
-              <p className="text-sm font-semibold text-slate-800 leading-tight">{a.titulo}</p>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">{a.desc}</p>
-              <p className="text-[10px] text-slate-400 mt-1.5">{a.meta}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── INDICADORES ─────────────────────────────────────────────────────────────
-function SeccionIndicadores() {
-  return (
-    <div className="space-y-4">
-      <PageHeader title="Indicadores" />
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { v: "157",  l: "Colaboradores",        t: "orange" },
-          { v: "+19",  l: "Años de experiencia",  t: "blue"   },
-          { v: "+35",  l: "Proyectos ejecutados", t: "emerald"},
-          { v: "3",    l: "Unidades de negocio",  t: "violet" },
-        ].map(s => (
-          <Card key={s.l} className="text-center p-5!">
-            <div className={`text-3xl font-bold text-${s.t}-600`}>{s.v}</div>
-            <div className="text-xs text-slate-500 mt-1">{s.l}</div>
-          </Card>
-        ))}
-      </div>
-      <Pending owner="Cruz · TI" desc="Dashboards de Power BI se integrarán aquí. Cruz configura el embed al lanzamiento." />
-    </div>
-  )
-}
-
-// ─── ACCESOS RÁPIDOS ─────────────────────────────────────────────────────────
 const ACCESOS = [
-  { emoji: "📄", label: "Política de equipos", bg: "bg-orange-50 border-orange-200 hover:bg-orange-100" },
-  { emoji: "📊", label: "Power BI",            bg: "bg-blue-50 border-blue-200 hover:bg-blue-100"     },
-  { emoji: "🔗", label: "Odoo ERP",            bg: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100" },
-  { emoji: "👥", label: "Directorio",          bg: "bg-violet-50 border-violet-200 hover:bg-violet-100"   },
-  { emoji: "🏢", label: "Organigrama",         bg: "bg-amber-50 border-amber-200 hover:bg-amber-100"      },
-  { emoji: "🛠️", label: "Soporte TI",         bg: "bg-orange-50 border-orange-200 hover:bg-orange-100"   },
-  { emoji: "📝", label: "Hoja membretada",     bg: "bg-blue-50 border-blue-200 hover:bg-blue-100"         },
-  { emoji: "🗂️", label: "Formatos RH",        bg: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100"},
+  { emoji: "🏢", label: "Organigrama",      color: "text-orange-600",  bg: "bg-orange-50 border-orange-200 hover:bg-orange-100"   },
+  { emoji: "🛠️", label: "Soporte TI",      color: "text-blue-600",    bg: "bg-blue-50 border-blue-200 hover:bg-blue-100"         },
+  { emoji: "📝", label: "Hoja membretada", color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100" },
+  { emoji: "✚",  label: "Personalizar",    color: "text-violet-600",  bg: "bg-violet-50 border-violet-200 hover:bg-violet-100"   },
+  { emoji: "📄", label: "Política de equipos", color: "text-slate-600", bg: "bg-slate-50 border-slate-200 hover:bg-slate-100"   },
+  { emoji: "📊", label: "Power BI",            color: "text-blue-600",  bg: "bg-blue-50 border-blue-200 hover:bg-blue-100"       },
+  { emoji: "🔗", label: "Odoo ERP",            color: "text-orange-600",bg: "bg-orange-50 border-orange-200 hover:bg-orange-100" },
+  { emoji: "👥", label: "Directorio",          color: "text-violet-600",bg: "bg-violet-50 border-violet-200 hover:bg-violet-100" },
 ]
 
-function SeccionAccesosRapidos() {
+const CHART_BARS = [
+  { mes:"Jun",real:776, budget:1000 },{ mes:"Jul",real:912, budget:1000 },
+  { mes:"Ago",real:885, budget:1000 },{ mes:"Sep",real:1274,budget:1000 },
+  { mes:"Oct",real:1886,budget:1000 },{ mes:"Nov",real:885, budget:1000 },
+  { mes:"Dic",real:1040,budget:1000 },{ mes:"Ene",real:1001,budget:915  },
+  { mes:"Feb",real:853, budget:915  },{ mes:"Mar",real:508, budget:915  },
+  { mes:"Abr",real:796, budget:915  },{ mes:"May",real:668, budget:915  },
+  { mes:"Jun",real:89,  budget:915  },
+]
+const MAX_BAR = 1900
+
+function SeccionPortalHome({ scrollTo }: { scrollTo?: string }) {
+  const [dashTab, setDashTab] = useState("todo")
+
+  useEffect(() => {
+    if (!scrollTo) return
+    const timer = setTimeout(() => {
+      document.getElementById(scrollTo)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 120)
+    return () => clearTimeout(timer)
+  }, [scrollTo])
+
   return (
-    <div className="space-y-4">
-      <PageHeader title="Accesos rápidos" />
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {ACCESOS.map(a => (
-          <button type="button" key={a.label} className={`flex flex-col items-center gap-3 p-5 rounded-xl border transition-all hover:shadow-sm ${a.bg}`}>
-            <span className="text-3xl">{a.emoji}</span>
-            <span className="text-xs font-medium text-slate-700 text-center">{a.label}</span>
-          </button>
-        ))}
+    <div className="space-y-5 max-w-4xl">
+      {/* Header + aviso */}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 justify-between">
+        <div>
+          <p className="text-sm text-slate-500">Mayo 2026</p>
+          <h1 className="text-2xl font-bold text-slate-900">Portal SDI</h1>
+        </div>
+        <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-2.5 text-sm max-w-sm">
+          <span className="font-bold text-orange-600 shrink-0">Aviso importante</span>
+          <span className="text-orange-500 shrink-0">→</span>
+          <span className="text-orange-700 text-xs leading-tight">Evaluaciones de colaborador a colaborador activas hasta 30 de jul</span>
+        </div>
       </div>
-      <Card className="text-center py-3!">
-        <p className="text-xs text-slate-400">¿Falta algo? Solicita a TI agregar un acceso directo.</p>
-      </Card>
+
+      {/* Hero banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+        <div className="bg-white p-8 flex flex-col justify-center gap-4">
+          <h2 className="text-2xl font-bold text-slate-900 leading-tight">Bienvenidos al portal SDI</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">En este banner principal se encuentran las noticias, campañas y contenido cultural. En este caso les compartimos el tutorial del portal organizacional.</p>
+          <button type="button" className="self-start px-5 py-2.5 bg-orange-500 text-white text-sm font-semibold rounded-xl hover:bg-orange-600 transition-colors">
+            Ver tutorial...
+          </button>
+        </div>
+        <div className="bg-slate-900 min-h-[180px] flex flex-col items-center justify-center gap-2 p-8">
+          <div className="text-white font-black text-3xl tracking-wider opacity-90">UNA NUEVA</div>
+          <div className="text-white font-black text-3xl tracking-wider opacity-90">EXPERIENCIA</div>
+          <div className="mt-4 flex items-center gap-2">
+            <div className="h-1.5 w-8 rounded-full bg-orange-500" />
+            <div className="h-1.5 w-2 rounded-full bg-white/30" />
+            <div className="h-1.5 w-2 rounded-full bg-white/30" />
+          </div>
+          <p className="text-[10px] text-white/40 mt-1">SDI · Simplificando procesos</p>
+        </div>
+      </div>
+
+      {/* Widgets: eventos · cumpleaños · aniversarios */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="!p-4">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Eventos próximos</p>
+          {[
+            { emoji: "🟠", name: "Ohanas",   fecha: "Hoy", hoy: true  },
+            { emoji: "🟣", name: "Misa",     fecha: "Jue 5", hoy: false },
+          ].map(e => (
+            <div key={e.name} className="flex items-center gap-2.5 py-1.5 border-b border-slate-100 last:border-0">
+              <span className="text-lg">{e.emoji}</span>
+              <span className="flex-1 text-sm text-slate-700 font-medium">{e.name}</span>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${e.hoy ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500"}`}>{e.fecha} {e.hoy ? "🎉" : ""}</span>
+            </div>
+          ))}
+        </Card>
+        <Card className="!p-4">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Cumpleaños del mes</p>
+          {[
+            { init: "RG", grad: "from-amber-500 to-orange-500", name: "Rogelio García",  role: "Proyectos · MHS", fecha: "Hoy",   hoy: true  },
+            { init: "IS", grad: "from-emerald-500 to-teal-500", name: "Isabel Soto",     role: "Talento · RH",   fecha: "Jue 5", hoy: false },
+          ].map(p => (
+            <div key={p.name} className="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
+              <div className={`h-8 w-8 rounded-full bg-linear-to-br ${p.grad} flex items-center justify-center text-white text-[10px] font-bold shrink-0`}>{p.init}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-800 truncate">{p.name}</p>
+                <p className="text-[10px] text-slate-400">{p.role}</p>
+              </div>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${p.hoy ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500"}`}>{p.fecha} {p.hoy ? "🎉" : ""}</span>
+            </div>
+          ))}
+        </Card>
+        <Card className="!p-4">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Aniversarios del mes</p>
+          {[
+            { init: "RG", grad: "from-amber-500 to-orange-500", name: "Rogelio García",  years: "3 años", fecha: "Hoy",   hoy: true  },
+            { init: "IS", grad: "from-emerald-500 to-teal-500", name: "Isabel Soto",     years: "5 años", fecha: "Jue 5", hoy: false },
+          ].map(p => (
+            <div key={p.name} className="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
+              <div className={`h-8 w-8 rounded-full bg-linear-to-br ${p.grad} flex items-center justify-center text-white text-[10px] font-bold shrink-0`}>{p.init}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-800 truncate">{p.name}</p>
+                <p className="text-[10px] text-slate-400">{p.years}</p>
+              </div>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${p.hoy ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500"}`}>{p.fecha} {p.hoy ? "🎉" : ""}</span>
+            </div>
+          ))}
+        </Card>
+      </div>
+
+      {/* ── SECCIÓN: COMUNICADOS ── */}
+      <section id="comunicados" className="scroll-mt-14">
+        <h2 className="text-base font-bold text-slate-800 mb-3">Comunicados</h2>
+        <div className="space-y-2">
+          {AVISOS.map((a, i) => (
+            <div key={i} className={`flex gap-3 p-4 rounded-xl border-l-4 border border-slate-200 ${a.color}`}>
+              <span className="text-xl shrink-0">{a.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1 ${a.chip}`}>{a.area}</span>
+                <p className="text-sm font-semibold text-slate-800 leading-tight">{a.titulo}</p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{a.desc}</p>
+                <p className="text-[10px] text-slate-400 mt-1">{a.meta}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── SECCIÓN: INDICADORES / DASHBOARD ── */}
+      <section id="indicadores" className="scroll-mt-14">
+        <Card className="!p-0 overflow-hidden">
+          {/* Tabs */}
+          <div className="flex border-b border-slate-200">
+            {[["todo","Seleccionar todo"],["productos","Productos"],["proyectos","Proyectos"],["servicios","Servicios"]].map(([id,lbl]) => (
+              <button key={id} type="button" onClick={() => setDashTab(id)}
+                className={["px-4 py-3 text-xs font-semibold transition-colors whitespace-nowrap", dashTab === id ? "border-b-2 border-orange-500 text-orange-600" : "text-slate-500 hover:text-slate-800"].join(" ")}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+          <div className="p-5">
+            {/* Metrics */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              {(dashTab === "todo" || dashTab === "productos")  && <div className="border border-slate-200 rounded-xl p-4 text-center"><p className="text-[10px] text-slate-400 uppercase tracking-wider">Productos</p><p className="text-2xl font-bold text-slate-800 mt-1">438 mil</p></div>}
+              {(dashTab === "todo" || dashTab === "proyectos") && <div className="border border-slate-200 rounded-xl p-4 text-center"><p className="text-[10px] text-slate-400 uppercase tracking-wider">Proyectos</p><p className="text-2xl font-bold text-slate-800 mt-1">141 mil</p></div>}
+              {(dashTab === "todo" || dashTab === "servicios") && <div className="border border-slate-200 rounded-xl p-4 text-center"><p className="text-[10px] text-slate-400 uppercase tracking-wider">Servicios</p><p className="text-2xl font-bold text-slate-800 mt-1">$90 mil</p></div>}
+            </div>
+            {/* Chart + Gauge row */}
+            <div className="flex gap-5 items-end">
+              {/* Bar chart */}
+              <div className="flex-1">
+                <div className="text-[10px] text-slate-400 mb-2 uppercase tracking-wider">Real vs Presupuesto</div>
+                <div className="flex items-end gap-1 h-28">
+                  {CHART_BARS.map((b, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                      <div className="w-full flex items-end gap-0.5" style={{ height: "96px" }}>
+                        <div className="flex-1 bg-orange-400 rounded-t-sm" style={{ height: `${(b.real / MAX_BAR) * 96}px` }} />
+                        <div className="flex-1 border-t-2 border-blue-400 bg-blue-100/30" style={{ height: `${(b.budget / MAX_BAR) * 96}px` }} />
+                      </div>
+                      <span className="text-[8px] text-slate-400 truncate">{b.mes}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-3 mt-2">
+                  <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="h-2.5 w-2.5 rounded-sm bg-orange-400 shrink-0" />Real</span>
+                  <span className="flex items-center gap-1 text-[10px] text-slate-500"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400 shrink-0" />Presupuesto</span>
+                </div>
+              </div>
+              {/* Gauge */}
+              <div className="shrink-0 text-center w-36">
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-2">VS Objetivo</div>
+                <div className="relative inline-flex items-center justify-center">
+                  <svg viewBox="0 0 100 60" className="w-32 h-20">
+                    <path d="M10,55 A40,40 0 0,1 90,55" fill="none" stroke="#e2e8f0" strokeWidth="10" strokeLinecap="round" />
+                    <path d="M10,55 A40,40 0 0,1 90,55" fill="none" stroke="#f97316" strokeWidth="10" strokeLinecap="round"
+                      strokeDasharray="125.6" strokeDashoffset={`${125.6 * (1 - 0.73)}`} />
+                  </svg>
+                  <div className="absolute bottom-0 inset-x-0 text-center">
+                    <p className="text-2xl font-black text-slate-900 leading-none">73%</p>
+                  </div>
+                </div>
+                <p className="text-xl font-bold text-slate-800 mt-1">668 mil</p>
+                <p className="text-[10px] text-slate-400">de 915 mil objetivo</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      {/* ── SECCIÓN: ACCESOS RÁPIDOS ── */}
+      <section id="accesos-rapidos" className="scroll-mt-14">
+        <h2 className="text-base font-bold text-slate-800 mb-3">Accesos rápidos</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {ACCESOS.map(a => (
+            <button type="button" key={a.label} className={`flex flex-col items-center gap-2 p-5 rounded-xl border transition-all hover:shadow-sm ${a.bg}`}>
+              <span className="text-3xl">{a.emoji}</span>
+              <span className={`text-xs font-semibold text-center ${a.color}`}>{a.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
@@ -717,21 +854,33 @@ function SeccionServicio({ id }: { id: SectionId }) {
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
+const PORTAL_HOME_IDS: SectionId[] = ["portal-home","comunicados","indicadores","accesos-rapidos"]
+
 export function PortalSDIView() {
-  const [seccion, setSeccion]       = useState<SectionId>("comunicados")
-  const [gruposOpen, setGruposOpen] = useState<Set<string>>(new Set(["portal","conoce","departamentos","servicios"]))
+  const [seccion, setSeccion]         = useState<SectionId>("portal-home")
+  const [gruposOpen, setGruposOpen]   = useState<Set<string>>(new Set(["portal","conoce","departamentos","servicios"]))
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [busqueda, setBusqueda]     = useState("")
+  const [busqueda, setBusqueda]       = useState("")
 
   function toggleGrupo(id: string) {
     setGruposOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
 
+  function navigate(id: SectionId) {
+    setSeccion(id)
+    // Scroll to top of content area when switching between main pages
+    if (!PORTAL_HOME_IDS.includes(id)) {
+      window.scrollTo({ top: 0 })
+    }
+  }
+
   function renderContent() {
+    // Portal principal group → single scrollable home page, anchor controls scroll position
+    if (PORTAL_HOME_IDS.includes(seccion)) {
+      const anchor = seccion === "portal-home" ? undefined : seccion
+      return <SeccionPortalHome scrollTo={anchor} />
+    }
     switch (seccion) {
-      case "comunicados":    return <SeccionComunicados />
-      case "indicadores":    return <SeccionIndicadores />
-      case "accesos-rapidos":return <SeccionAccesosRapidos />
       case "quienes-somos":  return <SeccionConoceSDI initialTab="quienes"    />
       case "organigrama":    return <SeccionConoceSDI initialTab="organigrama" />
       case "onboarding":     return <SeccionConoceSDI initialTab="onboarding"  />
@@ -747,7 +896,8 @@ export function PortalSDIView() {
     }
   }
 
-  const itemActual = GRUPOS.flatMap(g => g.items).find(i => i.id === seccion)
+  const isPortalHome = PORTAL_HOME_IDS.includes(seccion)
+  const itemActual   = GRUPOS.flatMap(g => g.items).find(i => i.id === seccion)
 
   return (
     <div className="flex min-h-screen bg-slate-100">
@@ -770,20 +920,39 @@ export function PortalSDIView() {
           <nav className="flex-1 overflow-y-auto py-2">
             {GRUPOS.map(grupo => {
               const isOpen = gruposOpen.has(grupo.id)
+              // "portal" group header navigates to portal-home
+              const headerActive = grupo.id === "portal" && isPortalHome
               return (
                 <div key={grupo.id} className="mb-1">
-                  <button type="button" onClick={() => toggleGrupo(grupo.id)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-orange-600 transition-colors">
-                    <span>{grupo.label}</span>
-                    <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                  </button>
+                  {/* Group header: label is clickable for navigation, arrow is separate toggle */}
+                  <div className={`flex items-center pr-2 rounded-r-lg ${headerActive ? "bg-orange-50" : ""}`}>
+                    <button
+                      type="button"
+                      onClick={() => { navigate(grupo.id === "portal" ? "portal-home" : grupo.items[0].id) }}
+                      className={[
+                        "flex-1 text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors",
+                        headerActive ? "text-orange-600" : "text-slate-900 hover:text-orange-600",
+                      ].join(" ")}
+                    >
+                      {grupo.label}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={isOpen ? "Colapsar" : "Expandir"}
+                      onClick={() => toggleGrupo(grupo.id)}
+                      className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+                    >
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  </div>
+
                   {isOpen && (
                     <div className="pb-1">
                       {grupo.items.map(item => {
                         const Icon = item.icon
                         const active = seccion === item.id
                         return (
-                          <button key={item.id} type="button" onClick={() => setSeccion(item.id)}
+                          <button key={item.id} type="button" onClick={() => navigate(item.id)}
                             className={["w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium transition-all",
                               active ? "text-orange-600 bg-orange-50 border-r-2 border-orange-500" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50",
                             ].join(" ")}>
@@ -823,7 +992,9 @@ export function PortalSDIView() {
 
           <div className="flex items-center gap-1.5 text-sm text-slate-400">
             <span>Portal SDI</span>
-            {itemActual && <><span className="text-slate-300">/</span><span className="text-slate-600 font-medium">{itemActual.label}</span></>}
+            {!isPortalHome && itemActual && (
+              <><span className="text-slate-300">/</span><span className="text-slate-600 font-medium">{itemActual.label}</span></>
+            )}
           </div>
 
           <div className="ml-auto flex items-center gap-2">
