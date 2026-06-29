@@ -135,6 +135,68 @@ const CHART_BARS = [
 ]
 const MAX_BAR = 1900
 
+const AVISO_BG: Record<number, string> = {
+  0: "bg-orange-500",
+  1: "bg-emerald-500",
+  2: "bg-blue-600",
+  3: "bg-orange-500",
+}
+
+function HeroCarusel() {
+  const [idx, setIdx] = useState(0)
+  const total = AVISOS.length
+
+  useEffect(() => {
+    const iv = setInterval(() => setIdx(p => (p + 1) % total), 6000)
+    return () => clearInterval(iv)
+  }, [total])
+
+  const prev = () => setIdx(p => (p - 1 + total) % total)
+  const next = () => setIdx(p => (p + 1) % total)
+  const a = AVISOS[idx]
+
+  return (
+    <section id="comunicados" className="scroll-mt-14 rounded-2xl overflow-hidden border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 min-h-[220px]">
+      {/* Left — aviso content */}
+      <div className="bg-white p-8 flex flex-col justify-between gap-4">
+        <div className="flex flex-col gap-3">
+          <span className={`self-start text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${a.chip}`}>{a.area}</span>
+          <h2 className="text-xl font-bold text-slate-900 leading-tight">{a.titulo}</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">{a.desc}</p>
+          <p className="text-[11px] text-slate-400">{a.meta}</p>
+        </div>
+        {/* Dot navigation */}
+        <div className="flex items-center gap-2">
+          {AVISOS.map((_, i) => (
+            <button key={i} type="button" aria-label={`Ir a slide ${i + 1}`}
+              onClick={() => setIdx(i)}
+              className={`h-2 rounded-full transition-all ${i === idx ? "w-6 bg-orange-500" : "w-2 bg-slate-300 hover:bg-slate-400"}`}
+            />
+          ))}
+        </div>
+      </div>
+      {/* Right — colored panel */}
+      <div className={`${AVISO_BG[idx]} relative flex flex-col items-center justify-center gap-3 p-8 min-h-[180px]`}>
+        <span className="text-6xl select-none">{a.emoji}</span>
+        <p className="text-white/80 text-[11px] font-semibold tracking-widest uppercase text-center">SDI · Comunicados</p>
+        {/* Prev / Next */}
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+          <button type="button" aria-label="Anterior" onClick={prev}
+            className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center transition-colors text-lg font-bold">
+            ‹
+          </button>
+        </div>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <button type="button" aria-label="Siguiente" onClick={next}
+            className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center transition-colors text-lg font-bold">
+            ›
+          </button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function SeccionPortalHome({ scrollTo }: { scrollTo?: string }) {
   const [dashTab, setDashTab] = useState("todo")
 
@@ -147,7 +209,7 @@ function SeccionPortalHome({ scrollTo }: { scrollTo?: string }) {
   }, [scrollTo])
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5">
       {/* Header + aviso */}
       <div className="flex flex-col sm:flex-row sm:items-start gap-3 justify-between">
         <div>
@@ -161,26 +223,8 @@ function SeccionPortalHome({ scrollTo }: { scrollTo?: string }) {
         </div>
       </div>
 
-      {/* Hero banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-        <div className="bg-white p-8 flex flex-col justify-center gap-4">
-          <h2 className="text-2xl font-bold text-slate-900 leading-tight">Bienvenidos al portal SDI</h2>
-          <p className="text-sm text-slate-500 leading-relaxed">En este banner principal se encuentran las noticias, campañas y contenido cultural. En este caso les compartimos el tutorial del portal organizacional.</p>
-          <button type="button" className="self-start px-5 py-2.5 bg-orange-500 text-white text-sm font-semibold rounded-xl hover:bg-orange-600 transition-colors">
-            Ver tutorial...
-          </button>
-        </div>
-        <div className="bg-slate-900 min-h-[180px] flex flex-col items-center justify-center gap-2 p-8">
-          <div className="text-white font-black text-3xl tracking-wider opacity-90">UNA NUEVA</div>
-          <div className="text-white font-black text-3xl tracking-wider opacity-90">EXPERIENCIA</div>
-          <div className="mt-4 flex items-center gap-2">
-            <div className="h-1.5 w-8 rounded-full bg-orange-500" />
-            <div className="h-1.5 w-2 rounded-full bg-white/30" />
-            <div className="h-1.5 w-2 rounded-full bg-white/30" />
-          </div>
-          <p className="text-[10px] text-white/40 mt-1">SDI · Simplificando procesos</p>
-        </div>
-      </div>
+      {/* Hero Carrusel de comunicados */}
+      <HeroCarusel />
 
       {/* Widgets: eventos · cumpleaños · aniversarios */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -230,24 +274,6 @@ function SeccionPortalHome({ scrollTo }: { scrollTo?: string }) {
           ))}
         </Card>
       </div>
-
-      {/* ── SECCIÓN: COMUNICADOS ── */}
-      <section id="comunicados" className="scroll-mt-14">
-        <h2 className="text-base font-bold text-slate-800 mb-3">Comunicados</h2>
-        <div className="space-y-2">
-          {AVISOS.map((a, i) => (
-            <div key={i} className={`flex gap-3 p-4 rounded-xl border-l-4 border border-slate-200 ${a.color}`}>
-              <span className="text-xl shrink-0">{a.emoji}</span>
-              <div className="flex-1 min-w-0">
-                <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1 ${a.chip}`}>{a.area}</span>
-                <p className="text-sm font-semibold text-slate-800 leading-tight">{a.titulo}</p>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{a.desc}</p>
-                <p className="text-[10px] text-slate-400 mt-1">{a.meta}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ── SECCIÓN: INDICADORES / DASHBOARD ── */}
       <section id="indicadores" className="scroll-mt-14">
@@ -1014,7 +1040,7 @@ export function PortalSDIView() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 max-w-4xl">
+        <div className="flex-1 p-6">
           {renderContent()}
         </div>
       </div>
