@@ -835,6 +835,17 @@ const MKT_TABS = [
   { id: "gobernanza", label: "Gobernanza"             },
 ]
 
+const LOGOS_SDI = [
+  { nombre: "Logo SDI",                      url: "#" },
+  { nombre: "Logo 3S",                       url: "#" },
+  { nombre: "Logo Academia SDI",             url: "#" },
+  { nombre: "Logo Directorio de Integradores", url: "#" },
+  { nombre: "Logo Ser Lo Que Somos",         url: "#" },
+  { nombre: "Logo Simple y Directo",         url: "#" },
+  { nombre: "Logo Simplificando Procesos",   url: "#" },
+  { nombre: "Logo Webinar Industrial",       url: "#" },
+]
+
 const COLORES_SDI = [
   { name: "Naranja SDI", hex: "#D95F02", uso: "Color primario · CTAs · Énfasis" },
   { name: "Negro",       hex: "#0F172A", uso: "Fondos · Headers · Texto principal" },
@@ -879,15 +890,28 @@ function SeccionMarketing() {
 
           {/* Logos — primero */}
           <Card>
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Logos</h3>
-            <Pending owner="Ricardo / Nancy" desc="Carpeta con todas las variantes del logo SDI (fondo blanco, fondo oscuro, solo símbolo, solo texto, versión horizontal y vertical) en PNG y SVG." />
-            <div className="flex flex-wrap gap-2 mt-4">
-              <button type="button" className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
-                <Download className="h-3.5 w-3.5" /> Manual de Identidad de Marca SDI
-              </button>
-              <button type="button" className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
-                <ExternalLink className="h-3.5 w-3.5" /> Carpeta de logos (Drive)
-              </button>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Logos</h3>
+              <div className="flex gap-2">
+                <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                  <Download className="h-3 w-3" /> Manual de Marca
+                </button>
+                <button type="button" className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                  <ExternalLink className="h-3 w-3" /> Carpeta Drive
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {LOGOS_SDI.map(logo => (
+                <a key={logo.nombre} href={logo.url} target="_blank" rel="noreferrer"
+                  className="group flex flex-col gap-2 bg-slate-900 rounded-xl p-4 hover:bg-slate-800 transition-colors">
+                  <div className="flex items-center justify-center h-12">
+                    <ExternalLink className="h-5 w-5 text-slate-500 group-hover:text-orange-400 transition-colors" />
+                  </div>
+                  <p className="text-[11px] text-slate-300 font-medium text-center leading-tight">{logo.nombre}</p>
+                  <span className="self-center text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded uppercase tracking-wider">LINK</span>
+                </a>
+              ))}
             </div>
           </Card>
 
@@ -912,13 +936,13 @@ function SeccionMarketing() {
               <div className="flex flex-col gap-3">
                 <div className="border border-slate-200 rounded-xl p-5">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Títulos y encabezados</p>
-                  <p className="text-2xl font-extrabold text-slate-900 leading-tight mb-1">Barlow Condensed</p>
-                  <p className="text-xs text-slate-400">Bold 700/800 · Mayúsculas en encabezados principales</p>
+                  <p className="text-2xl font-extrabold text-slate-900 leading-tight mb-1" style={{ fontFamily: "'Open Sans', sans-serif" }}>Open Sans Bold</p>
+                  <p className="text-xs text-slate-400">Bold 700/800 · Para encabezados y CTAs principales</p>
                 </div>
                 <div className="border border-slate-200 rounded-xl p-5">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Cuerpo de texto</p>
-                  <p className="text-xl text-slate-900 leading-tight mb-1">Barlow Regular</p>
-                  <p className="text-xs text-slate-400">Regular 400 · Medium 500 para énfasis · 14px base</p>
+                  <p className="text-xl text-slate-900 leading-tight mb-1" style={{ fontFamily: "'Open Sans', sans-serif" }}>Open Sans Regular</p>
+                  <p className="text-xs text-slate-400">Regular 400 · SemiBold 600 para énfasis · 14px base</p>
                 </div>
               </div>
             </Card>
