@@ -847,10 +847,10 @@ const LOGOS_SDI = [
 ]
 
 const COLORES_SDI = [
-  { name: "Naranja SDI", hex: "#D95F02", uso: "Color primario · CTAs · Énfasis" },
-  { name: "Negro",       hex: "#0F172A", uso: "Fondos · Headers · Texto principal" },
+  { name: "Naranja SDI", hex: "#ED8000", uso: "Color primario · CTAs · Énfasis" },
+  { name: "Gris SDI",    hex: "#4C4E53", uso: "Texto secundario · Íconos · Bordes" },
   { name: "Blanco",      hex: "#FFFFFF", uso: "Fondos · Texto sobre oscuro" },
-  { name: "Gris",        hex: "#94A3B8", uso: "Fondos secundarios · Cards · Separadores" },
+  { name: "Negro",       hex: "#000000", uso: "Texto principal · Headers · Contrastes" },
 ]
 
 const PLANTILLAS_MKT = [
@@ -904,12 +904,16 @@ function SeccionMarketing() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {LOGOS_SDI.map(logo => (
                 <a key={logo.nombre} href={logo.url} target="_blank" rel="noreferrer"
-                  className="group flex flex-col gap-2 bg-slate-900 rounded-xl p-4 hover:bg-slate-800 transition-colors">
-                  <div className="flex items-center justify-center h-12">
-                    <ExternalLink className="h-5 w-5 text-slate-500 group-hover:text-orange-400 transition-colors" />
+                  className="group flex flex-col border border-slate-200 rounded-xl overflow-hidden hover:shadow-md hover:border-orange-300 transition-all">
+                  {/* Preview area */}
+                  <div className="h-20 bg-slate-50 flex items-center justify-center border-b border-slate-200 group-hover:bg-orange-50 transition-colors">
+                    <ExternalLink className="h-6 w-6 text-slate-300 group-hover:text-orange-400 transition-colors" />
                   </div>
-                  <p className="text-[11px] text-slate-300 font-medium text-center leading-tight">{logo.nombre}</p>
-                  <span className="self-center text-[10px] font-bold bg-slate-700 text-slate-300 px-2 py-0.5 rounded uppercase tracking-wider">LINK</span>
+                  {/* Footer */}
+                  <div className="flex items-center justify-between px-3 py-2 bg-white">
+                    <p className="text-[11px] text-slate-600 font-medium leading-tight truncate flex-1 mr-2">{logo.nombre}</p>
+                    <span className="shrink-0 text-[10px] font-bold text-orange-500 border border-orange-200 bg-orange-50 px-1.5 py-0.5 rounded tracking-wider">LINK</span>
+                  </div>
                 </a>
               ))}
             </div>
