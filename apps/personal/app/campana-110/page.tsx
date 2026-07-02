@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { Campana110View } from "@/components/Campana110View"
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 }
 
 export default function Campana110Page() {
-  return <Campana110View />
+  return (
+    <Suspense>
+      <Campana110View />
+    </Suspense>
+  )
 }
