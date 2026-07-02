@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
 import { Pencil, X, Check, Loader2 } from "lucide-react"
 
-const STRAPI = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+const STRAPI = process.env.NEXT_PUBLIC_BACKEND_URL ?? "https://miracles2025oct-production.up.railway.app"
 const TOKEN  = process.env.NEXT_PUBLIC_CAMPANA_TOKEN ?? ""
 
 const DEFAULT_META   = 110_000
