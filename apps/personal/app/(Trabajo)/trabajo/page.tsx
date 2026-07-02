@@ -5,55 +5,73 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   CheckSquare, FolderKanban, Users, CalendarDays, Wallet,
-  TrendingUp, Clock, AlertCircle, ChevronRight,
+  TrendingUp, AlertCircle, ChevronRight, Archive, Megaphone,
+  FileImage, BookOpen, Globe, Building2, Ticket, LayoutGrid,
 } from "lucide-react"
-import { useGetTareas }        from "@/api/tarea/getTareas"
-import { useGetProyectos }     from "@/api/proyecto/getProyectos"
+import { useGetTareas }          from "@/api/tarea/getTareas"
+import { useGetProyectos }       from "@/api/proyecto/getProyectos"
 import { useGetClientesTrabajo } from "@/api/cliente-trabajo/getClientesTrabajo"
-import { useGetReuniones }     from "@/api/reunion/getReuniones"
-import { useGetPagosTrabajo }  from "@/api/pago-trabajo/getPagosTrabajo"
+import { useGetReuniones }       from "@/api/reunion/getReuniones"
+import { useGetPagosTrabajo }    from "@/api/pago-trabajo/getPagosTrabajo"
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
 
-function StatCard({ label, value, sub, icon: Icon, color, href, delay }: {
-  label: string; value: string | number; sub?: string
-  icon: React.ElementType; color: string; href: string; delay: number
-}) {
-  const map: Record<string, { bg: string; icon: string; border: string }> = {
-    blue:   { bg: "bg-blue-500/10",   icon: "text-blue-400",   border: "border-blue-500/20"   },
-    violet: { bg: "bg-violet-500/10", icon: "text-violet-400", border: "border-violet-500/20" },
-    cyan:   { bg: "bg-cyan-500/10",   icon: "text-cyan-400",   border: "border-cyan-500/20"   },
-    amber:  { bg: "bg-amber-500/10",  icon: "text-amber-400",  border: "border-amber-500/20"  },
-    emerald:{ bg: "bg-emerald-500/10",icon: "text-emerald-400",border: "border-emerald-500/20"},
-  }
-  const c = map[color] ?? map.blue
+const MODULOS = [
+  {
+    seccion: "Operación",
+    items: [
+      { label: "Tareas",           desc: "Gestiona y prioriza pendientes",    href: "/trabajo/tareas",              icon: CheckSquare,  color: "blue"    },
+      { label: "Campañas",         desc: "Seguimiento de campañas activas",   href: "/trabajo/campanas",            icon: Megaphone,    color: "orange"  },
+      { label: "Pagos",            desc: "Registro de cobros y gastos",       href: "/trabajo/pagos",               icon: Wallet,       color: "emerald" },
+      { label: "Tickets",          desc: "Incidencias y solicitudes",         href: "/trabajo/tickets",             icon: Ticket,       color: "red"     },
+    ],
+  },
+  {
+    seccion: "Proyectos y Clientes",
+    items: [
+      { label: "Proyectos",        desc: "Control de proyectos activos",      href: "/trabajo/proyectos",           icon: FolderKanban, color: "violet"  },
+      { label: "Clientes",         desc: "Directorio de clientes",            href: "/trabajo/clientes",            icon: Users,        color: "cyan"    },
+      { label: "Reuniones",        desc: "Agenda y minutas",                  href: "/trabajo/reuniones",           icon: CalendarDays, color: "amber"   },
+      { label: "Planeador",        desc: "Planificación de campañas",         href: "/trabajo/campanas-planner",    icon: LayoutGrid,   color: "violet"  },
+    ],
+  },
+  {
+    seccion: "Indicadores",
+    items: [
+      { label: "Ecosistema",       desc: "Métricas del ecosistema marketing", href: "/trabajo/mkt/ecosistema",      icon: TrendingUp,   color: "orange"  },
+    ],
+  },
+  {
+    seccion: "Inventario",
+    items: [
+      { label: "Material Físico",  desc: "Control de inventario físico",      href: "/trabajo/inventario",          icon: Archive,      color: "amber"   },
+      { label: "Material Digital", desc: "Activos digitales y creativos",     href: "/trabajo/mkt/inventario-digital", icon: FileImage, color: "cyan"    },
+    ],
+  },
+  {
+    seccion: "Equipo",
+    items: [
+      { label: "Roles",            desc: "Estructura y responsabilidades",    href: "/trabajo/mkt/roles",           icon: Users,        color: "violet"  },
+      { label: "Tutoriales",       desc: "Guías y procesos del equipo",       href: "/trabajo/mkt/tutoriales",      icon: BookOpen,     color: "blue"    },
+    ],
+  },
+  {
+    seccion: "Web y Organización",
+    items: [
+      { label: "Sitio Web",        desc: "Gestión del sitio web",             href: "/trabajo/sitio-web",           icon: Globe,        color: "emerald" },
+      { label: "Portal SDI",       desc: "Intranet y recursos internos",      href: "/trabajo/portal",              icon: Building2,    color: "orange"  },
+    ],
+  },
+]
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay }}
-    >
-      <Link href={href}>
-        <div className={`group p-4 rounded-xl bg-slate-900/60 border border-slate-700/40 hover:border-slate-600/60 backdrop-blur-sm transition-all cursor-pointer`}>
-          <div className="flex items-start justify-between">
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{label}</p>
-              <p className="text-2xl font-bold text-slate-100 mt-1">{value}</p>
-              {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
-            </div>
-            <div className={`h-9 w-9 rounded-lg flex items-center justify-center border shrink-0 ${c.bg} ${c.border}`}>
-              <Icon className={`h-4 w-4 ${c.icon}`} />
-            </div>
-          </div>
-          <div className="mt-3 flex items-center gap-1 text-[10px] text-slate-600 group-hover:text-slate-400 transition-colors">
-            <span>Ver detalle</span>
-            <ChevronRight className="h-3 w-3" />
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  )
+const COLOR_MAP: Record<string, { bg: string; icon: string; border: string; dot: string }> = {
+  blue:    { bg: "bg-blue-500/10",    icon: "text-blue-400",    border: "border-blue-500/20",    dot: "bg-blue-400"    },
+  violet:  { bg: "bg-violet-500/10",  icon: "text-violet-400",  border: "border-violet-500/20",  dot: "bg-violet-400"  },
+  cyan:    { bg: "bg-cyan-500/10",    icon: "text-cyan-400",    border: "border-cyan-500/20",    dot: "bg-cyan-400"    },
+  amber:   { bg: "bg-amber-500/10",   icon: "text-amber-400",   border: "border-amber-500/20",   dot: "bg-amber-400"   },
+  emerald: { bg: "bg-emerald-500/10", icon: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" },
+  red:     { bg: "bg-red-500/10",     icon: "text-red-400",     border: "border-red-500/20",     dot: "bg-red-400"     },
+  orange:  { bg: "bg-orange-500/10",  icon: "text-orange-400",  border: "border-orange-500/20",  dot: "bg-orange-400"  },
 }
 
 export default function TrabajoDashboard() {
@@ -70,172 +88,110 @@ export default function TrabajoDashboard() {
     const tareasEnProgreso  = tareas.filter(t => t.estado === "en_progreso").length
     const proyectosActivos  = proyectos.filter(p => p.estado === "activo").length
     const clientesActivos   = clientes.filter(c => c.activo).length
-    const reunionesProximas = reuniones.filter(r => r.fecha.slice(0, 10) >= hoy).length
+    const reunionesHoy      = reuniones.filter(r => r.fecha.slice(0, 10) === hoy).length
     const cobroPendiente    = pagos.filter(p => p.estado !== "pagado").reduce((s, p) => s + p.monto, 0)
-    const cobradoMes        = pagos
-      .filter(p => p.estado === "pagado" && p.fecha?.slice(0, 7) === hoy.slice(0, 7))
-      .reduce((s, p) => s + p.monto, 0)
-    const vencidas = tareas.filter(t =>
+    const vencidas          = tareas.filter(t =>
       t.estado !== "completada" && t.fechaVencimiento && t.fechaVencimiento < hoy
     ).length
-
-    return { tareasPendientes, tareasEnProgreso, proyectosActivos, clientesActivos, reunionesProximas, cobroPendiente, cobradoMes, vencidas }
+    return { tareasPendientes, tareasEnProgreso, proyectosActivos, clientesActivos, reunionesHoy, cobroPendiente, vencidas }
   }, [tareas, proyectos, clientes, reuniones, pagos, hoy])
 
-  const tareasUrgentes = tareas
-    .filter(t => t.estado !== "completada" && (t.prioridad === "urgente" || t.prioridad === "alta"))
-    .slice(0, 5)
-
-  const reunionesProximas = reuniones
-    .filter(r => r.fecha.slice(0, 10) >= hoy)
-    .slice(0, 3)
-
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto">
 
-      {/* Header */}
+      {/* Banner SDI */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl bg-linear-to-r from-slate-900 via-slate-900 to-slate-800/80 border border-slate-700/50 p-5"
+        className="relative overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900"
       >
-        <div className="flex items-center gap-4">
-          <div className="h-11 w-11 rounded-xl bg-linear-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 shrink-0">
-            RR
+        {/* Decoración naranja */}
+        <div className="absolute right-0 top-0 h-full w-64 pointer-events-none bg-[linear-gradient(135deg,transparent_40%,rgba(237,128,0,0.08)_100%)]" />
+        <div className="absolute bottom-0 right-8 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(237,128,0,0.13)_0%,transparent_70%)]" />
+
+        <div className="relative p-6 flex items-center gap-5">
+          <div className="h-14 w-14 rounded-xl flex items-center justify-center shrink-0 border border-orange-500/30 bg-linear-to-br from-[#c46800] to-[#ED8000]">
+            <span className="text-white font-black text-lg">SDI</span>
           </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-100">Espacio de Trabajo</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {stats.tareasEnProgreso} en progreso · {stats.vencidas > 0 ? `${stats.vencidas} vencidas` : "sin vencidas"}
-            </p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-black text-slate-100 tracking-tight">Soporte Dinámico Industrial</h1>
+            <p className="text-sm text-slate-400 mt-0.5">Hub de gestión · Marketing team</p>
           </div>
-          {stats.vencidas > 0 && (
-            <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
-              <AlertCircle className="h-3.5 w-3.5 text-red-400" />
-              <span className="text-xs text-red-400 font-medium">{stats.vencidas} vencidas</span>
+          <div className="hidden sm:flex items-center gap-6 text-center shrink-0">
+            <div>
+              <p className="text-2xl font-black text-slate-100">{stats.tareasPendientes}</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">pendientes</p>
             </div>
-          )}
+            <div className="w-px h-8 bg-slate-700" />
+            <div>
+              <p className="text-2xl font-black text-slate-100">{stats.proyectosActivos}</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">proyectos</p>
+            </div>
+            <div className="w-px h-8 bg-slate-700" />
+            <div>
+              <p className="text-2xl font-black text-[#ED8000]">{fmt(stats.cobroPendiente)}</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">por cobrar</p>
+            </div>
+          </div>
         </div>
+
+        {/* Alertas rápidas */}
+        {(stats.vencidas > 0 || stats.reunionesHoy > 0) && (
+          <div className="px-6 pb-4 flex flex-wrap gap-2">
+            {stats.vencidas > 0 && (
+              <Link href="/trabajo/tareas">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium hover:bg-red-500/15 transition-colors">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  {stats.vencidas} tarea{stats.vencidas > 1 ? "s" : ""} vencida{stats.vencidas > 1 ? "s" : ""}
+                </span>
+              </Link>
+            )}
+            {stats.reunionesHoy > 0 && (
+              <Link href="/trabajo/reuniones">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-medium hover:bg-amber-500/15 transition-colors">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  {stats.reunionesHoy} reunión{stats.reunionesHoy > 1 ? "es" : ""} hoy
+                </span>
+              </Link>
+            )}
+          </div>
+        )}
       </motion.div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <StatCard label="Tareas pendientes"   value={stats.tareasPendientes}                    sub={`${stats.tareasEnProgreso} en progreso`} icon={CheckSquare}  color="blue"    href="/trabajo/tareas"    delay={0.05} />
-        <StatCard label="Proyectos activos"   value={stats.proyectosActivos}                    sub={`de ${proyectos.length} totales`}        icon={FolderKanban} color="violet"  href="/trabajo/proyectos" delay={0.1}  />
-        <StatCard label="Clientes activos"    value={stats.clientesActivos}                                                                   icon={Users}        color="cyan"    href="/trabajo/clientes"  delay={0.15} />
-        <StatCard label="Reuniones próximas"  value={stats.reunionesProximas}                                                                 icon={CalendarDays} color="amber"   href="/trabajo/reuniones" delay={0.2}  />
-        <StatCard label="Cobro pendiente"     value={fmt(stats.cobroPendiente)}                 sub="por cobrar"                              icon={AlertCircle}  color="amber"   href="/trabajo/pagos"     delay={0.25} />
-        <StatCard label="Cobrado este mes"    value={fmt(stats.cobradoMes)}                                                                   icon={TrendingUp}   color="emerald" href="/trabajo/pagos"     delay={0.3}  />
-      </div>
-
-      {/* Tareas urgentes + Reuniones próximas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* Tareas alta prioridad */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Alta Prioridad</h2>
-            <Link href="/trabajo/tareas" className="text-[10px] text-blue-500 hover:text-blue-400">Ver todas</Link>
-          </div>
-          {tareasUrgentes.length === 0 ? (
-            <p className="text-xs text-slate-600 text-center py-6">Sin tareas urgentes</p>
-          ) : (
-            <div className="space-y-2">
-              {tareasUrgentes.map(t => (
-                <div key={t.documentId} className="flex items-start gap-3 py-2 border-b border-slate-800/40 last:border-0">
-                  <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${t.prioridad === "urgente" ? "bg-red-400" : "bg-amber-400"}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-200 truncate">{t.titulo}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {t.proyecto && <span className="text-[10px] text-slate-500">{t.proyecto.nombre}</span>}
-                      {t.fechaVencimiento && (
-                        <span className={`text-[10px] ${t.fechaVencimiento < hoy ? "text-red-400" : "text-slate-600"}`}>
-                          {t.fechaVencimiento < hoy ? "Vencida" : t.fechaVencimiento}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
-                    t.estado === "en_progreso" ? "bg-blue-500/15 text-blue-400" : "bg-slate-800 text-slate-500"
-                  }`}>
-                    {t.estado === "en_progreso" ? "En progreso" : "Pendiente"}
-                  </span>
-                </div>
-              ))}
+      {/* Módulos por sección */}
+      <div className="space-y-6">
+        {MODULOS.map(({ seccion, items }, si) => (
+          <motion.div key={seccion}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 + si * 0.06 }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{seccion}</p>
+              <div className="flex-1 h-px bg-slate-800/60" />
             </div>
-          )}
-        </motion.div>
-
-        {/* Próximas reuniones */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-4 backdrop-blur-sm"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Próximas Reuniones</h2>
-            <Link href="/trabajo/reuniones" className="text-[10px] text-blue-500 hover:text-blue-400">Ver todas</Link>
-          </div>
-          {reunionesProximas.length === 0 ? (
-            <p className="text-xs text-slate-600 text-center py-6">Sin reuniones próximas</p>
-          ) : (
-            <div className="space-y-3">
-              {reunionesProximas.map(r => {
-                const fecha = new Date(r.fecha)
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {items.map(({ label, desc, href, icon: Icon, color }) => {
+                const c = COLOR_MAP[color] ?? COLOR_MAP.blue
                 return (
-                  <div key={r.documentId} className="flex items-start gap-3 py-2 border-b border-slate-800/40 last:border-0">
-                    <div className="shrink-0 text-center w-10">
-                      <p className="text-[10px] text-slate-500 uppercase">{fecha.toLocaleDateString("es-MX", { month: "short" })}</p>
-                      <p className="text-base font-bold text-blue-400 leading-none">{fecha.getDate()}</p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-200 truncate">{r.titulo}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        {r.clienteTrabajo && <span className="text-[10px] text-slate-500">{r.clienteTrabajo.nombre}</span>}
-                        {r.proyecto && <span className="text-[10px] text-slate-600">· {r.proyecto.nombre}</span>}
+                  <Link key={href} href={href}>
+                    <div className="group h-full p-4 rounded-xl bg-slate-900/60 border border-slate-700/40 hover:border-slate-600/60 backdrop-blur-sm transition-all cursor-pointer">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className={`h-9 w-9 rounded-lg flex items-center justify-center border ${c.bg} ${c.border}`}>
+                          <Icon className={`h-4 w-4 ${c.icon}`} />
+                        </div>
+                        <ChevronRight className="h-3.5 w-3.5 text-slate-700 group-hover:text-slate-500 transition-colors mt-1" />
                       </div>
+                      <p className="text-sm font-semibold text-slate-200">{label}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{desc}</p>
                     </div>
-                    <span className="text-[10px] text-slate-500 shrink-0">
-                      {fecha.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
+                  </Link>
                 )
               })}
             </div>
-          )}
-        </motion.div>
+          </motion.div>
+        ))}
       </div>
-
-      {/* Quick nav */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.45 }}
-      >
-        <h2 className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">Módulos</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {[
-            { label: "Tareas",    icon: CheckSquare,  href: "/trabajo/tareas",    color: "text-blue-400"   },
-            { label: "Proyectos", icon: FolderKanban, href: "/trabajo/proyectos", color: "text-violet-400" },
-            { label: "Clientes",  icon: Users,        href: "/trabajo/clientes",  color: "text-cyan-400"   },
-            { label: "Reuniones", icon: CalendarDays, href: "/trabajo/reuniones", color: "text-amber-400"  },
-            { label: "Pagos",     icon: Wallet,       href: "/trabajo/pagos",     color: "text-emerald-400"},
-          ].map(({ label, icon: Icon, href, color }) => (
-            <Link key={href} href={href}>
-              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 hover:bg-slate-800/60 hover:border-slate-700/60 transition-all cursor-pointer">
-                <Icon className={`h-5 w-5 ${color}`} />
-                <span className="text-xs text-slate-400">{label}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </motion.div>
 
     </div>
   )
