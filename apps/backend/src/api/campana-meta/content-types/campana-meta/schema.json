@@ -1,0 +1,29 @@
+{
+  "kind": "singleType",
+  "collectionName": "campana_meta",
+  "info": {
+    "singularName": "campana-meta",
+    "pluralName": "campana-metas",
+    "displayName": "Campaña Meta 110"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "avance": {
+      "type": "integer",
+      "required": true,
+      "default": 82687
+    },
+    "meta": {
+      "type": "integer",
+      "required": true,
+      "default": 110000
+    },
+    "etiqueta": {
+      "type": "string",
+      "default": "¡Jugemos al 110!"
+    }
+  }
+}
