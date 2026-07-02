@@ -74,11 +74,14 @@ export function Campana110View() {
     setTimeout(() => inputRef.current?.focus(), 50)
   }
 
+  const [saveError, setSaveError] = useState("")
+
   async function applyEdit() {
     const a = Number(draftAvance.replace(/[^0-9]/g, ""))
     const m = Number(draftMeta.replace(/[^0-9]/g, ""))
     if (!a || !m) return
     setSaving(true)
+    setSaveError("")
     try {
       const res = await fetch(`${STRAPI}/api/campana-meta`, {
         method: "PUT",
@@ -89,7 +92,11 @@ export function Campana110View() {
         setAvance(a)
         setMeta(m)
         setEditOpen(false)
+      } else {
+        setSaveError("No se pudo guardar. Verifica el token en Cloudflare.")
       }
+    } catch {
+      setSaveError("Error de conexión con Strapi.")
     } finally {
       setSaving(false)
     }
@@ -152,12 +159,10 @@ export function Campana110View() {
       </div>
 
       {/* Botón edición flotante */}
-      {TOKEN && (
-        <button type="button" onClick={openEdit} aria-label="Actualizar avance"
-          className="fixed bottom-6 left-6 z-50 h-10 w-10 rounded-full bg-white/10 hover:bg-[#ED8000] text-white/50 hover:text-white flex items-center justify-center transition-all shadow-lg">
-          <Pencil className="h-4 w-4" />
-        </button>
-      )}
+      <button type="button" onClick={openEdit} aria-label="Actualizar avance"
+        className="fixed bottom-6 left-6 z-50 h-10 w-10 rounded-full bg-white/10 hover:bg-[#ED8000] text-white/50 hover:text-white flex items-center justify-center transition-all shadow-lg">
+        <Pencil className="h-4 w-4" />
+      </button>
 
       {/* Modal edición */}
       {editOpen && (
@@ -195,9 +200,10 @@ export function Campana110View() {
                 {saving ? "Guardando..." : "Actualizar"}
               </button>
             </div>
-            <p className="text-white/20 text-[11px] text-center mt-4">
-              El número se guarda en Strapi — todos ven el mismo avance al visitar el link.
-            </p>
+            {saveError
+              ? <p className="text-red-400 text-[11px] text-center mt-4">{saveError}</p>
+              : <p className="text-white/20 text-[11px] text-center mt-4">El número se guarda en Strapi — todos ven el mismo avance.</p>
+            }
           </div>
         </div>
       )}
