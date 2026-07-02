@@ -30,6 +30,7 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: https://miracles2025oct-production.up.railway.app
           NEXT_PUBLIC_STRAPI_URL: https://miracles2025oct-production.up.railway.app
           NEXT_PUBLIC_SITE_URL: https://miracles-frontend.pages.dev
+          NEXT_PUBLIC_CAMPANA_TOKEN: ${{ secrets.NEXT_PUBLIC_CAMPANA_TOKEN }}
 
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy apps/personal/out --project-name richard-avrod --commit-dirty=true
