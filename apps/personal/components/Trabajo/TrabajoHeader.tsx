@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Menu, Sun, Moon, Building2 } from "lucide-react"
 import { useState } from "react"
@@ -39,6 +40,9 @@ export function TrabajoHeader() {
           >
             <Menu className="h-5 w-5" />
           </button>
+          <Link href="/soportedinamico" className="shrink-0">
+            <Image src="/logo-sdi.png" alt="SDI" width={32} height={32} className="w-8 h-8 object-contain rounded" />
+          </Link>
           <h1 className="text-sm md:text-base font-semibold text-slate-700 dark:text-slate-300 tracking-tight">
             {title}
           </h1>

@@ -33,11 +33,11 @@ export function SoporteDinamicoLanding() {
           className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl flex items-center justify-center bg-gradient-to-br from-[#c46800] to-[#ED8000] shadow-2xl shadow-orange-500/30"
         >
           <Image
-            src="/logo-3s.png"
+            src="/logo-sdi.png"
             alt="Soporte Dinámico Industrial"
-            width={120}
-            height={120}
-            className="w-24 h-24 sm:w-32 sm:h-32 object-contain"
+            width={140}
+            height={140}
+            className="w-28 h-28 sm:w-36 sm:h-36 object-contain"
             priority
           />
         </motion.div>
