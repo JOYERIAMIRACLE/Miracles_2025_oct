@@ -18,8 +18,8 @@ export function TrabajoLayoutClient({ children }: { children: React.ReactNode })
       router.replace("/gestion-empresa")
       return
     }
-    if (isProveedorWeb() && !pathname.startsWith("/trabajo/sitio-web")) {
-      router.replace("/trabajo/sitio-web")
+    if (isProveedorWeb() && !pathname.startsWith("/marketing/sitio-web")) {
+      router.replace("/marketing/sitio-web")
     }
   }, [pathname, router])
 

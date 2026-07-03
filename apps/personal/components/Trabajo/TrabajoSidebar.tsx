@@ -13,41 +13,41 @@ const SECTIONS = [
   {
     title: "Operación",
     items: [
-      { label: "Tareas",             href: "/trabajo/tareas",   icon: CheckSquare },
-      { label: "Campañas",           href: "/trabajo/campanas", icon: Megaphone   },
-      { label: "Registro de gastos", href: "/trabajo/pagos",    icon: Wallet      },
+      { label: "Tareas",             href: "/marketing/tareas",   icon: CheckSquare },
+      { label: "Campañas",           href: "/marketing/campanas", icon: Megaphone   },
+      { label: "Registro de gastos", href: "/marketing/pagos",    icon: Wallet      },
     ],
   },
   {
     title: "Indicadores",
     items: [
-      { label: "Ecosistema marketing", href: "/trabajo/mkt/ecosistema", icon: TrendingUp },
+      { label: "Ecosistema marketing", href: "/marketing/mkt/ecosistema", icon: TrendingUp },
     ],
   },
   {
     title: "Inventario",
     items: [
-      { label: "Material Físico",   href: "/trabajo/inventario",           icon: Archive   },
-      { label: "Material Digital",  href: "/trabajo/mkt/inventario-digital", icon: FileImage },
+      { label: "Material Físico",   href: "/marketing/inventario",           icon: Archive   },
+      { label: "Material Digital",  href: "/marketing/mkt/inventario-digital", icon: FileImage },
     ],
   },
   {
     title: "Equipo",
     items: [
-      { label: "Roles",        href: "/trabajo/mkt/roles",       icon: Users    },
-      { label: "Tutorial de procesos mkt", href: "/trabajo/mkt/tutoriales", icon: BookOpen },
+      { label: "Roles",        href: "/marketing/mkt/roles",       icon: Users    },
+      { label: "Tutorial de procesos mkt", href: "/marketing/mkt/tutoriales", icon: BookOpen },
     ],
   },
   {
     title: "Web",
     items: [
-      { label: "Sitio web", href: "/trabajo/sitio-web", icon: Globe },
+      { label: "Sitio web", href: "/marketing/sitio-web", icon: Globe },
     ],
   },
   {
     title: "Organización",
     items: [
-      { label: "Portal SDI", href: "/trabajo/portal", icon: Building2 },
+      { label: "Portal SDI", href: "/marketing/portal", icon: Building2 },
     ],
   },
 ]

@@ -40,7 +40,7 @@ const APPS: AppEntry[] = [
     name: "Trabajo",
     description: "Tareas · Campañas · Marketing",
     icon: Briefcase,
-    href: "/trabajo/tareas",
+    href: "/marketing/portal",
     color: "blue",
     status: "active",
   },

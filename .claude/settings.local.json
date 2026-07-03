@@ -5,7 +5,36 @@
       "Bash(xargs ls:*)",
       "Bash(find \"/c/Users/RicardoRodriguezAvil/Desktop/Miracles/fronten_miracles/app/\\(personal\\)\" -name \"page.tsx\")",
       "Bash(find \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\fronten_miracles\\\\app/\\(AdminPersonal\\)\" -type f -o -type d)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/empresa-rpg\" -TimeoutSec 5 -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\" } catch { \"Error: $_\" })",
+      "Bash(cat apps/backend/.gitignore)",
+      "Bash(cat .gitignore)",
+      "Bash(mkdir -p \"c:/Users/RicardoRodriguezAvil/Desktop/Miracles/apps/personal/app/\\(AdminEmpresaMiracles\\)/gestion-empresa/finanzas/gastos\" && echo \"ok\")",
+      "Bash(xargs wc -c)",
+      "Bash(awk '$1 == 0 {print $2}')",
+      "Bash(grep -v \"^/api/$\")",
+      "Bash(rm -rf \"c:/Users/RicardoRodriguezAvil/Desktop/Miracles/apps/personal/app/\\(Tienda\\)/1tiendacomponentes/Home\" \\\\ *)",
+      "Bash(git add *)",
+      "Bash(grep -n \"^build\\\\|^/build\\\\| build$\" \"c:/Users/RicardoRodriguezAvil/Desktop/Miracles/apps/backend/.gitignore\")",
+      "Bash(grep -n \"^build\\\\|^/build\\\\| build$\" \"c:/Users/RicardoRodriguezAvil/Desktop/Miracles/.gitignore\")",
+      "Bash(grep -rn \"^build$\\\\|^/build$\\\\|build/$\\\\|/build/\" \"c:/Users/RicardoRodriguezAvil/Desktop/Miracles/.gitignore\" \"c:/Users/RicardoRodriguezAvil/Desktop/Miracles/apps/backend/.gitignore\")",
+      "Bash(find \"c:/Users/RicardoRodriguezAvil\" -name \"*.html\" -not -path \"*/node_modules/*\" 2>/dev/null | grep -i \"sdi\\\\|intranet\\\\|portal\" | head -10)",
+      "Read(//c/Users/RicardoRodriguezAvil/**)",
+      "PowerShell(cd \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"PortalSDI\" })",
+      "PowerShell(cd \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\"; $out = npx tsc --noEmit 2>&1; $out | Where-Object { $_ -match \"Portal\" }; Write-Host \"--- Done ---\")",
+      "PowerShell(cd \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\"; npx tsc --noEmit --skipLibCheck 2>&1 | Where-Object { $_ -match \"PortalSDI|Trabajo\" } | Select-Object -First 20)",
+      "PowerShell(cd \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\"; npx tsc --noEmit --skipLibCheck 2>&1 | Where-Object { $_ -match \"PortalSDI\" } | Select-Object -First 10)",
+      "PowerShell(cd \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\"; $out = npx tsc --noEmit --skipLibCheck 2>&1; $out | Where-Object { $_ -match \"PortalSDI\" }; Write-Host \"TSC done\")",
+      "PowerShell(cd \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\"; $out = npx tsc --noEmit --skipLibCheck 2>&1; $out | Where-Object { $_ -match \"PortalSDI\" }; Write-Host \"done\")",
+      "Bash(gh workflow *)",
+      "PowerShell(Rename-Item \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\app\\\\\\(Trabajo\\)\\\\trabajo\" \"marketing\")",
+      "PowerShell(Rename-Item \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\app\\\\\\(Portal\\)\\\\trabajo\" \"marketing\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\RicardoRodriguezAvil\\Desktop\\Miracles\\apps\\personal\\app\\(AdminEmpresaMiracles)\\gestion-empresa\\finanzas",
+      "c:\\Users\\RicardoRodriguezAvil\\Desktop\\Miracles\\apps\\personal\\app\\(Tienda)\\1tiendacomponentes\\Home"
     ]
   }
 }

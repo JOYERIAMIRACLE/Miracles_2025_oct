@@ -20,46 +20,46 @@ const MODULOS = [
   {
     seccion: "Operación",
     items: [
-      { label: "Tareas",           desc: "Gestiona y prioriza pendientes",    href: "/trabajo/tareas",              icon: CheckSquare,  color: "blue"    },
-      { label: "Campañas",         desc: "Seguimiento de campañas activas",   href: "/trabajo/campanas",            icon: Megaphone,    color: "orange"  },
-      { label: "Pagos",            desc: "Registro de cobros y gastos",       href: "/trabajo/pagos",               icon: Wallet,       color: "emerald" },
-      { label: "Tickets",          desc: "Incidencias y solicitudes",         href: "/trabajo/tickets",             icon: Ticket,       color: "red"     },
+      { label: "Tareas",           desc: "Gestiona y prioriza pendientes",    href: "/marketing/tareas",              icon: CheckSquare,  color: "blue"    },
+      { label: "Campañas",         desc: "Seguimiento de campañas activas",   href: "/marketing/campanas",            icon: Megaphone,    color: "orange"  },
+      { label: "Pagos",            desc: "Registro de cobros y gastos",       href: "/marketing/pagos",               icon: Wallet,       color: "emerald" },
+      { label: "Tickets",          desc: "Incidencias y solicitudes",         href: "/marketing/tickets",             icon: Ticket,       color: "red"     },
     ],
   },
   {
     seccion: "Proyectos y Clientes",
     items: [
-      { label: "Proyectos",        desc: "Control de proyectos activos",      href: "/trabajo/proyectos",           icon: FolderKanban, color: "violet"  },
-      { label: "Clientes",         desc: "Directorio de clientes",            href: "/trabajo/clientes",            icon: Users,        color: "cyan"    },
-      { label: "Reuniones",        desc: "Agenda y minutas",                  href: "/trabajo/reuniones",           icon: CalendarDays, color: "amber"   },
-      { label: "Planeador",        desc: "Planificación de campañas",         href: "/trabajo/campanas-planner",    icon: LayoutGrid,   color: "violet"  },
+      { label: "Proyectos",        desc: "Control de proyectos activos",      href: "/marketing/proyectos",           icon: FolderKanban, color: "violet"  },
+      { label: "Clientes",         desc: "Directorio de clientes",            href: "/marketing/clientes",            icon: Users,        color: "cyan"    },
+      { label: "Reuniones",        desc: "Agenda y minutas",                  href: "/marketing/reuniones",           icon: CalendarDays, color: "amber"   },
+      { label: "Planeador",        desc: "Planificación de campañas",         href: "/marketing/campanas-planner",    icon: LayoutGrid,   color: "violet"  },
     ],
   },
   {
     seccion: "Indicadores",
     items: [
-      { label: "Ecosistema",       desc: "Métricas del ecosistema marketing", href: "/trabajo/mkt/ecosistema",      icon: TrendingUp,   color: "orange"  },
+      { label: "Ecosistema",       desc: "Métricas del ecosistema marketing", href: "/marketing/mkt/ecosistema",      icon: TrendingUp,   color: "orange"  },
     ],
   },
   {
     seccion: "Inventario",
     items: [
-      { label: "Material Físico",  desc: "Control de inventario físico",      href: "/trabajo/inventario",          icon: Archive,      color: "amber"   },
-      { label: "Material Digital", desc: "Activos digitales y creativos",     href: "/trabajo/mkt/inventario-digital", icon: FileImage, color: "cyan"    },
+      { label: "Material Físico",  desc: "Control de inventario físico",      href: "/marketing/inventario",          icon: Archive,      color: "amber"   },
+      { label: "Material Digital", desc: "Activos digitales y creativos",     href: "/marketing/mkt/inventario-digital", icon: FileImage, color: "cyan"    },
     ],
   },
   {
     seccion: "Equipo",
     items: [
-      { label: "Roles",            desc: "Estructura y responsabilidades",    href: "/trabajo/mkt/roles",           icon: Users,        color: "violet"  },
-      { label: "Tutoriales",       desc: "Guías y procesos del equipo",       href: "/trabajo/mkt/tutoriales",      icon: BookOpen,     color: "blue"    },
+      { label: "Roles",            desc: "Estructura y responsabilidades",    href: "/marketing/mkt/roles",           icon: Users,        color: "violet"  },
+      { label: "Tutoriales",       desc: "Guías y procesos del equipo",       href: "/marketing/mkt/tutoriales",      icon: BookOpen,     color: "blue"    },
     ],
   },
   {
     seccion: "Web y Organización",
     items: [
-      { label: "Sitio Web",        desc: "Gestión del sitio web",             href: "/trabajo/sitio-web",           icon: Globe,        color: "emerald" },
-      { label: "Portal SDI",       desc: "Intranet y recursos internos",      href: "/trabajo/portal",              icon: Building2,    color: "orange"  },
+      { label: "Sitio Web",        desc: "Gestión del sitio web",             href: "/marketing/sitio-web",           icon: Globe,        color: "emerald" },
+      { label: "Portal SDI",       desc: "Intranet y recursos internos",      href: "/marketing/portal",              icon: Building2,    color: "orange"  },
     ],
   },
 ]
@@ -139,7 +139,7 @@ export default function TrabajoDashboard() {
         {(stats.vencidas > 0 || stats.reunionesHoy > 0) && (
           <div className="px-6 pb-4 flex flex-wrap gap-2">
             {stats.vencidas > 0 && (
-              <Link href="/trabajo/tareas">
+              <Link href="/marketing/tareas">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium hover:bg-red-500/15 transition-colors">
                   <AlertCircle className="h-3.5 w-3.5" />
                   {stats.vencidas} tarea{stats.vencidas > 1 ? "s" : ""} vencida{stats.vencidas > 1 ? "s" : ""}
@@ -147,7 +147,7 @@ export default function TrabajoDashboard() {
               </Link>
             )}
             {stats.reunionesHoy > 0 && (
-              <Link href="/trabajo/reuniones">
+              <Link href="/marketing/reuniones">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-medium hover:bg-amber-500/15 transition-colors">
                   <CalendarDays className="h-3.5 w-3.5" />
                   {stats.reunionesHoy} reunión{stats.reunionesHoy > 1 ? "es" : ""} hoy

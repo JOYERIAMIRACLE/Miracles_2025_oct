@@ -11,7 +11,7 @@ export function PersonalLayoutClient({ children }: { children: React.ReactNode }
   const router = useRouter()
 
   useEffect(() => {
-    if (isSoloTrabajo()) router.replace("/trabajo/tareas")
+    if (isSoloTrabajo()) router.replace("/marketing/portal")
   }, [router])
 
   return (

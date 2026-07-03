@@ -9,7 +9,7 @@ export function TiendaGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isProveedorWeb()) {
-      router.replace("/trabajo/sitio-web")
+      router.replace("/marketing/sitio-web")
     }
   }, [router])
 
