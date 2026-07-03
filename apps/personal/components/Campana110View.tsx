@@ -155,7 +155,7 @@ export function Campana110View() {
 
         {/* Por 110 en */}
         <div className="mb-8 flex flex-col items-center">
-          <p className="text-white/50 text-base uppercase tracking-widest font-semibold mb-4 text-center">Vamos por 110 en:</p>
+          <p className="text-white text-base uppercase tracking-widest font-semibold mb-4 text-center">Vamos por 110 en:</p>
           <div className="flex flex-wrap justify-center gap-3">
             {["Eficiencia", "Entregas", "Actitud", "Servicio"].map(v => (
               <span key={v} className="px-5 py-2.5 rounded-full border border-[#ED8000]/40 text-[#ED8000] font-semibold text-base tracking-wide">
@@ -163,7 +163,7 @@ export function Campana110View() {
               </span>
             ))}
           </div>
-          <p className="mt-5 text-white text-base italic text-center tracking-wide">
+          <p className="mt-5 text-white font-medium text-base italic text-center tracking-wide">
             Muestra tu mejor versión en el concurso de lluvia de ideas
           </p>
         </div>
