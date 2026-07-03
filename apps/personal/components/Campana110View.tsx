@@ -134,7 +134,7 @@ export function Campana110View() {
               Logremos cumplir al 110% la <span className="italic text-[#ED8000]">promesa al cliente</span>
             </p>
             <p className="text-white/40 text-sm tracking-[0.18em] font-medium mt-1">
-              Servir · Solucionar · Simplificar
+              Solucionar · Simplificar · Servir
             </p>
           </div>
         </div>
