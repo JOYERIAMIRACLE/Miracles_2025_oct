@@ -9,7 +9,7 @@ const STRAPI = process.env.NEXT_PUBLIC_BACKEND_URL ?? "https://miracles2025oct-p
 const TOKEN  = process.env.NEXT_PUBLIC_CAMPANA_TOKEN ?? ""
 
 const DEFAULT_META   = 110_000
-const DEFAULT_AVANCE =  82_687
+const DEFAULT_AVANCE =       0
 
 function formatMiles(n: number) {
   const m = n / 1000
@@ -60,8 +60,8 @@ export function Campana110View() {
       .then(r => r.json())
       .then(json => {
         const d = json?.data?.attributes ?? json?.data ?? {}
-        if (d.avance) setAvance(d.avance)
-        if (d.meta)   setMeta(d.meta)
+        if (d.avance != null) setAvance(d.avance)
+        if (d.meta   != null) setMeta(d.meta)
       })
       .catch(() => {/* usa defaults si Strapi no responde */})
       .finally(() => setLoading(false))
