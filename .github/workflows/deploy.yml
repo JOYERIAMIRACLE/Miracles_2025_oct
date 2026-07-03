@@ -58,7 +58,7 @@ jobs:
       - name: Prepare soportedinamico deploy
         run: |
           cp -r apps/personal/out apps/sdi-out
-          printf '/ /soportedinamico 200\n' > apps/sdi-out/_redirects
+          printf '<html><head><meta http-equiv="refresh" content="0;url=/soportedinamico"><script>location.replace("/soportedinamico")</script></head></html>' > apps/sdi-out/index.html
 
       - name: Create soportedinamico Pages project (if not exists)
         run: npx wrangler pages project create soportedinamico --production-branch main || true
