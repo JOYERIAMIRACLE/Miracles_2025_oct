@@ -164,7 +164,7 @@ export function Campana110View() {
             ))}
           </div>
           <p className="mt-5 text-white/30 text-sm italic text-center tracking-widest">
-            Entrega tu 110 · · · · · · · · · · · · · muestra tu mejor versión
+            Muestra tu mejor versión en el concurso de lluvia de ideas
           </p>
         </div>
 
