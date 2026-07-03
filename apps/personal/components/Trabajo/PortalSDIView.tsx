@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
   ChevronDown, Bell, Search, Menu, Megaphone, ArrowRight,
   FileText, BarChart2, Zap, Users, GitBranch, UserCheck,
@@ -1149,8 +1150,8 @@ export function PortalSDIView() {
         <aside className="w-52 shrink-0 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 left-0 z-40">
           {/* Logo */}
           <div className="h-14 flex items-center gap-2.5 px-4 border-b border-slate-200 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center shrink-0">
-              <Building2 className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+              <Image src="/logo-sdi.png" alt="SDI" width={32} height={32} className="w-7 h-7 object-contain" />
             </div>
             <div>
               <div className="text-sm font-bold text-slate-900 leading-tight">Portal SDI</div>
