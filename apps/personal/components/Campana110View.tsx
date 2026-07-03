@@ -133,6 +133,9 @@ export function Campana110View() {
             <p className="text-2xl sm:text-3xl font-semibold text-white leading-snug">
               Logremos cumplir al 110% la <span className="italic text-[#ED8000]">promesa al cliente</span>
             </p>
+            <p className="text-white/40 text-sm tracking-[0.18em] font-medium mt-1">
+              Servir · Solucionar · Simplificar
+            </p>
           </div>
         </div>
 
@@ -151,22 +154,22 @@ export function Campana110View() {
         <div className="w-full h-px bg-white/10 mb-8" />
 
         {/* Por 110 en */}
-        <div className="mb-8">
-          <p className="text-white/50 text-sm uppercase tracking-widest font-semibold mb-4 text-center sm:text-left">Por 110 en:</p>
-          <div className="flex flex-wrap justify-center sm:justify-start gap-3">
+        <div className="mb-8 flex flex-col items-center">
+          <p className="text-white/50 text-sm uppercase tracking-widest font-semibold mb-4 text-center">Vamos por 110 en:</p>
+          <div className="flex flex-wrap justify-center gap-3">
             {["Eficiencia", "Entregas", "Actitud", "Servicio"].map(v => (
               <span key={v} className="px-4 py-2 rounded-full border border-[#ED8000]/40 text-[#ED8000] font-semibold text-sm tracking-wide">
                 {v}
               </span>
             ))}
           </div>
-          <p className="mt-5 text-white/30 text-sm italic text-center sm:text-left tracking-widest">
+          <p className="mt-5 text-white/30 text-sm italic text-center tracking-widest">
             Entrega tu 110 · · · · · · · · · · · · · muestra tu mejor versión
           </p>
         </div>
 
         {/* CTA */}
-        <div className="flex justify-center sm:justify-start">
+        <div className="flex justify-center">
           <Link href="/concurso">
             <button type="button"
               className="px-6 py-3 rounded-xl font-bold text-sm text-white border border-[#ED8000]/60 hover:bg-[#ED8000] hover:border-[#ED8000] transition-all duration-200 tracking-wide">
