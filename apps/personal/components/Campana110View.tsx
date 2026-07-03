@@ -109,7 +109,7 @@ export function Campana110View() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#1a1a1a] flex flex-col items-center justify-center overflow-hidden px-8 py-12">
+    <div className="relative min-h-screen bg-[#1a1a1a] flex flex-col items-center justify-center overflow-hidden px-8 py-12 pb-40 sm:pb-12">
 
       {/* Triángulos naranja decorativos */}
       <div className="absolute bottom-0 right-0 pointer-events-none"
