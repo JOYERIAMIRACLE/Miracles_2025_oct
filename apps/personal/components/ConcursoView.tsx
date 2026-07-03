@@ -40,10 +40,10 @@ export function ConcursoView() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] text-white flex flex-col">
+    <div className="relative min-h-screen bg-[#1a1a1a] text-white flex flex-col overflow-hidden">
 
-      {/* Triángulo decorativo */}
-      <div className="absolute bottom-0 right-0 pointer-events-none"
+      {/* Triángulo decorativo — oculto en móvil */}
+      <div className="hidden sm:block absolute bottom-0 right-0 pointer-events-none"
         style={{ width:0,height:0,borderStyle:"solid",borderWidth:"0 0 300px 260px",borderColor:"transparent transparent #ED8000 transparent",opacity:0.15 }} />
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-16 pb-40 sm:pb-16">

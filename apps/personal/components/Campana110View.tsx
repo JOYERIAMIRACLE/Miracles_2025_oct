@@ -111,10 +111,10 @@ export function Campana110View() {
   return (
     <div className="relative min-h-screen bg-[#1a1a1a] flex flex-col items-center justify-center overflow-hidden px-8 py-12 pb-40 sm:pb-12">
 
-      {/* Triángulos naranja decorativos */}
-      <div className="absolute bottom-0 right-0 pointer-events-none"
+      {/* Triángulos naranja decorativos — ocultos en móvil */}
+      <div className="hidden sm:block absolute bottom-0 right-0 pointer-events-none"
         style={{ width:0,height:0,borderStyle:"solid",borderWidth:"0 0 260px 220px",borderColor:"transparent transparent #ED8000 transparent" }} />
-      <div className="absolute bottom-0 right-0 pointer-events-none opacity-40"
+      <div className="hidden sm:block absolute bottom-0 right-0 pointer-events-none opacity-40"
         style={{ width:0,height:0,borderStyle:"solid",borderWidth:"0 0 180px 140px",borderColor:"transparent transparent #ED8000 transparent",transform:"translate(-60px,0)" }} />
 
       {/* Contenido principal */}
