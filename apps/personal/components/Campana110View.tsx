@@ -163,7 +163,7 @@ export function Campana110View() {
               </span>
             ))}
           </div>
-          <p className="mt-5 text-white/40 text-base italic text-center tracking-wide">
+          <p className="mt-5 text-white text-base italic text-center tracking-wide">
             Muestra tu mejor versión en el concurso de lluvia de ideas
           </p>
         </div>
