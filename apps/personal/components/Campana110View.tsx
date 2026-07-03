@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Pencil, X, Check, Loader2 } from "lucide-react"
 
 const STRAPI = process.env.NEXT_PUBLIC_BACKEND_URL ?? "https://miracles2025oct-production.up.railway.app"
@@ -166,10 +167,12 @@ export function Campana110View() {
 
         {/* CTA */}
         <div className="flex justify-center sm:justify-start">
-          <button type="button"
-            className="px-6 py-3 rounded-xl font-bold text-sm text-white border border-[#ED8000]/60 hover:bg-[#ED8000] hover:border-[#ED8000] transition-all duration-200 tracking-wide">
-            Únete · Somos Diferentes Innovando
-          </button>
+          <Link href="/concurso">
+            <button type="button"
+              className="px-6 py-3 rounded-xl font-bold text-sm text-white border border-[#ED8000]/60 hover:bg-[#ED8000] hover:border-[#ED8000] transition-all duration-200 tracking-wide">
+              Únete · Somos Diferentes Innovando
+            </button>
+          </Link>
         </div>
       </div>
 

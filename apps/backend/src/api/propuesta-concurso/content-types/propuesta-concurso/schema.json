@@ -1,0 +1,16 @@
+{
+  "kind": "collectionType",
+  "collectionName": "propuesta_concursos",
+  "info": {
+    "singularName": "propuesta-concurso",
+    "pluralName": "propuesta-concursos",
+    "displayName": "Propuesta Concurso"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "nombre_equipo": { "type": "string", "required": true },
+    "integrantes":   { "type": "text",   "required": true },
+    "objetivo":      { "type": "text",   "required": true },
+    "link_archivo":  { "type": "string"  }
+  }
+}

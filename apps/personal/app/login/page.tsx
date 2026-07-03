@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Gem } from "lucide-react"
+import { Loader2, Building2 } from "lucide-react"
 import { setToken, removeToken, isTokenValid, getToken, setUserRole, removeUserRole, getUserRole, fetchUserRole } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -65,8 +65,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
 
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4">
-            <Gem className="h-6 w-6 text-white" />
+          <div className="h-12 w-12 rounded-2xl bg-linear-to-br from-orange-500 to-orange-700 flex items-center justify-center shadow-lg shadow-orange-500/20 mb-4">
+            <Building2 className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-xl font-bold text-slate-100">Panel Admin</h1>
           <p className="text-sm text-slate-500 mt-1">Inicia sesión para continuar</p>
