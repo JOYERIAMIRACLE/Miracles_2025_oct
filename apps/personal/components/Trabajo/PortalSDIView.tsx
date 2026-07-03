@@ -9,7 +9,7 @@ import {
   ShoppingBag, DollarSign, Shield, Monitor, Calendar,
   ClipboardList, MessageSquare, Ticket, Database, Globe,
   Building2, Flag, Download, ExternalLink,
-  LayoutDashboard, Info, Briefcase, Layers,
+  LayoutDashboard, Landmark, Briefcase, Layers,
 } from "lucide-react"
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ const GRUPOS: NavGroup[] = [
     items: [],
   },
   {
-    id: "conoce", label: "Conoce a SDI", icon: Info,
+    id: "conoce", label: "Conoce a SDI", icon: Landmark,
     items: [
       { id: "quienes-somos", label: "¿Quiénes somos?", icon: Building2 },
       { id: "organigrama",   label: "Organigrama",      icon: GitBranch },
