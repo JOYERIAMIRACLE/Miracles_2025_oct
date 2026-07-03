@@ -155,15 +155,15 @@ export function Campana110View() {
 
         {/* Por 110 en */}
         <div className="mb-8 flex flex-col items-center">
-          <p className="text-white/50 text-sm uppercase tracking-widest font-semibold mb-4 text-center">Vamos por 110 en:</p>
+          <p className="text-white/50 text-base uppercase tracking-widest font-semibold mb-4 text-center">Vamos por 110 en:</p>
           <div className="flex flex-wrap justify-center gap-3">
             {["Eficiencia", "Entregas", "Actitud", "Servicio"].map(v => (
-              <span key={v} className="px-4 py-2 rounded-full border border-[#ED8000]/40 text-[#ED8000] font-semibold text-sm tracking-wide">
+              <span key={v} className="px-5 py-2.5 rounded-full border border-[#ED8000]/40 text-[#ED8000] font-semibold text-base tracking-wide">
                 {v}
               </span>
             ))}
           </div>
-          <p className="mt-5 text-white/30 text-sm italic text-center tracking-widest">
+          <p className="mt-5 text-white/40 text-base italic text-center tracking-wide">
             Muestra tu mejor versión en el concurso de lluvia de ideas
           </p>
         </div>
@@ -172,7 +172,7 @@ export function Campana110View() {
         <div className="flex justify-center">
           <Link href="/concurso">
             <button type="button"
-              className="px-6 py-3 rounded-xl font-bold text-sm text-white border border-[#ED8000]/60 hover:bg-[#ED8000] hover:border-[#ED8000] transition-all duration-200 tracking-wide">
+              className="px-8 py-3.5 rounded-xl font-bold text-base text-white bg-[#ED8000] hover:bg-[#d47200] transition-all duration-200 tracking-wide">
               Únete · Somos Diferentes Innovando
             </button>
           </Link>
