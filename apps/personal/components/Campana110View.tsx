@@ -12,7 +12,8 @@ const DEFAULT_META   = 110_000
 const DEFAULT_AVANCE =  82_687
 
 function formatMiles(n: number) {
-  return `$${n.toLocaleString("es-MX")} mil`
+  const m = n / 1000
+  return `$${m.toLocaleString("es-MX", { maximumFractionDigits: 1 })} M`
 }
 
 function AnimatedBar({ pct }: { pct: number }) {
@@ -198,13 +199,13 @@ export function Campana110View() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-white/40 uppercase tracking-wider mb-1.5">Avance actual (miles de pesos)</label>
+                <label className="block text-xs text-white/40 uppercase tracking-wider mb-1.5">Avance actual (en miles — ej. 82687 = $82.7 M)</label>
                 <input ref={inputRef} type="number" value={draftAvance} onChange={e => setDraftAvance(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-semibold focus:outline-none focus:border-[#ED8000] transition-colors"
                   placeholder="82687" />
               </div>
               <div>
-                <label className="block text-xs text-white/40 uppercase tracking-wider mb-1.5">Meta anual (miles de pesos)</label>
+                <label className="block text-xs text-white/40 uppercase tracking-wider mb-1.5">Meta anual (en miles — ej. 110000 = $110 M)</label>
                 <input type="number" value={draftMeta} onChange={e => setDraftMeta(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-semibold focus:outline-none focus:border-[#ED8000] transition-colors"
                   placeholder="110000" />
