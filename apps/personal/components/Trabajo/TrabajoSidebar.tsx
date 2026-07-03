@@ -47,7 +47,7 @@ const SECTIONS = [
   {
     title: "Organización",
     items: [
-      { label: "Portal SDI", href: "/marketing/portal", icon: Building2 },
+      { label: "Portal SDI", href: "/portal", icon: Building2 },
     ],
   },
 ]

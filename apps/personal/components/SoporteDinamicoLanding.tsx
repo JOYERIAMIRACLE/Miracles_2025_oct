@@ -93,7 +93,7 @@ export function SoporteDinamicoLanding() {
             <p className="text-lg text-white/50 mb-8 max-w-md mx-auto sm:mx-0">
               Servir · Solucionar · Simplificar
             </p>
-            <Link href="/marketing/portal">
+            <Link href="/portal">
               <button type="button" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 active:scale-95 bg-linear-to-br from-[#c46800] to-[#ED8000]">
                 Acceder al portal
                 <ArrowRight className="h-4 w-4" />
@@ -137,7 +137,7 @@ export function SoporteDinamicoLanding() {
       <div className="border-t border-white/5 px-6 py-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-white/20">Soporte Dinámico Industrial · Plataforma interna</p>
-          <Link href="/marketing/portal">
+          <Link href="/portal">
             <span className="text-xs text-[#ED8000] hover:underline font-medium">Ir al portal →</span>
           </Link>
         </div>

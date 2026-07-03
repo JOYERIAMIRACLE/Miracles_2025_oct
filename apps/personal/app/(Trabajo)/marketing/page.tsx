@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useMemo } from "react"
 import Link from "next/link"
@@ -18,10 +18,10 @@ const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
 
 const MODULOS = [
   {
-    seccion: "Operación",
+    seccion: "OperaciÃ³n",
     items: [
       { label: "Tareas",           desc: "Gestiona y prioriza pendientes",    href: "/marketing/tareas",              icon: CheckSquare,  color: "blue"    },
-      { label: "Campañas",         desc: "Seguimiento de campañas activas",   href: "/marketing/campanas",            icon: Megaphone,    color: "orange"  },
+      { label: "CampaÃ±as",         desc: "Seguimiento de campaÃ±as activas",   href: "/marketing/campanas",            icon: Megaphone,    color: "orange"  },
       { label: "Pagos",            desc: "Registro de cobros y gastos",       href: "/marketing/pagos",               icon: Wallet,       color: "emerald" },
       { label: "Tickets",          desc: "Incidencias y solicitudes",         href: "/marketing/tickets",             icon: Ticket,       color: "red"     },
     ],
@@ -32,19 +32,19 @@ const MODULOS = [
       { label: "Proyectos",        desc: "Control de proyectos activos",      href: "/marketing/proyectos",           icon: FolderKanban, color: "violet"  },
       { label: "Clientes",         desc: "Directorio de clientes",            href: "/marketing/clientes",            icon: Users,        color: "cyan"    },
       { label: "Reuniones",        desc: "Agenda y minutas",                  href: "/marketing/reuniones",           icon: CalendarDays, color: "amber"   },
-      { label: "Planeador",        desc: "Planificación de campañas",         href: "/marketing/campanas-planner",    icon: LayoutGrid,   color: "violet"  },
+      { label: "Planeador",        desc: "PlanificaciÃ³n de campaÃ±as",         href: "/marketing/campanas-planner",    icon: LayoutGrid,   color: "violet"  },
     ],
   },
   {
     seccion: "Indicadores",
     items: [
-      { label: "Ecosistema",       desc: "Métricas del ecosistema marketing", href: "/marketing/mkt/ecosistema",      icon: TrendingUp,   color: "orange"  },
+      { label: "Ecosistema",       desc: "MÃ©tricas del ecosistema marketing", href: "/marketing/mkt/ecosistema",      icon: TrendingUp,   color: "orange"  },
     ],
   },
   {
     seccion: "Inventario",
     items: [
-      { label: "Material Físico",  desc: "Control de inventario físico",      href: "/marketing/inventario",          icon: Archive,      color: "amber"   },
+      { label: "Material FÃ­sico",  desc: "Control de inventario fÃ­sico",      href: "/marketing/inventario",          icon: Archive,      color: "amber"   },
       { label: "Material Digital", desc: "Activos digitales y creativos",     href: "/marketing/mkt/inventario-digital", icon: FileImage, color: "cyan"    },
     ],
   },
@@ -52,14 +52,14 @@ const MODULOS = [
     seccion: "Equipo",
     items: [
       { label: "Roles",            desc: "Estructura y responsabilidades",    href: "/marketing/mkt/roles",           icon: Users,        color: "violet"  },
-      { label: "Tutoriales",       desc: "Guías y procesos del equipo",       href: "/marketing/mkt/tutoriales",      icon: BookOpen,     color: "blue"    },
+      { label: "Tutoriales",       desc: "GuÃ­as y procesos del equipo",       href: "/marketing/mkt/tutoriales",      icon: BookOpen,     color: "blue"    },
     ],
   },
   {
-    seccion: "Web y Organización",
+    seccion: "Web y OrganizaciÃ³n",
     items: [
-      { label: "Sitio Web",        desc: "Gestión del sitio web",             href: "/marketing/sitio-web",           icon: Globe,        color: "emerald" },
-      { label: "Portal SDI",       desc: "Intranet y recursos internos",      href: "/marketing/portal",              icon: Building2,    color: "orange"  },
+      { label: "Sitio Web",        desc: "GestiÃ³n del sitio web",             href: "/marketing/sitio-web",           icon: Globe,        color: "emerald" },
+      { label: "Portal SDI",       desc: "Intranet y recursos internos",      href: "/portal",              icon: Building2,    color: "orange"  },
     ],
   },
 ]
@@ -105,7 +105,7 @@ export default function TrabajoDashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900"
       >
-        {/* Decoración naranja */}
+        {/* DecoraciÃ³n naranja */}
         <div className="absolute right-0 top-0 h-full w-64 pointer-events-none bg-[linear-gradient(135deg,transparent_40%,rgba(237,128,0,0.08)_100%)]" />
         <div className="absolute bottom-0 right-8 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(237,128,0,0.13)_0%,transparent_70%)]" />
 
@@ -114,8 +114,8 @@ export default function TrabajoDashboard() {
             <span className="text-white font-black text-lg">SDI</span>
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-black text-slate-100 tracking-tight">Soporte Dinámico Industrial</h1>
-            <p className="text-sm text-slate-400 mt-0.5">Hub de gestión · Marketing team</p>
+            <h1 className="text-xl font-black text-slate-100 tracking-tight">Soporte DinÃ¡mico Industrial</h1>
+            <p className="text-sm text-slate-400 mt-0.5">Hub de gestiÃ³n Â· Marketing team</p>
           </div>
           <div className="hidden sm:flex items-center gap-6 text-center shrink-0">
             <div>
@@ -135,7 +135,7 @@ export default function TrabajoDashboard() {
           </div>
         </div>
 
-        {/* Alertas rápidas */}
+        {/* Alertas rÃ¡pidas */}
         {(stats.vencidas > 0 || stats.reunionesHoy > 0) && (
           <div className="px-6 pb-4 flex flex-wrap gap-2">
             {stats.vencidas > 0 && (
@@ -150,7 +150,7 @@ export default function TrabajoDashboard() {
               <Link href="/marketing/reuniones">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-medium hover:bg-amber-500/15 transition-colors">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  {stats.reunionesHoy} reunión{stats.reunionesHoy > 1 ? "es" : ""} hoy
+                  {stats.reunionesHoy} reuniÃ³n{stats.reunionesHoy > 1 ? "es" : ""} hoy
                 </span>
               </Link>
             )}
@@ -158,7 +158,7 @@ export default function TrabajoDashboard() {
         )}
       </motion.div>
 
-      {/* Módulos por sección */}
+      {/* MÃ³dulos por secciÃ³n */}
       <div className="space-y-6">
         {MODULOS.map(({ seccion, items }, si) => (
           <motion.div key={seccion}

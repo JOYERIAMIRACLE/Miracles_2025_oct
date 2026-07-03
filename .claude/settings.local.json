@@ -30,7 +30,8 @@
       "PowerShell(cd \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\"; $out = npx tsc --noEmit --skipLibCheck 2>&1; $out | Where-Object { $_ -match \"PortalSDI\" }; Write-Host \"done\")",
       "Bash(gh workflow *)",
       "PowerShell(Rename-Item \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\app\\\\\\(Trabajo\\)\\\\trabajo\" \"marketing\")",
-      "PowerShell(Rename-Item \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\app\\\\\\(Portal\\)\\\\trabajo\" \"marketing\")"
+      "PowerShell(Rename-Item \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\app\\\\\\(Portal\\)\\\\trabajo\" \"marketing\")",
+      "Bash(git checkout *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\RicardoRodriguezAvil\\Desktop\\Miracles\\apps\\personal\\app\\(AdminEmpresaMiracles)\\gestion-empresa\\finanzas",

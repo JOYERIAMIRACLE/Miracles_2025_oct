@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { Menu } from "lucide-react"
@@ -13,7 +13,7 @@ export function EmpresaLayoutClient({ children }: { children: React.ReactNode })
   const router = useRouter()
 
   useEffect(() => {
-    if (isSoloTrabajo()) router.replace("/marketing/portal")
+    if (isSoloTrabajo()) router.replace("/portal")
   }, [router])
 
   return (
