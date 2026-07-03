@@ -54,3 +54,20 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 5b0a6ff7def6c2a2db4c33869b490353
+
+      - name: Prepare soportedinamico deploy
+        run: |
+          cp -r apps/personal/out apps/sdi-out
+          printf '<html><head><meta http-equiv="refresh" content="0;url=/soportedinamico"><script>location.href="/soportedinamico"</script></head></html>' > apps/sdi-out/index.html
+
+      - name: Create soportedinamico Pages project (if not exists)
+        run: npx wrangler pages project create soportedinamico --production-branch main || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 5b0a6ff7def6c2a2db4c33869b490353
+
+      - name: Deploy soportedinamico to Cloudflare Pages
+        run: npx wrangler pages deploy apps/sdi-out --project-name soportedinamico --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 5b0a6ff7def6c2a2db4c33869b490353
