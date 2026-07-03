@@ -30,7 +30,7 @@ export function SoporteDinamicoLanding() {
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl flex items-center justify-center bg-gradient-to-br from-[#c46800] to-[#ED8000] shadow-2xl shadow-orange-500/30"
+          className="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl flex items-center justify-center bg-white shadow-2xl shadow-black/30"
         >
           <Image
             src="/logo-sdi.png"
