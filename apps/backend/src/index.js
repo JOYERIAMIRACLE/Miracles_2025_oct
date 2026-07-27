@@ -251,6 +251,10 @@ async function aplicarPermisosPublic(strapi) {
 }
 
 async function sembrarCategoriasSiVacio(strapi) {
+  if (!strapi.db.metadata.get('api::categoria.categoria')) {
+    strapi.log.warn('[bootstrap] Modelo api::categoria.categoria no registrado — skip seed');
+    return;
+  }
   const count = await strapi.db.query('api::categoria.categoria').count({});
   if (count > 0) {
     strapi.log.info('[bootstrap] Categorías ya existen — skip seed');
@@ -265,6 +269,7 @@ async function sembrarCategoriasSiVacio(strapi) {
 // Backfill: si una categoría coincide por nombre con un seed default y NO tiene color,
 // le asigna el color del seed. Idempotente — solo toca categorías sin color.
 async function backfillColoresCategorias(strapi) {
+  if (!strapi.db.metadata.get('api::categoria.categoria')) return;
   const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
   const seedByName = new Map();
   for (const c of CATEGORIAS_SEED) seedByName.set(norm(c.nombre), c);
@@ -365,15 +370,15 @@ module.exports = {
   },
 
   async bootstrap({ strapi }) {
-    try {
-      await aplicarPermisosPublic(strapi);
-      await sembrarCategoriasSiVacio(strapi);
-      await backfillColoresCategorias(strapi);
-      await normalizarCategorias(strapi);
-      await sembrarCategoriasPagoSiVacio(strapi);
-      await migrarGastosAmbitoTrabajo(strapi);
-    } catch (err) {
-      strapi.log.error('[bootstrap] Error: ' + err.message);
-    }
+    const run = async (label, fn) => {
+      try { await fn(); }
+      catch (err) { strapi.log.error(`[bootstrap] ${label}: ${err.message}`); }
+    };
+    await run('aplicarPermisosPublic',      () => aplicarPermisosPublic(strapi));
+    await run('sembrarCategorias',           () => sembrarCategoriasSiVacio(strapi));
+    await run('backfillColoresCategorias',  () => backfillColoresCategorias(strapi));
+    await run('normalizarCategorias',       () => normalizarCategorias(strapi));
+    await run('sembrarCategoriasPago',      () => sembrarCategoriasPagoSiVacio(strapi));
+    await run('migrarGastosAmbito',         () => migrarGastosAmbitoTrabajo(strapi));
   },
 };
