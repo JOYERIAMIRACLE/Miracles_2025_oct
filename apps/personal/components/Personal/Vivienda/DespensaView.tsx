@@ -43,6 +43,7 @@ export function DespensaView() {
   const [deletingId,   setDeletingId]   = useState<string | null>(null)
   const [comprando,    setComprando]    = useState<Set<string>>(new Set())
   const [procesando,   setProcesando]   = useState<Set<string>>(new Set())
+  const [resetandoId,  setResetandoId]  = useState<string | null>(null)
 
   // ── derived ──────────────────────────────────────────────────────────────
 
@@ -130,6 +131,19 @@ export function DespensaView() {
     }
   }
 
+  async function resetearCantidad(ing: IngredienteDespensa) {
+    setResetandoId(ing.documentId)
+    try {
+      const updated = await updateIngrediente(ing.documentId, { cantidad: 0 })
+      setIngredientes(prev => prev.map(i => i.documentId === ing.documentId ? updated : i))
+      toast.success(`${ing.nombre} → 0`)
+    } catch {
+      toast.error("Error al actualizar")
+    } finally {
+      setResetandoId(null)
+    }
+  }
+
   async function toggleEnProceso(ing: IngredienteDespensa) {
     const nuevo = !ing.enProceso
     setProcesando(prev => new Set(prev).add(ing.documentId))
@@ -211,7 +225,8 @@ export function DespensaView() {
                 const bajo = ing.cantidad < ing.cantidadMinima
                 return (
                   <div key={ing.documentId}
-                    className={`bg-slate-900 border rounded-xl p-4 space-y-3 transition-colors ${bajo ? "border-amber-500/30" : "border-slate-800"}`}>
+                    onClick={() => abrirEditar(ing)}
+                    className={`bg-slate-900 border rounded-xl p-4 space-y-3 transition-colors cursor-pointer ${bajo ? "border-amber-500/30 hover:border-amber-500/50" : "border-slate-800 hover:border-slate-600"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -222,7 +237,11 @@ export function DespensaView() {
                         </div>
                         {ing.notas && <p className="text-[11px] text-slate-500 mt-0.5 truncate">{ing.notas}</p>}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => resetearCantidad(ing)} disabled={resetandoId === ing.documentId} title="Poner cantidad en 0"
+                          className="p-1.5 text-slate-600 hover:text-amber-400 rounded-lg hover:bg-slate-800 transition disabled:opacity-40 text-[11px] font-bold leading-none">
+                          {resetandoId === ing.documentId ? <Loader2 size={13} className="animate-spin" /> : "0"}
+                        </button>
                         <button onClick={() => abrirEditar(ing)} title="Editar"
                           className="p-1.5 text-slate-600 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition">
                           <Pencil size={13} />
