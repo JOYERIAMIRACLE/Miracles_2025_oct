@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Navbar from "@/app/(Tienda)/1tiendacomponentes/navbar";
 import Footer from "@/app/(Tienda)/1tiendacomponentes/footer";
-import { TiendaGuard } from "@/app/(Tienda)/1tiendacomponentes/TiendaGuard";
 
 export const metadata: Metadata = {
   // Este título se inyectará en el %s del Root Layout
@@ -16,18 +15,16 @@ export default function TiendaLayout({
   children: React.ReactNode;
 }) {
   return (
-    <TiendaGuard>
-      <div className="relative flex flex-col min-h-screen">
-        {/* El Navbar solo aparece en la zona de tienda */}
-        <Navbar />
+    <div className="relative flex flex-col min-h-screen">
+      {/* El Navbar solo aparece en la zona de tienda */}
+      <Navbar />
 
-        <main className="flex-grow">
-          {children}
-        </main>
+      <main className="flex-grow">
+        {children}
+      </main>
 
-        {/* El Footer solo aparece en la zona de tienda */}
-        <Footer />
-      </div>
-    </TiendaGuard>
+      {/* El Footer solo aparece en la zona de tienda */}
+      <Footer />
+    </div>
   );
 }

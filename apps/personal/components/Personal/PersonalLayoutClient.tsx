@@ -1,19 +1,10 @@
 ﻿"use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { PersonalSidebar } from "./PersonalSidebar"
 import { PersonalHeader } from "./PersonalHeader"
 import { AuthGuard } from "@/components/AuthGuard"
-import { isSoloTrabajo } from "@/lib/auth"
 
 export function PersonalLayoutClient({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-
-  useEffect(() => {
-    if (isSoloTrabajo()) router.replace("/portal")
-  }, [router])
-
   return (
     <AuthGuard>
       <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 z-50 w-64">

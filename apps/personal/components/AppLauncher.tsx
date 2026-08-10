@@ -5,7 +5,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutGrid, X,
-  User, Building2, ShoppingBag, Briefcase,
+  User, Building2, ShoppingBag,
 } from "lucide-react"
 
 type AppStatus = "active" | "coming"
@@ -34,14 +34,6 @@ const APPS: AppEntry[] = [
     icon: Building2,
     href: "/gestion-empresa",
     color: "violet",
-    status: "active",
-  },
-  {
-    name: "Trabajo",
-    description: "Tareas · Campañas · Marketing",
-    icon: Briefcase,
-    href: "/portal",
-    color: "blue",
     status: "active",
   },
   {

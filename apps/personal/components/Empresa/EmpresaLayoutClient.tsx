@@ -1,20 +1,13 @@
 ﻿"use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Menu } from "lucide-react"
 import { EmpresaSidebar } from "./EmpresaSidebar"
 import { EmpresaHeader } from "./EmpresaHeader"
 import { AuthGuard } from "@/components/AuthGuard"
-import { isSoloTrabajo } from "@/lib/auth"
-import { useRouter } from "next/navigation"
 
 export function EmpresaLayoutClient({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
-  const router = useRouter()
-
-  useEffect(() => {
-    if (isSoloTrabajo()) router.replace("/portal")
-  }, [router])
 
   return (
     <AuthGuard>

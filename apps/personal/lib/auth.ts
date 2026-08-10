@@ -44,21 +44,6 @@ export function logout() {
   removeUserRole()
 }
 
-export function isProveedorWeb(): boolean {
-  const role = getUserRole()
-  return (role?.includes("proveedor") ?? false)
-}
-
-export function isMarketingTeam(): boolean {
-  const role = getUserRole()
-  return (role?.includes("marketing") ?? false)
-}
-
-// Roles que solo tienen acceso a /trabajo (no empresa ni personal)
-export function isSoloTrabajo(): boolean {
-  return isProveedorWeb() || isMarketingTeam()
-}
-
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   const headers = { Authorization: `Bearer ${token}` }
   const normalize = (raw: string) => raw.toLowerCase().replace(/[\s-]/g, "_")
