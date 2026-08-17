@@ -14,6 +14,12 @@
     "archivo":     { "type": "media", "multiple": false, "required": true, "allowedTypes": ["files", "images"] },
     "activo":      { "type": "boolean", "default": true },
     "orden":       { "type": "integer", "default": 0 },
-    "seccion":     { "type": "string", "required": true }
+    "seccion":     { "type": "string", "required": true },
+    "categoria":   { "type": "string", "maxLength": 80 },
+    "grupo":       { "type": "string", "maxLength": 80 },
+    "variante":    { "type": "string", "maxLength": 60 },
+    "tipo":        { "type": "string", "maxLength": 80 },
+    "fecha_lanzamiento": { "type": "date" },
+    "rol_autor":   { "type": "string", "maxLength": 40 }
   }
 }

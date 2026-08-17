@@ -184,8 +184,8 @@ export function SeccionMision() {
       case "principios":  return <TabPrincipios identidad={identidad} documentId={documentId} onUploaded={reload} />
       case "valores":      return <TabValores identidad={identidad} documentId={documentId} onUploaded={reload} />
       case "actitudes":    return <TabActitudes />
-      case "consejeria":   return <RecursosDescargables seccion="mision-consejeria" />
-      case "onboarding":   return <RecursosDescargables seccion="mision-onboarding" />
+      case "consejeria":   return <RecursosDescargables seccion="mision-consejeria" layout="sidebar" />
+      case "onboarding":   return <RecursosDescargables seccion="mision-onboarding" layout="sidebar" />
       default:              return null
     }
   }

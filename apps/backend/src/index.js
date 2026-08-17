@@ -159,6 +159,11 @@ const PUBLIC_ACTIONS_PORTAL_MDO = [
   'api::rh-item.rh-item.create',
   'api::rh-item.rh-item.update',
   'api::rh-item.rh-item.delete',
+  'api::recurso-categoria.recurso-categoria.find',
+  'api::recurso-categoria.recurso-categoria.findOne',
+  'api::recurso-categoria.recurso-categoria.create',
+  'api::recurso-categoria.recurso-categoria.update',
+  'api::recurso-categoria.recurso-categoria.delete',
 ];
 
 const CATEGORIAS_PAGO_SEED = [

@@ -47,7 +47,7 @@ export function SeccionRH() {
         <RHItemList tipo="politica" titulo="Políticas laborales" intro="Políticas laborales vigentes en medallitadeoro. Da clic en una para ver el detalle." />
       )}
       {tab === "capacitacion" && (
-        <RecursosDescargables seccion="rh-capacitacion" />
+        <RecursosDescargables seccion="rh-capacitacion" layout="sidebar" />
       )}
       {tab === "emergencias" && (
         <RHItemList tipo="emergencia" titulo="Emergencias" intro="Directorio de contactos de emergencia. Acceso inmediato sin necesidad de buscar en correos." />
