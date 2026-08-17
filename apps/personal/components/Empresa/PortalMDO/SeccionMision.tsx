@@ -1,16 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Compass, HeartHandshake, Smile, Church, LifeBuoy, GraduationCap, Camera } from "lucide-react"
-import { useSectionTab, TabBar, Card, Pending, SeccionHero, useHeroImagen, useUploadImagen } from "./shared"
+import { Compass, HeartHandshake, Smile, LifeBuoy, GraduationCap, Camera } from "lucide-react"
+import { useSectionTab, TabBar, Card, SeccionHero, useHeroImagen, useUploadImagen } from "./shared"
 import type { IdentidadImagenCampo } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
+import { RecursosDescargables } from "./RecursosDescargables"
 
 const TABS = [
   { id: "principios",  label: "Principios",           icon: Compass },
   { id: "valores",     label: "Valores",               icon: HeartHandshake },
   { id: "actitudes",   label: "Actitudes",             icon: Smile },
-  { id: "espiritual",  label: "Formación Espiritual",  icon: Church },
   { id: "consejeria",  label: "Consejería",            icon: LifeBuoy },
   { id: "onboarding",  label: "Onboarding",            icon: GraduationCap },
 ]
@@ -184,9 +184,8 @@ export function SeccionMision() {
       case "principios":  return <TabPrincipios identidad={identidad} documentId={documentId} onUploaded={reload} />
       case "valores":      return <TabValores identidad={identidad} documentId={documentId} onUploaded={reload} />
       case "actitudes":    return <TabActitudes />
-      case "espiritual":   return <Pending owner="Medallitadeoro" desc="Todavía no existe esta información en Miracles." />
-      case "consejeria":   return <Pending owner="Medallitadeoro" desc="Todavía no existe esta información en Miracles." />
-      case "onboarding":   return <Pending owner="Medallitadeoro" desc="Todavía no existe esta información en Miracles." />
+      case "consejeria":   return <RecursosDescargables seccion="mision-consejeria" />
+      case "onboarding":   return <RecursosDescargables seccion="mision-onboarding" />
       default:              return null
     }
   }

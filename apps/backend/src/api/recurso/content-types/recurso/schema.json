@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "recursos",
+  "info": {
+    "singularName": "recurso",
+    "pluralName": "recursos",
+    "displayName": "Portal - Recurso Descargable"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":      { "type": "string", "required": true },
+    "descripcion": { "type": "text", "maxLength": 300 },
+    "archivo":     { "type": "media", "multiple": false, "required": true, "allowedTypes": ["files", "images"] },
+    "activo":      { "type": "boolean", "default": true },
+    "orden":       { "type": "integer", "default": 0 },
+    "seccion":     { "type": "string", "required": true }
+  }
+}
