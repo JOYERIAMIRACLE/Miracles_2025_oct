@@ -1,3 +1,10 @@
+export type IdentidadImagen = {
+  url:    string
+  width?: number
+  height?: number
+  mime?:  string
+} | null
+
 export type IdentidadEmpresa = {
   id:             number
   documentId:     string
@@ -11,6 +18,15 @@ export type IdentidadEmpresa = {
   sitioWeb:       string | null
   redesSociales:  string | null
   notas:          string | null
+  descripcion_conoce:      string | null
+  portada_conoce:          IdentidadImagen
+  portada_conoce_original: IdentidadImagen
+  foto_equipo:             IdentidadImagen
+  imagen_mision:           IdentidadImagen
+  imagen_vision:           IdentidadImagen
+  telefono:       string | null
+  correo:         string | null
+  direccion:      string | null
   createdAt?:     string
   updatedAt?:     string
 }

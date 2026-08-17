@@ -2,11 +2,12 @@ import { useEffect, useState } from "react"
 import { IdentidadEmpresa } from "@/types/identidad-empresa"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const URL  = `${BASE}/api/identidad-empresas?pagination[pageSize]=1`
+const URL  = `${BASE}/api/identidad-empresas?pagination[pageSize]=1&populate=*`
 
 export function useGetIdentidad() {
   const [identidad, setIdentidad] = useState<IdentidadEmpresa | null>(null)
   const [loading,   setLoading]   = useState(true)
+  const [tick,      setTick]      = useState(0)
 
   useEffect(() => {
     ;(async () => {
@@ -16,9 +17,9 @@ export function useGetIdentidad() {
         setIdentidad(json.data?.[0] ?? null)
       } finally { setLoading(false) }
     })()
-  }, [])
+  }, [tick])
 
-  return { identidad, setIdentidad, loading }
+  return { identidad, setIdentidad, loading, reload: () => setTick(t => t + 1) }
 }
 
 export async function saveIdentidad(

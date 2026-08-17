@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "avisos",
+  "info": {
+    "singularName": "aviso",
+    "pluralName": "avisos",
+    "displayName": "Portal - Aviso"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "titulo":   { "type": "string", "required": true },
+    "desc":     { "type": "text", "required": true },
+    "area":     { "type": "string", "required": true },
+    "emoji":    { "type": "string", "default": "📋" },
+    "color": {
+      "type": "enumeration",
+      "enum": ["violet", "emerald", "blue", "orange", "red", "amber"],
+      "default": "violet"
+    },
+    "autor":     { "type": "string" },
+    "vigencia":  { "type": "date" },
+    "activo":    { "type": "boolean", "default": true },
+    "orden":     { "type": "integer", "default": 0 },
+    "imagen":    { "type": "media", "multiple": false, "required": false, "allowedTypes": ["images"] }
+  }
+}

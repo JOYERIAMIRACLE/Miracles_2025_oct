@@ -18,6 +18,15 @@
     "tipografia":  { "type": "string" },
     "sitioWeb":    { "type": "string" },
     "redesSociales": { "type": "text" },
-    "notas":       { "type": "text" }
+    "notas":       { "type": "text" },
+    "descripcion_conoce":      { "type": "text" },
+    "portada_conoce":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_conoce_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "foto_equipo":             { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "imagen_mision":           { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "imagen_vision":           { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "telefono":    { "type": "string" },
+    "correo":      { "type": "string" },
+    "direccion":   { "type": "text" }
   }
 }
