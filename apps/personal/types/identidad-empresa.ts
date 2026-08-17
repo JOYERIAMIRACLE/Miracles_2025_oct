@@ -50,6 +50,9 @@ export type IdentidadEmpresa = {
   descripcion_depto_rh:      string | null
   portada_depto_rh:          IdentidadImagen
   portada_depto_rh_original: IdentidadImagen
+  descripcion_depto_cadena:      string | null
+  portada_depto_cadena:          IdentidadImagen
+  portada_depto_cadena_original: IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }
