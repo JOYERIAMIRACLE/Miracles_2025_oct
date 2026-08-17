@@ -9,14 +9,18 @@ import { IngresosEmpresaView }     from "@/components/Empresa/Finanzas/IngresosE
 import { InventarioEmpresaView }   from "@/components/Empresa/Almacen/InventarioEmpresaView"
 import { CampanasEmpresaView }     from "@/components/Empresa/Marketing/CampanasEmpresaView"
 import { FinancierosView }         from "@/components/Empresa/Indicadores/FinancierosView"
+import { RichiavrodHub }           from "@/components/GameEmpresa/RichiavrodHub"
+import { SdiPortalGateway }        from "@/components/GameEmpresa/SdiPortalGateway"
 
 const LABELS: Record<string, string> = {
-  ventas:      "⚔️  Sala de Conquistas — Ventas",
-  pipeline:    "🗺️  Mapa de Quests — Pipeline CRM",
-  finanzas:    "🏦  Tesorería — Finanzas",
-  almacen:     "📦  Inventario — Almacén",
-  marketing:   "📢  Gremio Mercader — Marketing",
-  indicadores: "📊  Sala de Tácticas — KPIs",
+  ventas:       "⚔️  Sala de Conquistas — Ventas",
+  pipeline:     "🗺️  Mapa de Quests — Pipeline CRM",
+  finanzas:     "🏦  Tesorería — Finanzas",
+  almacen:      "📦  Inventario — Almacén",
+  marketing:    "📢  Gremio Mercader — Marketing",
+  indicadores:  "📊  Sala de Tácticas — KPIs",
+  richiavrod:   "🏠  Tu Casa — Richiavrod",
+  "sdi-portal": "🏭  Portal Externo — SDI",
 }
 
 function Content({ module }: { module: string }) {
@@ -27,6 +31,8 @@ function Content({ module }: { module: string }) {
     case "almacen":     return <InventarioEmpresaView />
     case "marketing":   return <CampanasEmpresaView />
     case "indicadores": return <FinancierosView />
+    case "richiavrod":  return <RichiavrodHub />
+    case "sdi-portal":  return <SdiPortalGateway />
     default:            return <p className="p-8 text-sm text-slate-600">Módulo: {module}</p>
   }
 }

@@ -10,17 +10,26 @@ const MAP_W = 1300
 const MAP_H = 950
 
 const BUILDINGS = [
-  { x: 220,  y: 210,  w: 150, h: 95, icon: "⚔",  label: "VENTAS",       id: "ventas",       r: 16,  g: 185, b: 129 },
-  { x: 650,  y: 160,  w: 150, h: 95, icon: "🗺",  label: "PIPELINE",     id: "pipeline",     r: 245, g: 158, b: 11  },
-  { x: 1080, y: 210,  w: 150, h: 95, icon: "🏦",  label: "FINANZAS",     id: "finanzas",     r: 59,  g: 130, b: 246 },
-  { x: 220,  y: 700,  w: 150, h: 95, icon: "📦",  label: "ALMACÉN",      id: "almacen",      r: 124, g: 58,  b: 237 },
-  { x: 650,  y: 750,  w: 150, h: 95, icon: "📢",  label: "MARKETING",    id: "marketing",    r: 236, g: 72,  b: 153 },
-  { x: 1080, y: 700,  w: 150, h: 95, icon: "📊",  label: "INDICADORES",  id: "indicadores",  r: 6,   g: 182, b: 212 },
-  { x: 220,  y: 475,  w: 150, h: 95, icon: "🏠",  label: "RICHIAVROD",   id: "richiavrod",   r: 20,  g: 184, b: 166 },
-  { x: 1080, y: 475,  w: 150, h: 95, icon: "🏭",  label: "SDI PORTAL",   id: "sdi-portal",   r: 99,  g: 102, b: 241 },
+  { x: 200,  y: 300, w: 150, h: 95, icon: "🏢", label: "OFICINA RICHI",     id: "oficina-richiavrod",      r: 167, g: 139, b: 250 },
+  { x: 200,  y: 475, w: 150, h: 95, icon: "🏬", label: "ALMACÉN RICHI",     id: "almacen-richiavrod",      r: 124, g: 58,  b: 198 },
+  { x: 200,  y: 650, w: 150, h: 95, icon: "🧩", label: "TALLER RICHI",      id: "taller-richiavrod",       r: 217, g: 70,  b: 239 },
+  { x: 480,  y: 140, w: 150, h: 95, icon: "🏢", label: "OFICINA MEDALLA",   id: "oficina-medallitadeoro",  r: 192, g: 132, b: 252 },
+  { x: 820,  y: 140, w: 150, h: 95, icon: "🏬", label: "ALMACÉN MEDALLA",   id: "almacen-medallitadeoro",  r: 147, g: 51,  b: 234 },
+  { x: 480,  y: 300, w: 150, h: 95, icon: "🪟", label: "APARADOR",          id: "aparador-medallitadeoro", r: 216, g: 180, b: 254 },
+  { x: 820,  y: 300, w: 150, h: 95, icon: "🧩", label: "TALLER MEDALLA",    id: "taller-medallitadeoro",   r: 217, g: 70,  b: 239 },
+  { x: 1100, y: 300, w: 150, h: 95, icon: "🏢", label: "OFICINA SDI",       id: "oficina-sdi",             r: 129, g: 140, b: 248 },
+  { x: 1100, y: 475, w: 150, h: 95, icon: "🏬", label: "ALMACÉN SDI",       id: "almacen-sdi",             r: 99,  g: 102, b: 241 },
+  { x: 1100, y: 650, w: 150, h: 95, icon: "🧩", label: "TALLER SDI",        id: "taller-sdi",              r: 217, g: 70,  b: 239 },
 ]
 
-export function PhaserGame({ onEnterZone }: Props) {
+/* Sectores — agrupan visualmente los edificios de cada mundo (x/y = esquina superior izquierda) */
+const SECTORS = [
+  { x: 80,  y: 220, w: 240, h: 500, label: "RICHIAVROD",     r: 167, g: 139, b: 250 },
+  { x: 330, y: 70,  w: 640, h: 280, label: "MEDALLITADEORO", r: 192, g: 132, b: 252 },
+  { x: 980, y: 220, w: 240, h: 500, label: "SDI PORTAL",     r: 129, g: 140, b: 248 },
+]
+
+export function SegundoCerebroGame({ onEnterZone }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const gameRef      = useRef<{ destroy: (r: boolean) => void } | null>(null)
   const callbackRef  = useRef(onEnterZone)
@@ -50,7 +59,7 @@ export function PhaserGame({ onEnterZone }: Props) {
         prompt!:      Phaser.GameObjects.Text
         nearZone:     string | null = null
 
-        constructor() { super({ key: "GameScene" }) }
+        constructor() { super({ key: "SegundoCerebroScene" }) }
 
         create() {
           this.physics.world.setBounds(0, 0, MAP_W, MAP_H)
@@ -58,53 +67,67 @@ export function PhaserGame({ onEnterZone }: Props) {
 
           const gfx = this.add.graphics()
 
-          /* ── Background ── */
-          gfx.fillStyle(0x050810)
+          /* ── Background (violeta oscuro) ── */
+          gfx.fillStyle(0x0a0714)
           gfx.fillRect(0, 0, MAP_W, MAP_H)
 
           /* ── Grid ── */
-          gfx.lineStyle(1, 0x090f1e, 0.6)
+          gfx.lineStyle(1, 0x150f24, 0.6)
           for (let x = 0; x <= MAP_W; x += 48) gfx.lineBetween(x, 0, x, MAP_H)
           for (let y = 0; y <= MAP_H; y += 48) gfx.lineBetween(0, y, MAP_W, y)
 
           /* ── Roads ── */
-          gfx.lineStyle(24, 0x080d1c, 1)
+          gfx.lineStyle(24, 0x120c1f, 1)
           gfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
           gfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
 
-          /* ── Road markings ── */
-          gfx.lineStyle(1, 0x0d1830, 0.8)
+          gfx.lineStyle(1, 0x1a1330, 0.8)
           gfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
           gfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
 
-          /* ── Paths from buildings to plaza ── */
+          /* ── Caminos de edificios a la plaza ── */
           const cx = MAP_W / 2, cy = MAP_H / 2
-          gfx.lineStyle(10, 0x070c1a, 1)
+          gfx.lineStyle(10, 0x0f0a1a, 1)
           BUILDINGS.forEach(b => gfx.lineBetween(b.x, b.y, cx, cy))
 
-          /* ── Center plaza ── */
-          gfx.fillStyle(0x060d1c)
+          /* ── Plaza central ── */
+          gfx.fillStyle(0x0d0818)
           gfx.fillCircle(cx, cy, 90)
-          gfx.lineStyle(1, 0x0d1e36, 1)
+          gfx.lineStyle(1, 0x241a3d, 1)
           gfx.strokeCircle(cx, cy, 90)
-          gfx.lineStyle(1, 0x0a172c, 1)
+          gfx.lineStyle(1, 0x1a1330, 1)
           gfx.strokeCircle(cx, cy, 75)
-          this.add.text(cx, cy, "💎\nMIRACLES\nCORP", {
-            fontFamily: "monospace", fontSize: "11px",
-            color: "#1a3a5c", align: "center",
+          this.add.text(cx, cy, "🧠\nSEGUNDO\nCEREBRO", {
+            fontFamily: "monospace", fontSize: "10px",
+            color: "#3d2a63", align: "center",
           }).setOrigin(0.5)
 
-          /* ── Ambient dots ── */
+          /* ── Puntos ambientales ── */
           const dotGfx = this.add.graphics()
           for (let i = 0; i < 60; i++) {
             const dx = Math.random() * MAP_W
             const dy = Math.random() * MAP_H
             const alpha = Math.random() * 0.3 + 0.05
-            dotGfx.fillStyle(0x1a3a5c, alpha)
+            dotGfx.fillStyle(0x3d2a63, alpha)
             dotGfx.fillCircle(dx, dy, 1)
           }
 
-          /* ── Buildings ── */
+          /* ── Sectores (agrupan los edificios de cada mundo) ── */
+          SECTORS.forEach(s => {
+            const hex = (s.r << 16) | (s.g << 8) | s.b
+            gfx.fillStyle(hex, 0.035)
+            gfx.fillRoundedRect(s.x, s.y, s.w, s.h, 18)
+            gfx.lineStyle(1, hex, 0.22)
+            gfx.strokeRoundedRect(s.x, s.y, s.w, s.h, 18)
+
+            this.add.text(s.x + s.w / 2, s.y + 16, s.label, {
+              fontFamily: "monospace", fontSize: "10px",
+              color: `#${hex.toString(16).padStart(6, "0")}`,
+              align: "center", letterSpacing: 3,
+            }).setOrigin(0.5).setAlpha(0.55)
+          })
+
+          /* ── Edificios ── */
           BUILDINGS.forEach(b => {
             const hex = (b.r << 16) | (b.g << 8) | b.b
             const darkR = Math.floor(b.r * 0.06)
@@ -112,46 +135,44 @@ export function PhaserGame({ onEnterZone }: Props) {
             const darkB = Math.floor(b.b * 0.06)
             const darkHex = (darkR << 16) | (darkG << 8) | darkB
 
-            /* Shadow */
             gfx.fillStyle(0x000000, 0.6)
             gfx.fillRect(b.x - b.w / 2 + 5, b.y - b.h / 2 + 5, b.w, b.h)
 
-            /* Fill */
             gfx.fillStyle(darkHex)
             gfx.fillRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h)
 
-            /* Border */
             gfx.lineStyle(1, hex, 0.6)
             gfx.strokeRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h)
 
-            /* Top glow line */
             gfx.lineStyle(2, hex, 0.5)
             gfx.lineBetween(b.x - b.w / 2 + 6, b.y - b.h / 2, b.x + b.w / 2 - 6, b.y - b.h / 2)
 
-            /* Door */
             gfx.fillStyle(hex, 0.25)
             gfx.fillRect(b.x - 10, b.y + b.h / 2 - 14, 20, 14)
             gfx.lineStyle(1, hex, 0.4)
             gfx.strokeRect(b.x - 10, b.y + b.h / 2 - 14, 20, 14)
 
-            /* Icon + label */
             this.add.text(b.x, b.y - 10, b.icon, {
               fontFamily: "serif", fontSize: "22px",
             }).setOrigin(0.5)
             this.add.text(b.x, b.y + 16, b.label, {
               fontFamily: "monospace", fontSize: "9px",
               color: `#${hex.toString(16).padStart(6, "0")}`,
-              align: "center", letterSpacing: 2,
+              align: "center", letterSpacing: 1,
             }).setOrigin(0.5)
 
-            /* Entry zone (30px padding) */
             this.zones.push({
               rect: new Phaser.Geom.Rectangle(b.x - b.w / 2 - 20, b.y - b.h / 2 - 20, b.w + 40, b.h + 40),
               id: b.id,
             })
+
+            /* Click directo al edificio — alternativa a caminar + E */
+            this.add.zone(b.x, b.y, b.w, b.h)
+              .setInteractive({ useHandCursor: true })
+              .on("pointerdown", () => callbackRef.current(b.id))
           })
 
-          /* ── Player ── */
+          /* ── Jugador ── */
           const sx = MAP_W / 2, sy = MAP_H / 2 + 110
           this.playerGlow = this.add.rectangle(sx, sy, 22, 26, 0x00d4ff, 0.08)
           this.player = this.add.rectangle(sx, sy, 10, 14, 0x00d4ff)
@@ -166,11 +187,11 @@ export function PhaserGame({ onEnterZone }: Props) {
           this.d = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D)
           this.eKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E)
 
-          /* ── Enter prompt ── */
+          /* ── Prompt de entrada ── */
           this.prompt = this.add.text(sx, sy - 30, "[ E ]  ENTRAR", {
             fontFamily: "monospace", fontSize: "10px",
             color: "#00d4ff",
-            backgroundColor: "#050810cc",
+            backgroundColor: "#0a0714cc",
             padding: { x: 7, y: 4 },
           }).setOrigin(0.5).setAlpha(0).setDepth(10)
 
@@ -182,8 +203,14 @@ export function PhaserGame({ onEnterZone }: Props) {
             repeat: -1,
           })
 
-          /* ── Camera ── */
-          this.cameras.main.startFollow(this.player, true, 0.09, 0.09)
+          /* ── Cámara: centrada mostrando el mapa completo, no persigue al jugador ── */
+          const fitCamera = () => {
+            const zoom = Math.min(this.scale.width / MAP_W, this.scale.height / MAP_H) * 0.94
+            this.cameras.main.setZoom(zoom)
+            this.cameras.main.centerOn(cx, cy)
+          }
+          fitCamera()
+          this.scale.on(Phaser.Scale.Events.RESIZE, fitCamera)
         }
 
         update() {
@@ -203,10 +230,8 @@ export function PhaserGame({ onEnterZone }: Props) {
           if (down)  body.setVelocityY(SPEED)
           if ((left || right) && (up || down)) body.velocity.normalize().scale(SPEED)
 
-          /* Sync glow */
           this.playerGlow.setPosition(this.player.x, this.player.y)
 
-          /* Zone detection */
           let found: string | null = null
           for (const z of this.zones) {
             if (z.rect.contains(this.player.x, this.player.y)) { found = z.id; break }
@@ -230,7 +255,7 @@ export function PhaserGame({ onEnterZone }: Props) {
       const config: Phaser.Types.Core.GameConfig = {
         type:   Phaser.AUTO,
         parent: containerRef.current!,
-        backgroundColor: "#050810",
+        backgroundColor: "#0a0714",
         physics: {
           default: "arcade",
           arcade:  { gravity: { x: 0, y: 0 }, debug: false },
