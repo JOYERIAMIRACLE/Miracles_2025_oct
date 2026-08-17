@@ -56,6 +56,9 @@ export type IdentidadEmpresa = {
   descripcion_depto_comercial:      string | null
   portada_depto_comercial:          IdentidadImagen
   portada_depto_comercial_original: IdentidadImagen
+  descripcion_depto_marketing:      string | null
+  portada_depto_marketing:          IdentidadImagen
+  portada_depto_marketing_original: IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }
