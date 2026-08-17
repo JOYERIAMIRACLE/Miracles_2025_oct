@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Menu, Search, X as XIcon, Sun, Moon, Sparkles, LogOut, Bell } from "lucide-react"
+import { Menu, Search, X as XIcon, Sun, Moon, Sparkles, LogOut, Bell, Camera } from "lucide-react"
 import { GRUPOS } from "./PortalMDOSidebar"
 import { logout } from "@/lib/auth"
 import { useCurrentUser } from "@/lib/useCurrentUser"
+import { useUploadImagen } from "./shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 
 interface Props {
   onMenuClick: () => void
@@ -54,6 +56,21 @@ function SearchResultsPanel({ results, onSelect }: { results: Resultado[]; onSel
           <p className="text-[10px] text-slate-400">{r.grupo}</p>
         </button>
       ))}
+    </div>
+  )
+}
+
+function LogoEditable({ url, documentId, onUploaded }: { url?: string | null; documentId: string | null; onUploaded: () => void }) {
+  const { uploading, inputRef, handleFile, trigger } = useUploadImagen("logo", documentId, onUploaded)
+  return (
+    <div className="relative h-9 w-9 shrink-0 rounded-lg bg-violet-600 flex items-center justify-center overflow-hidden group">
+      {url ? <img src={url} alt="Logo" className="w-full h-full object-cover" /> : <Sparkles className="h-5 w-5 text-white" />}
+      <button type="button" onClick={e => { e.stopPropagation(); trigger() }} disabled={uploading}
+        title="Cambiar logo"
+        className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition disabled:opacity-100">
+        {uploading ? <span className="text-[8px] font-bold">...</span> : <Camera className="h-3.5 w-3.5" />}
+      </button>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   )
 }
@@ -164,6 +181,7 @@ function NotifBell() {
 
 export function PortalMDOHeader({ onMenuClick, onLogoClick, onNavigate }: Props) {
   const indice = useIndiceBusqueda()
+  const { identidad, reload } = useGetIdentidad()
   const [busqueda, setBusqueda]   = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -197,16 +215,15 @@ export function PortalMDOHeader({ onMenuClick, onLogoClick, onNavigate }: Props)
           className="h-9 w-9 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0">
           <Menu className="h-5 w-5" />
         </button>
-        <button type="button" onClick={onLogoClick}
-          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity min-w-0 shrink-0">
-          <div className="h-9 w-9 shrink-0 rounded-lg bg-violet-600 flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
+        <div role="button" tabIndex={0} onClick={onLogoClick}
+          onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onLogoClick() }}
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity min-w-0 shrink-0 cursor-pointer">
+          <LogoEditable url={identidad?.logo?.url} documentId={identidad?.documentId ?? null} onUploaded={reload} />
           <div className="min-w-0 text-left hidden sm:block">
-            <div className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">Portal Medallitadeoro</div>
-            <div className="text-[11px] text-slate-400 leading-none pt-0.5">Joyería Miracles</div>
+            <div className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">Portal organizacional</div>
+            <div className="text-[11px] text-slate-400 leading-none pt-0.5">Medallita de Oro</div>
           </div>
-        </button>
+        </div>
 
         <div ref={searchRef} className="hidden sm:flex flex-1 justify-center px-8 relative">
           <div className="relative w-72">

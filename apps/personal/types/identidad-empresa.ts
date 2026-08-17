@@ -46,6 +46,7 @@ export type IdentidadEmpresa = {
   icono_valor_3:       IdentidadImagen
   icono_valor_4:       IdentidadImagen
   icono_valor_5:       IdentidadImagen
+  logo:                IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }

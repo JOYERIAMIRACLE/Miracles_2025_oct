@@ -172,6 +172,7 @@ export type IdentidadImagenCampo =
   | "img_orientador_1" | "img_orientador_2" | "img_orientador_3" | "img_orientador_4"
   | "img_valores_logo"
   | "icono_valor_1" | "icono_valor_2" | "icono_valor_3" | "icono_valor_4" | "icono_valor_5"
+  | "logo"
 
 /** Sube una imagen simple (sin recorte) y la guarda en identidad-empresa. */
 export function useUploadImagen(campo: IdentidadImagenCampo, documentId: string | null, onUploaded: () => void) {

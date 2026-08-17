@@ -46,6 +46,7 @@
     "icono_valor_2":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "icono_valor_3":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "icono_valor_4":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "icono_valor_5":       { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "icono_valor_5":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "logo":                { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }
