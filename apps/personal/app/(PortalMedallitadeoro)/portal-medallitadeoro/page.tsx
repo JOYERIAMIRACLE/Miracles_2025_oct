@@ -11,13 +11,11 @@ import { SeccionCadenaSuministro } from "@/components/Empresa/PortalMDO/SeccionC
 import { SeccionComercial } from "@/components/Empresa/PortalMDO/SeccionComercial"
 import { SeccionMarketing } from "@/components/Empresa/PortalMDO/SeccionMarketing"
 import { SeccionAdministracionFinanzas } from "@/components/Empresa/PortalMDO/SeccionAdministracionFinanzas"
-import { SeccionSeguridad } from "@/components/Empresa/PortalMDO/SeccionSeguridad"
-import { SeccionTI } from "@/components/Empresa/PortalMDO/SeccionTI"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
 
 const SECCIONES_VALIDAS = [
   "portal", "conoce", "mision", "rh", "cadena", "comercial", "marketing",
-  "administracion", "seguridad", "ti", "tareas",
+  "administracion", "tareas",
 ]
 
 function leerHash(): { seccion: string; tab: string } {
@@ -61,8 +59,6 @@ export default function PortalMedallitadeoroPage() {
       case "comercial":      return <SeccionComercial />
       case "marketing":      return <SeccionMarketing />
       case "administracion": return <SeccionAdministracionFinanzas />
-      case "seguridad":      return <SeccionSeguridad />
-      case "ti":             return <SeccionTI />
       case "tareas":         return <TareasView ambito="empresa" titulo="Tareas" />
       default:                return <SeccionPortalHome onNavigate={navigate} />
     }

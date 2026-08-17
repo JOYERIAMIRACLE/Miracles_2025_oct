@@ -3,7 +3,7 @@
 import { useState } from "react"
 import {
   Home, Landmark, Briefcase, Layers, Building2, GitBranch, ShoppingBag,
-  Flag, Users, Globe, DollarSign, Shield, Monitor, ChevronDown, Settings,
+  Flag, Users, Globe, DollarSign, ChevronDown, Settings,
 } from "lucide-react"
 import { PortalMDOConfigModal } from "./PortalMDOConfigModal"
 
@@ -35,8 +35,6 @@ export const GRUPOS: NavGroup[] = [
       { id: "comercial",       label: "Comercial",                 icon: ShoppingBag },
       { id: "marketing",       label: "Marketing",                 icon: GitBranch },
       { id: "administracion",  label: "Administración y Finanzas", icon: DollarSign },
-      { id: "seguridad",       label: "Seguridad",                 icon: Shield },
-      { id: "ti",              label: "TI y Soporte",              icon: Monitor },
     ],
   },
   {
@@ -49,7 +47,7 @@ export const GRUPOS: NavGroup[] = [
 
 export const DEPT_ICONS: Record<string, typeof Home> = {
   mision: Flag, rh: Users, cadena: Globe, comercial: ShoppingBag,
-  marketing: GitBranch, administracion: DollarSign, seguridad: Shield, ti: Monitor,
+  marketing: GitBranch, administracion: DollarSign,
 }
 
 interface Props {
