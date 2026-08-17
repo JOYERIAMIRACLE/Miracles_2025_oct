@@ -7,6 +7,11 @@ export type TipoCampana = "completa" | "titulos_extra"
 
 export type AmbitoCampana = "trabajo" | "empresa"
 
+export type RedPublicacionKey = "linkedin" | "facebook" | "mailing" | "portal" | "blog"
+export type PublicacionData = Record<RedPublicacionKey, { publicado: boolean; hora: string; dia: string }>
+
+export type StrapiMedia = { id: number; url: string; mime: string; name: string }
+
 export type CampanaType = {
   id:              number
   documentId:      string
@@ -37,8 +42,10 @@ export type CampanaType = {
   notas:           string | null
   keyword:         string | null
   etapas:          string | null
+  multimedia:      StrapiMedia | null
+  publicacion:     string | null
   createdAt?:      string
   updatedAt?:      string
 }
 
-export type CampanaPayload = Omit<CampanaType, "id" | "documentId" | "createdAt" | "updatedAt">
+export type CampanaPayload = Omit<CampanaType, "id" | "documentId" | "createdAt" | "updatedAt" | "multimedia"> & { multimedia: number | null }

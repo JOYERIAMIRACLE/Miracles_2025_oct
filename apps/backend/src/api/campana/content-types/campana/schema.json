@@ -71,6 +71,8 @@
     },
     "etapas": {
       "type": "string"
-    }
+    },
+    "multimedia": { "type": "media", "multiple": false, "allowedTypes": ["images", "videos", "files"] },
+    "publicacion": { "type": "text" }
   }
 }

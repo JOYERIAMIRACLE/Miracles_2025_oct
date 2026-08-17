@@ -5,7 +5,7 @@ import { useSectionTab, TabBar, Card, SeccionHero, useHeroImagen } from "./share
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { RecursosDescargables, type RecursoExtraTab } from "./RecursosDescargables"
 import { SitioWebMiraclesView } from "@/components/Empresa/Marketing/SitioWebMiraclesView"
-import { CampanasEmpresaView } from "@/components/Empresa/Marketing/CampanasEmpresaView"
+import { CampanasPlannerView } from "./CampanasPlannerView"
 import { PromocionalesView } from "@/components/Empresa/Marketing/PromocionalesView"
 import { EcosistemaView } from "@/components/Shared/EcosistemaView"
 
@@ -86,7 +86,7 @@ export function SeccionMarketing() {
       {tab === "plantillas"  && <RecursosDescargables seccion="marketing-plantillas" layout="sidebar" />}
       {tab === "galeria"     && <RecursosDescargables seccion="marketing-galeria" layout="sidebar" />}
       {tab === "materiales"  && <RecursosDescargables seccion="marketing-materiales" layout="sidebar" />}
-      {tab === "campanas"    && <CampanasEmpresaView />}
+      {tab === "campanas"    && <CampanasPlannerView />}
       {tab === "sitio-web"   && <SitioWebMiraclesView />}
       {tab === "indicadores" && <EcosistemaView ambito="empresa" />}
       {tab === "merch"       && <PromocionalesView ambito="empresa" />}

@@ -5,7 +5,7 @@ export function useGetCampanas(ambito: AmbitoCampana = "trabajo") {
   const filter = ambito === "empresa"
     ? "&filters[ambito][$eq]=empresa"
     : "&filters[$or][0][ambito][$eq]=trabajo&filters[$or][1][ambito][$null]=true"
-  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/campanas?pagination[pageSize]=200&sort=anio:desc,mes:asc,createdAt:desc${filter}`
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/campanas?pagination[pageSize]=200&sort=anio:desc,mes:asc,createdAt:desc&populate=multimedia${filter}`
   const [campanas, setCampanas] = useState<CampanaType[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState("")
