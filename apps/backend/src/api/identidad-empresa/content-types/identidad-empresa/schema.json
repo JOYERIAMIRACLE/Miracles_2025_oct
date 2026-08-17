@@ -53,6 +53,9 @@
     "portada_depto_rh_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "descripcion_depto_cadena":      { "type": "text" },
     "portada_depto_cadena":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "portada_depto_cadena_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "portada_depto_cadena_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "descripcion_depto_comercial":      { "type": "text" },
+    "portada_depto_comercial":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_depto_comercial_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }

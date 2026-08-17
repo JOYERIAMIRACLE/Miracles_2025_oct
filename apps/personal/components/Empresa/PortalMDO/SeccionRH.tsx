@@ -1,7 +1,7 @@
 "use client"
 
-import { Gift, BookOpen, GraduationCap, Siren, Users } from "lucide-react"
-import { useSectionTab, TabBar, Card, Pending, SeccionHero, useHeroImagen } from "./shared"
+import { Gift, BookOpen, GraduationCap, Siren } from "lucide-react"
+import { useSectionTab, TabBar, SeccionHero, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { RHItemList } from "./RHItemList"
 import { RecursosDescargables } from "./RecursosDescargables"
@@ -11,7 +11,6 @@ const TABS = [
   { id: "politicas",    label: "Políticas laborales", icon: BookOpen },
   { id: "capacitacion", label: "Capacitación",        icon: GraduationCap },
   { id: "emergencias",  label: "Emergencias",         icon: Siren },
-  { id: "integrantes",  label: "Integrantes",         icon: Users },
 ]
 
 export function SeccionRH() {
@@ -52,9 +51,6 @@ export function SeccionRH() {
       )}
       {tab === "emergencias" && (
         <RHItemList tipo="emergencia" titulo="Emergencias" intro="Directorio de contactos de emergencia. Acceso inmediato sin necesidad de buscar en correos." />
-      )}
-      {tab === "integrantes" && (
-        <Pending owner="Medallitadeoro" desc="Todavía no existe un directorio de colaboradores en medallitadeoro." />
       )}
     </div>
   )
