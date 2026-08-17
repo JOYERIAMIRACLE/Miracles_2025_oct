@@ -254,24 +254,33 @@ const CATEGORIAS_SEED = [
   { nombre: 'Otro',              tipo: 'gasto',   grupo: 'prescindible', color: '#6b7280', orden: 99, activa: true },
 ];
 
-async function aplicarPermisosPublic(strapi) {
-  const publicRole = await strapi.db
+async function otorgarPermisos(strapi, roleType, actions) {
+  const role = await strapi.db
     .query('plugin::users-permissions.role')
-    .findOne({ where: { type: 'public' } });
-  if (!publicRole) return;
-
-  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO];
-  for (const action of todas) {
+    .findOne({ where: { type: roleType } });
+  if (!role) return;
+  for (const action of actions) {
     const existing = await strapi.db
       .query('plugin::users-permissions.permission')
-      .findOne({ where: { action, role: publicRole.id } });
+      .findOne({ where: { action, role: role.id } });
     if (!existing) {
       await strapi.db
         .query('plugin::users-permissions.permission')
-        .create({ data: { action, role: publicRole.id } });
+        .create({ data: { action, role: role.id } });
     }
   }
-  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo + Portal MDO)');
+}
+
+async function aplicarPermisosPublic(strapi) {
+  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO];
+  await otorgarPermisos(strapi, 'public', todas);
+  // El front de Portal Medallitadeoro manda el JWT del usuario logueado en
+  // los guardados (crear/editar/eliminar) — esas peticiones las evalúa
+  // Strapi bajo el rol "authenticated", no "public", así que ese rol
+  // también necesita estos permisos o el guardado falla con 403 aunque el
+  // GET (sin token) sí funcione.
+  await otorgarPermisos(strapi, 'authenticated', PUBLIC_ACTIONS_PORTAL_MDO);
+  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo + Portal MDO) + Authenticated (Portal MDO)');
 }
 
 async function sembrarCategoriasSiVacio(strapi) {
