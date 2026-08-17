@@ -137,6 +137,30 @@ const PUBLIC_ACTIONS_TRABAJO = [
   'api::ecosistema-mkt.ecosistema-mkt.delete',
 ];
 
+// Portal Medallitadeoro — identidad-empresa, avisos (comunicados),
+// recursos descargables y rh-item (prestaciones/politicas/emergencias).
+const PUBLIC_ACTIONS_PORTAL_MDO = [
+  'api::identidad-empresa.identidad-empresa.find',
+  'api::identidad-empresa.identidad-empresa.findOne',
+  'api::identidad-empresa.identidad-empresa.create',
+  'api::identidad-empresa.identidad-empresa.update',
+  'api::aviso.aviso.find',
+  'api::aviso.aviso.findOne',
+  'api::aviso.aviso.create',
+  'api::aviso.aviso.update',
+  'api::aviso.aviso.delete',
+  'api::recurso.recurso.find',
+  'api::recurso.recurso.findOne',
+  'api::recurso.recurso.create',
+  'api::recurso.recurso.update',
+  'api::recurso.recurso.delete',
+  'api::rh-item.rh-item.find',
+  'api::rh-item.rh-item.findOne',
+  'api::rh-item.rh-item.create',
+  'api::rh-item.rh-item.update',
+  'api::rh-item.rh-item.delete',
+];
+
 const CATEGORIAS_PAGO_SEED = [
   'Comisión', 'Anticipo', 'Liquidación', 'Honorario', 'Servicio', 'Otro',
 ];
@@ -236,7 +260,7 @@ async function aplicarPermisosPublic(strapi) {
     .findOne({ where: { type: 'public' } });
   if (!publicRole) return;
 
-  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL];
+  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO];
   for (const action of todas) {
     const existing = await strapi.db
       .query('plugin::users-permissions.permission')
@@ -247,7 +271,7 @@ async function aplicarPermisosPublic(strapi) {
         .create({ data: { action, role: publicRole.id } });
     }
   }
-  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo)');
+  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo + Portal MDO)');
 }
 
 async function sembrarCategoriasSiVacio(strapi) {
