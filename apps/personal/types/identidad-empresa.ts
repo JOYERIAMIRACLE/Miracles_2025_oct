@@ -47,6 +47,9 @@ export type IdentidadEmpresa = {
   icono_valor_4:       IdentidadImagen
   icono_valor_5:       IdentidadImagen
   logo:                IdentidadImagen
+  descripcion_depto_rh:      string | null
+  portada_depto_rh:          IdentidadImagen
+  portada_depto_rh_original: IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }

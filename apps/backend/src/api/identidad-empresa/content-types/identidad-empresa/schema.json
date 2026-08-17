@@ -47,6 +47,9 @@
     "icono_valor_3":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "icono_valor_4":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "icono_valor_5":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "logo":                { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "logo":                { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "descripcion_depto_rh":      { "type": "text" },
+    "portada_depto_rh":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_depto_rh_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }

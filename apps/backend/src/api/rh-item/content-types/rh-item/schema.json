@@ -1,0 +1,20 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rh_items",
+  "info": {
+    "singularName": "rh-item",
+    "pluralName": "rh-items",
+    "displayName": "Portal RH - Prestacion/Politica/Emergencia"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":     { "type": "string", "required": true },
+    "subtitulo":  { "type": "string" },
+    "tipo":       { "type": "enumeration", "enum": ["prestacion", "politica", "emergencia"], "required": true },
+    "caracteristicas": { "type": "json" },
+    "archivos":   { "type": "media", "multiple": true, "allowedTypes": ["files", "images"] },
+    "activo":     { "type": "boolean", "default": true },
+    "orden":      { "type": "integer", "default": 0 }
+  }
+}
