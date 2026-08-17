@@ -27,6 +27,25 @@
     "imagen_vision":           { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "telefono":    { "type": "string" },
     "correo":      { "type": "string" },
-    "direccion":   { "type": "text" }
+    "direccion":   { "type": "text" },
+    "descripcion_depto_mision":      { "type": "text" },
+    "portada_depto_mision":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_depto_mision_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_principios":  { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_principio_1":   { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_principio_2":   { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_principio_3":   { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_principio_4":   { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_principio_5":   { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "img_orientador_1":    { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "img_orientador_2":    { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "img_orientador_3":    { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "img_orientador_4":    { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "img_valores_logo":    { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_valor_1":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_valor_2":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_valor_3":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_valor_4":       { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "icono_valor_5":       { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }

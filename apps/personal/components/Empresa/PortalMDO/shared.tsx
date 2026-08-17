@@ -165,7 +165,13 @@ export function boldify(texto: string): React.ReactNode[] {
   )
 }
 
-type IdentidadImagenCampo = "foto_equipo" | "imagen_mision" | "imagen_vision"
+export type IdentidadImagenCampo =
+  | "foto_equipo" | "imagen_mision" | "imagen_vision"
+  | "portada_principios"
+  | "icono_principio_1" | "icono_principio_2" | "icono_principio_3" | "icono_principio_4" | "icono_principio_5"
+  | "img_orientador_1" | "img_orientador_2" | "img_orientador_3" | "img_orientador_4"
+  | "img_valores_logo"
+  | "icono_valor_1" | "icono_valor_2" | "icono_valor_3" | "icono_valor_4" | "icono_valor_5"
 
 /** Sube una imagen simple (sin recorte) y la guarda en identidad-empresa. */
 export function useUploadImagen(campo: IdentidadImagenCampo, documentId: string | null, onUploaded: () => void) {
@@ -220,7 +226,9 @@ async function recortarImagen(imagenUrl: string, area: Area): Promise<File> {
  * recortar la primera vez que se sube, para que "Ajustar imagen" siempre
  * parta de la foto completa en vez de recortar sobre un recorte anterior.
  */
-export function useHeroImagen(campo: "portada_conoce", documentId: string | null, onUploaded: () => void) {
+type HeroImagenCampo = "portada_conoce" | "portada_depto_mision"
+
+export function useHeroImagen(campo: HeroImagenCampo, documentId: string | null, onUploaded: () => void) {
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 

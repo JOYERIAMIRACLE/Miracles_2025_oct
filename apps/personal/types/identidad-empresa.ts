@@ -27,6 +27,25 @@ export type IdentidadEmpresa = {
   telefono:       string | null
   correo:         string | null
   direccion:      string | null
+  descripcion_depto_mision:      string | null
+  portada_depto_mision:          IdentidadImagen
+  portada_depto_mision_original: IdentidadImagen
+  portada_principios: IdentidadImagen
+  icono_principio_1:  IdentidadImagen
+  icono_principio_2:  IdentidadImagen
+  icono_principio_3:  IdentidadImagen
+  icono_principio_4:  IdentidadImagen
+  icono_principio_5:  IdentidadImagen
+  img_orientador_1:   IdentidadImagen
+  img_orientador_2:   IdentidadImagen
+  img_orientador_3:   IdentidadImagen
+  img_orientador_4:   IdentidadImagen
+  img_valores_logo:   IdentidadImagen
+  icono_valor_1:       IdentidadImagen
+  icono_valor_2:       IdentidadImagen
+  icono_valor_3:       IdentidadImagen
+  icono_valor_4:       IdentidadImagen
+  icono_valor_5:       IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }
