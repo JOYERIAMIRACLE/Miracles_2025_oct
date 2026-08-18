@@ -10,7 +10,7 @@ export function useGetPagosProgramados() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/pago-programados?pagination[pageSize]=200&sort=fecha:asc`)
+        const res  = await fetch(`${BASE}/api/pago-programados?populate=cuenta&pagination[pageSize]=200&sort=fecha:asc`)
         const json = await res.json()
         setPagos(json.data ?? [])
       } finally { setLoading(false) }

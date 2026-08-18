@@ -45,6 +45,21 @@
     },
     "notas": {
       "type": "text"
+    },
+    "cuenta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cuenta.cuenta"
+    },
+    "transaccion": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::transaccion.transaccion"
+    },
+    "ambito": {
+      "type": "enumeration",
+      "enum": ["trabajo", "empresa"],
+      "default": "empresa"
     }
   }
 }

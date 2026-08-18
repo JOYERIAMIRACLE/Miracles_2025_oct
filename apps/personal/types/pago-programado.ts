@@ -14,6 +14,9 @@ export type PagoProgramadoType = {
   frecuencia?: FrecuenciaPago | null
   categoria?:  string | null
   notas?:      string | null
+  cuenta?:      { id: number; documentId: string; nombre: string } | null
+  transaccion?: { id: number; documentId: string } | null
+  ambito?:      "trabajo" | "empresa" | null
   createdAt:   string
 }
 

@@ -14,6 +14,9 @@ import { updatePartida } from "@/api/partida-presupuesto/updatePartida"
 import { deletePartida } from "@/api/partida-presupuesto/deletePartida"
 import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
+import { DropdownPicker } from "@/components/Shared/DropdownPicker"
+import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
+import { fieldCls } from "@/lib/styles"
 
 const CATEGORIAS_EMPRESA = ["Operaciones", "Marketing", "Ventas", "Administración", "Producción", "IT", "Otro"]
 const FRECUENCIAS = ["mensual", "trimestral", "anual", "único"] as const
@@ -33,18 +36,8 @@ function areaDeCategoria(categoria: string | null): string {
   return "Otro"
 }
 
-const CHART_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#14b8a6"]
-const TOOLTIP_STYLE = { backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 12, color: "#e2e8f0" }
-
-const CAT_BAR: Record<string, string> = {
-  "Operaciones":    "bg-indigo-500",
-  "Marketing":      "bg-blue-500",
-  "Ventas":         "bg-emerald-500",
-  "Administración": "bg-violet-500",
-  "Producción":     "bg-amber-500",
-  "IT":             "bg-cyan-500",
-  "Otro":           "bg-zinc-500",
-}
+// Un solo acento (violeta) en distintas opacidades para las gráficas.
+const CHART_COLORS = ["#8b5cf6", "#a78bfa", "#c4b5fd", "#7c3aed", "#6d28d9", "#5b21b6", "#ddd6fe"]
 
 function calcMensual(monto: number, frecuencia: string | null): number {
   switch (frecuencia) {
@@ -82,8 +75,8 @@ function WeekBar({ pct }: { pct: number }) {
   const ref = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => { if (ref.current) ref.current.style.width = `${Math.min(pct, 100)}%` }, [pct])
   return (
-    <div className="flex-1 h-1.5 rounded-full bg-slate-800">
-      <div ref={ref} className="h-1.5 rounded-full bg-blue-500 transition-all duration-500" />
+    <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
+      <div ref={ref} className="h-1.5 rounded-full bg-violet-500 transition-all duration-500" />
     </div>
   )
 }
@@ -97,7 +90,8 @@ function ChartDot({ color }: { color: string }) {
 type Form = { descripcion: string; categoria: string; tipo: string; frecuencia: string; monto: string }
 const emptyForm = (): Form => ({ descripcion: "", categoria: "Operaciones", tipo: "necesidad", frecuencia: "mensual", monto: "" })
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
+const labelCls = "block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5"
+const TOOLTIP_STYLE = { backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12, color: "#e2e8f0" }
 
 export function PresupuestosEmpresaView() {
   const { partidas: raw, loading, error } = useGetPartidas("empresa")
@@ -110,6 +104,7 @@ export function PresupuestosEmpresaView() {
   const [form,      setForm]      = useState<Form>(emptyForm())
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
+  const cerrarSiVacio = useModalBackdropClose(form, () => setModalOpen(false), editing?.documentId)
 
   const hoy = new Date()
   const mesDefault = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`
@@ -220,85 +215,85 @@ export function PresupuestosEmpresaView() {
     finally { setDelId(null) }
   }
 
-  if (error) return <div className="p-8 text-sm text-red-400">Error: {error}</div>
+  if (error) return <div className="p-8 text-sm text-red-500">Error: {error}</div>
 
   return (
-    <div className="p-4 md:p-6 space-y-5">
+    <div className="space-y-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100">Presupuesto</h1>
-          <p className="text-sm text-slate-500">Planifica ingresos y egresos por área de la empresa.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Presupuesto</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Planifica ingresos y egresos por área de la empresa.</p>
         </div>
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 transition-colors">
           <Plus size={15} /> Nueva partida
         </button>
       </div>
 
       {/* Presupuesto vs Real */}
-      <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5 space-y-5">
+      <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-5">
 
         {/* Selector de mes */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Presupuesto vs Real</h2>
+            <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Presupuesto vs Real</h2>
             <div className="flex items-center gap-1.5">
               <button type="button" onClick={() => {
                 const d = new Date(mes + "-15"); d.setMonth(d.getMonth() - 1)
                 setMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
-              }} className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors">←</button>
+              }} className="h-7 w-7 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs transition-colors">←</button>
               <input type="month" title="Seleccionar mes" value={mes} onChange={e => setMes(e.target.value)}
-                className="h-7 text-xs bg-slate-800 border border-slate-700 rounded-md px-2 text-slate-300" />
+                className="h-7 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2 text-slate-700 dark:text-slate-300" />
               <button type="button" onClick={() => {
                 const d = new Date(mes + "-15"); d.setMonth(d.getMonth() + 1)
                 setMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
-              }} className="h-7 w-7 rounded-md bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center text-xs transition-colors">→</button>
+              }} className="h-7 w-7 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs transition-colors">→</button>
               {!esMesActual && (
-                <button type="button" onClick={() => setMes(mesDefault)} className="text-[10px] text-cyan-400 hover:text-cyan-300 ml-1">Hoy</button>
+                <button type="button" onClick={() => setMes(mesDefault)} className="text-[10px] text-violet-500 hover:text-violet-600 ml-1">Hoy</button>
               )}
             </div>
           </div>
-          <p className="text-[10px] text-slate-500 capitalize">{mesLabel}</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 capitalize">{mesLabel}</p>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/30">
+            className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/30">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="h-3.5 w-3.5 text-blue-400" />
-              <span className="text-[10px] text-slate-500 uppercase font-medium">Presupuesto mensual</span>
+              <TrendingDown className="h-3.5 w-3.5 text-violet-500" />
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Presupuesto mensual</span>
             </div>
-            <p className="text-lg font-bold text-blue-400">{fmt(totalPresupuestado)}</p>
-            <p className="text-[10px] text-slate-600 mt-0.5">total gastos planificados</p>
+            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{fmt(totalPresupuestado)}</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">total gastos planificados</p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/30">
+            className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/30">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="h-3.5 w-3.5 text-red-400" />
-              <span className="text-[10px] text-slate-500 uppercase font-medium">Gastado en {mesLabel}</span>
+              <TrendingDown className="h-3.5 w-3.5 text-violet-500" />
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Gastado en {mesLabel}</span>
             </div>
             <div className="flex items-end justify-between">
-              <p className={`text-lg font-bold ${pct > 100 ? "text-red-400" : "text-amber-400"}`}>{fmt(totalGastado)}</p>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${pct > 100 ? "bg-red-500/10 text-red-400" : pct > 80 ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+              <p className={`text-lg font-bold ${pct > 100 ? "text-red-500 dark:text-red-400" : "text-slate-900 dark:text-slate-100"}`}>{fmt(totalGastado)}</p>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${pct > 100 ? "bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400" : "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400"}`}>
                 {Math.round(pct)}%
               </span>
             </div>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/30">
+            className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/30">
             <div className="flex items-center gap-2 mb-2">
               {disponible >= 0
-                ? <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
-                : <AlertTriangle className="h-3.5 w-3.5 text-red-400" />}
-              <span className="text-[10px] text-slate-500 uppercase font-medium">Disponible</span>
+                ? <CheckCircle className="h-3.5 w-3.5 text-violet-500" />
+                : <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Disponible</span>
             </div>
-            <p className={`text-lg font-bold ${disponible >= 0 ? "text-emerald-400" : "text-red-400"}`}>{fmt(disponible)}</p>
-            <p className="text-[10px] text-slate-600 mt-0.5">restante del presupuesto</p>
+            <p className={`text-lg font-bold ${disponible >= 0 ? "text-slate-900 dark:text-slate-100" : "text-red-500 dark:text-red-400"}`}>{fmt(disponible)}</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">restante del presupuesto</p>
           </motion.div>
         </div>
 
@@ -306,15 +301,15 @@ export function PresupuestosEmpresaView() {
         {totalPresupuestado > 0 && (
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs text-slate-400">Total gastos del mes</span>
-              <span className="text-[10px] text-slate-500">{fmt(totalGastado)} / {fmt(totalPresupuestado)}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Total gastos del mes</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">{fmt(totalGastado)} / {fmt(totalPresupuestado)}</span>
             </div>
-            <div className="h-3 rounded-full bg-slate-800 overflow-hidden border border-slate-700/30">
+            <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700/30">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(pct, 100)}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className={`h-full rounded-full ${pct > 100 ? "bg-red-500" : pct > 80 ? "bg-amber-500" : "bg-blue-500"}`}
+                className={`h-full rounded-full ${pct > 100 ? "bg-red-500" : "bg-violet-500"}`}
               />
             </div>
           </div>
@@ -323,24 +318,24 @@ export function PresupuestosEmpresaView() {
         {/* Barras por área */}
         {comparativa.length > 0 && (
           <>
-            <h4 className="text-[10px] text-slate-500 uppercase font-medium">Distribución por área</h4>
+            <h4 className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Distribución por área — real vs. presupuestado</h4>
             <div className="space-y-3">
               {comparativa.map((c, i) => {
                 const pctReal = c.presupuestado > 0 ? (c.real / c.presupuestado) * 100 : 0
                 return (
                 <motion.div key={c.cat} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-slate-300">{c.cat}</span>
-                    <span className="text-[10px] text-slate-500">
-                      Real: <span className={pctReal > 100 ? "text-red-400" : "text-slate-300"}>{fmt(c.real)}</span> / {fmt(c.presupuestado)}
+                    <span className="text-xs text-slate-600 dark:text-slate-300">{c.cat}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                      Real: <span className={pctReal > 100 ? "text-red-500 dark:text-red-400 font-medium" : "text-slate-600 dark:text-slate-300"}>{fmt(c.real)}</span> / {fmt(c.presupuestado)}
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-800 overflow-hidden relative">
+                  <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(pctReal, 100)}%` }}
                       transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
-                      className={`h-full rounded-full ${pctReal > 100 ? "bg-red-500" : CAT_BAR[c.cat] ?? "bg-zinc-500"}`}
+                      className={`h-full rounded-full ${pctReal > 100 ? "bg-red-500" : "bg-violet-500"}`}
                     />
                   </div>
                 </motion.div>
@@ -354,8 +349,8 @@ export function PresupuestosEmpresaView() {
       {/* Charts */}
       {comparativa.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Distribución presupuesto mensual</h3>
+          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Distribución presupuesto mensual</h3>
             <div className="flex items-center gap-4">
               <ResponsiveContainer width="50%" height={160}>
                 <PieChart>
@@ -369,23 +364,23 @@ export function PresupuestosEmpresaView() {
                 {comparativa.map((c, i) => (
                   <div key={c.cat} className="flex items-center gap-2 min-w-0">
                     <ChartDot color={CHART_COLORS[i % CHART_COLORS.length]} />
-                    <span className="text-[11px] text-slate-400 truncate flex-1">{c.cat}</span>
-                    <span className="text-[11px] text-slate-300 font-medium shrink-0">{fmt(c.presupuestado)}</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate flex-1">{c.cat}</span>
+                    <span className="text-[11px] text-slate-700 dark:text-slate-300 font-medium shrink-0">{fmt(c.presupuestado)}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Presupuesto por área — {mesLabel}</h3>
+          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Presupuesto por área — {mesLabel}</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={comparativa.map(c => ({ cat: c.cat.length > 9 ? c.cat.slice(0, 9) + "…" : c.cat, Presupuesto: Math.round(c.presupuestado) }))} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <XAxis dataKey="cat" tick={{ fontSize: 9, fill: "#64748b" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: "#64748b" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                <XAxis dataKey="cat" tick={{ fontSize: 9, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "#94a3b8" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => `$${v.toLocaleString("es-MX")}`} />
                 <Legend wrapperStyle={{ fontSize: 10, color: "#94a3b8" }} />
-                <Bar dataKey="Presupuesto" fill="#6366f1" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="Presupuesto" fill="#8b5cf6" radius={[3, 3, 0, 0]} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -396,19 +391,19 @@ export function PresupuestosEmpresaView() {
       {gastoPorSemana.length > 0 && (() => {
         const maxTotal = Math.max(...gastoPorSemana.map(s => s.total))
         return (
-          <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 p-5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Gasto por semana</h3>
+          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Gasto por semana</h3>
             <div className="space-y-1">
               {[...gastoPorSemana].reverse().map(semana => {
                 const esActual = semana.monday === semanaActualKey
                 const pctW = maxTotal > 0 ? (semana.total / maxTotal) * 100 : 0
                 return (
-                  <div key={semana.monday} className={`rounded-lg px-3 py-3 transition-colors ${esActual ? "bg-blue-500/10 border border-blue-500/20" : "hover:bg-slate-800/40"}`}>
+                  <div key={semana.monday} className={`rounded-lg px-3 py-3 transition-colors ${esActual ? "bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
                     <div className="flex items-center gap-3">
-                      <span className={`text-[11px] font-mono w-36 shrink-0 ${esActual ? "text-blue-300 font-semibold" : "text-slate-400"}`}>{semana.rangeLabel}</span>
+                      <span className={`text-[11px] font-mono w-36 shrink-0 ${esActual ? "text-violet-600 dark:text-violet-300 font-semibold" : "text-slate-500 dark:text-slate-400"}`}>{semana.rangeLabel}</span>
                       <WeekBar pct={pctW} />
-                      <span className={`text-sm font-bold w-24 text-right shrink-0 ${esActual ? "text-blue-200" : "text-slate-300"}`}>{fmt(semana.total)}</span>
-                      {esActual && <span className="text-[10px] text-blue-400 font-medium shrink-0">esta semana</span>}
+                      <span className={`text-sm font-bold w-24 text-right shrink-0 ${esActual ? "text-violet-700 dark:text-violet-200" : "text-slate-700 dark:text-slate-300"}`}>{fmt(semana.total)}</span>
+                      {esActual && <span className="text-[10px] text-violet-500 font-medium shrink-0">esta semana</span>}
                     </div>
                   </div>
                 )
@@ -419,25 +414,25 @@ export function PresupuestosEmpresaView() {
       })()}
 
       {/* Tabla de partidas con proyecciones */}
-      <div className="rounded-xl bg-slate-900/60 border border-slate-700/40 overflow-hidden">
+      <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
-            <thead className="border-b border-slate-800 bg-slate-800/60">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
               <tr>
-                <th className="h-10 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Área / Tipo</th>
-                <th className="h-10 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Descripción</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Semana</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Mensual</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Trimestral</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Anual</th>
+                <th className="h-10 px-4 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Área / Tipo</th>
+                <th className="h-10 px-4 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Descripción</th>
+                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Semana</th>
+                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Mensual</th>
+                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Trimestral</th>
+                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Anual</th>
                 <th className="h-10 px-4"><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody>
               {loading && Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i} className="border-b border-slate-800/50">
+                <tr key={i} className="border-b border-slate-100 dark:border-slate-800/50">
                   {Array.from({ length: 7 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-3.5 rounded bg-slate-800 animate-pulse" /></td>
+                    <td key={j} className="px-4 py-3"><div className="h-3.5 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" /></td>
                   ))}
                 </tr>
               ))}
@@ -445,40 +440,39 @@ export function PresupuestosEmpresaView() {
               {!loading && porCategoria.map(({ cat, items }) => {
                 const subtotal = items.reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
                 return [
-                  <tr key={`cat-${cat}`} className="bg-slate-800/40 border-t-2 border-slate-700/60">
+                  <tr key={`cat-${cat}`} className="bg-slate-50 dark:bg-slate-800/40 border-t-2 border-slate-200 dark:border-slate-700/60">
                     <td colSpan={2} className="px-4 py-2">
-                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">{cat}</span>
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{cat}</span>
                     </td>
-                    <td className="px-4 py-2 text-right text-xs font-semibold text-slate-400">{fmt(subtotal / 4.33)}</td>
-                    <td className="px-4 py-2 text-right text-xs font-bold text-slate-200">{fmt(subtotal)}</td>
-                    <td className="px-4 py-2 text-right text-xs font-semibold text-slate-400">{fmt(subtotal * 3)}</td>
-                    <td className="px-4 py-2 text-right text-xs font-semibold text-slate-400">{fmt(subtotal * 12)}</td>
+                    <td className="px-4 py-2 text-right text-xs font-semibold text-slate-400 dark:text-slate-400">{fmt(subtotal / 4.33)}</td>
+                    <td className="px-4 py-2 text-right text-xs font-bold text-slate-800 dark:text-slate-200">{fmt(subtotal)}</td>
+                    <td className="px-4 py-2 text-right text-xs font-semibold text-slate-400 dark:text-slate-400">{fmt(subtotal * 3)}</td>
+                    <td className="px-4 py-2 text-right text-xs font-semibold text-slate-400 dark:text-slate-400">{fmt(subtotal * 12)}</td>
                     <td />
                   </tr>,
                   ...items.map(p => {
                     const mensual = calcMensual(p.monto ?? 0, p.frecuencia)
                     const esIng = p.tipo === "ingreso"
-                    const colorNum = esIng ? "text-emerald-400" : "text-slate-200"
                     return (
-                      <tr key={p.documentId} className="border-b border-slate-800/40 hover:bg-slate-800/20 group transition-colors">
+                      <tr key={p.documentId} className="border-b border-slate-100 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/20 group transition-colors">
                         <td className="px-4 py-2.5">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 border border-slate-600/50">{p.frecuencia ?? "mensual"}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600/50">{p.frecuencia ?? "mensual"}</span>
                         </td>
-                        <td className="px-4 py-2.5 font-medium text-slate-200">{p.descripcion}</td>
-                        <td className={`px-4 py-2.5 text-right tabular-nums text-xs text-slate-400`}>{fmt(mensual / 4.33)}</td>
-                        <td className={`px-4 py-2.5 text-right tabular-nums text-sm font-semibold ${colorNum}`}>{fmt(mensual)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-xs text-slate-400">{fmt(mensual * 3)}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums text-xs text-slate-400">{fmt(mensual * 12)}</td>
+                        <td className="px-4 py-2.5 font-medium text-slate-700 dark:text-slate-200">{p.descripcion}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-xs text-slate-400 dark:text-slate-400">{fmt(mensual / 4.33)}</td>
+                        <td className={`px-4 py-2.5 text-right tabular-nums text-sm font-semibold ${esIng ? "text-violet-600 dark:text-violet-400" : "text-slate-800 dark:text-slate-200"}`}>{fmt(mensual)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-xs text-slate-400 dark:text-slate-400">{fmt(mensual * 3)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-xs text-slate-400 dark:text-slate-400">{fmt(mensual * 12)}</td>
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button type="button" title="Editar" onClick={() => openEditar(p)} className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
+                            <button type="button" title="Editar" onClick={() => openEditar(p)} className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"><Pencil size={13} /></button>
                             {delId === p.documentId ? (
                               <div className="flex items-center gap-1 px-1">
-                                <button type="button" onClick={() => handleDelete(p.documentId)} className="text-[11px] text-red-400 font-medium">Sí</button>
-                                <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500">No</button>
+                                <button type="button" onClick={() => handleDelete(p.documentId)} className="text-[11px] text-red-500 font-medium">Sí</button>
+                                <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-400">No</button>
                               </div>
                             ) : (
-                              <button type="button" title="Eliminar" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><X size={13} /></button>
+                              <button type="button" title="Eliminar" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"><X size={13} /></button>
                             )}
                           </div>
                         </td>
@@ -489,13 +483,13 @@ export function PresupuestosEmpresaView() {
               })}
 
               {!loading && activas.length > 0 && (
-                <tr className="border-t-2 border-slate-600 bg-slate-900">
+                <tr className="border-t-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900">
                   <td colSpan={2} className="px-4 py-3">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Flujo neto</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Flujo neto</span>
                   </td>
                   {([flujoPorFrecuencia.semana, flujoPorFrecuencia.mensual, flujoPorFrecuencia.trimestral, flujoPorFrecuencia.anual]).map((val, i) => (
                     <td key={i} className="px-4 py-3 text-right">
-                      <span className={`text-sm font-bold ${val >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      <span className={`text-sm font-bold ${val >= 0 ? "text-violet-600 dark:text-violet-400" : "text-red-500 dark:text-red-400"}`}>
                         {val >= 0 ? "+" : ""}{fmt(val)}
                       </span>
                     </td>
@@ -507,7 +501,7 @@ export function PresupuestosEmpresaView() {
           </table>
 
           {!loading && activas.length === 0 && (
-            <div className="py-16 text-center text-slate-600">
+            <div className="py-16 text-center text-slate-400 dark:text-slate-600">
               <TrendingDown size={32} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">Sin partidas. Agrega la primera.</p>
             </div>
@@ -517,54 +511,49 @@ export function PresupuestosEmpresaView() {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={ev => { if (ev.target === ev.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
-              <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar partida" : "Nueva partida"}</h2>
-              <button type="button" title="Cerrar" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16} /></button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? "Editar partida" : "Nueva partida"}</h2>
+              <button type="button" title="Cerrar" onClick={() => setModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Descripción <span className="text-red-400">*</span></label>
-                <input type="text" value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inp} placeholder="Ej. Renta bodega, Campaña Meta…" />
+                <label className={labelCls}>Descripción <span className="text-violet-500">*</span></label>
+                <input type="text" value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={fieldCls} placeholder="Ej. Renta bodega, Campaña Meta…" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Área</label>
-                  <select title="Área" value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className={inp + " cursor-pointer"}>
-                    {CATEGORIAS_EMPRESA.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <label className={labelCls}>Área</label>
+                  <DropdownPicker label="Área" value={form.categoria} onChange={v => setForm(f => ({ ...f, categoria: v }))}
+                    options={CATEGORIAS_EMPRESA.map(c => ({ value: c, label: c }))} />
                 </div>
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
-                  <select title="Tipo" value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inp + " cursor-pointer"}>
-                    <option value="necesidad">Gasto</option>
-                    <option value="ingreso">Ingreso</option>
-                  </select>
+                  <label className={labelCls}>Tipo</label>
+                  <DropdownPicker label="Tipo" value={form.tipo} onChange={v => setForm(f => ({ ...f, tipo: v }))}
+                    options={[{ value: "necesidad", label: "Gasto" }, { value: "ingreso", label: "Ingreso" }]} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Frecuencia</label>
-                  <select title="Frecuencia" value={form.frecuencia} onChange={e => setForm(f => ({ ...f, frecuencia: e.target.value }))} className={inp + " cursor-pointer"}>
-                    {FRECUENCIAS.map(fr => <option key={fr} value={fr}>{fr.charAt(0).toUpperCase() + fr.slice(1)}</option>)}
-                  </select>
+                  <label className={labelCls}>Frecuencia</label>
+                  <DropdownPicker label="Frecuencia" value={form.frecuencia} onChange={v => setForm(f => ({ ...f, frecuencia: v }))}
+                    options={FRECUENCIAS.map(fr => ({ value: fr, label: fr.charAt(0).toUpperCase() + fr.slice(1) }))} />
                 </div>
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Monto ($) <span className="text-red-400">*</span></label>
-                  <input type="number" min="0" step="0.01" value={form.monto} onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} className={inp} placeholder="0.00" />
+                  <label className={labelCls}>Monto ($) <span className="text-violet-500">*</span></label>
+                  <input type="number" min="0" step="0.01" value={form.monto} onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} className={fieldCls} placeholder="0.00" />
                 </div>
               </div>
               {form.monto && Number(form.monto) > 0 && form.frecuencia !== "mensual" && (
-                <p className="text-[11px] text-slate-500 bg-slate-800/50 rounded-lg px-3 py-2">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
                   Equivale a {fmt(calcMensual(Number(form.monto), form.frecuencia))} / mes
                 </p>
               )}
             </div>
-            <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-800">
-              <button type="button" onClick={() => setModalOpen(false)} disabled={saving} className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
-              <button type="button" onClick={handleSave} disabled={saving} className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition">
+            <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+              <button type="button" onClick={() => setModalOpen(false)} disabled={saving} className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+              <button type="button" onClick={handleSave} disabled={saving} className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar" : "Crear"}
               </button>
