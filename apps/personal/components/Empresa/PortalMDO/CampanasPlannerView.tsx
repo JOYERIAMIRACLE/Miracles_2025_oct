@@ -1,16 +1,18 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import {
   Plus, Pencil, Trash2, X, Check, ChevronDown,
   CalendarDays, LayoutGrid, ChevronLeft, ChevronRight, BarChart2,
-  Paperclip, Search, Camera,
+  Paperclip, Search, Camera, SlidersHorizontal, Link2,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetCampanas } from "@/api/campana/getCampanas"
 import { createCampana, updateCampana, deleteCampana } from "@/api/campana/mutateCampana"
 import { CampanaType, CampanaPayload, MESES, MesCampana, PublicacionData, RedPublicacionKey } from "@/types/campana"
 import { uploadMedia } from "@/lib/upload"
+import { CalendarioPicker } from "@/components/Shared/CalendarioPicker"
+import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 
 const AMBITO       = "empresa" as const
 const ANIO_ACTUAL  = new Date().getFullYear()
@@ -40,6 +42,14 @@ function addDays(d: Date, n: number): Date {
   return r
 }
 function toYMD(d: Date): string { return d.toISOString().split("T")[0] }
+function ymdToDate(s: string): Date | null { return s ? new Date(`${s}T00:00:00Z`) : null }
+function getISOWeek(d: Date): number {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  const day = dt.getUTCDay() || 7
+  dt.setUTCDate(dt.getUTCDate() + 4 - day)
+  const jan1 = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1))
+  return Math.ceil((((dt.getTime() - jan1.getTime()) / 86400000) + 1) / 7)
+}
 const HOY_YMD = toYMD(new Date())
 
 const FILAS_GRID = [
@@ -155,39 +165,65 @@ function CategoriaBadge({ cat }: { cat: string | null }) {
   return <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${cls}`}>{cat}</span>
 }
 
+type FiltroStatus = "todas" | "sin_iniciar" | "en_progreso" | "completadas"
+const ESTADOS_CAMPANA: { key: FiltroStatus; label: string; dot: string }[] = [
+  { key: "todas",       label: "Todas",       dot: "bg-slate-300" },
+  { key: "sin_iniciar", label: "Sin iniciar", dot: "bg-slate-400" },
+  { key: "en_progreso", label: "En progreso", dot: "bg-violet-500" },
+  { key: "completadas", label: "Completadas", dot: "bg-emerald-500" },
+]
+
 const CAT_CHIP: Record<string, { letter: string; bg: string; text: string }> = {
   MHS:   { letter: "M", bg: "bg-blue-500/15",   text: "text-blue-600 dark:text-blue-300"   },
   Store: { letter: "S", bg: "bg-violet-500/15", text: "text-violet-600 dark:text-violet-300" },
   Extra: { letter: "E", bg: "bg-amber-500/15",  text: "text-amber-600 dark:text-amber-300"  },
 }
 
-function CampanaChip({ titulo, categoria, fullWidth, archivos, progreso, onClick, onDelete }: {
-  titulo: string; categoria: string | null; fullWidth?: boolean; archivos?: string[]; progreso?: number
+function CampanaChip({ titulo, categoria, keyword, notas, fullWidth, archivos, multimediaUrl, progreso, onClick, onDelete }: {
+  titulo: string; categoria: string | null; keyword?: string | null; notas?: string | null
+  fullWidth?: boolean; archivos?: string[]; multimediaUrl?: string | null; progreso?: number
   onClick: () => void; onDelete?: () => void
 }) {
   const cfg = (categoria && CAT_CHIP[categoria]) ?? { letter: "·", bg: "bg-slate-100 dark:bg-slate-700", text: "text-slate-500 dark:text-slate-400" }
   const primerArchivo = archivos?.[0]
+  const progressPct = progreso !== undefined ? Math.round((progreso / 4) * 100) : 0
+  const riverColor = progressPct >= 100 ? "bg-emerald-500" : "bg-violet-400"
   return (
     <div onClick={onClick}
-      className={`group/chip relative flex items-center h-8 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600 transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[156px]"}`}>
-      <span className={`flex items-center justify-center h-full w-7 shrink-0 text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>{cfg.letter}</span>
-      <span className="text-[11px] text-slate-700 dark:text-slate-200 truncate px-2 flex-1 text-left leading-none">{titulo}</span>
-      {primerArchivo && (
-        <a href={primerArchivo} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-          title={`Abrir archivo${archivos && archivos.length > 1 ? ` (${archivos.length})` : ""}`}
-          className="flex items-center justify-center h-full w-6 shrink-0 text-slate-400 hover:text-violet-500 transition">
-          <Paperclip size={10} />
-        </a>
+      className={`group/chip relative flex items-stretch rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[210px]"}`}>
+      <span className={`flex items-start justify-center pt-2.5 w-7 shrink-0 text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>{cfg.letter}</span>
+      <div className="flex-1 min-w-0 px-2.5 py-2 space-y-0.5">
+        {notas && <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-snug truncate">{notas}</p>}
+        {keyword && <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug truncate">{keyword}</p>}
+        {titulo && <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug line-clamp-2">{titulo}</p>}
+      </div>
+      {(primerArchivo || multimediaUrl || onDelete) && (
+        <div className="flex flex-col items-center justify-center gap-1 w-6 shrink-0 bg-slate-50 dark:bg-slate-900/60 border-l border-slate-100 dark:border-slate-700/60">
+          {primerArchivo && (
+            <a href={primerArchivo} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+              title={`Abrir link${archivos && archivos.length > 1 ? ` (${archivos.length})` : ""}`}
+              className="flex items-center justify-center h-5 w-5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition">
+              <Link2 size={11} />
+            </a>
+          )}
+          {multimediaUrl && (
+            <a href={multimediaUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+              title="Abrir archivo subido"
+              className="flex items-center justify-center h-5 w-5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition">
+              <Paperclip size={11} />
+            </a>
+          )}
+          {onDelete && (
+            <span role="button" onClick={e => { e.stopPropagation(); onDelete() }} title="Eliminar campaña"
+              className="flex items-center justify-center h-5 w-5 text-slate-300 dark:text-slate-600 hover:text-red-500 opacity-0 group-hover/chip:opacity-100 transition">
+              <Trash2 size={10} />
+            </span>
+          )}
+        </div>
       )}
-      {onDelete && (
-        <span role="button" onClick={e => { e.stopPropagation(); onDelete() }} title="Eliminar campaña"
-          className="flex items-center justify-center h-full w-6 shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-500 opacity-0 group-hover/chip:opacity-100 transition">
-          <Trash2 size={10} />
-        </span>
-      )}
-      {progreso !== undefined && (
-        <span className={`absolute bottom-0 left-0 h-[3px] transition-all ${progreso >= 4 ? "bg-emerald-500" : "bg-violet-400"}`} style={{ width: `${(progreso / 4) * 100}%` }} />
-      )}
+      <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-100 dark:bg-slate-700">
+        {progressPct > 0 && <div className={`h-full ${riverColor} transition-all duration-500`} style={{ width: `${progressPct}%` }} />}
+      </div>
     </div>
   )
 }
@@ -461,22 +497,32 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
 
 // ─── Vista Catálogo (mensual) ─────────────────────────────────────────────────
 
-function semanaLabel(semanaStart: Date, semanaEnd: Date, n: NSemana): string {
+function semanaLabel(semanaStart: Date, semanaEnd: Date): { semNum: number; dateRange: string; badge: "actual" | "siguiente" | null } {
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0)
   const wHoy = weekStart(hoy)
   const wSiguiente = addDays(wHoy, 7)
+  const semNum = getISOWeek(semanaStart)
   const fmt = (d: Date, opts: Intl.DateTimeFormatOptions) => d.toLocaleDateString("es-MX", opts)
-  if (toYMD(semanaStart) === toYMD(wHoy)) return `Semana actual ${fmt(semanaStart, { day: "numeric" })}-${fmt(semanaEnd, { day: "numeric", month: "short" })}`
-  if (toYMD(semanaStart) === toYMD(wSiguiente)) return `Semana siguiente ${fmt(semanaStart, { day: "numeric" })}-${fmt(semanaEnd, { day: "numeric", month: "short" })}`
-  return `Semana ${n}`
+  const dateRange = `${fmt(semanaStart, { day: "numeric" })} – ${fmt(semanaEnd, { day: "numeric", month: "short" })}`
+  const badge: "actual" | "siguiente" | null =
+    toYMD(semanaStart) === toYMD(wHoy) ? "actual"
+    : toYMD(semanaStart) === toYMD(wSiguiente) ? "siguiente"
+    : null
+  return { semNum, dateRange, badge }
+}
+const fmtFecha = (iso: string | null) => {
+  if (!iso) return null
+  const d = new Date(iso + "T00:00:00")
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })
 }
 
 function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   mes: MesCampana; anio: number; campanas: CampanaType[]
-  onEdit: (c: CampanaType) => void; onDelete: (c: CampanaType) => void; onNueva: () => void
+  onEdit: (c: CampanaType) => void; onDelete: (c: CampanaType) => void; onNueva: (opts: { mes: MesCampana; anio: number }) => void
 }) {
   const isCurrentMonth = anio === ANIO_HOY && MESES.indexOf(mes) === MES_HOY_IDX
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(anio > ANIO_HOY)
+  const [showPasadas, setShowPasadas] = useState(false)
   const mesIdx = MESES.indexOf(mes)
   const firstMon = getFirstMonday(anio, mesIdx)
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0)
@@ -496,59 +542,116 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   const sinTitulosDocIds = new Set(campanas.filter(c => !SEMANAS.some(n => !!getSemana(c, n, "Titulo"))).map(c => c.documentId))
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+    <div className="border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
       <button type="button" onClick={() => setCollapsed(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/40 transition">
-        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{mes} {anio}</span>
-        <ChevronRight className={`h-4 w-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${collapsed ? "" : "rotate-90"}`} />
+        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{mes} {anio}</span>
+          {campanas.length > 0 && (
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">{campanas.length}</span>
+          )}
+        </div>
+        <ChevronRight className={`h-4 w-4 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${collapsed ? "" : "rotate-90"}`} />
       </button>
       {!collapsed && (
         <>
-          <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800/50 flex items-center gap-2 min-h-[36px]">
+          <div className="px-4 py-2 border-b border-slate-300 dark:border-slate-700 flex items-center gap-2 min-h-[36px] bg-slate-50 dark:bg-slate-800/40">
             {editingObjetivo ? (
               <input autoFocus value={objetivoDraft} onChange={e => setObjetivoDraft(e.target.value)} onBlur={saveObjetivo}
                 onKeyDown={e => { if (e.key === "Enter") saveObjetivo(); if (e.key === "Escape") setEditingObjetivo(false) }}
                 placeholder="Escribe el objetivo del mes..."
-                className="flex-1 text-xs bg-transparent border-b border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none py-0.5" />
+                className="flex-1 text-xs bg-transparent border-b border-slate-300 dark:border-slate-600 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none py-0.5" />
             ) : objetivo ? (
               <button type="button" onClick={() => { setObjetivoDraft(objetivo); setEditingObjetivo(true) }}
-                className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition text-left group/obj">
+                className="flex items-center gap-2 text-xs text-slate-700 dark:text-white hover:text-slate-900 dark:hover:text-slate-200 transition text-left group/obj">
                 <span>🎯</span><span>{objetivo}</span>
-                <Pencil size={10} className="opacity-0 group-hover/obj:opacity-100 text-slate-400 shrink-0" />
+                <Pencil size={10} className="opacity-0 group-hover/obj:opacity-100 text-slate-500 dark:text-slate-400 shrink-0" />
               </button>
             ) : (
               <button type="button" onClick={() => { setObjetivoDraft(""); setEditingObjetivo(true) }}
-                className="text-[11px] text-slate-300 dark:text-slate-700 hover:text-slate-500 dark:hover:text-slate-500 transition flex items-center gap-1">
+                className="text-[11px] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-md px-2.5 py-1">
                 <Plus size={10} /> Objetivo del mes
               </button>
             )}
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
+
+          {isCurrentMonth && (() => {
+            const hayPasadas = SEMANAS.some(n => addDays(addDays(firstMon, (n - 1) * 7), 6) < hoy)
+            if (!hayPasadas) return null
+            return (
+              <button type="button" onClick={() => setShowPasadas(v => !v)}
+                className="w-full px-4 py-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border-b border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 transition text-left flex items-center gap-1.5">
+                <span>{showPasadas ? "▲" : "▼"}</span>
+                {showPasadas ? "Ocultar semanas pasadas" : "Mostrar semanas pasadas"}
+              </button>
+            )
+          })()}
+
+          <div className="divide-y divide-slate-300 dark:divide-slate-700 overflow-x-auto">
             {SEMANAS.map(n => {
               const sStart = addDays(firstMon, (n - 1) * 7)
               const sEnd = addDays(sStart, 6)
-              if (isCurrentMonth && sEnd < hoy) return null
-              const label = semanaLabel(sStart, sEnd, n)
-              const conTitulo = campanas.filter(c => !!getSemana(c, n, "Titulo")).map(c => ({ c, titulo: getSemana(c, n, "Titulo")! }))
-              const sEndStr = toYMD(sEnd), sStartStr = toYMD(sStart)
-              const sinTitulo = campanas.filter(c => sinTitulosDocIds.has(c.documentId))
+              const sStartStr = toYMD(sStart), sEndStr = toYMD(sEnd)
+              const esPasada = isCurrentMonth && sEnd < hoy
+              if (esPasada && !showPasadas) return null
+              const { semNum, dateRange, badge } = semanaLabel(sStart, sEnd)
+
+              type RowItem = { c: CampanaType; titulo: string; fecha: string | null }
+              const conTitulo: RowItem[] = []
+              for (const c of campanas) {
+                for (const sn of SEMANAS) {
+                  const titulo = getSemana(c, sn, "Titulo")
+                  const fecha = getSemana(c, sn, "Fecha")
+                  if (!titulo) continue
+                  if (fecha) { if (fecha >= sStartStr && fecha <= sEndStr) conTitulo.push({ c, titulo, fecha }) }
+                  else if (sn === n) conTitulo.push({ c, titulo, fecha: null })
+                }
+              }
+              const sinTitulo: RowItem[] = campanas.filter(c => sinTitulosDocIds.has(c.documentId))
                 .filter(c => c.semana1Fecha ? c.semana1Fecha >= sStartStr && c.semana1Fecha <= sEndStr : n === 1)
-                .map(c => ({ c, titulo: c.unidadNegocio }))
-              const items = [...conTitulo, ...sinTitulo]
+                .map(c => ({ c, titulo: c.unidadNegocio, fecha: c.semana1Fecha }))
+              const items = [...conTitulo, ...sinTitulo].sort((a, b) => {
+                if (!a.fecha && !b.fecha) return 0
+                if (!a.fecha) return 1
+                if (!b.fecha) return -1
+                return a.fecha.localeCompare(b.fecha)
+              })
+
               return (
-                <div key={n} className="flex items-center gap-3 px-4 py-3 min-h-[52px]">
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 w-44 shrink-0 leading-snug">{label}</span>
-                  <div className="flex-1 flex flex-wrap items-center gap-2">
-                    {items.map(({ c, titulo }) => (
-                      <CampanaChip key={`${c.documentId}-${n}`} titulo={titulo} categoria={c.categoria} progreso={progresoDe(c)}
-                        archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo].filter(Boolean) as string[]}
-                        onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
+                <div key={n} className={`flex items-stretch min-h-[56px] min-w-fit ${esPasada ? "opacity-40" : ""}`}>
+                  <div className={[
+                    "w-44 shrink-0 sticky left-0 z-10 flex flex-col justify-center gap-0.5 px-4 py-3",
+                    "bg-slate-50 dark:bg-slate-800/60",
+                    "border-r border-slate-200 dark:border-slate-700",
+                    badge ? "border-l-2 border-l-violet-400" : "",
+                  ].join(" ")}>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">Sem. {semNum}</span>
+                      {badge && (
+                        <span className="text-[9px] rounded-full px-1.5 py-0.5 font-semibold bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400">
+                          {badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-none">{dateRange}{esPasada && " · pasada"}</span>
+                  </div>
+                  <div className="flex-1 flex flex-wrap items-start gap-2 px-4 py-3">
+                    {items.map(({ c, titulo, fecha }) => (
+                      <div key={`${c.documentId}-${n}`} className="flex items-start gap-1">
+                        {fecha && <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium shrink-0 tabular-nums mt-2.5">{fmtFecha(fecha)}</span>}
+                        <CampanaChip titulo={titulo} categoria={c.categoria} keyword={c.keyword} notas={c.notas} progreso={progresoDe(c)}
+                          archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo].filter(Boolean) as string[]}
+                          multimediaUrl={c.multimedia?.url ?? null}
+                          onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
+                      </div>
                     ))}
                   </div>
-                  <button type="button" title="Agregar campaña" onClick={onNueva}
-                    className="flex items-center justify-center h-7 w-7 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 hover:border-violet-400 text-slate-300 dark:text-slate-600 hover:text-violet-500 transition-colors shrink-0">
-                    <Plus size={12} />
-                  </button>
+                  <div className="flex items-center pr-4">
+                    <button type="button" title="Agregar campaña" onClick={() => onNueva({ mes, anio })}
+                      className="flex items-center justify-center h-7 w-7 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 hover:border-violet-400 dark:hover:border-violet-600 text-slate-400 dark:text-slate-600 hover:text-violet-500 transition-colors shrink-0">
+                      <Plus size={12} />
+                    </button>
+                  </div>
                 </div>
               )
             })}
@@ -559,38 +662,71 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   )
 }
 
-function VistaCatalogo({ campanas, onEdit, onDelete, onNueva }: {
-  campanas: CampanaType[]; onEdit: (c: CampanaType) => void; onDelete: (c: CampanaType) => void; onNueva: () => void
+function VistaCatalogo({ campanas, hayFiltros, filtroDesde, filtroHasta, onEdit, onDelete, onNueva }: {
+  campanas: CampanaType[]; hayFiltros: boolean; filtroDesde: string; filtroHasta: string
+  onEdit: (c: CampanaType) => void; onDelete: (c: CampanaType) => void; onNueva: (opts: { mes: MesCampana; anio: number }) => void
 }) {
-  const grupos = useMemo(() => {
+  const hayRango = !!(filtroDesde || filtroHasta)
+  const [showMesesPasados, setShowMesesPasados] = useState(false)
+
+  const { actuales, pasados } = useMemo(() => {
     const map = new Map<string, { mes: MesCampana; anio: number; items: CampanaType[] }>()
     campanas.forEach(c => {
-      const key = `${c.anio}-${String(MESES.indexOf(c.mes)).padStart(2, "0")}`
-      if (!map.has(key)) map.set(key, { mes: c.mes, anio: c.anio, items: [] })
+      let anio: number, mesIdx: number
+      if (hayRango) {
+        const fechas = [c.semana1Fecha, c.semana2Fecha, c.semana3Fecha, c.semana4Fecha].filter(Boolean) as string[]
+        const match = fechas.find(f => (!filtroDesde || f >= filtroDesde) && (!filtroHasta || f <= filtroHasta))
+        if (!match) return
+        const d = new Date(match + "T00:00:00")
+        anio = d.getFullYear(); mesIdx = d.getMonth()
+      } else {
+        anio = c.anio; mesIdx = MESES.indexOf(c.mes)
+      }
+      const key = `${anio}-${String(mesIdx).padStart(2, "0")}`
+      if (!map.has(key)) map.set(key, { mes: MESES[mesIdx], anio, items: [] })
       map.get(key)!.items.push(c)
     })
+    if (!hayFiltros) {
+      for (let offsetMes = 0; offsetMes < 20; offsetMes++) {
+        const d = new Date(ANIO_HOY, MES_HOY_IDX + offsetMes, 1)
+        const anio = d.getFullYear(), mesIdx = d.getMonth()
+        const key = `${anio}-${String(mesIdx).padStart(2, "0")}`
+        if (!map.has(key)) map.set(key, { mes: MESES[mesIdx], anio, items: [] })
+      }
+    }
     const nowKey = `${ANIO_HOY}-${String(MES_HOY_IDX).padStart(2, "0")}`
-    return [...map.entries()].sort(([a], [b]) => {
+    const sorted = [...map.entries()].sort(([a], [b]) => {
       const aFut = a >= nowKey, bFut = b >= nowKey
       if (aFut && !bFut) return -1
       if (!aFut && bFut) return 1
       return aFut ? a.localeCompare(b) : b.localeCompare(a)
-    }).map(([, v]) => v)
-  }, [campanas])
+    }).map(([k, v]) => ({ key: k, ...v }))
 
-  if (campanas.length === 0) return (
+    return { actuales: sorted.filter(g => g.key >= nowKey), pasados: sorted.filter(g => g.key < nowKey) }
+  }, [campanas, hayFiltros, hayRango, filtroDesde, filtroHasta])
+
+  if (hayFiltros && campanas.length === 0) return (
     <div className="text-center py-16">
-      <p className="text-slate-400 dark:text-slate-500 text-sm mb-3">No hay campañas</p>
-      <button type="button" onClick={onNueva}
-        className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition">
-        <Plus size={14} /> Crear primera campaña
-      </button>
+      <p className="text-slate-400 dark:text-slate-500 text-sm mb-3">Sin resultados para estos filtros</p>
     </div>
   )
 
   return (
     <div className="space-y-3">
-      {grupos.map(({ mes, anio, items }) => (
+      {pasados.length > 0 && (
+        <button type="button" onClick={() => setShowMesesPasados(v => !v)}
+          className="w-full flex items-center gap-1.5 px-4 py-2 text-[11px] text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left">
+          <span>{showMesesPasados ? "▲" : "▼"}</span>
+          {showMesesPasados ? "Ocultar meses pasados" : "Mostrar meses pasados"}
+          <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">{pasados.length}</span>
+        </button>
+      )}
+
+      {showMesesPasados && pasados.map(({ mes, anio, items }) => (
+        <MesGroup key={`${mes}-${anio}`} mes={mes} anio={anio} campanas={items} onEdit={onEdit} onDelete={onDelete} onNueva={onNueva} />
+      ))}
+
+      {actuales.map(({ mes, anio, items }) => (
         <MesGroup key={`${mes}-${anio}`} mes={mes} anio={anio} campanas={items} onEdit={onEdit} onDelete={onDelete} onNueva={onNueva} />
       ))}
     </div>
@@ -711,8 +847,9 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
                 return (
                   <div key={di} className={`border-l border-slate-200 dark:border-slate-700 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-violet-50 dark:bg-violet-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
-                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} fullWidth progreso={progresoDe(campana)}
+                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} keyword={campana.keyword} notas={campana.notas} fullWidth progreso={progresoDe(campana)}
                         archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]}
+                        multimediaUrl={campana.multimedia?.url ?? null}
                         onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
                     ))}
                     <button type="button" onClick={() => setPicker({ dayStr: toYMD(day), categoria: fila.label })}
@@ -869,6 +1006,73 @@ export function CampanasPlannerView() {
     categoria: null, mes: MES_ACTUAL, anio: ANIO_ACTUAL, fecha: null,
   })
 
+  // ── Filtros calendario mensual ──
+  const [busqueda, setBusqueda] = useState("")
+  const [filtroCat, setFiltroCat] = useState("")
+  const [filtroMedio, setFiltroMedio] = useState<RedPublicacionKey | "">("")
+  const [filtroDesde, setFiltroDesde] = useState("")
+  const [filtroHasta, setFiltroHasta] = useState("")
+  const [showFiltros, setShowFiltros] = useState(false)
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>("todas")
+  const [statusOpen, setStatusOpen] = useState(false)
+  const filtrosRef = useRef<HTMLDivElement>(null)
+  const statusRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (filtrosRef.current && !filtrosRef.current.contains(e.target as Node)) setShowFiltros(false)
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) setStatusOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const filtrosActivos = [filtroCat, filtroMedio, filtroDesde, filtroHasta].filter(Boolean).length
+  const limpiarFiltros = () => { setBusqueda(""); setFiltroCat(""); setFiltroMedio(""); setFiltroDesde(""); setFiltroHasta(""); setFiltroStatus("todas") }
+
+  const statusStats = useMemo(() => ({
+    todas: campanas.length,
+    sin_iniciar: campanas.filter(c => etapasFromString(c.etapas).size === 0).length,
+    en_progreso: campanas.filter(c => { const e = etapasFromString(c.etapas); return e.size > 0 && !e.has(3) }).length,
+    completadas: campanas.filter(c => etapasFromString(c.etapas).has(3)).length,
+  }), [campanas])
+
+  const campanasFiltradas = useMemo(() => {
+    let r = campanas
+    if (busqueda.trim()) {
+      const q = busqueda.toLowerCase()
+      r = r.filter(c =>
+        c.unidadNegocio.toLowerCase().includes(q) ||
+        (c.notas ?? "").toLowerCase().includes(q) ||
+        (c.keyword ?? "").toLowerCase().includes(q) ||
+        (c.atributos ?? "").toLowerCase().includes(q) ||
+        (c.semana1Titulo ?? "").toLowerCase().includes(q) ||
+        (c.semana2Titulo ?? "").toLowerCase().includes(q) ||
+        (c.semana3Titulo ?? "").toLowerCase().includes(q) ||
+        (c.semana4Titulo ?? "").toLowerCase().includes(q)
+      )
+    }
+    if (filtroCat) r = r.filter(c => c.categoria === filtroCat)
+    if (filtroMedio) r = r.filter(c => !!c.publicacion && parsePublicacion(c.publicacion)[filtroMedio as RedPublicacionKey]?.publicado === true)
+    if (filtroDesde || filtroHasta) {
+      r = r.filter(c => {
+        const fechas = [c.semana1Fecha, c.semana2Fecha, c.semana3Fecha, c.semana4Fecha].filter(Boolean) as string[]
+        if (fechas.length === 0) return false
+        return fechas.some(f => (!filtroDesde || f >= filtroDesde) && (!filtroHasta || f <= filtroHasta))
+      })
+    }
+    if (filtroStatus !== "todas") {
+      r = r.filter(c => {
+        const e = etapasFromString(c.etapas)
+        if (filtroStatus === "sin_iniciar") return e.size === 0
+        if (filtroStatus === "en_progreso") return e.size > 0 && !e.has(3)
+        if (filtroStatus === "completadas") return e.has(3)
+        return true
+      })
+    }
+    return r
+  }, [campanas, busqueda, filtroCat, filtroMedio, filtroDesde, filtroHasta, filtroStatus])
+
   const abrirNueva = (opts?: Partial<typeof defOpts>) => {
     setEditando(null)
     setDefOpts({ categoria: null, mes: MES_ACTUAL, anio: ANIO_ACTUAL, fecha: null, ...opts })
@@ -947,7 +1151,88 @@ export function CampanasPlannerView() {
         ))}
       </div>
 
-      {tab === "mensual" && <VistaCatalogo campanas={campanas} onEdit={abrirEditar} onDelete={eliminar} onNueva={() => abrirNueva()} />}
+      {tab === "mensual" && (
+        <>
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar campaña…"
+                className="pl-8 pr-3 h-9 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-violet-400 transition shadow-sm w-52" />
+            </div>
+
+            <div ref={statusRef} className="relative">
+              <button type="button" onClick={() => { setStatusOpen(v => !v); setShowFiltros(false) }}
+                className="h-9 flex items-center gap-2 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition-colors shadow-sm">
+                <span className={`h-2 w-2 rounded-full shrink-0 ${ESTADOS_CAMPANA.find(e => e.key === filtroStatus)?.dot ?? "bg-slate-300"}`} />
+                <span>{filtroStatus === "todas" ? "Estado" : ESTADOS_CAMPANA.find(e => e.key === filtroStatus)?.label}</span>
+                <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${statusOpen ? "rotate-180" : ""}`} />
+              </button>
+              {statusOpen && (
+                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 min-w-[190px] py-1 overflow-hidden">
+                  {ESTADOS_CAMPANA.map(e => (
+                    <button key={e.key} type="button" onClick={() => { setFiltroStatus(e.key); setStatusOpen(false) }}
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${filtroStatus === e.key ? "text-violet-500 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}>
+                      <span className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full shrink-0 ${e.dot}`} />{e.label}</span>
+                      <span className="text-[11px] text-slate-400 tabular-nums">{statusStats[e.key]}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div ref={filtrosRef} className="relative">
+              <button type="button" onClick={() => setShowFiltros(v => !v)}
+                className={`h-9 flex items-center gap-1.5 px-3 text-sm rounded-lg border transition-colors shadow-sm ${filtrosActivos > 0 ? "border-violet-400/60 bg-violet-500/10 text-violet-600 dark:text-violet-400" : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600"}`}>
+                <SlidersHorizontal size={13} />
+                <span>Filtros</span>
+                {filtrosActivos > 0 && <span className="h-4 w-4 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center">{filtrosActivos}</span>}
+                <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${showFiltros ? "rotate-180" : ""}`} />
+              </button>
+              {showFiltros && (
+                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-64 p-3 space-y-3">
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1"><CalendarDays size={10} /> Fecha de publicación</p>
+                    <div className="flex flex-col gap-1.5">
+                      <div>
+                        <p className="text-[10px] text-slate-400 mb-0.5">Desde</p>
+                        <CalendarioPicker value={ymdToDate(filtroDesde)} label="Fecha desde" className="w-full"
+                          max={ymdToDate(filtroHasta) ?? undefined} onChange={d => setFiltroDesde(toYMD(d))} onClear={() => setFiltroDesde("")} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 mb-0.5">Hasta</p>
+                        <CalendarioPicker value={ymdToDate(filtroHasta)} label="Fecha hasta" className="w-full"
+                          min={ymdToDate(filtroDesde) ?? undefined} onChange={d => setFiltroHasta(toYMD(d))} onClear={() => setFiltroHasta("")} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Categoría</p>
+                    <DropdownPicker label="Categoría" value={filtroCat} onChange={setFiltroCat} placeholder="Todas"
+                      options={[{ value: "", label: "Todas" }, ...FILAS_GRID.map(f => ({ value: f.label, label: f.label }))]} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Medio</p>
+                    <DropdownPicker label="Medio" value={filtroMedio} onChange={v => setFiltroMedio(v as RedPublicacionKey | "")} placeholder="Todos"
+                      options={[{ value: "", label: "Todos" }, ...REDES_PUBLICACION.map(r => ({ value: r.key, label: r.label }))]} />
+                  </div>
+                  {filtrosActivos > 0 && (
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <button type="button" onClick={limpiarFiltros} className="text-[11px] text-slate-400 hover:text-red-500 transition-colors">Limpiar filtros</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {(busqueda || filtrosActivos > 0 || filtroStatus !== "todas") && (
+              <span className="text-xs text-slate-500 dark:text-slate-400">{campanasFiltradas.length} de {campanas.length}</span>
+            )}
+          </div>
+
+          <VistaCatalogo campanas={campanasFiltradas} hayFiltros={!!busqueda.trim() || filtrosActivos > 0} filtroDesde={filtroDesde} filtroHasta={filtroHasta}
+            onEdit={abrirEditar} onDelete={eliminar} onNueva={opts => abrirNueva(opts)} />
+        </>
+      )}
       {tab === "semanal" && (
         <VistaPlaneador campanas={campanas} onEdit={abrirEditar} onDelete={eliminar}
           onAgregar={opts => abrirNueva(opts)} onAsignarExistente={asignarExistente} />
