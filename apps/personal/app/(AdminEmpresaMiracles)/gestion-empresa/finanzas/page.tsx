@@ -1,14 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Wallet, TrendingUp, TrendingDown, DollarSign } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
-import { useGetGastos } from "@/api/gasto/getGastos"
-import { useGetIngresos } from "@/api/ingreso/getIngresos"
-import { CuentaType } from "@/types/cuenta"
-import { GastoType } from "@/types/gasto"
-import { Ingreso } from "@/types/ingreso"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n: number) =>
@@ -68,9 +64,10 @@ function BarraItem({ label, monto, total, color }: { label: string; monto: numbe
 }
 
 export default function FinanzasPage() {
-  const { cuentas,  loading: loadC } = useGetCuentas()
-  const { gastos,   loading: loadG } = useGetGastos()
-  const { ingresos, loading: loadI } = useGetIngresos("empresa")
+  const { cuentas,  loading: loadC } = useGetCuentas("empresa")
+  const { transacciones, loading: loadT } = useGetTransacciones("empresa")
+  const gastos   = useMemo(() => transacciones.filter(t => t.tipo === "gasto"),   [transacciones])
+  const ingresos = useMemo(() => transacciones.filter(t => t.tipo === "ingreso"), [transacciones])
 
   const [periodo,    setPeriodo]    = useState<"mes" | "anio" | "custom">("mes")
   const [fechaDesde, setFechaDesde] = useState("")
@@ -106,7 +103,7 @@ export default function FinanzasPage() {
     }, {})
   ).sort((a, b) => b.monto - a.monto).slice(0, 5)
 
-  const loading = loadC || loadG || loadI
+  const loading = loadC || loadT
 
   return (
     <div className="space-y-6">

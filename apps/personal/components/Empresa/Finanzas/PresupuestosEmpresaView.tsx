@@ -12,11 +12,26 @@ import { useGetPartidas } from "@/api/partida-presupuesto/getPartidas"
 import { createPartida } from "@/api/partida-presupuesto/createPartida"
 import { updatePartida } from "@/api/partida-presupuesto/updatePartida"
 import { deletePartida } from "@/api/partida-presupuesto/deletePartida"
-import { useGetGastos } from "@/api/gasto/getGastos"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
 
 const CATEGORIAS_EMPRESA = ["Operaciones", "Marketing", "Ventas", "Administración", "Producción", "IT", "Otro"]
 const FRECUENCIAS = ["mensual", "trimestral", "anual", "único"] as const
+
+// Conecta el catálogo real de categorías (usado por Ingresos/Gastos) con las
+// áreas de presupuesto — permite comparar presupuestado vs. gasto real por área.
+const AREA_CATEGORIAS: Record<string, string[]> = {
+  "Marketing":  ["Marketing - Adquisición", "Marketing - Operación", "Marketing - Digital", "Marketing - Imprenta", "Marketing - Promocionales", "Marketing - Publicidad", "Marketing - Nutrimiento"],
+  "IT":         ["IT - Soporte hardware", "IT - Licencias", "IT - Desarrollo"],
+  "Producción": ["Suministro - Compra mercancía", "Suministro - Materia prima", "Suministro - Herramientas"],
+}
+function areaDeCategoria(categoria: string | null): string {
+  if (!categoria) return "Otro"
+  for (const [area, cats] of Object.entries(AREA_CATEGORIAS)) {
+    if (cats.includes(categoria)) return area
+  }
+  return "Otro"
+}
 
 const CHART_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#14b8a6"]
 const TOOLTIP_STYLE = { backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: 8, fontSize: 12, color: "#e2e8f0" }
@@ -86,7 +101,8 @@ const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 tex
 
 export function PresupuestosEmpresaView() {
   const { partidas: raw, loading, error } = useGetPartidas("empresa")
-  const { gastos } = useGetGastos("empresa")
+  const { transacciones } = useGetTransacciones("empresa")
+  const gastos = useMemo(() => transacciones.filter(t => t.tipo === "gasto"), [transacciones])
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
   const [modalOpen, setModalOpen] = useState(false)
@@ -119,12 +135,22 @@ export function PresupuestosEmpresaView() {
       items: activas.filter(p => (p.categoria ?? "Otro") === cat && p.tipo !== "ingreso"),
     })).filter(g => g.items.length > 0), [activas])
 
+  const realPorArea = useMemo(() => {
+    const map = new Map<string, number>()
+    gastosMes.forEach(g => {
+      const area = areaDeCategoria(g.categoria)
+      map.set(area, (map.get(area) ?? 0) + Number(g.monto ?? 0))
+    })
+    return map
+  }, [gastosMes])
+
   const comparativa = useMemo(() =>
     porCategoria.map(({ cat, items }) => {
       const presupuestado = items.reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
       const pctCat = totalPresupuestado > 0 ? (presupuestado / totalPresupuestado) * 100 : 0
-      return { cat, presupuestado, pctCat }
-    }), [porCategoria, totalPresupuestado])
+      const real = realPorArea.get(cat) ?? 0
+      return { cat, presupuestado, pctCat, real }
+    }), [porCategoria, totalPresupuestado, realPorArea])
 
   const flujoPorFrecuencia = useMemo(() =>
     activas.reduce(
@@ -299,22 +325,27 @@ export function PresupuestosEmpresaView() {
           <>
             <h4 className="text-[10px] text-slate-500 uppercase font-medium">Distribución por área</h4>
             <div className="space-y-3">
-              {comparativa.map((c, i) => (
+              {comparativa.map((c, i) => {
+                const pctReal = c.presupuestado > 0 ? (c.real / c.presupuestado) * 100 : 0
+                return (
                 <motion.div key={c.cat} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-slate-300">{c.cat}</span>
-                    <span className="text-[10px] text-slate-500">{fmt(c.presupuestado)} · {Math.round(c.pctCat)}%</span>
+                    <span className="text-[10px] text-slate-500">
+                      Real: <span className={pctReal > 100 ? "text-red-400" : "text-slate-300"}>{fmt(c.real)}</span> / {fmt(c.presupuestado)}
+                    </span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+                  <div className="h-2 rounded-full bg-slate-800 overflow-hidden relative">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${c.pctCat}%` }}
+                      animate={{ width: `${Math.min(pctReal, 100)}%` }}
                       transition={{ duration: 0.8, ease: "easeOut", delay: 0.05 * i }}
-                      className={`h-full rounded-full ${CAT_BAR[c.cat] ?? "bg-zinc-500"}`}
+                      className={`h-full rounded-full ${pctReal > 100 ? "bg-red-500" : CAT_BAR[c.cat] ?? "bg-zinc-500"}`}
                     />
                   </div>
                 </motion.div>
-              ))}
+                )
+              })}
             </div>
           </>
         )}

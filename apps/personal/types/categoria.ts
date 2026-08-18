@@ -3,6 +3,8 @@
 export type TipoCategoria  = "ingreso" | "gasto"
 export type GrupoCategoria = "necesidad" | "prescindible" | "ahorro" | "ingreso"
 
+export type AmbitoCategoria = "trabajo" | "empresa"
+
 export type CategoriaType = {
   id:         number
   documentId: string
@@ -13,6 +15,7 @@ export type CategoriaType = {
   color:      string | null
   orden:      number
   activa:     boolean
+  ambito:     AmbitoCategoria | null
 }
 
 export type CategoriaPayload = {
@@ -23,4 +26,5 @@ export type CategoriaPayload = {
   color?: string | null
   orden?: number
   activa?: boolean
+  ambito?: AmbitoCategoria | null
 }

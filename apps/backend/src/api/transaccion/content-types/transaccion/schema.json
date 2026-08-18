@@ -47,6 +47,38 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::cuenta.cuenta"
+    },
+    "ambito": {
+      "type": "enumeration",
+      "enum": ["trabajo", "empresa"],
+      "default": "trabajo"
+    },
+    "comprobante": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "files", "videos", "audios"]
+    },
+    "proveedor": {
+      "type": "string"
+    },
+    "factura": {
+      "type": "string"
+    },
+    "metodoPago": {
+      "type": "enumeration",
+      "enum": ["Efectivo", "Transferencia", "Tarjeta", "Otro"]
+    },
+    "referencia": {
+      "type": "string"
+    },
+    "clienteDocumentId": {
+      "type": "string"
+    },
+    "centro_costo": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::centro-costo.centro-costo",
+      "inversedBy": "transacciones"
     }
   }
 }

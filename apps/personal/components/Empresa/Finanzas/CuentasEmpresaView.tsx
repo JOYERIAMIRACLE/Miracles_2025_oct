@@ -415,10 +415,17 @@ export function CuentasEmpresaView() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Saldo actual ($)</label>
-                  <input type="number" step="0.01" value={form.saldoActual ?? ""}
-                    onChange={e => setForm(f => ({ ...f, saldoActual: e.target.value ? Number(e.target.value) : null }))}
-                    className={inp} placeholder="0.00" />
+                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
+                    Saldo {editando ? "actual" : "inicial"} ($)
+                    {editando && <span className="text-slate-600 font-normal normal-case"> · se actualiza solo con ingresos/gastos/transferencias</span>}
+                  </label>
+                  {editando ? (
+                    <div className={`${inp} flex items-center text-slate-400 cursor-not-allowed bg-slate-900`}>{fmt(form.saldoActual)}</div>
+                  ) : (
+                    <input type="number" step="0.01" value={form.saldoActual ?? ""}
+                      onChange={e => setForm(f => ({ ...f, saldoActual: e.target.value ? Number(e.target.value) : null }))}
+                      className={inp} placeholder="0.00" />
+                  )}
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Saldo banco ($)</label>

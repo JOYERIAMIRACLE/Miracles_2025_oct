@@ -169,6 +169,16 @@ const PUBLIC_ACTIONS_PORTAL_MDO = [
   'api::documento-legal.documento-legal.create',
   'api::documento-legal.documento-legal.update',
   'api::documento-legal.documento-legal.delete',
+  'api::transaccion.transaccion.find',
+  'api::transaccion.transaccion.findOne',
+  'api::transaccion.transaccion.create',
+  'api::transaccion.transaccion.update',
+  'api::transaccion.transaccion.delete',
+  'api::categoria.categoria.find',
+  'api::categoria.categoria.findOne',
+  'api::categoria.categoria.create',
+  'api::categoria.categoria.update',
+  'api::categoria.categoria.delete',
 ];
 
 const CATEGORIAS_PAGO_SEED = [
@@ -176,25 +186,39 @@ const CATEGORIAS_PAGO_SEED = [
 ];
 
 
-async function migrarGastosAmbitoTrabajo(strapi) {
-  // Solo corre si NO hay ningún gasto con ambito="trabajo"
-  // (estado roto: todos tienen "empresa" por default incorrecto de migración)
-  const hayTrabajo = await strapi.db.query('api::gasto.gasto').count({
-    where: { ambito: 'trabajo' },
-  });
-  if (hayTrabajo > 0) {
-    strapi.log.info('[bootstrap] Gastos ambito — skip (ya hay registros trabajo)');
+// Categorías del libro contable (transaccion) para el ámbito empresa —
+// reemplazan los enums desconectados que antes vivían embebidos en los
+// content-types gasto/ingreso (ya retirados, fusionados en transaccion).
+const CATEGORIAS_EMPRESA_SEED = [
+  { nombre: 'Venta de joyería',   tipo: 'ingreso', ambito: 'empresa', orden: 1, activa: true },
+  { nombre: 'Anticipo de cliente', tipo: 'ingreso', ambito: 'empresa', orden: 2, activa: true },
+  { nombre: 'Saldo de cliente',   tipo: 'ingreso', ambito: 'empresa', orden: 3, activa: true },
+  { nombre: 'Otro ingreso',       tipo: 'ingreso', ambito: 'empresa', orden: 4, activa: true },
+  { nombre: 'Marketing - Adquisición',   tipo: 'gasto', ambito: 'empresa', orden: 10, activa: true },
+  { nombre: 'Marketing - Operación',     tipo: 'gasto', ambito: 'empresa', orden: 11, activa: true },
+  { nombre: 'Marketing - Digital',       tipo: 'gasto', ambito: 'empresa', orden: 12, activa: true },
+  { nombre: 'Marketing - Imprenta',      tipo: 'gasto', ambito: 'empresa', orden: 13, activa: true },
+  { nombre: 'Marketing - Promocionales', tipo: 'gasto', ambito: 'empresa', orden: 14, activa: true },
+  { nombre: 'Marketing - Publicidad',    tipo: 'gasto', ambito: 'empresa', orden: 15, activa: true },
+  { nombre: 'Marketing - Nutrimiento',   tipo: 'gasto', ambito: 'empresa', orden: 16, activa: true },
+  { nombre: 'IT - Soporte hardware',     tipo: 'gasto', ambito: 'empresa', orden: 20, activa: true },
+  { nombre: 'IT - Licencias',            tipo: 'gasto', ambito: 'empresa', orden: 21, activa: true },
+  { nombre: 'IT - Desarrollo',           tipo: 'gasto', ambito: 'empresa', orden: 22, activa: true },
+  { nombre: 'Suministro - Compra mercancía', tipo: 'gasto', ambito: 'empresa', orden: 30, activa: true },
+  { nombre: 'Suministro - Materia prima',    tipo: 'gasto', ambito: 'empresa', orden: 31, activa: true },
+  { nombre: 'Suministro - Herramientas',     tipo: 'gasto', ambito: 'empresa', orden: 32, activa: true },
+];
+
+async function sembrarCategoriasEmpresaSiVacio(strapi) {
+  const count = await strapi.db.query('api::categoria.categoria').count({ where: { ambito: 'empresa' } });
+  if (count > 0) {
+    strapi.log.info('[bootstrap] Categorías empresa ya existen — skip seed');
     return;
   }
-  const gastos = await strapi.db.query('api::gasto.gasto').findMany({});
-  if (gastos.length === 0) return;
-  for (const g of gastos) {
-    await strapi.db.query('api::gasto.gasto').update({
-      where: { id: g.id },
-      data: { ambito: 'trabajo' },
-    });
+  for (const c of CATEGORIAS_EMPRESA_SEED) {
+    await strapi.db.query('api::categoria.categoria').create({ data: c });
   }
-  strapi.log.info(`[bootstrap] ${gastos.length} gastos migrados a ambito=trabajo`);
+  strapi.log.info(`[bootstrap] ${CATEGORIAS_EMPRESA_SEED.length} categorías empresa sembradas`);
 }
 
 async function sembrarCategoriasPagoSiVacio(strapi) {
@@ -422,6 +446,6 @@ module.exports = {
     await run('backfillColoresCategorias',  () => backfillColoresCategorias(strapi));
     await run('normalizarCategorias',       () => normalizarCategorias(strapi));
     await run('sembrarCategoriasPago',      () => sembrarCategoriasPagoSiVacio(strapi));
-    await run('migrarGastosAmbito',         () => migrarGastosAmbitoTrabajo(strapi));
+    await run('sembrarCategoriasEmpresa',   () => sembrarCategoriasEmpresaSiVacio(strapi));
   },
 };

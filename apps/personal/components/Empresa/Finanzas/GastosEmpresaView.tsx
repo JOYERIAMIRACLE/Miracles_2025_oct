@@ -1,17 +1,19 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Plus, Search, X, Loader2, Wallet, BarChart2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, ResponsiveContainer,
 } from "recharts"
-import { useGetGastos }  from "@/api/gasto/getGastos"
-import { createGasto }   from "@/api/gasto/createGasto"
-import { updateGasto }   from "@/api/gasto/updateGasto"
-import { deleteGasto }   from "@/api/gasto/deleteGasto"
-import { GastoType, GastoPayload, AmbitoGasto, CategoriaGasto, CATEGORIAS, CATEGORIA_COLOR } from "@/types/gasto"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { createTransaccion } from "@/api/transaccion/createTransaccion"
+import { updateTransaccion } from "@/api/transaccion/updateTransaccion"
+import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
+import { TransaccionType, TransaccionPayload } from "@/types/transaccion"
+import { useGetCategorias } from "@/api/categoria/getCategorias"
+import { useGetCuentas } from "@/api/cuenta/getCuentas"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -19,18 +21,23 @@ const fmt = (n: number | null) =>
   n != null ? `$${Math.round(n).toLocaleString("es-MX")}` : "—"
 
 const fmtFecha = (iso: string | null) =>
-  iso ? new Date(iso + "T12:00:00").toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" }) : "—"
+  iso ? new Date(iso.slice(0, 10) + "T12:00:00").toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" }) : "—"
 
 const fmtK = (n: number) =>
   n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M`
   : n >= 1_000   ? `$${Math.round(n / 1_000)}k`
   : `$${Math.round(n)}`
 
-function emptyForm(): GastoPayload {
+const CAT_COLORS = ["#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b", "#ec4899", "#f97316", "#10b981", "#64748b", "#a855f7", "#22c55e", "#eab308", "#ef4444", "#14b8a6"]
+function colorDe(categoria: string | null, idx: number): string {
+  return CAT_COLORS[idx % CAT_COLORS.length]
+}
+
+function emptyForm(): TransaccionPayload {
   return {
-    concepto: "", monto: null,
-    fecha: new Date().toISOString().split("T")[0],
-    categoria: null, proveedor: null, factura: null, notas: null,
+    descripcion: "", tipo: "gasto", monto: 0,
+    fecha: `${new Date().toISOString().split("T")[0]}T12:00:00`,
+    categoria: null, cuentaOrigen: null, proveedor: null, factura: null, notas: null, ambito: "empresa",
   }
 }
 
@@ -44,27 +51,24 @@ const TOOLTIP_STYLE = {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto }) {
-  const { gastos: raw, loading } = useGetGastos(ambito)
+export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" | "empresa" }) {
+  const { transacciones: raw, setTransacciones: setTx, loading } = useGetTransacciones(ambito)
+  const { categorias } = useGetCategorias(ambito)
+  const { cuentas } = useGetCuentas(ambito)
+  const categoriasGasto = useMemo(() => categorias.filter(c => c.tipo === "gasto" && c.activa), [categorias])
+  const cuentasDisponibles = useMemo(() => cuentas.filter(c => c.activa !== false && c.tipo !== "Crédito"), [cuentas])
 
-  const [gastos,    setGastos]    = useState<GastoType[]>([])
+  const gastos = useMemo(() => raw.filter(t => t.tipo === "gasto"), [raw])
+
   const [tab,       setTab]       = useState<"tabla" | "metricas">("tabla")
   const [search,    setSearch]    = useState("")
-  const [filtCat,   setFiltCat]   = useState<CategoriaGasto | "todas">("todas")
+  const [filtCat,   setFiltCat]   = useState<string>("todas")
   const [periodo,   setPeriodo]   = useState<"mes" | "trimestre" | "año" | "todo">("mes")
   const [modalOpen, setModalOpen] = useState(false)
-  const [editing,   setEditing]   = useState<GastoType | null>(null)
-  const [form,      setForm]      = useState<GastoPayload>(emptyForm())
+  const [editing,   setEditing]   = useState<TransaccionType | null>(null)
+  const [form,      setForm]      = useState<TransaccionPayload>(emptyForm())
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
-
-  useEffect(() => {
-    const data = raw ?? []
-    const filtered = ambito === "empresa"
-      ? data.filter(g => g.ambito === "empresa")
-      : data.filter(g => g.ambito === "trabajo" || g.ambito == null)
-    setGastos(filtered)
-  }, [raw, ambito])
 
   const hoy    = new Date()
   const mesStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`
@@ -80,11 +84,11 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
 
     return gastos
       .filter(g => {
-        const matchSearch = !search || g.concepto.toLowerCase().includes(search.toLowerCase())
+        const matchSearch = !search || g.descripcion.toLowerCase().includes(search.toLowerCase())
           || (g.proveedor ?? "").toLowerCase().includes(search.toLowerCase())
         const matchCat    = filtCat === "todas" || g.categoria === filtCat
         const matchPeriodo = periodo === "todo" || (
-          g.fecha ? new Date(g.fecha + "T12:00:00").getTime() >= corteMs : true
+          g.fecha ? new Date(g.fecha).getTime() >= corteMs : true
         )
         return matchSearch && matchCat && matchPeriodo
       })
@@ -121,11 +125,7 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
       map.set(key, (map.get(key) ?? 0) + (g.monto ?? 0))
     })
     return [...map.entries()]
-      .map(([cat, total]) => ({
-        cat,
-        total: Math.round(total),
-        color: CATEGORIA_COLOR[cat as CategoriaGasto] ?? "#64748b",
-      }))
+      .map(([cat, total], i) => ({ cat, total: Math.round(total), color: colorDe(cat, i) }))
       .sort((a, b) => b.total - a.total)
   }, [filtrados])
 
@@ -146,23 +146,28 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
   // ── CRUD ─────────────────────────────────────────────────────────────────────
 
   function openNuevo() { setEditing(null); setForm(emptyForm()); setModalOpen(true) }
-  function openEditar(g: GastoType) {
+  function openEditar(g: TransaccionType) {
     setEditing(g)
-    setForm({ concepto: g.concepto, monto: g.monto, fecha: g.fecha, categoria: g.categoria, proveedor: g.proveedor, factura: g.factura, notas: g.notas })
+    setForm({
+      descripcion: g.descripcion, tipo: "gasto", monto: g.monto, fecha: g.fecha,
+      categoria: g.categoria, cuentaOrigen: g.cuentaOrigen?.documentId ?? null,
+      proveedor: g.proveedor, factura: g.factura, notas: g.notas, ambito: "empresa",
+    })
     setModalOpen(true)
   }
 
   async function handleSave() {
-    if (!form.concepto.trim()) { toast.error("El concepto es obligatorio"); return }
+    if (!form.descripcion.trim()) { toast.error("El concepto es obligatorio"); return }
+    if (!form.cuentaOrigen) { toast.error("Selecciona la cuenta origen"); return }
     setSaving(true)
     try {
       if (editing) {
-        const updated = await updateGasto(editing.documentId, form)
-        setGastos(prev => prev.map(g => g.documentId === updated.documentId ? updated : g))
+        const updated = await updateTransaccion(editing.documentId, form)
+        setTx(prev => prev.map(g => g.documentId === updated.documentId ? updated : g))
         toast.success("Gasto actualizado")
       } else {
-        const nuevo = await createGasto({ ...form, ambito })
-        setGastos(prev => [nuevo, ...prev])
+        const nuevo = await createTransaccion(form)
+        setTx(prev => [nuevo, ...prev])
         toast.success("Gasto registrado")
       }
       setModalOpen(false)
@@ -175,8 +180,8 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
 
   async function handleDelete(documentId: string) {
     try {
-      await deleteGasto(documentId)
-      setGastos(prev => prev.filter(g => g.documentId !== documentId))
+      await deleteTransaccion(documentId)
+      setTx(prev => prev.filter(g => g.documentId !== documentId))
       toast.success("Gasto eliminado")
     } catch {
       toast.error("No se pudo eliminar")
@@ -239,11 +244,11 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
             onChange={e => setSearch(e.target.value)}
             className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
         </div>
-        <select value={filtCat} onChange={e => setFiltCat(e.target.value as CategoriaGasto | "todas")}
+        <select value={filtCat} onChange={e => setFiltCat(e.target.value)}
           title="Filtrar por categoría"
           className="h-9 rounded-lg border border-slate-700 bg-slate-900 px-3 text-xs text-slate-300 focus:outline-none">
           <option value="todas">Todas las categorías</option>
-          {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+          {categoriasGasto.map(c => <option key={c.documentId} value={c.nombre}>{c.nombre}</option>)}
         </select>
         <div className="flex gap-1">
           {periodoOpts.map(({ key, label }) => (
@@ -264,7 +269,7 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
             <table className="w-full text-sm">
               <thead className="border-b border-slate-800 bg-slate-950/50">
                 <tr>
-                  {["Fecha", "Categoría", "Concepto", "Proveedor", "Notas", "Monto", ""].map(h => (
+                  {["Fecha", "Categoría", "Concepto", "Cuenta", "Proveedor", "Monto", ""].map(h => (
                     <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -275,7 +280,10 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                     <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td>
                   ))}</tr>
                 ))}
-                {!loading && filtrados.map(g => (
+                {!loading && filtrados.map(g => {
+                  const idx = porCategoria.findIndex(p => p.cat === (g.categoria ?? "(Sin categoría)"))
+                  const color = idx >= 0 ? porCategoria[idx].color : "#64748b"
+                  return (
                   <tr key={g.documentId}
                     className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
                     onClick={() => delId !== g.documentId && openEditar(g)}>
@@ -283,14 +291,14 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                     <td className="px-4 py-3">
                       {g.categoria && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap"
-                          style={{ backgroundColor: `${CATEGORIA_COLOR[g.categoria]}20`, color: CATEGORIA_COLOR[g.categoria], border: `1px solid ${CATEGORIA_COLOR[g.categoria]}40` }}>
+                          style={{ backgroundColor: `${color}20`, color, border: `1px solid ${color}40` }}>
                           {g.categoria}
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-200 max-w-[200px] truncate">{g.concepto}</td>
+                    <td className="px-4 py-3 font-medium text-slate-200 max-w-[200px] truncate">{g.descripcion}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs max-w-[140px] truncate">{g.cuentaOrigen?.nombre ?? "—"}</td>
                     <td className="px-4 py-3 text-slate-400 text-xs max-w-[140px] truncate">{g.proveedor ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs max-w-[160px] truncate">{g.notas ?? "—"}</td>
                     <td className="px-4 py-3 text-red-400 font-semibold tabular-nums whitespace-nowrap">{fmt(g.monto)}</td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       {delId === g.documentId ? (
@@ -308,7 +316,8 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                       )}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
             {!loading && filtrados.length === 0 && (
@@ -402,7 +411,7 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar gasto" : "Nuevo gasto"}</h2>
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
@@ -412,16 +421,24 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
               {/* Categoría */}
               <div>
                 <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
-                <select title="Categoría" value={form.categoria ?? ""} onChange={e => setForm(f => ({ ...f, categoria: (e.target.value || null) as CategoriaGasto | null }))} className={sel}>
+                <select title="Categoría" value={form.categoria ?? ""} onChange={e => setForm(f => ({ ...f, categoria: e.target.value || null }))} className={sel}>
                   <option value="">Sin categoría</option>
-                  {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+                  {categoriasGasto.map(c => <option key={c.documentId} value={c.nombre}>{c.nombre}</option>)}
                 </select>
               </div>
               {/* Concepto */}
               <div>
                 <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Concepto <span className="text-red-400">*</span></label>
-                <input type="text" placeholder="Ej. Boost de publicación Instagram" value={form.concepto}
-                  onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} className={inp} />
+                <input type="text" placeholder="Ej. Boost de publicación Instagram" value={form.descripcion}
+                  onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inp} />
+              </div>
+              {/* Cuenta origen */}
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cuenta origen <span className="text-red-400">*</span></label>
+                <select title="Cuenta origen" value={form.cuentaOrigen ? String(form.cuentaOrigen) : ""} onChange={e => setForm(f => ({ ...f, cuentaOrigen: e.target.value || null }))} className={sel}>
+                  <option value="">— Seleccionar —</option>
+                  {cuentasDisponibles.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
+                </select>
               </div>
               {/* Proveedor + Factura */}
               <div className="grid grid-cols-2 gap-3">
@@ -441,12 +458,12 @@ export function GastosEmpresaView({ ambito = "trabajo" }: { ambito?: AmbitoGasto
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Monto ($)</label>
                   <input type="number" placeholder="0" value={form.monto ?? ""}
-                    onChange={e => setForm(f => ({ ...f, monto: e.target.value ? Number(e.target.value) : null }))} className={inp} />
+                    onChange={e => setForm(f => ({ ...f, monto: e.target.value ? Number(e.target.value) : 0 }))} className={inp} />
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha</label>
-                  <input type="date" title="Fecha" value={form.fecha ?? ""}
-                    onChange={e => setForm(f => ({ ...f, fecha: e.target.value || null }))} className={inp} />
+                  <input type="date" title="Fecha" value={form.fecha ? form.fecha.slice(0, 10) : ""}
+                    onChange={e => setForm(f => ({ ...f, fecha: e.target.value ? `${e.target.value}T12:00:00` : "" }))} className={inp} />
                 </div>
               </div>
               {/* Notas */}

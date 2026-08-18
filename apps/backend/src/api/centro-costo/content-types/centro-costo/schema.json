@@ -21,10 +21,10 @@
     "descripcion": {
       "type": "string"
     },
-    "gastoycentrodecostos": {
+    "transacciones": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::gasto.gasto",
+      "target": "api::transaccion.transaccion",
       "mappedBy": "centro_costo"
     }
   }

@@ -46,6 +46,11 @@
     "activa": {
       "type": "boolean",
       "default": true
+    },
+    "ambito": {
+      "type": "enumeration",
+      "enum": ["trabajo", "empresa"],
+      "default": "trabajo"
     }
   }
 }

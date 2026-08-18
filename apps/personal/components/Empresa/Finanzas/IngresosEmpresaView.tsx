@@ -3,12 +3,12 @@
 import { useState, useMemo } from "react"
 import { Plus, X, Check, Trash2, TrendingUp, DollarSign, Banknote, CalendarDays } from "lucide-react"
 import { toast } from "sonner"
-import { useGetIngresos, createIngreso, deleteIngreso } from "@/api/ingreso/getIngresos"
-import {
-  Ingreso, IngresoPayload,
-  METODOS_PAGO_INGRESO, CATEGORIAS_INGRESO, METODO_COLOR,
-  MetodoPagoIngreso, CategoriaIngreso,
-} from "@/types/ingreso"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { createTransaccion } from "@/api/transaccion/createTransaccion"
+import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
+import { TransaccionType, METODOS_PAGO, MetodoPagoTransaccion } from "@/types/transaccion"
+import { useGetCategorias } from "@/api/categoria/getCategorias"
+import { useGetCuentas } from "@/api/cuenta/getCuentas"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n: number) =>
@@ -23,7 +23,8 @@ const hoy = () => new Date().toISOString().split("T")[0]
 
 const inRango = (fecha: string | null, desde: string, hasta: string) => {
   if (!fecha) return false
-  return fecha >= desde && fecha <= hasta
+  const soloFecha = fecha.slice(0, 10)
+  return soloFecha >= desde && soloFecha <= hasta
 }
 
 const getRango = (periodo: "mes" | "anio" | "todo") => {
@@ -34,20 +35,33 @@ const getRango = (periodo: "mes" | "anio" | "todo") => {
   return { desde: "2000-01-01", hasta: hoyS }
 }
 
+const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
+  "Efectivo":      "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  "Transferencia": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  "Tarjeta":       "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Otro":          "bg-slate-500/10 text-slate-400 border-slate-500/20",
+}
+
 // ─── Modal nuevo ingreso ──────────────────────────────────────────────────────
 function IngresoModal({ onClose, onSaved }: {
   onClose:  () => void
-  onSaved:  (i: Ingreso) => void
+  onSaved:  (i: TransaccionType) => void
 }) {
   const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
   const lbl = "block text-[11px] text-slate-500 mb-1"
+
+  const { categorias } = useGetCategorias("empresa")
+  const { cuentas } = useGetCuentas("empresa")
+  const categoriasIngreso = useMemo(() => categorias.filter(c => c.tipo === "ingreso" && c.activa), [categorias])
+  const cuentasDisponibles = useMemo(() => cuentas.filter(c => c.activa !== false && c.tipo !== "Crédito"), [cuentas])
 
   const [form, setForm] = useState({
     concepto:   "",
     monto:      "",
     fecha:      hoy(),
-    metodoPago: "Efectivo" as MetodoPagoIngreso,
-    categoria:  "VENTA - JOYERÍA" as CategoriaIngreso,
+    metodoPago: "Efectivo" as MetodoPagoTransaccion,
+    categoria:  "",
+    cuentaId:   "",
     referencia: "",
     notas:      "",
   })
@@ -58,19 +72,21 @@ function IngresoModal({ onClose, onSaved }: {
     if (!form.concepto.trim()) { toast.error("Concepto requerido"); return }
     if (!form.monto || isNaN(monto) || monto <= 0) { toast.error("Monto inválido"); return }
     if (!form.fecha) { toast.error("Fecha requerida"); return }
+    if (!form.cuentaId) { toast.error("Selecciona la cuenta destino"); return }
     setGuardando(true)
     try {
-      const payload: IngresoPayload = {
-        concepto:   form.concepto.trim(),
+      const saved = await createTransaccion({
+        descripcion: form.concepto.trim(),
+        tipo:        "ingreso",
         monto,
-        fecha:      form.fecha,
-        metodoPago: form.metodoPago,
-        categoria:  form.categoria,
-        referencia: form.referencia || null,
-        notas:      form.notas     || null,
-        ambito:     "empresa",
-      }
-      const saved = await createIngreso(payload)
+        fecha:       `${form.fecha}T12:00:00`,
+        metodoPago:  form.metodoPago,
+        categoria:   form.categoria || null,
+        cuentaDestino: form.cuentaId,
+        referencia:  form.referencia || null,
+        notas:       form.notas || null,
+        ambito:      "empresa",
+      })
       onSaved(saved)
       toast.success("Ingreso registrado")
     } catch { toast.error("Error al guardar") } finally { setGuardando(false) }
@@ -78,7 +94,7 @@ function IngresoModal({ onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-100">Nuevo ingreso</h2>
           <button type="button" title="Cerrar" onClick={onClose}
@@ -110,9 +126,17 @@ function IngresoModal({ onClose, onSaved }: {
         </div>
 
         <div>
+          <label className={lbl}>Cuenta destino *</label>
+          <select title="Cuenta destino" value={form.cuentaId} onChange={e => setForm(f => ({ ...f, cuentaId: e.target.value }))} className={inp}>
+            <option value="">— Seleccionar —</option>
+            {cuentasDisponibles.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
+          </select>
+        </div>
+
+        <div>
           <label className={lbl}>Método de pago</label>
           <div className="flex flex-wrap gap-1.5">
-            {METODOS_PAGO_INGRESO.map(m => (
+            {METODOS_PAGO.map(m => (
               <button key={m} type="button"
                 onClick={() => setForm(f => ({ ...f, metodoPago: m }))}
                 className={`px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition ${
@@ -125,9 +149,10 @@ function IngresoModal({ onClose, onSaved }: {
         <div>
           <label className={lbl}>Categoría</label>
           <select value={form.categoria} title="Categoría"
-            onChange={e => setForm(f => ({ ...f, categoria: e.target.value as CategoriaIngreso }))}
+            onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}
             className={inp}>
-            {CATEGORIAS_INGRESO.map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="">Sin categoría</option>
+            {categoriasIngreso.map(c => <option key={c.documentId} value={c.nombre}>{c.nombre}</option>)}
           </select>
         </div>
 
@@ -160,10 +185,11 @@ function IngresoModal({ onClose, onSaved }: {
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 export function IngresosEmpresaView() {
-  const { ingresos, setIngresos, loading } = useGetIngresos("empresa")
+  const { transacciones, setTransacciones, loading } = useGetTransacciones("empresa")
+  const ingresos = useMemo(() => transacciones.filter(t => t.tipo === "ingreso"), [transacciones])
   const [modalOpen,  setModalOpen]  = useState(false)
   const [periodo,    setPeriodo]    = useState<"mes" | "anio" | "todo">("mes")
-  const [metodoFiltro, setMetodoFiltro] = useState<MetodoPagoIngreso | "">("")
+  const [metodoFiltro, setMetodoFiltro] = useState<MetodoPagoTransaccion | "">("")
 
   const { desde, hasta } = getRango(periodo)
 
@@ -178,11 +204,11 @@ export function IngresosEmpresaView() {
   const totalTransferencia = filtrados.filter(i => i.metodoPago === "Transferencia").reduce((s, i) => s + (i.monto ?? 0), 0)
   const countClientes    = new Set(filtrados.map(i => i.referencia ?? i.clienteDocumentId ?? "—").filter(Boolean)).size
 
-  const eliminar = async (ing: Ingreso) => {
-    if (!confirm(`¿Eliminar ingreso "${ing.concepto}"?`)) return
+  const eliminar = async (ing: TransaccionType) => {
+    if (!confirm(`¿Eliminar ingreso "${ing.descripcion}"?`)) return
     try {
-      await deleteIngreso(ing.documentId)
-      setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
+      await deleteTransaccion(ing.documentId)
+      setTransacciones(prev => prev.filter(i => i.documentId !== ing.documentId))
       toast.success("Eliminado")
     } catch { toast.error("Error al eliminar") }
   }
@@ -215,11 +241,11 @@ export function IngresosEmpresaView() {
           </button>
         ))}
         <div className="h-4 w-px bg-slate-700 mx-1" />
-        {(["", ...METODOS_PAGO_INGRESO] as const).map(m => (
-          <button key={m} type="button" onClick={() => setMetodoFiltro(m as MetodoPagoIngreso | "")}
+        {(["", ...METODOS_PAGO] as const).map(m => (
+          <button key={m} type="button" onClick={() => setMetodoFiltro(m as MetodoPagoTransaccion | "")}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition ${
               metodoFiltro === m
-                ? m ? METODO_COLOR[m as MetodoPagoIngreso] : "bg-slate-700 text-slate-200 border-slate-600"
+                ? m ? METODO_COLOR[m as MetodoPagoTransaccion] : "bg-slate-700 text-slate-200 border-slate-600"
                 : "border-slate-700 text-slate-500 hover:text-slate-300"
             }`}>
             {m || "Todos"}
@@ -265,6 +291,7 @@ export function IngresosEmpresaView() {
               <tr className="border-b border-slate-800">
                 <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Concepto</th>
                 <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Cliente</th>
+                <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Cuenta</th>
                 <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Fecha</th>
                 <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Método</th>
                 <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Monto</th>
@@ -275,10 +302,11 @@ export function IngresosEmpresaView() {
               {filtrados.map(ing => (
                 <tr key={ing.documentId} className="hover:bg-slate-800/40 transition group">
                   <td className="px-4 py-3">
-                    <p className="text-slate-200 font-medium">{ing.concepto}</p>
+                    <p className="text-slate-200 font-medium">{ing.descripcion}</p>
                     {ing.notas && <p className="text-[10px] text-slate-500 truncate max-w-[200px]">{ing.notas}</p>}
                   </td>
                   <td className="px-4 py-3 text-slate-400 text-xs">{ing.referencia || "—"}</td>
+                  <td className="px-4 py-3 text-slate-400 text-xs">{ing.cuentaDestino?.nombre ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">{fmtFecha(ing.fecha)}</td>
                   <td className="px-4 py-3">
                     {ing.metodoPago
@@ -302,7 +330,7 @@ export function IngresosEmpresaView() {
             </tbody>
             <tfoot>
               <tr className="border-t border-slate-700">
-                <td colSpan={4} className="px-4 py-3 text-xs text-slate-500">{filtrados.length} registro{filtrados.length !== 1 ? "s" : ""}</td>
+                <td colSpan={5} className="px-4 py-3 text-xs text-slate-500">{filtrados.length} registro{filtrados.length !== 1 ? "s" : ""}</td>
                 <td className="px-4 py-3 text-right">
                   <span className="text-emerald-300 font-bold font-mono text-sm">{fmt(totalFiltrado)}</span>
                 </td>
@@ -317,7 +345,7 @@ export function IngresosEmpresaView() {
         <IngresoModal
           onClose={() => setModalOpen(false)}
           onSaved={ing => {
-            setIngresos(prev => [ing, ...prev])
+            setTransacciones(prev => [ing, ...prev])
             setModalOpen(false)
           }}
         />

@@ -4,7 +4,7 @@ import { TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, UserCog, Shiel
 import { useSectionTab, TabBar, SeccionHero, useHeroImagen, Pending } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { IngresosEmpresaView } from "@/components/Empresa/Finanzas/IngresosEmpresaView"
-import { GastosEmpresaView } from "@/components/Empresa/Marketing/GastosEmpresaView"
+import { GastosEmpresaView } from "@/components/Empresa/Finanzas/GastosEmpresaView"
 import { PresupuestosEmpresaView } from "@/components/Empresa/Finanzas/PresupuestosEmpresaView"
 import { CuentasEmpresaView } from "@/components/Empresa/Finanzas/CuentasEmpresaView"
 import { CalendarioPagosView } from "@/components/Empresa/Finanzas/CalendarioPagosView"

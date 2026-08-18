@@ -15,8 +15,19 @@ import {
 import { Cotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
 import { useGetCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { CotizacionModal } from "./CotizacionModal"
-import { useGetIngresosByCliente, createIngreso, deleteIngreso } from "@/api/ingreso/getIngresos"
-import { Ingreso, METODOS_PAGO_INGRESO, CATEGORIAS_INGRESO, METODO_COLOR, MetodoPagoIngreso, CategoriaIngreso } from "@/types/ingreso"
+import { useGetTransaccionesByCliente } from "@/api/transaccion/getTransacciones"
+import { createTransaccion } from "@/api/transaccion/createTransaccion"
+import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
+import { TransaccionType, METODOS_PAGO, MetodoPagoTransaccion } from "@/types/transaccion"
+import { useGetCategorias } from "@/api/categoria/getCategorias"
+import { useGetCuentas } from "@/api/cuenta/getCuentas"
+
+const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
+  "Efectivo":      "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  "Transferencia": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  "Tarjeta":       "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Otro":          "bg-slate-500/10 text-slate-400 border-slate-500/20",
+}
 
 // ─── Metadatos por etapa ──────────────────────────────────────────────────────
 
@@ -247,8 +258,9 @@ function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onC
 type PagoForm = {
   monto:      string
   fecha:      string
-  metodoPago: MetodoPagoIngreso
-  categoria:  CategoriaIngreso
+  metodoPago: MetodoPagoTransaccion
+  categoria:  string
+  cuentaId:   string
   concepto:   string
   notas:      string
 }
@@ -257,14 +269,19 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
   clienteNombre:     string
   clienteDocumentId: string
   onClose:           () => void
-  onSaved:           (i: Ingreso) => void
+  onSaved:           (i: TransaccionType) => void
 }) {
   const hoy = new Date().toISOString().split("T")[0]
+  const { categorias } = useGetCategorias("empresa")
+  const { cuentas } = useGetCuentas("empresa")
+  const categoriasIngreso = categorias.filter(c => c.tipo === "ingreso" && c.activa)
+  const cuentasDisponibles = cuentas.filter(c => c.activa !== false && c.tipo !== "Crédito")
   const [form, setForm] = useState<PagoForm>({
     monto:      "",
     fecha:      hoy,
     metodoPago: "Transferencia",
-    categoria:  "VENTA - JOYERÍA",
+    categoria:  "Venta de joyería",
+    cuentaId:   "",
     concepto:   `Pago — ${clienteNombre}`,
     notas:      "",
   })
@@ -277,14 +294,17 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
     if (!form.monto || isNaN(monto) || monto <= 0) { toast.error("Monto inválido"); return }
     if (!form.fecha)   { toast.error("Fecha requerida"); return }
     if (!form.concepto.trim()) { toast.error("Concepto requerido"); return }
+    if (!form.cuentaId) { toast.error("Selecciona la cuenta destino"); return }
     setGuardando(true)
     try {
-      const saved = await createIngreso({
-        concepto:          form.concepto.trim(),
+      const saved = await createTransaccion({
+        descripcion:       form.concepto.trim(),
+        tipo:              "ingreso",
         monto,
-        fecha:             form.fecha,
+        fecha:             `${form.fecha}T12:00:00`,
         metodoPago:        form.metodoPago,
         categoria:         form.categoria,
+        cuentaDestino:     form.cuentaId,
         notas:             form.notas || null,
         referencia:        clienteNombre,
         clienteDocumentId,
@@ -331,7 +351,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
         <div>
           <label className={lbl}>Método de pago</label>
           <div className="flex flex-wrap gap-1.5">
-            {METODOS_PAGO_INGRESO.map(m => (
+            {METODOS_PAGO.map(m => (
               <button key={m} type="button"
                 onClick={() => setForm(f => ({ ...f, metodoPago: m }))}
                 className={`px-2.5 py-1 text-[11px] font-medium rounded-lg border transition ${
@@ -344,9 +364,19 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
         <div>
           <label className={lbl}>Categoría</label>
           <select value={form.categoria} title="Categoría"
-            onChange={e => setForm(f => ({ ...f, categoria: e.target.value as CategoriaIngreso }))}
+            onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}
             className={inp}>
-            {CATEGORIAS_INGRESO.map(c => <option key={c} value={c}>{c}</option>)}
+            {categoriasIngreso.map(c => <option key={c.documentId} value={c.nombre}>{c.nombre}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className={lbl}>Cuenta destino *</label>
+          <select value={form.cuentaId} title="Cuenta destino"
+            onChange={e => setForm(f => ({ ...f, cuentaId: e.target.value }))}
+            className={inp}>
+            <option value="">— Seleccionar —</option>
+            {cuentasDisponibles.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
           </select>
         </div>
 
@@ -377,7 +407,7 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
   const [pagoModalOpen, setPagoModalOpen] = useState(false)
   const { cotizaciones, setCotizaciones, loading: cotLoading } = useGetCotizaciones(cliente.documentId)
-  const { ingresos, setIngresos, loading: ingLoading } = useGetIngresosByCliente(cliente.documentId)
+  const { transacciones: ingresos, setTransacciones: setIngresos, loading: ingLoading } = useGetTransaccionesByCliente(cliente.documentId)
 
   const handleCotizacionSaved = useCallback((saved: Cotizacion) => {
     setCotizaciones(prev => {
@@ -544,7 +574,7 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
                 <div key={ing.documentId}
                   className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/60 group">
                   <div>
-                    <p className="text-[11px] font-medium text-slate-200">{ing.concepto}</p>
+                    <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
                       {ing.metodoPago && (
@@ -562,7 +592,7 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
                       onClick={async () => {
                         if (!confirm("¿Eliminar este pago?")) return
                         try {
-                          await deleteIngreso(ing.documentId)
+                          await deleteTransaccion(ing.documentId)
                           setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
                           toast.success("Pago eliminado")
                         } catch { toast.error("Error al eliminar") }

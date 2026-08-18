@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react"
 import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
-import { useGetGastos } from "@/api/gasto/getGastos"
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Minus } from "lucide-react"
+import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
+import { useGetCuentas } from "@/api/cuenta/getCuentas"
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Minus, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type Periodo = "mes_actual" | "mes_anterior" | "anio_actual"
@@ -34,16 +35,23 @@ function fmt(n: number) {
 
 export function FinancierosView() {
   const { ventas,  loading: lv } = useGetVentas()
-  const { gastos,  loading: lg } = useGetGastos("empresa")
+  const { transacciones, loading: lt } = useGetTransacciones("empresa")
+  const { cuentas, loading: lc } = useGetCuentas("empresa")
   const [periodo, setPeriodo] = useState<Periodo>("mes_actual")
+
+  const gastos          = useMemo(() => transacciones.filter(t => t.tipo === "gasto"), [transacciones])
+  const ingresosAdmin    = useMemo(() => transacciones.filter(t => t.tipo === "ingreso"), [transacciones])
+  const saldoTotal = useMemo(() =>
+    cuentas.filter(c => c.activa !== false && c.tipo !== "Crédito").reduce((s, c) => s + (c.saldoActual ?? 0), 0), [cuentas])
 
   const stats = useMemo(() => {
     const ventasFiltradas = ventas.filter(v =>
       v.estado !== "Cancelado" && fechaEnPeriodo(v.fecha, periodo)
     )
-    const gastosFiltrados = gastos.filter(g => fechaEnPeriodo(g.fecha, periodo))
+    const gastosFiltrados  = gastos.filter(g => fechaEnPeriodo(g.fecha, periodo))
+    const ingresosFiltrados = ingresosAdmin.filter(i => fechaEnPeriodo(i.fecha, periodo))
 
-    const ingresos  = ventasFiltradas.reduce((s, v) => s + (v.monto ?? 0), 0)
+    const ingresos  = ventasFiltradas.reduce((s, v) => s + (v.monto ?? 0), 0) + ingresosFiltrados.reduce((s, i) => s + (i.monto ?? 0), 0)
     const egresos   = gastosFiltrados.reduce((s, g) => s + (g.monto ?? 0), 0)
     const margen    = ingresos - egresos
     const numVentas = ventasFiltradas.length
@@ -53,11 +61,15 @@ export function FinancierosView() {
       const m = v.metodoPago ?? "Sin método"
       porMetodo[m] = (porMetodo[m] ?? 0) + v.monto
     }
+    for (const i of ingresosFiltrados) {
+      const m = i.metodoPago ?? "Sin método"
+      porMetodo[m] = (porMetodo[m] ?? 0) + i.monto
+    }
 
     return { ingresos, egresos, margen, numVentas, ventasFiltradas, gastosFiltrados, porMetodo }
-  }, [ventas, gastos, periodo])
+  }, [ventas, gastos, ingresosAdmin, periodo])
 
-  const loading = lv || lg
+  const loading = lv || lt || lc
 
   return (
     <div className="p-6 space-y-6 max-w-5xl">
@@ -83,7 +95,13 @@ export function FinancierosView() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <KpiCard
+          label="Saldo en cuentas"
+          value={loading ? "—" : fmt(saldoTotal)}
+          icon={Wallet}
+          color="sky"
+        />
         <KpiCard
           label="Ingresos"
           value={loading ? "—" : fmt(stats.ingresos)}
@@ -150,8 +168,8 @@ export function FinancierosView() {
               stats.gastosFiltrados.slice(0, 8).map(g => (
                 <div key={g.documentId} className="flex items-center justify-between px-4 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-slate-300 truncate">{g.concepto}</p>
-                    <p className="text-[11px] text-slate-600">{g.centro_costo?.nombre ?? "Sin centro"} · {g.fecha}</p>
+                    <p className="text-xs font-medium text-slate-300 truncate">{g.descripcion}</p>
+                    <p className="text-[11px] text-slate-600">{g.categoria ?? g.centro_costo?.nombre ?? "Sin categoría"} · {g.fecha.slice(0, 10)}</p>
                   </div>
                   <span className="text-xs font-semibold text-rose-400 shrink-0 ml-3">{fmt(g.monto ?? 0)}</span>
                 </div>
