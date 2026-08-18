@@ -1,7 +1,7 @@
 "use client"
 
-import { TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, UserCog, ShieldCheck, BarChart3, Gavel } from "lucide-react"
-import { useSectionTab, TabBar, SeccionHero, useHeroImagen, Pending } from "./shared"
+import { TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, BarChart3, Gavel } from "lucide-react"
+import { useSectionTab, TabBar, SeccionHero, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { IngresosEmpresaView } from "@/components/Empresa/Finanzas/IngresosEmpresaView"
 import { GastosEmpresaView } from "@/components/Empresa/Finanzas/GastosEmpresaView"
@@ -18,8 +18,6 @@ const TABS = [
   { id: "cuentas",      label: "Cuentas",                icon: CreditCard },
   { id: "calendario",   label: "Calendario de pagos",   icon: CalendarDays },
   { id: "legales",      label: "Documentos legales",    icon: Gavel },
-  { id: "personas",     label: "Personas",               icon: UserCog },
-  { id: "roles",        label: "Roles",                  icon: ShieldCheck },
   { id: "metricas",     label: "Métricas",                icon: BarChart3 },
 ]
 
@@ -55,8 +53,6 @@ export function SeccionAdministracionFinanzas() {
       {tab === "cuentas"       && <CuentasEmpresaView />}
       {tab === "calendario"    && <CalendarioPagosView />}
       {tab === "legales"       && <DocumentosLegalesView />}
-      {tab === "personas"      && <Pending owner="Medallitadeoro" desc="En desarrollo, igual que hoy en gestion-empresa." />}
-      {tab === "roles"         && <Pending owner="Medallitadeoro" desc="En desarrollo, igual que hoy en gestion-empresa." />}
       {tab === "metricas"      && <FinancierosView />}
     </div>
   )

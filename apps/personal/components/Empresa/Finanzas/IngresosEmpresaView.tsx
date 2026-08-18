@@ -207,33 +207,27 @@ export function IngresosEmpresaView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
-      {/* Encabezado */}
+      {/* Filtros + acción */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Ingresos</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Pagos y cobros recibidos de clientes</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          {(["mes", "anio", "todo"] as const).map(p => (
+            <button key={p} type="button" onClick={() => setPeriodo(p)} className={pill(periodo === p)}>
+              {p === "mes" ? "Este mes" : p === "anio" ? "Este año" : "Todo"}
+            </button>
+          ))}
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+          {(["", ...METODOS_PAGO] as const).map(m => (
+            <button key={m} type="button" onClick={() => setMetodoFiltro(m as MetodoPagoTransaccion | "")} className={pill(metodoFiltro === m)}>
+              {m || "Todos"}
+            </button>
+          ))}
         </div>
         <button type="button" onClick={() => setModalOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-500 hover:bg-violet-600 text-white rounded-lg transition">
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-500 hover:bg-violet-600 text-white rounded-lg transition shrink-0">
           <Plus size={15} /> Nuevo ingreso
         </button>
-      </div>
-
-      {/* Filtros de periodo */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {(["mes", "anio", "todo"] as const).map(p => (
-          <button key={p} type="button" onClick={() => setPeriodo(p)} className={pill(periodo === p)}>
-            {p === "mes" ? "Este mes" : p === "anio" ? "Este año" : "Todo"}
-          </button>
-        ))}
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
-        {(["", ...METODOS_PAGO] as const).map(m => (
-          <button key={m} type="button" onClick={() => setMetodoFiltro(m as MetodoPagoTransaccion | "")} className={pill(metodoFiltro === m)}>
-            {m || "Todos"}
-          </button>
-        ))}
       </div>
 
       {/* KPIs */}

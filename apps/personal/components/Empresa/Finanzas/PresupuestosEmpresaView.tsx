@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef, useLayoutEffect } from "react"
-import { Plus, X, Pencil, Loader2, TrendingDown, AlertTriangle, CheckCircle } from "lucide-react"
+import { Plus, X, Pencil, Loader2, TrendingDown, AlertTriangle, CheckCircle, BarChart2 } from "lucide-react"
 import { motion } from "framer-motion"
 import {
   PieChart, Pie, Cell,
@@ -99,6 +99,7 @@ export function PresupuestosEmpresaView() {
   const gastos = useMemo(() => transacciones.filter(t => t.tipo === "gasto"), [transacciones])
 
   const [partidas,  setPartidas]  = useState<PartidaPresupuestoType[]>([])
+  const [tab,       setTab]       = useState<"resumen" | "metricas">("resumen")
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState<PartidaPresupuestoType | null>(null)
   const [form,      setForm]      = useState<Form>(emptyForm())
@@ -220,11 +221,18 @@ export function PresupuestosEmpresaView() {
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Presupuesto</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Planifica ingresos y egresos por área de la empresa.</p>
+      {/* Tabs + acción */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-lg p-1 w-fit">
+          {([["resumen", "Resumen"], ["metricas", "Métricas"]] as const).map(([key, label]) => (
+            <button key={key} type="button" onClick={() => setTab(key)}
+              className={`flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium transition-all ${
+                tab === key ? "bg-violet-500 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}>
+              {key === "metricas" && <BarChart2 size={13} />}
+              {label}
+            </button>
+          ))}
         </div>
         <button type="button" onClick={openNuevo}
           className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 transition-colors">
@@ -232,6 +240,8 @@ export function PresupuestosEmpresaView() {
         </button>
       </div>
 
+      {tab === "resumen" && (
+      <>
       {/* Presupuesto vs Real */}
       <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-5">
 
@@ -345,7 +355,11 @@ export function PresupuestosEmpresaView() {
           </>
         )}
       </div>
+      </>
+      )}
 
+      {tab === "metricas" && (
+      <>
       {/* Charts */}
       {comparativa.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -412,7 +426,11 @@ export function PresupuestosEmpresaView() {
           </div>
         )
       })()}
+      </>
+      )}
 
+      {tab === "resumen" && (
+      <>
       {/* Tabla de partidas con proyecciones */}
       <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -508,6 +526,8 @@ export function PresupuestosEmpresaView() {
           )}
         </div>
       </div>
+      </>
+      )}
 
       {/* Modal */}
       {modalOpen && (

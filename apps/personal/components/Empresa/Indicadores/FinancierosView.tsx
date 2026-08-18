@@ -71,12 +71,8 @@ export function FinancierosView() {
   const loading = lv || lt || lc
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Indicadores Financieros</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Ingresos, gastos y margen del negocio</p>
-        </div>
+    <div className="space-y-5 max-w-5xl">
+      <div className="flex items-center justify-end">
         <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-1 shadow-sm">
           {PERIODOS.map(p => (
             <button key={p.value} type="button"

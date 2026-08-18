@@ -92,13 +92,6 @@ export function CuentasEmpresaView() {
   const tieneBancos = liquidas.some(c => c.saldoBanco != null)
   const diferencia  = tieneBancos ? totalBanco - saldoTotal : null
 
-  const resumenCards = useMemo(() => {
-    return ORDEN.filter(k => k !== "__sin").map(k => {
-      const items = k === "__credito" ? creditos : liquidas.filter(c => (c.proposito ?? "__sin") === k)
-      return { key: k, meta: PROPOSITO_META[k], total: items.reduce((s, c) => s + (c.saldoActual ?? 0), 0), count: items.length }
-    }).filter(c => c.count > 0)
-  }, [activas])
-
   const grupos = useMemo(() => {
     const map = new Map<string, CuentaType[]>()
     for (const c of activas) {
@@ -182,11 +175,20 @@ export function CuentasEmpresaView() {
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Cuentas</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Saldos y distribución del dinero de la empresa.</p>
+      {/* Saldo total + acciones */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-6">
+          <div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Saldo total empresa</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{fmt(saldoTotal)}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{liquidas.length} cuenta{liquidas.length !== 1 ? "s" : ""} activa{liquidas.length !== 1 ? "s" : ""}</p>
+          </div>
+          {totalDeuda > 0 && (
+            <div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Deuda crédito</p>
+              <p className="text-xl font-bold text-red-500 dark:text-red-400">{fmt(totalDeuda)}</p>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setTransModal(true)}
@@ -199,40 +201,6 @@ export function CuentasEmpresaView() {
           </button>
         </div>
       </div>
-
-      {/* Saldo total */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 flex items-center justify-between">
-        <div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Saldo total empresa</p>
-          <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{fmt(saldoTotal)}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{liquidas.length} cuenta{liquidas.length !== 1 ? "s" : ""} activa{liquidas.length !== 1 ? "s" : ""}</p>
-        </div>
-        {totalDeuda > 0 && (
-          <div className="text-right">
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Deuda crédito</p>
-            <p className="text-xl font-bold text-red-500 dark:text-red-400">{fmt(totalDeuda)}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Cards resumen por propósito */}
-      {resumenCards.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {resumenCards.map(({ key, meta, total, count }) => {
-            const Icon = meta.icon
-            return (
-              <div key={key} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-4">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Icon size={13} className="text-violet-500" />
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{meta.label}</p>
-                </div>
-                <p className={`text-xl font-bold ${meta.esCredito ? "text-red-500 dark:text-red-400" : "text-slate-900 dark:text-slate-100"}`}>{fmt(total)}</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{count} cuenta{count !== 1 ? "s" : ""}</p>
-              </div>
-            )
-          })}
-        </div>
-      )}
 
       {/* Banco vs sistema */}
       {tieneBancos && (
