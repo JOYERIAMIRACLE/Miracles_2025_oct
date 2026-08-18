@@ -6,8 +6,8 @@ import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { RecursosDescargables, type RecursoExtraTab } from "./RecursosDescargables"
 import { SitioWebMiraclesView } from "@/components/Empresa/Marketing/SitioWebMiraclesView"
 import { CampanasPlannerView } from "./CampanasPlannerView"
-import { PromocionalesView } from "@/components/Empresa/Marketing/PromocionalesView"
-import { EcosistemaView } from "@/components/Shared/EcosistemaView"
+import { MerchView } from "./MerchView"
+import { IndicadoresView } from "./IndicadoresView"
 
 const TABS = [
   { id: "identidad",  label: "Identidad de marca",     icon: Palette },
@@ -88,8 +88,8 @@ export function SeccionMarketing() {
       {tab === "materiales"  && <RecursosDescargables seccion="marketing-materiales" layout="sidebar" />}
       {tab === "campanas"    && <CampanasPlannerView />}
       {tab === "sitio-web"   && <SitioWebMiraclesView />}
-      {tab === "indicadores" && <EcosistemaView ambito="empresa" />}
-      {tab === "merch"       && <PromocionalesView ambito="empresa" />}
+      {tab === "indicadores" && <IndicadoresView />}
+      {tab === "merch"       && <MerchView />}
     </div>
   )
 }
