@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "documentos_legales",
+  "info": {
+    "singularName": "documento-legal",
+    "pluralName": "documentos-legales",
+    "displayName": "Portal - Documento Legal"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": { "type": "string", "required": true },
+    "subtitulo": { "type": "string" },
+    "caracteristicas": { "type": "json" },
+    "archivos": { "type": "media", "multiple": true, "allowedTypes": ["files", "images"] },
+    "activo": { "type": "boolean", "default": true },
+    "orden": { "type": "integer", "default": 0 }
+  }
+}

@@ -164,6 +164,11 @@ const PUBLIC_ACTIONS_PORTAL_MDO = [
   'api::recurso-categoria.recurso-categoria.create',
   'api::recurso-categoria.recurso-categoria.update',
   'api::recurso-categoria.recurso-categoria.delete',
+  'api::documento-legal.documento-legal.find',
+  'api::documento-legal.documento-legal.findOne',
+  'api::documento-legal.documento-legal.create',
+  'api::documento-legal.documento-legal.update',
+  'api::documento-legal.documento-legal.delete',
 ];
 
 const CATEGORIAS_PAGO_SEED = [

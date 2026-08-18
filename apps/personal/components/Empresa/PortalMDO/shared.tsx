@@ -227,7 +227,7 @@ async function recortarImagen(imagenUrl: string, area: Area): Promise<File> {
  * recortar la primera vez que se sube, para que "Ajustar imagen" siempre
  * parta de la foto completa en vez de recortar sobre un recorte anterior.
  */
-type HeroImagenCampo = "portada_conoce" | "portada_depto_mision" | "portada_depto_rh" | "portada_depto_cadena" | "portada_depto_comercial" | "portada_depto_marketing"
+type HeroImagenCampo = "portada_conoce" | "portada_depto_mision" | "portada_depto_rh" | "portada_depto_cadena" | "portada_depto_comercial" | "portada_depto_marketing" | "portada_depto_administracion"
 
 export function useHeroImagen(campo: HeroImagenCampo, documentId: string | null, onUploaded: () => void) {
   const [uploading, setUploading] = useState(false)
