@@ -7,7 +7,7 @@ import { useGetMateriales, createMaterial, updateMaterial } from "@/api/material
 import { Material, MaterialPayload } from "@/types/material"
 import {
   useGetComprasMaterial, createCompraMaterial, updateCompraMaterial, deleteCompraMaterial,
-  createCompraMaterialLinea, deleteCompraMaterialLinea,
+  createCompraMaterialLinea, updateCompraMaterialLinea, deleteCompraMaterialLinea,
 } from "@/api/compra-material/getComprasMaterial"
 import { CompraMaterial, CompraMaterialLinea } from "@/types/compra-material"
 import { createMovimientoMaterial } from "@/api/movimiento-material/mutateMovimientoMaterial"
@@ -157,19 +157,25 @@ function MaterialesTab() {
 
 // ─── Modal: nueva compra (cabecera + líneas tipo recibo) ───────────────────────
 
-type LineaForm = { material: string; descripcion: string; gramos: string; precioPorGramo: string }
+type LineaForm = { documentId?: string; material: string; descripcion: string; gramos: string; precioPorGramo: string }
 const emptyLinea = (): LineaForm => ({ material: "", descripcion: "", gramos: "", precioPorGramo: "" })
+const lineaFormDe = (l: CompraMaterialLinea): LineaForm => ({
+  documentId: l.documentId, material: l.material?.documentId ?? "", descripcion: l.descripcion,
+  gramos: String(l.gramos), precioPorGramo: String(l.precioPorGramo),
+})
 
-function NuevaCompraModal({ materiales, proveedores, onClose, onSaved }: {
+function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved }: {
+  editando: CompraMaterial | null
   materiales: Material[]; proveedores: { documentId: string; nombre: string }[]
   onClose: () => void; onSaved: (c: CompraMaterial) => void
 }) {
-  const [proveedor, setProveedor] = useState("")
-  const [fecha, setFecha] = useState(toYMD(new Date()))
-  const [notas, setNotas] = useState("")
-  const [lineas, setLineas] = useState<LineaForm[]>([emptyLinea()])
+  const [proveedor, setProveedor] = useState(editando?.proveedor?.documentId ?? "")
+  const [fecha, setFecha] = useState(editando?.fecha ?? toYMD(new Date()))
+  const [notas, setNotas] = useState(editando?.notas ?? "")
+  const [lineas, setLineas] = useState<LineaForm[]>(editando && editando.lineas.length > 0 ? editando.lineas.map(lineaFormDe) : [emptyLinea()])
+  const [eliminadas, setEliminadas] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
-  const cerrarSiVacio = useModalBackdropClose({ proveedor, fecha, notas, lineas }, onClose)
+  const cerrarSiVacio = useModalBackdropClose({ proveedor, fecha, notas, lineas }, onClose, editando?.documentId)
 
   function actualizarLinea(i: number, campo: keyof LineaForm, valor: string) {
     setLineas(prev => prev.map((l, idx) => {
@@ -182,6 +188,11 @@ function NuevaCompraModal({ materiales, proveedores, onClose, onSaved }: {
       return nueva
     }))
   }
+  function quitarLinea(i: number) {
+    const l = lineas[i]
+    if (l?.documentId) setEliminadas(prev => [...prev, l.documentId!])
+    setLineas(prev => prev.filter((_, idx) => idx !== i))
+  }
   const totalLinea = (l: LineaForm) => (Number(l.gramos) || 0) * (Number(l.precioPorGramo) || 0)
   const totalCompra = lineas.reduce((s, l) => s + totalLinea(l), 0)
 
@@ -190,15 +201,21 @@ function NuevaCompraModal({ materiales, proveedores, onClose, onSaved }: {
     if (validas.length === 0) { toast.error("Agrega al menos una línea completa"); return }
     setSaving(true)
     try {
-      const compra = await createCompraMaterial({ fecha, proveedor: proveedor || null, notas: notas || null, estado: "borrador" })
+      const compra = editando
+        ? await updateCompraMaterial(editando.documentId, { fecha, proveedor: proveedor || null, notas: notas || null })
+        : await createCompraMaterial({ fecha, proveedor: proveedor || null, notas: notas || null, estado: "borrador" })
+      for (const documentId of eliminadas) await deleteCompraMaterialLinea(documentId)
+      const lineasFinales: CompraMaterialLinea[] = []
       for (const l of validas) {
-        await createCompraMaterialLinea({
+        const payload = {
           compra: compra.documentId, material: l.material, descripcion: l.descripcion.trim(),
           gramos: Number(l.gramos), precioPorGramo: Number(l.precioPorGramo), total: totalLinea(l),
-        })
+        }
+        const linea = l.documentId ? await updateCompraMaterialLinea(l.documentId, payload) : await createCompraMaterialLinea(payload)
+        lineasFinales.push(linea)
       }
-      toast.success("Compra registrada como borrador — recíbela para actualizar inventario y gasto")
-      onSaved(compra)
+      toast.success(editando ? "Compra actualizada" : "Compra registrada como borrador — recíbela para actualizar inventario y gasto")
+      onSaved({ ...compra, lineas: lineasFinales })
     } catch (e: any) { toast.error(e.message ?? "Error al guardar la compra") } finally { setSaving(false) }
   }
 
@@ -206,7 +223,7 @@ function NuevaCompraModal({ materiales, proveedores, onClose, onSaved }: {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Nueva compra de materia prima</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar compra de materia prima" : "Nueva compra de materia prima"}</h2>
           <button type="button" title="Cerrar" onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
         </div>
 
@@ -255,7 +272,7 @@ function NuevaCompraModal({ materiales, proveedores, onClose, onSaved }: {
                     <td className="p-1.5 w-24 text-xs font-semibold text-slate-700 dark:text-slate-200 text-right pr-3">{fmt(totalLinea(l))}</td>
                     <td className="p-1.5 w-8">
                       {lineas.length > 1 && (
-                        <button type="button" title="Quitar línea" onClick={() => setLineas(prev => prev.filter((_, idx) => idx !== i))}
+                        <button type="button" title="Quitar línea" onClick={() => quitarLinea(i)}
                           className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-500 transition"><X size={13} /></button>
                       )}
                     </td>
@@ -287,7 +304,7 @@ function NuevaCompraModal({ materiales, proveedores, onClose, onSaved }: {
           <button type="button" onClick={onClose} className="px-3 py-2 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg transition">Cancelar</button>
           <button type="button" onClick={guardar} disabled={saving}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-500 hover:bg-violet-600 disabled:opacity-50 text-white rounded-lg transition">
-            <Check size={14} />{saving ? "Guardando..." : "Guardar como borrador"}
+            <Check size={14} />{saving ? "Guardando..." : editando ? "Guardar cambios" : "Guardar como borrador"}
           </button>
         </div>
       </div>
@@ -366,6 +383,7 @@ function ComprasTab() {
   const { materiales } = useGetMateriales()
   const { proveedores } = useGetProveedores()
   const [modalOpen, setModalOpen] = useState(false)
+  const [editando, setEditando] = useState<CompraMaterial | null>(null)
   const [recibiendo, setRecibiendo] = useState<CompraMaterial | null>(null)
   const [delId, setDelId] = useState<string | null>(null)
 
@@ -380,7 +398,7 @@ function ComprasTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-end">
-        <button type="button" onClick={() => setModalOpen(true)}
+        <button type="button" onClick={() => { setEditando(null); setModalOpen(true) }}
           className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 transition-colors">
           <Plus size={15} /> Nueva compra
         </button>
@@ -423,6 +441,12 @@ function ComprasTab() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         {c.estado === "borrador" && (
+                          <button type="button" title="Editar" onClick={() => { setEditando(c); setModalOpen(true) }}
+                            className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                            <Pencil size={13} />
+                          </button>
+                        )}
+                        {c.estado === "borrador" && (
                           <button type="button" onClick={() => setRecibiendo(c)}
                             className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium bg-violet-500 hover:bg-violet-600 text-white rounded-lg transition">
                             <Check size={11} /> Recibir
@@ -452,8 +476,11 @@ function ComprasTab() {
       </div>
 
       {modalOpen && (
-        <NuevaCompraModal materiales={materiales} proveedores={proveedores} onClose={() => setModalOpen(false)}
-          onSaved={c => { setCompras(prev => [c, ...prev]); setModalOpen(false) }} />
+        <NuevaCompraModal editando={editando} materiales={materiales} proveedores={proveedores} onClose={() => setModalOpen(false)}
+          onSaved={c => {
+            setCompras(prev => editando ? prev.map(x => x.documentId === c.documentId ? c : x) : [c, ...prev])
+            setModalOpen(false); setEditando(null)
+          }} />
       )}
       {recibiendo && (
         <RecibirModal compra={recibiendo} onClose={() => setRecibiendo(null)}

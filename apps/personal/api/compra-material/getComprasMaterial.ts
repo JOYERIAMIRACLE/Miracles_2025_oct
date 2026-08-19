@@ -50,6 +50,14 @@ export async function createCompraMaterialLinea(payload: CompraMaterialLineaPayl
   return (await r.json()).data
 }
 
+export async function updateCompraMaterialLinea(documentId: string, payload: Partial<CompraMaterialLineaPayload>): Promise<CompraMaterialLinea> {
+  const r = await fetch(`${BASE}/api/compra-material-lineas/${documentId}?populate=material`, {
+    method: "PUT", headers: hdrs(), body: JSON.stringify({ data: payload }),
+  })
+  if (!r.ok) { const e = await r.json(); throw new Error(e?.error?.message ?? "Error al actualizar línea") }
+  return (await r.json()).data
+}
+
 export async function deleteCompraMaterialLinea(documentId: string): Promise<void> {
   await fetch(`${BASE}/api/compra-material-lineas/${documentId}`, { method: "DELETE", headers: hdrs() })
 }
