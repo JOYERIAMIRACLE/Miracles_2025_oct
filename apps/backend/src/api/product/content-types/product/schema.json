@@ -91,6 +91,22 @@
     },
     "contenidoo": {
       "type": "richtext"
+    },
+    "pesoGramos": {
+      "type": "decimal"
+    },
+    "costoManoObra": {
+      "type": "decimal"
+    },
+    "materialInsumo": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::material.material"
+    },
+    "atributos": {
+      "type": "component",
+      "component": "joyeria.atributos-joya",
+      "repeatable": false
     }
   }
 }

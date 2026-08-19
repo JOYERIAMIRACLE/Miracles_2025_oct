@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_joyeria_atributos_joyas",
+  "info": {
+    "displayName": "Atributos de joya",
+    "icon": "gem"
+  },
+  "options": {},
+  "attributes": {
+    "conPiedra": { "type": "boolean" },
+    "tipoPiedra": { "type": "string" },
+    "kilates": { "type": "string" },
+    "largoCm": { "type": "decimal" },
+    "cierre": { "type": "string" }
+  }
+}

@@ -19,6 +19,16 @@ export type CategoriaType = {
   MainImage?:      { url: string } | null
 }
 
+export type AtributosJoya = {
+  conPiedra:  boolean | null
+  tipoPiedra: string  | null
+  kilates:    string  | null
+  largoCm:    number  | null
+  cierre:     string  | null
+}
+
+export type MaterialInsumoRef = { id: number; documentId: string; nombre: string; precioReferenciaGramo: number | null }
+
 export type ProductType = {
   id:               number
   documentId:       string
@@ -38,4 +48,8 @@ export type ProductType = {
   activo:           boolean
   isFeatured:       boolean
   categoria:        CategoriaType | null
+  pesoGramos:       number | null
+  costoManoObra:    number | null
+  materialInsumo:   MaterialInsumoRef | null
+  atributos:        AtributosJoya | null
 }

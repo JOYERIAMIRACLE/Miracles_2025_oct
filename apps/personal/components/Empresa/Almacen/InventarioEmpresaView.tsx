@@ -7,6 +7,18 @@ import { useGetInventario, createProducto, updateProducto, deleteProducto, patch
 import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem } from "@/types/product"
 import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
+import { useGetMateriales } from "@/api/material/getMateriales"
+import { createMovimientoMaterial } from "@/api/movimiento-material/mutateMovimientoMaterial"
+
+// Qué atributos mostrar según categoría — un solo modelo de campos opcionales
+// que cubre las 9 categorías, en vez de un formulario distinto por cada una.
+function atributosRelevantes(cat: CategoriaJoya | "") {
+  if (cat === "Anillos" || cat === "Argollas")   return { piedra: true,  largo: false, cierre: false }
+  if (cat === "Cadenas" || cat === "Esclavas" || cat === "Pulsos" || cat === "Rosarios") return { piedra: false, largo: true, cierre: false }
+  if (cat === "Aretes" || cat === "Broqueles")   return { piedra: true,  largo: false, cierre: true }
+  if (cat === "Dijes")                            return { piedra: true,  largo: false, cierre: false }
+  return { piedra: true, largo: true, cierre: true }
+}
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const imgUrl  = (url: string) => url.startsWith("http") ? url : `${BACKEND}${url}`
@@ -60,15 +72,20 @@ type FormData = {
   categoriaJoya: CategoriaJoya | ""; materialProducto: MaterialProducto | ""
   talla: string; costoProduccion: string; costo: string; stock: string
   material: MaterialItem
+  materialInsumo: string; pesoGramos: string; costoManoObra: string
+  conPiedra: boolean; tipoPiedra: string; kilates: string; largoCm: string; cierre: string
 }
 const emptyForm = (): FormData => ({
   nombreProducto:"", sku:"", descripcion:"", figura:"", categoriaJoya:"", materialProducto:"",
   talla:"", costoProduccion:"", costo:"", stock:"0", material:"producto",
+  materialInsumo:"", pesoGramos:"", costoManoObra:"",
+  conPiedra:false, tipoPiedra:"", kilates:"", largoCm:"", cierre:"",
 })
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
 
 export function InventarioEmpresaView() {
   const { items, setItems, loading } = useGetInventario()
+  const { materiales } = useGetMateriales()
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [search,      setSearch]      = useState("")
@@ -168,9 +185,33 @@ export function InventarioEmpresaView() {
       costoProduccion: it.costoProduccion != null ? String(it.costoProduccion) : "",
       costo: it.costo != null ? String(it.costo) : "",
       stock: String(it.stock ?? 0), material: it.material ?? "producto",
+      materialInsumo: it.materialInsumo?.documentId ?? "",
+      pesoGramos: it.pesoGramos != null ? String(it.pesoGramos) : "",
+      costoManoObra: it.costoManoObra != null ? String(it.costoManoObra) : "",
+      conPiedra: it.atributos?.conPiedra ?? false,
+      tipoPiedra: it.atributos?.tipoPiedra ?? "",
+      kilates: it.atributos?.kilates ?? "",
+      largoCm: it.atributos?.largoCm != null ? String(it.atributos.largoCm) : "",
+      cierre: it.atributos?.cierre ?? "",
     })
     setModalOpen(true)
   }
+
+  // Costo de material = peso (g) × precio/gramo del material elegido + mano de obra manual.
+  // Solo se auto-calcula cuando hay material + peso capturados; si no, el costo sigue siendo editable a mano
+  // (compatibilidad con productos que no llevan seguimiento de peso).
+  function recalcularCosto(next: Partial<Pick<FormData, "materialInsumo" | "pesoGramos" | "costoManoObra">>) {
+    setForm(f => {
+      const merged = { ...f, ...next }
+      const mat = materiales.find(m => m.documentId === merged.materialInsumo)
+      if (mat?.precioReferenciaGramo && merged.pesoGramos) {
+        const costo = Number(merged.pesoGramos) * mat.precioReferenciaGramo + (Number(merged.costoManoObra) || 0)
+        return { ...merged, costoProduccion: String(Math.round(costo * 100) / 100) }
+      }
+      return merged
+    })
+  }
+  const costeoAutomatico = !!(form.materialInsumo && form.pesoGramos)
 
   function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -200,8 +241,31 @@ export function InventarioEmpresaView() {
         costo:          form.costo ? Number(form.costo) : null,
         stock:          Number(form.stock) || 0,
         material:       form.material,
+        pesoGramos:     form.pesoGramos ? Number(form.pesoGramos) : null,
+        costoManoObra:  form.costoManoObra ? Number(form.costoManoObra) : null,
+        materialInsumo: form.materialInsumo || null,
+        atributos: {
+          conPiedra:  form.conPiedra,
+          tipoPiedra: form.tipoPiedra.trim() || null,
+          kilates:    form.kilates.trim() || null,
+          largoCm:    form.largoCm ? Number(form.largoCm) : null,
+          cierre:     form.cierre.trim() || null,
+        },
         ...(needsSlug ? { slug: slugify(form.nombreProducto.trim()) } : {}),
         ...(fotoData ? { imagenes: [fotoData.id] } : {}),
+      }
+
+      // Al crear una pieza con material+peso capturados, consume ese peso del
+      // inventario de materia prima (una vez por cada unidad de stock inicial) —
+      // es la "individualización" de un lote a granel en piezas vendibles reales.
+      if (!editing && form.materialInsumo && form.pesoGramos) {
+        const unidades = Math.max(1, Number(form.stock) || 1)
+        for (let i = 0; i < unidades; i++) {
+          await createMovimientoMaterial({
+            tipo: "salida", material: form.materialInsumo, gramos: Number(form.pesoGramos),
+            fecha: new Date().toISOString(), notas: `Alta de producto: ${form.nombreProducto.trim()}`,
+          })
+        }
       }
 
       if (editing) {
@@ -245,6 +309,15 @@ export function InventarioEmpresaView() {
     try {
       await patchStock(it.documentId, nuevo)
       setItems(prev => prev.map(i => i.documentId === it.documentId ? { ...i, stock: nuevo } : i))
+      // Cada unidad adicional de una pieza con material+peso consume ese peso otra vez
+      // (se hizo/repuso otra pieza física del mismo diseño) — no se restaura al bajar stock.
+      if (delta > 0 && it.materialInsumo && it.pesoGramos) {
+        await createMovimientoMaterial({
+          tipo: "salida", material: it.materialInsumo.documentId, gramos: it.pesoGramos * delta,
+          fecha: new Date().toISOString(), notas: `Reposición de stock: ${it.nombreProducto}`,
+          producto: it.documentId,
+        })
+      }
     } catch { toast.error("Error actualizando stock") }
   }
 
@@ -839,14 +912,101 @@ export function InventarioEmpresaView() {
                     </div>
                   </div>
 
+                  {/* Peso / insumo real (individualización de piezas) */}
+                  <div>
+                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Peso e insumo (costeo automático)</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
+                        <select title="Material real" value={form.materialInsumo}
+                          onChange={e => recalcularCosto({ materialInsumo: e.target.value })}
+                          className={inp+" cursor-pointer"}>
+                          <option value="">Sin especificar</option>
+                          {materiales.map(m => <option key={m.documentId} value={m.documentId}>{m.nombre} {m.precioReferenciaGramo ? `· $${m.precioReferenciaGramo}/g` : ""}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Peso (g)</label>
+                        <input type="number" min="0" step="0.01" placeholder="0.00" value={form.pesoGramos}
+                          onChange={e => recalcularCosto({ pesoGramos: e.target.value })} className={inp}/>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Mano de obra ($)</label>
+                        <input type="number" min="0" step="0.01" placeholder="0.00" value={form.costoManoObra}
+                          onChange={e => recalcularCosto({ costoManoObra: e.target.value })} className={inp}/>
+                      </div>
+                    </div>
+                    {!editing && costeoAutomatico && (
+                      <p className="text-[11px] text-emerald-500 mt-2">
+                        Costo calculado solo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
+                        {Number(form.costoManoObra) > 0 ? ` + $${form.costoManoObra} mano de obra` : ""} = ${form.costoProduccion}
+                        {Number(form.stock) > 1 ? ` · se descontarán ${(Number(form.pesoGramos) * Number(form.stock)).toFixed(2)}g en total (${form.stock} piezas)` : ""}
+                      </p>
+                    )}
+                    {editing && costeoAutomatico && (
+                      <p className="text-[11px] text-slate-600 mt-2">El costo se recalculó con el peso/material actuales — editar aquí no vuelve a descontar material (solo pasa al crear la pieza o al sumar stock).</p>
+                    )}
+                  </div>
+
+                  {/* Atributos de joya */}
+                  {form.categoriaJoya && (() => {
+                    const rel = atributosRelevantes(form.categoriaJoya)
+                    return (
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos de joya</p>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Kilates / Ley</label>
+                            <input type="text" placeholder="10k, 925…" value={form.kilates}
+                              onChange={e => setForm(f => ({...f, kilates:e.target.value}))} className={inp}/>
+                          </div>
+                          {rel.largo && (
+                            <div>
+                              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Largo (cm)</label>
+                              <input type="number" min="0" step="0.5" placeholder="0" value={form.largoCm}
+                                onChange={e => setForm(f => ({...f, largoCm:e.target.value}))} className={inp}/>
+                            </div>
+                          )}
+                          {rel.cierre && (
+                            <div>
+                              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cierre</label>
+                              <input type="text" placeholder="Mariposa, presión…" value={form.cierre}
+                                onChange={e => setForm(f => ({...f, cierre:e.target.value}))} className={inp}/>
+                            </div>
+                          )}
+                          {rel.piedra && (
+                            <>
+                              <div className="flex items-center gap-2 pt-6">
+                                <input type="checkbox" id="con-piedra" checked={form.conPiedra}
+                                  onChange={e => setForm(f => ({...f, conPiedra:e.target.checked}))}
+                                  className="h-4 w-4 rounded border-slate-600 bg-slate-800"/>
+                                <label htmlFor="con-piedra" className="text-sm text-slate-300">Con piedra</label>
+                              </div>
+                              {form.conPiedra && (
+                                <div className="col-span-2">
+                                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo de piedra</label>
+                                  <input type="text" placeholder="Circonia, zafiro, perla…" value={form.tipoPiedra}
+                                    onChange={e => setForm(f => ({...f, tipoPiedra:e.target.value}))} className={inp}/>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
                   {/* Precios y stock */}
                   <div>
                     <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Precios y Stock</p>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Costo ($)</label>
-                        <input type="number" placeholder="0" value={form.costoProduccion}
-                          onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))} className={inp}/>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
+                          Costo ($) {costeoAutomatico && <span className="text-emerald-500 normal-case">· automático</span>}
+                        </label>
+                        <input type="number" placeholder="0" value={form.costoProduccion} readOnly={costeoAutomatico}
+                          onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))}
+                          className={inp+(costeoAutomatico?" opacity-70 cursor-not-allowed":"")}/>
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Precio venta ($)</label>
