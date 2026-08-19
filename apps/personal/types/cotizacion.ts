@@ -15,6 +15,7 @@ export type ItemCotizacion = {
   cantidad:    number
   precio:      number
   subtotal:    number
+  productoId?: string | null
 }
 
 export type Cotizacion = {

@@ -7,8 +7,10 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetAllCotizaciones, deleteCotizacion } from "@/api/cotizacion/getCotizaciones"
-import { createVenta } from "@/api/ventaEmpresa/getVentas"
+import { createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
+import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
+import { EstadoVenta } from "@/types/ventaEmpresa"
 import {
   Cotizacion, EstadoCotizacion, ESTADOS_COT, ESTADO_COT_COLOR,
 } from "@/types/cotizacion"
@@ -35,11 +37,13 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
     ? cotizacion.items.map(i => `${i.descripcion} ×${i.cantidad}`).join(", ")
     : cotizacion.numero ?? "Pedido desde cotización"
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    concepto: string; monto: number; fecha: string; estado: EstadoVenta; notas: string
+  }>({
     concepto,
     monto: cotizacion.total,
     fecha: new Date().toISOString().split("T")[0],
-    estado: "Pagado" as const,
+    estado: "Pagado",
     notas: cotizacion.notas ?? "",
   })
   const [saving, setSaving] = useState(false)
@@ -49,15 +53,31 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
   const handleConvert = async () => {
     setSaving(true)
     try {
-      await createVenta({
+      // Nace "Cotizado" (sin efecto de stock) para poder copiar las líneas
+      // reales de la cotización antes de aplicar el estado elegido — mismo
+      // patrón de 2 pasos que "Nuevo pedido" en PedidosView.
+      const creada = await createVenta({
         concepto:  form.concepto,
         monto:     form.monto,
         fecha:     form.fecha,
-        estado:    form.estado,
+        estado:    "Cotizado",
         notas:     form.notas || null,
         cantidad:  1,
         cliente:   clienteId,
       })
+      const items = cotizacion.items ?? []
+      for (const item of items) {
+        if (!item.descripcion.trim()) continue
+        await createVentaLinea({
+          venta: creada.documentId,
+          producto: item.productoId || null,
+          descripcion: item.descripcion.trim(),
+          cantidad: item.cantidad || 1,
+          precioUnitario: item.precio || 0,
+          subtotal: item.subtotal,
+        })
+      }
+      if (form.estado !== "Cotizado") await updateVenta(creada.documentId, { estado: form.estado })
       toast.success("Pedido creado desde cotización")
       onConverted()
       onClose()

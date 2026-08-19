@@ -68,6 +68,12 @@
     },
     "notas": {
       "type": "string"
+    },
+    "lineas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::venta-linea.venta-linea",
+      "mappedBy": "venta"
     }
   }
 }

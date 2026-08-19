@@ -199,6 +199,11 @@ const PUBLIC_ACTIONS_PORTAL_MDO = [
   'api::compra-material-linea.compra-material-linea.create',
   'api::compra-material-linea.compra-material-linea.update',
   'api::compra-material-linea.compra-material-linea.delete',
+  'api::venta-linea.venta-linea.find',
+  'api::venta-linea.venta-linea.findOne',
+  'api::venta-linea.venta-linea.create',
+  'api::venta-linea.venta-linea.update',
+  'api::venta-linea.venta-linea.delete',
 ];
 
 const CATEGORIAS_PAGO_SEED = [

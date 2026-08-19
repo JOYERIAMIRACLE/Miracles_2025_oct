@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "venta_lineas",
+  "info": {
+    "singularName": "venta-linea",
+    "pluralName": "venta-lineas",
+    "displayName": "Línea de Venta"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "venta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::venta.venta",
+      "inversedBy": "lineas"
+    },
+    "producto": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product.product"
+    },
+    "descripcion": { "type": "string", "required": true },
+    "cantidad": { "type": "integer", "default": 1, "required": true },
+    "precioUnitario": { "type": "decimal", "required": true },
+    "subtotal": { "type": "decimal" }
+  }
+}

@@ -1,7 +1,10 @@
 import { ClienteEmpresa } from "./clienteEmpresa"
+import { VentaLinea } from "./venta-linea"
 
 export type EstadoVenta   = "Cotizado" | "Pagado" | "Preparando" | "Enviado" | "Entregado" | "Cancelado"
 export type MetodoPago    = "Efectivo" | "Transferencia" | "Tarjeta" | "Otro"
+
+export type CentroVentaRef = { id: number; documentId: string; nombre: string | null }
 
 export const ESTADOS_VENTA: EstadoVenta[] = ["Cotizado", "Pagado", "Preparando", "Enviado", "Entregado", "Cancelado"]
 export const METODOS_PAGO:  MetodoPago[]  = ["Efectivo", "Transferencia", "Tarjeta", "Otro"]
@@ -27,6 +30,8 @@ export type VentaEmpresa = {
   cantidad:    number
   cliente:     Pick<ClienteEmpresa, "id" | "documentId" | "nombre" | "telefono"> | null
   producto:    { id: number; documentId: string; nombreProducto: string; costo: number | null } | null
+  centro_venta: CentroVentaRef | null
+  lineas:      VentaLinea[]
   createdAt:   string
 }
 
@@ -40,4 +45,5 @@ export type VentaPayload = {
   cantidad?:   number
   cliente?:    string | null
   producto?:   string | null
+  centro_venta?: string | null
 }
