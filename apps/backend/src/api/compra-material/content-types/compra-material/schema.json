@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "compras_material",
+  "info": {
+    "singularName": "compra-material",
+    "pluralName": "compras-material",
+    "displayName": "Compra de Materia Prima"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "numero": { "type": "string" },
+    "fecha": { "type": "date", "required": true },
+    "estado": { "type": "enumeration", "enum": ["borrador", "recibida"], "default": "borrador" },
+    "notas": { "type": "text" },
+    "proveedor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::proveedor.proveedor"
+    },
+    "lineas": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::compra-material-linea.compra-material-linea",
+      "mappedBy": "compra"
+    },
+    "transaccion": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::transaccion.transaccion"
+    }
+  }
+}

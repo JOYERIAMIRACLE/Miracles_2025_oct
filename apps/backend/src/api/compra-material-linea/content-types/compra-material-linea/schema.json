@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "compra_material_lineas",
+  "info": {
+    "singularName": "compra-material-linea",
+    "pluralName": "compra-material-lineas",
+    "displayName": "Línea de Compra de Material"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "compra": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::compra-material.compra-material",
+      "inversedBy": "lineas"
+    },
+    "material": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::material.material"
+    },
+    "descripcion": { "type": "string", "required": true },
+    "gramos": { "type": "decimal", "required": true },
+    "precioPorGramo": { "type": "decimal", "required": true },
+    "total": { "type": "decimal" }
+  }
+}

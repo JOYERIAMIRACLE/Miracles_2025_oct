@@ -1,0 +1,19 @@
+{
+  "kind": "collectionType",
+  "collectionName": "materiales",
+  "info": {
+    "singularName": "material",
+    "pluralName": "materiales",
+    "displayName": "Material"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": { "type": "string", "required": true, "unique": true },
+    "unidadMedida": { "type": "enumeration", "enum": ["gramo"], "default": "gramo" },
+    "precioReferenciaGramo": { "type": "decimal" },
+    "stockGramos": { "type": "decimal", "default": 0 },
+    "activo": { "type": "boolean", "default": true },
+    "notas": { "type": "text" }
+  }
+}

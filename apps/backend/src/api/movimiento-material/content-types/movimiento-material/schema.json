@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "movimientos_material",
+  "info": {
+    "singularName": "movimiento-material",
+    "pluralName": "movimientos-material",
+    "displayName": "Movimiento de Material"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "tipo": { "type": "enumeration", "enum": ["entrada", "salida"], "required": true },
+    "material": { "type": "relation", "relation": "manyToOne", "target": "api::material.material" },
+    "gramos": { "type": "decimal", "required": true },
+    "fecha": { "type": "datetime", "required": true },
+    "notas": { "type": "text" },
+    "compraLinea": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::compra-material-linea.compra-material-linea"
+    },
+    "producto": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product.product"
+    }
+  }
+}
