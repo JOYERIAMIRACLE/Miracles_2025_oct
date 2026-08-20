@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
-  DollarSign, Banknote, AlertCircle,
+  DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
@@ -13,7 +13,7 @@ import {
   FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
 } from "@/types/clienteEmpresa"
 import { Cotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
-import { useGetCotizaciones } from "@/api/cotizacion/getCotizaciones"
+import { useGetCotizaciones, useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { CotizacionModal } from "./CotizacionModal"
 import { useGetTransaccionesByCliente } from "@/api/transaccion/getTransacciones"
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
@@ -21,6 +21,9 @@ import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
 import { TransaccionType, METODOS_PAGO, MetodoPagoTransaccion } from "@/types/transaccion"
 import { useGetCategorias } from "@/api/categoria/getCategorias"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
+import { useGetVentas, createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
+import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
+import { VentaEmpresa, EstadoVenta, ESTADO_VENTA_COLOR } from "@/types/ventaEmpresa"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Efectivo":      "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -28,6 +31,12 @@ const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Tarjeta":       "bg-violet-500/10 text-violet-400 border-violet-500/20",
   "Otro":          "bg-slate-500/10 text-slate-400 border-slate-500/20",
 }
+
+const fmtMoney = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
+
+// Días sin movimiento antes de mostrar alerta de estancado
+const DIAS_ESTANCADO_AVISO = 14
+const DIAS_ESTANCADO_ALERTA = 30
 
 // ─── Metadatos por etapa ──────────────────────────────────────────────────────
 
@@ -59,6 +68,14 @@ function numDisplay(etapa: FunnelEtapa, idx: number) {
 const fmtDt = (iso: string | null) => {
   if (!iso) return null
   return new Date(iso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })
+}
+
+// Días desde la última fecha de etapa — null si no aplica (Entrega/Rechazada son terminales)
+function diasSinMovimiento(c: ClienteEmpresa, etapa: FunnelEtapa): number | null {
+  if (etapa === "Entrega" || etapa === "Rechazada") return null
+  const fecha = c[STAGE_META[etapa].fechaKey] as string | null
+  if (!fecha) return null
+  return Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000)
 }
 
 // ─── Canal icon ───────────────────────────────────────────────────────────────
@@ -163,8 +180,9 @@ function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
-function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onCalificar, onRechazar, onRecuperar }: {
+function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDelete, onSelect, onAvanzar, onCalificar, onRechazar, onRecuperar }: {
   c: ClienteEmpresa; num: string; etapa: FunnelEtapa
+  valor: number | null; dias: number | null; sinPedidoReal: boolean
   onEdit: () => void; onDelete: () => void; onSelect: () => void
   onAvanzar?: () => void; onCalificar?: () => void
   onRechazar?: () => void; onRecuperar?: () => void
@@ -187,7 +205,35 @@ function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onC
         </div>
       </div>
 
-      <p className="text-xs font-semibold text-slate-100 leading-snug">{c.nombre}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-semibold text-slate-100 leading-snug">{c.nombre}</p>
+        {valor != null && (
+          <span className="flex items-center gap-0.5 text-[11px] font-bold text-emerald-400 font-mono shrink-0">
+            <DollarSign size={10} />{valor.toLocaleString("es-MX")}
+          </span>
+        )}
+      </div>
+
+      {/* Alertas: estancado / sin pedido real */}
+      {(dias != null && dias >= DIAS_ESTANCADO_AVISO) || sinPedidoReal ? (
+        <div className="flex flex-wrap gap-1">
+          {dias != null && dias >= DIAS_ESTANCADO_AVISO && (
+            <span className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border font-medium ${
+              dias >= DIAS_ESTANCADO_ALERTA
+                ? "bg-red-500/10 text-red-400 border-red-500/30"
+                : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+            }`}>
+              <Clock size={9} /> {dias}d sin movimiento
+            </span>
+          )}
+          {sinPedidoReal && (
+            <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 font-medium"
+              title="Está en esta etapa pero no tiene ningún pedido real conectado">
+              <AlertTriangle size={9} /> sin pedido real
+            </span>
+          )}
+        </div>
+      ) : null}
 
       <div className="space-y-1">
         {etapa === "Lead" && <>
@@ -253,7 +299,6 @@ function ClienteCard({ c, num, etapa, onEdit, onDelete, onSelect, onAvanzar, onC
   )
 }
 
-// ─── Panel lateral ────────────────────────────────────────────────────────────
 // ─── Modal Registrar Pago ─────────────────────────────────────────────────────
 type PagoForm = {
   monto:      string
@@ -399,9 +444,148 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
   )
 }
 
-function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
-  cliente: ClienteEmpresa; num: string
+// ─── Modal: vincular pedido real (gate de Oferta → Pedido) ────────────────────
+function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, onCreated }: {
+  cliente: ClienteEmpresa
+  cotizacionesAceptadas: Cotizacion[]
+  onClose: () => void
+  onCreated: (v: VentaEmpresa) => void
+}) {
+  const [convirtiendo, setConvirtiendo] = useState<string | null>(null)
+  const [modoRapido, setModoRapido] = useState(cotizacionesAceptadas.length === 0)
+  const hoy = new Date().toISOString().split("T")[0]
+  const [form, setForm] = useState({
+    concepto: `Pedido — ${cliente.nombre}`,
+    monto: "",
+    fecha: hoy,
+    estado: "Pagado" as EstadoVenta,
+    metodoPago: "Transferencia" as MetodoPagoTransaccion,
+  })
+  const [guardando, setGuardando] = useState(false)
+  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
+  const lbl = "block text-[11px] text-slate-500 mb-1"
+
+  async function convertirCotizacion(cot: Cotizacion) {
+    setConvirtiendo(cot.documentId)
+    try {
+      const creada = await createVenta({
+        concepto: cot.numero ?? `Pedido — ${cliente.nombre}`,
+        monto: cot.total, fecha: hoy, estado: "Cotizado",
+        notas: cot.notas || null, cantidad: 1, cliente: cliente.documentId,
+      })
+      for (const item of cot.items ?? []) {
+        if (!item.descripcion.trim()) continue
+        await createVentaLinea({
+          venta: creada.documentId, producto: item.productoId || null,
+          descripcion: item.descripcion.trim(), cantidad: item.cantidad || 1,
+          precioUnitario: item.precio || 0, subtotal: item.subtotal,
+        })
+      }
+      const confirmada = await updateVenta(creada.documentId, { estado: "Pagado" })
+      toast.success(`Pedido creado desde ${cot.numero}`)
+      onCreated(confirmada)
+    } catch { toast.error("Error al convertir la cotización"); setConvirtiendo(null) }
+  }
+
+  async function crearRapido() {
+    const monto = parseFloat(form.monto)
+    if (!form.concepto.trim()) { toast.error("El concepto es obligatorio"); return }
+    if (!form.monto || isNaN(monto) || monto <= 0) { toast.error("Monto inválido"); return }
+    setGuardando(true)
+    try {
+      const creada = await createVenta({
+        concepto: form.concepto.trim(), monto, fecha: form.fecha,
+        estado: form.estado, metodoPago: form.metodoPago,
+        cantidad: 1, cliente: cliente.documentId,
+      })
+      toast.success("Pedido creado")
+      onCreated(creada)
+    } catch { toast.error("Error al crear el pedido") } finally { setGuardando(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-60 p-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
+              <ShoppingBag size={14} className="text-emerald-400" /> Vincular pedido real
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">{cliente.nombre}</p>
+          </div>
+          <button type="button" title="Cerrar" onClick={onClose}
+            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={15} /></button>
+        </div>
+
+        <p className="text-[11px] text-slate-500 leading-relaxed">
+          Para pasar a "Pedido" necesita un pedido real conectado — así el stock y las finanzas se actualizan solos.
+        </p>
+
+        {cotizacionesAceptadas.length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Cotizaciones aceptadas</p>
+            <div className="space-y-1.5">
+              {cotizacionesAceptadas.map(cot => (
+                <button key={cot.documentId} type="button" disabled={convirtiendo === cot.documentId}
+                  onClick={() => convertirCotizacion(cot)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-700 hover:border-emerald-600 bg-slate-800/60 hover:bg-emerald-500/5 transition text-left disabled:opacity-50">
+                  <div>
+                    <p className="text-[11px] font-bold font-mono text-slate-300">{cot.numero}</p>
+                    <p className="text-[11px] font-semibold text-emerald-400">{fmtMoney(cot.total)}</p>
+                  </div>
+                  <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                    {convirtiendo === cot.documentId ? "Creando..." : <>Convertir <ArrowRightCircle size={12} /></>}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={() => setModoRapido(m => !m)}
+              className="text-[10px] text-slate-600 hover:text-slate-400 mt-2 transition">
+              {modoRapido ? "Ocultar" : "O crear un pedido nuevo sin cotización"}
+            </button>
+          </div>
+        )}
+
+        {modoRapido && (
+          <div className="space-y-3 pt-1 border-t border-slate-800">
+            <div>
+              <label className={lbl}>Concepto</label>
+              <input value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} className={inp} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={lbl}>Monto *</label>
+                <input type="number" min="0" step="0.01" value={form.monto}
+                  onChange={e => setForm(f => ({ ...f, monto: e.target.value }))}
+                  placeholder="0.00" className={inp} />
+              </div>
+              <div>
+                <label className={lbl}>Fecha</label>
+                <input type="date" title="Fecha" value={form.fecha}
+                  onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className={inp} />
+              </div>
+            </div>
+            <button type="button" onClick={crearRapido} disabled={guardando}
+              className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition">
+              <Check size={14} />{guardando ? "Creando..." : "Crear pedido y avanzar"}
+            </button>
+          </div>
+        )}
+
+        <button type="button" onClick={onClose}
+          className="w-full text-center text-[11px] text-slate-600 hover:text-slate-400 transition pt-1">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Panel lateral ────────────────────────────────────────────────────────────
+function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar }: {
+  cliente: ClienteEmpresa; num: string; ventasDelCliente: VentaEmpresa[]
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
+  onAvanzar: (c: ClienteEmpresa) => void
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
@@ -419,18 +603,15 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
     setCotModalState(null)
   }, [setCotizaciones])
 
-  const moverFunnel = async (dir: 1 | -1) => {
+  const retroceder = async () => {
     const idx    = FUNNEL_ETAPAS.indexOf(etapa)
-    const newIdx = Math.max(0, Math.min(FUNNEL_ETAPAS.length - 1, idx + dir))
+    const newIdx = Math.max(0, idx - 1)
     if (newIdx === idx) return
-    const destino    = FUNNEL_ETAPAS[newIdx]
-    const fechaField = FECHA_FIELD[destino]
-    const extra      = dir === 1 && !(cliente[fechaField] as string | null)
-      ? { [fechaField]: new Date().toISOString() } : {}
+    const destino = FUNNEL_ETAPAS[newIdx]
     try {
-      const updated = await updateCliente(cliente.documentId, { Funnel: destino, ...extra })
+      const updated = await updateCliente(cliente.documentId, { Funnel: destino })
       onUpdate(updated)
-      toast.success(dir === 1 ? `→ ${FUNNEL_LABEL[destino]}` : `← ${FUNNEL_LABEL[destino]}`)
+      toast.success(`← ${FUNNEL_LABEL[destino]}`)
     } catch { toast.error("Error al actualizar") }
   }
 
@@ -476,6 +657,31 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
             <p className="text-xs text-slate-400 leading-relaxed">{cliente.notas}</p>
           </div>
         )}
+
+        {/* Pedidos reales */}
+        <div className="px-4 py-3 border-b border-slate-800">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Pedidos</p>
+          {ventasDelCliente.length === 0 ? (
+            <p className="text-[10px] text-slate-700 py-1">Sin pedidos reales conectados todavía.</p>
+          ) : (
+            <div className="space-y-0.5">
+              {ventasDelCliente.map(v => (
+                <div key={v.documentId} className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-800/40">
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-300 truncate">{v.concepto}</p>
+                    <p className="text-[9px] text-slate-600">{v.fecha ? fmtDt(v.fecha) : "—"}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[11px] font-semibold text-emerald-400 font-mono">{fmtMoney(v.monto)}</span>
+                    {v.estado && (
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Cotizaciones */}
         <div className="px-4 py-3 border-b border-slate-800">
@@ -530,10 +736,12 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
             </button>
           </div>
 
-          {/* Saldo */}
+          {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
           {(() => {
-            const cotAceptada = cotizaciones.find(c => c.estado === "Aceptada")
-            const totalAcordado = cotAceptada?.total ?? null
+            const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
+            const totalAcordado = cotizacionesAceptadas.length > 0
+              ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
+              : null
             const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
             const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
             return totalAcordado !== null || totalPagado > 0 ? (
@@ -615,13 +823,13 @@ function ClientePanel({ cliente, num, onClose, onUpdate, onEdit }: {
           {etapa !== "Rechazada" && (
             <div className="flex gap-2">
               {etapa !== "Lead" && (
-                <button type="button" onClick={() => moverFunnel(-1)}
+                <button type="button" onClick={retroceder}
                   className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
                   <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
                 </button>
               )}
               {etapa !== "Entrega" && (
-                <button type="button" onClick={() => moverFunnel(1)}
+                <button type="button" onClick={() => onAvanzar(cliente)}
                   className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-emerald-800/50 hover:border-emerald-600 hover:text-emerald-300 rounded-lg transition text-emerald-500/70">
                   {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
                 </button>
@@ -840,11 +1048,55 @@ function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
 
 export function PipelineView() {
   const { clientes, setClientes, loading } = useGetClientes()
+  const { ventas: todasVentas, setVentas: setTodasVentas } = useGetVentas()
+  const { cotizaciones: todasCotizaciones } = useGetAllCotizaciones()
   const [modalOpen,       setModalOpen]       = useState(false)
   const [editando,        setEditando]        = useState<ClienteEmpresa | null>(null)
   const [form,            setForm]            = useState<ClientePayload>(emptyCliente())
   const [guardando,       setGuardando]       = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<ClienteEmpresa | null>(null)
+  const [pedidoGateFor,   setPedidoGateFor]   = useState<ClienteEmpresa | null>(null)
+
+  const ventasPorCliente = useMemo(() => {
+    const m = new Map<string, VentaEmpresa[]>()
+    todasVentas.forEach(v => {
+      const id = v.cliente?.documentId
+      if (!id) return
+      if (!m.has(id)) m.set(id, [])
+      m.get(id)!.push(v)
+    })
+    return m
+  }, [todasVentas])
+
+  // Pedidos "de verdad" — excluye los cancelados, que no cuentan como pedido real conectado
+  const ventasActivasPorCliente = useMemo(() => {
+    const m = new Map<string, VentaEmpresa[]>()
+    ventasPorCliente.forEach((ventas, id) => m.set(id, ventas.filter(v => v.estado !== "Cancelado")))
+    return m
+  }, [ventasPorCliente])
+
+  const cotizacionesPorCliente = useMemo(() => {
+    const m = new Map<string, Cotizacion[]>()
+    todasCotizaciones.forEach(c => {
+      const id = c.cliente?.documentId
+      if (!id) return
+      if (!m.has(id)) m.set(id, [])
+      m.get(id)!.push(c)
+    })
+    return m
+  }, [todasCotizaciones])
+
+  // Valor del cliente: prioriza pedidos reales (no cancelados); si no hay, usa cotizaciones aceptadas
+  const valorPorCliente = useMemo(() => {
+    const m = new Map<string, number>()
+    clientes.forEach(c => {
+      const ventas = ventasActivasPorCliente.get(c.documentId) ?? []
+      if (ventas.length > 0) { m.set(c.documentId, ventas.reduce((s, v) => s + (v.monto ?? 0), 0)); return }
+      const cots = (cotizacionesPorCliente.get(c.documentId) ?? []).filter(ct => ct.estado === "Aceptada")
+      if (cots.length > 0) m.set(c.documentId, cots.reduce((s, ct) => s + ct.total, 0))
+    })
+    return m
+  }, [clientes, ventasActivasPorCliente, cotizacionesPorCliente])
 
   const porFunnel = useMemo(() => {
     const map = new Map<FunnelEtapa, ClienteEmpresa[]>()
@@ -905,19 +1157,35 @@ export function PipelineView() {
     } catch { toast.error("Error al eliminar") }
   }
 
-  const avanzar = async (c: ClienteEmpresa) => {
-    const idx    = FUNNEL_ETAPAS.indexOf(c.Funnel ?? "Lead")
-    const newIdx = Math.min(FUNNEL_ETAPAS.length - 1, idx + 1)
-    if (newIdx === idx) return
-    const destino    = FUNNEL_ETAPAS[newIdx]
+  const avanzarA = async (c: ClienteEmpresa, destino: FunnelEtapa) => {
     const fechaField = FECHA_FIELD[destino]
-    const extra      = !(c[fechaField] as string | null) ? { [fechaField]: new Date().toISOString() } : {}
+    const extra = !(c[fechaField] as string | null) ? { [fechaField]: new Date().toISOString() } : {}
     try {
       const updated = await updateCliente(c.documentId, { Funnel: destino, ...extra })
       setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
       if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
       toast.success(`→ ${FUNNEL_LABEL[destino]}`)
     } catch { toast.error("Error al avanzar") }
+  }
+
+  // Avanzar de etapa — si el destino es "Pedido" y el cliente no tiene ningún
+  // pedido real conectado, abre el gate en vez de solo cambiar el texto del Funnel.
+  const avanzar = async (c: ClienteEmpresa) => {
+    const idx    = FUNNEL_ETAPAS.indexOf(c.Funnel ?? "Lead")
+    const newIdx = Math.min(FUNNEL_ETAPAS.length - 1, idx + 1)
+    if (newIdx === idx) return
+    const destino = FUNNEL_ETAPAS[newIdx]
+    if (destino === "Pedido" && (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0) {
+      setPedidoGateFor(c)
+      return
+    }
+    await avanzarA(c, destino)
+  }
+
+  const handlePedidoCreado = async (v: VentaEmpresa) => {
+    setTodasVentas(prev => [v, ...prev])
+    if (pedidoGateFor) await avanzarA(pedidoGateFor, "Pedido")
+    setPedidoGateFor(null)
   }
 
   const rechazar = async (c: ClienteEmpresa) => {
@@ -1006,6 +1274,9 @@ export function PipelineView() {
                     {items.map((c, i) => (
                       <ClienteCard key={c.documentId} c={c}
                         num={numDisplay(etapa, i)} etapa={etapa}
+                        valor={valorPorCliente.get(c.documentId) ?? null}
+                        dias={diasSinMovimiento(c, etapa)}
+                        sinPedidoReal={(etapa === "Pedido" || etapa === "Entrega") && (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0}
                         onEdit={() => abrirEditar(c)}
                         onDelete={() => borrar(c)}
                         onSelect={() => setSelectedCliente(c)}
@@ -1039,9 +1310,20 @@ export function PipelineView() {
         <ClientePanel
           cliente={selectedCliente}
           num={numMap.get(selectedCliente.documentId) ?? "—"}
+          ventasDelCliente={ventasPorCliente.get(selectedCliente.documentId) ?? []}
           onClose={() => setSelectedCliente(null)}
           onUpdate={handleUpdate}
           onEdit={() => { abrirEditar(selectedCliente); setSelectedCliente(null) }}
+          onAvanzar={avanzar}
+        />
+      )}
+
+      {pedidoGateFor && (
+        <NuevoPedidoGateModal
+          cliente={pedidoGateFor}
+          cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+          onClose={() => setPedidoGateFor(null)}
+          onCreated={handlePedidoCreado}
         />
       )}
     </div>

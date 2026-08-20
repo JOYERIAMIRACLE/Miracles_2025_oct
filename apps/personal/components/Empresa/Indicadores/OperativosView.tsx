@@ -13,7 +13,7 @@ export function OperativosView() {
 
   const pipeline = useMemo(() => {
     const activos = clientes.filter(c => c.Estado !== "Inactivo")
-    const conteo: Record<FunnelEtapa, number> = { Lead: 0, Oferta: 0, Pedido: 0, Entrega: 0 }
+    const conteo: Record<FunnelEtapa, number> = { Lead: 0, Oferta: 0, Pedido: 0, Entrega: 0, Rechazada: 0 }
     for (const c of activos) {
       if (c.Funnel) conteo[c.Funnel] = (conteo[c.Funnel] ?? 0) + 1
     }
@@ -24,7 +24,7 @@ export function OperativosView() {
   }, [clientes])
 
   const tareaStats = useMemo(() => {
-    const pendientes  = tareas.filter(t => t.estado === "pendiente").length
+    const pendientes  = tareas.filter(t => t.estado === "sin_iniciar" || t.estado === "en_pausa").length
     const enProgreso  = tareas.filter(t => t.estado === "en_progreso").length
     const completadas = tareas.filter(t => t.estado === "completada").length
     const urgentes    = tareas.filter(t => t.prioridad === "urgente" && t.estado !== "completada").length
