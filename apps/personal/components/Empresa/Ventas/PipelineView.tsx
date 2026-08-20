@@ -937,16 +937,15 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
 
         <div>
           <label className={lbl}>Etapa</label>
-          <div className="flex gap-1.5 flex-wrap">
-            {FUNNEL_ETAPAS.map(e => (
-              <button key={e} type="button"
-                onClick={() => setForm(f => ({ ...f, Funnel: e }))}
-                className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border transition ${
-                  etapa === e ? FUNNEL_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"
-                }`}>
-                {FUNNEL_LABEL[e]}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <span className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border ${FUNNEL_COLOR[etapa]}`}>
+              {FUNNEL_LABEL[etapa]}
+            </span>
+            {editando && (
+              <span className="text-[10px] text-slate-600">
+                Para cambiar de etapa usa los botones de avanzar/rechazar del pipeline — así siempre queda un pedido real conectado antes de pasar a "Pedido".
+              </span>
+            )}
           </div>
         </div>
 
@@ -1301,7 +1300,9 @@ export function PipelineView() {
                     ))}
                   </div>
 
-                  {!esRechazada && (
+                  {/* Solo se puede dar de alta directo en Lead/Oferta — Pedido/Entrega
+                      solo se alcanzan avanzando con un pedido real conectado (poka-yoke) */}
+                  {(etapa === "Lead" || etapa === "Oferta") && (
                     <button type="button" onClick={() => abrirCrear(etapa)}
                       className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-700 hover:text-slate-500 border border-dashed border-slate-800 hover:border-slate-700 rounded-xl transition mt-1">
                       <Plus size={10} /> Agregar
