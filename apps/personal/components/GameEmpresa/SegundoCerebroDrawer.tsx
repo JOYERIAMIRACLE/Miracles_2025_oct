@@ -61,12 +61,13 @@ function Content({ module }: { module: string }) {
       return (
         <AlmacenPanel
           titulo="Bodega de medallitadeoro"
-          totalFichas={18}
+          totalFichas={23}
           adminUrl={MIRACLES_ADMIN}
           estantes={[
-            { nombre: "Catálogo / Inventario", fichas: "product, product-category, catalogo-joyeria" },
-            { nombre: "Ventas",                fichas: "venta, cliente, cotización, centro-venta, envío" },
-            { nombre: "Compras",               fichas: "proveedor, orden-compra" },
+            { nombre: "Catálogo / Inventario", fichas: "product (con peso, material real y atributos de joya), product-category, catalogo-joyeria" },
+            { nombre: "Ventas",                fichas: "venta, venta-linea, cliente, cotización, centro-venta, envío" },
+            { nombre: "Materia prima",         fichas: "material, movimiento-material, compra-material, compra-material-linea" },
+            { nombre: "Compras (mercancía terminada, en desuso)", fichas: "proveedor, orden-compra — tab quitado de la navegación, datos históricos intactos" },
             { nombre: "Marca / Sitio",         fichas: "identidad-empresa, sitio-web-miracles, blog-post, anuncio" },
           ]}
         />
