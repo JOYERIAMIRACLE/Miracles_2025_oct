@@ -2,18 +2,17 @@
 
 import { useState, useMemo, useCallback } from "react"
 import {
-  Plus, X, Check, Phone, Mail, MessageCircle,
+  Plus, X, Check, Phone, Mail, MessageCircle, MapPin,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
   DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle,
 } from "lucide-react"
 import { toast } from "sonner"
-import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
 import {
   ClienteEmpresa, ClientePayload,
   FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
 } from "@/types/clienteEmpresa"
 import { Cotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
-import { useGetCotizaciones, useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
+import { useGetCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { CotizacionModal } from "./CotizacionModal"
 import { useGetTransaccionesByCliente } from "@/api/transaccion/getTransacciones"
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
@@ -21,9 +20,10 @@ import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
 import { TransaccionType, METODOS_PAGO, MetodoPagoTransaccion } from "@/types/transaccion"
 import { useGetCategorias } from "@/api/categoria/getCategorias"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
-import { useGetVentas, createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
+import { createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
 import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
 import { VentaEmpresa, EstadoVenta, ESTADO_VENTA_COLOR } from "@/types/ventaEmpresa"
+import { useClientesPipeline } from "./useClientesPipeline"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Efectivo":      "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -32,7 +32,7 @@ const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Otro":          "bg-slate-500/10 text-slate-400 border-slate-500/20",
 }
 
-const fmtMoney = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
+export const fmtMoney = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
 
 // Días sin movimiento antes de mostrar alerta de estancado
 const DIAS_ESTANCADO_AVISO = 14
@@ -40,7 +40,7 @@ const DIAS_ESTANCADO_ALERTA = 30
 
 // ─── Metadatos por etapa ──────────────────────────────────────────────────────
 
-const STAGE_META: Record<FunnelEtapa, {
+export const STAGE_META: Record<FunnelEtapa, {
   prefix: string; desc: string; numColor: string; dot: string
   fechaKey: keyof ClienteEmpresa; nextLabel?: string
 }> = {
@@ -51,35 +51,45 @@ const STAGE_META: Record<FunnelEtapa, {
   Rechazada: { prefix: "REJ", desc: "Oportunidad perdida o rechazada",          fechaKey: "fechaRechazada",                                  numColor: "text-red-400 bg-red-950/40 border-red-800/50",             dot: "bg-red-400" },
 }
 
-const FECHA_FIELD: Record<FunnelEtapa, keyof ClientePayload> = {
-  Lead:      "fechaLead",
-  Oferta:    "fechaOferta",
-  Pedido:    "fechaPedido",
-  Entrega:   "fechaEntrega",
-  Rechazada: "fechaRechazada",
-}
+export const CANALES = ["WhatsApp", "Instagram", "Facebook", "Llamada", "Email", "Referido", "Visita", "Otro"]
 
-const CANALES = ["WhatsApp", "Instagram", "Facebook", "Llamada", "Email", "Referido", "Visita", "Otro"]
-
-function numDisplay(etapa: FunnelEtapa, idx: number) {
+export function numDisplay(etapa: FunnelEtapa, idx: number) {
   return `${STAGE_META[etapa].prefix}-${String(idx + 1).padStart(3, "0")}`
 }
 
-const fmtDt = (iso: string | null) => {
+export const fmtDt = (iso: string | null) => {
   if (!iso) return null
   return new Date(iso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })
 }
 
 // Días desde la última fecha de etapa — null si no aplica (Entrega/Rechazada son terminales)
-function diasSinMovimiento(c: ClienteEmpresa, etapa: FunnelEtapa): number | null {
+export function diasSinMovimiento(c: ClienteEmpresa, etapa: FunnelEtapa): number | null {
   if (etapa === "Entrega" || etapa === "Rechazada") return null
   const fecha = c[STAGE_META[etapa].fechaKey] as string | null
   if (!fecha) return null
   return Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000)
 }
 
+// Cuántos días pasó el cliente EN una etapa ya superada (diferencia contra la
+// fecha de la siguiente etapa), o cuántos lleva ahí si es la etapa actual.
+function duracionEtapaDias(cliente: ClienteEmpresa, etapa: FunnelEtapa): number | null {
+  const fecha = cliente[STAGE_META[etapa].fechaKey] as string | null
+  if (!fecha) return null
+  const idx = FUNNEL_ETAPAS.indexOf(etapa)
+  if (idx === -1 || idx === FUNNEL_ETAPAS.length - 1) return null
+  const siguiente = FUNNEL_ETAPAS[idx + 1]
+  const fechaSiguiente = cliente[STAGE_META[siguiente].fechaKey] as string | null
+  if (fechaSiguiente) {
+    return Math.max(0, Math.round((new Date(fechaSiguiente).getTime() - new Date(fecha).getTime()) / 86400000))
+  }
+  if (etapa === (cliente.Funnel ?? "Lead")) {
+    return Math.max(0, Math.round((Date.now() - new Date(fecha).getTime()) / 86400000))
+  }
+  return null
+}
+
 // ─── Canal icon ───────────────────────────────────────────────────────────────
-function CanalIcon({ canal }: { canal: string | null }) {
+export function CanalIcon({ canal }: { canal: string | null }) {
   if (!canal) return null
   const c = canal.toLowerCase()
   if (c.includes("whatsapp"))  return <MessageCircle size={11} className="text-emerald-400 shrink-0" />
@@ -91,9 +101,20 @@ function CanalIcon({ canal }: { canal: string | null }) {
 }
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
-function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
+export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
   const etapaActual = cliente.Funnel ?? "Lead"
   const idxActual   = FUNNEL_ETAPAS.indexOf(etapaActual)
+
+  const DuracionTag = ({ etapa }: { etapa: FunnelEtapa }) => {
+    const dias = duracionEtapaDias(cliente, etapa)
+    if (dias == null) return null
+    const esActual = etapa === etapaActual
+    return (
+      <span className={`text-[9px] ${esActual ? "text-amber-500" : "text-slate-600"}`}>
+        {esActual ? `lleva ${dias}d aquí` : `${dias}d en esta etapa`}
+      </span>
+    )
+  }
 
   return (
     <div className="px-4 py-3">
@@ -122,7 +143,10 @@ function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
                   </span>
                   {actual && <span className={`text-[9px] px-1 py-0.5 rounded border font-semibold ${FUNNEL_COLOR.Lead}`}>actual</span>}
                 </div>
-                {cliente.fechaLead && <p className="text-[10px] text-slate-500">{fmtDt(cliente.fechaLead)}</p>}
+                <div className="flex items-center gap-1.5">
+                  {cliente.fechaLead && <p className="text-[10px] text-slate-500">{fmtDt(cliente.fechaLead)}</p>}
+                  <DuracionTag etapa={etapa} />
+                </div>
                 {/* Sub-paso: calificado */}
                 <div className="flex items-center gap-1.5 mt-1">
                   <div className={`h-1.5 w-1.5 rounded-full ${cliente.calificado ? "bg-blue-400" : "bg-slate-700"}`} />
@@ -166,10 +190,13 @@ function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
                   }`}>{FUNNEL_LABEL[etapa]}</span>
                   {actual && <span className={`text-[9px] px-1 py-0.5 rounded border font-semibold ${FUNNEL_COLOR[etapa]}`}>actual</span>}
                 </div>
-                {fecha
-                  ? <p className="text-[10px] text-slate-500">{fmtDt(fecha)}</p>
-                  : pendiente && <p className="text-[10px] text-slate-700">—</p>
-                }
+                <div className="flex items-center gap-1.5">
+                  {fecha
+                    ? <p className="text-[10px] text-slate-500">{fmtDt(fecha)}</p>
+                    : pendiente && <p className="text-[10px] text-slate-700">—</p>
+                  }
+                  <DuracionTag etapa={etapa} />
+                </div>
               </div>
             </div>
           )
@@ -445,7 +472,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
 }
 
 // ─── Modal: vincular pedido real (gate de Oferta → Pedido) ────────────────────
-function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, onCreated }: {
+export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, onCreated }: {
   cliente: ClienteEmpresa
   cotizacionesAceptadas: Cotizacion[]
   onClose: () => void
@@ -581,11 +608,14 @@ function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, onCreat
   )
 }
 
-// ─── Panel lateral ────────────────────────────────────────────────────────────
-function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar }: {
+// ─── Panel de cliente (compartido por Pipeline, Leads y Contactos) ────────────
+export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar }: {
   cliente: ClienteEmpresa; num: string; ventasDelCliente: VentaEmpresa[]
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
-  onAvanzar: (c: ClienteEmpresa) => void
+  onAvanzar:    (c: ClienteEmpresa) => void
+  onRetroceder: (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
+  onRechazar:   (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
+  onRecuperar:  (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
@@ -602,18 +632,6 @@ function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdi
     })
     setCotModalState(null)
   }, [setCotizaciones])
-
-  const retroceder = async () => {
-    const idx    = FUNNEL_ETAPAS.indexOf(etapa)
-    const newIdx = Math.max(0, idx - 1)
-    if (newIdx === idx) return
-    const destino = FUNNEL_ETAPAS[newIdx]
-    try {
-      const updated = await updateCliente(cliente.documentId, { Funnel: destino })
-      onUpdate(updated)
-      toast.success(`← ${FUNNEL_LABEL[destino]}`)
-    } catch { toast.error("Error al actualizar") }
-  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
@@ -653,6 +671,7 @@ function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdi
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Contacto</p>
                 {cliente.telefono      && <p className="text-xs text-slate-300 flex items-center gap-2"><Phone size={11} className="text-slate-600" />{cliente.telefono}</p>}
                 {cliente.email         && <p className="text-xs text-slate-300 flex items-center gap-2"><Mail size={11} className="text-slate-600" />{cliente.email}</p>}
+                {cliente.direccion     && <p className="text-xs text-slate-300 flex items-center gap-2"><MapPin size={11} className="text-slate-600 shrink-0" />{cliente.direccion}</p>}
                 {cliente.canalContacto && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
                 {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
                 {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
@@ -844,13 +863,7 @@ function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdi
           <div className="flex items-center gap-2 flex-wrap">
             {etapa === "Rechazada" ? (
               <button type="button"
-                onClick={async () => {
-                  try {
-                    const updated = await updateCliente(cliente.documentId, { Funnel: "Lead" })
-                    onUpdate(updated)
-                    toast.success("Recuperado → Lead")
-                  } catch { toast.error("Error al actualizar") }
-                }}
+                onClick={async () => { const u = await onRecuperar(cliente); if (u) onUpdate(u) }}
                 className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-blue-800/50 hover:border-blue-600 text-blue-500 hover:text-blue-300 rounded-lg transition">
                 <RotateCcw size={12} /> Recuperar (volver a Lead)
               </button>
@@ -858,20 +871,14 @@ function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdi
               <>
                 {etapa !== "Entrega" && (
                   <button type="button"
-                    onClick={async () => {
-                      const extra = !cliente.fechaRechazada ? { fechaRechazada: new Date().toISOString() } : {}
-                      try {
-                        const updated = await updateCliente(cliente.documentId, { Funnel: "Rechazada", ...extra })
-                        onUpdate(updated)
-                        toast.success("Marcado como rechazada")
-                      } catch { toast.error("Error al actualizar") }
-                    }}
+                    onClick={async () => { const u = await onRechazar(cliente); if (u) onUpdate(u) }}
                     className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-red-900/40 hover:border-red-700 text-red-700 hover:text-red-400 rounded-lg transition">
                     <XCircle size={12} /> Rechazar
                   </button>
                 )}
                 {etapa !== "Lead" && (
-                  <button type="button" onClick={retroceder}
+                  <button type="button"
+                    onClick={async () => { const u = await onRetroceder(cliente); if (u) onUpdate(u) }}
                     className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
                     <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
                   </button>
@@ -913,8 +920,8 @@ function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdi
   )
 }
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
-function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando }: {
+// ─── Modal alta/edición de cliente (compartido) ───────────────────────────────
+export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando }: {
   editando: ClienteEmpresa | null; form: ClientePayload
   setForm: React.Dispatch<React.SetStateAction<ClientePayload>>
   onGuardar: () => void; onCerrar: () => void; guardando: boolean
@@ -979,6 +986,13 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
           <input type="email" value={form.email ?? ""}
             onChange={e => setForm(f => ({ ...f, email: e.target.value || null }))}
             placeholder="correo@email.com" className={inp} />
+        </div>
+
+        <div>
+          <label className={lbl}>Dirección</label>
+          <input value={form.direccion ?? ""}
+            onChange={e => setForm(f => ({ ...f, direccion: e.target.value || null }))}
+            placeholder="Calle, número, colonia, ciudad…" className={inp} />
         </div>
 
         {etapa === "Lead" && (
@@ -1048,7 +1062,7 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
 }
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
-function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
+export function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
   return {
     nombre: "", email: null, telefono: null, direccion: null,
     segmento: null, Funnel: etapa, calificado: false,
@@ -1059,56 +1073,18 @@ function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
 }
 
 export function PipelineView() {
-  const { clientes, setClientes, loading } = useGetClientes()
-  const { ventas: todasVentas, setVentas: setTodasVentas } = useGetVentas()
-  const { cotizaciones: todasCotizaciones } = useGetAllCotizaciones()
+  const {
+    clientes, loading,
+    ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
+    avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
+    pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
+  } = useClientesPipeline()
+
   const [modalOpen,       setModalOpen]       = useState(false)
   const [editando,        setEditando]        = useState<ClienteEmpresa | null>(null)
   const [form,            setForm]            = useState<ClientePayload>(emptyCliente())
   const [guardando,       setGuardando]       = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<ClienteEmpresa | null>(null)
-  const [pedidoGateFor,   setPedidoGateFor]   = useState<ClienteEmpresa | null>(null)
-
-  const ventasPorCliente = useMemo(() => {
-    const m = new Map<string, VentaEmpresa[]>()
-    todasVentas.forEach(v => {
-      const id = v.cliente?.documentId
-      if (!id) return
-      if (!m.has(id)) m.set(id, [])
-      m.get(id)!.push(v)
-    })
-    return m
-  }, [todasVentas])
-
-  // Pedidos "de verdad" — excluye los cancelados, que no cuentan como pedido real conectado
-  const ventasActivasPorCliente = useMemo(() => {
-    const m = new Map<string, VentaEmpresa[]>()
-    ventasPorCliente.forEach((ventas, id) => m.set(id, ventas.filter(v => v.estado !== "Cancelado")))
-    return m
-  }, [ventasPorCliente])
-
-  const cotizacionesPorCliente = useMemo(() => {
-    const m = new Map<string, Cotizacion[]>()
-    todasCotizaciones.forEach(c => {
-      const id = c.cliente?.documentId
-      if (!id) return
-      if (!m.has(id)) m.set(id, [])
-      m.get(id)!.push(c)
-    })
-    return m
-  }, [todasCotizaciones])
-
-  // Valor del cliente: prioriza pedidos reales (no cancelados); si no hay, usa cotizaciones aceptadas
-  const valorPorCliente = useMemo(() => {
-    const m = new Map<string, number>()
-    clientes.forEach(c => {
-      const ventas = ventasActivasPorCliente.get(c.documentId) ?? []
-      if (ventas.length > 0) { m.set(c.documentId, ventas.reduce((s, v) => s + (v.monto ?? 0), 0)); return }
-      const cots = (cotizacionesPorCliente.get(c.documentId) ?? []).filter(ct => ct.estado === "Aceptada")
-      if (cots.length > 0) m.set(c.documentId, cots.reduce((s, ct) => s + ct.total, 0))
-    })
-    return m
-  }, [clientes, ventasActivasPorCliente, cotizacionesPorCliente])
 
   const porFunnel = useMemo(() => {
     const map = new Map<FunnelEtapa, ClienteEmpresa[]>()
@@ -1145,94 +1121,38 @@ export function PipelineView() {
     if (!form.nombre.trim()) { toast.error("El nombre es obligatorio"); return }
     setGuardando(true)
     try {
-      if (editando) {
-        const updated = await updateCliente(editando.documentId, form)
-        setClientes(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
-        if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
-        toast.success("Actualizado")
-      } else {
-        const nuevo = await createCliente(form)
-        setClientes(prev => [...prev, nuevo])
-        toast.success("Creado")
-      }
+      const saved = await guardarCliente(editando, form)
+      if (selectedCliente?.documentId === saved.documentId) setSelectedCliente(saved)
+      toast.success(editando ? "Actualizado" : "Creado")
       setModalOpen(false)
     } catch { toast.error("Error al guardar") } finally { setGuardando(false) }
   }
 
-  const borrar = async (c: ClienteEmpresa) => {
-    if (!confirm(`¿Eliminar "${c.nombre}"?`)) return
-    try {
-      await deleteCliente(c.documentId)
-      setClientes(prev => prev.filter(x => x.documentId !== c.documentId))
-      if (selectedCliente?.documentId === c.documentId) setSelectedCliente(null)
-      toast.success("Eliminado")
-    } catch { toast.error("Error al eliminar") }
+  const handleAvanzar = async (c: ClienteEmpresa) => {
+    const u = await avanzar(c)
+    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
   }
-
-  const avanzarA = async (c: ClienteEmpresa, destino: FunnelEtapa) => {
-    const fechaField = FECHA_FIELD[destino]
-    const extra = !(c[fechaField] as string | null) ? { [fechaField]: new Date().toISOString() } : {}
-    try {
-      const updated = await updateCliente(c.documentId, { Funnel: destino, ...extra })
-      setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
-      if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
-      toast.success(`→ ${FUNNEL_LABEL[destino]}`)
-    } catch { toast.error("Error al avanzar") }
+  const handleRechazar = async (c: ClienteEmpresa) => {
+    const u = await rechazar(c)
+    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
+    return u
   }
-
-  // Avanzar de etapa — si el destino es "Pedido" y el cliente no tiene ningún
-  // pedido real conectado, abre el gate en vez de solo cambiar el texto del Funnel.
-  const avanzar = async (c: ClienteEmpresa) => {
-    const idx    = FUNNEL_ETAPAS.indexOf(c.Funnel ?? "Lead")
-    const newIdx = Math.min(FUNNEL_ETAPAS.length - 1, idx + 1)
-    if (newIdx === idx) return
-    const destino = FUNNEL_ETAPAS[newIdx]
-    if (destino === "Pedido" && (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0) {
-      setPedidoGateFor(c)
-      return
-    }
-    await avanzarA(c, destino)
+  const handleRecuperar = async (c: ClienteEmpresa) => {
+    const u = await recuperar(c)
+    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
+    return u
   }
-
-  const handlePedidoCreado = async (v: VentaEmpresa) => {
-    setTodasVentas(prev => [v, ...prev])
-    if (pedidoGateFor) await avanzarA(pedidoGateFor, "Pedido")
-    setPedidoGateFor(null)
+  const handleCalificar = async (c: ClienteEmpresa) => {
+    const u = await toggleCalificado(c)
+    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
   }
-
-  const rechazar = async (c: ClienteEmpresa) => {
-    const extra = !c.fechaRechazada ? { fechaRechazada: new Date().toISOString() } : {}
-    try {
-      const updated = await updateCliente(c.documentId, { Funnel: "Rechazada", ...extra })
-      setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
-      if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
-      toast.success("Marcado como rechazada")
-    } catch { toast.error("Error al rechazar") }
+  const handleBorrar = async (c: ClienteEmpresa) => {
+    const ok = await borrar(c)
+    if (ok && selectedCliente?.documentId === c.documentId) setSelectedCliente(null)
   }
-
-  const recuperar = async (c: ClienteEmpresa) => {
-    try {
-      const updated = await updateCliente(c.documentId, { Funnel: "Lead" })
-      setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
-      if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
-      toast.success("Recuperado → Lead")
-    } catch { toast.error("Error al recuperar") }
-  }
-
-  const toggleCalificado = async (c: ClienteEmpresa) => {
-    const nuevoValor = !c.calificado
-    const extra      = nuevoValor && !c.fechaCalificado ? { fechaCalificado: new Date().toISOString() } : {}
-    try {
-      const updated = await updateCliente(c.documentId, { calificado: nuevoValor, ...extra })
-      setClientes(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
-      if (selectedCliente?.documentId === updated.documentId) setSelectedCliente(updated)
-      toast.success(nuevoValor ? "Lead calificado ✓" : "Calificación removida")
-    } catch { toast.error("Error al actualizar") }
-  }
-
-  const handleUpdate = (updated: ClienteEmpresa) => {
-    setClientes(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
-    setSelectedCliente(updated)
+  const onPedidoCreado = async (v: VentaEmpresa) => {
+    const u = await handlePedidoCreado(v)
+    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
   }
 
   const leadsCalificados = clientes.filter(c => c.Funnel === "Lead" && c.calificado).length
@@ -1290,12 +1210,12 @@ export function PipelineView() {
                         dias={diasSinMovimiento(c, etapa)}
                         sinPedidoReal={(etapa === "Pedido" || etapa === "Entrega") && (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0}
                         onEdit={() => abrirEditar(c)}
-                        onDelete={() => borrar(c)}
+                        onDelete={() => handleBorrar(c)}
                         onSelect={() => setSelectedCliente(c)}
-                        onAvanzar={!esRechazada && etapa !== "Entrega" ? () => avanzar(c) : undefined}
-                        onCalificar={etapa === "Lead" ? () => toggleCalificado(c) : undefined}
-                        onRechazar={!esRechazada && etapa !== "Entrega" ? () => rechazar(c) : undefined}
-                        onRecuperar={esRechazada ? () => recuperar(c) : undefined}
+                        onAvanzar={!esRechazada && etapa !== "Entrega" ? () => handleAvanzar(c) : undefined}
+                        onCalificar={etapa === "Lead" ? () => handleCalificar(c) : undefined}
+                        onRechazar={!esRechazada && etapa !== "Entrega" ? () => handleRechazar(c) : undefined}
+                        onRecuperar={esRechazada ? () => handleRecuperar(c) : undefined}
                       />
                     ))}
                   </div>
@@ -1326,9 +1246,12 @@ export function PipelineView() {
           num={numMap.get(selectedCliente.documentId) ?? "—"}
           ventasDelCliente={ventasPorCliente.get(selectedCliente.documentId) ?? []}
           onClose={() => setSelectedCliente(null)}
-          onUpdate={handleUpdate}
+          onUpdate={setSelectedCliente}
           onEdit={() => { abrirEditar(selectedCliente); setSelectedCliente(null) }}
-          onAvanzar={avanzar}
+          onAvanzar={handleAvanzar}
+          onRetroceder={retroceder}
+          onRechazar={handleRechazar}
+          onRecuperar={handleRecuperar}
         />
       )}
 
@@ -1337,7 +1260,7 @@ export function PipelineView() {
           cliente={pedidoGateFor}
           cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
           onClose={() => setPedidoGateFor(null)}
-          onCreated={handlePedidoCreado}
+          onCreated={onPedidoCreado}
         />
       )}
     </div>
