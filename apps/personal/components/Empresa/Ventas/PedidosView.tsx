@@ -49,7 +49,7 @@ function emptyForm(): VentaPayload {
   }
 }
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
 
 export function PedidosView() {
   const { ventas: raw, setVentas, loading } = useGetVentas()
@@ -247,8 +247,8 @@ export function PedidosView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Total pedidos",  value: totales.total,                 color: "text-slate-200" },
-          { label: "En proceso",     value: totales.activos,               color: "text-amber-400" },
-          { label: "Monto activo",   value: fmt(totales.montoActivos),     color: "text-emerald-400" },
+          { label: "En proceso",     value: totales.activos,               color: "text-violet-400" },
+          { label: "Monto activo",   value: fmt(totales.montoActivos),     color: "text-violet-400" },
           { label: "Entregados",     value: totales.entregados,            color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -265,7 +265,7 @@ export function PedidosView() {
           <input
             type="text" placeholder="Buscar por concepto o cliente…"
             value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
           />
         </div>
 
@@ -287,7 +287,7 @@ export function PedidosView() {
         </div>
 
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-colors ml-auto">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors ml-auto">
           <Plus size={15} /> Nuevo pedido
         </button>
       </div>
@@ -340,7 +340,7 @@ export function PedidosView() {
                       ? <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
                       : <span className="text-slate-600 text-xs">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-emerald-400 font-semibold">{fmt(v.monto)}</td>
+                  <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(v.monto)}</td>
                   <td className="px-4 py-3">
                     {delId === v.documentId ? (
                       <div className="flex items-center gap-2">
@@ -394,14 +394,14 @@ export function PedidosView() {
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-[11px] font-medium text-slate-400 block">
                     Productos del pedido {!lineasEditables && (
-                      <span className="inline-flex items-center gap-1 text-amber-400 normal-case ml-1">
+                      <span className="inline-flex items-center gap-1 text-violet-400 normal-case ml-1">
                         <Lock size={10} /> confirmado — solo lectura
                       </span>
                     )}
                   </label>
                   {lineasEditables && (
                     <button type="button" onClick={agregarLinea}
-                      className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 transition">
+                      className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
                       <Plus size={11} /> Agregar línea
                     </button>
                   )}
@@ -423,12 +423,12 @@ export function PedidosView() {
                               productos={productos} />
                             {l.productoId && (
                               <span title="Ligado a inventario real — descuenta stock al confirmarse"
-                                className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-500" />
+                                className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-violet-500" />
                             )}
                           </div>
                         ) : (
                           <span className="text-[11px] text-slate-300 flex items-center gap-1">
-                            {l.productoId && <Package size={10} className="text-emerald-500 shrink-0" />} {l.descripcion}
+                            {l.productoId && <Package size={10} className="text-violet-500 shrink-0" />} {l.descripcion}
                           </span>
                         )}
                         {lineasEditables ? (
@@ -529,7 +529,7 @@ export function PedidosView() {
                 Cancelar
               </button>
               <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition">
+                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar cambios" : "Registrar"}
               </button>

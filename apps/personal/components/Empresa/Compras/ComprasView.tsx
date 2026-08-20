@@ -18,7 +18,7 @@ import { OrdenCompra, LineaOrden, EstadoOrden, ESTADO_CONFIG, OrdenPayload } fro
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
 
 const BASE_URL  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const inp       = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition"
+const inp       = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
 const fmt       = (n: number | null) => n != null ? `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : "—"
 const fmtDate   = (s: string | null) => s ? new Date(s + "T12:00:00").toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" }) : "—"
 const uid       = () => crypto.randomUUID()
@@ -177,7 +177,7 @@ function OrdenModal({
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Productos</p>
               <button type="button" onClick={() => { setCatOpen(true); loadCat() }}
-                className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 bg-amber-500/5 rounded-lg px-3 py-1.5 transition">
+                className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 border border-violet-500/30 bg-violet-500/5 rounded-lg px-3 py-1.5 transition">
                 <BookOpen size={12}/> Buscar en catálogo
               </button>
             </div>
@@ -191,7 +191,7 @@ function OrdenModal({
                   {/* Header */}
                   <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
                     <div className="flex items-center gap-2">
-                      <BookOpen size={14} className="text-amber-400"/>
+                      <BookOpen size={14} className="text-violet-400"/>
                       <p className="text-sm font-semibold text-slate-100">Catálogo de productos</p>
                     </div>
                     <button type="button" title="Cerrar catálogo" onClick={() => { setCatOpen(false); setCatQ(""); setCatMat(null) }}
@@ -204,7 +204,7 @@ function OrdenModal({
                       className="flex items-center gap-1.5 text-[10px] text-slate-600 hover:text-slate-400 transition w-full">
                       {showFormula ? <ChevronUp size={10}/> : <ChevronDown size={10}/>}
                       <span className="font-bold uppercase tracking-widest">Fórmula SKU</span>
-                      <span className="ml-2 font-mono text-amber-600">[MAT]-[CAT]-[TIPO]-[VARIANTE]</span>
+                      <span className="ml-2 font-mono text-violet-600">[MAT]-[CAT]-[TIPO]-[VARIANTE]</span>
                     </button>
                     {showFormula && (
                       <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1">
@@ -212,7 +212,7 @@ function OrdenModal({
                           <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">Material</p>
                           {[["O10","Oro 10k"],["P92","Plata 925"]].map(([c,l]) => (
                             <div key={c} className="flex items-center gap-2 text-[10px]">
-                              <span className="font-mono text-amber-500 w-8">{c}</span>
+                              <span className="font-mono text-violet-500 w-8">{c}</span>
                               <span className="text-slate-500">{l}</span>
                             </div>
                           ))}
@@ -221,7 +221,7 @@ function OrdenModal({
                           <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">Categoría</p>
                           {[["ANI","Anillos"],["CAD","Cadenas"],["ARC","Arracadas"],["BRQ","Broqueles"],["ARE","Aretes"],["ESC","Esclavas"],["PUL","Pulsos"],["DIJ","Dijes"],["ROS","Rosarios"]].map(([c,l]) => (
                             <div key={c} className="flex items-center gap-2 text-[10px]">
-                              <span className="font-mono text-blue-400 w-8">{c}</span>
+                              <span className="font-mono text-violet-400 w-8">{c}</span>
                               <span className="text-slate-500">{l}</span>
                             </div>
                           ))}
@@ -230,7 +230,7 @@ function OrdenModal({
                           <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">Ejemplos</p>
                           <div className="flex flex-wrap gap-2">
                             {["O10-ANI-LIS-T6","P92-CAD-CAR-45","O10-DIJ-VIR-MED","P92-ARC-LIS-3CM","O10-ESC-LIS-18"].map(e => (
-                              <span key={e} className="font-mono text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5">{e}</span>
+                              <span key={e} className="font-mono text-[10px] text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded px-1.5 py-0.5">{e}</span>
                             ))}
                           </div>
                         </div>
@@ -244,7 +244,7 @@ function OrdenModal({
                       <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600"/>
                       <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catQ}
                         onChange={e => setCatQ(e.target.value)}
-                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-8 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/40" />
+                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-8 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500/40" />
                     </div>
                     <div className="flex gap-1 shrink-0">
                       {[null, ...catalogo.map(m => m.nombre)].map(m => (
@@ -252,7 +252,7 @@ function OrdenModal({
                           onClick={() => setCatMat(m)}
                           className={`h-8 px-2.5 rounded-lg text-[11px] font-medium border transition-all ${
                             catMat === m
-                              ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                              ? "bg-violet-500/15 text-violet-400 border-violet-500/30"
                               : "border-slate-700 text-slate-500 hover:text-slate-300"
                           }`}>
                           {m ?? "Todos"}
@@ -317,10 +317,10 @@ function OrdenModal({
                                             <span className="text-xs text-slate-200 font-medium">{prod.nombre}</span>
                                             {mod.nombre && <span className="text-slate-500 text-xs ml-1.5">{mod.nombre}</span>}
                                           </div>
-                                          <span className="font-mono text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                                          <span className="font-mono text-[10px] text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded px-1.5 py-0.5 shrink-0 group-hover:bg-violet-500/20 transition-colors">
                                             {mod.sku || prod.sku}
                                           </span>
-                                          <Plus size={12} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                          <Plus size={12} className="text-slate-700 group-hover:text-violet-400 transition-colors shrink-0"/>
                                         </button>
                                       ))
                                     : (
@@ -328,10 +328,10 @@ function OrdenModal({
                                         onClick={() => addFromCat(mat.nombre, cat.nombre, prod, "", prod.sku)}
                                         className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-slate-700/50 transition-colors group">
                                         <span className="flex-1 text-xs text-slate-200">{prod.nombre}</span>
-                                        <span className="font-mono text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5 shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                                        <span className="font-mono text-[10px] text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded px-1.5 py-0.5 shrink-0 group-hover:bg-violet-500/20 transition-colors">
                                           {prod.sku}
                                         </span>
-                                        <Plus size={12} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                        <Plus size={12} className="text-slate-700 group-hover:text-violet-400 transition-colors shrink-0"/>
                                       </button>
                                     )
                                 )}
@@ -365,15 +365,15 @@ function OrdenModal({
             <div className="space-y-1.5">
               {lineas.map(l => (
                 <div key={l.id} className="grid grid-cols-[1fr_2fr_80px_90px_24px] gap-1.5 items-center">
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs font-mono text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs font-mono text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="SKU" value={l.sku} onChange={e => updLinea(l.id, { sku: e.target.value })} />
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Nombre" value={l.nombre} onChange={e => updLinea(l.id, { nombre: e.target.value })} />
                   <input type="number" min={1}
-                    className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-amber-500/40"
+                    className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-violet-500/40"
                     value={l.cantidad} onChange={e => updLinea(l.id, { cantidad: Number(e.target.value) })} />
                   <input type="number" min={0} step="0.01"
-                    className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                    className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="0.00" value={l.costoUnitario || ""} onChange={e => updLinea(l.id, { costoUnitario: Number(e.target.value) })} />
                   <button type="button" onClick={() => setLineas(prev => prev.filter(x => x.id !== l.id))}
                     className="text-slate-700 hover:text-red-400 transition"><X size={12}/></button>
@@ -390,7 +390,7 @@ function OrdenModal({
             {/* Total */}
             {total > 0 && (
               <div className="flex justify-end mt-3 pt-3 border-t border-slate-800">
-                <span className="text-sm font-bold text-amber-400">Total estimado: {fmt(total)}</span>
+                <span className="text-sm font-bold text-violet-400">Total estimado: {fmt(total)}</span>
               </div>
             )}
           </div>
@@ -400,7 +400,7 @@ function OrdenModal({
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-800 shrink-0">
           <button type="button" onClick={onClose} className="h-8 px-4 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-slate-200 transition">Cancelar</button>
           <button type="button" onClick={handleSave} disabled={saving}
-            className="h-8 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition disabled:opacity-50 flex items-center gap-1.5">
+            className="h-8 px-4 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition disabled:opacity-50 flex items-center gap-1.5">
             {saving && <Loader2 size={11} className="animate-spin"/>}
             {orden ? "Guardar cambios" : "Crear orden"}
           </button>
@@ -518,12 +518,12 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
 
         {step === "done" ? (
           <div className="px-5 py-10 text-center">
-            <CheckCircle size={36} className="mx-auto mb-3 text-emerald-400" />
+            <CheckCircle size={36} className="mx-auto mb-3 text-violet-400" />
             <p className="text-slate-100 font-semibold mb-1">¡Mercancía recibida!</p>
             <p className="text-slate-500 text-sm">{totalPiezas} piezas · Costo {fmt(totalImporte)} · Venta {fmt(totalVenta)}</p>
             <p className="text-slate-600 text-xs mt-1">Inventario actualizado · Gasto registrado</p>
             <button type="button" onClick={onClose}
-              className="mt-5 h-8 px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition">
+              className="mt-5 h-8 px-6 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition">
               Cerrar
             </button>
           </div>
@@ -538,11 +538,11 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
                   placeholder="50"
                   value={margen}
                   onChange={e => setMargen(Math.max(0, Number(e.target.value)))}
-                  className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-slate-100 text-center focus:outline-none focus:ring-2 focus:ring-amber-500/40 font-mono" />
+                  className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-slate-100 text-center focus:outline-none focus:ring-2 focus:ring-violet-500/40 font-mono" />
                 <span className="text-sm text-slate-400">%</span>
               </div>
               <span className="text-[11px] text-slate-600">
-                P.Venta = Costo × <span className="text-amber-500 font-mono">{(1 + margen / 100).toFixed(2)}</span>
+                P.Venta = Costo × <span className="text-violet-500 font-mono">{(1 + margen / 100).toFixed(2)}</span>
               </span>
             </div>
 
@@ -563,16 +563,16 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
                     <input type="number" min={0} max={l.cantidad}
                       title={`Cantidad a recibir: ${l.nombre}`}
                       placeholder="0"
-                      className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500/60 text-center"
+                      className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-violet-500/60 text-center"
                       value={cantidades[l.id] ?? l.cantidad}
                       onChange={e => setCantidades(prev => ({ ...prev, [l.id]: Number(e.target.value) }))} />
                     <input type="number" min={0} step="0.01"
                       title={`Costo unitario: ${l.nombre}`}
                       placeholder="0.00"
-                      className="bg-slate-800 border border-amber-500/30 rounded px-2 py-1 text-xs text-amber-300 focus:outline-none focus:border-amber-500/70 text-right tabular-nums"
+                      className="bg-slate-800 border border-violet-500/30 rounded px-2 py-1 text-xs text-violet-300 focus:outline-none focus:border-violet-500/70 text-right tabular-nums"
                       value={c || ""}
                       onChange={e => setCostosLocales(prev => ({ ...prev, [l.id]: Number(e.target.value) }))} />
-                    <span className={`text-xs text-right tabular-nums font-medium ${pv ? "text-emerald-400" : "text-slate-700"}`}>
+                    <span className={`text-xs text-right tabular-nums font-medium ${pv ? "text-violet-400" : "text-slate-700"}`}>
                       {pv ? fmt(pv) : "—"}
                     </span>
                   </div>
@@ -585,9 +585,9 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
               <div className="flex items-center justify-between text-slate-400">
                 <span>{totalPiezas} piezas</span>
                 <div className="flex gap-4">
-                  <span>Costo: <span className="text-amber-400 font-medium tabular-nums">{fmt(totalImporte)}</span></span>
+                  <span>Costo: <span className="text-violet-400 font-medium tabular-nums">{fmt(totalImporte)}</span></span>
                   {totalVenta > 0 && (
-                    <span>Venta: <span className="text-emerald-400 font-medium tabular-nums">{fmt(totalVenta)}</span></span>
+                    <span>Venta: <span className="text-violet-400 font-medium tabular-nums">{fmt(totalVenta)}</span></span>
                   )}
                 </div>
               </div>
@@ -600,7 +600,7 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
                 Cancelar
               </button>
               <button type="button" onClick={handleRecibir} disabled={saving}
-                className="h-8 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition disabled:opacity-50 flex items-center gap-1.5">
+                className="h-8 px-4 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition disabled:opacity-50 flex items-center gap-1.5">
                 {saving ? <Loader2 size={11} className="animate-spin"/> : <PackageCheck size={11}/>}
                 Confirmar recepción
               </button>
@@ -665,7 +665,7 @@ export function ComprasView() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5">
-          <ShoppingBag size={18} className="text-amber-400" />
+          <ShoppingBag size={18} className="text-violet-400" />
           <div>
             <h1 className="text-xl font-bold text-slate-100">Órdenes de Compra</h1>
             <p className="text-[11px] text-slate-500">{ordenes.length} órdenes · {kpis.activas} activas</p>
@@ -675,10 +675,10 @@ export function ComprasView() {
           <div className="relative">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar…"
-              className="pl-7 pr-3 h-8 rounded-lg border border-slate-700 bg-slate-900 text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-amber-500/40 w-40 transition" />
+              className="pl-7 pr-3 h-8 rounded-lg border border-slate-700 bg-slate-900 text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-40 transition" />
           </div>
           <button type="button" onClick={() => { setSelected(null); setModal("nueva") }}
-            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition">
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition">
             <Plus size={13}/> Nueva orden
           </button>
         </div>
@@ -688,9 +688,9 @@ export function ComprasView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Total órdenes",  value: kpis.total,          color: "text-slate-200" },
-          { label: "Activas",        value: kpis.activas,         color: "text-blue-400"  },
-          { label: "Recibidas",      value: kpis.recibidas,       color: "text-emerald-400" },
-          { label: "Valor recibido", value: fmt(kpis.valorTotal), color: "text-amber-400"   },
+          { label: "Activas",        value: kpis.activas,         color: "text-violet-400"  },
+          { label: "Recibidas",      value: kpis.recibidas,       color: "text-violet-400" },
+          { label: "Valor recibido", value: fmt(kpis.valorTotal), color: "text-violet-400"   },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
             <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -748,7 +748,7 @@ export function ComprasView() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-400">{cant} pzs · {o.lineas.length} líneas</td>
-                    <td className="px-4 py-3 text-xs font-medium text-amber-400">{fmt(o.totalEstimado)}</td>
+                    <td className="px-4 py-3 text-xs font-medium text-violet-400">{fmt(o.totalEstimado)}</td>
                     <td className="px-4 py-3">
                       {delId === o.documentId ? (
                         <div className="flex items-center gap-1">
@@ -761,14 +761,14 @@ export function ComprasView() {
                           {(o.estado === "borrador" || o.estado === "enviada") && (
                             <button type="button" title="Recibir mercancía"
                               onClick={() => { setSelected(o); setModal("recibir") }}
-                              className="p-1.5 text-slate-600 hover:text-emerald-400 hover:bg-slate-800 rounded transition">
+                              className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-slate-800 rounded transition">
                               <PackageCheck size={13}/>
                             </button>
                           )}
                           {o.estado === "borrador" && (
                             <button type="button" title="Marcar como enviada"
                               onClick={() => handleEstado(o, "enviada")}
-                              className="p-1.5 text-slate-600 hover:text-blue-400 hover:bg-slate-800 rounded transition">
+                              className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-slate-800 rounded transition">
                               <Truck size={13}/>
                             </button>
                           )}

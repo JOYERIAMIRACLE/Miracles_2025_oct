@@ -103,7 +103,7 @@ export function LeadsView() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <UserSearch size={18} className="text-emerald-400" />
+            <UserSearch size={18} className="text-violet-400" />
             <h1 className="text-2xl font-bold text-slate-100">Leads</h1>
           </div>
           <p className="text-sm text-slate-500">
@@ -111,7 +111,7 @@ export function LeadsView() {
           </p>
         </div>
         <button type="button" onClick={abrirCrear}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
           <Plus size={15} /> Nuevo lead
         </button>
       </div>
@@ -124,7 +124,7 @@ export function LeadsView() {
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">Calificados</p>
-          <p className="text-xl font-bold text-blue-400">{stats.calificados}</p>
+          <p className="text-xl font-bold text-violet-400">{stats.calificados}</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">Sin calificar</p>
@@ -139,7 +139,7 @@ export function LeadsView() {
             onClick={() => setFiltro(f)}
             className={`h-7 px-3 text-xs rounded-full border transition-all font-medium ${
               filtro === f
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
                 : "border-slate-700 text-slate-500 hover:text-slate-300"
             }`}>
             {f === "todos" ? "Todos" : f === "calificado" ? "Calificados" : "Sin calificar"}
@@ -162,7 +162,7 @@ export function LeadsView() {
           </p>
           {filtro === "todos" && (
             <button type="button" onClick={abrirCrear}
-              className="mt-3 flex items-center gap-1.5 px-3 py-2 text-sm text-emerald-400 border border-emerald-800/50 rounded-lg hover:bg-emerald-500/10 transition mx-auto">
+              className="mt-3 flex items-center gap-1.5 px-3 py-2 text-sm text-violet-400 border border-violet-800/50 rounded-lg hover:bg-violet-500/10 transition mx-auto">
               <Plus size={14} /> Registrar primer lead
             </button>
           )}
@@ -203,10 +203,10 @@ export function LeadsView() {
                 onClick={e => { e.stopPropagation(); handleCalificar(c) }}
                 className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
                   c.calificado
-                    ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20"
+                    ? "bg-violet-500/10 text-violet-400 border-violet-500/30 hover:bg-violet-500/20"
                     : "bg-slate-800/60 text-slate-500 border-slate-700 hover:text-slate-300 hover:border-slate-600"
                 }`}>
-                <CheckCircle2 size={11} className={c.calificado ? "text-blue-400" : "text-slate-600"} />
+                <CheckCircle2 size={11} className={c.calificado ? "text-violet-400" : "text-slate-600"} />
                 {c.calificado ? "Calificado" : "Calificar"}
               </button>
             </div>

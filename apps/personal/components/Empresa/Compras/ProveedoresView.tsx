@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useGetProveedores, createProveedor, updateProveedor, deleteProveedor } from "@/api/proveedor/getProveedores"
 import { Proveedor, ProveedorPayload } from "@/types/proveedor"
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
 
 const emptyForm = (): ProveedorPayload => ({
   nombre: "", contacto: "", telefono: "", email: "", rfc: "", direccion: "", notas: "", activo: true,
@@ -68,7 +68,7 @@ export function ProveedoresView() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5">
-          <Building2 size={18} className="text-amber-400" />
+          <Building2 size={18} className="text-violet-400" />
           <div>
             <h1 className="text-xl font-bold text-slate-100">Proveedores</h1>
             <p className="text-[11px] text-slate-500">{proveedores.length} registrados · {proveedores.filter(p => p?.activo).length} activos</p>
@@ -78,10 +78,10 @@ export function ProveedoresView() {
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..."
-              className="pl-8 pr-3 h-8 rounded-lg border border-slate-700 bg-slate-900 text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-amber-500/40 w-44" />
+              className="pl-8 pr-3 h-8 rounded-lg border border-slate-700 bg-slate-900 text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44" />
           </div>
           <button type="button" onClick={openNuevo}
-            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition">
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition">
             <Plus size={13} /> Nuevo proveedor
           </button>
         </div>
@@ -111,15 +111,15 @@ export function ProveedoresView() {
                     {p.contacto && <p className="text-[11px] text-slate-500 mt-0.5">{p.contacto}</p>}
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-400">
-                    {p.telefono ? <a href={`tel:${p.telefono}`} className="flex items-center gap-1 hover:text-amber-400 transition"><Phone size={11}/>{p.telefono}</a> : <span className="text-slate-700">—</span>}
+                    {p.telefono ? <a href={`tel:${p.telefono}`} className="flex items-center gap-1 hover:text-violet-400 transition"><Phone size={11}/>{p.telefono}</a> : <span className="text-slate-700">—</span>}
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-400">
-                    {p.email ? <a href={`mailto:${p.email}`} className="flex items-center gap-1 hover:text-amber-400 transition"><Mail size={11}/>{p.email}</a> : <span className="text-slate-700">—</span>}
+                    {p.email ? <a href={`mailto:${p.email}`} className="flex items-center gap-1 hover:text-violet-400 transition"><Mail size={11}/>{p.email}</a> : <span className="text-slate-700">—</span>}
                   </td>
                   <td className="px-4 py-3 text-xs font-mono text-slate-500">{p.rfc || <span className="text-slate-700">—</span>}</td>
                   <td className="px-4 py-3">
                     {p.activo
-                      ? <span className="flex items-center gap-1 text-[11px] text-emerald-400"><CheckCircle size={11}/>Activo</span>
+                      ? <span className="flex items-center gap-1 text-[11px] text-violet-400"><CheckCircle size={11}/>Activo</span>
                       : <span className="flex items-center gap-1 text-[11px] text-slate-600"><XCircle size={11}/>Inactivo</span>}
                   </td>
                   <td className="px-4 py-3">
@@ -191,7 +191,7 @@ export function ProveedoresView() {
             <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} className="h-8 px-4 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-slate-200 transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
-                className="h-8 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition disabled:opacity-50 flex items-center gap-1.5">
+                className="h-8 px-4 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition disabled:opacity-50 flex items-center gap-1.5">
                 {saving && <Loader2 size={11} className="animate-spin"/>}
                 {editing ? "Guardar cambios" : "Crear proveedor"}
               </button>

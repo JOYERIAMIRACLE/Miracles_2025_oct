@@ -161,7 +161,7 @@ function TreeRow({
           {childTipo && (
             <button type="button" title={`Agregar ${TIPO_CONFIG[childTipo].label}`}
               onClick={e => { e.stopPropagation(); onAdd(node.id, childTipo) }}
-              className="p-0.5 text-slate-600 hover:text-emerald-400 rounded">
+              className="p-0.5 text-slate-600 hover:text-violet-400 rounded">
               <Plus size={11} />
             </button>
           )}
@@ -238,7 +238,7 @@ function DetailPanel({
   const delModelo = (id: string) =>
     onUpdate({ modelos: node.modelos.filter(m => m.id !== id) })
 
-  const inp = "w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40 transition"
+  const inp = "w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40 transition"
   const lbl = "block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1"
 
   return (
@@ -248,10 +248,10 @@ function DetailPanel({
       <div className="flex items-center gap-2">
         <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${
           node.tipo === "material"
-            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+            ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
             : node.tipo === "categoria"
-              ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+              ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
+              : "bg-violet-500/10 text-violet-400 border-violet-500/20"
         }`}>
           {cfg.label}
         </span>
@@ -291,7 +291,7 @@ function DetailPanel({
               )}
               <div>
                 <button type="button" onClick={() => fotoRef.current?.click()} disabled={uploadingFoto}
-                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg px-2.5 py-1.5 transition disabled:opacity-50">
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-400 border border-slate-700 rounded-lg px-2.5 py-1.5 transition disabled:opacity-50">
                   {uploadingFoto ? <Loader2 size={11} className="animate-spin"/> : <ImagePlus size={11}/>}
                   {node.fotoUrl ? "Cambiar" : "Subir foto"}
                 </button>
@@ -335,7 +335,7 @@ function DetailPanel({
             <label className={lbl}>Características</label>
             <button type="button"
               onClick={() => onUpdate({ caracteristicas: [...node.caracteristicas, caracteristicaVacia()] })}
-              className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-emerald-400 transition">
+              className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-violet-400 transition">
               <Plus size={10} /> Agregar
             </button>
           </div>
@@ -346,13 +346,13 @@ function DetailPanel({
               {node.caracteristicas.map(c => (
                 <div key={c.id} className="flex gap-2 items-center">
                   <input
-                    className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                    className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Clave (Ej. Metal)"
                     value={c.clave}
                     onChange={e => updCaract(c.id, { clave: e.target.value })}
                   />
                   <input
-                    className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                    className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Valor (Ej. Oro)"
                     value={c.valor}
                     onChange={e => updCaract(c.id, { valor: e.target.value })}
@@ -375,7 +375,7 @@ function DetailPanel({
             <label className={lbl}>Modelos / SKUs</label>
             <button type="button"
               onClick={() => onUpdate({ modelos: [...node.modelos, modeloVacio()] })}
-              className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-emerald-400 transition">
+              className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-violet-400 transition">
               <Plus size={10} /> Agregar
             </button>
           </div>
@@ -391,15 +391,15 @@ function DetailPanel({
               </div>
               {node.modelos.map(m => (
                 <div key={m.id} className="grid grid-cols-[1fr_1fr_1fr_64px_72px_28px] gap-1.5 items-center">
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="SKU" value={m.sku} onChange={e => updModelo(m.id, { sku: e.target.value })} />
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Talla 6" value={m.nombre} onChange={e => updModelo(m.id, { nombre: e.target.value })} />
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Amarillo" value={m.variedad} onChange={e => updModelo(m.id, { variedad: e.target.value })} />
-                  <input type="number" className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  <input type="number" className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="0" value={m.stock ?? ""} onChange={e => updModelo(m.id, { stock: e.target.value === "" ? null : Number(e.target.value) })} />
-                  <input type="number" className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/40"
+                  <input type="number" className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="0.00" value={m.precio ?? ""} onChange={e => updModelo(m.id, { precio: e.target.value === "" ? null : Number(e.target.value) })} />
                   <button type="button" title="Eliminar modelo" onClick={() => delModelo(m.id)}
                     className="text-slate-700 hover:text-red-400 transition p-1">
@@ -506,7 +506,7 @@ export function CatalogoJoyeriaView() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-slate-800 shrink-0 flex-wrap">
         <div className="flex items-center gap-2.5">
-          <BookOpen size={16} className="text-amber-400" />
+          <BookOpen size={16} className="text-violet-400" />
           <div>
             <h1 className="text-lg font-bold text-slate-100 leading-none">Catálogo de Joyería</h1>
             <p className="text-[10px] text-slate-600 mt-0.5">
@@ -523,7 +523,7 @@ export function CatalogoJoyeriaView() {
             </div>
           )}
           {saved && !saving && (
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+            <div className="flex items-center gap-1.5 text-[11px] text-violet-400">
               <CheckCircle size={11} /> Guardado
             </div>
           )}
@@ -538,7 +538,7 @@ export function CatalogoJoyeriaView() {
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar…"
-              className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-amber-500/40 w-44 transition" />
+              className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44 transition" />
             {busqueda && (
               <button type="button" title="Limpiar búsqueda" onClick={() => setBusqueda("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
@@ -558,7 +558,7 @@ export function CatalogoJoyeriaView() {
 
           {/* Agregar material */}
           <button type="button" onClick={handleAddMaterial}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-amber-600/90 hover:bg-amber-500 text-white rounded-lg transition">
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
             <Plus size={13} /> Material
           </button>
         </div>
@@ -574,7 +574,7 @@ export function CatalogoJoyeriaView() {
               <Gem size={28} className="mx-auto mb-3 text-slate-700" />
               <p className="text-slate-600 text-xs mb-3">Sin materiales</p>
               <button type="button" onClick={handleAddMaterial}
-                className="text-xs text-amber-400 hover:text-amber-300 transition">
+                className="text-xs text-violet-400 hover:text-violet-300 transition">
                 + Agregar material
               </button>
             </div>
@@ -611,7 +611,7 @@ export function CatalogoJoyeriaView() {
                 {TIPO_CONFIG[selectedNode.tipo].childTipo && (
                   <button type="button"
                     onClick={() => handleAdd(selectedNode.id, TIPO_CONFIG[selectedNode.tipo].childTipo!)}
-                    className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-emerald-400 transition border border-slate-700 rounded-lg px-2.5 py-1">
+                    className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-400 transition border border-slate-700 rounded-lg px-2.5 py-1">
                     <Plus size={11} />
                     {TIPO_CONFIG[selectedNode.tipo].childLabel}
                   </button>

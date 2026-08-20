@@ -26,8 +26,8 @@ import { VentaEmpresa, EstadoVenta, ESTADO_VENTA_COLOR } from "@/types/ventaEmpr
 import { useClientesPipeline } from "./useClientesPipeline"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
-  "Efectivo":      "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  "Transferencia": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  "Efectivo":      "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Transferencia": "bg-violet-500/10 text-violet-400 border-violet-500/20",
   "Tarjeta":       "bg-violet-500/10 text-violet-400 border-violet-500/20",
   "Otro":          "bg-slate-500/10 text-slate-400 border-slate-500/20",
 }
@@ -45,8 +45,8 @@ export const STAGE_META: Record<FunnelEtapa, {
   fechaKey: keyof ClienteEmpresa; nextLabel?: string
 }> = {
   Lead:      { prefix: "L",   desc: "Contacto que llegó por algún medio",      fechaKey: "fechaLead",      nextLabel: "Enviar oferta",      numColor: "text-slate-400 bg-slate-800 border-slate-700",              dot: "bg-slate-400" },
-  Oferta:    { prefix: "OF",  desc: "Oferta de venta enviada al cliente",       fechaKey: "fechaOferta",    nextLabel: "Confirmar pedido",   numColor: "text-amber-400 bg-amber-950/40 border-amber-800/50",        dot: "bg-amber-400" },
-  Pedido:    { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",  fechaKey: "fechaPedido",    nextLabel: "Registrar entrega",  numColor: "text-emerald-400 bg-emerald-950/40 border-emerald-800/50",  dot: "bg-emerald-400" },
+  Oferta:    { prefix: "OF",  desc: "Oferta de venta enviada al cliente",       fechaKey: "fechaOferta",    nextLabel: "Confirmar pedido",   numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",        dot: "bg-violet-400" },
+  Pedido:    { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",  fechaKey: "fechaPedido",    nextLabel: "Registrar entrega",  numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",  dot: "bg-violet-400" },
   Entrega:   { prefix: "ENT", desc: "Pedido entregado al cliente",              fechaKey: "fechaEntrega",                                    numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",    dot: "bg-violet-400" },
   Rechazada: { prefix: "REJ", desc: "Oportunidad perdida o rechazada",          fechaKey: "fechaRechazada",                                  numColor: "text-red-400 bg-red-950/40 border-red-800/50",             dot: "bg-red-400" },
 }
@@ -92,11 +92,11 @@ function duracionEtapaDias(cliente: ClienteEmpresa, etapa: FunnelEtapa): number 
 export function CanalIcon({ canal }: { canal: string | null }) {
   if (!canal) return null
   const c = canal.toLowerCase()
-  if (c.includes("whatsapp"))  return <MessageCircle size={11} className="text-emerald-400 shrink-0" />
-  if (c.includes("instagram")) return <span className="text-[9px] font-bold text-pink-400 shrink-0">IG</span>
-  if (c.includes("facebook"))  return <span className="text-[9px] font-bold text-blue-400 shrink-0">FB</span>
-  if (c.includes("email"))     return <Mail size={11} className="text-blue-400 shrink-0" />
-  if (c.includes("llamada"))   return <Phone size={11} className="text-amber-400 shrink-0" />
+  if (c.includes("whatsapp"))  return <MessageCircle size={11} className="text-violet-400 shrink-0" />
+  if (c.includes("instagram")) return <span className="text-[9px] font-bold text-violet-400 shrink-0">IG</span>
+  if (c.includes("facebook"))  return <span className="text-[9px] font-bold text-violet-400 shrink-0">FB</span>
+  if (c.includes("email"))     return <Mail size={11} className="text-violet-400 shrink-0" />
+  if (c.includes("llamada"))   return <Phone size={11} className="text-violet-400 shrink-0" />
   return <span className="text-[9px] text-slate-500 shrink-0">{canal.slice(0, 2).toUpperCase()}</span>
 }
 
@@ -110,7 +110,7 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
     if (dias == null) return null
     const esActual = etapa === etapaActual
     return (
-      <span className={`text-[9px] ${esActual ? "text-amber-500" : "text-slate-600"}`}>
+      <span className={`text-[9px] ${esActual ? "text-violet-500" : "text-slate-600"}`}>
         {esActual ? `lleva ${dias}d aquí` : `${dias}d en esta etapa`}
       </span>
     )
@@ -149,8 +149,8 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
                 </div>
                 {/* Sub-paso: calificado */}
                 <div className="flex items-center gap-1.5 mt-1">
-                  <div className={`h-1.5 w-1.5 rounded-full ${cliente.calificado ? "bg-blue-400" : "bg-slate-700"}`} />
-                  <span className={`text-[10px] ${cliente.calificado ? "text-blue-400" : "text-slate-700"}`}>
+                  <div className={`h-1.5 w-1.5 rounded-full ${cliente.calificado ? "bg-violet-400" : "bg-slate-700"}`} />
+                  <span className={`text-[10px] ${cliente.calificado ? "text-violet-400" : "text-slate-700"}`}>
                     {cliente.calificado ? "Calificado" : "Sin calificar"}
                   </span>
                   {cliente.calificado && cliente.fechaCalificado && (
@@ -235,7 +235,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-semibold text-slate-100 leading-snug">{c.nombre}</p>
         {valor != null && (
-          <span className="flex items-center gap-0.5 text-[11px] font-bold text-emerald-400 font-mono shrink-0">
+          <span className="flex items-center gap-0.5 text-[11px] font-bold text-violet-400 font-mono shrink-0">
             <DollarSign size={10} />{valor.toLocaleString("es-MX")}
           </span>
         )}
@@ -248,7 +248,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
             <span className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border font-medium ${
               dias >= DIAS_ESTANCADO_ALERTA
                 ? "bg-red-500/10 text-red-400 border-red-500/30"
-                : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                : "bg-violet-500/10 text-violet-400 border-violet-500/30"
             }`}>
               <Clock size={9} /> {dias}d sin movimiento
             </span>
@@ -288,10 +288,10 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
           onClick={e => { e.stopPropagation(); onCalificar?.() }}
           className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
             c.calificado
-              ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20"
+              ? "bg-violet-500/10 text-violet-400 border-violet-500/30 hover:bg-violet-500/20"
               : "bg-slate-800/60 text-slate-500 border-slate-700 hover:text-slate-300 hover:border-slate-600"
           }`}>
-          <CheckCircle2 size={11} className={c.calificado ? "text-blue-400" : "text-slate-600"} />
+          <CheckCircle2 size={11} className={c.calificado ? "text-violet-400" : "text-slate-600"} />
           {c.calificado ? "Calificado" : "Calificar"}
         </button>
       )}
@@ -300,7 +300,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {onRecuperar && (
         <button type="button"
           onClick={e => { e.stopPropagation(); onRecuperar() }}
-          className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-blue-500 hover:text-blue-300 border border-dashed border-blue-900/50 hover:border-blue-700 rounded-lg transition">
+          className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-violet-500 hover:text-violet-300 border border-dashed border-violet-900/50 hover:border-violet-700 rounded-lg transition">
           <RotateCcw size={10} /> Recuperar
         </button>
       )}
@@ -462,7 +462,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
           <button type="button" onClick={onClose}
             className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">Cancelar</button>
           <button type="button" onClick={guardar} disabled={guardando}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition">
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} />{guardando ? "Guardando..." : "Registrar"}
           </button>
         </div>
@@ -536,7 +536,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
-              <ShoppingBag size={14} className="text-emerald-400" /> Vincular pedido real
+              <ShoppingBag size={14} className="text-violet-400" /> Vincular pedido real
             </h3>
             <p className="text-[11px] text-slate-500 mt-0.5">{cliente.nombre}</p>
           </div>
@@ -555,10 +555,10 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
               {cotizacionesAceptadas.map(cot => (
                 <button key={cot.documentId} type="button" disabled={convirtiendo === cot.documentId}
                   onClick={() => convertirCotizacion(cot)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-700 hover:border-emerald-600 bg-slate-800/60 hover:bg-emerald-500/5 transition text-left disabled:opacity-50">
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-700 hover:border-violet-600 bg-slate-800/60 hover:bg-violet-500/5 transition text-left disabled:opacity-50">
                   <div>
                     <p className="text-[11px] font-bold font-mono text-slate-300">{cot.numero}</p>
-                    <p className="text-[11px] font-semibold text-emerald-400">{fmtMoney(cot.total)}</p>
+                    <p className="text-[11px] font-semibold text-violet-400">{fmtMoney(cot.total)}</p>
                   </div>
                   <span className="text-[10px] text-slate-500 flex items-center gap-1">
                     {convirtiendo === cot.documentId ? "Creando..." : <>Convertir <ArrowRightCircle size={12} /></>}
@@ -593,7 +593,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
               </div>
             </div>
             <button type="button" onClick={crearRapido} disabled={guardando}
-              className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition">
+              className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
               <Check size={14} />{guardando ? "Creando..." : "Crear pedido y avanzar"}
             </button>
           </div>
@@ -651,7 +651,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${STAGE_META[etapa].numColor}`}>#{num}</span>
                   <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>{FUNNEL_LABEL[etapa]}</span>
                   {etapa === "Lead" && cliente.calificado && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-blue-500/15 text-blue-300 border-blue-500/30">Calificado</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-500/15 text-violet-300 border-violet-500/30">Calificado</span>
                   )}
                 </div>
               </div>
@@ -701,7 +701,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                           <p className="text-[9px] text-slate-600">{v.fecha ? fmtDt(v.fecha) : "—"}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[11px] font-semibold text-emerald-400 font-mono">{fmtMoney(v.monto)}</span>
+                          <span className="text-[11px] font-semibold text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
                           {v.estado && (
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
                           )}
@@ -718,7 +718,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Cotizaciones</p>
                   <button type="button"
                     onClick={() => setCotModalState("nueva")}
-                    className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition">
+                    className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
                     <Plus size={10} /> Nueva
                   </button>
                 </div>
@@ -727,7 +727,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 ) : cotizaciones.length === 0 ? (
                   <button type="button"
                     onClick={() => setCotModalState("nueva")}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-amber-400 border border-dashed border-slate-800 hover:border-amber-800/50 rounded-lg transition">
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
                     <FileText size={11} /> Crear primera cotización
                   </button>
                 ) : (
@@ -760,7 +760,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Pagos</p>
                   <button type="button"
                     onClick={() => setPagoModalOpen(true)}
-                    className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 transition">
+                    className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
                     <Plus size={10} /> Registrar
                   </button>
                 </div>
@@ -782,16 +782,16 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                           </span>
                         </span>
                       )}
-                      <span className="text-[10px] text-emerald-400 font-mono">
+                      <span className="text-[10px] text-violet-400 font-mono">
                         Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
                       </span>
                       {saldo !== null && saldo > 0 && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-amber-400 font-mono">
+                        <span className="flex items-center gap-0.5 text-[10px] text-violet-400 font-mono">
                           <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
                         </span>
                       )}
                       {saldo !== null && saldo <= 0 && (
-                        <span className="text-[10px] text-emerald-400">✓ Liquidado</span>
+                        <span className="text-[10px] text-violet-400">✓ Liquidado</span>
                       )}
                     </div>
                   ) : null
@@ -802,7 +802,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 ) : ingresos.length === 0 ? (
                   <button type="button"
                     onClick={() => setPagoModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-emerald-400 border border-dashed border-slate-800 hover:border-emerald-800/50 rounded-lg transition">
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
                     <Banknote size={11} /> Registrar primer pago
                   </button>
                 ) : (
@@ -822,7 +822,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[12px] font-bold text-emerald-400 font-mono">
+                          <span className="text-[12px] font-bold text-violet-400 font-mono">
                             {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
                           </span>
                           <button type="button"
@@ -864,7 +864,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
             {etapa === "Rechazada" ? (
               <button type="button"
                 onClick={async () => { const u = await onRecuperar(cliente); if (u) onUpdate(u) }}
-                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-blue-800/50 hover:border-blue-600 text-blue-500 hover:text-blue-300 rounded-lg transition">
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-violet-800/50 hover:border-violet-600 text-violet-500 hover:text-violet-300 rounded-lg transition">
                 <RotateCcw size={12} /> Recuperar (volver a Lead)
               </button>
             ) : (
@@ -885,7 +885,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 )}
                 {etapa !== "Entrega" && (
                   <button type="button" onClick={() => onAvanzar(cliente)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border border-emerald-600/60 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-500 text-emerald-300 rounded-lg transition">
+                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border border-violet-600/60 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500 text-violet-300 rounded-lg transition">
                     {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
                   </button>
                 )}
@@ -1008,10 +1008,10 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
                 onClick={() => setForm(f => ({ ...f, calificado: !f.calificado }))}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition ${
                   form.calificado
-                    ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                    ? "bg-violet-500/10 text-violet-400 border-violet-500/30"
                     : "border-slate-700 text-slate-500 hover:text-slate-300"
                 }`}>
-                <CheckCircle2 size={15} className={form.calificado ? "text-blue-400" : "text-slate-600"} />
+                <CheckCircle2 size={15} className={form.calificado ? "text-violet-400" : "text-slate-600"} />
                 {form.calificado ? "Calificado" : "Marcar como calificado"}
               </button>
             </div>
@@ -1052,7 +1052,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
           <button type="button" onClick={onCerrar}
             className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">Cancelar</button>
           <button type="button" onClick={onGuardar} disabled={guardando}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg transition">
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} /> {guardando ? "Guardando..." : "Guardar"}
           </button>
         </div>
@@ -1171,7 +1171,7 @@ export function PipelineView() {
           </p>
         </div>
         <button type="button" onClick={() => abrirCrear("Lead")}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
           <Plus size={15} /> Nuevo lead
         </button>
       </div>
@@ -1192,7 +1192,7 @@ export function PipelineView() {
                       <span className="text-xs font-bold">{FUNNEL_LABEL[etapa]}</span>
                       <div className="flex items-center gap-1">
                         {calificadosEnCol !== null && calificadosEnCol > 0 && (
-                          <span className="text-[9px] font-semibold bg-blue-500/20 text-blue-300 px-1 py-0.5 rounded-full">
+                          <span className="text-[9px] font-semibold bg-violet-500/20 text-violet-300 px-1 py-0.5 rounded-full">
                             {calificadosEnCol} cal.
                           </span>
                         )}

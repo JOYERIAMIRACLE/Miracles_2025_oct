@@ -9,12 +9,14 @@ export type CentroVentaRef = { id: number; documentId: string; nombre: string | 
 export const ESTADOS_VENTA: EstadoVenta[] = ["Cotizado", "Pagado", "Preparando", "Enviado", "Entregado", "Cancelado"]
 export const METODOS_PAGO:  MetodoPago[]  = ["Efectivo", "Transferencia", "Tarjeta", "Otro"]
 
+// Un solo acento (violeta), sin colores decorativos por estado — el rojo
+// queda solo para Cancelado (alerta real). Intensidad sube con el avance.
 export const ESTADO_VENTA_COLOR: Record<EstadoVenta, string> = {
   Cotizado:   "bg-slate-500/15 text-slate-300 border-slate-500/30",
-  Pagado:     "bg-blue-500/15 text-blue-300 border-blue-500/30",
-  Preparando: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  Enviado:    "bg-violet-500/15 text-violet-300 border-violet-500/30",
-  Entregado:  "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  Pagado:     "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  Preparando: "bg-violet-500/20 text-violet-200 border-violet-500/40",
+  Enviado:    "bg-violet-500/25 text-violet-100 border-violet-500/45",
+  Entregado:  "bg-violet-600/30 text-violet-50 border-violet-500/60",
   Cancelado:  "bg-red-500/15 text-red-300 border-red-500/30",
 }
 

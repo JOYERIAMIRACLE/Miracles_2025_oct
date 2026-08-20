@@ -102,7 +102,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
         <div className="p-5 border-b border-slate-800 flex items-start justify-between gap-3 shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <FileText size={15} className="text-amber-400" />
+              <FileText size={15} className="text-violet-400" />
               <h2 className="text-base font-semibold text-slate-100">
                 {cotizacion ? `Cotización ${cotizacion.numero}` : "Nueva cotización"}
               </h2>
@@ -129,7 +129,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Productos / Servicios</p>
               <button type="button"
                 onClick={() => setItems(prev => [...prev, emptyItem()])}
-                className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 transition">
+                className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
                 <Plus size={11} /> Agregar línea
               </button>
             </div>
@@ -155,7 +155,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
                     />
                     {item.productoId && (
                       <span title="Ligado a inventario real — se descontará stock al convertir a pedido"
-                        className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-500" />
+                        className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-violet-500" />
                     )}
                   </div>
                   <input type="number" min="1" title="Cantidad"
@@ -196,7 +196,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
               </div>
               <div className="flex justify-between text-sm font-bold border-t border-slate-700 pt-2">
                 <span className="text-slate-200">Total</span>
-                <span className="text-emerald-400">{fmt(total)}</span>
+                <span className="text-violet-400">{fmt(total)}</span>
               </div>
             </div>
           </div>
@@ -233,7 +233,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
             Cancelar
           </button>
           <button type="button" onClick={guardar} disabled={guardando}
-            className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg transition">
+            className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} /> {guardando ? "Guardando..." : "Guardar cotización"}
           </button>
         </div>

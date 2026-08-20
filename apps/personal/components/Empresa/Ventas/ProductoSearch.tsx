@@ -69,7 +69,7 @@ export function ProductoSearch({
                 </div>
                 <div className="text-right shrink-0">
                   {p.costo != null && (
-                    <span className="text-[10px] text-emerald-400 font-semibold block">
+                    <span className="text-[10px] text-violet-400 font-semibold block">
                       {p.costo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
                     </span>
                   )}

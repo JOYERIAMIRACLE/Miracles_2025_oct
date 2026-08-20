@@ -202,9 +202,9 @@ export function HistorialPipelineView() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
           { label: "Leads",       value: totalesAño.leads,       color: "text-slate-300",   pct: null },
-          { label: "Calificados", value: totalesAño.calificados, color: "text-blue-400",    pct: conv.cal },
-          { label: "Ofertas",     value: totalesAño.ofertas,     color: "text-amber-400",   pct: conv.of },
-          { label: "Pedidos",     value: totalesAño.pedidos,     color: "text-emerald-400", pct: conv.ped },
+          { label: "Calificados", value: totalesAño.calificados, color: "text-violet-400",    pct: conv.cal },
+          { label: "Ofertas",     value: totalesAño.ofertas,     color: "text-violet-400",   pct: conv.of },
+          { label: "Pedidos",     value: totalesAño.pedidos,     color: "text-violet-400", pct: conv.ped },
           { label: "Entregas",    value: totalesAño.entregas,    color: "text-violet-400",  pct: conv.ent },
           { label: "Rechazadas",  value: totalesAño.rechazadas,  color: "text-red-400",     pct: Math.round((totalesAño.rechazadas / (totalesAño.leads || 1)) * 100) },
         ].map(k => (
@@ -228,9 +228,9 @@ export function HistorialPipelineView() {
         <div className="flex items-end gap-2 h-14">
           {[
             { label: "Leads",    value: totalesAño.leads,       color: "bg-slate-600" },
-            { label: "Calific.", value: totalesAño.calificados, color: "bg-blue-600" },
-            { label: "Ofertas",  value: totalesAño.ofertas,     color: "bg-amber-600" },
-            { label: "Pedidos",  value: totalesAño.pedidos,     color: "bg-emerald-600" },
+            { label: "Calific.", value: totalesAño.calificados, color: "bg-violet-600" },
+            { label: "Ofertas",  value: totalesAño.ofertas,     color: "bg-violet-600" },
+            { label: "Pedidos",  value: totalesAño.pedidos,     color: "bg-violet-600" },
             { label: "Entregas", value: totalesAño.entregas,    color: "bg-violet-600" },
             { label: "Rechaz.",  value: totalesAño.rechazadas,  color: "bg-red-700" },
           ].map((b) => {
@@ -312,13 +312,13 @@ export function HistorialPipelineView() {
                       <MiniBar value={row.leads}       max={maxLeads} color="bg-slate-500" />
                     </td>
                     <td className="px-4 py-2.5 min-w-[100px]">
-                      <MiniBar value={row.calificados} max={maxLeads} color="bg-blue-500" />
+                      <MiniBar value={row.calificados} max={maxLeads} color="bg-violet-500" />
                     </td>
                     <td className="px-4 py-2.5 min-w-[100px]">
-                      <MiniBar value={row.ofertas}     max={maxLeads} color="bg-amber-500" />
+                      <MiniBar value={row.ofertas}     max={maxLeads} color="bg-violet-500" />
                     </td>
                     <td className="px-4 py-2.5 min-w-[100px]">
-                      <MiniBar value={row.pedidos}     max={maxLeads} color="bg-emerald-500" />
+                      <MiniBar value={row.pedidos}     max={maxLeads} color="bg-violet-500" />
                     </td>
                     <td className="px-4 py-2.5 min-w-[100px]">
                       <MiniBar value={row.entregas}    max={maxLeads} color="bg-violet-500" />
@@ -435,8 +435,8 @@ export function HistorialPipelineView() {
                     <td className="px-4 py-2.5">
                       {c.calificado ? (
                         <div>
-                          <p className="text-[11px] text-blue-400">{fmtDt(c.fechaCalificado) ?? "Sí"}</p>
-                          <div className="inline-block mt-0.5 w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          <p className="text-[11px] text-violet-400">{fmtDt(c.fechaCalificado) ?? "Sí"}</p>
+                          <div className="inline-block mt-0.5 w-1.5 h-1.5 rounded-full bg-violet-500" />
                         </div>
                       ) : <span className="text-slate-700 text-[10px]">No</span>}
                     </td>
@@ -444,14 +444,14 @@ export function HistorialPipelineView() {
                     {/* Oferta */}
                     <td className="px-4 py-2.5">
                       {c.fechaOferta
-                        ? <p className="text-[11px] text-amber-400">{fmtDt(c.fechaOferta)}</p>
+                        ? <p className="text-[11px] text-violet-400">{fmtDt(c.fechaOferta)}</p>
                         : <span className="text-slate-700">—</span>}
                     </td>
 
                     {/* Pedido */}
                     <td className="px-4 py-2.5">
                       {c.fechaPedido
-                        ? <p className="text-[11px] text-emerald-400">{fmtDt(c.fechaPedido)}</p>
+                        ? <p className="text-[11px] text-violet-400">{fmtDt(c.fechaPedido)}</p>
                         : <span className="text-slate-700">—</span>}
                     </td>
 

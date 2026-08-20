@@ -16,11 +16,14 @@ export const FUNNEL_LABEL: Record<FunnelEtapa, string> = {
   Rechazada: "Rechazada",
 }
 
+// Un solo color de acento (violeta) en toda la app — sin variación decorativa
+// por etapa/categoría. El rojo se reserva exclusivamente para alertas reales
+// (Rechazada). La intensidad del violeta sube con el avance en el embudo.
 export const FUNNEL_COLOR: Record<FunnelEtapa, string> = {
-  Lead:      "bg-slate-500/15 text-slate-300 border-slate-500/30",
-  Oferta:    "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  Pedido:    "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  Entrega:   "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  Lead:      "bg-violet-500/10 text-violet-300/80 border-violet-500/20",
+  Oferta:    "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  Pedido:    "bg-violet-500/20 text-violet-200 border-violet-500/40",
+  Entrega:   "bg-violet-600/25 text-violet-100 border-violet-500/50",
   Rechazada: "bg-red-500/15 text-red-300 border-red-500/30",
 }
 

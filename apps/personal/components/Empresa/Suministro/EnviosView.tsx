@@ -12,8 +12,8 @@ import {
 } from "@/types/envio"
 import { cn } from "@/lib/utils"
 
-const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
-const area = "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 resize-none transition-all"
+const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+const area = "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
 
 const ESTADOS: EstadoEnvio[]    = ["pendiente", "preparando", "enviado", "en_transito", "entregado", "devuelto", "cancelado"]
 const PAQUETERIAS: PaqueteriaEnvio[] = ["fedex", "dhl", "estafeta", "ups", "correos_mex", "otro"]
@@ -123,9 +123,9 @@ export function EnviosView() {
       <div className="grid grid-cols-4 gap-3">
         {[
           { label: "Total",       value: stats.total,       color: "text-slate-200" },
-          { label: "Pendientes",  value: stats.pendiente,   color: "text-amber-400" },
+          { label: "Pendientes",  value: stats.pendiente,   color: "text-violet-400" },
           { label: "En tránsito", value: stats.en_transito, color: "text-violet-400" },
-          { label: "Entregados",  value: stats.entregado,   color: "text-emerald-400" },
+          { label: "Entregados",  value: stats.entregado,   color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -139,21 +139,21 @@ export function EnviosView() {
         <div className="flex gap-1 flex-wrap">
           <button type="button" onClick={() => setFiltro("todos")}
             className={cn("h-8 px-3 text-xs rounded-lg border capitalize transition-colors",
-              filtro === "todos" ? "bg-blue-500/15 border-blue-500/30 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
+              filtro === "todos" ? "bg-violet-500/15 border-violet-500/30 text-violet-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
             )}>
             Todos
           </button>
           {ESTADOS.map(e => (
             <button key={e} type="button" onClick={() => setFiltro(e)}
               className={cn("h-8 px-3 text-xs rounded-lg border capitalize transition-colors",
-                filtro === e ? "bg-blue-500/15 border-blue-500/30 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
+                filtro === e ? "bg-violet-500/15 border-violet-500/30 text-violet-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
               )}>
               {ESTADO_ENVIO_LABELS[e]}
             </button>
           ))}
         </div>
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors ml-auto">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors ml-auto">
           <Plus size={15} /> Nuevo envío
         </button>
       </div>
@@ -290,7 +290,7 @@ export function EnviosView() {
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
                 className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition">
+                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar" : "Registrar"}
               </button>

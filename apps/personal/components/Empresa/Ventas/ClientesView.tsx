@@ -122,7 +122,7 @@ export function ClientesView() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <UserCheck size={18} className="text-emerald-400" />
+            <UserCheck size={18} className="text-violet-400" />
             <h1 className="text-2xl font-bold text-slate-100">Contactos</h1>
           </div>
           <p className="text-sm text-slate-500">
@@ -130,7 +130,7 @@ export function ClientesView() {
           </p>
         </div>
         <button type="button" onClick={abrirCrear}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
           <Plus size={15} /> Nuevo contacto
         </button>
       </div>
@@ -140,7 +140,7 @@ export function ClientesView() {
         {[
           { label: "Total",      value: stats.total,     color: "text-slate-200" },
           { label: "Leads",      value: stats.leads,      color: "text-slate-400" },
-          { label: "En proceso", value: stats.enProceso,  color: "text-amber-400" },
+          { label: "En proceso", value: stats.enProceso,  color: "text-violet-400" },
           { label: "Entregado",  value: stats.entrega,    color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -154,11 +154,11 @@ export function ClientesView() {
       <div className="flex flex-wrap items-center gap-3">
         <input type="text" placeholder="Buscar por nombre, teléfono o correo…"
           value={search} onChange={e => setSearch(e.target.value)}
-          className="h-9 min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+          className="h-9 min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
         <div className="flex items-center gap-1.5 flex-wrap">
           <button type="button" onClick={() => setFiltroEtapa("todos")}
             className={`h-7 px-3 text-xs rounded-full border transition-all font-medium ${
-              filtroEtapa === "todos" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
+              filtroEtapa === "todos" ? "bg-violet-500/15 border-violet-500/30 text-violet-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
             }`}>
             Todos
           </button>
@@ -220,7 +220,7 @@ export function ClientesView() {
                     </td>
                     <td className="px-4 py-3">
                       {valor != null ? (
-                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-emerald-400 font-mono">
+                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-violet-400 font-mono">
                           <DollarSign size={10} />{fmtMoney(valor)}
                         </span>
                       ) : (
@@ -229,7 +229,7 @@ export function ClientesView() {
                     </td>
                     <td className="px-4 py-3">
                       {numCot > 0 ? (
-                        <span className="flex items-center gap-1 text-[11px] text-amber-400">
+                        <span className="flex items-center gap-1 text-[11px] text-violet-400">
                           <FileText size={11} />{numCot}
                         </span>
                       ) : (

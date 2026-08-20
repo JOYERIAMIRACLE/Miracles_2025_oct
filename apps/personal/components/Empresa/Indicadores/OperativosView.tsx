@@ -44,7 +44,7 @@ export function OperativosView() {
       <section className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <Users className="h-4 w-4 text-emerald-400" />
+            <Users className="h-4 w-4 text-violet-400" />
             Pipeline de clientes
           </h2>
           <span className="text-xs text-slate-500">{pipeline.total} activos</span>
@@ -80,7 +80,7 @@ export function OperativosView() {
 
             <div className="flex items-center gap-4 pt-1">
               <div className="text-center">
-                <p className="text-2xl font-bold text-emerald-400">{pipeline.tasa}%</p>
+                <p className="text-2xl font-bold text-violet-400">{pipeline.tasa}%</p>
                 <p className="text-[11px] text-slate-600">Tasa de conversión</p>
               </div>
               <div className="h-8 w-px bg-slate-800" />
@@ -95,7 +95,7 @@ export function OperativosView() {
       {/* Tareas */}
       <section className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-          <CheckSquare className="h-4 w-4 text-sky-400" />
+          <CheckSquare className="h-4 w-4 text-violet-400" />
           Tareas empresa
         </h2>
 
@@ -157,9 +157,9 @@ function TareaKpi({
 }) {
   const colors: Record<string, { bg: string; text: string; border: string; icon: string }> = {
     slate:   { bg: "bg-slate-500/10",   text: "text-slate-300",   border: "border-slate-500/20",   icon: "text-slate-400" },
-    amber:   { bg: "bg-amber-500/10",   text: "text-amber-300",   border: "border-amber-500/20",   icon: "text-amber-400" },
-    emerald: { bg: "bg-emerald-500/10", text: "text-emerald-300", border: "border-emerald-500/20", icon: "text-emerald-400" },
-    rose:    { bg: "bg-rose-500/10",    text: "text-rose-300",    border: "border-rose-500/20",    icon: "text-rose-400" },
+    amber:   { bg: "bg-violet-500/10",   text: "text-violet-300",   border: "border-violet-500/20",   icon: "text-violet-400" },
+    emerald: { bg: "bg-violet-500/10", text: "text-violet-300", border: "border-violet-500/20", icon: "text-violet-400" },
+    rose:    { bg: "bg-violet-500/10",    text: "text-violet-300",    border: "border-violet-500/20",    icon: "text-violet-400" },
   }
   const c = colors[color] ?? colors.slate
 

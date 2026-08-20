@@ -48,7 +48,7 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
   })
   const [saving, setSaving] = useState(false)
 
-  const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+  const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
 
   const handleConvert = async () => {
     setSaving(true)
@@ -156,7 +156,7 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
           <button type="button" onClick={onClose} disabled={saving}
             className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
           <button type="button" onClick={handleConvert} disabled={saving}
-            className="flex items-center gap-2 h-8 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition">
+            className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
             {saving ? "Creando…" : "Crear pedido"}
           </button>
@@ -234,7 +234,7 @@ export function CotizacionesView() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <FileText size={18} className="text-amber-400" />
+            <FileText size={18} className="text-violet-400" />
             <h1 className="text-2xl font-bold text-slate-100">Cotizaciones</h1>
           </div>
           <p className="text-sm text-slate-500">
@@ -247,8 +247,8 @@ export function CotizacionesView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Total",     value: stats.total,    color: "text-slate-200" },
-          { label: "Enviadas",  value: stats.enviada,  color: "text-amber-400" },
-          { label: "Aceptadas", value: stats.aceptada, color: "text-emerald-400" },
+          { label: "Enviadas",  value: stats.enviada,  color: "text-violet-400" },
+          { label: "Aceptadas", value: stats.aceptada, color: "text-violet-400" },
           { label: "Rechazadas", value: stats.rechazada, color: "text-red-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -264,7 +264,7 @@ export function CotizacionesView() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
           <input type="text" placeholder="Buscar por número o cliente…"
             value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50" />
+            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <button type="button" onClick={() => setFiltroEstado("")}
@@ -328,7 +328,7 @@ export function CotizacionesView() {
                     ) : <span className="text-slate-700 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-emerald-400 font-semibold">{fmt(cot.total)}</span>
+                    <span className="text-violet-400 font-semibold">{fmt(cot.total)}</span>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[cot.estado]}`}>
@@ -353,7 +353,7 @@ export function CotizacionesView() {
                           <button type="button"
                             onClick={() => setConvertiendo(cot)}
                             title="Convertir a pedido"
-                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-emerald-400 border border-emerald-800/50 rounded-lg hover:bg-emerald-500/10 transition">
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-violet-400 border border-violet-800/50 rounded-lg hover:bg-violet-500/10 transition">
                             <ArrowRight size={11} /> Pedido
                           </button>
                         )}

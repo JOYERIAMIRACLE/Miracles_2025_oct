@@ -55,16 +55,12 @@ function buildSku(cat: CategoriaJoya | "", mat: MaterialProducto | "", figura: s
   ].join("-")
 }
 
+// Un solo acento (violeta) para las 9 categorías — sin arcoíris decorativo,
+// la categoría ya se distingue por el texto de la etiqueta.
+const CAT_BADGE = "bg-violet-500/10 text-violet-300 border-violet-500/20"
 export const CAT_COLOR: Record<CategoriaJoya, string> = {
-  "Anillos":"bg-violet-500/10 text-violet-300 border-violet-500/20",
-  "Cadenas":"bg-blue-500/10 text-blue-300 border-blue-500/20",
-  "Esclavas":"bg-pink-500/10 text-pink-300 border-pink-500/20",
-  "Dijes":"bg-sky-500/10 text-sky-300 border-sky-500/20",
-  "Broqueles":"bg-amber-500/10 text-amber-300 border-amber-500/20",
-  "Aretes":"bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  "Pulsos":"bg-rose-500/10 text-rose-300 border-rose-500/20",
-  "Rosarios":"bg-indigo-500/10 text-indigo-300 border-indigo-500/20",
-  "Argollas":"bg-orange-500/10 text-orange-300 border-orange-500/20",
+  "Anillos":CAT_BADGE, "Cadenas":CAT_BADGE, "Esclavas":CAT_BADGE, "Dijes":CAT_BADGE,
+  "Broqueles":CAT_BADGE, "Aretes":CAT_BADGE, "Pulsos":CAT_BADGE, "Rosarios":CAT_BADGE, "Argollas":CAT_BADGE,
 }
 
 type FormData = {
@@ -81,7 +77,7 @@ const emptyForm = (): FormData => ({
   materialInsumo:"", pesoGramos:"", costoManoObra:"",
   conPiedra:false, tipoPiedra:"", kilates:"", largoCm:"", cierre:"",
 })
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
 
 export function InventarioEmpresaView() {
   const { items, setItems, loading } = useGetInventario()
@@ -421,8 +417,8 @@ export function InventarioEmpresaView() {
         {[
           { label:"SKUs",         value:kpis.total,           color:"text-slate-200" },
           { label:"Stock total",  value:kpis.stockTotal,      color:"text-slate-200" },
-          { label:"Valor costo",  value:fmt(kpis.valorCosto), color:"text-amber-400" },
-          { label:"Valor venta",  value:fmt(kpis.valorVenta), color:"text-emerald-400" },
+          { label:"Valor costo",  value:fmt(kpis.valorCosto), color:"text-violet-400" },
+          { label:"Valor venta",  value:fmt(kpis.valorVenta), color:"text-violet-400" },
           { label:"En tienda",    value:kpis.enTienda,        color:"text-violet-400" },
           { label:"Stock bajo",   value:kpis.stockBajo,       color:kpis.stockBajo>0?"text-red-400":"text-slate-500" },
         ].map(k => (
@@ -439,7 +435,7 @@ export function InventarioEmpresaView() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
           <input type="text" placeholder="Buscar nombre o SKU…" value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
         </div>
         <div className="flex gap-1 flex-wrap">
           <button type="button" onClick={() => setFiltroCat("todas")}
@@ -453,13 +449,13 @@ export function InventarioEmpresaView() {
           <button type="button" onClick={() => setMargenPanel(v => !v)}
             className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium border transition-all ${
               margenPanel
-                ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                ? "bg-violet-500/15 text-violet-400 border-violet-500/30"
                 : "border-slate-700 text-slate-500 hover:text-slate-300"
             }`}>
             <Percent size={13}/> Margen global
           </button>
           <button type="button" onClick={openNuevo}
-            className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-colors">
+            className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors">
             <Plus size={15} /> Nuevo producto
           </button>
         </div>
@@ -467,26 +463,26 @@ export function InventarioEmpresaView() {
 
       {/* Panel margen global */}
       {margenPanel && (
-        <div className="bg-slate-900 border border-amber-500/20 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
+        <div className="bg-slate-900 border border-violet-500/20 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-slate-400 shrink-0">Margen global</span>
             <input type="number" min={0} max={500} step={5}
               title="Margen (%)"
               value={globalMargen}
               onChange={e => setGlobalMargen(Math.max(0, Number(e.target.value)))}
-              className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-center font-mono text-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40" />
+              className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-center font-mono text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/40" />
             <span className="text-sm text-slate-500">%</span>
           </div>
           <span className="text-xs text-slate-600">
             P.Venta = Costo ×{" "}
-            <span className="font-mono text-amber-500">{(1 + globalMargen / 100).toFixed(2)}</span>
+            <span className="font-mono text-violet-500">{(1 + globalMargen / 100).toFixed(2)}</span>
           </span>
           <div className="flex items-center gap-3 ml-auto">
             <span className="text-[11px] text-slate-600">
               {items.filter(i => (i.costoProduccion ?? 0) > 0).length} productos con costo
             </span>
             <button type="button" onClick={handleAplicarMargen} disabled={applyingMar}
-              className="flex items-center gap-1.5 h-8 px-4 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition-colors disabled:opacity-50">
+              className="flex items-center gap-1.5 h-8 px-4 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition-colors disabled:opacity-50">
               {applyingMar
                 ? <><Loader2 size={11} className="animate-spin"/> {marProgress.done}/{marProgress.total}</>
                 : <><TrendingUp size={11}/> Aplicar a todos</>}
@@ -540,7 +536,7 @@ export function InventarioEmpresaView() {
                         <div>
                           <p className="font-medium text-slate-200 leading-snug">{it.nombreProducto}</p>
                           {it.sku && (
-                            <span className="text-[10px] font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded mt-0.5 inline-block">{it.sku}</span>
+                            <span className="text-[10px] font-mono text-violet-500 bg-violet-500/10 px-1.5 py-0.5 rounded mt-0.5 inline-block">{it.sku}</span>
                           )}
                           {it.descripcion && (
                             <p className="text-[10px] text-slate-600 max-w-[160px] truncate mt-0.5" title={it.descripcion}>{it.descripcion}</p>
@@ -570,12 +566,12 @@ export function InventarioEmpresaView() {
                     <td className="px-3 py-3 text-slate-400 tabular-nums text-xs">{fmt(it.costoProduccion)}</td>
 
                     {/* Precio venta */}
-                    <td className="px-3 py-3 text-emerald-400 font-medium tabular-nums text-xs">{fmt(it.costo)}</td>
+                    <td className="px-3 py-3 text-violet-400 font-medium tabular-nums text-xs">{fmt(it.costo)}</td>
 
                     {/* Margen */}
                     <td className="px-3 py-3">
                       {m!=null
-                        ? <span className={`flex items-center gap-0.5 text-xs font-medium ${m>=40?"text-emerald-400":m>=20?"text-amber-400":"text-red-400"}`}>
+                        ? <span className={`flex items-center gap-0.5 text-xs font-medium ${m>=40?"text-violet-400":m>=20?"text-violet-400":"text-red-400"}`}>
                             <TrendingUp size={10}/> {m}%
                           </span>
                         : <span className="text-slate-700 text-xs">—</span>}
@@ -599,7 +595,7 @@ export function InventarioEmpresaView() {
                         title={it.activo ? "Visible en tienda — clic para ocultar" : "Oculto — clic para publicar"}
                         className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border font-medium transition-all ${
                           it.activo
-                            ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+                            ? "border-violet-500/30 text-violet-400 bg-violet-500/10 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
                             : "border-slate-700 text-slate-600 hover:text-violet-400 hover:border-violet-500/30 hover:bg-violet-500/10"
                         }`}>
                         {isPublishing
@@ -613,7 +609,7 @@ export function InventarioEmpresaView() {
                       <button type="button" onClick={() => handleToggleFeatured(it)}
                         disabled={isFeaturing}
                         title={it.isFeatured ? "Destacado — clic para quitar" : "No destacado — clic para marcar"}
-                        className={`p-1.5 rounded-lg transition-all ${it.isFeatured ? "text-amber-400 hover:text-amber-300" : "text-slate-700 hover:text-amber-500"}`}>
+                        className={`p-1.5 rounded-lg transition-all ${it.isFeatured ? "text-violet-400 hover:text-violet-300" : "text-slate-700 hover:text-violet-500"}`}>
                         {isFeaturing ? <Loader2 size={14} className="animate-spin"/> : <Star size={14} fill={it.isFeatured ? "currentColor" : "none"}/>}
                       </button>
                     </td>
@@ -681,7 +677,7 @@ export function InventarioEmpresaView() {
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"/>
                     <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catSearch}
                       onChange={e => setCatSearch(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/40"/>
+                      className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500/40"/>
                   </div>
                 </div>
 
@@ -712,10 +708,10 @@ export function InventarioEmpresaView() {
                                         <span className="text-sm text-slate-200">{prod.nombre}</span>
                                         {mod.nombre && <span className="text-slate-500 text-xs ml-1.5">{mod.nombre}</span>}
                                       </div>
-                                      <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">
+                                      <span className="font-mono text-xs text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded px-2 py-0.5 shrink-0">
                                         {mod.sku || prod.sku}
                                       </span>
-                                      <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                      <Plus size={13} className="text-slate-700 group-hover:text-violet-400 transition-colors shrink-0"/>
                                     </button>
                                   ))
                                 : (
@@ -723,8 +719,8 @@ export function InventarioEmpresaView() {
                                     onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "", prod.sku)}
                                     className="w-full text-left flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700/50 transition-colors group">
                                     <span className="flex-1 text-sm text-slate-200">{prod.nombre}</span>
-                                    <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">{prod.sku}</span>
-                                    <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                    <span className="font-mono text-xs text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded px-2 py-0.5 shrink-0">{prod.sku}</span>
+                                    <Plus size={13} className="text-slate-700 group-hover:text-violet-400 transition-colors shrink-0"/>
                                   </button>
                                 )
                             )}
@@ -745,7 +741,7 @@ export function InventarioEmpresaView() {
                       <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
                       <select title="Material" value={cascMaterial}
                         onChange={e => { setCascMaterial(e.target.value); setCascCategoria(""); setCascProducto(""); setCascModelo("") }}
-                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
                         <option value="">Selecciona material…</option>
                         {catalogo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                       </select>
@@ -755,7 +751,7 @@ export function InventarioEmpresaView() {
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
                         <select title="Categoría" value={cascCategoria}
                           onChange={e => { setCascCategoria(e.target.value); setCascProducto(""); setCascModelo("") }}
-                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
                           <option value="">Selecciona categoría…</option>
                           {matNode.children.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                         </select>
@@ -765,7 +761,7 @@ export function InventarioEmpresaView() {
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo / Producto</label>
                         <select title="Tipo de producto" value={cascProducto} onChange={e => handleCascProducto(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
                           <option value="">Selecciona tipo…</option>
                           {catNode.children.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                         </select>
@@ -775,7 +771,7 @@ export function InventarioEmpresaView() {
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Talla / Tamaño</label>
                         <select title="Talla o tamaño" value={cascModelo} onChange={e => handleCascModelo(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
                           <option value="">Selecciona talla…</option>
                           {prodNode.modelos.map(mo => <option key={mo.id} value={mo.id}>{mo.nombre}</option>)}
                         </select>
@@ -796,14 +792,14 @@ export function InventarioEmpresaView() {
                 <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
 
                   {/* Card del producto del catálogo */}
-                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start justify-between gap-3">
+                  <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 px-4 py-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-100 leading-snug">{catalogCard.nombre}</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">{catalogCard.material} · {catalogCard.categoria}</p>
-                      <p className="font-mono text-[11px] text-amber-400 mt-1">{catalogCard.sku}</p>
+                      <p className="font-mono text-[11px] text-violet-400 mt-1">{catalogCard.sku}</p>
                     </div>
                     <button type="button" onClick={() => { setCatalogCard(null); resetCascada() }}
-                      className="text-[10px] text-slate-600 hover:text-amber-400 border border-slate-700 rounded-lg px-2.5 py-1 transition shrink-0">
+                      className="text-[10px] text-slate-600 hover:text-violet-400 border border-slate-700 rounded-lg px-2.5 py-1 transition shrink-0">
                       Cambiar
                     </button>
                   </div>
@@ -826,7 +822,7 @@ export function InventarioEmpresaView() {
                     )}
                     <div className="flex-1">
                       <button type="button" onClick={() => fileRef.current?.click()}
-                        className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors">
+                        className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-violet-500/50 hover:text-violet-400 transition-colors">
                         <ImagePlus size={14}/> {fotoPreview ? "Cambiar foto" : "Subir foto"}
                       </button>
                       <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
@@ -854,7 +850,7 @@ export function InventarioEmpresaView() {
                       </div>
                     </div>
                     {costeoAutomatico && (
-                      <p className="text-[11px] text-emerald-500 mt-2">
+                      <p className="text-[11px] text-violet-500 mt-2">
                         Costo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
                         {Number(form.costoManoObra) > 0 ? ` + $${form.costoManoObra} mano de obra` : ""} = ${form.costoProduccion}
                         {precioAuto ? ` · precio venta sugerido $${form.costo} (margen ${globalMargen}%)` : ""}
@@ -910,7 +906,7 @@ export function InventarioEmpresaView() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
-                        Precio venta ($) {precioAuto && costeoAutomatico && <span className="text-emerald-500 normal-case">· automático (margen {globalMargen}%)</span>}
+                        Precio venta ($) {precioAuto && costeoAutomatico && <span className="text-violet-500 normal-case">· automático (margen {globalMargen}%)</span>}
                       </label>
                       <input type="number" placeholder="0" value={form.costo}
                         onChange={e => { setPrecioAuto(false); setForm(f => ({...f, costo:e.target.value})) }} className={inp}/>
@@ -935,7 +931,7 @@ export function InventarioEmpresaView() {
                   <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
                     className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
                   <button type="button" onClick={handleSave} disabled={saving}
-                    className="flex items-center gap-2 h-8 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition">
+                    className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                     {saving && <Loader2 size={14} className="animate-spin"/>}
                     Agregar al inventario
                   </button>
@@ -968,7 +964,7 @@ export function InventarioEmpresaView() {
                       )}
                       <div className="flex-1">
                         <button type="button" onClick={() => fileRef.current?.click()}
-                          className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors">
+                          className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-violet-500/50 hover:text-violet-400 transition-colors">
                           <ImagePlus size={14}/> {fotoPreview?"Cambiar foto":"Subir foto"}
                         </button>
                         <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
@@ -990,10 +986,10 @@ export function InventarioEmpresaView() {
                         <div className="flex items-center justify-between mb-1.5">
                           <label className="text-[11px] font-medium text-slate-400">SKU</label>
                           {skuAuto && form.categoriaJoya
-                            ? <span className="text-[10px] font-medium text-emerald-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
+                            ? <span className="text-[10px] font-medium text-violet-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
                             : form.categoriaJoya
                               ? <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya,f.materialProducto,f.figura,f.talla)})) }}
-                                  className="text-[10px] text-slate-500 hover:text-emerald-400 flex items-center gap-0.5 transition-colors">
+                                  className="text-[10px] text-slate-500 hover:text-violet-400 flex items-center gap-0.5 transition-colors">
                                   <RefreshCw size={9}/> Regenerar
                                 </button>
                               : null}
@@ -1075,7 +1071,7 @@ export function InventarioEmpresaView() {
                       </div>
                     </div>
                     {!editing && costeoAutomatico && (
-                      <p className="text-[11px] text-emerald-500 mt-2">
+                      <p className="text-[11px] text-violet-500 mt-2">
                         Costo calculado solo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
                         {Number(form.costoManoObra) > 0 ? ` + $${form.costoManoObra} mano de obra` : ""} = ${form.costoProduccion}
                         {Number(form.stock) > 1 ? ` · se descontarán ${(Number(form.pesoGramos) * Number(form.stock)).toFixed(2)}g en total (${form.stock} piezas)` : ""}
@@ -1135,7 +1131,7 @@ export function InventarioEmpresaView() {
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
-                          Costo ($) {costeoAutomatico && <span className="text-emerald-500 normal-case">· automático</span>}
+                          Costo ($) {costeoAutomatico && <span className="text-violet-500 normal-case">· automático</span>}
                         </label>
                         <input type="number" placeholder="0" value={form.costoProduccion} readOnly={costeoAutomatico}
                           onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))}
@@ -1154,7 +1150,7 @@ export function InventarioEmpresaView() {
                     </div>
                     {form.costoProduccion && form.costo && (
                       <p className="text-[11px] mt-2 text-slate-500">
-                        Margen: <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=40?"text-emerald-400":"text-amber-400"}`}>
+                        Margen: <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=40?"text-violet-400":"text-violet-400"}`}>
                           {margen(Number(form.costoProduccion),Number(form.costo))??0}%
                         </span>
                       </p>
@@ -1166,7 +1162,7 @@ export function InventarioEmpresaView() {
                   <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
                     className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
                   <button type="button" onClick={handleSave} disabled={saving}
-                    className="flex items-center gap-2 h-8 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 transition">
+                    className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                     {saving && <Loader2 size={14} className="animate-spin"/>}
                     Guardar cambios
                   </button>
