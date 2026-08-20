@@ -55,7 +55,7 @@ function buildSku(cat: CategoriaJoya | "", mat: MaterialProducto | "", figura: s
   ].join("-")
 }
 
-const CAT_COLOR: Record<CategoriaJoya, string> = {
+export const CAT_COLOR: Record<CategoriaJoya, string> = {
   "Anillos":"bg-violet-500/10 text-violet-300 border-violet-500/20",
   "Cadenas":"bg-blue-500/10 text-blue-300 border-blue-500/20",
   "Esclavas":"bg-pink-500/10 text-pink-300 border-pink-500/20",
@@ -837,7 +837,7 @@ export function InventarioEmpresaView() {
                   {/* Peso / insumo real (individualización de piezas) */}
                   <div>
                     <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Peso e insumo (costeo automático)</p>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
                         <select title="Material real" value={form.materialInsumo}
@@ -851,11 +851,6 @@ export function InventarioEmpresaView() {
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Peso (g)</label>
                         <input type="number" min="0" step="0.01" placeholder="0.00" value={form.pesoGramos}
                           onChange={e => recalcularCosto({ pesoGramos: e.target.value })} className={inp}/>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Mano de obra ($)</label>
-                        <input type="number" min="0" step="0.01" placeholder="0.00" value={form.costoManoObra}
-                          onChange={e => recalcularCosto({ costoManoObra: e.target.value })} className={inp}/>
                       </div>
                     </div>
                     {costeoAutomatico && (
@@ -875,11 +870,6 @@ export function InventarioEmpresaView() {
                       <div>
                         <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos de joya</p>
                         <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Kilates / Ley</label>
-                            <input type="text" placeholder="10k, 925…" value={form.kilates}
-                              onChange={e => setForm(f => ({...f, kilates:e.target.value}))} className={inp}/>
-                          </div>
                           {rel.largo && (
                             <div>
                               <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Largo (cm)</label>
@@ -1068,7 +1058,7 @@ export function InventarioEmpresaView() {
                   {/* Peso / insumo real (individualización de piezas) */}
                   <div>
                     <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Peso e insumo (costeo automático)</p>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
                         <select title="Material real" value={form.materialInsumo}
@@ -1082,11 +1072,6 @@ export function InventarioEmpresaView() {
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Peso (g)</label>
                         <input type="number" min="0" step="0.01" placeholder="0.00" value={form.pesoGramos}
                           onChange={e => recalcularCosto({ pesoGramos: e.target.value })} className={inp}/>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Mano de obra ($)</label>
-                        <input type="number" min="0" step="0.01" placeholder="0.00" value={form.costoManoObra}
-                          onChange={e => recalcularCosto({ costoManoObra: e.target.value })} className={inp}/>
                       </div>
                     </div>
                     {!editing && costeoAutomatico && (
@@ -1108,11 +1093,6 @@ export function InventarioEmpresaView() {
                       <div>
                         <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos de joya</p>
                         <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Kilates / Ley</label>
-                            <input type="text" placeholder="10k, 925…" value={form.kilates}
-                              onChange={e => setForm(f => ({...f, kilates:e.target.value}))} className={inp}/>
-                          </div>
                           {rel.largo && (
                             <div>
                               <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Largo (cm)</label>
