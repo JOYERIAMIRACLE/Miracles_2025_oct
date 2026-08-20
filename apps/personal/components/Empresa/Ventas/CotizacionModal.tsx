@@ -94,7 +94,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
   const inp = "px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 w-full"
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-60 p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
         onClick={e => e.stopPropagation()}>
 

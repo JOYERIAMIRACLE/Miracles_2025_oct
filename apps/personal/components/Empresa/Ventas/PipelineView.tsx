@@ -96,7 +96,7 @@ function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
   const idxActual   = FUNNEL_ETAPAS.indexOf(etapaActual)
 
   return (
-    <div className="px-4 py-3 border-b border-slate-800">
+    <div className="px-4 py-3">
       <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-3">Recorrido</p>
       <div className="space-y-2">
         {/* Lead + calificado como sub-paso */}
@@ -361,8 +361,8 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-60 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-100">Registrar pago</h3>
@@ -504,7 +504,7 @@ function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, onCreat
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-60 p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
@@ -616,19 +616,20 @@ function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdi
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex justify-end" onClick={onClose}>
-      <div className="w-full max-w-xs bg-slate-900 border-l border-slate-800 flex flex-col h-full overflow-y-auto"
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-2xl max-h-[90vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col"
         onClick={e => e.stopPropagation()}>
 
-        <div className="p-4 border-b border-slate-800">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-800 shrink-0">
           <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                <User size={14} className="text-slate-400" />
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
+                <User size={18} className="text-slate-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-100">{cliente.nombre}</p>
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <p className="text-base font-bold text-slate-100">{cliente.nombre}</p>
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${STAGE_META[etapa].numColor}`}>#{num}</span>
                   <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>{FUNNEL_LABEL[etapa]}</span>
                   {etapa === "Lead" && cliente.calificado && (
@@ -638,240 +639,252 @@ function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdi
               </div>
             </div>
             <button type="button" title="Cerrar" onClick={onClose}
-              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition shrink-0"><X size={16} /></button>
+              className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition shrink-0"><X size={18} /></button>
           </div>
         </div>
 
-        <div className="p-4 border-b border-slate-800 space-y-1.5">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Contacto</p>
-          {cliente.telefono      && <p className="text-xs text-slate-300 flex items-center gap-2"><Phone size={11} className="text-slate-600" />{cliente.telefono}</p>}
-          {cliente.email         && <p className="text-xs text-slate-300 flex items-center gap-2"><Mail size={11} className="text-slate-600" />{cliente.email}</p>}
-          {cliente.canalContacto && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
-          {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
-          {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
-        </div>
+        {/* Body — 2 columnas en pantallas anchas, apiladas en celular */}
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
 
-        {cliente.notas && (
-          <div className="px-4 py-3 border-b border-slate-800">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Notas</p>
-            <p className="text-xs text-slate-400 leading-relaxed">{cliente.notas}</p>
-          </div>
-        )}
+            {/* Columna izquierda: contacto + notas */}
+            <div className="space-y-5">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Contacto</p>
+                {cliente.telefono      && <p className="text-xs text-slate-300 flex items-center gap-2"><Phone size={11} className="text-slate-600" />{cliente.telefono}</p>}
+                {cliente.email         && <p className="text-xs text-slate-300 flex items-center gap-2"><Mail size={11} className="text-slate-600" />{cliente.email}</p>}
+                {cliente.canalContacto && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
+                {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
+                {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
+              </div>
 
-        {/* Pedidos reales */}
-        <div className="px-4 py-3 border-b border-slate-800">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Pedidos</p>
-          {ventasDelCliente.length === 0 ? (
-            <p className="text-[10px] text-slate-700 py-1">Sin pedidos reales conectados todavía.</p>
-          ) : (
-            <div className="space-y-0.5">
-              {ventasDelCliente.map(v => (
-                <div key={v.documentId} className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-800/40">
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-slate-300 truncate">{v.concepto}</p>
-                    <p className="text-[9px] text-slate-600">{v.fecha ? fmtDt(v.fecha) : "—"}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[11px] font-semibold text-emerald-400 font-mono">{fmtMoney(v.monto)}</span>
-                    {v.estado && (
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
-                    )}
-                  </div>
+              {cliente.notas && (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Notas</p>
+                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Cotizaciones */}
-        <div className="px-4 py-3 border-b border-slate-800">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600">Cotizaciones</p>
-            <button type="button"
-              onClick={() => setCotModalState("nueva")}
-              className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition">
-              <Plus size={10} /> Nueva
-            </button>
-          </div>
-          {cotLoading ? (
-            <p className="text-[10px] text-slate-700 py-1">Cargando...</p>
-          ) : cotizaciones.length === 0 ? (
-            <button type="button"
-              onClick={() => setCotModalState("nueva")}
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[10px] text-slate-700 hover:text-amber-400 border border-dashed border-slate-800 hover:border-amber-800/50 rounded-lg transition">
-              <FileText size={11} /> Crear primera cotización
-            </button>
-          ) : (
-            <div className="space-y-0.5">
-              {cotizaciones.map(c => (
-                <button key={c.documentId} type="button"
-                  onClick={() => setCotModalState(c)}
-                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-800 transition text-left">
-                  <div>
-                    <p className="text-[11px] font-bold font-mono text-slate-300">{c.numero}</p>
-                    <p className="text-[9px] text-slate-600">{fmtDt(c.fecha ?? c.createdAt)}</p>
+            {/* Columna derecha: pedidos, cotizaciones, pagos */}
+            <div className="space-y-5">
+              {/* Pedidos reales */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Pedidos</p>
+                {ventasDelCliente.length === 0 ? (
+                  <p className="text-[11px] text-slate-700 py-1">Sin pedidos reales conectados todavía.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {ventasDelCliente.map(v => (
+                      <div key={v.documentId} className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-800/40">
+                        <div className="min-w-0">
+                          <p className="text-[11px] text-slate-300 truncate">{v.concepto}</p>
+                          <p className="text-[9px] text-slate-600">{v.fecha ? fmtDt(v.fecha) : "—"}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[11px] font-semibold text-emerald-400 font-mono">{fmtMoney(v.monto)}</span>
+                          {v.estado && (
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-semibold text-slate-300">
-                      {c.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                    </span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>
-                      {c.estado}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Pagos */}
-        <div className="px-4 py-3 border-b border-slate-800">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600">Pagos</p>
-            <button type="button"
-              onClick={() => setPagoModalOpen(true)}
-              className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 transition">
-              <Plus size={10} /> Registrar
-            </button>
-          </div>
-
-          {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
-          {(() => {
-            const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
-            const totalAcordado = cotizacionesAceptadas.length > 0
-              ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
-              : null
-            const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
-            const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
-            return totalAcordado !== null || totalPagado > 0 ? (
-              <div className="flex gap-2 mb-2 flex-wrap">
-                {totalAcordado !== null && (
-                  <span className="text-[10px] text-slate-500">
-                    Total: <span className="text-slate-300 font-mono">
-                      {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                    </span>
-                  </span>
-                )}
-                <span className="text-[10px] text-emerald-400 font-mono">
-                  Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                </span>
-                {saldo !== null && saldo > 0 && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-amber-400 font-mono">
-                    <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                  </span>
-                )}
-                {saldo !== null && saldo <= 0 && (
-                  <span className="text-[10px] text-emerald-400">✓ Liquidado</span>
                 )}
               </div>
-            ) : null
-          })()}
 
-          {ingLoading ? (
-            <p className="text-[10px] text-slate-700 py-1">Cargando...</p>
-          ) : ingresos.length === 0 ? (
-            <button type="button"
-              onClick={() => setPagoModalOpen(true)}
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[10px] text-slate-700 hover:text-emerald-400 border border-dashed border-slate-800 hover:border-emerald-800/50 rounded-lg transition">
-              <Banknote size={11} /> Registrar primer pago
-            </button>
-          ) : (
-            <div className="space-y-1">
-              {ingresos.map(ing => (
-                <div key={ing.documentId}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/60 group">
-                  <div>
-                    <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
-                      {ing.metodoPago && (
-                        <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
-                          {ing.metodoPago}
+              {/* Cotizaciones */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Cotizaciones</p>
+                  <button type="button"
+                    onClick={() => setCotModalState("nueva")}
+                    className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition">
+                    <Plus size={10} /> Nueva
+                  </button>
+                </div>
+                {cotLoading ? (
+                  <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
+                ) : cotizaciones.length === 0 ? (
+                  <button type="button"
+                    onClick={() => setCotModalState("nueva")}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-amber-400 border border-dashed border-slate-800 hover:border-amber-800/50 rounded-lg transition">
+                    <FileText size={11} /> Crear primera cotización
+                  </button>
+                ) : (
+                  <div className="space-y-1">
+                    {cotizaciones.map(c => (
+                      <button key={c.documentId} type="button"
+                        onClick={() => setCotModalState(c)}
+                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800 transition text-left">
+                        <div>
+                          <p className="text-[11px] font-bold font-mono text-slate-300">{c.numero}</p>
+                          <p className="text-[9px] text-slate-600">{fmtDt(c.fecha ?? c.createdAt)}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-semibold text-slate-300">
+                            {c.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                          </span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>
+                            {c.estado}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pagos */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Pagos</p>
+                  <button type="button"
+                    onClick={() => setPagoModalOpen(true)}
+                    className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 transition">
+                    <Plus size={10} /> Registrar
+                  </button>
+                </div>
+
+                {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
+                {(() => {
+                  const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
+                  const totalAcordado = cotizacionesAceptadas.length > 0
+                    ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
+                    : null
+                  const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
+                  const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
+                  return totalAcordado !== null || totalPagado > 0 ? (
+                    <div className="flex gap-2 mb-2 flex-wrap">
+                      {totalAcordado !== null && (
+                        <span className="text-[10px] text-slate-500">
+                          Total: <span className="text-slate-300 font-mono">
+                            {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                          </span>
                         </span>
                       )}
+                      <span className="text-[10px] text-emerald-400 font-mono">
+                        Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                      </span>
+                      {saldo !== null && saldo > 0 && (
+                        <span className="flex items-center gap-0.5 text-[10px] text-amber-400 font-mono">
+                          <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                        </span>
+                      )}
+                      {saldo !== null && saldo <= 0 && (
+                        <span className="text-[10px] text-emerald-400">✓ Liquidado</span>
+                      )}
                     </div>
+                  ) : null
+                })()}
+
+                {ingLoading ? (
+                  <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
+                ) : ingresos.length === 0 ? (
+                  <button type="button"
+                    onClick={() => setPagoModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-emerald-400 border border-dashed border-slate-800 hover:border-emerald-800/50 rounded-lg transition">
+                    <Banknote size={11} /> Registrar primer pago
+                  </button>
+                ) : (
+                  <div className="space-y-1">
+                    {ingresos.map(ing => (
+                      <div key={ing.documentId}
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 group">
+                        <div>
+                          <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
+                            {ing.metodoPago && (
+                              <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
+                                {ing.metodoPago}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] font-bold text-emerald-400 font-mono">
+                            {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                          </span>
+                          <button type="button"
+                            onClick={async () => {
+                              if (!confirm("¿Eliminar este pago?")) return
+                              try {
+                                await deleteTransaccion(ing.documentId)
+                                setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
+                                toast.success("Pago eliminado")
+                              } catch { toast.error("Error al eliminar") }
+                            }}
+                            title="Eliminar pago"
+                            className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
+                            <Trash2 size={10} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-bold text-emerald-400 font-mono">
-                      {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                    </span>
-                    <button type="button"
-                      onClick={async () => {
-                        if (!confirm("¿Eliminar este pago?")) return
-                        try {
-                          await deleteTransaccion(ing.documentId)
-                          setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
-                          toast.success("Pago eliminado")
-                        } catch { toast.error("Error al eliminar") }
-                      }}
-                      title="Eliminar pago"
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
-                      <Trash2 size={10} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Recorrido — a lo ancho, debajo de las 2 columnas */}
+          <div className="rounded-xl border border-slate-800 bg-slate-800/20">
+            <Timeline cliente={cliente} />
+          </div>
         </div>
 
-        <Timeline cliente={cliente} />
-
-        <div className="px-4 py-3 border-b border-slate-800 space-y-2">
-          {/* Navegación lineal (solo etapas de progresión) */}
-          {etapa !== "Rechazada" && (
-            <div className="flex gap-2">
-              {etapa !== "Lead" && (
-                <button type="button" onClick={retroceder}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
-                  <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
-                </button>
-              )}
-              {etapa !== "Entrega" && (
-                <button type="button" onClick={() => onAvanzar(cliente)}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-medium border border-emerald-800/50 hover:border-emerald-600 hover:text-emerald-300 rounded-lg transition text-emerald-500/70">
-                  {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Rechazar / Recuperar */}
-          {etapa !== "Entrega" && etapa !== "Rechazada" && (
-            <button type="button"
-              onClick={async () => {
-                const extra = !cliente.fechaRechazada ? { fechaRechazada: new Date().toISOString() } : {}
-                try {
-                  const updated = await updateCliente(cliente.documentId, { Funnel: "Rechazada", ...extra })
-                  onUpdate(updated)
-                  toast.success("Marcado como rechazada")
-                } catch { toast.error("Error al actualizar") }
-              }}
-              className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium border border-red-900/40 hover:border-red-700 text-red-700 hover:text-red-400 rounded-lg transition">
-              <XCircle size={12} /> Marcar como rechazada
-            </button>
-          )}
-          {etapa === "Rechazada" && (
-            <button type="button"
-              onClick={async () => {
-                try {
-                  const updated = await updateCliente(cliente.documentId, { Funnel: "Lead" })
-                  onUpdate(updated)
-                  toast.success("Recuperado → Lead")
-                } catch { toast.error("Error al actualizar") }
-              }}
-              className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium border border-blue-800/50 hover:border-blue-600 text-blue-500 hover:text-blue-300 rounded-lg transition">
-              <RotateCcw size={12} /> Recuperar (volver a Lead)
-            </button>
-          )}
-        </div>
-
-        <div className="px-4 py-3">
+        {/* Footer — acciones */}
+        <div className="px-6 py-4 border-t border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2">
           <button type="button" onClick={onEdit}
-            className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-400">
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-400">
             <Pencil size={12} /> Editar datos
           </button>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {etapa === "Rechazada" ? (
+              <button type="button"
+                onClick={async () => {
+                  try {
+                    const updated = await updateCliente(cliente.documentId, { Funnel: "Lead" })
+                    onUpdate(updated)
+                    toast.success("Recuperado → Lead")
+                  } catch { toast.error("Error al actualizar") }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-blue-800/50 hover:border-blue-600 text-blue-500 hover:text-blue-300 rounded-lg transition">
+                <RotateCcw size={12} /> Recuperar (volver a Lead)
+              </button>
+            ) : (
+              <>
+                {etapa !== "Entrega" && (
+                  <button type="button"
+                    onClick={async () => {
+                      const extra = !cliente.fechaRechazada ? { fechaRechazada: new Date().toISOString() } : {}
+                      try {
+                        const updated = await updateCliente(cliente.documentId, { Funnel: "Rechazada", ...extra })
+                        onUpdate(updated)
+                        toast.success("Marcado como rechazada")
+                      } catch { toast.error("Error al actualizar") }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-red-900/40 hover:border-red-700 text-red-700 hover:text-red-400 rounded-lg transition">
+                    <XCircle size={12} /> Rechazar
+                  </button>
+                )}
+                {etapa !== "Lead" && (
+                  <button type="button" onClick={retroceder}
+                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
+                    <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
+                  </button>
+                )}
+                {etapa !== "Entrega" && (
+                  <button type="button" onClick={() => onAvanzar(cliente)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border border-emerald-600/60 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-500 text-emerald-300 rounded-lg transition">
+                    {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -911,7 +924,7 @@ function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando 
   const lbl   = "block text-[11px] text-slate-500 mb-1"
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
