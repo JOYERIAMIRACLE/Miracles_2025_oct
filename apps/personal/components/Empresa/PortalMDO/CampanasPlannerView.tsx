@@ -53,9 +53,9 @@ function getISOWeek(d: Date): number {
 const HOY_YMD = toYMD(new Date())
 
 const FILAS_GRID = [
-  { label: "MHS",   rowBg: "bg-blue-50 dark:bg-blue-950/30"   },
+  { label: "MHS",   rowBg: "bg-violet-50 dark:bg-violet-950/30"   },
   { label: "Store", rowBg: "bg-violet-50 dark:bg-violet-950/30"  },
-  { label: "Extra", rowBg: "bg-amber-50 dark:bg-amber-950/30"   },
+  { label: "Extra", rowBg: "bg-violet-50 dark:bg-violet-950/30"   },
 ] as const
 
 const DIAS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const
@@ -158,9 +158,9 @@ function etapasFromString(raw: string | null): Set<number> {
 
 function CategoriaBadge({ cat }: { cat: string | null }) {
   if (!cat) return null
-  const cls = cat === "MHS"   ? "bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/30"
+  const cls = cat === "MHS"   ? "bg-violet-500/10 text-violet-600 dark:text-violet-300 border-violet-500/30"
             : cat === "Store" ? "bg-violet-500/10 text-violet-600 dark:text-violet-300 border-violet-500/30"
-            : cat === "Extra" ? "bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30"
+            : cat === "Extra" ? "bg-violet-500/10 text-violet-600 dark:text-violet-300 border-violet-500/30"
             : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600"
   return <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${cls}`}>{cat}</span>
 }
@@ -170,13 +170,13 @@ const ESTADOS_CAMPANA: { key: FiltroStatus; label: string; dot: string }[] = [
   { key: "todas",       label: "Todas",       dot: "bg-slate-300" },
   { key: "sin_iniciar", label: "Sin iniciar", dot: "bg-slate-400" },
   { key: "en_progreso", label: "En progreso", dot: "bg-violet-500" },
-  { key: "completadas", label: "Completadas", dot: "bg-emerald-500" },
+  { key: "completadas", label: "Completadas", dot: "bg-violet-500" },
 ]
 
 const CAT_CHIP: Record<string, { letter: string; bg: string; text: string }> = {
-  MHS:   { letter: "M", bg: "bg-blue-500/15",   text: "text-blue-600 dark:text-blue-300"   },
+  MHS:   { letter: "M", bg: "bg-violet-500/15",   text: "text-violet-600 dark:text-violet-300"   },
   Store: { letter: "S", bg: "bg-violet-500/15", text: "text-violet-600 dark:text-violet-300" },
-  Extra: { letter: "E", bg: "bg-amber-500/15",  text: "text-amber-600 dark:text-amber-300"  },
+  Extra: { letter: "E", bg: "bg-violet-500/15",  text: "text-violet-600 dark:text-violet-300"  },
 }
 
 function CampanaChip({ titulo, categoria, keyword, notas, fullWidth, archivos, multimediaUrl, progreso, onClick, onDelete }: {
@@ -187,7 +187,7 @@ function CampanaChip({ titulo, categoria, keyword, notas, fullWidth, archivos, m
   const cfg = (categoria && CAT_CHIP[categoria]) ?? { letter: "·", bg: "bg-slate-100 dark:bg-slate-700", text: "text-slate-500 dark:text-slate-400" }
   const primerArchivo = archivos?.[0]
   const progressPct = progreso !== undefined ? Math.round((progreso / 4) * 100) : 0
-  const riverColor = progressPct >= 100 ? "bg-emerald-500" : "bg-violet-400"
+  const riverColor = progressPct >= 100 ? "bg-violet-500" : "bg-violet-400"
   return (
     <div onClick={onClick}
       className={`group/chip relative flex items-stretch rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[210px]"}`}>
@@ -377,9 +377,9 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
                   <button key={cat} type="button" onClick={() => setForm(f => ({ ...f, categoria: f.categoria === cat ? null : cat }))}
                     className={`flex-1 py-2 rounded-lg text-[11px] font-medium border transition-colors ${
                       form.categoria === cat
-                        ? cat === "MHS" ? "bg-blue-50 dark:bg-blue-600/20 border-blue-300 dark:border-blue-500/40 text-blue-600 dark:text-blue-300"
+                        ? cat === "MHS" ? "bg-violet-50 dark:bg-violet-600/20 border-violet-300 dark:border-violet-500/40 text-violet-600 dark:text-violet-300"
                         : cat === "Store" ? "bg-violet-50 dark:bg-violet-600/20 border-violet-300 dark:border-violet-500/40 text-violet-600 dark:text-violet-300"
-                        : "bg-amber-50 dark:bg-amber-600/20 border-amber-300 dark:border-amber-500/40 text-amber-600 dark:text-amber-300"
+                        : "bg-violet-50 dark:bg-violet-600/20 border-violet-300 dark:border-violet-500/40 text-violet-600 dark:text-violet-300"
                         : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                     }`}>{cat}</button>
                 ))}
@@ -434,7 +434,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
               {REDES_PUBLICACION.map(({ key, label }) => (
                 <div key={key} className="flex items-center gap-2">
                   <button type="button" onClick={() => setPub(p => ({ ...p, [key]: { ...p[key], publicado: !p[key].publicado } }))}
-                    className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${pub[key].publicado ? "bg-emerald-500 border-emerald-500" : "border-slate-300 dark:border-slate-600"}`}>
+                    className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${pub[key].publicado ? "bg-violet-500 border-violet-500" : "border-slate-300 dark:border-slate-600"}`}>
                     {pub[key].publicado && <Check size={11} className="text-white" />}
                   </button>
                   <span className="text-xs font-medium text-slate-600 dark:text-slate-300 w-16 shrink-0">{label}</span>
@@ -452,7 +452,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
               ))}
               {anyConHora && (
                 <button type="button" onClick={() => setManualPublicado(m => !m)}
-                  className={`w-full mt-1 h-8 rounded-lg text-xs font-semibold border transition-colors ${manualPublicado ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"}`}>
+                  className={`w-full mt-1 h-8 rounded-lg text-xs font-semibold border transition-colors ${manualPublicado ? "bg-violet-50 dark:bg-violet-950/30 border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"}`}>
                   {manualPublicado ? "✓ Marcado como publicado" : "Marcar como publicado"}
                 </button>
               )}
@@ -463,12 +463,12 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Progreso {etapasSet.size}/4</span>
-            {etapasSet.size === 4 && <span className="text-[10px] font-bold text-emerald-500">Completo</span>}
+            {etapasSet.size === 4 && <span className="text-[10px] font-bold text-violet-500">Completo</span>}
           </div>
           <div className="grid grid-cols-4 gap-1">
             {ETAPAS.map((e, i) => (
               <div key={e} className="space-y-1">
-                <div className={`h-1.5 rounded-full ${etapasSet.has(i) ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`} />
+                <div className={`h-1.5 rounded-full ${etapasSet.has(i) ? "bg-violet-500" : "bg-slate-200 dark:bg-slate-700"}`} />
                 <p className="text-[9px] text-slate-400 truncate">{e}</p>
               </div>
             ))}
@@ -788,8 +788,8 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
                 <CategoriaBadge cat={c.categoria} />
                 <span className="flex-1 text-xs text-slate-700 dark:text-slate-200 truncate">{c.unidadNegocio || "Sin título"}</span>
                 {semanaFechaActual
-                  ? <span className="text-[9px] text-amber-500 shrink-0">↺ reemplaza fecha</span>
-                  : <span className="text-[9px] text-emerald-500 shrink-0 opacity-0 group-hover:opacity-100">+ asignar</span>}
+                  ? <span className="text-[9px] text-violet-500 shrink-0">↺ reemplaza fecha</span>
+                  : <span className="text-[9px] text-violet-500 shrink-0 opacity-0 group-hover:opacity-100">+ asignar</span>}
               </button>
             )
           })}
@@ -944,11 +944,11 @@ function VistaMetricas({ campanas }: { campanas: CampanaType[] }) {
 
   const stats = [
     { label: "Total campañas", value: total, color: "text-slate-800 dark:text-slate-100" },
-    { label: "Publicadas", value: publicadas, sub: total ? `${Math.round((publicadas / total) * 100)}%` : undefined, color: "text-emerald-500" },
+    { label: "Publicadas", value: publicadas, sub: total ? `${Math.round((publicadas / total) * 100)}%` : undefined, color: "text-violet-500" },
     { label: "En producción", value: enProduccion, color: "text-violet-500" },
     { label: "Sin iniciar", value: sinIniciar, color: "text-slate-400" },
-    { label: "Con multimedia", value: conMultimedia, color: "text-blue-500" },
-    { label: "Con publicación", value: conPublicacion, color: "text-amber-500" },
+    { label: "Con multimedia", value: conMultimedia, color: "text-violet-500" },
+    { label: "Con publicación", value: conPublicacion, color: "text-violet-500" },
   ]
 
   return (

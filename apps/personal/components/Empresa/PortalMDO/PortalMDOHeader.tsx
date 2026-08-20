@@ -92,7 +92,7 @@ function ThemeToggleButton() {
 
 function AvatarCircle({ ini, className = "" }: { ini: string; className?: string }) {
   return (
-    <div className={`w-full h-full rounded-full bg-linear-to-br from-cyan-500 to-violet-600 flex items-center justify-center font-bold text-white ${className}`}>
+    <div className={`w-full h-full rounded-full bg-linear-to-br from-violet-500 to-violet-600 flex items-center justify-center font-bold text-white ${className}`}>
       {ini}
     </div>
   )

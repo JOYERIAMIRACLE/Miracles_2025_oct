@@ -201,7 +201,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
                     <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                       <div className="w-full flex items-end gap-0.5" style={{ height: "96px" }}>
                         <div className="flex-1 bg-violet-400 rounded-t-sm" style={{ height: `${(b.real / MAX_BAR) * 96}px` }} />
-                        <div className="flex-1 border-t-2 border-blue-400 bg-blue-100/30 dark:bg-blue-900/20" style={{ height: `${(b.budget / MAX_BAR) * 96}px` }} />
+                        <div className="flex-1 border-t-2 border-violet-400 bg-violet-100/30 dark:bg-violet-900/20" style={{ height: `${(b.budget / MAX_BAR) * 96}px` }} />
                       </div>
                       <span className="text-[8px] text-slate-400 dark:text-slate-500 truncate">{b.mes}</span>
                     </div>
@@ -209,7 +209,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
                 </div>
                 <div className="flex gap-3 mt-2">
                   <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400"><span className="h-2.5 w-2.5 rounded-sm bg-violet-400 shrink-0" />Real</span>
-                  <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400 shrink-0" />Presupuesto</span>
+                  <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400"><span className="h-2.5 w-2.5 rounded-sm bg-violet-400 shrink-0" />Presupuesto</span>
                 </div>
               </div>
               <div className="shrink-0 text-center w-36">

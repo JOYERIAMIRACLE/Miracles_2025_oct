@@ -16,12 +16,12 @@ const CATEGORIA_LABEL: Record<CategoriaMaterial, string> = {
 
 const CATEGORIA_BADGE: Record<CategoriaMaterial, string> = {
   promocional: "bg-violet-500/15 text-violet-300 border-violet-500/20",
-  folleto:     "bg-sky-500/15 text-sky-300 border-sky-500/20",
-  camisa:      "bg-rose-500/15 text-rose-300 border-rose-500/20",
+  folleto:     "bg-violet-500/15 text-violet-300 border-violet-500/20",
+  camisa:      "bg-violet-500/15 text-violet-300 border-violet-500/20",
   otro:        "bg-slate-500/15 text-slate-400 border-slate-500/20",
 }
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
 
 export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMaterial }) {
   const { materiales, setMateriales, loading } = useGetMaterialesTrabajo(ambito)
@@ -98,8 +98,8 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Items",      value: stats.total,  color: "text-slate-200" },
-          { label: "Piezas",     value: stats.piezas, color: "text-blue-400" },
-          { label: "Stock bajo", value: stats.bajos,  color: stats.bajos > 0 ? "text-amber-400" : "text-slate-500" },
+          { label: "Piezas",     value: stats.piezas, color: "text-violet-400" },
+          { label: "Stock bajo", value: stats.bajos,  color: stats.bajos > 0 ? "text-violet-400" : "text-slate-500" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -115,7 +115,7 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
             <button key={f} type="button" onClick={() => setFiltro(f)}
               className={`h-7 px-3 text-xs rounded-lg border transition-colors ${
                 filtro === f
-                  ? "bg-blue-500/15 border-blue-500/30 text-blue-300"
+                  ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
                   : "border-slate-700 text-slate-500 hover:text-slate-300"
               }`}>
               {f === "todos" ? `Todos (${materiales.length})` : `${CATEGORIA_LABEL[f as CategoriaMaterial]} (${materiales.filter(m => m.categoria === f).length})`}
@@ -123,7 +123,7 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
           ))}
         </div>
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors ml-auto">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors ml-auto">
           <Plus size={15} /> Nuevo item
         </button>
       </div>
@@ -150,8 +150,8 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
                 <tr key={m.documentId} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {bajo && <AlertTriangle size={12} className="text-amber-400 shrink-0" />}
-                      <span className={`font-medium ${bajo ? "text-amber-200" : "text-slate-200"}`}>{m.nombre}</span>
+                      {bajo && <AlertTriangle size={12} className="text-violet-400 shrink-0" />}
+                      <span className={`font-medium ${bajo ? "text-violet-200" : "text-slate-200"}`}>{m.nombre}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -163,7 +163,7 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
                     <div className="flex items-center gap-2">
                       <button type="button" onClick={() => handleCantidad(m, -1)}
                         className="h-6 w-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold transition-colors">−</button>
-                      <span className={`w-7 text-center font-bold tabular-nums ${bajo ? "text-amber-400" : "text-slate-200"}`}>{m.cantidad}</span>
+                      <span className={`w-7 text-center font-bold tabular-nums ${bajo ? "text-violet-400" : "text-slate-200"}`}>{m.cantidad}</span>
                       <button type="button" onClick={() => handleCantidad(m, +1)}
                         className="h-6 w-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold transition-colors">+</button>
                     </div>
@@ -238,7 +238,7 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
                 className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition">
+                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar" : "Crear"}
               </button>

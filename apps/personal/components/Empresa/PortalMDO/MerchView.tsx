@@ -23,8 +23,8 @@ const CATEGORIA_LABEL: Record<CategoriaMaterial, string> = {
 }
 const CATEGORIA_BADGE: Record<CategoriaMaterial, string> = {
   promocional: "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
-  folleto:     "bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
-  camisa:      "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+  folleto:     "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
+  camisa:      "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
   otro:        "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700",
 }
 const CATEGORIA_HEX: Record<CategoriaMaterial, string> = {
@@ -131,8 +131,8 @@ function MetricasPanel({ materiales, porCategoria, stats }: {
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
         <StatTile label="Items" value={stats.total} />
-        <StatTile label="Piezas" value={stats.piezas} color="text-emerald-500" />
-        <StatTile label="Stock bajo" value={stats.bajos} color={stats.bajos > 0 ? "text-amber-500" : undefined} />
+        <StatTile label="Piezas" value={stats.piezas} color="text-violet-500" />
+        <StatTile label="Stock bajo" value={stats.bajos} color={stats.bajos > 0 ? "text-violet-500" : undefined} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
@@ -342,8 +342,8 @@ export function MerchView() {
                           className="border-b border-slate-200 dark:border-slate-700 last:border-0 group hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              {bajo && <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" aria-label="Stock bajo mínimo" />}
-                              <span className={`font-medium truncate max-w-[140px] ${bajo ? "text-amber-600" : "text-slate-800 dark:text-slate-100"}`}>{m.nombre}</span>
+                              {bajo && <AlertTriangle className="h-3.5 w-3.5 text-violet-400 shrink-0" aria-label="Stock bajo mínimo" />}
+                              <span className={`font-medium truncate max-w-[140px] ${bajo ? "text-violet-600" : "text-slate-800 dark:text-slate-100"}`}>{m.nombre}</span>
                             </div>
                             <span className={`sm:hidden mt-0.5 inline-flex text-[10px] px-1.5 py-0.5 rounded border ${CATEGORIA_BADGE[m.categoria]}`}>{CATEGORIA_LABEL[m.categoria]}</span>
                           </td>
@@ -354,7 +354,7 @@ export function MerchView() {
                             <div className="flex items-center justify-center gap-2">
                               <button type="button" onClick={() => handleCantidad(m, -1)}
                                 className="h-6 w-6 rounded bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm font-bold transition-colors">−</button>
-                              <span className={`w-8 text-center font-bold tabular-nums ${bajo ? "text-amber-500" : "text-slate-800 dark:text-slate-100"}`}>{m.cantidad}</span>
+                              <span className={`w-8 text-center font-bold tabular-nums ${bajo ? "text-violet-500" : "text-slate-800 dark:text-slate-100"}`}>{m.cantidad}</span>
                               <button type="button" onClick={() => handleCantidad(m, 1)}
                                 className="h-6 w-6 rounded bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm font-bold transition-colors">+</button>
                             </div>

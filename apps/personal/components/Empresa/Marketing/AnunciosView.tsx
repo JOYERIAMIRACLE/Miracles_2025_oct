@@ -10,7 +10,7 @@ import {
 } from "@/types/anuncio"
 import { cn } from "@/lib/utils"
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
 const fmt = (n: number) => `$${n.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`
 const pct = (a: number, b: number) => b > 0 ? `${((a / b) * 100).toFixed(1)}%` : "—"
 
@@ -82,10 +82,10 @@ export function AnunciosView() {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Activos",      value: totales.activos,                color: "text-emerald-400" },
+          { label: "Activos",      value: totales.activos,                color: "text-violet-400" },
           { label: "Presupuesto",  value: fmt(totales.presupuesto),        color: "text-slate-200" },
-          { label: "Gastado",      value: fmt(totales.gastado),            color: "text-rose-400" },
-          { label: "CTR global",   value: pct(totales.clics, totales.impresiones), color: "text-blue-400" },
+          { label: "Gastado",      value: fmt(totales.gastado),            color: "text-violet-400" },
+          { label: "CTR global",   value: pct(totales.clics, totales.impresiones), color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -100,7 +100,7 @@ export function AnunciosView() {
           {(["todos", ...ESTADOS_ANUNCIO] as const).map(e => (
             <button key={e} type="button" onClick={() => setFiltroEstado(e)}
               className={cn("h-7 px-3 text-xs rounded-lg border capitalize transition-colors",
-                filtroEstado === e ? "bg-blue-500/15 border-blue-500/30 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
+                filtroEstado === e ? "bg-violet-500/15 border-violet-500/30 text-violet-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
               )}>
               {e === "todos" ? "Todos" : e}
             </button>
@@ -117,7 +117,7 @@ export function AnunciosView() {
           ))}
         </div>
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors ml-auto">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors ml-auto">
           <Plus size={15} /> Nuevo anuncio
         </button>
       </div>
@@ -149,10 +149,10 @@ export function AnunciosView() {
                     <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium capitalize", ESTADO_BADGE[a.estado])}>{a.estado}</span>
                   </td>
                   <td className="px-4 py-3 text-slate-300 tabular-nums">{fmt(a.presupuesto)}</td>
-                  <td className="px-4 py-3 text-rose-400 tabular-nums">{fmt(a.gastado)}</td>
+                  <td className="px-4 py-3 text-violet-400 tabular-nums">{fmt(a.gastado)}</td>
                   <td className="px-4 py-3 text-slate-400 tabular-nums">{a.impresiones.toLocaleString()}</td>
                   <td className="px-4 py-3 text-slate-400 tabular-nums">{a.clics.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-blue-400 tabular-nums">{pct(a.clics, a.impresiones)}</td>
+                  <td className="px-4 py-3 text-violet-400 tabular-nums">{pct(a.clics, a.impresiones)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button type="button" onClick={() => openEditar(a)}
@@ -261,7 +261,7 @@ export function AnunciosView() {
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
                 className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition">
+                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar" : "Crear"}
               </button>

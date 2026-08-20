@@ -106,11 +106,9 @@ export function PageHeader({
   badge?: { label: string; color: "violet" | "emerald" | "amber" }
   owner?: string
 }) {
-  const badgeColors = {
-    violet:  "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25",
-    emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
-    amber:   "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
-  }
+  // Un solo acento (violeta) — sin variación decorativa por color de badge.
+  const violetBadge = "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25"
+  const badgeColors = { violet: violetBadge, emerald: violetBadge, amber: violetBadge }
   return (
     <div className="mb-4">
       {breadcrumb && breadcrumb.length > 0 && (

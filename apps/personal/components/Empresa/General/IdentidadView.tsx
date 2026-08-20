@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useGetIdentidad, saveIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { IdentidadPayload } from "@/types/identidad-empresa"
 
-const inp  = "w-full rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
+const inp  = "w-full rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
 const area = inp + " resize-none"
 
 function empty(): IdentidadPayload {
@@ -64,8 +64,8 @@ export function IdentidadView() {
     <div className="p-6 max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
-            <Building2 className="h-4 w-4 text-emerald-400" />
+          <div className="h-9 w-9 rounded-lg bg-violet-500/15 border border-violet-500/20 flex items-center justify-center">
+            <Building2 className="h-4 w-4 text-violet-400" />
           </div>
           <div>
             <h1 className="text-lg font-semibold text-slate-100">Identidad Corporativa</h1>
@@ -73,7 +73,7 @@ export function IdentidadView() {
           </div>
         </div>
         <button type="button" onClick={handleSave} disabled={saving || !dirty}
-          className="flex items-center gap-2 h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-40 transition-colors">
+          className="flex items-center gap-2 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-40 transition-colors">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Guardar
         </button>

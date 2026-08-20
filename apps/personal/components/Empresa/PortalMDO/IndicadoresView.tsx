@@ -57,7 +57,7 @@ function fmtPeso(n: number): string {
 function TasaBadge({ num, den }: { num: number; den: number }) {
   if (!den) return <span className="text-[10px] text-slate-400 dark:text-slate-600">—</span>
   const ratio = num / den
-  const color = ratio >= 0.05 ? "text-emerald-500" : ratio >= 0.01 ? "text-amber-500" : "text-red-500"
+  const color = ratio >= 0.05 ? "text-violet-500" : ratio >= 0.01 ? "text-violet-500" : "text-red-500"
   return <span className={`text-[10px] font-medium ${color}`}>{pct(num, den)}</span>
 }
 function MetricaCell({ value, sub, subDen }: { value: number; sub?: number; subDen?: number }) {
@@ -421,7 +421,7 @@ function Section({ id, label, badge, badgeGreen, openSection, onToggle, children
       <button type="button" onClick={() => onToggle(id)} className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{label}</span>
         <div className="flex items-center gap-2">
-          {badge && <span className={`text-[10px] font-semibold ${badgeGreen ? "text-emerald-500" : "text-violet-500"}`}>{badge}</span>}
+          {badge && <span className={`text-[10px] font-semibold ${badgeGreen ? "text-violet-500" : "text-violet-500"}`}>{badge}</span>}
           <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
         </div>
       </button>
@@ -595,7 +595,7 @@ function DrilldownModal({ row, semanas, onCerrar, onEditarSemana }: { row: BSRow
                 const v = s[row.key] as number
                 const isMax = !s.placeholder && nonZero.length > 1 && v === maxVal
                 const isMin = !s.placeholder && nonZero.length > 1 && v === minVal && v > 0
-                return <td key={s.documentId} className={`px-3 py-2 text-center font-medium ${s.placeholder ? "text-slate-300 dark:text-slate-700" : isMax ? "text-emerald-500" : isMin ? "text-red-500" : "text-slate-700 dark:text-slate-300"}`}>{s.placeholder ? "—" : fmtV(v)}</td>
+                return <td key={s.documentId} className={`px-3 py-2 text-center font-medium ${s.placeholder ? "text-slate-300 dark:text-slate-700" : isMax ? "text-violet-500" : isMin ? "text-red-500" : "text-slate-700 dark:text-slate-300"}`}>{s.placeholder ? "—" : fmtV(v)}</td>
               })}
             </tr></tbody>
           </table>
@@ -803,11 +803,11 @@ function TabBoxscore() {
 
       {semanasConDatos.length > 0 && (
         <div className="space-y-8 pt-2 border-t border-slate-200 dark:border-slate-700">
-          <MensualTable title="Impresiones por mes" accent="border-l-blue-500/60" semanas={semanasConDatos}
+          <MensualTable title="Impresiones por mes" accent="border-l-violet-500/60" semanas={semanasConDatos}
             metricas={[{ label: "Impresiones Corp", key: "impresionesCorp", color: "#3b82f6" }, { label: "Impresiones Store", key: "impresionesStore", color: "#8b5cf6" }, { label: "Impresiones CYA", key: "impresionesCYA", color: "#fb923c" }, { label: "Impresiones IC", key: "impresionesIC", color: "#ec4899" }]} />
           <MensualTable title="Tráfico por mes" accent="border-l-violet-500/60" semanas={semanasConDatos}
             metricas={[{ label: "Tráfico Dir. Corp", key: "traficoDirectoCorp", color: "#3b82f6" }, { label: "Tráfico Dir. Store", key: "traficoDirectoStore", color: "#8b5cf6" }, { label: "Tráf. Orgánico Corp", key: "traficoOrganicoCorp", color: "#10b981" }, { label: "Tráf. Orgánico Store", key: "traficoOrganicoStore", color: "#34d399" }, { label: "Clics CYA", key: "clicsCYA", color: "#fb923c" }, { label: "Clics IC", key: "clicsIC", color: "#ec4899" }]} />
-          <MensualTable title="Conversiones por mes" accent="border-l-emerald-500/60" semanas={semanasConDatos}
+          <MensualTable title="Conversiones por mes" accent="border-l-violet-500/60" semanas={semanasConDatos}
             metricas={[{ label: "Conv. CYA", key: "conversionesCYA", color: "#fb923c" }, { label: "Conv. IC", key: "conversionesIC", color: "#ec4899" }]} />
         </div>
       )}
@@ -944,7 +944,7 @@ function DrilldownModalCdl({ row, sectionTitle, meses, onCerrar, onEditarMes }: 
                 const v = m[row.key as string] as number
                 const isMax = !m.placeholder && nonZero.length > 1 && v === maxVal
                 const isMin = !m.placeholder && nonZero.length > 1 && v === minVal && v > 0
-                return <td key={m.key} className={`px-3 py-2 text-center font-medium ${m.placeholder ? "text-slate-300 dark:text-slate-700" : isMax ? "text-emerald-500" : isMin ? "text-red-500" : "text-slate-700 dark:text-slate-300"}`}>{m.placeholder ? "—" : fmtV(v)}</td>
+                return <td key={m.key} className={`px-3 py-2 text-center font-medium ${m.placeholder ? "text-slate-300 dark:text-slate-700" : isMax ? "text-violet-500" : isMin ? "text-red-500" : "text-slate-700 dark:text-slate-300"}`}>{m.placeholder ? "—" : fmtV(v)}</td>
               })}
             </tr></tbody>
           </table>

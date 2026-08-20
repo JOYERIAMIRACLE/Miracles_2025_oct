@@ -14,15 +14,15 @@ const BASE     = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 const ESTADOS: { key: EstadoTarea; label: string; color: string }[] = [
   { key: "pendiente",   label: "Pendiente",   color: "bg-slate-500/10 text-slate-400 border-slate-500/20" },
-  { key: "en_progreso", label: "En progreso", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+  { key: "en_progreso", label: "En progreso", color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
   { key: "en_pausa",    label: "En pausa",    color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
-  { key: "completada",  label: "Completada",  color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  { key: "completada",  label: "Completada",  color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
 ]
 
 const PRIORIDADES: { key: PrioridadTarea; label: string; dot: string }[] = [
   { key: "baja",    label: "Baja",    dot: "bg-slate-500" },
-  { key: "media",   label: "Media",   dot: "bg-blue-400" },
-  { key: "alta",    label: "Alta",    dot: "bg-amber-400" },
+  { key: "media",   label: "Media",   dot: "bg-violet-400" },
+  { key: "alta",    label: "Alta",    dot: "bg-violet-400" },
   { key: "urgente", label: "Urgente", dot: "bg-red-400" },
 ]
 
@@ -30,13 +30,13 @@ const CATEGORIAS = ["Contenido", "Campaña", "Diseño", "SEO", "Analytics", "Soc
 
 const CATEGORIA_COLOR: Record<string, string> = {
   "Contenido":          "bg-green-500/10 text-green-400 border-green-500/20",
-  "Campaña":            "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  "Diseño":             "bg-pink-500/10 text-pink-400 border-pink-500/20",
-  "SEO":                "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  "Campaña":            "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Diseño":             "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "SEO":                "bg-violet-500/10 text-violet-400 border-violet-500/20",
   "Analytics":          "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  "Social Media":       "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "Email":              "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  "Infraestructura web":"bg-teal-500/10 text-teal-400 border-teal-500/20",
+  "Social Media":       "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Email":              "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Infraestructura web":"bg-violet-500/10 text-violet-400 border-violet-500/20",
   "Otro":               "bg-slate-500/10 text-slate-400 border-slate-500/20",
 }
 
@@ -54,7 +54,7 @@ function emptyForm(): FormData {
   return { titulo: "", descripcion: "", estado: "pendiente", prioridad: "media", fechaVencimiento: "", progreso: 0, categoria: "" }
 }
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
@@ -205,8 +205,8 @@ export function TareasEmpresaView() {
         {[
           { label: "Total",       value: stats.total,       color: "text-slate-200" },
           { label: "Pendientes",  value: stats.pendientes,  color: "text-slate-400" },
-          { label: "En progreso", value: stats.progreso,    color: "text-blue-400" },
-          { label: "Completadas", value: stats.completadas, color: "text-emerald-400" },
+          { label: "En progreso", value: stats.progreso,    color: "text-violet-400" },
+          { label: "Completadas", value: stats.completadas, color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
             <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -240,7 +240,7 @@ export function TareasEmpresaView() {
           </select>
         )}
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors ml-auto">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors ml-auto">
           <Plus size={15} /> Nueva tarea
         </button>
       </div>
@@ -263,7 +263,7 @@ export function TareasEmpresaView() {
               const est   = ESTADOS.find(e => e.key === t.estado)
               const prior = PRIORIDADES.find(p => p.key === t.prioridad)
               const pct   = t.progreso ?? 0
-              const barColor = pct >= 100 ? "bg-emerald-500" : pct >= 60 ? "bg-blue-500" : pct >= 30 ? "bg-amber-500" : "bg-red-400"
+              const barColor = pct >= 100 ? "bg-violet-500" : pct >= 60 ? "bg-violet-500" : pct >= 30 ? "bg-violet-500" : "bg-red-400"
               return (
                 <div key={t.documentId} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors group">
                   {/* Toggle completada */}
@@ -271,8 +271,8 @@ export function TareasEmpresaView() {
                     onClick={() => cambiarEstado(t, t.estado === "completada" ? "pendiente" : "completada")}
                     className={`mt-0.5 h-4 w-4 rounded border flex items-center justify-center shrink-0 transition-all ${
                       t.estado === "completada"
-                        ? "bg-emerald-500 border-emerald-500"
-                        : "border-slate-600 hover:border-emerald-500"
+                        ? "bg-violet-500 border-violet-500"
+                        : "border-slate-600 hover:border-violet-500"
                     }`}>
                     {t.estado === "completada" && <Check size={9} className="text-white" />}
                   </button>
@@ -421,18 +421,18 @@ export function TareasEmpresaView() {
               </div>
               <div>
                 <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
-                  Progreso — <span className="text-blue-400 font-mono">{form.progreso}%</span>
+                  Progreso — <span className="text-violet-400 font-mono">{form.progreso}%</span>
                 </label>
                 <input type="range" min={0} max={100} value={form.progreso} title="Porcentaje de progreso"
                   onChange={e => setForm(f => ({ ...f, progreso: Number(e.target.value) }))}
-                  className="w-full accent-blue-500" />
+                  className="w-full accent-violet-500" />
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
                 className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition">
+                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar" : "Crear"}
               </button>

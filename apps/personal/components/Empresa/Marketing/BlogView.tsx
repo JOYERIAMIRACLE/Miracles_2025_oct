@@ -7,8 +7,8 @@ import { useGetBlogPosts, createBlogPost, updateBlogPost, publishBlogPost, unpub
 import { BlogPostType, CATEGORIA_BLOG_LABELS } from "@/types/blog-post"
 import { cn } from "@/lib/utils"
 
-const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
-const area = "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 resize-none transition-all"
+const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+const area = "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
 
 const CATEGORIAS = Object.keys(CATEGORIA_BLOG_LABELS) as (keyof typeof CATEGORIA_BLOG_LABELS)[]
 
@@ -108,8 +108,8 @@ export function BlogView() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total",      value: stats.total,     color: "text-slate-200" },
-          { label: "Publicados", value: stats.publicado, color: "text-emerald-400" },
-          { label: "Borradores", value: stats.borrador,  color: "text-amber-400" },
+          { label: "Publicados", value: stats.publicado, color: "text-violet-400" },
+          { label: "Borradores", value: stats.borrador,  color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -124,14 +124,14 @@ export function BlogView() {
           {(["todos", "publicado", "borrador"] as const).map(f => (
             <button key={f} type="button" onClick={() => setFiltro(f)}
               className={cn("h-8 px-3 text-xs rounded-lg border capitalize transition-colors",
-                filtro === f ? "bg-blue-500/15 border-blue-500/30 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
+                filtro === f ? "bg-violet-500/15 border-violet-500/30 text-violet-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
               )}>
               {f}
             </button>
           ))}
         </div>
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors ml-auto">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors ml-auto">
           <Plus size={15} /> Nuevo post
         </button>
       </div>
@@ -153,7 +153,7 @@ export function BlogView() {
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-sm font-medium text-slate-200 truncate">{p.titulo}</p>
                 <span className={cn("text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0",
-                  p.publishedAt ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/20" : "bg-amber-500/15 text-amber-300 border-amber-500/20"
+                  p.publishedAt ? "bg-violet-500/15 text-violet-300 border-violet-500/20" : "bg-violet-500/15 text-violet-300 border-violet-500/20"
                 )}>
                   {p.publishedAt ? "Publicado" : "Borrador"}
                 </span>
@@ -167,7 +167,7 @@ export function BlogView() {
             </div>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
               <button type="button" onClick={() => togglePublish(p)} title={p.publishedAt ? "Despublicar" : "Publicar"}
-                className="p-1.5 text-slate-600 hover:text-emerald-400 hover:bg-slate-800 rounded transition">
+                className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-slate-800 rounded transition">
                 {p.publishedAt ? <EyeOff size={13} /> : <Eye size={13} />}
               </button>
               <button type="button" onClick={() => openEditar(p)}
@@ -234,7 +234,7 @@ export function BlogView() {
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
                 className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 disabled:opacity-50 transition">
+                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar" : "Crear"}
               </button>

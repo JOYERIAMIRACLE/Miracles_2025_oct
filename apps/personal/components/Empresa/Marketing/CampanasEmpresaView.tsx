@@ -47,9 +47,9 @@ function toYMD(d: Date): string {
 const HOY_YMD = toYMD(new Date())
 
 const FILAS_GRID = [
-  { label: "MHS",   rowBg: "bg-blue-950/30"   },
+  { label: "MHS",   rowBg: "bg-violet-950/30"   },
   { label: "Store", rowBg: "bg-violet-950/30"  },
-  { label: "Extra", rowBg: "bg-amber-950/30"   },
+  { label: "Extra", rowBg: "bg-violet-950/30"   },
 ] as const
 
 const DIAS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const
@@ -166,17 +166,17 @@ function payloadDe(c: CampanaType): CampanaPayload {
 
 function CategoriaBadge({ cat }: { cat: string | null }) {
   if (!cat) return null
-  const cls = cat === "MHS"   ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+  const cls = cat === "MHS"   ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
             : cat === "Store" ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
-            : cat === "Extra" ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+            : cat === "Extra" ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
             : "bg-slate-700 text-slate-400 border-slate-600"
   return <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${cls}`}>{cat}</span>
 }
 
 const CAT_CHIP: Record<string, { letter: string; bg: string; text: string }> = {
-  MHS:   { letter: "M", bg: "bg-blue-500/20",   text: "text-blue-300"   },
+  MHS:   { letter: "M", bg: "bg-violet-500/20",   text: "text-violet-300"   },
   Store: { letter: "S", bg: "bg-violet-500/20", text: "text-violet-300" },
-  Extra: { letter: "E", bg: "bg-amber-500/20",  text: "text-amber-300"  },
+  Extra: { letter: "E", bg: "bg-violet-500/20",  text: "text-violet-300"  },
 }
 
 function CampanaChip({ titulo, categoria, fullWidth, archivos, onClick, onDelete }: {
@@ -197,7 +197,7 @@ function CampanaChip({ titulo, categoria, fullWidth, archivos, onClick, onDelete
         <a href={primerArchivo} target="_blank" rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
           title={`Abrir archivo${archivos && archivos.length > 1 ? ` (${archivos.length})` : ""}`}
-          className="flex items-center justify-center h-full w-6 shrink-0 text-slate-500 hover:text-blue-400 transition">
+          className="flex items-center justify-center h-full w-6 shrink-0 text-slate-500 hover:text-violet-400 transition">
           <Paperclip size={10} />
         </a>
       )}
@@ -321,7 +321,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
   const field = (label: string, node: React.ReactNode, highlight = false) => (
     <div>
       <label className={`block mb-1 ${highlight ? "text-xs text-slate-200 font-semibold" : "text-[11px] text-slate-500"}`}>
-        {highlight && <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 mb-0.5 align-middle" />}
+        {highlight && <span className="inline-block w-1.5 h-1.5 rounded-full bg-violet-500 mr-1.5 mb-0.5 align-middle" />}
         {label}
       </label>
       {node}
@@ -329,7 +329,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
   )
 
   const inputCls   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
-  const inputHlCls = "w-full px-3 py-2 text-sm rounded-lg border border-blue-500/30 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-blue-500/60"
+  const inputHlCls = "w-full px-3 py-2 text-sm rounded-lg border border-violet-500/30 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500/60"
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -365,9 +365,9 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
                   onClick={() => setForm(f => ({ ...f, categoria: f.categoria === cat ? null : cat }))}
                   className={`flex-1 py-2 rounded-lg text-[11px] font-medium border transition-colors ${
                     form.categoria === cat
-                      ? cat === "MHS"   ? "bg-blue-600/20 border-blue-500/40 text-blue-300"
+                      ? cat === "MHS"   ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
                       : cat === "Store" ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
-                                        : "bg-amber-600/20 border-amber-500/40 text-amber-300"
+                                        : "bg-violet-600/20 border-violet-500/40 text-violet-300"
                       : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
                   }`}>{cat}
                 </button>
@@ -423,7 +423,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
             Cancelar
           </button>
           <button type="button" onClick={guardar} disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg transition">
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} />
             {saving ? "Guardando..." : "Guardar"}
           </button>
@@ -551,7 +551,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
                     ))}
                   </div>
                   <button type="button" title="Agregar campaña" onClick={() => onNueva({ mes, anio })}
-                    className="flex items-center justify-center h-7 w-7 rounded-lg border border-dashed border-slate-700 hover:border-blue-500/40 text-slate-600 hover:text-blue-400 transition-colors shrink-0">
+                    className="flex items-center justify-center h-7 w-7 rounded-lg border border-dashed border-slate-700 hover:border-violet-500/40 text-slate-600 hover:text-violet-400 transition-colors shrink-0">
                     <Plus size={12} />
                   </button>
                 </div>
@@ -654,7 +654,7 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
 
         <div className="px-4 pt-3 pb-2">
           <button type="button" onClick={() => { onClose(); onNueva() }}
-            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition mb-3">
+            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition mb-3">
             <Plus size={14} /> Nueva campaña
           </button>
 
@@ -680,9 +680,9 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
                   <CategoriaBadge cat={c.categoria} />
                   <span className="flex-1 text-xs text-slate-200 truncate">{c.unidadNegocio || "Sin título"}</span>
                   {semanaFechaActual ? (
-                    <span className="text-[9px] text-amber-500 shrink-0">↺ reemplaza fecha</span>
+                    <span className="text-[9px] text-violet-500 shrink-0">↺ reemplaza fecha</span>
                   ) : (
-                    <span className="text-[9px] text-emerald-600 shrink-0 opacity-0 group-hover:opacity-100">+ asignar</span>
+                    <span className="text-[9px] text-violet-600 shrink-0 opacity-0 group-hover:opacity-100">+ asignar</span>
                   )}
                 </button>
               )
@@ -742,11 +742,11 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
           <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-800 bg-slate-900/60">
             <div />
             {days.map((d, i) => (
-              <div key={i} className={`px-2 py-2.5 border-l border-slate-800 text-center ${isHoy(d) ? "bg-blue-500/5" : ""}`}>
-                <p className={`text-[10px] font-semibold uppercase tracking-wider ${isHoy(d) ? "text-blue-400" : "text-slate-500"}`}>
+              <div key={i} className={`px-2 py-2.5 border-l border-slate-800 text-center ${isHoy(d) ? "bg-violet-500/5" : ""}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wider ${isHoy(d) ? "text-violet-400" : "text-slate-500"}`}>
                   {DIAS_ES[i]}
                 </p>
-                <p className={`text-[12px] font-medium mt-0.5 ${isHoy(d) ? "text-blue-300" : "text-slate-400"}`}>
+                <p className={`text-[12px] font-medium mt-0.5 ${isHoy(d) ? "text-violet-300" : "text-slate-400"}`}>
                   {d.toLocaleDateString("es-MX", { day: "numeric" })}
                 </p>
                 <p className="text-[9px] text-slate-600">
@@ -769,7 +769,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
                 const items  = getDiaItems(campanas, dayStr, fila.label)
                 return (
                   <div key={di}
-                    className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-blue-500/5" : ""}`}>
+                    className={`border-l border-slate-800 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-violet-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
                       <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} fullWidth
                         archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]}
@@ -777,7 +777,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
                     ))}
                     <button type="button"
                       onClick={() => setPicker({ dayStr: toYMD(day), categoria: fila.label })}
-                      className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-blue-500/40 text-slate-700 hover:text-blue-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto shrink-0">
+                      className="w-full py-0.5 rounded border border-dashed border-slate-800 hover:border-violet-500/40 text-slate-700 hover:text-violet-500/60 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto shrink-0">
                       <Plus size={8} /> Agregar
                     </button>
                   </div>
@@ -879,7 +879,7 @@ export function CampanasEmpresaView() {
           <p className="text-sm text-slate-500">{campanas.length} campaña{campanas.length !== 1 ? "s" : ""}</p>
         </div>
         <button type="button" onClick={() => abrirNueva()}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
           <Plus size={15} /> Nueva campaña
         </button>
       </div>

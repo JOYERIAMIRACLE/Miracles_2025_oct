@@ -118,8 +118,8 @@ function normalizeNode(n: PageNode): PageNode {
 
 const ST = {
   planning: { dot: "bg-slate-500",   txt: "text-slate-500",   lbl: "Planeando" },
-  draft:    { dot: "bg-amber-500",   txt: "text-amber-500",   lbl: "Borrador"  },
-  live:     { dot: "bg-emerald-500", txt: "text-emerald-400", lbl: "Live"      },
+  draft:    { dot: "bg-violet-500",   txt: "text-violet-500",   lbl: "Borrador"  },
+  live:     { dot: "bg-violet-500", txt: "text-violet-400", lbl: "Live"      },
 } as const
 
 // ─── ListEditor ───────────────────────────────────────────────────────────────
@@ -161,11 +161,11 @@ function ListEditor({ items, onUpdate, ph }: {
           onChange={e => setDraft(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); add() } }}
           placeholder={ph}
-          className="flex-1 px-3.5 py-2 text-sm rounded-lg border border-white/[0.07] bg-white/[0.03] text-slate-200 placeholder:text-slate-700 outline-none focus:border-blue-500/40 transition"
+          className="flex-1 px-3.5 py-2 text-sm rounded-lg border border-white/[0.07] bg-white/[0.03] text-slate-200 placeholder:text-slate-700 outline-none focus:border-violet-500/40 transition"
         />
         <button
           type="button" onClick={add}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg border border-white/[0.07] bg-white/[0.03] text-slate-400 hover:text-white hover:border-blue-500/30 hover:bg-blue-500/10 transition shrink-0">
+          className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg border border-white/[0.07] bg-white/[0.03] text-slate-400 hover:text-white hover:border-violet-500/30 hover:bg-violet-500/10 transition shrink-0">
           <Plus size={14} /> Agregar
         </button>
       </div>
@@ -201,7 +201,7 @@ function SectionEditor({ items, onUpdate }: {
               onChange={e => change(i, { texto: e.target.value })}
               placeholder="Nombre o descripción de la sección…"
               rows={2}
-              className="flex-1 px-2.5 py-1.5 text-[13px] text-slate-200 rounded-md border border-white/[0.06] bg-white/[0.02] placeholder:text-slate-700 outline-none focus:border-blue-500/40 resize-none transition"
+              className="flex-1 px-2.5 py-1.5 text-[13px] text-slate-200 rounded-md border border-white/[0.06] bg-white/[0.02] placeholder:text-slate-700 outline-none focus:border-violet-500/40 resize-none transition"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -210,11 +210,11 @@ function SectionEditor({ items, onUpdate }: {
               value={sec.imagen}
               onChange={e => change(i, { imagen: e.target.value })}
               placeholder="URL imagen de referencia (opcional)…"
-              className="flex-1 px-2.5 py-1.5 text-[12px] text-slate-400 rounded-md border border-white/[0.06] bg-white/[0.02] placeholder:text-slate-700 outline-none focus:border-blue-500/40 transition"
+              className="flex-1 px-2.5 py-1.5 text-[12px] text-slate-400 rounded-md border border-white/[0.06] bg-white/[0.02] placeholder:text-slate-700 outline-none focus:border-violet-500/40 transition"
             />
             {sec.imagen && (
               <a href={sec.imagen} target="_blank" rel="noopener noreferrer" title="Ver imagen"
-                className="shrink-0 p-1.5 rounded text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 transition">
+                className="shrink-0 p-1.5 rounded text-slate-600 hover:text-violet-400 hover:bg-violet-500/10 transition">
                 <ExternalLink size={12} />
               </a>
             )}
@@ -223,7 +223,7 @@ function SectionEditor({ items, onUpdate }: {
       ))}
       <button
         type="button" onClick={addNew}
-        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-white/[0.09] text-sm text-slate-600 hover:text-slate-300 hover:border-blue-500/30 hover:bg-blue-500/5 transition">
+        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-white/[0.09] text-sm text-slate-600 hover:text-slate-300 hover:border-violet-500/30 hover:bg-violet-500/5 transition">
         <Plus size={13} /> Agregar sección
       </button>
     </div>
@@ -242,7 +242,7 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
   return (
     <div
       onClick={onEdit}
-      className="group w-52 rounded-xl border border-slate-700/60 bg-slate-900/90 backdrop-blur-sm hover:border-emerald-500/40 hover:bg-emerald-500/5 cursor-pointer transition-all duration-150 select-none">
+      className="group w-52 rounded-xl border border-slate-700/60 bg-slate-900/90 backdrop-blur-sm hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer transition-all duration-150 select-none">
       <div className="px-3 pt-3 pb-2">
         <div className="flex items-center gap-1.5 mb-1.5">
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
@@ -288,7 +288,7 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
           )}
           <button type="button" title="Agregar sub-página"
             onClick={e => { e.stopPropagation(); onAddChild() }}
-            className="p-1 text-slate-600 hover:text-emerald-400 rounded transition">
+            className="p-1 text-slate-600 hover:text-violet-400 rounded transition">
             <Plus size={12} />
           </button>
           {node.id !== "root" && (
@@ -394,7 +394,7 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
 
       <div className="flex items-center gap-4 px-7 py-6 border-b border-white/[0.06] shrink-0">
         <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-white/[0.08] flex items-center justify-center shrink-0">
-          <Globe size={22} className="text-emerald-400" />
+          <Globe size={22} className="text-violet-400" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[21px] font-semibold text-slate-100 truncate leading-tight">
@@ -405,8 +405,8 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
         <button type="button" onClick={handleSave} disabled={saving}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition shrink-0 ${
             saved
-              ? "bg-emerald-600/20 border border-emerald-500/30 text-emerald-400"
-              : "bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
+              ? "bg-violet-600/20 border border-violet-500/30 text-violet-400"
+              : "bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50"
           }`}>
           {saving ? <Loader2 size={14} className="animate-spin" /> : null}
           {saved ? "✓ Guardado" : saving ? "Guardando…" : "Guardar"}
@@ -422,7 +422,7 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
             className={`px-6 py-4 text-[14px] font-medium border-b-2 -mb-px transition ${
               tab === t.id
-                ? "border-emerald-500 text-slate-100"
+                ? "border-violet-500 text-slate-100"
                 : "border-transparent text-slate-500 hover:text-slate-300"
             }`}>
             {t.label}
@@ -573,8 +573,8 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
                     <button key={st} type="button" onClick={() => onUpdate({ status: st })}
                       className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition ${
                         node.status === st
-                          ? st === "live"     ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-300"
-                          : st === "draft"    ? "bg-amber-500/20 border-amber-500/30 text-amber-300"
+                          ? st === "live"     ? "bg-violet-600/20 border-violet-500/30 text-violet-300"
+                          : st === "draft"    ? "bg-violet-500/20 border-violet-500/30 text-violet-300"
                                               : "bg-slate-700/40 border-slate-600/30 text-slate-300"
                           : "border-white/[0.06] text-slate-600 hover:text-slate-400"
                       }`}>
@@ -590,8 +590,8 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
                       onClick={() => onUpdate({ trafico: node.trafico === t ? "" : t })}
                       className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border capitalize transition ${
                         node.trafico === t
-                          ? t === "alto"  ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-400"
-                          : t === "medio" ? "bg-amber-500/15 border-amber-500/20 text-amber-400"
+                          ? t === "alto"  ? "bg-violet-500/15 border-violet-500/20 text-violet-400"
+                          : t === "medio" ? "bg-violet-500/15 border-violet-500/20 text-violet-400"
                                           : "bg-slate-700/30 border-slate-600/20 text-slate-400"
                           : "border-white/[0.06] text-slate-600 hover:text-slate-400"
                       }`}>{t}</button>
@@ -727,8 +727,8 @@ export function SitioWebMiraclesView() {
             <h1 className="text-2xl font-bold text-slate-100">Sitio web Miracles</h1>
             <p className="text-xs text-slate-500 mt-0.5">
               {total} página{total !== 1 ? "s" : ""} ·{" "}
-              <span className="text-emerald-400">{nlive} live</span> ·{" "}
-              <span className="text-amber-400">{ndrft} borrador</span>
+              <span className="text-violet-400">{nlive} live</span> ·{" "}
+              <span className="text-violet-400">{ndrft} borrador</span>
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -741,7 +741,7 @@ export function SitioWebMiraclesView() {
               <button
                 type="button"
                 onClick={() => setOffline(false)}
-                className="text-xs text-amber-400 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition"
+                className="text-xs text-violet-400 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition"
                 title="Haz clic para reintentar">
                 <CloudOff size={12} /> Error al guardar — reintentar
               </button>
@@ -751,7 +751,7 @@ export function SitioWebMiraclesView() {
               <Download size={14} /> Exportar
             </button>
             <button type="button" onClick={() => handleAdd("root")}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
               <Plus size={14} /> Nueva página
             </button>
           </div>

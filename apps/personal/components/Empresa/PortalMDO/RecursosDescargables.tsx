@@ -46,11 +46,11 @@ function getFileMeta(mime: string, ext: string) {
   if (mime === "application/pdf")
     return { grad: "from-red-400 to-red-600", label: "PDF", badge: "bg-red-100 text-red-600" }
   if (mime.includes("presentationml") || mime.includes("powerpoint"))
-    return { grad: "from-orange-400 to-orange-500", label: "PPT", badge: "bg-orange-100 text-orange-600" }
+    return { grad: "from-violet-400 to-violet-500", label: "PPT", badge: "bg-violet-100 text-violet-600" }
   if (mime.includes("spreadsheetml") || mime.includes("excel"))
-    return { grad: "from-emerald-400 to-emerald-600", label: "XLS", badge: "bg-emerald-100 text-emerald-600" }
+    return { grad: "from-violet-400 to-violet-600", label: "XLS", badge: "bg-violet-100 text-violet-600" }
   if (mime.includes("wordprocessingml") || mime.includes("msword"))
-    return { grad: "from-blue-400 to-blue-600", label: "DOC", badge: "bg-blue-100 text-blue-600" }
+    return { grad: "from-violet-400 to-violet-600", label: "DOC", badge: "bg-violet-100 text-violet-600" }
   return { grad: "from-slate-400 to-slate-600", label: ext || "FILE", badge: "bg-slate-100 text-slate-500" }
 }
 
@@ -723,7 +723,7 @@ function SidebarNav({ tabs, activo, onSelect, onCrear, huerfanos, verHuerfanos, 
       })}
       {!!huerfanos && onVerHuerfanos && (
         <button type="button" onClick={onVerHuerfanos}
-          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-all mt-1 ${verHuerfanos ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-slate-800 border-r-2 border-amber-500" : "text-amber-600/80 dark:text-amber-500/80 hover:bg-amber-50 dark:hover:bg-slate-800/60"}`}>
+          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-all mt-1 ${verHuerfanos ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-slate-800 border-r-2 border-violet-500" : "text-violet-600/80 dark:text-violet-500/80 hover:bg-violet-50 dark:hover:bg-slate-800/60"}`}>
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span className="truncate">Sin categoría ({huerfanos})</span>
         </button>

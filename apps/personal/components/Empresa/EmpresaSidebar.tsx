@@ -85,32 +85,32 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
 ]
 
 const activeColors: Record<string, string> = {
-  emerald: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-  amber:   "bg-amber-500/10 text-amber-400 border-amber-500/30",
-  blue:    "bg-blue-500/10 text-blue-400 border-blue-500/30",
+  emerald: "bg-violet-500/10 text-violet-400 border-violet-500/30",
+  amber:   "bg-violet-500/10 text-violet-400 border-violet-500/30",
+  blue:    "bg-violet-500/10 text-violet-400 border-violet-500/30",
   violet:  "bg-violet-500/10 text-violet-400 border-violet-500/30",
-  rose:    "bg-rose-500/10 text-rose-400 border-rose-500/30",
-  sky:     "bg-sky-500/10 text-sky-400 border-sky-500/30",
+  rose:    "bg-violet-500/10 text-violet-400 border-violet-500/30",
+  sky:     "bg-violet-500/10 text-violet-400 border-violet-500/30",
   slate:   "bg-slate-500/10 text-slate-300 border-slate-500/30",
 }
 
 const iconActive: Record<string, string> = {
-  emerald: "text-emerald-400",
-  amber:   "text-amber-400",
-  blue:    "text-blue-400",
+  emerald: "text-violet-400",
+  amber:   "text-violet-400",
+  blue:    "text-violet-400",
   violet:  "text-violet-400",
-  rose:    "text-rose-400",
-  sky:     "text-sky-400",
+  rose:    "text-violet-400",
+  sky:     "text-violet-400",
   slate:   "text-slate-300",
 }
 
 const sectionLabel: Record<string, string> = {
   violet:  "text-violet-700",
-  sky:     "text-sky-800",
-  blue:    "text-blue-700",
-  emerald: "text-emerald-700",
-  amber:   "text-amber-700",
-  rose:    "text-rose-700",
+  sky:     "text-violet-800",
+  blue:    "text-violet-700",
+  emerald: "text-violet-700",
+  amber:   "text-violet-700",
+  rose:    "text-violet-700",
   slate:   "text-slate-500",
 }
 
@@ -121,7 +121,7 @@ export function EmpresaSidebar({ onNavigate }: { onNavigate?: () => void } = {})
     <div className="flex flex-col w-64 bg-slate-950 h-full border-r border-slate-800/80">
       <div className="h-16 flex items-center px-5 border-b border-slate-800/80 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 bg-linear-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <div className="h-8 w-8 bg-linear-to-br from-violet-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-500/20">
             <Building2 className="h-4 w-4 text-white" />
           </div>
           <div>
@@ -175,7 +175,7 @@ export function EmpresaSidebar({ onNavigate }: { onNavigate?: () => void } = {})
 
       <div className="px-4 py-4 border-t border-slate-800/80 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-md bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-[10px] font-bold text-white">
+          <div className="h-7 w-7 rounded-md bg-linear-to-br from-violet-500 to-violet-600 flex items-center justify-center text-[10px] font-bold text-white">
             M
           </div>
           <div>

@@ -161,7 +161,7 @@ function Modal({ editando, categoriaInicial, onGuardar, onCerrar }: {
             Cancelar
           </button>
           <button type="button" onClick={guardar} disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg transition">
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} />{saving ? "Guardando..." : "Guardar"}
           </button>
         </div>
@@ -174,13 +174,13 @@ function Modal({ editando, categoriaInicial, onGuardar, onCerrar }: {
 
 const CAT_DOT: Record<string, string> = {
   violet:  "bg-violet-400",
-  blue:    "bg-blue-400",
-  amber:   "bg-amber-400",
-  cyan:    "bg-cyan-400",
-  emerald: "bg-emerald-400",
-  rose:    "bg-rose-400",
-  orange:  "bg-orange-400",
-  teal:    "bg-teal-400",
+  blue:    "bg-violet-400",
+  amber:   "bg-violet-400",
+  cyan:    "bg-violet-400",
+  emerald: "bg-violet-400",
+  rose:    "bg-violet-400",
+  orange:  "bg-violet-400",
+  teal:    "bg-violet-400",
 }
 
 const TIPO_ICON = {
@@ -194,10 +194,10 @@ const TIPO_ICON = {
 
 const TIPO_ICON_BG: Record<TipoMaterial, string> = {
   pdf:          "bg-red-500/15 text-red-400",
-  imagen:       "bg-rose-500/15 text-rose-400",
-  presentacion: "bg-blue-500/15 text-blue-400",
-  video:        "bg-amber-500/15 text-amber-400",
-  documento:    "bg-sky-500/15 text-sky-400",
+  imagen:       "bg-violet-500/15 text-violet-400",
+  presentacion: "bg-violet-500/15 text-violet-400",
+  video:        "bg-violet-500/15 text-violet-400",
+  documento:    "bg-violet-500/15 text-violet-400",
   link:         "bg-slate-500/15 text-slate-400",
 }
 
@@ -462,7 +462,7 @@ export function MaterialDigitalView() {
                   className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-slate-900 text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 w-full sm:w-44 transition" />
               </div>
               <button type="button" onClick={abrirNuevo}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition shrink-0">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition shrink-0">
                 <Plus size={13} /> Agregar
               </button>
             </div>
@@ -478,7 +478,7 @@ export function MaterialDigitalView() {
               </p>
               {!busqueda && (
                 <button type="button" onClick={abrirNuevo}
-                  className="mt-3 text-xs text-blue-500 hover:text-blue-400 underline underline-offset-2 transition">
+                  className="mt-3 text-xs text-violet-500 hover:text-violet-400 underline underline-offset-2 transition">
                   Agregar el primero
                 </button>
               )}

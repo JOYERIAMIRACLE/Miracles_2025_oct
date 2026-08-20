@@ -57,9 +57,9 @@ export function DashboardEmpresaView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Clientes totales",  value: loading ? "…" : clientes.length,                        color: "text-slate-200" },
-          { label: "Ventas este mes",   value: loading ? "…" : stats.ventasMes.length,                  color: "text-emerald-400" },
-          { label: "Monto del mes",     value: loading ? "…" : fmt(stats.montoMes),                     color: "text-emerald-400" },
-          { label: "Pedidos en proceso",value: loading ? "…" : stats.pedidosActivos.length,             color: "text-amber-400" },
+          { label: "Ventas este mes",   value: loading ? "…" : stats.ventasMes.length,                  color: "text-violet-400" },
+          { label: "Monto del mes",     value: loading ? "…" : fmt(stats.montoMes),                     color: "text-violet-400" },
+          { label: "Pedidos en proceso",value: loading ? "…" : stats.pedidosActivos.length,             color: "text-violet-400" },
         ].map(k => (
           <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
@@ -89,7 +89,7 @@ export function DashboardEmpresaView() {
                     </span>
                     <div className="flex-1 bg-slate-800 rounded-full h-2">
                       <div
-                        className="h-2 rounded-full bg-emerald-500/60 transition-all duration-500"
+                        className="h-2 rounded-full bg-violet-500/60 transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -120,9 +120,9 @@ export function DashboardEmpresaView() {
                     <span className="text-[10px] text-slate-600 w-4 tabular-nums">{i + 1}</span>
                     <span className="text-xs text-slate-300 flex-1 truncate">{nombre}</span>
                     <div className="w-20 bg-slate-800 rounded-full h-1.5">
-                      <div className="h-1.5 rounded-full bg-blue-500/60" style={{ width: `${pct}%` }} />
+                      <div className="h-1.5 rounded-full bg-violet-500/60" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-emerald-400 tabular-nums shrink-0">{fmt(monto)}</span>
+                    <span className="text-xs text-violet-400 tabular-nums shrink-0">{fmt(monto)}</span>
                   </div>
                 )
               })}
@@ -134,7 +134,7 @@ export function DashboardEmpresaView() {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-300">Pedidos en Proceso</h2>
-            <span className="text-xs text-amber-400 font-semibold">{fmt(stats.montoActivo)}</span>
+            <span className="text-xs text-violet-400 font-semibold">{fmt(stats.montoActivo)}</span>
           </div>
           {loading ? (
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => (
@@ -156,7 +156,7 @@ export function DashboardEmpresaView() {
                         {v.estado}
                       </span>
                     )}
-                    <span className="text-xs text-emerald-400 font-medium tabular-nums">{fmt(v.monto)}</span>
+                    <span className="text-xs text-violet-400 font-medium tabular-nums">{fmt(v.monto)}</span>
                   </div>
                 </div>
               ))}
@@ -181,7 +181,7 @@ export function DashboardEmpresaView() {
                     <p className="text-xs text-slate-300 truncate">{v.concepto}</p>
                     <p className="text-[10px] text-slate-600">{v.fecha ? fmtFecha(v.fecha) : "—"} · {v.cliente?.nombre ?? "Sin cliente"}</p>
                   </div>
-                  <span className="text-xs text-emerald-400 font-semibold tabular-nums shrink-0">{fmt(v.monto)}</span>
+                  <span className="text-xs text-violet-400 font-semibold tabular-nums shrink-0">{fmt(v.monto)}</span>
                 </div>
               ))}
             </div>
