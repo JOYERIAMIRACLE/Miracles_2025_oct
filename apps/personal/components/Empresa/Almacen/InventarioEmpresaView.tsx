@@ -157,9 +157,13 @@ export function InventarioEmpresaView() {
       || [prod.notas, ...prod.caracteristicas.map(c => `${c.clave}: ${c.valor}`)].filter(Boolean).join(" · ")
     const nombre = `${prod.nombre}${modeloNombre ? ` ${modeloNombre}` : ""}`
     const sku    = catalogSku || buildSku(cat, mat, prod.nombre, modeloNombre)
+    // El catálogo ya dice el material (Oro 10k / Plata 925) — si el nombre coincide
+    // con un material real dado de alta, lo preselecciona para el costeo automático.
+    const matReal = materiales.find(m => m.nombre === mat)
     setForm(f => ({
       ...f, nombreProducto: nombre, descripcion: desc,
       categoriaJoya: cat, materialProducto: mat, talla: modeloNombre, sku,
+      materialInsumo: matReal?.documentId ?? f.materialInsumo,
     }))
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
     const fotoUrl = prod.fotoUrl
@@ -753,12 +757,96 @@ export function InventarioEmpresaView() {
                     </div>
                   </div>
 
+                  {/* Peso / insumo real (individualización de piezas) */}
+                  <div>
+                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Peso e insumo (costeo automático)</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
+                        <select title="Material real" value={form.materialInsumo}
+                          onChange={e => recalcularCosto({ materialInsumo: e.target.value })}
+                          className={inp+" cursor-pointer"}>
+                          <option value="">Sin especificar</option>
+                          {materiales.map(m => <option key={m.documentId} value={m.documentId}>{m.nombre} {m.precioReferenciaGramo ? `· $${m.precioReferenciaGramo}/g` : ""}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Peso (g)</label>
+                        <input type="number" min="0" step="0.01" placeholder="0.00" value={form.pesoGramos}
+                          onChange={e => recalcularCosto({ pesoGramos: e.target.value })} className={inp}/>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Mano de obra ($)</label>
+                        <input type="number" min="0" step="0.01" placeholder="0.00" value={form.costoManoObra}
+                          onChange={e => recalcularCosto({ costoManoObra: e.target.value })} className={inp}/>
+                      </div>
+                    </div>
+                    {costeoAutomatico && (
+                      <p className="text-[11px] text-emerald-500 mt-2">
+                        Costo calculado solo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
+                        {Number(form.costoManoObra) > 0 ? ` + $${form.costoManoObra} mano de obra` : ""} = ${form.costoProduccion}
+                        {Number(form.stock) > 1 ? ` · se descontarán ${(Number(form.pesoGramos) * Number(form.stock)).toFixed(2)}g en total (${form.stock} piezas)` : ""}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Atributos de joya */}
+                  {form.categoriaJoya && (() => {
+                    const rel = atributosRelevantes(form.categoriaJoya)
+                    return (
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos de joya</p>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Kilates / Ley</label>
+                            <input type="text" placeholder="10k, 925…" value={form.kilates}
+                              onChange={e => setForm(f => ({...f, kilates:e.target.value}))} className={inp}/>
+                          </div>
+                          {rel.largo && (
+                            <div>
+                              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Largo (cm)</label>
+                              <input type="number" min="0" step="0.5" placeholder="0" value={form.largoCm}
+                                onChange={e => setForm(f => ({...f, largoCm:e.target.value}))} className={inp}/>
+                            </div>
+                          )}
+                          {rel.cierre && (
+                            <div>
+                              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cierre</label>
+                              <input type="text" placeholder="Mariposa, presión…" value={form.cierre}
+                                onChange={e => setForm(f => ({...f, cierre:e.target.value}))} className={inp}/>
+                            </div>
+                          )}
+                          {rel.piedra && (
+                            <>
+                              <div className="flex items-center gap-2 pt-6">
+                                <input type="checkbox" id="con-piedra-cat" checked={form.conPiedra}
+                                  onChange={e => setForm(f => ({...f, conPiedra:e.target.checked}))}
+                                  className="h-4 w-4 rounded border-slate-600 bg-slate-800"/>
+                                <label htmlFor="con-piedra-cat" className="text-sm text-slate-300">Con piedra</label>
+                              </div>
+                              {form.conPiedra && (
+                                <div className="col-span-2">
+                                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo de piedra</label>
+                                  <input type="text" placeholder="Circonia, zafiro, perla…" value={form.tipoPiedra}
+                                    onChange={e => setForm(f => ({...f, tipoPiedra:e.target.value}))} className={inp}/>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
                   {/* Precios y stock */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Costo ($)</label>
-                      <input type="number" placeholder="0" value={form.costoProduccion}
-                        onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))} className={inp}/>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
+                        Costo ($) {costeoAutomatico && <span className="text-emerald-500 normal-case">· automático</span>}
+                      </label>
+                      <input type="number" placeholder="0" value={form.costoProduccion} readOnly={costeoAutomatico}
+                        onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))}
+                        className={inp+(costeoAutomatico?" opacity-70 cursor-not-allowed":"")}/>
                     </div>
                     <div>
                       <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Precio venta ($)</label>
