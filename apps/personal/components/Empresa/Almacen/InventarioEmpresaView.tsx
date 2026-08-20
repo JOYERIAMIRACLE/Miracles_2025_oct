@@ -111,6 +111,33 @@ export function InventarioEmpresaView() {
     sku: string; nombre: string; categoria: string; material: string; notas: string
     descripcion: string; fotoUrl: string; fotoId: number | null
   } | null>(null)
+  const [precioAuto,   setPrecioAuto]   = useState(true)
+  // Cascada Material → Categoría → Producto → Talla/Tamaño (alta desde catálogo)
+  const [cascMaterial,  setCascMaterial]  = useState("")
+  const [cascCategoria, setCascCategoria] = useState("")
+  const [cascProducto,  setCascProducto]  = useState("")
+  const [cascModelo,    setCascModelo]    = useState("")
+  const matNode  = catalogo.find(m => m.id === cascMaterial) ?? null
+  const catNode  = matNode?.children.find(c => c.id === cascCategoria) ?? null
+  const prodNode = catNode?.children.find(p => p.id === cascProducto) ?? null
+
+  function resetCascada() {
+    setCascMaterial(""); setCascCategoria(""); setCascProducto(""); setCascModelo("")
+  }
+  function handleCascProducto(id: string) {
+    setCascProducto(id); setCascModelo("")
+    const prod = catNode?.children.find(p => p.id === id)
+    if (matNode && catNode && prod && prod.modelos.length === 0) {
+      applyFromCatalogo(matNode.nombre, catNode.nombre, prod, "", prod.sku)
+    }
+  }
+  function handleCascModelo(modeloId: string) {
+    setCascModelo(modeloId)
+    const modelo = prodNode?.modelos.find(mo => mo.id === modeloId)
+    if (matNode && catNode && prodNode && modelo) {
+      applyFromCatalogo(matNode.nombre, catNode.nombre, prodNode, modelo.nombre, modelo.sku)
+    }
+  }
 
   const filtrados = useMemo(() => items.filter(it => {
     const matchSearch = !search || it.nombreProducto.toLowerCase().includes(search.toLowerCase()) || (it.sku ?? "").toLowerCase().includes(search.toLowerCase())
@@ -133,9 +160,9 @@ export function InventarioEmpresaView() {
   }
 
   function openNuevo() {
-    setEditing(null); setForm(emptyForm()); setSkuAuto(true)
+    setEditing(null); setForm(emptyForm()); setSkuAuto(true); setPrecioAuto(true)
     setFotoPreview(null); setFotoFile(null)
-    setCatalogCard(null); setCatSearch("")
+    setCatalogCard(null); setCatSearch(""); resetCascada()
     setModalOpen(true); openModal()
   }
 
@@ -175,7 +202,7 @@ export function InventarioEmpresaView() {
   }
 
   function openEditar(it: ProductType) {
-    openModal(); setEditing(it); setSkuAuto(true)
+    openModal(); setEditing(it); setSkuAuto(true); setPrecioAuto(false)
     setFotoPreview(it.imagenes?.[0] ? imgUrl(it.imagenes[0].url) : null)
     setFotoFile(null)
     const cat = it.categoriaJoya ?? ""
@@ -209,8 +236,12 @@ export function InventarioEmpresaView() {
       const merged = { ...f, ...next }
       const mat = materiales.find(m => m.documentId === merged.materialInsumo)
       if (mat?.precioReferenciaGramo && merged.pesoGramos) {
-        const costo = Number(merged.pesoGramos) * mat.precioReferenciaGramo + (Number(merged.costoManoObra) || 0)
-        return { ...merged, costoProduccion: String(Math.round(costo * 100) / 100) }
+        const costoCalc = Math.round(Number(merged.pesoGramos) * mat.precioReferenciaGramo * 100) / 100 + (Number(merged.costoManoObra) || 0)
+        const costoRedondeado = Math.round(costoCalc * 100) / 100
+        // Precio de venta = costo × (1 + margen objetivo) — mismo margen global que "Aplicar margen a todos".
+        // Se recalcula solo si el usuario no lo tocó a mano (precioAuto).
+        const costo = precioAuto ? String(Math.round(costoRedondeado * (1 + globalMargen / 100) * 100) / 100) : merged.costo
+        return { ...merged, costoProduccion: String(costoRedondeado), costo }
       }
       return merged
     })
@@ -645,7 +676,7 @@ export function InventarioEmpresaView() {
             {!editing && !catalogCard && (
               <>
                 <div className="px-5 pt-4 pb-2 shrink-0">
-                  <p className="text-xs text-slate-500 mb-3">Selecciona el producto del catálogo para continuar</p>
+                  <p className="text-xs text-slate-500 mb-3">Elige por categoría o busca directo</p>
                   <div className="relative">
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"/>
                     <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catSearch}
@@ -653,60 +684,106 @@ export function InventarioEmpresaView() {
                       className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/40"/>
                   </div>
                 </div>
-                <div className="overflow-y-auto flex-1 px-3 pb-3 space-y-3">
-                  {catalogo.length === 0 && (
-                    <div className="py-8 text-center">
-                      <Loader2 size={20} className="mx-auto mb-2 text-slate-700 animate-spin"/>
-                      <p className="text-xs text-slate-600">Cargando catálogo…</p>
-                    </div>
-                  )}
-                  {catalogo.map(mat => mat.children.map(cat => {
-                    const prods = cat.children.filter(p =>
-                      !catSearch ||
-                      p.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
-                      p.sku.toLowerCase().includes(catSearch.toLowerCase()) ||
-                      cat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
-                      mat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
-                      p.modelos.some(m => m.sku.toLowerCase().includes(catSearch.toLowerCase()))
-                    )
-                    if (!prods.length) return null
-                    return (
-                      <div key={`${mat.id}-${cat.id}`}>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-1 mb-1">
-                          {mat.nombre} › {cat.nombre}
-                        </p>
-                        <div className="bg-slate-800/40 rounded-xl border border-slate-800 divide-y divide-slate-800 overflow-hidden">
-                          {prods.map(prod =>
-                            prod.modelos.length > 0
-                              ? prod.modelos.map(mod => (
-                                  <button key={mod.id} type="button"
-                                    onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
+
+                {catSearch ? (
+                  <div className="overflow-y-auto flex-1 px-3 pb-3 space-y-3">
+                    {catalogo.map(mat => mat.children.map(cat => {
+                      const prods = cat.children.filter(p =>
+                        p.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                        p.sku.toLowerCase().includes(catSearch.toLowerCase()) ||
+                        cat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                        mat.nombre.toLowerCase().includes(catSearch.toLowerCase()) ||
+                        p.modelos.some(m => m.sku.toLowerCase().includes(catSearch.toLowerCase()))
+                      )
+                      if (!prods.length) return null
+                      return (
+                        <div key={`${mat.id}-${cat.id}`}>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-1 mb-1">
+                            {mat.nombre} › {cat.nombre}
+                          </p>
+                          <div className="bg-slate-800/40 rounded-xl border border-slate-800 divide-y divide-slate-800 overflow-hidden">
+                            {prods.map(prod =>
+                              prod.modelos.length > 0
+                                ? prod.modelos.map(mod => (
+                                    <button key={mod.id} type="button"
+                                      onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, mod.nombre, mod.sku || prod.sku)}
+                                      className="w-full text-left flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700/50 transition-colors group">
+                                      <div className="flex-1 min-w-0">
+                                        <span className="text-sm text-slate-200">{prod.nombre}</span>
+                                        {mod.nombre && <span className="text-slate-500 text-xs ml-1.5">{mod.nombre}</span>}
+                                      </div>
+                                      <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">
+                                        {mod.sku || prod.sku}
+                                      </span>
+                                      <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
+                                    </button>
+                                  ))
+                                : (
+                                  <button key={prod.id} type="button"
+                                    onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "", prod.sku)}
                                     className="w-full text-left flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700/50 transition-colors group">
-                                    <div className="flex-1 min-w-0">
-                                      <span className="text-sm text-slate-200">{prod.nombre}</span>
-                                      {mod.nombre && <span className="text-slate-500 text-xs ml-1.5">{mod.nombre}</span>}
-                                    </div>
-                                    <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">
-                                      {mod.sku || prod.sku}
-                                    </span>
+                                    <span className="flex-1 text-sm text-slate-200">{prod.nombre}</span>
+                                    <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">{prod.sku}</span>
                                     <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
                                   </button>
-                                ))
-                              : (
-                                <button key={prod.id} type="button"
-                                  onClick={() => applyFromCatalogo(mat.nombre, cat.nombre, prod, "", prod.sku)}
-                                  className="w-full text-left flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700/50 transition-colors group">
-                                  <span className="flex-1 text-sm text-slate-200">{prod.nombre}</span>
-                                  <span className="font-mono text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-0.5 shrink-0">{prod.sku}</span>
-                                  <Plus size={13} className="text-slate-700 group-hover:text-emerald-400 transition-colors shrink-0"/>
-                                </button>
-                              )
-                          )}
+                                )
+                            )}
+                          </div>
                         </div>
+                      )
+                    }))}
+                  </div>
+                ) : catalogo.length === 0 ? (
+                  <div className="py-8 text-center flex-1">
+                    <Loader2 size={20} className="mx-auto mb-2 text-slate-700 animate-spin"/>
+                    <p className="text-xs text-slate-600">Cargando catálogo…</p>
+                  </div>
+                ) : (
+                  /* Cascada Material → Categoría → Producto → Talla/Tamaño */
+                  <div className="overflow-y-auto flex-1 px-5 pb-4 space-y-3">
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
+                      <select title="Material" value={cascMaterial}
+                        onChange={e => { setCascMaterial(e.target.value); setCascCategoria(""); setCascProducto(""); setCascModelo("") }}
+                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                        <option value="">Selecciona material…</option>
+                        {catalogo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                      </select>
+                    </div>
+                    {matNode && (
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
+                        <select title="Categoría" value={cascCategoria}
+                          onChange={e => { setCascCategoria(e.target.value); setCascProducto(""); setCascModelo("") }}
+                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                          <option value="">Selecciona categoría…</option>
+                          {matNode.children.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                        </select>
                       </div>
-                    )
-                  }))}
-                </div>
+                    )}
+                    {catNode && (
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo / Producto</label>
+                        <select title="Tipo de producto" value={cascProducto} onChange={e => handleCascProducto(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                          <option value="">Selecciona tipo…</option>
+                          {catNode.children.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                        </select>
+                      </div>
+                    )}
+                    {prodNode && prodNode.modelos.length > 0 && (
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Talla / Tamaño</label>
+                        <select title="Talla o tamaño" value={cascModelo} onChange={e => handleCascModelo(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-amber-500/40 cursor-pointer">
+                          <option value="">Selecciona talla…</option>
+                          {prodNode.modelos.map(mo => <option key={mo.id} value={mo.id}>{mo.nombre}</option>)}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="px-5 py-3 border-t border-slate-800 shrink-0 text-center">
                   <button type="button" onClick={() => setModalOpen(false)} className="text-xs text-slate-600 hover:text-slate-400 transition">Cancelar</button>
                 </div>
@@ -725,7 +802,7 @@ export function InventarioEmpresaView() {
                       <p className="text-[11px] text-slate-500 mt-0.5">{catalogCard.material} · {catalogCard.categoria}</p>
                       <p className="font-mono text-[11px] text-amber-400 mt-1">{catalogCard.sku}</p>
                     </div>
-                    <button type="button" onClick={() => setCatalogCard(null)}
+                    <button type="button" onClick={() => { setCatalogCard(null); resetCascada() }}
                       className="text-[10px] text-slate-600 hover:text-amber-400 border border-slate-700 rounded-lg px-2.5 py-1 transition shrink-0">
                       Cambiar
                     </button>
@@ -783,8 +860,9 @@ export function InventarioEmpresaView() {
                     </div>
                     {costeoAutomatico && (
                       <p className="text-[11px] text-emerald-500 mt-2">
-                        Costo calculado solo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
+                        Costo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
                         {Number(form.costoManoObra) > 0 ? ` + $${form.costoManoObra} mano de obra` : ""} = ${form.costoProduccion}
+                        {precioAuto ? ` · precio venta sugerido $${form.costo} (margen ${globalMargen}%)` : ""}
                         {Number(form.stock) > 1 ? ` · se descontarán ${(Number(form.pesoGramos) * Number(form.stock)).toFixed(2)}g en total (${form.stock} piezas)` : ""}
                       </p>
                     )}
@@ -838,20 +916,14 @@ export function InventarioEmpresaView() {
                     )
                   })()}
 
-                  {/* Precios y stock */}
-                  <div className="grid grid-cols-3 gap-3">
+                  {/* Precio y stock — el costo no se muestra aquí, es automático (ver "Peso e insumo") */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
-                        Costo ($) {costeoAutomatico && <span className="text-emerald-500 normal-case">· automático</span>}
+                        Precio venta ($) {precioAuto && costeoAutomatico && <span className="text-emerald-500 normal-case">· automático (margen {globalMargen}%)</span>}
                       </label>
-                      <input type="number" placeholder="0" value={form.costoProduccion} readOnly={costeoAutomatico}
-                        onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))}
-                        className={inp+(costeoAutomatico?" opacity-70 cursor-not-allowed":"")}/>
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Precio venta ($)</label>
                       <input type="number" placeholder="0" value={form.costo}
-                        onChange={e => setForm(f => ({...f, costo:e.target.value}))} className={inp}/>
+                        onChange={e => { setPrecioAuto(false); setForm(f => ({...f, costo:e.target.value})) }} className={inp}/>
                     </div>
                     <div>
                       <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Stock inicial</label>
@@ -859,13 +931,6 @@ export function InventarioEmpresaView() {
                         onChange={e => setForm(f => ({...f, stock:e.target.value}))} className={inp}/>
                     </div>
                   </div>
-                  {form.costoProduccion && form.costo && (
-                    <p className="text-[11px] text-slate-500">
-                      Margen: <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=40?"text-emerald-400":"text-amber-400"}`}>
-                        {margen(Number(form.costoProduccion),Number(form.costo))??0}%
-                      </span>
-                    </p>
-                  )}
 
                   {/* Descripción */}
                   <div>
