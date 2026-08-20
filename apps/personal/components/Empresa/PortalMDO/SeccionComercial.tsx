@@ -1,6 +1,6 @@
 "use client"
 
-import { Users, UserSearch, FileText, ShoppingBag, History, BarChart3, UserCheck } from "lucide-react"
+import { Users, UserSearch, FileText, ShoppingBag, UserCheck } from "lucide-react"
 import { useSectionTab, TabBar, SeccionHero, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
@@ -8,16 +8,12 @@ import { ClientesView } from "@/components/Empresa/Ventas/ClientesView"
 import { LeadsView } from "@/components/Empresa/Ventas/LeadsView"
 import { CotizacionesView } from "@/components/Empresa/Ventas/CotizacionesView"
 import { PedidosView } from "@/components/Empresa/Ventas/PedidosView"
-import { HistorialPipelineView } from "@/components/Empresa/Ventas/HistorialPipelineView"
-import { OperativosView } from "@/components/Empresa/Indicadores/OperativosView"
 
 const TABS = [
   { id: "pipeline",     label: "Pipeline (CRM)", icon: Users },
   { id: "leads",        label: "Leads",          icon: UserSearch },
   { id: "cotizaciones", label: "Cotizaciones",   icon: FileText },
   { id: "pedidos",      label: "Pedidos",        icon: ShoppingBag },
-  { id: "historial",    label: "Historial",      icon: History },
-  { id: "metricas",     label: "Métricas",       icon: BarChart3 },
   { id: "clientes",     label: "Clientes",       icon: UserCheck },
 ]
 
@@ -51,8 +47,6 @@ export function SeccionComercial() {
       {tab === "leads"        && <LeadsView />}
       {tab === "cotizaciones" && <CotizacionesView />}
       {tab === "pedidos"      && <PedidosView />}
-      {tab === "historial"    && <HistorialPipelineView />}
-      {tab === "metricas"     && <OperativosView />}
       {tab === "clientes"     && <ClientesView />}
     </div>
   )
