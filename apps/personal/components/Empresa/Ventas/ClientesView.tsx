@@ -9,6 +9,7 @@ import {
 } from "@/types/clienteEmpresa"
 import { useClientesPipeline } from "./useClientesPipeline"
 import { ClientePanel, ClienteModal, NuevoPedidoGateModal, numDisplay, emptyCliente, fmtMoney } from "./PipelineView"
+import { ListToolbar } from "./ListToolbar"
 
 export function ClientesView() {
   const {
@@ -135,43 +136,20 @@ export function ClientesView() {
         </button>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Total",      value: stats.total,     color: "text-slate-200" },
-          { label: "Leads",      value: stats.leads,      color: "text-slate-400" },
-          { label: "En proceso", value: stats.enProceso,  color: "text-violet-400" },
-          { label: "Entregado",  value: stats.entrega,    color: "text-violet-400" },
-        ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
-            <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Búsqueda + Filtro */}
-      <div className="flex flex-wrap items-center gap-3">
-        <input type="text" placeholder="Buscar por nombre, teléfono o correo…"
-          value={search} onChange={e => setSearch(e.target.value)}
-          className="h-9 min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button type="button" onClick={() => setFiltroEtapa("todos")}
-            className={`h-7 px-3 text-xs rounded-full border transition-all font-medium ${
-              filtroEtapa === "todos" ? "bg-violet-500/15 border-violet-500/30 text-violet-300" : "border-slate-700 text-slate-500 hover:text-slate-300"
-            }`}>
-            Todos
-          </button>
-          {FUNNEL_ALL.map(e => (
-            <button key={e} type="button" onClick={() => setFiltroEtapa(prev => prev === e ? "todos" : e)}
-              className={`h-7 px-3 text-xs rounded-full border transition-all font-medium ${
-                filtroEtapa === e ? FUNNEL_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"
-              }`}>
-              {FUNNEL_LABEL[e]}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ListToolbar
+        search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nombre, teléfono o correo…"
+        filtros={[
+          { value: "todos", label: "Todos" },
+          ...FUNNEL_ALL.map(e => ({ value: e as string, label: FUNNEL_LABEL[e] })),
+        ]}
+        filtroActivo={filtroEtapa} filtroDefault="todos" onFiltroChange={v => setFiltroEtapa(v as FunnelEtapa | "todos")}
+        metricas={[
+          { label: "Total",      value: stats.total },
+          { label: "Leads",      value: stats.leads },
+          { label: "En proceso", value: stats.enProceso, colorClass: "text-violet-400" },
+          { label: "Entregado",  value: stats.entrega,   colorClass: "text-violet-400" },
+        ]}
+      />
 
       {/* Tabla */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">

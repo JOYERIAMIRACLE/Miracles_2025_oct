@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { History, ChevronLeft, ChevronRight, User, TrendingUp } from "lucide-react"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
 import { ClienteEmpresa, FUNNEL_COLOR, FUNNEL_LABEL, FunnelEtapa } from "@/types/clienteEmpresa"
+import { ListToolbar } from "./ListToolbar"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -344,30 +345,17 @@ export function HistorialPipelineView() {
         </div>
       </div>
 
-      {/* Buscador + filtros de etapa */}
+      {/* Buscador + filtro de etapa */}
       <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="text"
-          placeholder="Buscar contacto…"
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-          className="flex-1 min-w-[180px] h-9 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
-        />
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button type="button" onClick={() => setEtapaFiltro("todos")}
-            className={`h-7 px-3 text-xs rounded-full border font-medium transition-all ${
-              etapaFiltro === "todos" ? "bg-slate-700 text-slate-100 border-slate-600" : "border-slate-700 text-slate-500 hover:text-slate-300"
-            }`}>
-            Todos
-          </button>
-          {ETAPAS.map(e => (
-            <button key={e} type="button" onClick={() => setEtapaFiltro(prev => prev === e ? "todos" : e)}
-              className={`h-7 px-3 text-xs rounded-full border font-medium transition-all ${
-                etapaFiltro === e ? FUNNEL_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"
-              }`}>
-              {FUNNEL_LABEL[e]}
-            </button>
-          ))}
+        <div className="flex-1 min-w-[200px]">
+          <ListToolbar
+            search={busqueda} onSearchChange={setBusqueda} searchPlaceholder="Buscar contacto…"
+            filtros={[
+              { value: "todos", label: "Todos" },
+              ...ETAPAS.map(e => ({ value: e as string, label: FUNNEL_LABEL[e] })),
+            ]}
+            filtroActivo={etapaFiltro} filtroDefault="todos" onFiltroChange={v => setEtapaFiltro(v as FunnelEtapa | "todos")}
+          />
         </div>
         {mesFiltro !== null && (
           <span className="text-[11px] text-violet-400 border border-violet-500/30 rounded-full px-2.5 py-0.5 bg-violet-500/10">

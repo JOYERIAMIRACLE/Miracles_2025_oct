@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { ClienteEmpresa, ClientePayload } from "@/types/clienteEmpresa"
 import { useClientesPipeline } from "./useClientesPipeline"
 import { ClientePanel, ClienteModal, NuevoPedidoGateModal, CanalIcon, fmtDt, numDisplay, emptyCliente } from "./PipelineView"
+import { ListToolbar } from "./ListToolbar"
 
 export function LeadsView() {
   const {
@@ -21,15 +22,24 @@ export function LeadsView() {
   const [guardando,    setGuardando]    = useState(false)
   const [selectedLead, setSelectedLead] = useState<ClienteEmpresa | null>(null)
   const [filtro,       setFiltro]       = useState<"todos" | "calificado" | "sin_calificar">("todos")
+  const [search,        setSearch]      = useState("")
 
   const leads = useMemo(() => {
-    const all = clientes
+    let all = clientes
       .filter(c => (c.Funnel ?? "Lead") === "Lead")
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    if (filtro === "calificado")    return all.filter(c => c.calificado)
-    if (filtro === "sin_calificar") return all.filter(c => !c.calificado)
+    if (filtro === "calificado")    all = all.filter(c => c.calificado)
+    if (filtro === "sin_calificar") all = all.filter(c => !c.calificado)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      all = all.filter(c =>
+        c.nombre.toLowerCase().includes(q) ||
+        (c.telefono ?? "").includes(q) ||
+        (c.canalContacto ?? "").toLowerCase().includes(q)
+      )
+    }
     return all
-  }, [clientes, filtro])
+  }, [clientes, filtro, search])
 
   const numMap = useMemo(() => {
     const all = clientes
@@ -116,36 +126,20 @@ export function LeadsView() {
         </button>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">Total leads</p>
-          <p className="text-xl font-bold text-slate-200">{stats.total}</p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">Calificados</p>
-          <p className="text-xl font-bold text-violet-400">{stats.calificados}</p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">Sin calificar</p>
-          <p className="text-xl font-bold text-slate-500">{stats.total - stats.calificados}</p>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="flex items-center gap-1.5">
-        {(["todos", "calificado", "sin_calificar"] as const).map(f => (
-          <button key={f} type="button"
-            onClick={() => setFiltro(f)}
-            className={`h-7 px-3 text-xs rounded-full border transition-all font-medium ${
-              filtro === f
-                ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
-                : "border-slate-700 text-slate-500 hover:text-slate-300"
-            }`}>
-            {f === "todos" ? "Todos" : f === "calificado" ? "Calificados" : "Sin calificar"}
-          </button>
-        ))}
-      </div>
+      <ListToolbar
+        search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por nombre, teléfono o canal…"
+        filtros={[
+          { value: "todos", label: "Todos" },
+          { value: "calificado", label: "Calificados" },
+          { value: "sin_calificar", label: "Sin calificar" },
+        ]}
+        filtroActivo={filtro} filtroDefault="todos" onFiltroChange={setFiltro}
+        metricas={[
+          { label: "Total leads", value: stats.total },
+          { label: "Calificados", value: stats.calificados, colorClass: "text-violet-400" },
+          { label: "Sin calificar", value: stats.total - stats.calificados },
+        ]}
+      />
 
       {/* Grid de leads */}
       {loading ? (

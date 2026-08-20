@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import {
-  FileText, Search, X, Check, ArrowRight, Loader2,
+  FileText, X, Check, ArrowRight, Loader2,
   User, Pencil, Trash2, Plus,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -16,6 +16,7 @@ import {
 } from "@/types/cotizacion"
 import { ClienteEmpresa } from "@/types/clienteEmpresa"
 import { CotizacionModal } from "./CotizacionModal"
+import { ListToolbar } from "./ListToolbar"
 
 const fmt = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
 
@@ -243,46 +244,20 @@ export function CotizacionesView() {
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Total",     value: stats.total,    color: "text-slate-200" },
-          { label: "Enviadas",  value: stats.enviada,  color: "text-violet-400" },
-          { label: "Aceptadas", value: stats.aceptada, color: "text-violet-400" },
-          { label: "Rechazadas", value: stats.rechazada, color: "text-red-400" },
-        ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
-            <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-          <input type="text" placeholder="Buscar por número o cliente…"
-            value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
-        </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button type="button" onClick={() => setFiltroEstado("")}
-            className={`h-7 px-3 rounded-full text-xs font-medium border transition-all ${
-              !filtroEstado ? "bg-slate-700 text-slate-100 border-slate-600" : "border-slate-700 text-slate-500 hover:text-slate-300"
-            }`}>
-            Todas
-          </button>
-          {ESTADOS_COT.map(e => (
-            <button key={e} type="button" onClick={() => setFiltroEstado(prev => prev === e ? "" : e)}
-              className={`h-7 px-3 rounded-full text-xs font-medium border transition-all ${
-                filtroEstado === e ? ESTADO_COT_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"
-              }`}>
-              {e}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ListToolbar
+        search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por número o cliente…"
+        filtros={[
+          { value: "", label: "Todas" },
+          ...ESTADOS_COT.map(e => ({ value: e as string, label: e })),
+        ]}
+        filtroActivo={filtroEstado} filtroDefault="" onFiltroChange={v => setFiltroEstado(v as EstadoCotizacion | "")}
+        metricas={[
+          { label: "Total",      value: stats.total },
+          { label: "Enviadas",   value: stats.enviada,   colorClass: "text-violet-400" },
+          { label: "Aceptadas",  value: stats.aceptada,  colorClass: "text-violet-400" },
+          { label: "Rechazadas", value: stats.rechazada, colorClass: "text-red-400" },
+        ]}
+      />
 
       {/* Tabla */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Search, Plus, X, Loader2, Package, Pencil, Trash2, Lock } from "lucide-react"
+import { Plus, X, Loader2, Package, Pencil, Trash2, Lock } from "lucide-react"
 import { toast } from "sonner"
 import { useGetVentas, createVenta, updateVenta, deleteVenta } from "@/api/ventaEmpresa/getVentas"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
@@ -9,6 +9,7 @@ import { useGetCentrosVenta } from "@/api/centro-venta/getCentrosVenta"
 import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
 import { createVentaLinea, updateVentaLinea, deleteVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
 import { ProductoSearch } from "./ProductoSearch"
+import { ListToolbar } from "./ListToolbar"
 import {
   VentaEmpresa, VentaPayload,
   ESTADOS_VENTA, EstadoVenta, ESTADO_VENTA_COLOR,
@@ -243,51 +244,26 @@ export function PedidosView() {
   return (
     <div className="p-4 md:p-6 space-y-5">
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Total pedidos",  value: totales.total,                 color: "text-slate-200" },
-          { label: "En proceso",     value: totales.activos,               color: "text-violet-400" },
-          { label: "Monto activo",   value: fmt(totales.montoActivos),     color: "text-violet-400" },
-          { label: "Entregados",     value: totales.entregados,            color: "text-violet-400" },
-        ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
-            <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
-      </div>
-
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-          <input
-            type="text" placeholder="Buscar por concepto o cliente…"
-            value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+        <div className="flex-1 min-w-[240px]">
+          <ListToolbar
+            search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por concepto o cliente…"
+            filtros={[
+              { value: "", label: "Todos" },
+              ...ESTADOS_VENTA.map(e => ({ value: e as string, label: e })),
+            ]}
+            filtroActivo={filtroEst} filtroDefault="" onFiltroChange={v => setFiltroEst(v as EstadoVenta | "")}
+            metricas={[
+              { label: "Total pedidos", value: totales.total },
+              { label: "En proceso",    value: totales.activos,               colorClass: "text-violet-400" },
+              { label: "Monto activo",  value: fmt(totales.montoActivos),     colorClass: "text-violet-400" },
+              { label: "Entregados",    value: totales.entregados,            colorClass: "text-violet-400" },
+            ]}
           />
         </div>
-
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button type="button" onClick={() => setFiltroEst("")}
-            className={`h-7 px-3 rounded-full text-xs font-medium border transition-all ${
-              !filtroEst ? "bg-slate-700 text-slate-100 border-slate-600" : "border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600"
-            }`}>
-            Todos
-          </button>
-          {ESTADOS_VENTA.map(e => (
-            <button type="button" key={e} onClick={() => setFiltroEst(prev => prev === e ? "" : e)}
-              className={`h-7 px-3 rounded-full text-xs font-medium border transition-all ${
-                filtroEst === e ? `${ESTADO_VENTA_COLOR[e]} shadow-sm` : "border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600"
-              }`}>
-              {e}
-            </button>
-          ))}
-        </div>
-
         <button type="button" onClick={openNuevo}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors ml-auto">
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors">
           <Plus size={15} /> Nuevo pedido
         </button>
       </div>
