@@ -17,6 +17,7 @@ const BUILDINGS = [
   { x: 820,  y: 140, w: 150, h: 95, icon: "🏬", label: "ALMACÉN MEDALLA",   id: "almacen-medallitadeoro",  r: 147, g: 51,  b: 234 },
   { x: 480,  y: 300, w: 150, h: 95, icon: "🪟", label: "APARADOR",          id: "aparador-medallitadeoro", r: 216, g: 180, b: 254 },
   { x: 820,  y: 300, w: 150, h: 95, icon: "🧩", label: "TALLER MEDALLA",    id: "taller-medallitadeoro",   r: 217, g: 70,  b: 239 },
+  { x: 480,  y: 470, w: 150, h: 95, icon: "🕸️", label: "ARQUITECTURA",      id: "arquitectura-medallitadeoro", r: 233, g: 213, b: 255 },
   { x: 1100, y: 300, w: 150, h: 95, icon: "🏢", label: "OFICINA SDI",       id: "oficina-sdi",             r: 129, g: 140, b: 248 },
   { x: 1100, y: 475, w: 150, h: 95, icon: "🏬", label: "ALMACÉN SDI",       id: "almacen-sdi",             r: 99,  g: 102, b: 241 },
   { x: 1100, y: 650, w: 150, h: 95, icon: "🧩", label: "TALLER SDI",        id: "taller-sdi",              r: 217, g: 70,  b: 239 },
@@ -25,7 +26,7 @@ const BUILDINGS = [
 /* Sectores — agrupan visualmente los edificios de cada mundo (x/y = esquina superior izquierda) */
 const SECTORS = [
   { x: 80,  y: 220, w: 240, h: 500, label: "RICHIAVROD",     r: 167, g: 139, b: 250 },
-  { x: 330, y: 70,  w: 640, h: 280, label: "MEDALLITADEORO", r: 192, g: 132, b: 252 },
+  { x: 330, y: 70,  w: 640, h: 520, label: "MEDALLITADEORO", r: 192, g: 132, b: 252 },
   { x: 980, y: 220, w: 240, h: 500, label: "SDI PORTAL",     r: 129, g: 140, b: 248 },
 ]
 

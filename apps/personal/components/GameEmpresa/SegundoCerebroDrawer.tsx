@@ -7,6 +7,7 @@ import { RichiavrodHub }              from "@/components/GameEmpresa/RichiavrodH
 import { SdiPortalOficinaHub }        from "@/components/GameEmpresa/SdiPortalOficinaHub"
 import { MedallitadeoroOficinaHub }   from "@/components/GameEmpresa/MedallitadeoroOficinaHub"
 import { AparadorMedallitadeoroPanel } from "@/components/GameEmpresa/AparadorMedallitadeoroPanel"
+import { ArquitecturaMedallitadeoroPanel } from "@/components/GameEmpresa/ArquitecturaMedallitadeoroPanel"
 import { AlmacenPanel } from "@/components/GameEmpresa/AlmacenPanel"
 import { TallerRichiavrodPanel }     from "@/components/GameEmpresa/TallerRichiavrodPanel"
 import { TallerMedallitadeoroPanel } from "@/components/GameEmpresa/TallerMedallitadeoroPanel"
@@ -23,6 +24,7 @@ const LABELS: Record<string, string> = {
   "almacen-medallitadeoro":  "🏬  Almacén — Medallitadeoro",
   "aparador-medallitadeoro": "🪟  Aparador — Medallitadeoro",
   "taller-medallitadeoro":   "🧩  Taller — Medallitadeoro",
+  "arquitectura-medallitadeoro": "🕸️  Arquitectura — Medallitadeoro",
   "oficina-sdi":             "🏢  Oficina — SDI Portal",
   "almacen-sdi":             "🏬  Almacén — SDI Portal",
   "taller-sdi":              "🧩  Taller — SDI Portal",
@@ -78,6 +80,9 @@ function Content({ module }: { module: string }) {
 
     case "taller-medallitadeoro":
       return <TallerMedallitadeoroPanel />
+
+    case "arquitectura-medallitadeoro":
+      return <ArquitecturaMedallitadeoroPanel />
 
     case "oficina-sdi":
       return <SdiPortalOficinaHub />
