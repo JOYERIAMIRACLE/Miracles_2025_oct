@@ -14,9 +14,8 @@ interface Props {
 }
 
 export interface SegundoCerebroGameHandle {
-  zoomIn:      () => void
-  zoomOut:     () => void
-  addIdentidad: (item: MapaIdentidadType) => void
+  zoomIn:  () => void
+  zoomOut: () => void
 }
 
 /* Mundo a 16:9 — llena pantallas anchas comunes sin dejar tanto margen vacío */
@@ -31,9 +30,8 @@ const MAX_ZOOM = 2.2
 const CLICK_THRESHOLD = 6 // px de pantalla — menos que esto = clic, más = arrastre
 
 type SceneBridge = {
-  setPaused:    (v: boolean) => void
-  zoomBy:       (factor: number) => void
-  addBuilding:  (item: MapaIdentidadType) => void
+  setPaused: (v: boolean) => void
+  zoomBy:    (factor: number) => void
 }
 
 export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
@@ -49,9 +47,8 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
     const [loadError,   setLoadError]   = useState("")
 
     useImperativeHandle(ref, () => ({
-      zoomIn:       () => sceneRef.current?.zoomBy(1.25),
-      zoomOut:      () => sceneRef.current?.zoomBy(1 / 1.25),
-      addIdentidad: item => sceneRef.current?.addBuilding(item),
+      zoomIn:  () => sceneRef.current?.zoomBy(1.25),
+      zoomOut: () => sceneRef.current?.zoomBy(1 / 1.25),
     }))
 
     useEffect(() => {
@@ -77,14 +74,6 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
 
         const activos = identidades.filter(i => i.activo !== false)
 
-        type BuildingEntry = {
-          container: Phaser.GameObjects.Container
-          data:      MapaIdentidadType
-          icon:      Phaser.GameObjects.Text
-          label:     Phaser.GameObjects.Text
-          hex:       number
-        }
-
         /* ── SCENE ── */
         class GameScene extends Phaser.Scene {
           player!:      Phaser.GameObjects.Rectangle
@@ -98,9 +87,10 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           prompt!:      Phaser.GameObjects.Text
           gamePaused = false
 
+          sectorGfx!: Phaser.GameObjects.Graphics
           pathsGfx!:  Phaser.GameObjects.Graphics
-          buildings: BuildingEntry[] = []
-          sectorContainers = new Map<Phaser.GameObjects.Container, { sector: string; members: BuildingEntry[] }>()
+          sectorLabels: Phaser.GameObjects.Text[] = []
+          buildings: Array<{ container: Phaser.GameObjects.Container; data: MapaIdentidadType; icon: Phaser.GameObjects.Text; label: Phaser.GameObjects.Text; hex: number }> = []
 
           isPanning = false
           dragMoved = false
@@ -154,8 +144,9 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
               dotGfx.fillCircle(dx, dy, 1)
             }
 
-            /* ── Capa dinámica de caminos (se redibuja cuando alguien mueve algo) ── */
-            this.pathsGfx = this.add.graphics()
+            /* ── Capas dinámicas (se redibujan cuando alguien mueve una caja) ── */
+            this.sectorGfx = this.add.graphics()
+            this.pathsGfx  = this.add.graphics()
             this.pathsGfx.setDepth(-1)
 
             /* ── Edificios (uno por identidad, cada uno arrastrable) ── */
@@ -202,11 +193,7 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             this.setupCameraControls()
             this.setupDragControls()
 
-            sceneRef.current = {
-              setPaused:   v => this.setPaused(v),
-              zoomBy:      f => this.zoomBy(f),
-              addBuilding: item => this.addBuildingLive(item),
-            }
+            sceneRef.current = { setPaused: v => this.setPaused(v), zoomBy: f => this.zoomBy(f) }
             this.setPaused(pausedRef.current)
           }
 
@@ -287,15 +274,14 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             return { container, data: item, icon: iconT, label: labelT, hex }
           }
 
-          /* Recalcula los contenedores de sector (arrastrables como grupo) + los
-             caminos a la plaza, a partir de las posiciones ACTUALES de cada
-             caja — se llama al cargar, al soltar un arrastre, y al agregar una
-             caja nueva. No se llama mientras un arrastre está en curso (eso
-             destruiría el objeto que Phaser está arrastrando). */
+          /* Recalcula y redibuja los contenedores de sector + los caminos a la
+             plaza, a partir de las posiciones ACTUALES de cada caja — se llama
+             al cargar y cada vez que alguien suelta un arrastre. */
           redrawDynamic() {
+            this.sectorGfx.clear()
             this.pathsGfx.clear()
-            this.sectorContainers.forEach((_info, container) => container.destroy())
-            this.sectorContainers.clear()
+            this.sectorLabels.forEach(t => t.destroy())
+            this.sectorLabels = []
 
             const cx = MAP_W / 2, cy = MAP_H / 2
             this.pathsGfx.lineStyle(10, 0x0f0a1a, 1)
@@ -303,7 +289,7 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
               this.pathsGfx.lineBetween(b.container.x, b.container.y, cx, cy)
             })
 
-            const bySector = new Map<string, BuildingEntry[]>()
+            const bySector = new Map<string, typeof this.buildings>()
             this.buildings.forEach(b => {
               const key = b.data.sector || "otros"
               if (!bySector.has(key)) bySector.set(key, [])
@@ -315,40 +301,20 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
               const right  = Math.max(...boxes.map(b => b.container.x + BOX_W / 2)) + SECTOR_PADDING
               const top    = Math.min(...boxes.map(b => b.container.y - BOX_H / 2)) - SECTOR_PADDING
               const bottom = Math.max(...boxes.map(b => b.container.y + BOX_H / 2)) + SECTOR_PADDING
-              const w = right - left, h = bottom - top
               const hex = boxes[0].hex
 
-              const sectorContainer = this.add.container(left, top)
-              sectorContainer.setDepth(-1) // detrás de los edificios, que se agregaron después
+              this.sectorGfx.fillStyle(hex, 0.035)
+              this.sectorGfx.fillRoundedRect(left, top, right - left, bottom - top, 20)
+              this.sectorGfx.lineStyle(1, hex, 0.22)
+              this.sectorGfx.strokeRoundedRect(left, top, right - left, bottom - top, 20)
 
-              const gfx = this.add.graphics()
-              gfx.fillStyle(hex, 0.035)
-              gfx.fillRoundedRect(0, 0, w, h, 20)
-              gfx.lineStyle(1, hex, 0.22)
-              gfx.strokeRoundedRect(0, 0, w, h, 20)
-              sectorContainer.add(gfx)
-
-              const label = this.add.text(w / 2, 18, sector.toUpperCase(), {
+              const label = this.add.text((left + right) / 2, top + 18, sector.toUpperCase(), {
                 fontFamily: "monospace", fontSize: "10px",
                 color: `#${hex.toString(16).padStart(6, "0")}`,
                 align: "center", letterSpacing: 3,
-              }).setOrigin(0.5).setAlpha(0.55)
-              sectorContainer.add(label)
-
-              /* Área arrastrable = todo el rectángulo del sector, en coordenadas
-                 locales (0,0)-(w,h) porque el contenedor no está centrado. */
-              sectorContainer.setInteractive(new Phaser.Geom.Rectangle(0, 0, w, h), Phaser.Geom.Rectangle.Contains)
-              this.input.setDraggable(sectorContainer)
-
-              this.sectorContainers.set(sectorContainer, { sector, members: boxes })
+              }).setOrigin(0.5).setAlpha(0.55).setDepth(-1)
+              this.sectorLabels.push(label)
             })
-          }
-
-          /* Agrega una identidad nueva en vivo (después de crearla desde el
-             formulario del "+") sin recargar la página. */
-          addBuildingLive(item: MapaIdentidadType) {
-            this.buildings.push(this.makeBuilding(item))
-            this.redrawDynamic()
           }
 
           /* Cámara libre: arrastrar sobre espacio vacío mueve la cámara; la
@@ -375,9 +341,8 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             cam.zoom = Phaser.Math.Clamp(cam.zoom * factor, MIN_ZOOM, MAX_ZOOM)
           }
 
-          /* Arrastrar una caja la mueve; arrastrar el fondo de un sector mueve
-             TODO el grupo junto. Si el movimiento fue mínimo, cuenta como
-             clic normal (entrar a la zona) en vez de arrastre. */
+          /* Arrastrar una caja la mueve; si el movimiento fue mínimo, cuenta
+             como clic normal (entrar a la zona) en vez de arrastre. */
           setupDragControls() {
             this.input.on("dragstart", (pointer: Phaser.Input.Pointer) => {
               this.dragMoved = false
@@ -386,51 +351,20 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
 
             this.input.on("drag", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
               const container = gameObject as Phaser.GameObjects.Container
-              const moved = Math.hypot(pointer.x - this.dragStartScreen.x, pointer.y - this.dragStartScreen.y)
-              if (moved > CLICK_THRESHOLD) this.dragMoved = true
-
-              const sectorInfo = this.sectorContainers.get(container)
-              if (sectorInfo) {
-                const deltaX = dragX - container.x
-                const deltaY = dragY - container.y
-                container.x = dragX
-                container.y = dragY
-                sectorInfo.members.forEach(b => {
-                  b.container.x += deltaX
-                  b.container.y += deltaY
-                })
-                const cx = MAP_W / 2, cy = MAP_H / 2
-                this.pathsGfx.clear()
-                this.pathsGfx.lineStyle(10, 0x0f0a1a, 1)
-                this.buildings.forEach(b => this.pathsGfx.lineBetween(b.container.x, b.container.y, cx, cy))
-                return
-              }
-
               container.x = dragX
               container.y = dragY
+              const moved = Math.hypot(pointer.x - this.dragStartScreen.x, pointer.y - this.dragStartScreen.y)
+              if (moved > CLICK_THRESHOLD) this.dragMoved = true
             })
 
             this.input.on("dragend", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
               const container = gameObject as Phaser.GameObjects.Container
-
-              const sectorInfo = this.sectorContainers.get(container)
-              if (sectorInfo) {
-                if (this.dragMoved) {
-                  const members = sectorInfo.members
-                  this.redrawDynamic()
-                  Promise.all(
-                    members.map(b => updateIdentidadPosicion(b.data.documentId, b.container.x, b.container.y))
-                  ).catch(err => console.error("No se pudieron guardar las posiciones del grupo:", err))
-                }
-                return
-              }
-
               const entry = this.buildings.find(b => b.container === container)
               if (!entry) return
 
               if (this.dragMoved) {
                 this.redrawDynamic()
-                updateIdentidadPosicion(entry.data.documentId, entry.container.x, entry.container.y).catch(err => {
+                updateIdentidadPosicion(entry.data.documentId, container.x, container.y).catch(err => {
                   console.error("No se pudo guardar la posición:", err)
                 })
               } else if (!entry.data.placeholder && entry.data.moduleId) {
@@ -494,7 +428,7 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
 
             this.playerGlow.setPosition(this.player.x, this.player.y)
 
-            let found: BuildingEntry | null = null
+            let found: typeof this.buildings[number] | null = null
             for (const b of this.buildings) {
               if (b.data.placeholder || !b.data.moduleId) continue
               const dx = Math.abs(this.player.x - b.container.x)
