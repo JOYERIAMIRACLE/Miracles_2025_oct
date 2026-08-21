@@ -1,0 +1,56 @@
+{
+  "kind": "collectionType",
+  "collectionName": "mapa_identidades",
+  "info": {
+    "singularName": "mapa-identidad",
+    "pluralName": "mapa-identidades",
+    "displayName": "Mapa Identidad"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre": {
+      "type": "string",
+      "required": true
+    },
+    "icono": {
+      "type": "string",
+      "required": true
+    },
+    "color": {
+      "type": "string",
+      "required": true
+    },
+    "sector": {
+      "type": "string",
+      "required": true
+    },
+    "x": {
+      "type": "integer",
+      "required": true
+    },
+    "y": {
+      "type": "integer",
+      "required": true
+    },
+    "moduleId": {
+      "type": "string"
+    },
+    "enlace": {
+      "type": "string"
+    },
+    "descripcion": {
+      "type": "text"
+    },
+    "placeholder": {
+      "type": "boolean",
+      "default": false
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}
