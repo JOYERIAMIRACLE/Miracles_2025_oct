@@ -206,16 +206,6 @@ const PUBLIC_ACTIONS_PORTAL_MDO = [
   'api::venta-linea.venta-linea.delete',
 ];
 
-// Mapa "Segundo Cerebro" (juego de exploración en /segundo-cerebro) — sin
-// login propio, así que solo necesita permisos de Public.
-const PUBLIC_ACTIONS_MAPA_IDENTIDAD = [
-  'api::mapa-identidad.mapa-identidad.find',
-  'api::mapa-identidad.mapa-identidad.findOne',
-  'api::mapa-identidad.mapa-identidad.create',
-  'api::mapa-identidad.mapa-identidad.update',
-  'api::mapa-identidad.mapa-identidad.delete',
-];
-
 const CATEGORIAS_PAGO_SEED = [
   'Comisión', 'Anticipo', 'Liquidación', 'Honorario', 'Servicio', 'Otro',
 ];
@@ -266,18 +256,6 @@ async function sembrarCategoriasPagoSiVacio(strapi) {
     await strapi.db.query('api::categoria-pago.categoria-pago').create({ data: { nombre } });
   }
   strapi.log.info(`[bootstrap] ${CATEGORIAS_PAGO_SEED.length} categorías de pago sembradas`);
-}
-
-async function sembrarMapaIdentidadesSiVacio(strapi) {
-  const count = await strapi.db.query('api::mapa-identidad.mapa-identidad').count({});
-  if (count > 0) {
-    strapi.log.info('[bootstrap] Identidades del mapa ya existen — skip seed');
-    return;
-  }
-  for (const id of MAPA_IDENTIDAD_SEED) {
-    await strapi.db.query('api::mapa-identidad.mapa-identidad').create({ data: id });
-  }
-  strapi.log.info(`[bootstrap] ${MAPA_IDENTIDAD_SEED.length} identidades del mapa sembradas`);
 }
 
 // Mapeo: enum viejo (lowercase, con/sin acentos, underscore) → nombre canónico de Categoria
@@ -335,24 +313,6 @@ const CATEGORIAS_SEED = [
   { nombre: 'Otro',              tipo: 'gasto',   grupo: 'prescindible', color: '#6b7280', orden: 99, activa: true },
 ];
 
-// Identidades del mapa "Segundo Cerebro" — solo se siembran si la tabla está
-// vacía (primer deploy con esta colección). Después de eso, todo se edita
-// arrastrando en el mapa o directo en el Admin de Strapi.
-const MAPA_IDENTIDAD_SEED = [
-  { nombre: 'OFICINA RICHI',     icono: '🏢', color: '#a78bfa', sector: 'richiavrod',     x: 220,  y: 220, moduleId: 'oficina-richiavrod' },
-  { nombre: 'ALMACÉN RICHI',     icono: '🏬', color: '#7c3ac6', sector: 'richiavrod',     x: 220,  y: 370, moduleId: 'almacen-richiavrod' },
-  { nombre: 'TALLER RICHI',      icono: '🧩', color: '#d946ef', sector: 'richiavrod',     x: 220,  y: 520, moduleId: 'taller-richiavrod' },
-  { nombre: 'OFICINA MEDALLA',   icono: '🏢', color: '#c084fc', sector: 'medallitadeoro', x: 640,  y: 220, moduleId: 'oficina-medallitadeoro' },
-  { nombre: 'ALMACÉN MEDALLA',   icono: '🏬', color: '#9333ea', sector: 'medallitadeoro', x: 960,  y: 220, moduleId: 'almacen-medallitadeoro' },
-  { nombre: 'APARADOR',          icono: '🪟', color: '#d8b4fe', sector: 'medallitadeoro', x: 640,  y: 370, moduleId: 'aparador-medallitadeoro' },
-  { nombre: 'TALLER MEDALLA',    icono: '🧩', color: '#d946ef', sector: 'medallitadeoro', x: 960,  y: 370, moduleId: 'taller-medallitadeoro' },
-  { nombre: 'ARQUITECTURA',      icono: '🕸️', color: '#e9d5ff', sector: 'medallitadeoro', x: 640,  y: 520, moduleId: 'arquitectura-medallitadeoro' },
-  { nombre: 'PRÓXIMAMENTE',      icono: '✨', color: '#5a5078', sector: 'medallitadeoro', x: 960,  y: 520, moduleId: '', placeholder: true },
-  { nombre: 'OFICINA SDI',       icono: '🏢', color: '#818cf8', sector: 'sdi-portal',     x: 1380, y: 220, moduleId: 'oficina-sdi' },
-  { nombre: 'ALMACÉN SDI',       icono: '🏬', color: '#6366f1', sector: 'sdi-portal',     x: 1380, y: 370, moduleId: 'almacen-sdi' },
-  { nombre: 'TALLER SDI',        icono: '🧩', color: '#d946ef', sector: 'sdi-portal',     x: 1380, y: 520, moduleId: 'taller-sdi' },
-];
-
 async function otorgarPermisos(strapi, roleType, actions) {
   const role = await strapi.db
     .query('plugin::users-permissions.role')
@@ -371,7 +331,7 @@ async function otorgarPermisos(strapi, roleType, actions) {
 }
 
 async function aplicarPermisosPublic(strapi) {
-  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO, ...PUBLIC_ACTIONS_MAPA_IDENTIDAD];
+  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO];
   await otorgarPermisos(strapi, 'public', todas);
   // El front de Portal Medallitadeoro manda el JWT del usuario logueado en
   // los guardados (crear/editar/eliminar) — esas peticiones las evalúa
@@ -512,6 +472,5 @@ module.exports = {
     await run('normalizarCategorias',       () => normalizarCategorias(strapi));
     await run('sembrarCategoriasPago',      () => sembrarCategoriasPagoSiVacio(strapi));
     await run('sembrarCategoriasEmpresa',   () => sembrarCategoriasEmpresaSiVacio(strapi));
-    await run('sembrarMapaIdentidades',     () => sembrarMapaIdentidadesSiVacio(strapi));
   },
 };

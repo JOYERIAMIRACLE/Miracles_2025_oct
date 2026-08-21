@@ -1,9 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react"
-import { getIdentidades } from "@/api/mapa-identidad/getIdentidades"
-import { updateIdentidadPosicion } from "@/api/mapa-identidad/updateIdentidadPosicion"
-import { MapaIdentidadType } from "@/types/mapa-identidad"
+import { useEffect, useRef } from "react"
 
 interface Props {
   onEnterZone: (module: string) => void
@@ -13,480 +10,421 @@ interface Props {
   paused?: boolean
 }
 
-export interface SegundoCerebroGameHandle {
-  zoomIn:  () => void
-  zoomOut: () => void
-}
-
 /* Mundo a 16:9 — llena pantallas anchas comunes sin dejar tanto margen vacío */
 const MAP_W = 1600
 const MAP_H = 900
 
+/* Ritmo de cuadrícula compartido por los 3 sectores — misma separación de filas
+   en todos lados, para que se sientan parte de un mismo sistema, no islas sueltas. */
 const BOX_W = 150
 const BOX_H = 95
+const ROW_PITCH = 150
 const SECTOR_PADDING = 44
-const MIN_ZOOM = 0.35
-const MAX_ZOOM = 2.2
-const CLICK_THRESHOLD = 6 // px de pantalla — menos que esto = clic, más = arrastre
 
-type SceneBridge = {
-  setPaused: (v: boolean) => void
-  zoomBy:    (factor: number) => void
+type Building = {
+  x: number; y: number
+  icon: string; label: string; id: string
+  sector: "richiavrod" | "medallitadeoro" | "sdi"
+  r: number; g: number; b: number
+  placeholder?: boolean
 }
 
-export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
-  function SegundoCerebroGame({ onEnterZone, paused = false }, ref) {
-    const containerRef = useRef<HTMLDivElement>(null)
-    const gameRef       = useRef<{ destroy: (r: boolean) => void } | null>(null)
-    const callbackRef   = useRef(onEnterZone)
-    callbackRef.current = onEnterZone
-    const pausedRef = useRef(paused)
-    pausedRef.current = paused
-    const sceneRef  = useRef<SceneBridge | null>(null)
-    const [dataLoading, setDataLoading] = useState(true)
-    const [loadError,   setLoadError]   = useState("")
+const ROWS_3 = [220, 370, 520] as const
 
-    useImperativeHandle(ref, () => ({
-      zoomIn:  () => sceneRef.current?.zoomBy(1.25),
-      zoomOut: () => sceneRef.current?.zoomBy(1 / 1.25),
-    }))
+const BUILDINGS: Building[] = [
+  // RICHIAVROD — columna izquierda, 1x3
+  { x: 220, y: ROWS_3[0], icon: "🏢", label: "OFICINA RICHI", id: "oficina-richiavrod", sector: "richiavrod", r: 167, g: 139, b: 250 },
+  { x: 220, y: ROWS_3[1], icon: "🏬", label: "ALMACÉN RICHI", id: "almacen-richiavrod", sector: "richiavrod", r: 124, g: 58,  b: 198 },
+  { x: 220, y: ROWS_3[2], icon: "🧩", label: "TALLER RICHI",  id: "taller-richiavrod",  sector: "richiavrod", r: 217, g: 70,  b: 239 },
 
-    useEffect(() => {
-      sceneRef.current?.setPaused(paused)
-    }, [paused])
+  // MEDALLITADEORO — centro, 2x3 (6 celdas, la última es un espacio reservado)
+  { x: 640, y: ROWS_3[0], icon: "🏢", label: "OFICINA MEDALLA",     id: "oficina-medallitadeoro",     sector: "medallitadeoro", r: 192, g: 132, b: 252 },
+  { x: 960, y: ROWS_3[0], icon: "🏬", label: "ALMACÉN MEDALLA",     id: "almacen-medallitadeoro",     sector: "medallitadeoro", r: 147, g: 51,  b: 234 },
+  { x: 640, y: ROWS_3[1], icon: "🪟", label: "APARADOR",            id: "aparador-medallitadeoro",    sector: "medallitadeoro", r: 216, g: 180, b: 254 },
+  { x: 960, y: ROWS_3[1], icon: "🧩", label: "TALLER MEDALLA",      id: "taller-medallitadeoro",      sector: "medallitadeoro", r: 217, g: 70,  b: 239 },
+  { x: 640, y: ROWS_3[2], icon: "🕸️", label: "ARQUITECTURA",        id: "arquitectura-medallitadeoro", sector: "medallitadeoro", r: 233, g: 213, b: 255 },
+  { x: 960, y: ROWS_3[2], icon: "✨", label: "PRÓXIMAMENTE",        id: "proximamente-medallitadeoro", sector: "medallitadeoro", r: 90,  g: 80,  b: 120, placeholder: true },
 
-    useEffect(() => {
-      if (!containerRef.current || gameRef.current) return
+  // SDI PORTAL — columna derecha, 1x3
+  { x: 1380, y: ROWS_3[0], icon: "🏢", label: "OFICINA SDI", id: "oficina-sdi", sector: "sdi", r: 129, g: 140, b: 248 },
+  { x: 1380, y: ROWS_3[1], icon: "🏬", label: "ALMACÉN SDI", id: "almacen-sdi", sector: "sdi", r: 99,  g: 102, b: 241 },
+  { x: 1380, y: ROWS_3[2], icon: "🧩", label: "TALLER SDI",  id: "taller-sdi",  sector: "sdi", r: 217, g: 70,  b: 239 },
+]
 
-      let game: { destroy: (r: boolean) => void } | null = null
-      let mounted = true
+const SECTOR_META: Record<Building["sector"], { label: string; r: number; g: number; b: number }> = {
+  richiavrod:     { label: "RICHIAVROD",     r: 167, g: 139, b: 250 },
+  medallitadeoro: { label: "MEDALLITADEORO", r: 192, g: 132, b: 252 },
+  sdi:            { label: "SDI PORTAL",     r: 129, g: 140, b: 248 },
+}
 
-      ;(async () => {
-        const [Phaser, identidades] = await Promise.all([
-          import("phaser").then(m => m.default),
-          getIdentidades().catch((err: any) => {
-            setLoadError(err?.message ?? "Error al cargar el mapa")
-            return [] as MapaIdentidadType[]
-          }),
-        ])
-        if (!mounted || !containerRef.current) return
-        setDataLoading(false)
+/* Los contenedores de sector se calculan a partir de las cajas que agrupan —
+   así nunca quedan paddings inconsistentes entre lados, como pasaba antes. */
+function computeSectors() {
+  const bySector = new Map<Building["sector"], Building[]>()
+  for (const b of BUILDINGS) {
+    if (!bySector.has(b.sector)) bySector.set(b.sector, [])
+    bySector.get(b.sector)!.push(b)
+  }
+  return Array.from(bySector.entries()).map(([sector, boxes]) => {
+    const left   = Math.min(...boxes.map(b => b.x - BOX_W / 2)) - SECTOR_PADDING
+    const right  = Math.max(...boxes.map(b => b.x + BOX_W / 2)) + SECTOR_PADDING
+    const top    = Math.min(...boxes.map(b => b.y - BOX_H / 2)) - SECTOR_PADDING
+    const bottom = Math.max(...boxes.map(b => b.y + BOX_H / 2)) + SECTOR_PADDING
+    const meta = SECTOR_META[sector]
+    return { x: left, y: top, w: right - left, h: bottom - top, ...meta }
+  })
+}
 
-        const activos = identidades.filter(i => i.activo !== false)
+const SECTORS = computeSectors()
 
-        /* ── SCENE ── */
-        class GameScene extends Phaser.Scene {
-          player!:      Phaser.GameObjects.Rectangle
-          playerGlow!:  Phaser.GameObjects.Rectangle
-          cursors!:     Phaser.Types.Input.Keyboard.CursorKeys
-          w!: Phaser.Input.Keyboard.Key
-          a!: Phaser.Input.Keyboard.Key
-          s!: Phaser.Input.Keyboard.Key
-          d!: Phaser.Input.Keyboard.Key
-          eKey!:        Phaser.Input.Keyboard.Key
-          prompt!:      Phaser.GameObjects.Text
-          gamePaused = false
+export function SegundoCerebroGame({ onEnterZone, paused = false }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const gameRef      = useRef<{ destroy: (r: boolean) => void } | null>(null)
+  const callbackRef  = useRef(onEnterZone)
+  callbackRef.current = onEnterZone
+  const pausedRef = useRef(paused)
+  pausedRef.current = paused
+  const sceneRef = useRef<{ setPaused: (v: boolean) => void } | null>(null)
 
-          sectorGfx!: Phaser.GameObjects.Graphics
-          pathsGfx!:  Phaser.GameObjects.Graphics
-          sectorLabels: Phaser.GameObjects.Text[] = []
-          buildings: Array<{ container: Phaser.GameObjects.Container; data: MapaIdentidadType; icon: Phaser.GameObjects.Text; label: Phaser.GameObjects.Text; hex: number }> = []
+  useEffect(() => {
+    sceneRef.current?.setPaused(paused)
+  }, [paused])
 
-          isPanning = false
-          dragMoved = false
-          dragStartScreen = { x: 0, y: 0 }
+  useEffect(() => {
+    if (!containerRef.current || gameRef.current) return
 
-          constructor() { super({ key: "SegundoCerebroScene" }) }
+    let game: { destroy: (r: boolean) => void } | null = null
+    let mounted = true
 
-          create() {
-            this.physics.world.setBounds(0, 0, MAP_W, MAP_H)
-            this.cameras.main.setBounds(0, 0, MAP_W, MAP_H)
+    ;(async () => {
+      const Phaser = (await import("phaser")).default
+      if (!mounted || !containerRef.current) return
 
-            const bgGfx = this.add.graphics()
+      /* ── SCENE ── */
+      class GameScene extends Phaser.Scene {
+        player!:      Phaser.GameObjects.Rectangle
+        playerGlow!:  Phaser.GameObjects.Rectangle
+        cursors!:     Phaser.Types.Input.Keyboard.CursorKeys
+        w!: Phaser.Input.Keyboard.Key
+        a!: Phaser.Input.Keyboard.Key
+        s!: Phaser.Input.Keyboard.Key
+        d!: Phaser.Input.Keyboard.Key
+        eKey!:        Phaser.Input.Keyboard.Key
+        zones:        Array<{ rect: Phaser.Geom.Rectangle; id: string }> = []
+        prompt!:      Phaser.GameObjects.Text
+        nearZone:     string | null = null
+        buildingVisuals = new Map<string, { icon: Phaser.GameObjects.Text; label: Phaser.GameObjects.Text; x: number; y: number; hex: number }>()
+        gamePaused = false
 
-            /* ── Fondo (violeta muy oscuro) ── */
-            bgGfx.fillStyle(0x0a0714)
-            bgGfx.fillRect(0, 0, MAP_W, MAP_H)
+        constructor() { super({ key: "SegundoCerebroScene" }) }
 
-            /* ── Cuadrícula ── */
-            bgGfx.lineStyle(1, 0x150f24, 0.6)
-            for (let x = 0; x <= MAP_W; x += 48) bgGfx.lineBetween(x, 0, x, MAP_H)
-            for (let y = 0; y <= MAP_H; y += 48) bgGfx.lineBetween(0, y, MAP_W, y)
+        create() {
+          this.physics.world.setBounds(0, 0, MAP_W, MAP_H)
+          this.cameras.main.setBounds(0, 0, MAP_W, MAP_H)
 
-            /* ── Caminos principales ── */
-            bgGfx.lineStyle(24, 0x120c1f, 1)
-            bgGfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
-            bgGfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
-            bgGfx.lineStyle(1, 0x1a1330, 0.8)
-            bgGfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
-            bgGfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
+          const gfx = this.add.graphics()
 
-            /* ── Plaza central ── */
-            const cx = MAP_W / 2, cy = MAP_H / 2
-            bgGfx.fillStyle(0x0d0818)
-            bgGfx.fillCircle(cx, cy, 90)
-            bgGfx.lineStyle(1, 0x241a3d, 1)
-            bgGfx.strokeCircle(cx, cy, 90)
-            bgGfx.lineStyle(1, 0x1a1330, 1)
-            bgGfx.strokeCircle(cx, cy, 75)
-            this.add.text(cx, cy, "🧠\nSEGUNDO\nCEREBRO", {
-              fontFamily: "monospace", fontSize: "10px",
-              color: "#3d2a63", align: "center",
-            }).setOrigin(0.5)
+          /* ── Fondo (violeta muy oscuro) ── */
+          gfx.fillStyle(0x0a0714)
+          gfx.fillRect(0, 0, MAP_W, MAP_H)
 
-            /* ── Puntos ambientales ── */
-            const dotGfx = this.add.graphics()
-            for (let i = 0; i < 80; i++) {
-              const dx = Math.random() * MAP_W
-              const dy = Math.random() * MAP_H
-              const alpha = Math.random() * 0.3 + 0.05
-              dotGfx.fillStyle(0x3d2a63, alpha)
-              dotGfx.fillCircle(dx, dy, 1)
-            }
+          /* ── Cuadrícula ── */
+          gfx.lineStyle(1, 0x150f24, 0.6)
+          for (let x = 0; x <= MAP_W; x += 48) gfx.lineBetween(x, 0, x, MAP_H)
+          for (let y = 0; y <= MAP_H; y += 48) gfx.lineBetween(0, y, MAP_W, y)
 
-            /* ── Capas dinámicas (se redibujan cuando alguien mueve una caja) ── */
-            this.sectorGfx = this.add.graphics()
-            this.pathsGfx  = this.add.graphics()
-            this.pathsGfx.setDepth(-1)
+          /* ── Caminos principales ── */
+          gfx.lineStyle(24, 0x120c1f, 1)
+          gfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
+          gfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
 
-            /* ── Edificios (uno por identidad, cada uno arrastrable) ── */
-            activos.forEach(item => this.buildings.push(this.makeBuilding(item)))
-            this.redrawDynamic()
+          gfx.lineStyle(1, 0x1a1330, 0.8)
+          gfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
+          gfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
 
-            /* ── Jugador ── */
-            const sx = cx, sy = cy + 110
-            this.playerGlow = this.add.rectangle(sx, sy, 22, 26, 0x00d4ff, 0.08)
-            this.player = this.add.rectangle(sx, sy, 10, 14, 0x00d4ff)
-            this.physics.add.existing(this.player)
-            ;(this.player.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true)
+          /* ── Caminos de edificios a la plaza ── */
+          const cx = MAP_W / 2, cy = MAP_H / 2
+          gfx.lineStyle(10, 0x0f0a1a, 1)
+          BUILDINGS.forEach(b => gfx.lineBetween(b.x, b.y, cx, cy))
 
-            /* ── Input de teclado ── */
-            this.cursors = this.input.keyboard!.createCursorKeys()
-            this.w = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W)
-            this.a = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A)
-            this.s = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S)
-            this.d = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D)
-            this.eKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E)
+          /* ── Plaza central ── */
+          gfx.fillStyle(0x0d0818)
+          gfx.fillCircle(cx, cy, 90)
+          gfx.lineStyle(1, 0x241a3d, 1)
+          gfx.strokeCircle(cx, cy, 90)
+          gfx.lineStyle(1, 0x1a1330, 1)
+          gfx.strokeCircle(cx, cy, 75)
+          this.add.text(cx, cy, "🧠\nSEGUNDO\nCEREBRO", {
+            fontFamily: "monospace", fontSize: "10px",
+            color: "#3d2a63", align: "center",
+          }).setOrigin(0.5)
 
-            /* ── Prompt de entrada ── */
-            this.prompt = this.add.text(sx, sy - 30, "[ E ]  ENTRAR", {
-              fontFamily: "monospace", fontSize: "10px",
-              color: "#00d4ff",
-              backgroundColor: "#0a0714cc",
-              padding: { x: 7, y: 4 },
-            }).setOrigin(0.5).setAlpha(0).setDepth(10)
-
-            this.tweens.add({
-              targets: this.prompt,
-              alpha: { from: 0.4, to: 1 },
-              duration: 550,
-              yoyo: true,
-              repeat: -1,
-            })
-
-            /* ── Cámara: arranca mostrando el mapa completo, pero ya libre
-               (arrastrar para mover, rueda para zoom) ── */
-            const zoomInicial = Math.min(this.scale.width / MAP_W, this.scale.height / MAP_H) * 0.97
-            this.cameras.main.setZoom(Phaser.Math.Clamp(zoomInicial, MIN_ZOOM, MAX_ZOOM))
-            this.cameras.main.centerOn(cx, cy)
-
-            this.setupCameraControls()
-            this.setupDragControls()
-
-            sceneRef.current = { setPaused: v => this.setPaused(v), zoomBy: f => this.zoomBy(f) }
-            this.setPaused(pausedRef.current)
+          /* ── Puntos ambientales ── */
+          const dotGfx = this.add.graphics()
+          for (let i = 0; i < 80; i++) {
+            const dx = Math.random() * MAP_W
+            const dy = Math.random() * MAP_H
+            const alpha = Math.random() * 0.3 + 0.05
+            dotGfx.fillStyle(0x3d2a63, alpha)
+            dotGfx.fillCircle(dx, dy, 1)
           }
 
-          /* Construye una caja/edificio arrastrable a partir de una identidad */
-          makeBuilding(item: MapaIdentidadType) {
-            const hex = Number.parseInt((item.color || "a78bfa").replace("#", ""), 16) || 0xa78bfa
-            const left = -BOX_W / 2, top = -BOX_H / 2
+          /* ── Sectores (contenedores calculados a partir de sus cajas) ── */
+          SECTORS.forEach(s => {
+            const hex = (s.r << 16) | (s.g << 8) | s.b
+            gfx.fillStyle(hex, 0.035)
+            gfx.fillRoundedRect(s.x, s.y, s.w, s.h, 20)
+            gfx.lineStyle(1, hex, 0.22)
+            gfx.strokeRoundedRect(s.x, s.y, s.w, s.h, 20)
 
-            const container = this.add.container(item.x, item.y)
-            const gfx = this.add.graphics()
+            this.add.text(s.x + s.w / 2, s.y + 18, s.label, {
+              fontFamily: "monospace", fontSize: "10px",
+              color: `#${hex.toString(16).padStart(6, "0")}`,
+              align: "center", letterSpacing: 3,
+            }).setOrigin(0.5).setAlpha(0.55)
+          })
 
-            if (item.placeholder) {
+          /* ── Edificios ── */
+          BUILDINGS.forEach(b => {
+            const hex = (b.r << 16) | (b.g << 8) | b.b
+            const left = b.x - BOX_W / 2, top = b.y - BOX_H / 2
+
+            if (b.placeholder) {
+              /* Celda reservada — solo contorno tenue, sin relleno ni zona clickeable */
               gfx.lineStyle(1, hex, 0.25)
               gfx.strokeRoundedRect(left, top, BOX_W, BOX_H, 8)
-              container.add(gfx)
-              const iconT = this.add.text(0, -6, item.icono, { fontFamily: "serif", fontSize: "16px" })
+              this.add.text(b.x, b.y - 6, b.icon, { fontFamily: "serif", fontSize: "16px" })
                 .setOrigin(0.5).setAlpha(0.35)
-              const labelT = this.add.text(0, 16, item.nombre, {
+              this.add.text(b.x, b.y + 16, b.label, {
                 fontFamily: "monospace", fontSize: "8px",
                 color: `#${hex.toString(16).padStart(6, "0")}`,
                 align: "center", letterSpacing: 1,
               }).setOrigin(0.5).setAlpha(0.45)
-              container.add([iconT, labelT])
-              container.setSize(BOX_W + 40, BOX_H + 40)
-              container.setInteractive({ useHandCursor: true, draggable: true })
-              return { container, data: item, icon: iconT, label: labelT, hex }
+              return
             }
 
             /* Sombra */
             gfx.fillStyle(0x000000, 0.6)
             gfx.fillRoundedRect(left + 5, top + 5, BOX_W, BOX_H, 8)
 
-            /* Halo suave */
+            /* Halo suave (glow simulado con trazos concéntricos, compatible con
+               cualquier renderer, sin depender de postFX/shaders) */
             gfx.lineStyle(6, hex, 0.05)
             gfx.strokeRoundedRect(left - 5, top - 5, BOX_W + 10, BOX_H + 10, 12)
             gfx.lineStyle(3, hex, 0.09)
             gfx.strokeRoundedRect(left - 2, top - 2, BOX_W + 4, BOX_H + 4, 10)
 
-            /* Relleno base */
-            const r = (hex >> 16) & 255, g = (hex >> 8) & 255, b = hex & 255
-            const darkHex = ((Math.floor(r * 0.07) << 16) | (Math.floor(g * 0.07) << 8) | Math.floor(b * 0.10))
+            /* Relleno base, muy oscuro y teñido del color del edificio */
+            const darkR = Math.floor(b.r * 0.07)
+            const darkG = Math.floor(b.g * 0.07)
+            const darkB = Math.floor(b.b * 0.10)
+            const darkHex = (darkR << 16) | (darkG << 8) | darkB
             gfx.fillStyle(darkHex)
             gfx.fillRoundedRect(left, top, BOX_W, BOX_H, 8)
 
-            /* Falso degradado */
+            /* Falso degradado: overlay más claro en la mitad superior (luz desde arriba) */
             gfx.fillStyle(hex, 0.05)
             gfx.fillRoundedRect(left, top, BOX_W, BOX_H / 2, { tl: 8, tr: 8, bl: 0, br: 0 })
 
-            /* Borde + acento superior */
+            /* Borde */
             gfx.lineStyle(1.5, hex, 0.65)
             gfx.strokeRoundedRect(left, top, BOX_W, BOX_H, 8)
+
+            /* Línea superior de acento */
             gfx.lineStyle(2, hex, 0.55)
             gfx.lineBetween(left + 10, top, left + BOX_W - 10, top)
 
-            /* Insignia del ícono */
+            /* Insignia del ícono — círculo de fondo para que se sienta "diseñado" */
             gfx.fillStyle(hex, 0.14)
-            gfx.fillCircle(0, -12, 17)
+            gfx.fillCircle(b.x, b.y - 12, 17)
             gfx.lineStyle(1, hex, 0.35)
-            gfx.strokeCircle(0, -12, 17)
+            gfx.strokeCircle(b.x, b.y - 12, 17)
 
-            /* Franja inferior */
+            const iconText = this.add.text(b.x, b.y - 12, b.icon, {
+              fontFamily: "serif", fontSize: "20px",
+            }).setOrigin(0.5)
+
+            /* Franja inferior — barra de acento a todo lo ancho, en vez del
+               bloque suelto en la esquina que traía antes */
             gfx.fillStyle(hex, 0.16)
             gfx.fillRoundedRect(left + 6, top + BOX_H - 15, BOX_W - 12, 9, 3)
 
-            container.add(gfx)
-
-            const iconT = this.add.text(0, -12, item.icono, { fontFamily: "serif", fontSize: "20px" }).setOrigin(0.5)
-            const labelT = this.add.text(0, 16, item.nombre, {
+            const labelText = this.add.text(b.x, b.y + 16, b.label, {
               fontFamily: "monospace", fontSize: "9px",
               color: `#${hex.toString(16).padStart(6, "0")}`,
               align: "center", letterSpacing: 1,
             }).setOrigin(0.5)
-            container.add([iconT, labelT])
 
-            container.setSize(BOX_W + 40, BOX_H + 40)
-            container.setInteractive({ useHandCursor: true, draggable: true })
+            this.buildingVisuals.set(b.id, { icon: iconText, label: labelText, x: b.x, y: b.y, hex })
 
-            return { container, data: item, icon: iconT, label: labelT, hex }
+            this.zones.push({
+              rect: new Phaser.Geom.Rectangle(left - 20, top - 20, BOX_W + 40, BOX_H + 40),
+              id: b.id,
+            })
+
+            /* Click directo al edificio — alternativa a caminar + E */
+            this.add.zone(b.x, b.y, BOX_W, BOX_H)
+              .setInteractive({ useHandCursor: true })
+              .on("pointerdown", () => {
+                this.popBuilding(b.id)
+                callbackRef.current(b.id)
+              })
+          })
+
+          /* ── Jugador ── */
+          const sx = MAP_W / 2, sy = MAP_H / 2 + 110
+          this.playerGlow = this.add.rectangle(sx, sy, 22, 26, 0x00d4ff, 0.08)
+          this.player = this.add.rectangle(sx, sy, 10, 14, 0x00d4ff)
+          this.physics.add.existing(this.player)
+          ;(this.player.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true)
+
+          /* ── Input ── */
+          this.cursors = this.input.keyboard!.createCursorKeys()
+          this.w = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W)
+          this.a = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A)
+          this.s = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S)
+          this.d = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+          this.eKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E)
+
+          /* ── Prompt de entrada ── */
+          this.prompt = this.add.text(sx, sy - 30, "[ E ]  ENTRAR", {
+            fontFamily: "monospace", fontSize: "10px",
+            color: "#00d4ff",
+            backgroundColor: "#0a0714cc",
+            padding: { x: 7, y: 4 },
+          }).setOrigin(0.5).setAlpha(0).setDepth(10)
+
+          this.tweens.add({
+            targets: this.prompt,
+            alpha: { from: 0.4, to: 1 },
+            duration: 550,
+            yoyo: true,
+            repeat: -1,
+          })
+
+          /* ── Cámara: centrada mostrando el mapa completo, no persigue al jugador ── */
+          const fitCamera = () => {
+            const zoom = Math.min(this.scale.width / MAP_W, this.scale.height / MAP_H) * 0.97
+            this.cameras.main.setZoom(zoom)
+            this.cameras.main.centerOn(cx, cy)
           }
+          fitCamera()
+          this.scale.on(Phaser.Scale.Events.RESIZE, fitCamera)
 
-          /* Recalcula y redibuja los contenedores de sector + los caminos a la
-             plaza, a partir de las posiciones ACTUALES de cada caja — se llama
-             al cargar y cada vez que alguien suelta un arrastre. */
-          redrawDynamic() {
-            this.sectorGfx.clear()
-            this.pathsGfx.clear()
-            this.sectorLabels.forEach(t => t.destroy())
-            this.sectorLabels = []
+          sceneRef.current = this
+          this.setPaused(pausedRef.current)
+        }
 
-            const cx = MAP_W / 2, cy = MAP_H / 2
-            this.pathsGfx.lineStyle(10, 0x0f0a1a, 1)
-            this.buildings.forEach(b => {
-              this.pathsGfx.lineBetween(b.container.x, b.container.y, cx, cy)
-            })
-
-            const bySector = new Map<string, typeof this.buildings>()
-            this.buildings.forEach(b => {
-              const key = b.data.sector || "otros"
-              if (!bySector.has(key)) bySector.set(key, [])
-              bySector.get(key)!.push(b)
-            })
-
-            bySector.forEach((boxes, sector) => {
-              const left   = Math.min(...boxes.map(b => b.container.x - BOX_W / 2)) - SECTOR_PADDING
-              const right  = Math.max(...boxes.map(b => b.container.x + BOX_W / 2)) + SECTOR_PADDING
-              const top    = Math.min(...boxes.map(b => b.container.y - BOX_H / 2)) - SECTOR_PADDING
-              const bottom = Math.max(...boxes.map(b => b.container.y + BOX_H / 2)) + SECTOR_PADDING
-              const hex = boxes[0].hex
-
-              this.sectorGfx.fillStyle(hex, 0.035)
-              this.sectorGfx.fillRoundedRect(left, top, right - left, bottom - top, 20)
-              this.sectorGfx.lineStyle(1, hex, 0.22)
-              this.sectorGfx.strokeRoundedRect(left, top, right - left, bottom - top, 20)
-
-              const label = this.add.text((left + right) / 2, top + 18, sector.toUpperCase(), {
-                fontFamily: "monospace", fontSize: "10px",
-                color: `#${hex.toString(16).padStart(6, "0")}`,
-                align: "center", letterSpacing: 3,
-              }).setOrigin(0.5).setAlpha(0.55).setDepth(-1)
-              this.sectorLabels.push(label)
-            })
-          }
-
-          /* Cámara libre: arrastrar sobre espacio vacío mueve la cámara; la
-             rueda del mouse hace zoom centrado en el cursor. */
-          setupCameraControls() {
-            this.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
-              if (currentlyOver.length === 0) this.isPanning = true
-            })
-            this.input.on("pointerup", () => { this.isPanning = false })
-            this.input.on("pointerupoutside", () => { this.isPanning = false })
-            this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
-              if (!this.isPanning || !pointer.isDown) return
-              const cam = this.cameras.main
-              cam.scrollX -= (pointer.x - pointer.prevPosition.x) / cam.zoom
-              cam.scrollY -= (pointer.y - pointer.prevPosition.y) / cam.zoom
-            })
-            this.input.on("wheel", (_p: Phaser.Input.Pointer, _go: unknown, _dx: number, deltaY: number) => {
-              this.zoomBy(deltaY > 0 ? 0.9 : 1.1)
-            })
-          }
-
-          zoomBy(factor: number) {
-            const cam = this.cameras.main
-            cam.zoom = Phaser.Math.Clamp(cam.zoom * factor, MIN_ZOOM, MAX_ZOOM)
-          }
-
-          /* Arrastrar una caja la mueve; si el movimiento fue mínimo, cuenta
-             como clic normal (entrar a la zona) en vez de arrastre. */
-          setupDragControls() {
-            this.input.on("dragstart", (pointer: Phaser.Input.Pointer) => {
-              this.dragMoved = false
-              this.dragStartScreen = { x: pointer.x, y: pointer.y }
-            })
-
-            this.input.on("drag", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
-              const container = gameObject as Phaser.GameObjects.Container
-              container.x = dragX
-              container.y = dragY
-              const moved = Math.hypot(pointer.x - this.dragStartScreen.x, pointer.y - this.dragStartScreen.y)
-              if (moved > CLICK_THRESHOLD) this.dragMoved = true
-            })
-
-            this.input.on("dragend", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
-              const container = gameObject as Phaser.GameObjects.Container
-              const entry = this.buildings.find(b => b.container === container)
-              if (!entry) return
-
-              if (this.dragMoved) {
-                this.redrawDynamic()
-                updateIdentidadPosicion(entry.data.documentId, container.x, container.y).catch(err => {
-                  console.error("No se pudo guardar la posición:", err)
-                })
-              } else if (!entry.data.placeholder && entry.data.moduleId) {
-                this.popBuilding(entry)
-                callbackRef.current(entry.data.moduleId)
-              }
-            })
-          }
-
-          setPaused(v: boolean) {
-            this.gamePaused = v
-            this.input.enabled = !v
-            if (v) {
-              ;(this.player.body as Phaser.Physics.Arcade.Body).setVelocity(0)
-              this.prompt.setAlpha(0)
-            }
-          }
-
-          popBuilding(entry: { icon: Phaser.GameObjects.Text; label: Phaser.GameObjects.Text; container: Phaser.GameObjects.Container; hex: number }) {
-            this.tweens.add({
-              targets: [entry.icon, entry.label],
-              scale: { from: 1, to: 1.3 },
-              duration: 110,
-              yoyo: true,
-              ease: "Back.easeOut",
-            })
-
-            const ring = this.add.graphics({ x: entry.container.x, y: entry.container.y })
-            ring.lineStyle(2.5, entry.hex, 0.85)
-            ring.strokeCircle(0, 0, 12)
-            ring.setDepth(20)
-            this.tweens.add({
-              targets: ring,
-              scaleX: 4,
-              scaleY: 4,
-              alpha: 0,
-              duration: 420,
-              ease: "Cubic.easeOut",
-              onComplete: () => ring.destroy(),
-            })
-          }
-
-          update() {
-            if (this.gamePaused) return
-
-            const body  = this.player.body as Phaser.Physics.Arcade.Body
-            const SPEED = 165
-
-            body.setVelocity(0)
-
-            const left  = this.cursors.left.isDown  || this.a.isDown
-            const right = this.cursors.right.isDown || this.d.isDown
-            const up    = this.cursors.up.isDown    || this.w.isDown
-            const down  = this.cursors.down.isDown  || this.s.isDown
-
-            if (left)  body.setVelocityX(-SPEED)
-            if (right) body.setVelocityX(SPEED)
-            if (up)    body.setVelocityY(-SPEED)
-            if (down)  body.setVelocityY(SPEED)
-            if ((left || right) && (up || down)) body.velocity.normalize().scale(SPEED)
-
-            this.playerGlow.setPosition(this.player.x, this.player.y)
-
-            let found: typeof this.buildings[number] | null = null
-            for (const b of this.buildings) {
-              if (b.data.placeholder || !b.data.moduleId) continue
-              const dx = Math.abs(this.player.x - b.container.x)
-              const dy = Math.abs(this.player.y - b.container.y)
-              if (dx < BOX_W / 2 + 20 && dy < BOX_H / 2 + 20) { found = b; break }
-            }
-
-            if (found) {
-              this.prompt.setPosition(found.container.x, found.container.y - BOX_H / 2 - 18).setAlpha(this.prompt.alpha || 0.7)
-              if (Phaser.Input.Keyboard.JustDown(this.eKey)) {
-                this.popBuilding(found)
-                callbackRef.current(found.data.moduleId!)
-              }
-            } else {
-              this.prompt.setAlpha(0)
-            }
+        /* Pausa real del juego (no solo visual) mientras el modal de una zona
+           está abierto — sin esto, Phaser sigue procesando clics sobre los
+           edificios aunque el modal los tape en pantalla. */
+        setPaused(v: boolean) {
+          this.gamePaused = v
+          this.input.enabled = !v
+          if (v) {
+            ;(this.player.body as Phaser.Physics.Arcade.Body).setVelocity(0)
+            this.prompt.setAlpha(0)
           }
         }
 
-        const config: Phaser.Types.Core.GameConfig = {
-          type:   Phaser.AUTO,
-          parent: containerRef.current!,
-          backgroundColor: "#0a0714",
-          physics: {
-            default: "arcade",
-            arcade:  { gravity: { x: 0, y: 0 }, debug: false },
-          },
-          scene: [GameScene],
-          scale: {
-            mode:       Phaser.Scale.RESIZE,
-            autoCenter: Phaser.Scale.CENTER_BOTH,
-          },
+        /* Animación al entrar a un edificio: el ícono/label "rebotan" y un
+           anillo se expande desde el centro y se desvanece — feedback táctil
+           tanto para clic directo como para caminar + E. */
+        popBuilding(id: string) {
+          const v = this.buildingVisuals.get(id)
+          if (!v) return
+
+          this.tweens.add({
+            targets: [v.icon, v.label],
+            scale: { from: 1, to: 1.3 },
+            duration: 110,
+            yoyo: true,
+            ease: "Back.easeOut",
+          })
+
+          const ring = this.add.graphics({ x: v.x, y: v.y })
+          ring.lineStyle(2.5, v.hex, 0.85)
+          ring.strokeCircle(0, 0, 12)
+          ring.setDepth(20)
+          this.tweens.add({
+            targets: ring,
+            scaleX: 4,
+            scaleY: 4,
+            alpha: 0,
+            duration: 420,
+            ease: "Cubic.easeOut",
+            onComplete: () => ring.destroy(),
+          })
         }
 
-        game = new Phaser.Game(config)
-        if (mounted) gameRef.current = game
-        else         game.destroy(true)
-      })()
+        update() {
+          if (this.gamePaused) return
 
-      return () => {
-        mounted = false
-        game?.destroy(true)
-        gameRef.current = null
+          const body  = this.player.body as Phaser.Physics.Arcade.Body
+          const SPEED = 165
+
+          body.setVelocity(0)
+
+          const left  = this.cursors.left.isDown  || this.a.isDown
+          const right = this.cursors.right.isDown || this.d.isDown
+          const up    = this.cursors.up.isDown    || this.w.isDown
+          const down  = this.cursors.down.isDown  || this.s.isDown
+
+          if (left)  body.setVelocityX(-SPEED)
+          if (right) body.setVelocityX(SPEED)
+          if (up)    body.setVelocityY(-SPEED)
+          if (down)  body.setVelocityY(SPEED)
+          if ((left || right) && (up || down)) body.velocity.normalize().scale(SPEED)
+
+          this.playerGlow.setPosition(this.player.x, this.player.y)
+
+          let found: string | null = null
+          for (const z of this.zones) {
+            if (z.rect.contains(this.player.x, this.player.y)) { found = z.id; break }
+          }
+
+          if (found !== this.nearZone) {
+            this.nearZone = found
+          }
+
+          if (found) {
+            this.prompt.setPosition(this.player.x, this.player.y - 28).setAlpha(this.prompt.alpha || 0.7)
+            if (Phaser.Input.Keyboard.JustDown(this.eKey)) {
+              this.popBuilding(found)
+              callbackRef.current(found)
+            }
+          } else {
+            this.prompt.setAlpha(0)
+          }
+        }
       }
-    }, [])
 
-    return (
-      <>
-        <div ref={containerRef} className="absolute inset-0" />
-        {(dataLoading || loadError) && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0714]">
-            <p className="text-[10px] font-mono text-violet-500/40 uppercase tracking-[0.2em] animate-pulse">
-              {loadError ? "No se pudo cargar el mapa" : "Cargando identidades..."}
-            </p>
-            {loadError && <p className="text-[9px] font-mono text-slate-700 mt-2">{loadError}</p>}
-          </div>
-        )}
-      </>
-    )
-  }
-)
+      const config: Phaser.Types.Core.GameConfig = {
+        type:   Phaser.AUTO,
+        parent: containerRef.current!,
+        backgroundColor: "#0a0714",
+        physics: {
+          default: "arcade",
+          arcade:  { gravity: { x: 0, y: 0 }, debug: false },
+        },
+        scene: [GameScene],
+        scale: {
+          mode:       Phaser.Scale.RESIZE,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
+      }
+
+      game = new Phaser.Game(config)
+      if (mounted) gameRef.current = game
+      else         game.destroy(true)
+    })()
+
+    return () => {
+      mounted = false
+      game?.destroy(true)
+      gameRef.current = null
+    }
+  }, [])
+
+  return <div ref={containerRef} className="absolute inset-0" />
+}
