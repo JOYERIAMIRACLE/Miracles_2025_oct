@@ -23,7 +23,7 @@ export default function SegundoCerebroPage() {
 
   return (
     <div className="relative overflow-hidden" style={{ height: "100svh" }}>
-      <SegundoCerebroGame onEnterZone={setActiveModule} />
+      <SegundoCerebroGame onEnterZone={setActiveModule} paused={!!activeModule} />
 
       {/* Controls hint */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">

@@ -138,53 +138,57 @@ export function SegundoCerebroDrawer({ module, onClose }: Props) {
       {module && (
         <>
           <motion.div
-            className="absolute inset-0 z-40"
-            style={{ background: "rgba(10,7,20,0.55)", backdropFilter: "blur(2px)" }}
+            className="absolute inset-0 z-40 flex items-center justify-center p-4 sm:p-8"
+            style={{ background: "rgba(10,7,20,0.68)", backdropFilter: "blur(3px)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-          />
-
-          <motion.div
-            className="absolute right-0 top-0 bottom-0 z-50 flex flex-col"
-            style={{
-              width: "min(720px, 72vw)",
-              background: "rgba(12,8,20,0.98)",
-              borderLeft: "1px solid rgba(167,139,250,0.12)",
-              backdropFilter: "blur(24px)",
-            }}
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 32, stiffness: 320 }}
           >
-            <div
-              className="flex items-center justify-between px-5 py-3 border-b shrink-0"
-              style={{ borderColor: "rgba(167,139,250,0.1)" }}
+            <motion.div
+              className="flex flex-col z-50 rounded-2xl overflow-hidden w-full"
+              style={{
+                maxWidth: "880px",
+                height: "min(760px, 88vh)",
+                background: "rgba(14,9,24,0.98)",
+                border: "1px solid rgba(167,139,250,0.16)",
+                boxShadow:
+                  "0 30px 80px -20px rgba(0,0,0,0.7), 0 0 60px -10px rgba(167,139,250,0.15)",
+                backdropFilter: "blur(24px)",
+              }}
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ type: "spring", damping: 28, stiffness: 340 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div>
-                <p className="text-[8px] font-mono text-violet-400/50 uppercase tracking-[0.2em] mb-0.5">
-                  ZONA ACTIVA
-                </p>
-                <h2 className="text-[13px] font-bold text-slate-200">
-                  {LABELS[module] ?? module}
-                </h2>
+              <div
+                className="flex items-center justify-between px-5 py-3 border-b shrink-0"
+                style={{ borderColor: "rgba(167,139,250,0.1)" }}
+              >
+                <div>
+                  <p className="text-[8px] font-mono text-violet-400/50 uppercase tracking-[0.2em] mb-0.5">
+                    ZONA ACTIVA
+                  </p>
+                  <h2 className="text-[13px] font-bold text-slate-200">
+                    {LABELS[module] ?? module}
+                  </h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[9px] font-mono text-slate-700">ESC para cerrar</span>
+                  <button
+                    onClick={onClose}
+                    className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800/60 rounded-lg transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[9px] font-mono text-slate-700">ESC para cerrar</span>
-                <button
-                  onClick={onClose}
-                  className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800/60 rounded-lg transition-colors"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
 
-            <div className="flex-1 overflow-auto">
-              <Content module={module} />
-            </div>
+              <div className="flex-1 overflow-auto">
+                <Content module={module} />
+              </div>
+            </motion.div>
           </motion.div>
         </>
       )}
