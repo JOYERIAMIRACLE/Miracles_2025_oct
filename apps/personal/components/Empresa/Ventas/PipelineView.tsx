@@ -609,13 +609,14 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
 }
 
 // ─── Panel de cliente (compartido por Pipeline, Leads y Contactos) ────────────
-export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar }: {
+export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar, onNuevoPedido }: {
   cliente: ClienteEmpresa; num: string; ventasDelCliente: VentaEmpresa[]
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
   onAvanzar:    (c: ClienteEmpresa) => void
   onRetroceder: (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
   onRechazar:   (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
   onRecuperar:  (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
+  onNuevoPedido: (c: ClienteEmpresa) => void
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
@@ -689,7 +690,14 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
             <div className="space-y-5">
               {/* Pedidos reales */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Pedidos</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Pedidos</p>
+                  <button type="button"
+                    onClick={() => onNuevoPedido(cliente)}
+                    className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                    <Plus size={10} /> Nuevo
+                  </button>
+                </div>
                 {ventasDelCliente.length === 0 ? (
                   <p className="text-[11px] text-slate-700 py-1">Sin pedidos reales conectados todavía.</p>
                 ) : (
@@ -1252,6 +1260,7 @@ export function PipelineView() {
           onRetroceder={retroceder}
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
+          onNuevoPedido={setPedidoGateFor}
         />
       )}
 

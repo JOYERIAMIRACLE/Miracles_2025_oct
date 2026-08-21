@@ -225,6 +225,7 @@ export function LeadsView() {
           onRetroceder={retroceder}
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
+          onNuevoPedido={setPedidoGateFor}
         />
       )}
 

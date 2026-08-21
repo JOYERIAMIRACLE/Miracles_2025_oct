@@ -94,9 +94,21 @@ export function useClientesPipeline() {
   }
 
   const handlePedidoCreado = async (v: VentaEmpresa) => {
+    // Nunca avanzar la etapa ni tocar el estado si el pedido no se creó de
+    // verdad — evita quedar con un cliente marcado "Pedido" sin nada real
+    // conectado (y evita romper el resto de la app con un registro vacío).
+    if (!v?.documentId) {
+      toast.error("El pedido no se pudo crear — el cliente sigue en su etapa actual")
+      setPedidoGateFor(null)
+      return null
+    }
     setTodasVentas(prev => [v, ...prev])
     let updated: ClienteEmpresa | null = null
-    if (pedidoGateFor) updated = await avanzarA(pedidoGateFor, "Pedido")
+    // Si ya estaba en Pedido/Entrega (ej. vinculando un pedido despues, desde
+    // el boton "+ Nuevo pedido" del panel) no lo regresamos a "Pedido".
+    const etapaActualIdx = pedidoGateFor ? FUNNEL_ETAPAS.indexOf(pedidoGateFor.Funnel ?? "Lead") : -1
+    const yaEnPedidoOMas = etapaActualIdx >= FUNNEL_ETAPAS.indexOf("Pedido")
+    if (pedidoGateFor && !yaEnPedidoOMas) updated = await avanzarA(pedidoGateFor, "Pedido")
     setPedidoGateFor(null)
     return updated
   }

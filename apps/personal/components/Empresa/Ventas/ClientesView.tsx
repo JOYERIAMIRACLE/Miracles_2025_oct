@@ -261,6 +261,7 @@ export function ClientesView() {
           onRetroceder={retroceder}
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
+          onNuevoPedido={setPedidoGateFor}
         />
       )}
 

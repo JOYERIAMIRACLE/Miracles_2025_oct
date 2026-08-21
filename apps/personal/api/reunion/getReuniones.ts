@@ -11,7 +11,7 @@ export function useGetReuniones() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/reuniones?populate=clienteTrabajo,proyecto&pagination[pageSize]=200&sort=fecha:desc`)
+        const res  = await fetch(`${BASE}/api/reuniones?populate[clienteTrabajo]=true&populate[proyecto]=true&pagination[pageSize]=200&sort=fecha:desc`)
         const json = await res.json()
         setReuniones(json.data ?? [])
       } catch (err: any) {

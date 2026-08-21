@@ -26,7 +26,9 @@ export async function createCliente(payload: ClientePayload): Promise<ClienteEmp
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
-  return (await res.json()).data
+  const json = await res.json()
+  if (!res.ok || !json?.data) throw new Error(json?.error?.message ?? "Error al crear el contacto")
+  return json.data
 }
 
 export async function updateCliente(documentId: string, payload: Partial<ClientePayload>): Promise<ClienteEmpresa> {
@@ -34,7 +36,9 @@ export async function updateCliente(documentId: string, payload: Partial<Cliente
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
-  return (await res.json()).data
+  const json = await res.json()
+  if (!res.ok || !json?.data) throw new Error(json?.error?.message ?? "Error al actualizar el contacto")
+  return json.data
 }
 
 export async function deleteCliente(documentId: string) {
