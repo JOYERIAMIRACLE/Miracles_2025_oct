@@ -1,14 +1,16 @@
 "use client"
 
 import Link from "next/link"
+import { useState } from "react"
 import {
   BarChart3, Activity, Globe2, Target, CheckSquare, HardDrive, Globe,
   Megaphone, BookOpen, Tv, Palette, Users, UserSearch, UserCheck, FileText,
   ShoppingBag, History, LayoutList, Package, ShoppingCart, Store, Truck,
   TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, UserCog,
-  ShieldCheck, ArrowRight, Gamepad2, Building2,
+  ShieldCheck, ArrowRight, Gamepad2, Building2, Waypoints,
 } from "lucide-react"
 import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
+import { MedallitadeoroDataMap } from "@/components/GameEmpresa/MedallitadeoroDataMap"
 
 /**
  * Espejo del sidebar real de gestión-empresa (components/Empresa/EmpresaSidebar.tsx)
@@ -83,7 +85,15 @@ const SIDEBAR_REAL = [
   },
 ]
 
+const TABS = [
+  { id: "accesos", label: "Accesos" },
+  { id: "mapa",    label: "Cómo se conecta todo" },
+] as const
+type TabId = typeof TABS[number]["id"]
+
 export function MedallitadeoroOficinaHub() {
+  const [tab, setTab] = useState<TabId>("accesos")
+
   return (
     <div className="p-5 space-y-6">
       <PortalPurposeHeader
@@ -93,6 +103,28 @@ export function MedallitadeoroOficinaHub() {
         descripcion="Espejo del sidebar real de gestión-empresa: mismo orden, mismas 7 salas. Cada acceso te lleva a la página de verdad — sales del mapa al entrar."
       />
 
+      <div className="flex gap-1.5">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border transition-all ${
+              tab === t.id
+                ? "bg-violet-600/20 text-violet-300 border-violet-500/40"
+                : "border-slate-700 text-slate-500 hover:text-slate-300"
+            }`}
+          >
+            {t.id === "mapa" && <Waypoints size={12} />}
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "mapa" && <MedallitadeoroDataMap />}
+
+      {tab === "accesos" && (
+      <>
       {SIDEBAR_REAL.map(grupo => (
         <div key={grupo.titulo}>
           <p className="text-[10px] font-mono uppercase tracking-widest text-violet-500/60 mb-2">
@@ -125,6 +157,8 @@ export function MedallitadeoroOficinaHub() {
       >
         <Gamepad2 size={14} /> Ver el mapa jugable detallado (estilo Miracles)
       </Link>
+      </>
+      )}
     </div>
   )
 }

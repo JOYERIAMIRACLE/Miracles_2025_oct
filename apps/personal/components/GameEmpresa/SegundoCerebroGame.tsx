@@ -105,6 +105,7 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           isPanning = false
           dragMoved = false
           dragStartScreen = { x: 0, y: 0 }
+          pinchDistance = 0
 
           constructor() { super({ key: "SegundoCerebroScene" }) }
 
@@ -352,14 +353,29 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           }
 
           /* Cámara libre: arrastrar sobre espacio vacío mueve la cámara; la
-             rueda del mouse hace zoom centrado en el cursor. */
+             rueda del mouse o pellizcar con dos dedos hace zoom. */
           setupCameraControls() {
             this.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
               if (currentlyOver.length === 0) this.isPanning = true
             })
-            this.input.on("pointerup", () => { this.isPanning = false })
-            this.input.on("pointerupoutside", () => { this.isPanning = false })
+            this.input.on("pointerup", () => { this.isPanning = false; this.pinchDistance = 0 })
+            this.input.on("pointerupoutside", () => { this.isPanning = false; this.pinchDistance = 0 })
             this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+              const p1 = this.input.pointer1
+              const p2 = this.input.pointer2
+
+              /* Pellizco con dos dedos — gana sobre el arrastre de un dedo */
+              if (p1.isDown && p2.isDown) {
+                this.isPanning = false
+                const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
+                if (this.pinchDistance > 0) {
+                  this.zoomBy(dist / this.pinchDistance)
+                }
+                this.pinchDistance = dist
+                return
+              }
+              this.pinchDistance = 0
+
               if (!this.isPanning || !pointer.isDown) return
               const cam = this.cameras.main
               cam.scrollX -= (pointer.x - pointer.prevPosition.x) / cam.zoom
@@ -526,6 +542,11 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           scale: {
             mode:       Phaser.Scale.RESIZE,
             autoCenter: Phaser.Scale.CENTER_BOTH,
+          },
+          /* activePointers >= 2 — sin esto Phaser solo rastrea un dedo y el
+             pellizco para zoom nunca detecta el segundo punto de contacto. */
+          input: {
+            activePointers: 2,
           },
         }
 
