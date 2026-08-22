@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Puzzle, Code2, Radio, ExternalLink } from "lucide-react"
+import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
 /** Tu sdi-portal corriendo en local (puerto por defecto de Next.js) — cámbialo si usas otro puerto. */
 const SDI_LOCAL = "http://localhost:3000"
@@ -147,12 +148,12 @@ export function TallerSdiPortalPanel() {
 
   return (
     <div className="p-5 space-y-5">
-      <div className="flex items-center gap-2">
-        <Puzzle size={16} className="text-indigo-400" />
-        <p className="text-xs text-slate-500">
-          Piezas propias de SDI Portal — otro repo, no se pueden renderizar aquí sin duplicar. Código real + acceso a tu instancia local.
-        </p>
-      </div>
+      <PortalPurposeHeader
+        tipo="taller"
+        icon={Puzzle}
+        titulo="Taller — SDI Portal"
+        descripcion="SDI Portal vive en otro repo — no se puede renderizar aquí sin duplicarlo. Código real de cada patrón + un botón para verlo corriendo en tu instancia local."
+      />
 
       <div className="flex flex-wrap gap-1.5">
         {CATEGORIAS.map(cat => (

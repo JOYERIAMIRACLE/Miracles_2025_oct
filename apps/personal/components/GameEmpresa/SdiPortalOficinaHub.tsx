@@ -5,6 +5,7 @@ import {
   Megaphone, DollarSign, Shield, Monitor, Calendar, ClipboardList, Ticket,
   Lock, Database, ListTodo, CalendarClock, Receipt, BarChart3, ExternalLink,
 } from "lucide-react"
+import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
 const SDI_BASE = "https://sdi-portal.pages.dev"
 
@@ -66,10 +67,12 @@ const TEAM_MARKETING = [
 export function SdiPortalOficinaHub() {
   return (
     <div className="p-5 space-y-6">
-      <p className="text-xs text-slate-500">
-        Espejo del sidebar real de SDI Portal — mismo orden, mismos 4 bloques. Otro dominio, otro login:
-        cada acceso abre sdi-portal.pages.dev en pestaña nueva.
-      </p>
+      <PortalPurposeHeader
+        tipo="oficina"
+        icon={Building2}
+        titulo="Oficina — SDI Portal"
+        descripcion="Espejo del sidebar real de SDI Portal: mismo orden, mismos 4 bloques. Otro dominio, otro login — cada acceso abre sdi-portal.pages.dev en pestaña nueva."
+      />
 
       <a
         href={`${SDI_BASE}/login`}

@@ -5,6 +5,7 @@ import {
   Puzzle, Eye, BarChart3, Globe2, Target, CheckSquare, Megaphone, Users,
   ShoppingBag, Package, TrendingUp, ShoppingCart as CartIcon, Heart, User, Expand,
 } from "lucide-react"
+import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
 const TABS = [
   { id: "oficina", label: "Oficina (admin)" },
@@ -153,12 +154,12 @@ export function TallerMedallitadeoroPanel() {
 
   return (
     <div className="p-5 space-y-5">
-      <div className="flex items-center gap-2">
-        <Puzzle size={16} className="text-violet-400" />
-        <p className="text-xs text-slate-500">
-          Piezas propias de medallitadeoro — oficina (admin) y tienda (público), renderizadas de verdad.
-        </p>
-      </div>
+      <PortalPurposeHeader
+        tipo="taller"
+        icon={Puzzle}
+        titulo="Taller — Medallitadeoro"
+        descripcion="Componentes reales de oficina (admin) y tienda (público), aislados para verlos sin abrir el proyecto — con datos de prueba, no datos reales."
+      />
 
       <div className="flex gap-1.5">
         {TABS.map(t => (

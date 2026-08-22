@@ -4,8 +4,9 @@ import Link from "next/link"
 import {
   CheckSquare, FolderOpen, LayoutDashboard, Swords, CalendarDays, Wallet,
   Dumbbell, CalendarRange, ChefHat, ShoppingCart, Sofa, Wrench, Car,
-  Users, CalendarHeart, ArrowRight,
+  Users, CalendarHeart, ArrowRight, Building2,
 } from "lucide-react"
+import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
 /**
  * Espejo del sidebar real de gestión-personal (components/Personal/PersonalSidebar.tsx)
@@ -64,9 +65,12 @@ const SIDEBAR_REAL = [
 export function RichiavrodHub() {
   return (
     <div className="p-5 space-y-6">
-      <p className="text-xs text-slate-500">
-        Espejo del sidebar real de gestión-personal — mismo orden, mismas 6 salas. Cada acceso te lleva a la página real, sales del mapa.
-      </p>
+      <PortalPurposeHeader
+        tipo="oficina"
+        icon={Building2}
+        titulo="Oficina — Richiavrod"
+        descripcion="Espejo del sidebar real de gestión-personal: mismo orden, mismas 6 salas. Cada acceso te lleva a la página de verdad — sales del mapa al entrar."
+      />
 
       {SIDEBAR_REAL.map(grupo => (
         <div key={grupo.titulo}>

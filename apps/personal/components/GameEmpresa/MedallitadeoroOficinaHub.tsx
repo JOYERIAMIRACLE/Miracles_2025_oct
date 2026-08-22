@@ -6,8 +6,9 @@ import {
   Megaphone, BookOpen, Tv, Palette, Users, UserSearch, UserCheck, FileText,
   ShoppingBag, History, LayoutList, Package, ShoppingCart, Store, Truck,
   TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, UserCog,
-  ShieldCheck, ArrowRight, Gamepad2,
+  ShieldCheck, ArrowRight, Gamepad2, Building2,
 } from "lucide-react"
+import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
 /**
  * Espejo del sidebar real de gestión-empresa (components/Empresa/EmpresaSidebar.tsx)
@@ -85,9 +86,12 @@ const SIDEBAR_REAL = [
 export function MedallitadeoroOficinaHub() {
   return (
     <div className="p-5 space-y-6">
-      <p className="text-xs text-slate-500">
-        Espejo del sidebar real de gestión-empresa — mismo orden, mismas 7 salas. Cada acceso te lleva a la página real, sales del mapa.
-      </p>
+      <PortalPurposeHeader
+        tipo="oficina"
+        icon={Building2}
+        titulo="Oficina — Medallitadeoro"
+        descripcion="Espejo del sidebar real de gestión-empresa: mismo orden, mismas 7 salas. Cada acceso te lleva a la página de verdad — sales del mapa al entrar."
+      />
 
       {SIDEBAR_REAL.map(grupo => (
         <div key={grupo.titulo}>

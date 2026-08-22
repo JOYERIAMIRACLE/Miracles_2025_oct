@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X } from "lucide-react"
+import { X, Sparkles } from "lucide-react"
 import { RichiavrodHub }              from "@/components/GameEmpresa/RichiavrodHub"
 import { SdiPortalOficinaHub }        from "@/components/GameEmpresa/SdiPortalOficinaHub"
 import { MedallitadeoroOficinaHub }   from "@/components/GameEmpresa/MedallitadeoroOficinaHub"
@@ -116,7 +116,17 @@ function Content({ module }: { module: string }) {
       return <TallerSdiPortalPanel />
 
     default:
-      return <p className="p-8 text-sm text-slate-600">Módulo: {module}</p>
+      return (
+        <div className="p-8 flex flex-col items-center text-center gap-3 py-16">
+          <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+            <Sparkles size={18} className="text-violet-400" />
+          </div>
+          <p className="text-sm font-medium text-slate-300">Identidad nueva, sin contenido propio todavía</p>
+          <p className="text-xs text-slate-600 max-w-xs leading-relaxed">
+            Se creó desde el mapa (o desde Strapi) pero todavía no tiene un panel a la medida — pídele a Claude que le agregue uno cuando quede claro para qué es.
+          </p>
+        </div>
+      )
   }
 }
 

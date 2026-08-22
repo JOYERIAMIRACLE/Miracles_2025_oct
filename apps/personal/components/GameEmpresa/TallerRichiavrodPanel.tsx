@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Puzzle, Eye, LayoutDashboard, CalendarDays, Wallet, Dumbbell, CalendarRange, ChefHat, ShoppingCart, Car, Users, CalendarHeart, CheckSquare, FolderOpen, Menu } from "lucide-react"
+import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
 const CATEGORIAS = [
   { id: "sidebar", label: "Sidebar" },
@@ -85,12 +86,12 @@ export function TallerRichiavrodPanel() {
 
   return (
     <div className="p-5 space-y-5">
-      <div className="flex items-center gap-2">
-        <Puzzle size={16} className="text-teal-400" />
-        <p className="text-xs text-slate-500">
-          Piezas propias de richiavrod — todas renderizadas de verdad, con datos de prueba.
-        </p>
-      </div>
+      <PortalPurposeHeader
+        tipo="taller"
+        icon={Puzzle}
+        titulo="Taller — Richiavrod"
+        descripcion="Componentes reales de gestión-personal, aislados para verlos o mostrarlos sin abrir el proyecto completo — con datos de prueba, no datos reales."
+      />
 
       <div className="flex flex-wrap gap-1.5">
         {CATEGORIAS.map(cat => (

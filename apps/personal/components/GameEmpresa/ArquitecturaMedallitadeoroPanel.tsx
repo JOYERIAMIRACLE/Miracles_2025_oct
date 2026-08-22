@@ -3,6 +3,7 @@
 import {
   Network, Globe2, GitBranch, Server, ExternalLink, FolderTree,
 } from "lucide-react"
+import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
 const STACK = [
   { label: "Frontend",           valor: "Next.js 15 + React 19 · Tailwind CSS v4" },
@@ -44,12 +45,12 @@ function Seccion({ icon: Icon, titulo, children }: {
 export function ArquitecturaMedallitadeoroPanel() {
   return (
     <div className="p-5 space-y-6">
-      <div className="flex items-center gap-2">
-        <Network size={16} className="text-violet-400" />
-        <p className="text-xs text-slate-500">
-          Arquitectura técnica de portal-medallitadeoro — el monorepo, el stack y el despliegue completos, aparte de lo que hace gestión-empresa día a día.
-        </p>
-      </div>
+      <PortalPurposeHeader
+        tipo="arquitectura"
+        icon={Network}
+        titulo="Arquitectura — Medallitadeoro"
+        descripcion="El monorepo, el stack y el despliegue completos — aparte de lo que hace gestión-empresa día a día, esto es cómo está armado por dentro."
+      />
 
       <Seccion icon={Server} titulo="Stack">
         <div className="rounded-lg border border-slate-800/60 bg-slate-900/40 divide-y divide-slate-800/60">
