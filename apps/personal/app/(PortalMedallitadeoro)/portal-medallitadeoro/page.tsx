@@ -16,8 +16,8 @@ import { SeccionSitioWeb } from "@/components/Empresa/PortalMDO/SeccionSitioWeb"
 import { SeccionFinanzas } from "@/components/Empresa/PortalMDO/SeccionFinanzas"
 import { SeccionDocumentos } from "@/components/Empresa/PortalMDO/SeccionDocumentos"
 import { SeccionGestionMarca } from "@/components/Empresa/PortalMDO/SeccionGestionMarca"
+import { SeccionEnlaces } from "@/components/Empresa/PortalMDO/SeccionEnlaces"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
-import { Pending } from "@/components/Empresa/PortalMDO/shared"
 
 const SECCIONES_VALIDAS = [
   "portal", "conoce", "mision", "rh",
@@ -72,7 +72,7 @@ export default function PortalMedallitadeoroPage() {
       case "sitio-web":    return <SeccionSitioWeb />
       case "documentos":   return <SeccionDocumentos />
       case "marca":        return <SeccionGestionMarca />
-      case "enlaces":      return <Pending owner="Medallitadeoro" desc="Enlaces todavía no está construido — próximo paso." />
+      case "enlaces":      return <SeccionEnlaces />
       default:              return <SeccionPortalHome onNavigate={navigate} />
     }
   }
