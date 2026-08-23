@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { GRUPOS, DEPT_ICONS } from "./PortalMDOSidebar"
-import { fechaActual } from "./shared"
 import { HeroCarusel } from "./HeroCarusel"
 import { GestionAvisosModal } from "./GestionAvisosModal"
 import { useGetAvisos } from "@/api/aviso/getAvisos"
@@ -93,11 +92,6 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Portal Medallitadeoro</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{fechaActual()}</p>
-      </div>
-
       <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
 
       {gestionOpen && (
