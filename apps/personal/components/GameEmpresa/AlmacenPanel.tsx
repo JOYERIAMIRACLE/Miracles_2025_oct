@@ -20,6 +20,7 @@ interface Props {
   adminUrl: string
   notaCompartida?: string
   infraestructura?: InfraItem[]
+  extra?: React.ReactNode
 }
 
 /* Separa "modelo, modelo — nota aparte" en las fichas propiamente (pastillas)
@@ -31,7 +32,7 @@ function parseFichas(fichas: string): { items: string[]; nota?: string } {
   return { items, nota }
 }
 
-export function AlmacenPanel({ titulo, totalFichas, estantes, adminUrl, notaCompartida, infraestructura }: Props) {
+export function AlmacenPanel({ titulo, totalFichas, estantes, adminUrl, notaCompartida, infraestructura, extra }: Props) {
   return (
     <div className="p-5 space-y-5">
       <PortalPurposeHeader
@@ -73,6 +74,8 @@ export function AlmacenPanel({ titulo, totalFichas, estantes, adminUrl, notaComp
           )
         })}
       </div>
+
+      {extra}
 
       {infraestructura && infraestructura.length > 0 && (
         <div>

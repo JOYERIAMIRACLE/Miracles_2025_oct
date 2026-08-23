@@ -12,6 +12,7 @@ import { AlmacenPanel } from "@/components/GameEmpresa/AlmacenPanel"
 import { TallerRichiavrodPanel }     from "@/components/GameEmpresa/TallerRichiavrodPanel"
 import { TallerMedallitadeoroPanel } from "@/components/GameEmpresa/TallerMedallitadeoroPanel"
 import { TallerSdiPortalPanel }      from "@/components/GameEmpresa/TallerSdiPortalPanel"
+import { MedallitadeoroDataMap }     from "@/components/GameEmpresa/MedallitadeoroDataMap"
 
 const MIRACLES_ADMIN   = "https://miracles2025oct-production.up.railway.app/admin"
 const SDI_PORTAL_ADMIN = "https://sdi-portal-production.up.railway.app/admin"
@@ -72,6 +73,14 @@ function Content({ module }: { module: string }) {
             { nombre: "Compras (mercancía terminada, en desuso)", fichas: "proveedor, orden-compra — tab quitado de la navegación, datos históricos intactos" },
             { nombre: "Marca / Sitio",         fichas: "identidad-empresa, sitio-web-miracles, blog-post, anuncio" },
           ]}
+          extra={
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-violet-500/60 mb-2.5">
+                Cómo se conecta esto
+              </p>
+              <MedallitadeoroDataMap />
+            </div>
+          }
         />
       )
 
