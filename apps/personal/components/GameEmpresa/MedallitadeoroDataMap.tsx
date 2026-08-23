@@ -2,14 +2,15 @@
 
 import { ChevronDown, Link2, Unlink } from "lucide-react"
 
-type Nodo = { nombre: string; nota?: string }
+type Nodo = { nombre: string; nota?: string; children?: React.ReactNode }
 
 /* Caja de una entidad dentro del flujo */
-function Caja({ nombre, nota }: Nodo) {
+function Caja({ nombre, nota, children }: Nodo) {
   return (
     <div className="rounded-lg border border-violet-500/25 bg-violet-500/5 px-3.5 py-2.5 text-center">
       <p className="text-xs font-semibold text-slate-200">{nombre}</p>
       {nota && <p className="text-[10px] text-slate-500 mt-0.5">{nota}</p>}
+      {children}
     </div>
   )
 }
@@ -27,6 +28,27 @@ function Flecha({ label, conectado = true }: { label?: string; conectado?: boole
           {label}
         </span>
       )}
+    </div>
+  )
+}
+
+/* Mini-estepper del campo Funnel dentro de Cliente — "Lead" no es tabla
+   aparte, es el primer valor de este mismo campo (confirmado en
+   LeadsView.tsx: filtra clientes.filter(c => c.Funnel === "Lead")). */
+function FunnelMini() {
+  const etapas = ["Lead", "Oferta", "Pedido", "Entrega"]
+  return (
+    <div className="mt-1.5 pt-1.5 border-t border-violet-500/15">
+      <p className="text-[9px] font-mono uppercase tracking-wider text-slate-600 mb-1">campo Funnel, mismo registro</p>
+      <div className="flex items-center justify-center flex-wrap gap-x-1 gap-y-0.5">
+        {etapas.map((e, i) => (
+          <span key={e} className="flex items-center gap-1">
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-700/40">{e}</span>
+            {i < etapas.length - 1 && <span className="text-slate-700 text-[9px]">→</span>}
+          </span>
+        ))}
+      </div>
+      <p className="text-[9px] text-slate-600 text-center mt-1">o "Rechazada" desde cualquier etapa</p>
     </div>
   )
 }
@@ -50,8 +72,10 @@ export function MedallitadeoroDataMap() {
       </p>
 
       <Flujo titulo="Ventas — de cliente a producto entregado">
-        <Caja nombre="Cliente" />
-        <Flecha label="1 → muchas" />
+        <Caja nombre="Cliente">
+          <FunnelMini />
+        </Caja>
+        <Flecha label="normalmente en etapa Oferta" />
         <Caja nombre="Cotización" nota="items guardados como texto libre, no ligados a Producto todavía" />
         <Flecha conectado={false} label="sin relación" />
         <div className="flex items-center gap-1.5 text-[10px] text-amber-500/70 justify-center -mt-1 mb-1">
