@@ -1,22 +1,15 @@
 "use client"
 
-import { Palette, LayoutTemplate, Images, Briefcase, Megaphone, Globe, BarChart3, ShoppingBag, Type } from "lucide-react"
-import { useSectionTab, TabBar, Card, SeccionHero, useHeroImagen } from "./shared"
-import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
+import { Palette, LayoutTemplate, Images, Briefcase, ShoppingBag, Type } from "lucide-react"
+import { useSectionTab, TabBar, Card, SeccionHero } from "./shared"
 import { RecursosDescargables, type RecursoExtraTab } from "./RecursosDescargables"
-import { SitioWebMiraclesView } from "@/components/Empresa/Marketing/SitioWebMiraclesView"
-import { CampanasPlannerView } from "./CampanasPlannerView"
 import { MerchView } from "./MerchView"
-import { IndicadoresView } from "./IndicadoresView"
 
 const TABS = [
   { id: "identidad",  label: "Identidad de marca",     icon: Palette },
   { id: "plantillas", label: "Plantillas",              icon: LayoutTemplate },
   { id: "galeria",    label: "Galería",                 icon: Images },
   { id: "materiales", label: "Materiales comerciales",  icon: Briefcase },
-  { id: "campanas",   label: "Campañas",                icon: Megaphone },
-  { id: "sitio-web",  label: "Sitio web",                icon: Globe },
-  { id: "indicadores",label: "Indicadores",              icon: BarChart3 },
   { id: "merch",      label: "Merch",                    icon: ShoppingBag },
 ]
 
@@ -56,39 +49,22 @@ const IDENTIDAD_EXTRA_TABS: RecursoExtraTab[] = [
   { id: "colorimetria", label: "Colorimetría", icon: Palette, orden: 2000, content: <TabColorimetria /> },
 ]
 
-export function SeccionMarketing() {
-  const { tab, setTab } = useSectionTab("marketing", "identidad")
+export function SeccionGestionMarca() {
+  const { tab, setTab } = useSectionTab("marca", "identidad")
   const activo = TABS.find(t => t.id === tab) ?? TABS[0]
-  const { identidad, loading, reload } = useGetIdentidad()
-  const documentId = identidad?.documentId ?? null
-  const hero = useHeroImagen("portada_depto_marketing", documentId, reload)
 
   return (
     <div className="space-y-4">
       <SeccionHero
-        breadcrumb={["Departamentos", "Marketing", activo.label]}
-        titulo="Marketing"
-        descripcion={identidad?.descripcion_depto_marketing || "Identidad de marca, plantillas, campañas y sitio web de medallitadeoro."}
-        campoDescripcion="descripcion_depto_marketing"
-        onDescripcionGuardada={reload}
-        imagenUrl={identidad?.portada_depto_marketing?.url}
-        imagenOriginalUrl={identidad?.portada_depto_marketing_original?.url}
-        documentId={documentId}
-        puedeEditar={!loading}
-        uploading={hero.uploading}
-        inputRef={hero.inputRef}
-        onTrigger={hero.trigger}
-        onFileChange={hero.handleFile}
-        onSaveCrop={hero.saveCrop}
+        breadcrumb={["Recursos", "Gestión de marca", activo.label]}
+        titulo="Gestión de marca"
+        descripcion="Identidad, plantillas, galería, materiales comerciales y merch — todo lo de marca en un solo lugar."
       />
       <TabBar tabs={TABS} active={tab} onChange={setTab} />
       {tab === "identidad"   && <RecursosDescargables seccion="marketing-identidad" layout="sidebar" extraTabs={IDENTIDAD_EXTRA_TABS} />}
       {tab === "plantillas"  && <RecursosDescargables seccion="marketing-plantillas" layout="sidebar" />}
       {tab === "galeria"     && <RecursosDescargables seccion="marketing-galeria" layout="sidebar" />}
       {tab === "materiales"  && <RecursosDescargables seccion="marketing-materiales" layout="sidebar" />}
-      {tab === "campanas"    && <CampanasPlannerView />}
-      {tab === "sitio-web"   && <SitioWebMiraclesView />}
-      {tab === "indicadores" && <IndicadoresView />}
       {tab === "merch"       && <MerchView />}
     </div>
   )

@@ -27,10 +27,11 @@ function useIndiceBusqueda(): Resultado[] {
         continue
       }
       for (const item of grupo.items) {
+        const itemOwnSection = item.ownSection ?? grupo.itemsAreOwnSection
         out.push({
           label: item.label,
-          seccion: grupo.itemsAreOwnSection ? item.id : grupo.id,
-          tab: grupo.itemsAreOwnSection ? undefined : item.id,
+          seccion: itemOwnSection ? item.id : grupo.id,
+          tab: itemOwnSection ? undefined : item.id,
           grupo: grupo.label,
         })
       }

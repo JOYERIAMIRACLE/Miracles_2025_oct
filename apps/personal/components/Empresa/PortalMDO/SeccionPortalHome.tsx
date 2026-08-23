@@ -10,7 +10,7 @@ import { useGetAvisos } from "@/api/aviso/getAvisos"
 
 const ACCESOS_KEY = "mdo_portal_accesos"
 const ACCESOS_CONFIGURED_KEY = "mdo_portal_accesos_configured"
-const DEFAULT_ACCESOS = ["quienes-somos", "comercial", "marketing", "administracion"]
+const DEFAULT_ACCESOS = ["quienes-somos", "crm", "ventas", "finanzas"]
 
 // Datos de ejemplo — mismo mockup decorativo que trae SDI Portal (no está
 // conectado a ventas/proyectos reales de medallitadeoro todavía).
@@ -25,20 +25,28 @@ const MAX_BAR = 30
 interface Acceso { id: string; label: string; icon: typeof DEPT_ICONS[string]; onClick: () => void }
 
 function useStaticAccesos(onNavigate: (id: string, tab?: string) => void): { grupo: string; items: Acceso[] }[] {
-  const conoce = GRUPOS.find(g => g.id === "conoce")!
-  const departamentos = GRUPOS.find(g => g.id === "departamentos")!
-  const servicios = GRUPOS.find(g => g.id === "servicios")!
+  const conoce     = GRUPOS.find(g => g.id === "conoce")!
+  const operacion  = GRUPOS.find(g => g.id === "operacion")!
+  const recursos   = GRUPOS.find(g => g.id === "recursos")!
+  const servicios  = GRUPOS.find(g => g.id === "servicios")!
   return [
     {
-      grupo: "Conoce a Medallitadeoro",
-      items: conoce.items.map(it => ({ id: it.id, label: it.label, icon: it.icon, onClick: () => onNavigate("conoce", it.id) })),
+      grupo: conoce.label,
+      items: conoce.items.map(it => ({
+        id: it.id, label: it.label, icon: it.icon,
+        onClick: () => (it.ownSection ?? conoce.itemsAreOwnSection) ? onNavigate(it.id) : onNavigate("conoce", it.id),
+      })),
     },
     {
-      grupo: "Departamentos",
-      items: departamentos.items.map(it => ({ id: it.id, label: it.label, icon: it.icon, onClick: () => onNavigate(it.id) })),
+      grupo: operacion.label,
+      items: operacion.items.map(it => ({ id: it.id, label: it.label, icon: it.icon, onClick: () => onNavigate(it.id) })),
     },
     {
-      grupo: "Servicios y aplicaciones",
+      grupo: recursos.label,
+      items: recursos.items.map(it => ({ id: it.id, label: it.label, icon: it.icon, onClick: () => onNavigate(it.id) })),
+    },
+    {
+      grupo: servicios.label,
       items: servicios.items.map(it => ({ id: it.id, label: it.label, icon: it.icon, onClick: () => onNavigate(it.id) })),
     },
   ]

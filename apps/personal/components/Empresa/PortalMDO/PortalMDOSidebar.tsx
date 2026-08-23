@@ -2,52 +2,79 @@
 
 import { useState } from "react"
 import {
-  Home, Landmark, Briefcase, Layers, Building2, GitBranch, ShoppingBag,
-  Flag, Users, Globe, DollarSign, ChevronDown, Settings,
+  Home, Landmark, Building2, GitBranch, Users, Flag, Briefcase, ListChecks,
+  Megaphone, Contact, Target, ShoppingBag, Boxes, DollarSign, Globe,
+  FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings,
 } from "lucide-react"
 import { PortalMDOConfigModal } from "./PortalMDOConfigModal"
+
+export interface NavItem {
+  id: string
+  label: string
+  icon: typeof Home
+  /** Si se define, sobreescribe itemsAreOwnSection del grupo SOLO para este
+      item — ej. "Misión" es su propia sección aunque viva visualmente
+      dentro del grupo "Conoce a Medallita de oro", que por lo demás
+      funciona por pestañas de una sola sección. */
+  ownSection?: boolean
+}
 
 export interface NavGroup {
   id:    string
   label: string
   icon:  typeof Home
-  /** Si es true, cada item navega a su PROPIA sección (departamentos/servicios). Si es false, todos los items navegan a `id` (este grupo) con el item como tab. */
+  /** Si es true, cada item navega a su PROPIA sección por default. Si es
+      false, todos los items navegan a `id` (este grupo) con el item como
+      tab — salvo que el item mismo traiga `ownSection` y lo sobreescriba. */
   itemsAreOwnSection: boolean
-  items: { id: string; label: string; icon: typeof Home }[]
+  items: NavItem[]
 }
 
 export const GRUPOS: NavGroup[] = [
   { id: "portal", label: "Inicio", icon: Home, itemsAreOwnSection: true, items: [] },
   {
-    id: "conoce", label: "Conoce a Medallitadeoro", icon: Landmark, itemsAreOwnSection: false,
+    id: "conoce", label: "Conoce a Medallita de oro", icon: Landmark, itemsAreOwnSection: false,
     items: [
       { id: "quienes-somos", label: "¿Quiénes somos?", icon: Building2 },
+      { id: "mision",        label: "Misión",           icon: Flag, ownSection: true },
       { id: "organigrama",   label: "Organigrama",      icon: GitBranch },
       { id: "directorio",    label: "Directorio",       icon: Users },
     ],
   },
   {
-    id: "departamentos", label: "Departamentos", icon: Briefcase, itemsAreOwnSection: true,
+    id: "operacion", label: "Operación", icon: Briefcase, itemsAreOwnSection: true,
     items: [
-      { id: "mision",         label: "Misión",                    icon: Flag },
-      { id: "rh",              label: "Recursos Humanos",          icon: Users },
-      { id: "cadena",          label: "Cadena de suministro",      icon: Globe },
-      { id: "comercial",       label: "Comercial",                 icon: ShoppingBag },
-      { id: "marketing",       label: "Marketing",                 icon: GitBranch },
-      { id: "administracion",  label: "Administración y Finanzas", icon: DollarSign },
+      { id: "tareas",     label: "Tareas",     icon: ListChecks },
+      { id: "campanas",   label: "Campañas",   icon: Megaphone },
+      { id: "contactos",  label: "Contactos",  icon: Contact },
+      { id: "crm",        label: "CRM",        icon: Target },
+      { id: "ventas",     label: "Ventas",     icon: ShoppingBag },
+      { id: "inventario", label: "Inventario", icon: Boxes },
+      { id: "finanzas",   label: "Finanzas",   icon: DollarSign },
+      { id: "sitio-web",  label: "Sitio web",  icon: Globe },
     ],
   },
   {
-    id: "servicios", label: "Servicios y aplicaciones", icon: Layers, itemsAreOwnSection: true,
+    id: "recursos", label: "Recursos", icon: FolderKanban, itemsAreOwnSection: true,
     items: [
-      { id: "tareas", label: "Tareas", icon: Layers },
+      { id: "rh",          label: "Recursos Humanos", icon: Users },
+      { id: "documentos",  label: "Documentos",       icon: FileText },
+      { id: "marca",       label: "Gestión de marca", icon: Palette },
+    ],
+  },
+  {
+    id: "servicios", label: "Servicios y apps", icon: Layers, itemsAreOwnSection: true,
+    items: [
+      { id: "enlaces", label: "Enlaces", icon: Link2 },
     ],
   },
 ]
 
 export const DEPT_ICONS: Record<string, typeof Home> = {
-  mision: Flag, rh: Users, cadena: Globe, comercial: ShoppingBag,
-  marketing: GitBranch, administracion: DollarSign,
+  "quienes-somos": Building2, mision: Flag, organigrama: GitBranch, directorio: Users,
+  tareas: ListChecks, campanas: Megaphone, contactos: Contact, crm: Target,
+  ventas: ShoppingBag, inventario: Boxes, finanzas: DollarSign, "sitio-web": Globe,
+  rh: Users, documentos: FileText, marca: Palette, enlaces: Link2,
 }
 
 interface Props {
@@ -58,7 +85,7 @@ interface Props {
 }
 
 export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
-  const [gruposOpen, setGruposOpen] = useState<Set<string>>(new Set(["departamentos"]))
+  const [gruposOpen, setGruposOpen] = useState<Set<string>>(new Set(["operacion"]))
   const [configOpen, setConfigOpen] = useState(false)
 
   function toggleGrupo(id: string) {
@@ -76,8 +103,8 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
         {GRUPOS.map(grupo => {
           const isOpen       = gruposOpen.has(grupo.id)
           const isPortal     = grupo.id === "portal"
-          const isToggleOnly = grupo.id === "departamentos" || grupo.id === "servicios" || grupo.id === "conoce"
-          const headerActive = (isPortal && seccion === "portal") || (grupo.id === "conoce" && seccion === "conoce")
+          const isToggleOnly = grupo.id !== "portal"
+          const headerActive = isPortal && seccion === "portal"
 
           const handleHeaderClick = () => {
             if (isPortal) onNavigate("portal")
@@ -108,10 +135,11 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
                 <div className="pb-1 mb-1 border-b border-slate-100 dark:border-slate-700 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.06)]">
                   {grupo.items.map(item => {
                     const Icon = item.icon
-                    const active = grupo.itemsAreOwnSection ? seccion === item.id : seccion === grupo.id && tab === item.id
+                    const itemOwnSection = item.ownSection ?? grupo.itemsAreOwnSection
+                    const active = itemOwnSection ? seccion === item.id : seccion === grupo.id && tab === item.id
                     return (
                       <button key={item.id} type="button"
-                        onClick={() => grupo.itemsAreOwnSection ? onNavigate(item.id) : onNavigate(grupo.id, item.id)}
+                        onClick={() => itemOwnSection ? onNavigate(item.id) : onNavigate(grupo.id, item.id)}
                         className={[
                           "w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-all",
                           active

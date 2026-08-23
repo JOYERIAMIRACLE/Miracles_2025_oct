@@ -7,15 +7,22 @@ import { SeccionPortalHome } from "@/components/Empresa/PortalMDO/SeccionPortalH
 import { SeccionConoceMDO } from "@/components/Empresa/PortalMDO/SeccionConoceMDO"
 import { SeccionMision } from "@/components/Empresa/PortalMDO/SeccionMision"
 import { SeccionRH } from "@/components/Empresa/PortalMDO/SeccionRH"
-import { SeccionCadenaSuministro } from "@/components/Empresa/PortalMDO/SeccionCadenaSuministro"
-import { SeccionComercial } from "@/components/Empresa/PortalMDO/SeccionComercial"
-import { SeccionMarketing } from "@/components/Empresa/PortalMDO/SeccionMarketing"
-import { SeccionAdministracionFinanzas } from "@/components/Empresa/PortalMDO/SeccionAdministracionFinanzas"
+import { SeccionContactos } from "@/components/Empresa/PortalMDO/SeccionContactos"
+import { SeccionCRM } from "@/components/Empresa/PortalMDO/SeccionCRM"
+import { SeccionVentas } from "@/components/Empresa/PortalMDO/SeccionVentas"
+import { SeccionInventario } from "@/components/Empresa/PortalMDO/SeccionInventario"
+import { SeccionCampanas } from "@/components/Empresa/PortalMDO/SeccionCampanas"
+import { SeccionSitioWeb } from "@/components/Empresa/PortalMDO/SeccionSitioWeb"
+import { SeccionFinanzas } from "@/components/Empresa/PortalMDO/SeccionFinanzas"
+import { SeccionDocumentos } from "@/components/Empresa/PortalMDO/SeccionDocumentos"
+import { SeccionGestionMarca } from "@/components/Empresa/PortalMDO/SeccionGestionMarca"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
+import { Pending } from "@/components/Empresa/PortalMDO/shared"
 
 const SECCIONES_VALIDAS = [
-  "portal", "conoce", "mision", "rh", "cadena", "comercial", "marketing",
-  "administracion", "tareas",
+  "portal", "conoce", "mision", "rh",
+  "tareas", "campanas", "contactos", "crm", "ventas", "inventario", "finanzas", "sitio-web",
+  "documentos", "marca", "enlaces",
 ]
 
 function leerHash(): { seccion: string; tab: string } {
@@ -51,16 +58,22 @@ export default function PortalMedallitadeoroPage() {
 
   function renderContent() {
     switch (seccion) {
-      case "portal":         return <SeccionPortalHome onNavigate={navigate} />
-      case "conoce":         return <SeccionConoceMDO />
-      case "mision":         return <SeccionMision />
-      case "rh":             return <SeccionRH />
-      case "cadena":         return <SeccionCadenaSuministro />
-      case "comercial":      return <SeccionComercial />
-      case "marketing":      return <SeccionMarketing />
-      case "administracion": return <SeccionAdministracionFinanzas />
-      case "tareas":         return <TareasView ambito="empresa" titulo="Tareas" />
-      default:                return <SeccionPortalHome onNavigate={navigate} />
+      case "portal":      return <SeccionPortalHome onNavigate={navigate} />
+      case "conoce":       return <SeccionConoceMDO />
+      case "mision":       return <SeccionMision />
+      case "rh":           return <SeccionRH />
+      case "tareas":       return <TareasView ambito="empresa" titulo="Tareas" />
+      case "campanas":     return <SeccionCampanas />
+      case "contactos":    return <SeccionContactos />
+      case "crm":          return <SeccionCRM />
+      case "ventas":       return <SeccionVentas />
+      case "inventario":   return <SeccionInventario />
+      case "finanzas":     return <SeccionFinanzas />
+      case "sitio-web":    return <SeccionSitioWeb />
+      case "documentos":   return <SeccionDocumentos />
+      case "marca":        return <SeccionGestionMarca />
+      case "enlaces":      return <Pending owner="Medallitadeoro" desc="Enlaces todavía no está construido — próximo paso." />
+      default:              return <SeccionPortalHome onNavigate={navigate} />
     }
   }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, BarChart3, Gavel } from "lucide-react"
+import { TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, BarChart3 } from "lucide-react"
 import { useSectionTab, TabBar, SeccionHero, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { IngresosEmpresaView } from "@/components/Empresa/Finanzas/IngresosEmpresaView"
@@ -9,20 +9,22 @@ import { PresupuestosEmpresaView } from "@/components/Empresa/Finanzas/Presupues
 import { CuentasEmpresaView } from "@/components/Empresa/Finanzas/CuentasEmpresaView"
 import { CalendarioPagosView } from "@/components/Empresa/Finanzas/CalendarioPagosView"
 import { FinancierosView } from "@/components/Empresa/Indicadores/FinancierosView"
-import { DocumentosLegalesView } from "./DocumentosLegalesView"
 
 const TABS = [
-  { id: "ingresos",     label: "Ingresos",              icon: TrendingUp },
+  { id: "ingresos",     label: "Ingresos",             icon: TrendingUp },
   { id: "gastos",       label: "Gastos",                icon: Receipt },
   { id: "presupuestos", label: "Presupuestos",          icon: PieChart },
   { id: "cuentas",      label: "Cuentas",                icon: CreditCard },
   { id: "calendario",   label: "Calendario de pagos",   icon: CalendarDays },
-  { id: "legales",      label: "Documentos legales",    icon: Gavel },
   { id: "metricas",     label: "Métricas",                icon: BarChart3 },
 ]
 
-export function SeccionAdministracionFinanzas() {
-  const { tab, setTab } = useSectionTab("administracion", "ingresos")
+/* Antes "Administración y Finanzas" — Documentos legales se movió a
+   Recursos > Documentos, "Administración" se cae del nombre. Reusa el
+   mismo campo de portada (portada_depto_administracion) para no perder
+   la imagen que ya hubiera puesto el usuario. */
+export function SeccionFinanzas() {
+  const { tab, setTab } = useSectionTab("finanzas", "ingresos")
   const activo = TABS.find(t => t.id === tab) ?? TABS[0]
   const { identidad, loading, reload } = useGetIdentidad()
   const documentId = identidad?.documentId ?? null
@@ -31,9 +33,9 @@ export function SeccionAdministracionFinanzas() {
   return (
     <div className="space-y-4">
       <SeccionHero
-        breadcrumb={["Departamentos", "Administración y Finanzas", activo.label]}
-        titulo="Administración y Finanzas"
-        descripcion={identidad?.descripcion_depto_administracion || "Ingresos, gastos, presupuestos, cuentas y documentos legales de medallitadeoro."}
+        breadcrumb={["Operación", "Finanzas", activo.label]}
+        titulo="Finanzas"
+        descripcion={identidad?.descripcion_depto_administracion || "Ingresos, gastos, presupuestos, cuentas y métricas de medallitadeoro."}
         campoDescripcion="descripcion_depto_administracion"
         onDescripcionGuardada={reload}
         imagenUrl={identidad?.portada_depto_administracion?.url}
@@ -52,7 +54,6 @@ export function SeccionAdministracionFinanzas() {
       {tab === "presupuestos"  && <PresupuestosEmpresaView />}
       {tab === "cuentas"       && <CuentasEmpresaView />}
       {tab === "calendario"    && <CalendarioPagosView />}
-      {tab === "legales"       && <DocumentosLegalesView />}
       {tab === "metricas"      && <FinancierosView />}
     </div>
   )
