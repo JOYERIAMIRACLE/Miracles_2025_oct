@@ -819,15 +819,9 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   return (
     <div
       className="-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden transition-colors duration-300"
-      style={{
-        backgroundColor: isDark ? "#020617" : "#f8fafc",
-        backgroundImage: isDark
-          ? "radial-gradient(circle, #1e293b 1px, transparent 1px)"
-          : "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
-        backgroundSize: "28px 28px",
-      }}>
+      style={{ backgroundColor: isDark ? "#020617" : "#f8fafc" }}>
       <div className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.07) 0%, transparent 55%)" }} />
+        style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.1) 0%, transparent 55%)" }} />
       <div className="relative p-4 sm:p-6">
       <div className="mb-6">
         <SeccionHero
@@ -1042,7 +1036,9 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
               const renombrandoEste = renombrandoProyecto === g.proyecto.documentId
               return (
                 <div key={`proyecto-${g.proyecto.documentId}`}
-                  className="rounded-xl border border-violet-200 dark:border-violet-800/40 bg-violet-50/40 dark:bg-violet-500/5 p-2 space-y-2">
+                  className={`rounded-xl border border-violet-200 dark:border-violet-800/40 p-2 space-y-2 ${
+                    colapsado ? "bg-white dark:bg-slate-900 shadow-sm" : "bg-violet-50/40 dark:bg-violet-500/5"
+                  }`}>
                   {renombrandoEste ? (
                     <div className="flex items-center gap-1.5 px-1.5 py-0.5" onClick={e => e.stopPropagation()}>
                       <input autoFocus value={nombreRenombrado} onChange={e => setNombreRenombrado(e.target.value)}
