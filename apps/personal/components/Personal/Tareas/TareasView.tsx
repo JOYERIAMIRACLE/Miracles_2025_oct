@@ -4,7 +4,8 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal, Layers, Pencil } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
-import { SeccionHero, HeroTabs } from "@/components/Empresa/PortalMDO/shared"
+import { SeccionHero, HeroTabs, useHeroImagen } from "@/components/Empresa/PortalMDO/shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
@@ -154,6 +155,15 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const { user } = useCurrentUser()
   const { tareas, setTareas, loading } = useGetTareas(ambito)
   const { historial, setHistorial }    = useGetHistorialTarea(ambito)
+
+  // La imagen/descripción del header viven en identidad-empresa (un solo
+  // registro global) — solo tiene sentido editarlas desde el ambito
+  // "empresa" (portal-medallitadeoro); en Personal/Trabajo el header se
+  // queda en modo simple, sin la imagen de marca de medallitadeoro.
+  const esEmpresa = ambito === "empresa"
+  const { identidad, loading: identidadLoading, reload: reloadIdentidad } = useGetIdentidad()
+  const documentIdIdentidad = identidad?.documentId ?? null
+  const hero = useHeroImagen("portada_tareas", documentIdIdentidad, reloadIdentidad)
   const [vista, setVista] = useState<Vista>("lista")
   const [filtro, setFiltro] = useState<EstadoTarea | "todas">("en_progreso")
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>("")
@@ -819,7 +829,18 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
         <SeccionHero
           breadcrumb={breadcrumb ?? [titulo]}
           titulo={titulo}
-          descripcion="Gestiona y da seguimiento a tus tareas"
+          descripcion={(esEmpresa && identidad?.descripcion_tareas) || "Gestiona y da seguimiento a tus tareas"}
+          campoDescripcion={esEmpresa ? "descripcion_tareas" : undefined}
+          onDescripcionGuardada={reloadIdentidad}
+          imagenUrl={esEmpresa ? identidad?.portada_tareas?.url : null}
+          imagenOriginalUrl={esEmpresa ? identidad?.portada_tareas_original?.url : null}
+          documentId={documentIdIdentidad}
+          puedeEditar={esEmpresa && !identidadLoading}
+          uploading={hero.uploading}
+          inputRef={hero.inputRef}
+          onTrigger={hero.trigger}
+          onFileChange={hero.handleFile}
+          onSaveCrop={hero.saveCrop}
         >
           <HeroTabs tabs={VISTA_TABS} active={vista} onChange={id => setVista(id as Vista)} />
         </SeccionHero>

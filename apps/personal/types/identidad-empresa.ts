@@ -62,6 +62,9 @@ export type IdentidadEmpresa = {
   descripcion_depto_administracion:      string | null
   portada_depto_administracion:          IdentidadImagen
   portada_depto_administracion_original: IdentidadImagen
+  descripcion_tareas:      string | null
+  portada_tareas:          IdentidadImagen
+  portada_tareas_original: IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }

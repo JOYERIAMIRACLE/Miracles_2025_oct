@@ -62,6 +62,9 @@
     "portada_depto_marketing_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "descripcion_depto_administracion":      { "type": "text" },
     "portada_depto_administracion":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "portada_depto_administracion_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "portada_depto_administracion_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "descripcion_tareas":      { "type": "text" },
+    "portada_tareas":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_tareas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }
