@@ -96,6 +96,7 @@ export function PedidosView() {
       .filter(v => {
         const matchSearch = !search ||
           v.concepto.toLowerCase().includes(search.toLowerCase()) ||
+          (v.numero ?? "").toLowerCase().includes(search.toLowerCase()) ||
           (v.cliente?.nombre ?? "").toLowerCase().includes(search.toLowerCase())
         const matchEst = !filtroEst || v.estado === filtroEst
         return matchSearch && matchEst
@@ -234,7 +235,7 @@ export function PedidosView() {
         // antes de aplicar el estado real elegido — evita descontar stock con
         // líneas que todavía no existen.
         const estadoFinal = form.estado ?? "Cotizado"
-        const creada = await createVenta({ ...form, estado: "Cotizado" })
+        const creada = await createVenta({ ...form, numero: `PED-${String(raw.length + 1).padStart(3, "0")}`, estado: "Cotizado" })
         for (const l of lineasValidas) {
           await createVentaLinea({
             venta: creada.documentId, producto: l.productoId || null,
@@ -275,7 +276,7 @@ export function PedidosView() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[240px]">
           <ListToolbar
-            search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por concepto o cliente…"
+            search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por número, concepto o cliente…"
             filtros={[
               { value: "", label: "Todos" },
               ...ESTADOS_VENTA.map(e => ({ value: e as string, label: e })),
@@ -319,7 +320,11 @@ export function PedidosView() {
               {!loading && ventas.map(v => (
                 <tr key={v.documentId} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="px-4 py-3">
+                    {v.numero && <p className="text-[10px] font-bold font-mono text-slate-500">{v.numero}</p>}
                     <p className="font-medium text-slate-200 leading-snug">{v.concepto}</p>
+                    {v.cotizacionOrigen && (
+                      <p className="text-[10px] text-emerald-500/80 mt-0.5">← {v.cotizacionOrigen.numero}</p>
+                    )}
                     {v.lineas?.length > 0 ? (
                       <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
                         <Package size={10} /> {v.lineas.length} línea{v.lineas.length > 1 ? "s" : ""} de producto

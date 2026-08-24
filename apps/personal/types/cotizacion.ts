@@ -34,7 +34,7 @@ export type Cotizacion = {
   fecha:       string | null
   createdAt:   string
   cliente?:    { documentId: string; nombre: string; telefono: string | null; email: string | null } | null
-  ventaGenerada?: { id: number; documentId: string; concepto: string; estado: string } | null
+  ventaGenerada?: { id: number; documentId: string; numero: string | null; concepto: string; estado: string } | null
 }
 
 export type CotizacionPayload = {

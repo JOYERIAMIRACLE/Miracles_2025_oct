@@ -23,6 +23,7 @@ export const ESTADO_VENTA_COLOR: Record<EstadoVenta, string> = {
 export type VentaEmpresa = {
   id:          number
   documentId:  string
+  numero:      string | null
   concepto:    string
   monto:       number
   fecha:       string
@@ -41,6 +42,7 @@ export type VentaEmpresa = {
 }
 
 export type VentaPayload = {
+  numero?:     string | null
   concepto:    string
   monto:       number
   fecha:       string

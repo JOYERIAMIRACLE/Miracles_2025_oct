@@ -11,6 +11,9 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "numero": {
+      "type": "string"
+    },
     "concepto": {
       "type": "string",
       "required": true

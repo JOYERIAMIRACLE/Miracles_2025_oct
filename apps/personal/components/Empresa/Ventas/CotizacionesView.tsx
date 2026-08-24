@@ -7,7 +7,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetAllCotizaciones, deleteCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
-import { createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
+import { createVenta, updateVenta, useGetVentas } from "@/api/ventaEmpresa/getVentas"
 import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
 import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
@@ -45,8 +45,9 @@ function calcularFaltantes(items: ItemCotizacion[], productos: ProductType[]) {
 }
 
 // ─── Modal convertir a pedido ─────────────────────────────────────────────────
-function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
+function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }: {
   cotizacion: Cotizacion
+  totalVentas: number
   onClose: () => void
   onConverted: (cotizacionActualizada: Cotizacion) => void
 }) {
@@ -83,6 +84,7 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
       // reales de la cotización antes de aplicar el estado elegido — mismo
       // patrón de 2 pasos que "Nuevo pedido" en PedidosView.
       const creada = await createVenta({
+        numero:    `PED-${String(totalVentas + 1).padStart(3, "0")}`,
         concepto:  form.concepto,
         monto:     form.monto,
         fecha:     form.fecha,
@@ -204,6 +206,7 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
 export function CotizacionesView() {
   const { cotizaciones, setCotizaciones, loading } = useGetAllCotizaciones()
   const { clientes } = useGetClientes()
+  const { ventas: todasVentas } = useGetVentas()
 
   const [search,          setSearch]          = useState("")
   const [filtroEstado,    setFiltroEstado]     = useState<EstadoCotizacion | "">("")
@@ -343,7 +346,7 @@ export function CotizacionesView() {
                       {cot.estado}
                     </span>
                     {cot.ventaGenerada && (
-                      <span className="block text-[10px] text-emerald-500/80 mt-1">→ {cot.ventaGenerada.concepto}</span>
+                      <span className="block text-[10px] text-emerald-500/80 mt-1">→ {cot.ventaGenerada.numero ?? cot.ventaGenerada.concepto}</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
@@ -404,6 +407,7 @@ export function CotizacionesView() {
       {convertiendo && (
         <ConvertirPedidoModal
           cotizacion={convertiendo}
+          totalVentas={todasVentas.length}
           onClose={() => setConvertiendo(null)}
           onConverted={cotizacionActualizada => { handleCotizacionSaved(cotizacionActualizada); setConvertiendo(null) }}
         />

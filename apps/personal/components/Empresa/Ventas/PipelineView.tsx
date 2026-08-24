@@ -492,9 +492,10 @@ function calcularFaltantes(items: ItemCotizacion[], productos: ProductType[]) {
   return faltantes
 }
 
-export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, onCreated }: {
+export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVentas, onClose, onCreated }: {
   cliente: ClienteEmpresa
   cotizacionesAceptadas: Cotizacion[]
+  totalVentas: number
   onClose: () => void
   onCreated: (v: VentaEmpresa) => void
 }) {
@@ -522,6 +523,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
     setConvirtiendo(cot.documentId)
     try {
       const creada = await createVenta({
+        numero: `PED-${String(totalVentas + 1).padStart(3, "0")}`,
         concepto: cot.numero ?? `Pedido — ${cliente.nombre}`,
         monto: cot.total, fecha: hoy, estado: "Cotizado",
         notas: cot.notas || null, cantidad: 1, cliente: cliente.documentId,
@@ -554,6 +556,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
     setGuardando(true)
     try {
       const creada = await createVenta({
+        numero: `PED-${String(totalVentas + 1).padStart(3, "0")}`,
         concepto: form.concepto.trim(), monto, fecha: form.fecha,
         estado: form.estado, metodoPago: form.metodoPago,
         cantidad: 1, cliente: cliente.documentId,
@@ -692,6 +695,24 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
             </div>
             <button type="button" title="Cerrar" onClick={onClose}
               className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition shrink-0"><X size={18} /></button>
+          </div>
+
+          {/* Contadores — resumen rápido de todo lo que este cliente ha
+              generado, sin tener que contar las listas de abajo a ojo. */}
+          <div className="flex items-center gap-3 mt-3 flex-wrap text-[10px]">
+            <span className="text-slate-500">
+              <span className="text-slate-200 font-bold font-mono">{cotizaciones.length}</span> cotización{cotizaciones.length !== 1 ? "es" : ""}
+            </span>
+            <span className="text-slate-700">·</span>
+            <span className="text-slate-500">
+              <span className="text-slate-200 font-bold font-mono">{ventasDelCliente.length}</span> pedido{ventasDelCliente.length !== 1 ? "s" : ""}
+            </span>
+            <span className="text-slate-700">·</span>
+            <span className="text-slate-500">
+              Total: <span className="text-violet-400 font-bold font-mono">
+                {ventasDelCliente.reduce((s, v) => s + (v.monto ?? 0), 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+              </span>
+            </span>
           </div>
         </div>
 
@@ -1116,6 +1137,7 @@ export function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
 export function PipelineView() {
   const {
     clientes, loading,
+    totalVentas,
     ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
@@ -1199,6 +1221,21 @@ export function PipelineView() {
   const leadsCalificados = clientes.filter(c => c.Funnel === "Lead" && c.calificado).length
   const rechazados       = clientes.filter(c => c.Funnel === "Rechazada").length
 
+  // De dónde viene cada cliente — no todos pasan por "Lead": el alta directo
+  // en la columna "Oferta" (ver botón "Agregar" de esa columna) no marca
+  // fechaLead, así que ese campo distingue de verdad "llegó como lead de
+  // marketing" de "se dio de alta ya cotizando". Y comparando cotizaciones
+  // vs. pedidos reales por cliente se ve quién se saltó la cotización.
+  const clientesDeLead = clientes.filter(c => !!c.fechaLead).length
+  const soloCotizaron  = clientes.filter(c =>
+    (cotizacionesPorCliente.get(c.documentId)?.length ?? 0) > 0 &&
+    (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0
+  ).length
+  const fueronDirectoAPedido = clientes.filter(c =>
+    (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) > 0 &&
+    (cotizacionesPorCliente.get(c.documentId)?.length ?? 0) === 0
+  ).length
+
   return (
     <div className="p-6 max-w-full mx-auto">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
@@ -1209,6 +1246,14 @@ export function PipelineView() {
             {leadsCalificados} calificados ·{" "}
             {clientes.filter(c => c.Funnel === "Entrega").length} entregas ·{" "}
             <span className="text-red-600">{rechazados} rechazadas</span>
+          </p>
+          {/* De dónde vienen los clientes — no todos entran por Lead: algunos
+              se dan de alta directo cotizando, otros directo con un pedido. */}
+          <p className="text-[11px] text-slate-600 mt-1">
+            De {clientes.length} clientes en total:{" "}
+            <span className="text-violet-400 font-semibold">{clientesDeLead} llegaron de lead</span> (marketing) ·{" "}
+            <span className="text-slate-400">{soloCotizaron} solo cotizaron</span> (sin pedido todavía) ·{" "}
+            <span className="text-slate-400">{fueronDirectoAPedido} fueron directo a pedido</span> (sin cotizar)
           </p>
         </div>
         <button type="button" onClick={() => abrirCrear("Lead")}
@@ -1301,6 +1346,7 @@ export function PipelineView() {
         <NuevoPedidoGateModal
           cliente={pedidoGateFor}
           cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+          totalVentas={totalVentas}
           onClose={() => setPedidoGateFor(null)}
           onCreated={onPedidoCreado}
         />

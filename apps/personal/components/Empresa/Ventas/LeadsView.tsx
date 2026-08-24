@@ -11,6 +11,7 @@ import { ListToolbar } from "./ListToolbar"
 export function LeadsView() {
   const {
     clientes, loading,
+    totalVentas,
     ventasPorCliente, cotizacionesPorCliente,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
@@ -233,6 +234,7 @@ export function LeadsView() {
         <NuevoPedidoGateModal
           cliente={pedidoGateFor}
           cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+          totalVentas={totalVentas}
           onClose={() => setPedidoGateFor(null)}
           onCreated={onPedidoCreado}
         />

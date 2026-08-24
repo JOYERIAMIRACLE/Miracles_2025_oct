@@ -14,6 +14,7 @@ import { ListToolbar } from "./ListToolbar"
 export function ClientesView() {
   const {
     clientes, loading,
+    totalVentas,
     ventasPorCliente, cotizacionesPorCliente, valorPorCliente,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
@@ -269,6 +270,7 @@ export function ClientesView() {
         <NuevoPedidoGateModal
           cliente={pedidoGateFor}
           cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+          totalVentas={totalVentas}
           onClose={() => setPedidoGateFor(null)}
           onCreated={onPedidoCreado}
         />

@@ -179,6 +179,7 @@ export function useClientesPipeline() {
 
   return {
     clientes, setClientes, loading,
+    totalVentas: todasVentas.length,
     ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
     avanzar, avanzarA, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
