@@ -228,7 +228,11 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [agruparPorProyecto, setAgruparPorProyecto] = useState(true)
-  const [proyectosColapsados, setProyectosColapsados] = useState<Set<string>>(new Set())
+  // Vacío por default = todos los grupos colapsados al cargar la página;
+  // solo se expanden los que el usuario abre a mano (se guarda el id del
+  // que SÍ está abierto, no al revés, para que el default "nada aquí"
+  // signifique "todo cerrado").
+  const [proyectosAbiertos, setProyectosAbiertos] = useState<Set<string>>(new Set())
   const [nombrandoProyecto, setNombrandoProyecto] = useState<{ origenId: string; destinoId: string } | null>(null)
   const [nombreProyectoInput, setNombreProyectoInput] = useState("")
   const [renombrandoProyecto, setRenombrandoProyecto] = useState<string | null>(null) // documentId del proyecto
@@ -568,7 +572,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   }
 
   function toggleProyectoColapsado(documentId: string) {
-    setProyectosColapsados(prev => {
+    setProyectosAbiertos(prev => {
       const next = new Set(prev)
       next.has(documentId) ? next.delete(documentId) : next.add(documentId)
       return next
@@ -1034,7 +1038,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
             {gruposRenderizados.map(g => {
               if (g.tipo === "suelta") return renderTareaCard(g.tarea)
 
-              const colapsado = proyectosColapsados.has(g.proyecto.documentId)
+              const colapsado = !proyectosAbiertos.has(g.proyecto.documentId)
               const renombrandoEste = renombrandoProyecto === g.proyecto.documentId
               return (
                 <div key={`proyecto-${g.proyecto.documentId}`}
