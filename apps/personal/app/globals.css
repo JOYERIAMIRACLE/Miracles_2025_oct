@@ -127,4 +127,12 @@
     background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);
     background-size: 28px 28px;
   }
+
+  @keyframes marquee-vertical {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
+  }
+  .animate-marquee-vertical {
+    animation: marquee-vertical 14s linear infinite;
+  }
 }

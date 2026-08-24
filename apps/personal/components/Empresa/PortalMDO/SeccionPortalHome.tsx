@@ -7,6 +7,7 @@ import { HeroCarusel } from "./HeroCarusel"
 import { PortalGlobe } from "./PortalGlobe"
 import { ActiveUsersCard } from "./ActiveUsersCard"
 import { HistorialCambiosCard } from "./HistorialCambiosCard"
+import { HistorialTickerCard } from "./HistorialTickerCard"
 import { CalendarioPendientesCard } from "./CalendarioPendientesCard"
 import { GestionAvisosModal } from "./GestionAvisosModal"
 import { useGetAvisos } from "@/api/aviso/getAvisos"
@@ -53,6 +54,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
   const [modalOpen,    setModalOpen]    = useState(false)
   const [tempSel,      setTempSel]      = useState<Set<string>>(new Set())
   const [gestionOpen,  setGestionOpen]  = useState(false)
+  const [historialOpen, setHistorialOpen] = useState(false)
 
   const { avisos, loading: loadingAvisos, reload: reloadAvisos } = useGetAvisos()
 
@@ -107,7 +109,8 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
         <GestionAvisosModal onClose={() => setGestionOpen(false)} onUpdated={reloadAvisos} />
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+        <div className="flex flex-col gap-5">
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Accesos rápidos</h2>
@@ -133,8 +136,20 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
           </div>
         </section>
 
+        <HistorialTickerCard onOpen={() => setHistorialOpen(true)} />
+        </div>
+
         <CalendarioPendientesCard />
       </div>
+
+      {historialOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setHistorialOpen(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <HistorialCambiosCard onClose={() => setHistorialOpen(false)} />
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -186,8 +201,6 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
           </div>
         </div>
       )}
-
-      <HistorialCambiosCard />
     </div>
   )
 }
