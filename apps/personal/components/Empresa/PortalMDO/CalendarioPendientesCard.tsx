@@ -8,7 +8,7 @@ import { useGetTareas } from "@/api/tarea/getTareas"
 import type { AmbitoTarea, TareaType } from "@/types/tarea"
 
 const DIAS_SEMANA = ["D", "L", "M", "M", "J", "V", "S"]
-const AMBITO_LABEL: Record<AmbitoTarea, string> = { personal: "Personal", trabajo: "Trabajo", empresa: "Empresa" }
+const AMBITO_LABEL: Record<AmbitoTarea, string> = { personal: "Tareas", trabajo: "Trabajo", empresa: "Eventos" }
 
 // El loop automático solo alterna entre personal y empresa (los pendientes reales
 // del usuario y los "eventos" de la empresa — hoy modelados como tareas ambito=empresa,
@@ -90,7 +90,7 @@ export function CalendarioPendientesCard() {
           )}
         </div>
         <div className="flex gap-1">
-          {([["todos", "Todos"], ["personal", "Personal"], ["empresa", "Empresa"]] as const).map(([v, l]) => {
+          {([["todos", "Todos"], ["personal", "Tareas"], ["empresa", "Eventos"]] as const).map(([v, l]) => {
             const activo = filtro === v
             return (
               <button key={v} type="button" onClick={() => seleccionar(v)}
