@@ -824,7 +824,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
       }}>
       <div className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.07) 0%, transparent 55%)" }} />
-      <div className="relative p-4 sm:p-6 max-w-5xl mx-auto">
+      <div className="relative p-4 sm:p-6">
       <div className="mb-6">
         <SeccionHero
           breadcrumb={breadcrumb ?? [titulo]}
