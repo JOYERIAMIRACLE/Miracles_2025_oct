@@ -95,6 +95,12 @@
       "relation": "oneToOne",
       "target": "api::transaccion.transaccion",
       "inversedBy": "ventaOrigen"
+    },
+    "comprobantePago": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images", "files"]
     }
   }
 }

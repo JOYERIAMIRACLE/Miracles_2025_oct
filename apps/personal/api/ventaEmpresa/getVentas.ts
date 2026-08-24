@@ -5,7 +5,7 @@ const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL  = `${BASE}/api/ventas`
 // Este Strapi no soporta el atajo "populate=a,b,c" (responde 400 "Invalid key") —
 // hay que usar la sintaxis de objeto, igual que ya se usa en compra-material.
-const POPULATE = "populate[cliente]=true&populate[producto]=true&populate[centro_venta]=true&populate[lineas][populate][producto]=true&populate[cotizacionOrigen][fields][0]=numero&populate[envios][fields][0]=estado&populate[transaccionGenerada][fields][0]=documentId"
+const POPULATE = "populate[cliente]=true&populate[producto]=true&populate[centro_venta]=true&populate[lineas][populate][producto]=true&populate[cotizacionOrigen][fields][0]=numero&populate[envios][fields][0]=estado&populate[transaccionGenerada][fields][0]=documentId&populate[comprobantePago][fields][0]=url&populate[comprobantePago][fields][1]=name"
 
 export function useGetVentas() {
   const [ventas,  setVentas]  = useState<VentaEmpresa[]>([])

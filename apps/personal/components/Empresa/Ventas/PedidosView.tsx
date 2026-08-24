@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Plus, X, Loader2, Package, Pencil, Trash2, Lock } from "lucide-react"
+import { useState, useMemo, useRef, useEffect } from "react"
+import { Plus, X, Loader2, Package, Pencil, Trash2, Lock, FileText, ChevronDown, Search, Paperclip } from "lucide-react"
 import { toast } from "sonner"
 import { useGetVentas, createVenta, updateVenta, deleteVenta } from "@/api/ventaEmpresa/getVentas"
+import { useGetAllCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
 import { useGetCentrosVenta } from "@/api/centro-venta/getCentrosVenta"
 import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
 import { createVentaLinea, updateVentaLinea, deleteVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
+import { uploadMedia } from "@/lib/upload"
 import { ProductoSearch } from "./ProductoSearch"
 import { ListToolbar } from "./ListToolbar"
 import {
@@ -15,6 +17,7 @@ import {
   ESTADOS_VENTA, EstadoVenta, ESTADO_VENTA_COLOR,
   METODOS_PAGO, MetodoPago,
 } from "@/types/ventaEmpresa"
+import { Cotizacion } from "@/types/cotizacion"
 import { ProductType } from "@/types/product"
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
@@ -73,6 +76,7 @@ export function PedidosView() {
   const { clientes } = useGetClientes()
   const { centrosVenta } = useGetCentrosVenta()
   const { items: productos } = useGetInventario()
+  const { cotizaciones } = useGetAllCotizaciones()
 
   const [search,    setSearch]    = useState("")
   const [filtroEst, setFiltroEst] = useState<EstadoVenta | "">("")
@@ -85,6 +89,59 @@ export function PedidosView() {
   const [montoAuto,    setMontoAuto]    = useState(true)
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
+
+  // Cotización de origen (opcional, solo al crear) — al elegirla, el pedido
+  // hereda cliente/líneas/monto reales de esa cotización en vez de volver a
+  // capturarlos a mano, y queda ligado (estado "Convertida" + ventaGenerada)
+  // para que el trayecto cotización→pedido no se pierda.
+  const [cotizacionOrigen, setCotizacionOrigen] = useState<Cotizacion | null>(null)
+  const [cotOpen,  setCotOpen]  = useState(false)
+  const [cotQuery, setCotQuery] = useState("")
+  const cotRef = useRef<HTMLDivElement>(null)
+  const [comprobante,    setComprobante]    = useState<File | null>(null)
+  const comprobanteRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) { if (cotRef.current && !cotRef.current.contains(e.target as Node)) setCotOpen(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const cotizacionesElegibles = useMemo(
+    () => cotizaciones.filter(c => c.estado !== "Convertida" && c.estado !== "Rechazada"),
+    [cotizaciones]
+  )
+  const cotizacionesFiltradas = useMemo(() => {
+    const q = cotQuery.trim().toLowerCase()
+    const base = cotizacionesElegibles
+    if (!q) return base.slice(0, 30)
+    return base.filter(c =>
+      (c.numero ?? "").toLowerCase().includes(q) || (c.cliente?.nombre ?? "").toLowerCase().includes(q)
+    ).slice(0, 30)
+  }, [cotizacionesElegibles, cotQuery])
+
+  function elegirCotizacion(c: Cotizacion | null) {
+    setCotizacionOrigen(c)
+    setCotOpen(false)
+    setCotQuery("")
+    if (c) {
+      // Monto fijo al total de la cotización (ya incluye envío si lo tenía)
+      // — no se recalcula desde las líneas para que nunca quede "diferente"
+      // de lo ya acordado, aunque después se ajuste alguna línea/cantidad.
+      setForm(f => ({ ...f, cliente: c.cliente?.documentId ?? null, monto: c.total }))
+      setMontoAuto(false)
+      const lineasDeCot = (c.items ?? []).filter(i => i.descripcion.trim()).map(i => ({
+        productoId: i.productoId ?? "", descripcion: i.descripcion,
+        cantidad: String(i.cantidad || 1), precioUnitario: String(i.precio || 0),
+      }))
+      const nuevasLineas = lineasDeCot.length ? lineasDeCot : [emptyLinea()]
+      setLineas(nuevasLineas)
+      setConceptoAuto(true)
+      aplicarConceptoAuto(nuevasLineas)
+    } else {
+      setMontoAuto(true)
+    }
+  }
 
   // Un pedido ya confirmado (no "Cotizado") ya descontó stock — sus líneas
   // quedan de solo lectura para no desincronizar el descuento ya aplicado;
@@ -122,6 +179,8 @@ export function PedidosView() {
     setEliminadas([])
     setConceptoAuto(true)
     setMontoAuto(true)
+    setCotizacionOrigen(null)
+    setComprobante(null)
     setModalOpen(true)
   }
 
@@ -148,6 +207,8 @@ export function PedidosView() {
     setEliminadas([])
     setConceptoAuto(false)
     setMontoAuto(false)
+    setCotizacionOrigen(null)
+    setComprobante(null)
     setModalOpen(true)
   }
 
@@ -213,6 +274,7 @@ export function PedidosView() {
 
     setSaving(true)
     try {
+      const comprobanteId = comprobante ? (await uploadMedia(comprobante)).id : undefined
 
       if (editing) {
         if (lineasEditables) {
@@ -227,7 +289,9 @@ export function PedidosView() {
             else await createVentaLinea(payload)
           }
         }
-        const updated = await updateVenta(editing.documentId, form)
+        const updated = await updateVenta(editing.documentId, {
+          ...form, ...(comprobanteId !== undefined ? { comprobantePago: comprobanteId } : {}),
+        })
         setVentas(prev => prev.map(v => v.documentId === updated.documentId ? updated : v))
         toast.success("Pedido actualizado")
       } else {
@@ -243,9 +307,22 @@ export function PedidosView() {
             precioUnitario: Number(l.precioUnitario) || 0, subtotal: totalLinea(l),
           })
         }
-        const nueva = estadoFinal !== "Cotizado"
-          ? await updateVenta(creada.documentId, { estado: estadoFinal })
+        const patch: Partial<VentaPayload> = {}
+        if (estadoFinal !== "Cotizado") patch.estado = estadoFinal
+        if (comprobanteId !== undefined) patch.comprobantePago = comprobanteId
+        const nueva = Object.keys(patch).length > 0
+          ? await updateVenta(creada.documentId, patch)
           : creada
+        // Si el pedido nació de una cotización, se marca "Convertida" y se
+        // liga al pedido real — mismo patrón que "Convertir a Pedido" en
+        // Cotizaciones, para que el trayecto no se pierda sin importar por
+        // dónde se creó el pedido.
+        if (cotizacionOrigen) {
+          await updateCotizacion(cotizacionOrigen.documentId, {
+            estado: "Convertida",
+            ventaGenerada: { connect: [{ id: nueva.id }] },
+          })
+        }
         setVentas(prev => [nueva, ...prev])
         toast.success("Pedido registrado")
       }
@@ -397,6 +474,54 @@ export function PedidosView() {
 
             <div className="px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto">
 
+              {/* Cotización de origen — al elegirla, hereda cliente/líneas/monto
+                  reales de esa cotización (no se vuelven a capturar a mano) y
+                  queda ligada, para que el trayecto cotización→pedido no se
+                  pierda sin importar por dónde se cree el pedido. */}
+              {!editing && (
+                <div>
+                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cotización de origen (opcional)</label>
+                  <div ref={cotRef} className="relative">
+                    <button type="button" onClick={() => setCotOpen(o => !o)}
+                      className={inp + " cursor-pointer flex items-center gap-2 text-left"}>
+                      <FileText size={13} className="text-slate-500 shrink-0" />
+                      <span className={`flex-1 truncate ${cotizacionOrigen ? "text-slate-100" : "text-slate-500"}`}>
+                        {cotizacionOrigen ? `${cotizacionOrigen.numero} — ${cotizacionOrigen.cliente?.nombre ?? "sin cliente"} · ${fmt(cotizacionOrigen.total)}` : "Sin cotización — capturar a mano"}
+                      </span>
+                      <ChevronDown size={13} className={`text-slate-500 shrink-0 transition-transform ${cotOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {cotOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-slate-900 border border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
+                        <div className="px-2 pt-2 pb-1">
+                          <div className="relative">
+                            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <input autoFocus value={cotQuery} onChange={e => setCotQuery(e.target.value)}
+                              placeholder="Buscar por número o cliente…"
+                              className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-500 outline-none focus:border-violet-500" />
+                          </div>
+                        </div>
+                        <div className="max-h-48 overflow-y-auto py-1">
+                          <button type="button" onClick={() => elegirCotizacion(null)}
+                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${!cotizacionOrigen ? "text-violet-400 font-medium" : "text-slate-500"}`}>
+                            Sin cotización — capturar a mano
+                          </button>
+                          {cotizacionesFiltradas.map(c => (
+                            <button key={c.documentId} type="button" onClick={() => elegirCotizacion(c)}
+                              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${cotizacionOrigen?.documentId === c.documentId ? "text-violet-400 font-medium" : "text-slate-300"}`}>
+                              <span className="block truncate">{c.numero} — {fmt(c.total)}</span>
+                              {c.cliente?.nombre && <span className="block text-[10px] text-slate-500 truncate">{c.cliente.nombre}</span>}
+                            </button>
+                          ))}
+                          {cotizacionesFiltradas.length === 0 && (
+                            <p className="text-[11px] text-slate-600 text-center py-3">Sin cotizaciones que coincidan.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Líneas de productos */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -475,9 +600,22 @@ export function PedidosView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Monto ($) <span className="text-red-400">*</span></label>
-                  <input type="number" placeholder="0" value={form.monto || ""}
-                    onChange={e => { setMontoAuto(false); setForm(f => ({ ...f, monto: Number(e.target.value) || 0 })) }} className={inp} />
+                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
+                    Monto ($) <span className="text-red-400">*</span>
+                    {cotizacionOrigen && (
+                      <span className="inline-flex items-center gap-1 text-violet-400 normal-case ml-1">
+                        <Lock size={10} /> de la cotización
+                      </span>
+                    )}
+                  </label>
+                  {cotizacionOrigen ? (
+                    <div className="h-9 rounded-lg border border-slate-800 bg-slate-800/40 px-3 flex items-center text-sm font-semibold text-violet-400">
+                      {fmt(form.monto || 0)}
+                    </div>
+                  ) : (
+                    <input type="number" placeholder="0" value={form.monto || ""}
+                      onChange={e => { setMontoAuto(false); setForm(f => ({ ...f, monto: Number(e.target.value) || 0 })) }} className={inp} />
+                  )}
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Canal de venta</label>
@@ -514,13 +652,39 @@ export function PedidosView() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cliente</label>
-                  <select title="Cliente" value={form.cliente ?? ""}
-                    onChange={e => setForm(f => ({ ...f, cliente: e.target.value || null }))} className={inp + " cursor-pointer"}>
-                    <option value="">— Sin cliente —</option>
-                    {clientes.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
-                  </select>
+                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
+                    Cliente
+                    {cotizacionOrigen && (
+                      <span className="inline-flex items-center gap-1 text-violet-400 normal-case ml-1">
+                        <Lock size={10} /> de la cotización
+                      </span>
+                    )}
+                  </label>
+                  {cotizacionOrigen ? (
+                    <div className="h-9 rounded-lg border border-slate-800 bg-slate-800/40 px-3 flex items-center text-sm text-slate-300">
+                      {cotizacionOrigen.cliente?.nombre ?? "— Sin cliente —"}
+                    </div>
+                  ) : (
+                    <select title="Cliente" value={form.cliente ?? ""}
+                      onChange={e => setForm(f => ({ ...f, cliente: e.target.value || null }))} className={inp + " cursor-pointer"}>
+                      <option value="">— Sin cliente —</option>
+                      {clientes.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
+                    </select>
+                  )}
                 </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Evidencia de pago (opcional)</label>
+                <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
+                  onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
+                <button type="button" onClick={() => comprobanteRef.current?.click()}
+                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 px-3 text-sm text-slate-400 hover:border-violet-500/50 hover:text-slate-200 transition-all">
+                  <Paperclip size={13} className="shrink-0" />
+                  <span className="truncate">
+                    {comprobante ? comprobante.name : editing?.comprobantePago ? `Ya adjunto: ${editing.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
+                  </span>
+                </button>
               </div>
 
               <div>

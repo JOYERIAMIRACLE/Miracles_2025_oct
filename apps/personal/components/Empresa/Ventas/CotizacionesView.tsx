@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 import {
   FileText, X, ArrowRight, Loader2,
-  User, Pencil, Trash2,
+  User, Pencil, Trash2, Paperclip,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetAllCotizaciones, deleteCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -11,6 +11,7 @@ import { createVenta, updateVenta, useGetVentas } from "@/api/ventaEmpresa/getVe
 import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
 import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
+import { uploadMedia } from "@/lib/upload"
 import { EstadoVenta } from "@/types/ventaEmpresa"
 import { ProductType } from "@/types/product"
 import {
@@ -60,14 +61,15 @@ function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }:
     : cotizacion.numero ?? "Pedido desde cotización"
 
   const [form, setForm] = useState<{
-    concepto: string; monto: number; fecha: string; estado: EstadoVenta; notas: string
+    concepto: string; fecha: string; estado: EstadoVenta; notas: string
   }>({
     concepto,
-    monto: cotizacion.total,
     fecha: new Date().toISOString().split("T")[0],
     estado: "Pagado",
     notas: cotizacion.notas ?? "",
   })
+  const [comprobante, setComprobante] = useState<File | null>(null)
+  const comprobanteRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
 
   const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
@@ -86,7 +88,9 @@ function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }:
       const creada = await createVenta({
         numero:    `PED-${String(totalVentas + 1).padStart(3, "0")}`,
         concepto:  form.concepto,
-        monto:     form.monto,
+        // El monto lo define la cotización, no se vuelve a capturar aquí —
+        // así no puede quedar "diferente" del precio ya acordado.
+        monto:     cotizacion.total,
         fecha:     form.fecha,
         estado:    "Cotizado",
         notas:     form.notas || null,
@@ -105,7 +109,10 @@ function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }:
           subtotal: item.subtotal,
         })
       }
-      if (form.estado !== "Cotizado") await updateVenta(creada.documentId, { estado: form.estado })
+      const patch: { estado?: EstadoVenta; comprobantePago?: number } = {}
+      if (form.estado !== "Cotizado") patch.estado = form.estado
+      if (comprobante) patch.comprobantePago = (await uploadMedia(comprobante)).id
+      if (Object.keys(patch).length > 0) await updateVenta(creada.documentId, patch)
       // Marca la cotización como Convertida y la liga al pedido real que
       // acaba de nacer — antes este hilo se perdía por completo (la
       // cotización se quedaba "Aceptada" para siempre, sin rastro de que
@@ -153,10 +160,10 @@ function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }:
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Monto ($)</label>
-              <input type="number" value={form.monto}
-                onChange={e => setForm(f => ({ ...f, monto: Number(e.target.value) || 0 }))}
-                className={inp} />
+              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Monto a pagar</label>
+              <div className="h-9 rounded-lg border border-slate-800 bg-slate-800/40 px-3 flex items-center text-sm font-semibold text-violet-400">
+                {fmt(cotizacion.total)}
+              </div>
             </div>
             <div>
               <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha</label>
@@ -164,6 +171,17 @@ function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }:
                 onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
                 className={inp} />
             </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Evidencia de pago (opcional)</label>
+            <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
+              onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
+            <button type="button" onClick={() => comprobanteRef.current?.click()}
+              className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 px-3 text-sm text-slate-400 hover:border-violet-500/50 hover:text-slate-200 transition-all">
+              <Paperclip size={13} className="shrink-0" />
+              <span className="truncate">{comprobante ? comprobante.name : "Adjuntar foto o archivo del comprobante…"}</span>
+            </button>
           </div>
 
           <div>

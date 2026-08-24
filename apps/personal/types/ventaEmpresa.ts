@@ -39,6 +39,7 @@ export type VentaEmpresa = {
   cotizacionOrigen?:    { id: number; documentId: string; numero: string | null } | null
   envios?:              { id: number; documentId: string; estado: string }[]
   transaccionGenerada?: { id: number; documentId: string } | null
+  comprobantePago?:     { id: number; url: string; name: string } | null
 }
 
 export type VentaPayload = {
@@ -53,4 +54,5 @@ export type VentaPayload = {
   cliente?:    string | null
   producto?:   string | null
   centro_venta?: string | null
+  comprobantePago?: number | null
 }
