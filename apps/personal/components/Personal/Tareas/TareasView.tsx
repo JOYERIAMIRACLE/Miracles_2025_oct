@@ -1067,12 +1067,12 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                       </button>
                       <button type="button" title="Agregar tarea a este proyecto"
                         onClick={() => abrirCrear(null, g.proyecto)}
-                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-0 group-hover/grupo:opacity-100 transition shrink-0">
+                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/grupo:opacity-100 transition shrink-0">
                         <Plus size={12} />
                       </button>
                       <button type="button" title="Renombrar proyecto"
                         onClick={() => { setRenombrandoProyecto(g.proyecto.documentId); setNombreRenombrado(g.proyecto.nombre) }}
-                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-0 group-hover/grupo:opacity-100 transition shrink-0">
+                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/grupo:opacity-100 transition shrink-0">
                         <Pencil size={12} />
                       </button>
                     </div>
