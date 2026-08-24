@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday } from "date-fns"
 import { es } from "date-fns/locale"
@@ -9,6 +9,12 @@ import type { AmbitoTarea, TareaType } from "@/types/tarea"
 
 const DIAS_SEMANA = ["D", "L", "M", "M", "J", "V", "S"]
 const AMBITO_LABEL: Record<AmbitoTarea, string> = { personal: "Personal", trabajo: "Trabajo", empresa: "Empresa" }
+
+// El loop automático solo alterna entre personal y empresa (los pendientes reales
+// del usuario y los "eventos" de la empresa — hoy modelados como tareas ambito=empresa,
+// hasta que exista un módulo de Eventos dedicado). "Todos" queda como opción fija aparte.
+const LOOP: AmbitoTarea[] = ["personal", "empresa"]
+const CICLO_MS = 3000
 
 function diasRestantes(fecha: string | null): number | null {
   if (!fecha) return null
@@ -20,8 +26,26 @@ function diasRestantes(fecha: string | null): number | null {
 export function CalendarioPendientesCard() {
   const { tareas, loading } = useGetTareas()
   const [mesActual, setMesActual] = useState(new Date())
-  const [filtro, setFiltro] = useState<"todos" | AmbitoTarea>("todos")
+  const [filtro, setFiltro] = useState<"todos" | AmbitoTarea>("personal")
+  const [pausado, setPausado] = useState(false)
   const [diaSel, setDiaSel] = useState<Date | null>(null)
+
+  useEffect(() => {
+    if (pausado) return
+    const iv = setInterval(() => {
+      setFiltro(f => {
+        const idx = LOOP.indexOf(f as AmbitoTarea)
+        return LOOP[idx === -1 ? 0 : (idx + 1) % LOOP.length]
+      })
+    }, CICLO_MS)
+    return () => clearInterval(iv)
+  }, [pausado])
+
+  function seleccionar(v: "todos" | AmbitoTarea) {
+    if (pausado && filtro === v) { setPausado(false); return }
+    setFiltro(v)
+    setPausado(true)
+  }
 
   const pendientes = useMemo(
     () => tareas.filter(t => t.ambito !== "trabajo" && t.estado !== "completada" && t.fechaVencimiento),
@@ -46,23 +70,31 @@ export function CalendarioPendientesCard() {
   return (
     <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5">
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Pendientes</h2>
           {proximos7 > 0 && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/25">
               {proximos7} esta semana
             </span>
           )}
+          {!pausado && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" /> En vivo
+            </span>
+          )}
         </div>
         <div className="flex gap-1">
-          {([["todos", "Todos"], ["personal", "Personal"], ["empresa", "Empresa"]] as const).map(([v, l]) => (
-            <button key={v} type="button" onClick={() => setFiltro(v)}
-              className={`h-6 px-2 text-[10px] rounded-md border transition-colors ${
-                filtro === v ? "bg-violet-500 text-white border-violet-500" : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}>
-              {l}
-            </button>
-          ))}
+          {([["todos", "Todos"], ["personal", "Personal"], ["empresa", "Empresa"]] as const).map(([v, l]) => {
+            const activo = filtro === v
+            return (
+              <button key={v} type="button" onClick={() => seleccionar(v)}
+                className={`h-6 px-2 text-[10px] rounded-md border font-medium transition-all ${
+                  activo ? "bg-violet-500 text-white border-violet-500 scale-105 shadow-sm shadow-violet-500/30" : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}>
+                {l}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -99,7 +131,7 @@ export function CalendarioPendientesCard() {
                   }`}>
                   {format(dia, "d")}
                   {evs.length > 0 && !seleccionado && (
-                    <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-violet-500" />
+                    <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-violet-500 animate-pulse" />
                   )}
                 </button>
               )
