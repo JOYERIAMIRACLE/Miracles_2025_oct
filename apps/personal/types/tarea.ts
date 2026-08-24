@@ -45,5 +45,5 @@ export type TareaPayload = {
   fechaInicio?:      string | null
   esTicket?:         boolean | null
   ticket?:           { connect: [{ documentId: string }] } | { disconnect: [] } | null
-  proyecto?:         { connect: [{ id: number }] } | null
+  proyecto?:         { connect: [{ id: number }] } | { disconnect: [{ id: number }] } | null
 }

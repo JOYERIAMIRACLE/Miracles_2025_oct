@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal } from "lucide-react"
+import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal, Layers, Pencil } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
 import { fieldCls } from "@/lib/styles"
+import { useCurrentUser } from "@/lib/useCurrentUser"
 import { useGetTareas } from "@/api/tarea/getTareas"
 import { createTarea } from "@/api/tarea/createTarea"
 import { updateTarea } from "@/api/tarea/updateTarea"
@@ -17,7 +18,10 @@ import { deleteTarea } from "@/api/tarea/deleteTarea"
 import { TareaType, TareaPayload, AmbitoTarea, EstadoTarea, PrioridadTarea } from "@/types/tarea"
 import { useGetHistorialTarea } from "@/api/historial-tarea/getHistorialTarea"
 import { createHistorialTarea } from "@/api/historial-tarea/mutateHistorialTarea"
+import { createProyecto, updateProyecto } from "@/api/proyecto/mutateProyecto"
 import { ProgresoBar, AvancesPanel } from "@/components/Shared/TareasWidgets"
+
+type ProyectoRef = NonNullable<TareaType["proyecto"]>
 
 // Los desplegables del modal (Estado/Prioridad/Responsable/Área/Etiqueta) son
 // paneles "position: absolute", así que no quedan incluidos en el bounding
@@ -141,6 +145,7 @@ type Vista = "lista" | "calendario" | "metricas"
 export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: string }) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
+  const { user } = useCurrentUser()
   const { tareas, setTareas, loading } = useGetTareas(ambito)
   const { historial, setHistorial }    = useGetHistorialTarea(ambito)
   const [vista, setVista] = useState<Vista>("lista")
@@ -190,6 +195,19 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const etqPanelRef       = useAutoScrollPanel(etqOpen)
   const areaPanelRef      = useAutoScrollPanel(areaOpen)
 
+  // Agrupar tareas arrastrando una sobre otra: comparten la relación real
+  // "proyecto" (misma colección que ya existe en el backend, sin UI propia
+  // todavía) — quien recibe el drop se conecta al proyecto de la otra si ya
+  // tenía uno; si ninguna tiene, se pide un nombre y se crea el proyecto.
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [agruparPorProyecto, setAgruparPorProyecto] = useState(true)
+  const [proyectosColapsados, setProyectosColapsados] = useState<Set<string>>(new Set())
+  const [nombrandoProyecto, setNombrandoProyecto] = useState<{ origenId: string; destinoId: string } | null>(null)
+  const [nombreProyectoInput, setNombreProyectoInput] = useState("")
+  const [renombrandoProyecto, setRenombrandoProyecto] = useState<string | null>(null) // documentId del proyecto
+  const [nombreRenombrado, setNombreRenombrado] = useState("")
+
   // Etiquetas/responsables/áreas usados — se derivan de las tareas ya
   // existentes (no hay un catálogo genérico separado en este proyecto), así
   // que cualquier valor nuevo queda disponible para autocompletar en cuanto
@@ -200,17 +218,30 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     return [...set].sort()
   }, [tareas])
 
+  // El catálogo se deriva de las tareas ya usadas — si es la primera vez que
+  // el usuario en sesión aparece como responsable (ver default de abajo), su
+  // nombre todavía no está ahí. Sin esto, el filtro seguiría funcionando por
+  // dentro pero el desplegable mostraría "Todos", dando la impresión de que
+  // no hay ningún filtro activo.
   const responsablesUsados = useMemo(() => {
     const set = new Set<string>()
     tareas.forEach(t => { if (t.responsable) set.add(t.responsable) })
-    return [...set].sort()
-  }, [tareas])
+    const base = [...set].sort()
+    return user?.username && !base.includes(user.username) ? [user.username, ...base] : base
+  }, [tareas, user])
 
   const areasUsadas = useMemo(() => {
     const set = new Set<string>()
     tareas.forEach(t => { if (t.area) set.add(t.area) })
     return [...set].sort()
   }, [tareas])
+
+  // Al entrar a la vista, el filtro de Responsable arranca en el usuario con
+  // la sesión iniciada (así cada quien ve sus propias tareas por default) —
+  // sigue siendo un filtro normal, se puede cambiar o limpiar después.
+  useEffect(() => {
+    if (user?.username) setFiltroResponsable(user.username)
+  }, [user])
 
   const filtradas = useMemo(() => {
     const inicioSem = inicioSemana(new Date()).getTime()
@@ -261,6 +292,31 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       })
   }, [tareas, filtro, filtroEtiqueta, filtroPrioridad, filtroResponsable, filtroRango, busqueda, filtroTicket])
 
+  // Agrupa la lista ya filtrada/ordenada por la relación "proyecto" (arrastrar
+  // una tarea sobre otra las agrupa, ver handleDropTarea) — las tareas de un
+  // mismo proyecto se juntan bajo un encabezado colapsable en la posición de
+  // la primera que aparece; las sueltas se quedan igual que antes. Toggle
+  // solo de vista — no toca el campo "proyecto" de ninguna tarea.
+  type GrupoTareas = { tipo: "proyecto"; proyecto: ProyectoRef; tareas: TareaType[] } | { tipo: "suelta"; tarea: TareaType }
+  const gruposRenderizados = useMemo<GrupoTareas[]>(() => {
+    if (!agruparPorProyecto) {
+      return filtradas.map(t => ({ tipo: "suelta" as const, tarea: t }))
+    }
+    const vistos = new Set<string>()
+    const resultado: GrupoTareas[] = []
+    for (const t of filtradas) {
+      const proyecto = t.proyecto
+      if (proyecto) {
+        if (vistos.has(proyecto.documentId)) continue
+        vistos.add(proyecto.documentId)
+        resultado.push({ tipo: "proyecto", proyecto, tareas: filtradas.filter(x => x.proyecto?.documentId === proyecto.documentId) })
+      } else {
+        resultado.push({ tipo: "suelta", tarea: t })
+      }
+    }
+    return resultado
+  }, [filtradas, agruparPorProyecto])
+
   const stats = {
     total:       tareas.length,
     sinIniciar:  tareas.filter(t => t.estado === "sin_iniciar").length,
@@ -276,7 +332,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       titulo: "", descripcion: "", ambito,
       estado: "en_progreso", prioridad: "media",
       etiqueta: null, fechaVencimiento: fechaVencimiento ?? unaSemanaDespues(hoy), notas: null, links: null,
-      responsable: null, area: null, fechaInicio: hoy, esTicket: false,
+      responsable: user?.username ?? null, area: null, fechaInicio: hoy, esTicket: false,
     })
     setModalOpen(true)
   }
@@ -410,6 +466,94 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     }
   }
 
+  // Conecta origen y destino a un proyecto ya existente (nuevo o reusado) —
+  // reusada tanto por confirmarNombrarProyecto (proyecto recién creado) como
+  // por handleDropTarea (proyecto que ya tenía alguna de las dos tareas).
+  const asignarProyectoExistente = async (origenId: string, destinoId: string, proyecto: ProyectoRef) => {
+    const origen  = tareas.find(t => t.documentId === origenId)
+    const destino = tareas.find(t => t.documentId === destinoId)
+    const prevOrigen  = origen?.proyecto  ?? null
+    const prevDestino = destino?.proyecto ?? null
+    setTareas(prev => prev.map(t => (t.documentId === origenId || t.documentId === destinoId) ? { ...t, proyecto } : t))
+    try {
+      await Promise.all([
+        prevOrigen?.documentId  !== proyecto.documentId ? updateTarea(origenId,  { proyecto: { connect: [{ id: proyecto.id }] } }) : Promise.resolve(),
+        prevDestino?.documentId !== proyecto.documentId ? updateTarea(destinoId, { proyecto: { connect: [{ id: proyecto.id }] } }) : Promise.resolve(),
+      ])
+      toast.success(`Agrupadas en "${proyecto.nombre}"`)
+    } catch {
+      setTareas(prev => prev.map(t =>
+        t.documentId === origenId  ? { ...t, proyecto: prevOrigen }
+        : t.documentId === destinoId ? { ...t, proyecto: prevDestino }
+        : t
+      ))
+      toast.error("Error al agrupar")
+    }
+  }
+
+  function handleDropTarea(destino: TareaType) {
+    const origenId = dragId
+    setDragId(null); setDragOverId(null)
+    if (!origenId || origenId === destino.documentId) return
+    const origen = tareas.find(t => t.documentId === origenId)
+    if (!origen) return
+    const proyectoExistente = destino.proyecto ?? origen.proyecto
+    if (proyectoExistente) {
+      asignarProyectoExistente(origenId, destino.documentId, proyectoExistente)
+    } else {
+      setNombreProyectoInput("")
+      setNombrandoProyecto({ origenId, destinoId: destino.documentId })
+    }
+  }
+
+  async function confirmarNombrarProyecto() {
+    if (!nombrandoProyecto || !nombreProyectoInput.trim()) return
+    const { origenId, destinoId } = nombrandoProyecto
+    setNombrandoProyecto(null)
+    try {
+      const nuevo = await createProyecto({ nombre: nombreProyectoInput.trim() })
+      await asignarProyectoExistente(origenId, destinoId, { id: nuevo.id, documentId: nuevo.documentId, nombre: nuevo.nombre })
+    } catch {
+      toast.error("Error al crear el proyecto")
+    }
+  }
+
+  function quitarDeProyecto(t: TareaType) {
+    if (!t.proyecto) return
+    const prev = t.proyecto
+    setTareas(p => p.map(x => x.documentId === t.documentId ? { ...x, proyecto: null } : x))
+    updateTarea(t.documentId, { proyecto: { disconnect: [{ id: prev.id }] } }).catch(() => {
+      setTareas(p => p.map(x => x.documentId === t.documentId ? { ...x, proyecto: prev } : x))
+      toast.error("Error al quitar del proyecto")
+    })
+  }
+
+  function toggleProyectoColapsado(documentId: string) {
+    setProyectosColapsados(prev => {
+      const next = new Set(prev)
+      next.has(documentId) ? next.delete(documentId) : next.add(documentId)
+      return next
+    })
+  }
+
+  async function confirmarRenombrarProyecto() {
+    if (!renombrandoProyecto) return
+    const docId = renombrandoProyecto
+    const nuevoNombre = nombreRenombrado.trim()
+    setRenombrandoProyecto(null)
+    const afectadas = tareas.filter(t => t.proyecto?.documentId === docId)
+    if (!nuevoNombre || afectadas.length === 0 || nuevoNombre === afectadas[0].proyecto?.nombre) return
+    const anterior = afectadas[0].proyecto!
+    setTareas(prev => prev.map(t => t.proyecto?.documentId === docId ? { ...t, proyecto: { ...t.proyecto!, nombre: nuevoNombre } } : t))
+    try {
+      await updateProyecto(docId, { nombre: nuevoNombre })
+      toast.success(`Proyecto renombrado a "${nuevoNombre}"`)
+    } catch {
+      setTareas(prev => prev.map(t => t.proyecto?.documentId === docId ? { ...t, proyecto: anterior } : t))
+      toast.error("Error al renombrar")
+    }
+  }
+
   // Tareas indexadas por fecha (para calendario)
   const tareasPorFecha = useMemo(() => {
     const map = new Map<string, TareaType[]>()
@@ -454,12 +598,23 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     const dias = diasHastaVencimiento(t.fechaVencimiento)
     const vencida = dias !== null && dias < 0 && t.estado !== "completada"
     const proxima = dias !== null && dias >= 0 && dias <= 2 && t.estado !== "completada"
+    const arrastrandoSobreEsta = dragOverId === t.documentId && dragId !== t.documentId
 
     return (
       <div
         key={t.documentId}
+        draggable
+        onDragStart={e => { setDragId(t.documentId); e.dataTransfer.effectAllowed = "move" }}
+        onDragEnd={() => { setDragId(null); setDragOverId(null) }}
+        onDragOver={e => { if (dragId && dragId !== t.documentId) { e.preventDefault(); setDragOverId(t.documentId) } }}
+        onDragLeave={() => setDragOverId(prev => prev === t.documentId ? null : prev)}
+        onDrop={e => { e.preventDefault(); handleDropTarea(t) }}
         onClick={() => abrirEditar(t)}
-        className={`flex items-start gap-3 p-3 rounded-xl border bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm cursor-pointer transition-all border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-md ${t.estado === "completada" ? "opacity-50" : ""}`}
+        className={`flex items-start gap-3 p-3 rounded-xl border bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm cursor-pointer transition-all ${
+          arrastrandoSobreEsta
+            ? "border-violet-400 dark:border-violet-500 ring-2 ring-violet-300/50 dark:ring-violet-500/30"
+            : "border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-md"
+        } ${t.estado === "completada" ? "opacity-50" : ""} ${dragId === t.documentId ? "opacity-40" : ""}`}
       >
         <button
           type="button"
@@ -548,6 +703,16 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               <span className="text-[10px] px-1.5 py-0.5 rounded border border-violet-200 dark:border-violet-900/40 bg-violet-50/40 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400 inline-flex items-center gap-1">
                 <Tag size={9} />
                 {t.etiqueta}
+              </span>
+            )}
+            {t.proyecto && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-violet-300 dark:border-violet-700/60 bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 inline-flex items-center gap-1 group/proy">
+                {t.proyecto.nombre}
+                <button type="button" title="Quitar del proyecto"
+                  onClick={e => { e.stopPropagation(); quitarDeProyecto(t) }}
+                  className="opacity-0 group-hover/proy:opacity-100 hover:text-red-500 transition">
+                  <X size={9} />
+                </button>
               </span>
             )}
             {t.fechaVencimiento && (
@@ -805,6 +970,21 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
             )}
           </div>
 
+          {/* Agrupar/desagrupar por proyecto — solo visual, no toca el campo proyecto */}
+          <button
+            type="button"
+            onClick={() => setAgruparPorProyecto(v => !v)}
+            title={agruparPorProyecto ? "Mostrar tareas sin agrupar" : "Agrupar tareas por proyecto"}
+            className={`h-9 flex items-center gap-1.5 px-3 text-sm rounded-lg border transition-colors shadow-sm ${
+              agruparPorProyecto
+                ? "border-violet-400/60 bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600"
+            }`}
+          >
+            <Layers size={13} />
+            <span>{agruparPorProyecto ? "Agrupado" : "Sin agrupar"}</span>
+          </button>
+
           {(filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim() || filtroResponsable || filtroTicket) && (
             <button type="button" onClick={limpiarFiltros}
               className="text-xs px-2 py-1.5 text-muted-foreground hover:text-foreground">
@@ -828,7 +1008,51 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
           </p>
         ) : (
           <div className="space-y-2">
-            {filtradas.map(t => renderTareaCard(t))}
+            {gruposRenderizados.map(g => {
+              if (g.tipo === "suelta") return renderTareaCard(g.tarea)
+
+              const colapsado = proyectosColapsados.has(g.proyecto.documentId)
+              const renombrandoEste = renombrandoProyecto === g.proyecto.documentId
+              return (
+                <div key={`proyecto-${g.proyecto.documentId}`}
+                  className="rounded-xl border border-violet-200 dark:border-violet-800/40 bg-violet-50/40 dark:bg-violet-500/5 p-2 space-y-2">
+                  {renombrandoEste ? (
+                    <div className="flex items-center gap-1.5 px-1.5 py-0.5" onClick={e => e.stopPropagation()}>
+                      <input autoFocus value={nombreRenombrado} onChange={e => setNombreRenombrado(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") confirmarRenombrarProyecto(); if (e.key === "Escape") setRenombrandoProyecto(null) }}
+                        className={`flex-1 h-7 text-xs ${fieldCls}`} />
+                      <button type="button" onClick={confirmarRenombrarProyecto} title="Guardar"
+                        className="p-1 text-emerald-600 hover:text-emerald-700 rounded transition-colors shrink-0">
+                        <Check size={13} />
+                      </button>
+                      <button type="button" onClick={() => setRenombrandoProyecto(null)} title="Cancelar"
+                        className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0">
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full flex items-center gap-2 px-1.5 py-1 group/grupo">
+                      <button type="button" onClick={() => toggleProyectoColapsado(g.proyecto.documentId)}
+                        className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                        <ChevronDown size={13} className={`text-violet-500 shrink-0 transition-transform ${colapsado ? "-rotate-90" : ""}`} />
+                        <span className="text-xs font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide truncate">{g.proyecto.nombre}</span>
+                        <span className="text-[10px] text-violet-500/70 dark:text-violet-400/60 tabular-nums shrink-0">{g.tareas.length}</span>
+                      </button>
+                      <button type="button" title="Renombrar proyecto"
+                        onClick={() => { setRenombrandoProyecto(g.proyecto.documentId); setNombreRenombrado(g.proyecto.nombre) }}
+                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-0 group-hover/grupo:opacity-100 transition shrink-0">
+                        <Pencil size={12} />
+                      </button>
+                    </div>
+                  )}
+                  {!colapsado && (
+                    <div className="space-y-2">
+                      {g.tareas.map(t => renderTareaCard(t))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )
       )}
@@ -1139,6 +1363,34 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               <button type="button" onClick={guardar} disabled={guardando} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white text-sm font-medium transition-colors">
                 <Check size={14} />
                 {guardando ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nombrar proyecto — al soltar una tarea sobre otra cuando ninguna
+          tenía proyecto todavía */}
+      {nombrandoProyecto && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={e => { if (e.target === e.currentTarget) setNombrandoProyecto(null) }}>
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-5 w-full max-w-sm space-y-3 border border-slate-200 dark:border-slate-700 shadow-xl">
+            <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Agrupar tareas</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Ponle un nombre al proyecto para agrupar estas tareas — cualquier otra que arrastres después a cualquiera de las dos se une al mismo grupo.
+            </p>
+            <input autoFocus value={nombreProyectoInput} onChange={e => setNombreProyectoInput(e.target.value)}
+              placeholder="Ej. Lanzamiento intranet"
+              onKeyDown={e => { if (e.key === "Enter") confirmarNombrarProyecto() }}
+              className={fieldCls} />
+            <div className="flex gap-2 pt-1">
+              <button type="button" onClick={() => setNombrandoProyecto(null)}
+                className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                Cancelar
+              </button>
+              <button type="button" onClick={confirmarNombrarProyecto} disabled={!nombreProyectoInput.trim()}
+                className="flex-1 h-9 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 disabled:opacity-50 transition-colors">
+                Agrupar
               </button>
             </div>
           </div>
