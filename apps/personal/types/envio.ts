@@ -14,6 +14,7 @@ export type EnvioType = {
   costo_envio?:   number | null
   notas?:         string | null
   createdAt:      string
+  venta?:         { id: number; documentId: string; concepto: string; cliente?: { nombre: string } | null } | null
 }
 
 export const ESTADO_ENVIO_LABELS: Record<EstadoEnvio, string> = {

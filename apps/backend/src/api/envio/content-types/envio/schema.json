@@ -41,6 +41,12 @@
     },
     "notas": {
       "type": "text"
+    },
+    "venta": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::venta.venta",
+      "inversedBy": "envios"
     }
   }
 }

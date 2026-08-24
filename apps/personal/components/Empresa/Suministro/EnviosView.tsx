@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Plus, X, Pencil, Loader2, Package, ExternalLink } from "lucide-react"
+import { useState, useMemo, useRef, useEffect } from "react"
+import { Plus, X, Pencil, Loader2, Package, Search, ChevronDown, ShoppingBag } from "lucide-react"
 import { toast } from "sonner"
 import {
   useGetEnvios, createEnvio, updateEnvio, deleteEnvio,
 } from "@/api/envio/getEnvios"
+import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
 import {
   EnvioType, EstadoEnvio, PaqueteriaEnvio,
   ESTADO_ENVIO_LABELS, ESTADO_ENVIO_COLORS, PAQUETERIA_LABELS,
@@ -20,7 +21,7 @@ const PAQUETERIAS: PaqueteriaEnvio[] = ["fedex", "dhl", "estafeta", "ups", "corr
 
 type Form = {
   numero_guia: string; paqueteria: string; estado: string
-  cliente: string; concepto: string
+  cliente: string; concepto: string; ventaId: string
   fecha_envio: string; fecha_estimada: string
   costo_envio: string; notas: string
 }
@@ -28,7 +29,7 @@ type Form = {
 function emptyForm(): Form {
   return {
     numero_guia: "", paqueteria: "otro", estado: "pendiente",
-    cliente: "", concepto: "",
+    cliente: "", concepto: "", ventaId: "",
     fecha_envio: new Date().toISOString().split("T")[0], fecha_estimada: "",
     costo_envio: "", notas: "",
   }
@@ -39,12 +40,44 @@ const fmt = (n: number | null | undefined) =>
 
 export function EnviosView() {
   const { envios, setEnvios, loading } = useGetEnvios()
+  const { ventas } = useGetVentas()
   const [filtro,    setFiltro]    = useState<EstadoEnvio | "todos">("todos")
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState<EnvioType | null>(null)
   const [form,      setForm]      = useState<Form>(emptyForm())
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
+
+  const [ventaOpen,  setVentaOpen]  = useState(false)
+  const [ventaQuery, setVentaQuery] = useState("")
+  const ventaRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) { if (ventaRef.current && !ventaRef.current.contains(e.target as Node)) setVentaOpen(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const ventasFiltradas = useMemo(() => {
+    const q = ventaQuery.trim().toLowerCase()
+    if (!q) return ventas.slice(0, 30)
+    return ventas.filter(v =>
+      v.concepto.toLowerCase().includes(q) || (v.cliente?.nombre ?? "").toLowerCase().includes(q)
+    ).slice(0, 30)
+  }, [ventas, ventaQuery])
+
+  const ventaSeleccionada = ventas.find(v => v.documentId === form.ventaId) ?? null
+
+  function elegirVenta(v: (typeof ventas)[number] | null) {
+    setForm(f => ({
+      ...f,
+      ventaId:  v?.documentId ?? "",
+      cliente:  v?.cliente?.nombre ?? f.cliente,
+      concepto: v?.concepto ?? f.concepto,
+    }))
+    setVentaOpen(false)
+    setVentaQuery("")
+  }
 
   const filtrados = useMemo(() => {
     if (filtro === "todos") return envios
@@ -67,6 +100,7 @@ export function EnviosView() {
       estado:         e.estado,
       cliente:        e.cliente        ?? "",
       concepto:       e.concepto       ?? "",
+      ventaId:        e.venta?.documentId ?? "",
       fecha_envio:    e.fecha_envio    ?? new Date().toISOString().split("T")[0],
       fecha_estimada: e.fecha_estimada ?? "",
       costo_envio:    e.costo_envio != null ? String(e.costo_envio) : "",
@@ -92,6 +126,7 @@ export function EnviosView() {
         fecha_estimada: form.fecha_estimada || null,
         costo_envio:    form.costo_envio    ? Number(form.costo_envio) : null,
         notas:          form.notas          || null,
+        venta:          form.ventaId ? { connect: [{ documentId: form.ventaId }] } : null,
       }
       if (editing) {
         const updated = await updateEnvio(editing.documentId, payload)
@@ -185,6 +220,11 @@ export function EnviosView() {
                     {PAQUETERIA_LABELS[e.paqueteria]}
                   </span>
                 )}
+                {e.venta && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded border bg-violet-500/10 text-violet-400 border-violet-500/20 shrink-0 flex items-center gap-1">
+                    <ShoppingBag size={9} /> {e.venta.concepto}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                 {e.numero_guia && (
@@ -252,6 +292,52 @@ export function EnviosView() {
                 <input type="text" value={form.numero_guia} onChange={ev => setForm(f => ({ ...f, numero_guia: ev.target.value }))}
                   className={inp} placeholder="Número de rastreo…" />
               </div>
+
+              {/* Pedido vinculado — al elegir uno, autocompleta cliente/concepto
+                  de ese pedido real; sin esto, envío quedaba totalmente
+                  desconectado de Ventas (cliente/concepto eran texto libre). */}
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Pedido vinculado (opcional)</label>
+                <div ref={ventaRef} className="relative">
+                  <button type="button" onClick={() => setVentaOpen(v => !v)}
+                    className={inp + " cursor-pointer flex items-center gap-2 text-left"}>
+                    <ShoppingBag size={13} className="text-slate-500 shrink-0" />
+                    <span className={`flex-1 truncate ${ventaSeleccionada ? "text-slate-100" : "text-slate-500"}`}>
+                      {ventaSeleccionada ? `${ventaSeleccionada.concepto}${ventaSeleccionada.cliente?.nombre ? " — " + ventaSeleccionada.cliente.nombre : ""}` : "Sin pedido vinculado"}
+                    </span>
+                    <ChevronDown size={13} className={`text-slate-500 shrink-0 transition-transform ${ventaOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {ventaOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-slate-900 border border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
+                      <div className="px-2 pt-2 pb-1">
+                        <div className="relative">
+                          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                          <input autoFocus value={ventaQuery} onChange={ev => setVentaQuery(ev.target.value)}
+                            placeholder="Buscar por concepto o cliente…"
+                            className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-500 outline-none focus:border-violet-500" />
+                        </div>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto py-1">
+                        <button type="button" onClick={() => elegirVenta(null)}
+                          className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${!form.ventaId ? "text-violet-400 font-medium" : "text-slate-500"}`}>
+                          Sin pedido vinculado
+                        </button>
+                        {ventasFiltradas.map(v => (
+                          <button key={v.documentId} type="button" onClick={() => elegirVenta(v)}
+                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${form.ventaId === v.documentId ? "text-violet-400 font-medium" : "text-slate-300"}`}>
+                            <span className="block truncate">{v.concepto}</span>
+                            {v.cliente?.nombre && <span className="block text-[10px] text-slate-500 truncate">{v.cliente.nombre}</span>}
+                          </button>
+                        ))}
+                        {ventasFiltradas.length === 0 && (
+                          <p className="text-[11px] text-slate-600 text-center py-3">Sin pedidos que coincidan.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cliente</label>
