@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Clock, Ticket, ChevronDown, ClipboardList, Link2, ExternalLink } from "lucide-react"
+import { useState, useMemo, useRef, useEffect } from "react"
+import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { DropdownPicker } from "@/components/Shared/DropdownPicker"
+import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
+import { fieldCls } from "@/lib/styles"
 import { useGetTareas } from "@/api/tarea/getTareas"
 import { createTarea } from "@/api/tarea/createTarea"
 import { updateTarea } from "@/api/tarea/updateTarea"
@@ -16,6 +18,18 @@ import { TareaType, TareaPayload, AmbitoTarea, EstadoTarea, PrioridadTarea } fro
 import { useGetHistorialTarea } from "@/api/historial-tarea/getHistorialTarea"
 import { createHistorialTarea } from "@/api/historial-tarea/mutateHistorialTarea"
 import { ProgresoBar, AvancesPanel } from "@/components/Shared/TareasWidgets"
+
+// Los desplegables del modal (Estado/Prioridad/Responsable/Área/Etiqueta) son
+// paneles "position: absolute", así que no quedan incluidos en el bounding
+// box de su contenedor — si el modal tiene scroll, el panel puede quedar
+// cortado abajo. Este ref hace que el panel se desplace a la vista al abrir.
+function useAutoScrollPanel(open: boolean) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (open) ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }, [open])
+  return ref
+}
 
 const ESTADOS: { key: EstadoTarea | "todas"; label: string }[] = [
   { key: "todas",        label: "Todas" },
@@ -37,26 +51,20 @@ const RANGOS: { key: RangoFecha; label: string }[] = [
 ]
 
 const PRIORIDADES: PrioridadTarea[] = ["baja", "media", "alta", "urgente"]
+const PRIORIDAD_LABEL: Record<PrioridadTarea, string> = { baja: "Baja", media: "Media", alta: "Alta", urgente: "Urgente" }
 
 const PRIORIDAD_COLORS: Record<PrioridadTarea, string> = {
-  baja:    "bg-slate-500/10 text-slate-400 border-slate-500/20",
-  media:   "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  alta:    "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  urgente: "bg-red-500/10 text-red-400 border-red-500/20",
-}
-
-const PRIORIDAD_DOT: Record<PrioridadTarea, string> = {
-  baja:    "bg-slate-400",
-  media:   "bg-blue-500",
-  alta:    "bg-amber-500",
-  urgente: "bg-red-500",
+  baja:    "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+  media:   "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+  alta:    "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50",
+  urgente: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/50",
 }
 
 const ESTADO_COLORS: Record<EstadoTarea, string> = {
-  sin_iniciar: "bg-slate-500/10 text-slate-400 border-slate-500/20",
-  en_progreso: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  en_pausa:    "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  completada:  "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  sin_iniciar: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+  en_progreso: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50",
+  en_pausa:    "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800/50",
+  completada:  "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50",
 }
 
 const ESTADO_LABEL: Record<EstadoTarea, string> = {
@@ -96,6 +104,13 @@ const fmtDuracion = (desde: string, hasta: string) => {
 
 const isoHoy = () => {
   const d = new Date(); d.setHours(0, 0, 0, 0)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+// Default de "Fecha límite" al crear: una semana después de hoy.
+const unaSemanaDespues = (iso: string): string => {
+  const d = new Date(iso + "T00:00:00")
+  d.setDate(d.getDate() + 7)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
@@ -145,14 +160,55 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [form, setForm] = useState<TareaPayload>({
     titulo: "", descripcion: "", ambito,
     estado: "sin_iniciar", prioridad: "media",
-    etiqueta: null, fechaVencimiento: null, notas: null, responsable: null,
+    etiqueta: null, fechaVencimiento: null, notas: null, links: null, responsable: null,
     area: null, fechaInicio: null, esTicket: false,
   })
+  const cerrarModalSiVacio = useModalBackdropClose(form, () => setModalOpen(false), modalOpen)
 
-  // Etiquetas únicas usadas para autocomplete
+  const [estadoOpen,  setEstadoOpen]  = useState(false)
+  const [filtrosOpen, setFiltrosOpen] = useState(false)
+  const estadoRef  = useRef<HTMLDivElement>(null)
+  const filtrosRef = useRef<HTMLDivElement>(null)
+  // Dropdowns del modal
+  const [atributosOpen, setAtributosOpen] = useState(false)
+  const [estadoFieldOpen,    setEstadoFieldOpen]    = useState(false)
+  const [prioridadFieldOpen, setPrioridadFieldOpen] = useState(false)
+  const [respOpen,  setRespOpen]  = useState(false)
+  const [respQuery, setRespQuery] = useState("")
+  const [etqOpen,   setEtqOpen]   = useState(false)
+  const [etqQuery,  setEtqQuery]  = useState("")
+  const [areaOpen,  setAreaOpen]  = useState(false)
+  const [areaQuery, setAreaQuery] = useState("")
+  const estadoFieldRef    = useRef<HTMLDivElement>(null)
+  const prioridadFieldRef = useRef<HTMLDivElement>(null)
+  const respRef = useRef<HTMLDivElement>(null)
+  const etqRef  = useRef<HTMLDivElement>(null)
+  const areaRef = useRef<HTMLDivElement>(null)
+  const estadoPanelRef    = useAutoScrollPanel(estadoFieldOpen)
+  const prioridadPanelRef = useAutoScrollPanel(prioridadFieldOpen)
+  const respPanelRef      = useAutoScrollPanel(respOpen)
+  const etqPanelRef       = useAutoScrollPanel(etqOpen)
+  const areaPanelRef      = useAutoScrollPanel(areaOpen)
+
+  // Etiquetas/responsables/áreas usados — se derivan de las tareas ya
+  // existentes (no hay un catálogo genérico separado en este proyecto), así
+  // que cualquier valor nuevo queda disponible para autocompletar en cuanto
+  // se usa una vez.
   const etiquetasUsadas = useMemo(() => {
     const set = new Set<string>()
     tareas.forEach(t => { if (t.etiqueta) set.add(t.etiqueta) })
+    return [...set].sort()
+  }, [tareas])
+
+  const responsablesUsados = useMemo(() => {
+    const set = new Set<string>()
+    tareas.forEach(t => { if (t.responsable) set.add(t.responsable) })
+    return [...set].sort()
+  }, [tareas])
+
+  const areasUsadas = useMemo(() => {
+    const set = new Set<string>()
+    tareas.forEach(t => { if (t.area) set.add(t.area) })
     return [...set].sort()
   }, [tareas])
 
@@ -203,7 +259,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         const bVenc = b.fechaVencimiento ? new Date(b.fechaVencimiento).getTime() : Infinity
         return aVenc - bVenc
       })
-  }, [tareas, filtro, filtroEtiqueta, filtroPrioridad, filtroResponsable, filtroRango, busqueda])
+  }, [tareas, filtro, filtroEtiqueta, filtroPrioridad, filtroResponsable, filtroRango, busqueda, filtroTicket])
 
   const stats = {
     total:       tareas.length,
@@ -213,28 +269,14 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     completadas: tareas.filter(t => t.estado === "completada").length,
   }
 
-  // Responsables usados para autocomplete
-  const responsablesUsados = useMemo(() => {
-    const s = new Set<string>()
-    tareas.forEach(t => { if (t.responsable) s.add(t.responsable) })
-    return [...s].sort()
-  }, [tareas])
-
-  // Áreas usadas para autocomplete
-  const areasUsadas = useMemo(() => {
-    const s = new Set<string>()
-    tareas.forEach(t => { if (t.area) s.add(t.area) })
-    return [...s].sort()
-  }, [tareas])
-
   const abrirCrear = (fechaVencimiento: string | null = null) => {
     const hoy = isoHoy()
     setEditando(null)
     setForm({
       titulo: "", descripcion: "", ambito,
-      estado: "sin_iniciar", prioridad: "media",
-      etiqueta: null, fechaVencimiento: fechaVencimiento ?? hoy, notas: null, responsable: null,
-      area: null, fechaInicio: hoy, esTicket: false,
+      estado: "en_progreso", prioridad: "media",
+      etiqueta: null, fechaVencimiento: fechaVencimiento ?? unaSemanaDespues(hoy), notas: null, links: null,
+      responsable: null, area: null, fechaInicio: hoy, esTicket: false,
     })
     setModalOpen(true)
   }
@@ -245,7 +287,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       titulo: t.titulo, descripcion: t.descripcion, ambito: t.ambito,
       estado: t.estado, prioridad: t.prioridad,
       etiqueta: t.etiqueta, fechaVencimiento: t.fechaVencimiento,
-      notas: t.notas, responsable: t.responsable ?? null,
+      notas: t.notas, links: t.links, responsable: t.responsable ?? null,
       area: t.area ?? null,
       fechaInicio: t.fechaInicio ?? null,
       esTicket: t.esTicket ?? false,
@@ -334,9 +376,8 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       const updated = await updateTarea(t.documentId, { progreso: pct })
       setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
     } catch (e: any) {
-      // 400 probablemente significa que el backend aún no tiene el campo progreso desplegado
       if (e?.message?.includes("400") || e?.status === 400) {
-        toast.warning("El servidor aún no tiene el campo progreso. Espera el redeploy de Render.")
+        toast.warning("El servidor aún no tiene el campo progreso. Espera el redeploy de Railway.")
       } else {
         toast.error("Error al guardar progreso")
       }
@@ -380,11 +421,203 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     return map
   }, [tareas])
 
+  const filtrosAvanzadosActivos = [
+    filtroRango !== "todas",
+    !!filtroPrioridad,
+    !!filtroEtiqueta,
+    !!filtroResponsable,
+    filtroTicket,
+  ].filter(Boolean).length
+
   const limpiarFiltros = () => {
     setFiltro("todas"); setFiltroEtiqueta(""); setFiltroPrioridad(""); setFiltroRango("todas"); setBusqueda(""); setFiltroResponsable(""); setFiltroTicket(false)
   }
 
-  const hayFiltrosActivos = filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim() || filtroResponsable || filtroTicket
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (estadoRef.current  && !estadoRef.current.contains(t))  setEstadoOpen(false)
+      if (filtrosRef.current && !filtrosRef.current.contains(t)) setFiltrosOpen(false)
+      if (estadoFieldRef.current    && !estadoFieldRef.current.contains(t))    setEstadoFieldOpen(false)
+      if (prioridadFieldRef.current && !prioridadFieldRef.current.contains(t)) setPrioridadFieldOpen(false)
+      if (respRef.current && !respRef.current.contains(t)) setRespOpen(false)
+      if (etqRef.current  && !etqRef.current.contains(t))  setEtqOpen(false)
+      if (areaRef.current && !areaRef.current.contains(t)) setAreaOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  // Tarjeta de una tarea — función normal (no componente aparte) para poder
+  // usar todos los handlers/estado de arriba sin pasar quince props.
+  function renderTareaCard(t: TareaType) {
+    const dias = diasHastaVencimiento(t.fechaVencimiento)
+    const vencida = dias !== null && dias < 0 && t.estado !== "completada"
+    const proxima = dias !== null && dias >= 0 && dias <= 2 && t.estado !== "completada"
+
+    return (
+      <div
+        key={t.documentId}
+        onClick={() => abrirEditar(t)}
+        className={`flex items-start gap-3 p-3 rounded-xl border bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm cursor-pointer transition-all border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-md ${t.estado === "completada" ? "opacity-50" : ""}`}
+      >
+        <button
+          type="button"
+          title={t.estado === "completada" ? "Marcar como sin iniciar" : "Marcar como completada"}
+          onClick={e => { e.stopPropagation(); cambiarEstado(t, t.estado === "completada" ? "sin_iniciar" : "completada") }}
+          className={`mt-0.5 h-5 w-5 rounded border-2 shrink-0 flex items-center justify-center transition ${
+            t.estado === "completada"
+              ? "bg-emerald-500 border-emerald-500"
+              : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-500"
+          }`}
+        >
+          {t.estado === "completada" && <Check size={12} className="text-white" />}
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className={`text-sm font-medium ${t.estado === "completada" ? "line-through text-muted-foreground" : ""}`}>
+              {t.titulo}
+            </p>
+            <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+              <button
+                type="button"
+                title={t.esTicket ? "Quitar ticket de servicio" : "Marcar como ticket de servicio"}
+                onClick={() => toggleTicket(t)}
+                className={`p-1 rounded transition-colors ${
+                  t.esTicket
+                    ? "text-blue-500 dark:text-blue-400 hover:text-blue-600"
+                    : "text-muted-foreground/30 hover:text-blue-400"
+                }`}
+              >
+                <Ticket size={12} />
+              </button>
+              <button type="button" title="Eliminar" onClick={() => borrar(t)} className="p-1 text-muted-foreground hover:text-red-500 rounded hover:bg-muted">
+                <Trash2 size={12} />
+              </button>
+              <button
+                type="button"
+                title="Agregar link"
+                onClick={() => setLinksOpen(prev => prev === t.documentId ? null : t.documentId)}
+                className={`p-1 rounded transition-colors ${
+                  linksOpen === t.documentId
+                    ? "text-blue-400 hover:text-blue-500"
+                    : t.links
+                    ? "text-blue-400/60 hover:text-blue-400"
+                    : "text-muted-foreground/40 hover:text-blue-400"
+                }`}
+              >
+                <Link2 size={12} />
+              </button>
+              <button
+                type="button"
+                title="Anotar avance"
+                onClick={() => setAvancesOpen(prev => prev === t.documentId ? null : t.documentId)}
+                className={`p-1 rounded transition-colors ${
+                  avancesOpen === t.documentId
+                    ? "text-violet-400 hover:text-violet-500"
+                    : "text-muted-foreground/40 hover:text-violet-400"
+                }`}
+              >
+                <Plus size={12} />
+              </button>
+            </div>
+          </div>
+
+          {t.descripcion && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.descripcion}</p>
+          )}
+
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            {t.esTicket && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 inline-flex items-center gap-1">
+                <Ticket size={9} /> Ticket
+              </span>
+            )}
+            {filtro === "todas" && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${ESTADO_COLORS[t.estado]}`}>
+                {ESTADO_LABEL[t.estado]}
+              </span>
+            )}
+            {t.prioridad !== "media" && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${PRIORIDAD_COLORS[t.prioridad]}`}>
+                {t.prioridad}
+              </span>
+            )}
+            {t.etiqueta && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-violet-200 dark:border-violet-900/40 bg-violet-50/40 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400 inline-flex items-center gap-1">
+                <Tag size={9} />
+                {t.etiqueta}
+              </span>
+            )}
+            {t.fechaVencimiento && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
+                vencida ? "border-red-300 bg-red-50 dark:bg-red-950/20 text-red-500"
+                : proxima ? "border-amber-300 bg-amber-50 dark:bg-amber-950/20 text-amber-500"
+                : "border-slate-200 dark:border-slate-700/50 text-muted-foreground"
+              }`}>
+                <CalIcon size={9} />
+                {fmtFecha(t.fechaVencimiento)}
+                {dias !== null && t.estado !== "completada" && (
+                  dias === 0 ? " · hoy"
+                  : dias < 0 ? ` · vencida ${-dias}d`
+                  : dias <= 7 ? ` · en ${dias}d`
+                  : ""
+                )}
+              </span>
+            )}
+          </div>
+
+          {(t.responsable || t.area || t.fechaCompletada || t.ticket) && (
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              {t.responsable && (
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  {t.responsable}
+                </span>
+              )}
+              {t.area && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 text-muted-foreground">
+                  {t.area}
+                </span>
+              )}
+              {t.estado === "completada" && t.fechaCompletada && (
+                <span className="text-[10px] flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                  <Check size={9} />
+                  {fmtFechaHora(t.fechaCompletada)}
+                  {t.fechaInicio && (
+                    <> · {fmtDuracion(t.fechaInicio, t.fechaCompletada)}</>
+                  )}
+                </span>
+              )}
+              {t.ticket && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
+                  🎫 {t.ticket.titulo}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div onClick={e => e.stopPropagation()}>
+            <ProgresoBar
+              value={t.progreso ?? 0}
+              onSave={pct => actualizarProgreso(t, pct)}
+            />
+            <LinksPanel
+              links={t.links}
+              inputOpen={linksOpen === t.documentId}
+              onAgregar={entrada => agregarLink(t, entrada)}
+            />
+            <AvancesPanel
+              notas={t.notas}
+              open={avancesOpen === t.documentId}
+              onAgregar={nota => agregarAvance(t, nota)}
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -397,7 +630,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         backgroundSize: "28px 28px",
       }}>
       <div className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(59,130,246,0.07) 0%, transparent 55%)" }} />
+        style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.07) 0%, transparent 55%)" }} />
       <div className="relative p-4 sm:p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
@@ -405,37 +638,27 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
           <p className="text-sm text-muted-foreground">Gestiona y da seguimiento a tus tareas</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Toggle vista */}
           <div className="flex gap-1 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700/50">
-            <button
-              type="button"
-              onClick={() => setVista("lista")}
+            <button type="button" onClick={() => setVista("lista")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "lista" ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}
-            >
+                vista === "lista" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}>
               <List size={14} /> Lista
             </button>
-            <button
-              type="button"
-              onClick={() => setVista("calendario")}
+            <button type="button" onClick={() => setVista("calendario")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "calendario" ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}
-            >
+                vista === "calendario" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}>
               <CalIcon size={14} /> Calendario
             </button>
-            <button
-              type="button"
-              onClick={() => setVista("metricas")}
+            <button type="button" onClick={() => setVista("metricas")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "metricas" ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}
-            >
+                vista === "metricas" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}>
               <BarChart2 size={14} /> Métricas
             </button>
           </div>
-          <Button onClick={() => abrirCrear()} size="sm">
+          <Button onClick={() => abrirCrear()} size="sm" className="bg-violet-600 hover:bg-violet-700">
             <Plus size={14} className="mr-1" />
             <span className="hidden sm:inline">Nueva tarea</span>
             <span className="sm:hidden">Nueva</span>
@@ -443,315 +666,169 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
         </div>
       </div>
 
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-        <div className="border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
-          <p className="text-[10px] text-muted-foreground uppercase">Total</p>
-          <p className="text-xl font-bold">{stats.total}</p>
-        </div>
-        <div className="border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
-          <p className="text-[10px] text-slate-500 uppercase">Sin iniciar</p>
-          <p className="text-xl font-bold text-slate-300">{stats.sinIniciar}</p>
-        </div>
-        <div className="border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm rounded-xl p-3">
-          <p className="text-[10px] text-blue-400 uppercase">En progreso</p>
-          <p className="text-xl font-bold text-blue-300">{stats.enProgreso}</p>
-        </div>
-        <div className="border border-violet-500/30 bg-violet-500/10 backdrop-blur-sm rounded-xl p-3">
-          <p className="text-[10px] text-violet-400 uppercase">En pausa</p>
-          <p className="text-xl font-bold text-violet-300">{stats.enPausa}</p>
-        </div>
-        <div className="border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm rounded-xl p-3">
-          <p className="text-[10px] text-emerald-400 uppercase">Completadas</p>
-          <p className="text-xl font-bold text-emerald-300">{stats.completadas}</p>
-        </div>
-      </div>
-
-      {/* Filtros (solo en vista lista) */}
+      {/* Barra de filtros */}
       {vista === "lista" && (
-        <div className="space-y-3 mb-6 mt-2">
+        <div className="flex items-center gap-2 mb-6 mt-2 flex-wrap">
           {/* Búsqueda */}
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative w-64">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar por título, descripción o etiqueta..."
-              className="h-9 pl-9 text-sm bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              placeholder="Buscar..."
+              className="h-9 pl-9 text-sm bg-white/80 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
           </div>
 
-          {/* Filtros en línea */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {ESTADOS.map(e => (
-              <button
-                key={e.key}
-                type="button"
-                onClick={() => setFiltro(e.key)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                  filtro === e.key
-                    ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600"
-                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
-                }`}
-              >
-                {e.label}
-              </button>
-            ))}
-
-            <select
-              title="Filtrar por rango de fecha"
-              value={filtroRango}
-              onChange={e => setFiltroRango(e.target.value as RangoFecha)}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-            >
-              {RANGOS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
-            </select>
-
-            <select
-              title="Filtrar por prioridad"
-              value={filtroPrioridad}
-              onChange={e => setFiltroPrioridad(e.target.value as PrioridadTarea | "")}
-              className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-            >
-              <option value="">Toda prioridad</option>
-              {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-
-            {etiquetasUsadas.length > 0 && (
-              <select
-                title="Filtrar por etiqueta"
-                value={filtroEtiqueta}
-                onChange={e => setFiltroEtiqueta(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-              >
-                <option value="">Todas las etiquetas</option>
-                {etiquetasUsadas.map(et => <option key={et} value={et}>{et}</option>)}
-              </select>
-            )}
-
-            {responsablesUsados.length > 0 && (
-              <select
-                title="Filtrar por responsable"
-                value={filtroResponsable}
-                onChange={e => setFiltroResponsable(e.target.value)}
-                className="text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-              >
-                <option value="">Todos los responsables</option>
-                {responsablesUsados.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-            )}
-
+          {/* Dropdown Estado */}
+          <div ref={estadoRef} className="relative">
             <button
               type="button"
-              onClick={() => setFiltroTicket(v => !v)}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 ${
-                filtroTicket
-                  ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
-                  : "bg-slate-800 border-slate-700 text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={() => { setEstadoOpen(v => !v); setFiltrosOpen(false) }}
+              className="h-9 flex items-center gap-2 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition-colors shadow-sm"
             >
-              <Ticket size={11} /> Solo tickets
+              <span className={`h-2 w-2 rounded-full shrink-0 ${
+                filtro === "en_progreso" ? "bg-blue-500"
+                : filtro === "en_pausa"  ? "bg-violet-500"
+                : filtro === "completada" ? "bg-emerald-500"
+                : filtro === "sin_iniciar" ? "bg-slate-400"
+                : "bg-slate-300"
+              }`} />
+              <span>{filtro === "todas" ? "Estado" : ESTADOS.find(e => e.key === filtro)?.label}</span>
+              <ChevronDown size={13} className={`text-muted-foreground transition-transform duration-150 ${estadoOpen ? "rotate-180" : ""}`} />
             </button>
-
-            {hayFiltrosActivos && (
-              <button
-                type="button"
-                onClick={limpiarFiltros}
-                className="text-xs px-2 py-1.5 text-muted-foreground hover:text-foreground"
-              >
-                Limpiar
-              </button>
+            {estadoOpen && (
+              <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 min-w-[190px] py-1 overflow-hidden">
+                {ESTADOS.map(e => {
+                  const count = e.key === "todas" ? tareas.length
+                    : e.key === "sin_iniciar"  ? stats.sinIniciar
+                    : e.key === "en_progreso"  ? stats.enProgreso
+                    : e.key === "en_pausa"     ? stats.enPausa
+                    : stats.completadas
+                  return (
+                    <button
+                      key={e.key}
+                      type="button"
+                      onClick={() => { setFiltro(e.key); setEstadoOpen(false) }}
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${filtro === e.key ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full shrink-0 ${
+                          e.key === "en_progreso"  ? "bg-blue-500"
+                          : e.key === "en_pausa"   ? "bg-violet-500"
+                          : e.key === "completada" ? "bg-emerald-500"
+                          : "bg-slate-400"
+                        }`} />
+                        {e.label}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">{count}</span>
+                    </button>
+                  )
+                })}
+              </div>
             )}
           </div>
+
+          {/* Dropdown Filtros avanzados */}
+          <div ref={filtrosRef} className="relative">
+            <button
+              type="button"
+              onClick={() => { setFiltrosOpen(v => !v); setEstadoOpen(false) }}
+              className={`h-9 flex items-center gap-1.5 px-3 text-sm rounded-lg border transition-colors shadow-sm ${
+                filtrosAvanzadosActivos > 0
+                  ? "border-violet-400/60 bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600"
+              }`}
+            >
+              <SlidersHorizontal size={13} />
+              <span>Filtros</span>
+              {filtrosAvanzadosActivos > 0 && (
+                <span className="h-4 w-4 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {filtrosAvanzadosActivos}
+                </span>
+              )}
+              <ChevronDown size={13} className={`text-muted-foreground transition-transform duration-150 ${filtrosOpen ? "rotate-180" : ""}`} />
+            </button>
+            {filtrosOpen && (
+              <div className="absolute top-full right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-64 p-3 space-y-3">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Rango de fecha</p>
+                  <DropdownPicker label="Rango de fecha" value={filtroRango}
+                    onChange={v => setFiltroRango(v as RangoFecha)}
+                    options={RANGOS.map(r => ({ value: r.key, label: r.label }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Prioridad</p>
+                  <DropdownPicker label="Prioridad" value={filtroPrioridad}
+                    onChange={v => setFiltroPrioridad(v as PrioridadTarea | "")}
+                    placeholder="Todas"
+                    options={[{ value: "", label: "Todas" }, ...PRIORIDADES.map(p => ({ value: p, label: PRIORIDAD_LABEL[p] }))]} />
+                </div>
+                {etiquetasUsadas.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Etiqueta</p>
+                    <DropdownPicker label="Etiqueta" value={filtroEtiqueta} onChange={setFiltroEtiqueta}
+                      placeholder="Todas"
+                      options={[{ value: "", label: "Todas" }, ...etiquetasUsadas.map(et => ({ value: et, label: et }))]} />
+                  </div>
+                )}
+                {responsablesUsados.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Responsable</p>
+                    <DropdownPicker label="Responsable" value={filtroResponsable} onChange={setFiltroResponsable}
+                      placeholder="Todos"
+                      options={[{ value: "", label: "Todos" }, ...responsablesUsados.map(r => ({ value: r, label: r }))]} />
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroTicket(v => !v)}
+                    className={`flex items-center gap-1.5 text-xs transition-colors ${filtroTicket ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <span className={`h-4 w-4 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${filtroTicket ? "border-violet-500 bg-violet-500" : "border-slate-300 dark:border-slate-600"}`}>
+                      {filtroTicket && <Check size={9} className="text-white" />}
+                    </span>
+                    Solo tickets
+                  </button>
+                  {filtrosAvanzadosActivos > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => { setFiltroRango("todas"); setFiltroPrioridad(""); setFiltroEtiqueta(""); setFiltroResponsable(""); setFiltroTicket(false) }}
+                      className="text-[11px] text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {(filtro !== "todas" || filtroEtiqueta || filtroPrioridad || filtroRango !== "todas" || busqueda.trim() || filtroResponsable || filtroTicket) && (
+            <button type="button" onClick={limpiarFiltros}
+              className="text-xs px-2 py-1.5 text-muted-foreground hover:text-foreground">
+              Limpiar todo
+            </button>
+          )}
         </div>
       )}
 
       {/* VISTA: LISTA */}
       {vista === "lista" && (
         loading ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Cargando...</p>
+          <div className="animate-pulse space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-20 rounded-xl bg-slate-200 dark:bg-slate-700" />
+            ))}
+          </div>
         ) : filtradas.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
             {tareas.length === 0 ? "No hay tareas. Crea una." : "Sin resultados con los filtros actuales."}
           </p>
         ) : (
           <div className="space-y-2">
-            {filtradas.map(t => {
-              const dias = diasHastaVencimiento(t.fechaVencimiento)
-              const vencida = dias !== null && dias < 0 && t.estado !== "completada"
-              const proxima = dias !== null && dias >= 0 && dias <= 2 && t.estado !== "completada"
-
-              return (
-                <div
-                  key={t.documentId}
-                  onClick={() => abrirEditar(t)}
-                  className={`flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 transition-colors ${t.estado === "completada" ? "opacity-50" : ""}`}
-                >
-                  <button
-                    type="button"
-                    title={t.estado === "completada" ? "Marcar como sin iniciar" : "Marcar como completada"}
-                    onClick={e => { e.stopPropagation(); cambiarEstado(t, t.estado === "completada" ? "sin_iniciar" : "completada") }}
-                    className={`mt-0.5 h-5 w-5 rounded border-2 shrink-0 flex items-center justify-center transition ${
-                      t.estado === "completada"
-                        ? "bg-emerald-500 border-emerald-500"
-                        : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-500"
-                    }`}
-                  >
-                    {t.estado === "completada" && <Check size={12} className="text-white" />}
-                  </button>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className={`text-sm font-medium ${t.estado === "completada" ? "line-through text-muted-foreground" : ""}`}>
-                        {t.titulo}
-                      </p>
-                      <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          title={t.esTicket ? "Quitar ticket de servicio" : "Marcar como ticket de servicio"}
-                          onClick={() => toggleTicket(t)}
-                          className={`p-1 rounded transition-colors ${
-                            t.esTicket
-                              ? "text-blue-500 dark:text-blue-400 hover:text-blue-600"
-                              : "text-muted-foreground/30 hover:text-blue-400"
-                          }`}
-                        >
-                          <Ticket size={12} />
-                        </button>
-                        <button type="button" title="Eliminar" onClick={() => borrar(t)} className="p-1 text-muted-foreground hover:text-red-500 rounded hover:bg-muted">
-                          <Trash2 size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          title="Agregar link"
-                          onClick={() => setLinksOpen(prev => prev === t.documentId ? null : t.documentId)}
-                          className={`p-1 rounded transition-colors ${
-                            linksOpen === t.documentId
-                              ? "text-blue-400 hover:text-blue-500"
-                              : t.links
-                              ? "text-blue-400/60 hover:text-blue-400"
-                              : "text-muted-foreground/40 hover:text-blue-400"
-                          }`}
-                        >
-                          <Link2 size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          title="Anotar avance"
-                          onClick={() => setAvancesOpen(prev => prev === t.documentId ? null : t.documentId)}
-                          className={`p-1 rounded transition-colors ${
-                            avancesOpen === t.documentId
-                              ? "text-violet-400 hover:text-violet-500"
-                              : "text-muted-foreground/40 hover:text-violet-400"
-                          }`}
-                        >
-                          <Plus size={12} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {t.descripcion && (
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.descripcion}</p>
-                    )}
-
-                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                      {t.esTicket && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 inline-flex items-center gap-1">
-                          <Ticket size={9} /> Ticket
-                        </span>
-                      )}
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${ESTADO_COLORS[t.estado]}`}>
-                        {ESTADO_LABEL[t.estado]}
-                      </span>
-                      {t.prioridad !== "media" && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${PRIORIDAD_COLORS[t.prioridad]}`}>
-                          {t.prioridad}
-                        </span>
-                      )}
-                      {t.etiqueta && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-violet-200 dark:border-violet-900/40 bg-violet-50/40 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400 inline-flex items-center gap-1">
-                          <Tag size={9} />
-                          {t.etiqueta}
-                        </span>
-                      )}
-                      {t.fechaVencimiento && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
-                          vencida ? "border-red-300 bg-red-50 dark:bg-red-950/20 text-red-500"
-                          : proxima ? "border-amber-300 bg-amber-50 dark:bg-amber-950/20 text-amber-500"
-                          : "border-slate-700/50 text-muted-foreground"
-                        }`}>
-                          <CalIcon size={9} />
-                          {fmtFecha(t.fechaVencimiento)}
-                          {dias !== null && t.estado !== "completada" && (
-                            dias === 0 ? " · hoy"
-                            : dias < 0 ? ` · vencida ${-dias}d`
-                            : dias <= 7 ? ` · en ${dias}d`
-                            : ""
-                          )}
-                        </span>
-                      )}
-                    </div>
-
-                    {(t.responsable || t.area || t.fechaInicio || t.fechaCompletada || t.ticket) && (
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        {t.responsable && (
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            {t.responsable}
-                          </span>
-                        )}
-                        {t.area && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 text-muted-foreground">
-                            {t.area}
-                          </span>
-                        )}
-                        {t.estado === "completada" && t.fechaCompletada ? (
-                          <span className="text-[10px] flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                            <Check size={9} />
-                            {t.fechaInicio && <>{fmtFechaHora(t.fechaInicio)} → </>}
-                            {fmtFechaHora(t.fechaCompletada)}
-                            {t.fechaInicio && (
-                              <> · {fmtDuracion(t.fechaInicio, t.fechaCompletada)}</>
-                            )}
-                          </span>
-                        ) : (t.fechaInicio || t.createdAt) ? (
-                          <span className="text-[10px] flex items-center gap-1 text-muted-foreground">
-                            <Clock size={9} />
-                            {fmtFechaHora(t.createdAt ?? t.fechaInicio!)}
-                            {t.fechaVencimiento && (
-                              <> → {fmtFecha(t.fechaVencimiento)}</>
-                            )}
-                          </span>
-                        ) : null}
-                        {t.ticket && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
-                            🎫 {t.ticket.titulo}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div onClick={e => e.stopPropagation()}>
-                      <ProgresoBar
-                        value={t.progreso ?? 0}
-                        onSave={pct => actualizarProgreso(t, pct)}
-                      />
-                      <LinksPanel
-                        links={t.links}
-                        inputOpen={linksOpen === t.documentId}
-                        onAgregar={entrada => agregarLink(t, entrada)}
-                      />
-                      <AvancesPanel
-                        notas={t.notas}
-                        open={avancesOpen === t.documentId}
-                        onAgregar={nota => agregarAvance(t, nota)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            {filtradas.map(t => renderTareaCard(t))}
           </div>
         )
       )}
@@ -774,165 +851,295 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 sm:p-6 w-full max-w-md space-y-3 border border-slate-700/50 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarModalSiVacio}>
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-5 w-full max-w-md space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl max-h-[90vh] overflow-y-auto">
+
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{editando ? "Editar tarea" : "Nueva tarea"}</h2>
-              <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
-                <X size={16} />
-              </Button>
+              <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">{editando ? "Editar tarea" : "Nueva tarea"}</h2>
+              <button type="button" onClick={() => setModalOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 transition-colors">
+                <X size={15} />
+              </button>
             </div>
 
-            <div>
-              <Label className="text-xs" htmlFor="t-titulo">Título *</Label>
-              <Input id="t-titulo" value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} className="h-9" placeholder="Ej. Revisar propuesta" />
+            <div className="space-y-1">
+              <label className="text-xs text-slate-500 dark:text-slate-400">Título <span className="text-violet-500">*</span></label>
+              <input
+                value={form.titulo}
+                onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
+                placeholder="Ej. Revisar propuesta"
+                className={fieldCls}
+              />
             </div>
 
-            <div>
-              <Label className="text-xs" htmlFor="t-desc">Descripción</Label>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-500 dark:text-slate-400">Descripción</label>
               <textarea
-                id="t-desc"
                 value={form.descripcion ?? ""}
                 onChange={e => setForm(f => ({ ...f, descripcion: e.target.value || null }))}
-                className="w-full min-h-[60px] text-sm rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2"
+                rows={2}
+                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 hover:border-slate-400 dark:hover:border-slate-600 outline-none focus:border-violet-400 dark:focus:border-violet-500 transition-colors shadow-sm resize-none"
                 placeholder="Detalles, contexto..."
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs" htmlFor="t-estado">Estado</Label>
-                <select
-                  id="t-estado"
-                  aria-label="Estado de la tarea"
-                  value={form.estado}
-                  onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoTarea }))}
-                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm"
-                >
-                  <option value="sin_iniciar">Sin iniciar</option>
-                  <option value="en_progreso">En progreso</option>
-                  <option value="en_pausa">En pausa</option>
-                  <option value="completada">Completada</option>
-                </select>
-              </div>
-              <div>
-                <Label className="text-xs" htmlFor="t-prio">Prioridad</Label>
-                <select
-                  id="t-prio"
-                  aria-label="Prioridad"
-                  value={form.prioridad}
-                  onChange={e => setForm(f => ({ ...f, prioridad: e.target.value as PrioridadTarea }))}
-                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm"
-                >
-                  {PRIORIDADES.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
+            {/* Atributos — desplegable: Estado, Prioridad, Fechas, Responsable, Área */}
+            <div className="space-y-1">
+              <button type="button" onClick={() => setAtributosOpen(a => !a)}
+                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Atributos</span>
+                <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${atributosOpen ? "rotate-180" : ""}`} />
+              </button>
+              {atributosOpen && (
+                <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 space-y-3">
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Estado */}
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400">Estado</label>
+                      <div ref={estadoFieldRef} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => { setEstadoFieldOpen(v => !v); setPrioridadFieldOpen(false); setRespOpen(false); setEtqOpen(false); setAreaOpen(false) }}
+                          className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm"
+                        >
+                          <span className={`h-2 w-2 rounded-full shrink-0 ${
+                            form.estado === "en_progreso" ? "bg-blue-500"
+                            : form.estado === "en_pausa"  ? "bg-violet-500"
+                            : form.estado === "completada" ? "bg-emerald-500"
+                            : "bg-slate-400"
+                          }`} />
+                          <span className="flex-1 text-left">{ESTADO_LABEL[form.estado ?? "sin_iniciar"]}</span>
+                          <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${estadoFieldOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        {estadoFieldOpen && (
+                          <div ref={estadoPanelRef} className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-50 py-1 overflow-hidden">
+                            {(["sin_iniciar","en_progreso","en_pausa","completada"] as EstadoTarea[]).map(e => (
+                              <button key={e} type="button"
+                                onClick={() => { setForm(f => ({ ...f, estado: e })); setEstadoFieldOpen(false) }}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${form.estado === e ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}
+                              >
+                                <span className={`h-2 w-2 rounded-full shrink-0 ${
+                                  e === "en_progreso" ? "bg-blue-500"
+                                  : e === "en_pausa"  ? "bg-violet-500"
+                                  : e === "completada" ? "bg-emerald-500"
+                                  : "bg-slate-400"
+                                }`} />
+                                {ESTADO_LABEL[e]}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {/* Prioridad */}
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400">Prioridad</label>
+                      <div ref={prioridadFieldRef} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => { setPrioridadFieldOpen(v => !v); setEstadoFieldOpen(false); setRespOpen(false); setEtqOpen(false); setAreaOpen(false) }}
+                          className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm"
+                        >
+                          <span className={`h-2 w-2 rounded-full shrink-0 ${
+                            form.prioridad === "urgente" ? "bg-red-500"
+                            : form.prioridad === "alta"  ? "bg-amber-500"
+                            : "bg-slate-400"
+                          }`} />
+                          <span className="flex-1 text-left">{PRIORIDAD_LABEL[form.prioridad ?? "media"]}</span>
+                          <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${prioridadFieldOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        {prioridadFieldOpen && (
+                          <div ref={prioridadPanelRef} className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-50 py-1 overflow-hidden">
+                            {PRIORIDADES.map(p => (
+                              <button key={p} type="button"
+                                onClick={() => { setForm(f => ({ ...f, prioridad: p })); setPrioridadFieldOpen(false) }}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${form.prioridad === p ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}
+                              >
+                                <span className={`h-2 w-2 rounded-full shrink-0 ${
+                                  p === "urgente" ? "bg-red-500" : p === "alta" ? "bg-amber-500" : "bg-slate-400"
+                                }`} />
+                                {PRIORIDAD_LABEL[p]}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400">
+                        Fecha inicio {!editando && <span className="text-muted-foreground font-normal">(auto)</span>}
+                      </label>
+                      <div className="h-9 flex items-center px-3 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm text-slate-400 dark:text-slate-500">
+                        {editando && form.fechaInicio ? fmtFechaHora(form.fechaInicio) : "Automático"}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400">Fecha límite</label>
+                      <Input
+                        type="date"
+                        value={form.fechaVencimiento ?? ""}
+                        onChange={e => setForm(f => ({ ...f, fechaVencimiento: e.target.value || null }))}
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Responsable */}
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400">Responsable</label>
+                      <div ref={respRef} className="relative">
+                        <button type="button"
+                          onClick={() => { setRespOpen(v => !v); setRespQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setEtqOpen(false); setAreaOpen(false) }}
+                          className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
+                          <span className={`flex-1 text-left truncate ${form.responsable ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
+                            {form.responsable ?? "Sin responsable"}
+                          </span>
+                          <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 shrink-0 ${respOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        {respOpen && (
+                          <div ref={respPanelRef} className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-50 overflow-hidden">
+                            <div className="px-2 pt-2 pb-1">
+                              <input autoFocus value={respQuery} onChange={e => setRespQuery(e.target.value)}
+                                placeholder="Buscar..." className={`text-sm ${fieldCls}`} />
+                            </div>
+                            <div className="max-h-44 overflow-y-auto py-1">
+                              <button type="button"
+                                onClick={() => { setForm(f => ({ ...f, responsable: null })); setRespOpen(false) }}
+                                className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${!form.responsable ? "text-violet-500 font-medium" : "text-slate-400 dark:text-slate-500"}`}>
+                                Sin responsable
+                              </button>
+                              {responsablesUsados
+                                .filter(r => r.toLowerCase().includes(respQuery.toLowerCase()))
+                                .map(r => (
+                                  <button key={r} type="button"
+                                    onClick={() => { setForm(f => ({ ...f, responsable: r })); setRespOpen(false) }}
+                                    className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${form.responsable === r ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}>
+                                    {r}
+                                  </button>
+                                ))}
+                              {respQuery && !responsablesUsados.some(r => r.toLowerCase() === respQuery.toLowerCase()) && (
+                                <button type="button"
+                                  onClick={() => { setForm(f => ({ ...f, responsable: respQuery })); setRespOpen(false) }}
+                                  className="w-full text-left px-3 py-1.5 text-sm text-violet-500 dark:text-violet-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
+                                  + Usar &quot;{respQuery}&quot;
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {/* Área de solicitud */}
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400">Área de solicitud</label>
+                      <div ref={areaRef} className="relative">
+                        <button type="button"
+                          onClick={() => { setAreaOpen(v => !v); setAreaQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setEtqOpen(false) }}
+                          className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
+                          <span className={`flex-1 text-left truncate ${form.area ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
+                            {form.area ?? "Sin área"}
+                          </span>
+                          <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 shrink-0 ${areaOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        {areaOpen && (
+                          <div ref={areaPanelRef} className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-50 overflow-hidden">
+                            <div className="px-2 pt-2 pb-1">
+                              <input autoFocus value={areaQuery} onChange={e => setAreaQuery(e.target.value)}
+                                placeholder="Buscar..." className={`text-sm ${fieldCls}`} />
+                            </div>
+                            <div className="max-h-44 overflow-y-auto py-1">
+                              <button type="button"
+                                onClick={() => { setForm(f => ({ ...f, area: null })); setAreaOpen(false) }}
+                                className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${!form.area ? "text-violet-500 font-medium" : "text-slate-400 dark:text-slate-500"}`}>
+                                Sin área
+                              </button>
+                              {areasUsadas
+                                .filter(a => a.toLowerCase().includes(areaQuery.toLowerCase()))
+                                .map(a => (
+                                  <button key={a} type="button"
+                                    onClick={() => { setForm(f => ({ ...f, area: a })); setAreaOpen(false) }}
+                                    className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${form.area === a ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}>
+                                    {a}
+                                  </button>
+                                ))}
+                              {areaQuery && !areasUsadas.some(a => a.toLowerCase() === areaQuery.toLowerCase()) && (
+                                <button type="button"
+                                  onClick={() => { setForm(f => ({ ...f, area: areaQuery })); setAreaOpen(false) }}
+                                  className="w-full text-left px-3 py-1.5 text-sm text-violet-500 dark:text-violet-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
+                                  + Usar &quot;{areaQuery}&quot;
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs" htmlFor="t-inicio">
-                  Fecha inicio {!editando && <span className="text-muted-foreground font-normal">(auto)</span>}
-                </Label>
-                {editando ? (
-                  <div className="h-9 flex items-center px-3 text-sm rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 text-muted-foreground">
-                    {form.fechaInicio ? fmtFechaHora(form.fechaInicio) : "—"}
-                  </div>
-                ) : (
-                  <div className="h-9 flex items-center px-3 text-sm rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 text-muted-foreground">
-                    Ahora (automático)
+            {/* Etiqueta */}
+            <div className="space-y-1">
+              <label className="text-xs text-slate-500 dark:text-slate-400">Etiqueta</label>
+              <div ref={etqRef} className="relative">
+                <button type="button"
+                  onClick={() => { setEtqOpen(v => !v); setEtqQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setAreaOpen(false) }}
+                  className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
+                  <span className={`flex-1 text-left truncate ${form.etiqueta ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
+                    {form.etiqueta ?? "campaña, urgente..."}
+                  </span>
+                  <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 shrink-0 ${etqOpen ? "rotate-180" : ""}`} />
+                </button>
+                {etqOpen && (
+                  <div ref={etqPanelRef} className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-50 overflow-hidden">
+                    <div className="px-2 pt-2 pb-1">
+                      <input autoFocus value={etqQuery} onChange={e => setEtqQuery(e.target.value)}
+                        placeholder="Buscar..." className={`text-sm ${fieldCls}`} />
+                    </div>
+                    <div className="max-h-44 overflow-y-auto py-1">
+                      <button type="button"
+                        onClick={() => { setForm(f => ({ ...f, etiqueta: null })); setEtqOpen(false) }}
+                        className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${!form.etiqueta ? "text-violet-500 font-medium" : "text-slate-400 dark:text-slate-500"}`}>
+                        Ninguna
+                      </button>
+                      {etiquetasUsadas
+                        .filter(et => et.toLowerCase().includes(etqQuery.toLowerCase()))
+                        .map(et => (
+                          <button key={et} type="button"
+                            onClick={() => { setForm(f => ({ ...f, etiqueta: et })); setEtqOpen(false) }}
+                            className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${form.etiqueta === et ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}>
+                            {et}
+                          </button>
+                        ))}
+                      {etqQuery && !etiquetasUsadas.some(et => et.toLowerCase() === etqQuery.toLowerCase()) && (
+                        <button type="button"
+                          onClick={() => { setForm(f => ({ ...f, etiqueta: etqQuery })); setEtqOpen(false) }}
+                          className="w-full text-left px-3 py-1.5 text-sm text-violet-500 dark:text-violet-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
+                          + Usar &quot;{etqQuery}&quot;
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
-              <div>
-                <Label className="text-xs" htmlFor="t-fecha">Fecha límite</Label>
-                <Input
-                  id="t-fecha"
-                  type="date"
-                  value={form.fechaVencimiento ?? ""}
-                  onChange={e => setForm(f => ({ ...f, fechaVencimiento: e.target.value || null }))}
-                  className="h-9"
-                />
-              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs" htmlFor="t-responsable">Responsable</Label>
-                <Input
-                  id="t-responsable"
-                  list="responsables-tarea"
-                  value={form.responsable ?? ""}
-                  onChange={e => setForm(f => ({ ...f, responsable: e.target.value || null }))}
-                  placeholder="Quién la realiza"
-                  className="h-9"
-                />
-                <datalist id="responsables-tarea">
-                  {responsablesUsados.map(r => <option key={r} value={r} />)}
-                </datalist>
-              </div>
-              <div>
-                <Label className="text-xs" htmlFor="t-area">Área de solicitud</Label>
-                <Input
-                  id="t-area"
-                  list="areas-tarea"
-                  value={form.area ?? ""}
-                  onChange={e => setForm(f => ({ ...f, area: e.target.value || null }))}
-                  placeholder="Diseño, Marketing..."
-                  className="h-9"
-                />
-                <datalist id="areas-tarea">
-                  {areasUsadas.map(a => <option key={a} value={a} />)}
-                </datalist>
-              </div>
-            </div>
+            {/* Notas y Enlaces — desplegables, se pueden agregar antes de guardar */}
+            <NotasCampoModal value={form.notas ?? null} onChange={v => setForm(f => ({ ...f, notas: v }))} />
+            <LinksCampoModal value={form.links ?? null} onChange={v => setForm(f => ({ ...f, links: v }))} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs" htmlFor="t-etiqueta">Etiqueta</Label>
-                <Input
-                  id="t-etiqueta"
-                  list="etiquetas-tarea"
-                  value={form.etiqueta ?? ""}
-                  onChange={e => setForm(f => ({ ...f, etiqueta: e.target.value || null }))}
-                  placeholder="campaña, urgente..."
-                  className="h-9"
-                />
-                <datalist id="etiquetas-tarea">
-                  {etiquetasUsadas.map(et => <option key={et} value={et} />)}
-                </datalist>
-              </div>
-              <div>
-                <Label className="text-xs" htmlFor="t-notas">Notas</Label>
-                <Input
-                  id="t-notas"
-                  value={form.notas ?? ""}
-                  onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
-                  placeholder="Notas adicionales..."
-                  className="h-9"
-                />
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2.5 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={form.esTicket ?? false}
-                onChange={e => setForm(f => ({ ...f, esTicket: e.target.checked }))}
-                className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-600 accent-blue-500"
-              />
-              <span className="text-sm flex items-center gap-1.5 text-muted-foreground">
-                <Ticket size={13} className="text-blue-400" />
-                Es ticket de servicio
-              </span>
-            </label>
-
-            <div className="flex gap-2 justify-end pt-2">
-              <Button variant="outline" size="sm" onClick={() => setModalOpen(false)}>Cancelar</Button>
-              <Button size="sm" onClick={guardar} disabled={guardando}>
-                <Check size={14} className="mr-1" />
+            <div className="flex gap-2 justify-end pt-1 border-t border-slate-100 dark:border-slate-800">
+              <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm transition-colors">Cancelar</button>
+              <button type="button" onClick={guardar} disabled={guardando} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white text-sm font-medium transition-colors">
+                <Check size={14} />
                 {guardando ? "Guardando..." : "Guardar"}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -942,7 +1149,131 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   )
 }
 
-// ─── Panel de links ──────────────────────────────────────────────────────────
+// ─── Notas / Enlaces del modal (desplegables, cada entrada en listado) ───────
+// A diferencia de AvancesPanel/LinksPanel (que persisten cada entrada de
+// inmediato contra una tarea que ya existe), estos dos operan sobre el
+// `form` local del modal — funcionan igual al crear (sin documentId todavía)
+// que al editar, y todo se guarda junto al hacer clic en "Guardar".
+
+function NotasCampoModal({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+  const [abierta, setAbierta] = useState(false)
+  const [input, setInput] = useState("")
+  const entradas = value ? value.split("\n").filter(Boolean) : []
+
+  function agregar() {
+    if (!input.trim()) return
+    const hoy = new Date()
+    const entrada = `${hoy.getDate()} ${MESES_NOMBRES[hoy.getMonth()].slice(0, 3)} · ${input.trim()}`
+    onChange(value ? `${entrada}\n${value}` : entrada)
+    setInput("")
+  }
+
+  return (
+    <div className="space-y-1">
+      <button type="button" onClick={() => setAbierta(a => !a)}
+        className="w-full flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <span>Notas {entradas.length > 0 && <span className="text-slate-400 dark:text-slate-500">({entradas.length})</span>}</span>
+        <ChevronDown size={13} className={`transition-transform duration-150 ${abierta ? "rotate-180" : ""}`} />
+      </button>
+      {abierta && (
+        <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 space-y-2">
+          {entradas.length > 0 && (
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {entradas.map((e, i) => {
+                const sep = e.indexOf(" · ")
+                const fecha = sep !== -1 ? e.slice(0, sep) : ""
+                const texto = sep !== -1 ? e.slice(sep + 3) : e
+                return (
+                  <div key={i} className="flex gap-2 items-baseline">
+                    {fecha && (
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 min-w-[38px] font-mono">
+                        {fecha}
+                      </span>
+                    )}
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">{texto}</p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Agregar nota..."
+              className="h-7 text-xs flex-1" autoFocus
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregar() } }} />
+            <button type="button" onClick={agregar} disabled={!input.trim()}
+              className="h-7 px-2.5 text-xs rounded-md bg-violet-600 hover:bg-violet-700 text-white disabled:opacity-40 transition shrink-0">
+              Agregar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function LinksCampoModal({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+  const [abierta, setAbierta] = useState(false)
+  const [urlInput, setUrlInput] = useState("")
+  const [labelInput, setLabelInput] = useState("")
+  const entradas = value ? value.split("\n").filter(Boolean) : []
+
+  function agregar() {
+    const url = urlInput.trim()
+    if (!url) return
+    const entrada = labelInput.trim() ? `${labelInput.trim()} · ${url}` : url
+    onChange(value ? `${entrada}\n${value}` : entrada)
+    setUrlInput(""); setLabelInput("")
+  }
+
+  const parseEntrada = (e: string) => {
+    const sep = e.indexOf(" · ")
+    if (sep !== -1) return { label: e.slice(0, sep), url: e.slice(sep + 3) }
+    return { label: null, url: e }
+  }
+  const dominio = (url: string) => { try { return new URL(url).hostname.replace("www.", "") } catch { return url.slice(0, 30) } }
+
+  return (
+    <div className="space-y-1">
+      <button type="button" onClick={() => setAbierta(a => !a)}
+        className="w-full flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <span>Enlaces {entradas.length > 0 && <span className="text-slate-400 dark:text-slate-500">({entradas.length})</span>}</span>
+        <ChevronDown size={13} className={`transition-transform duration-150 ${abierta ? "rotate-180" : ""}`} />
+      </button>
+      {abierta && (
+        <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 space-y-2">
+          {entradas.length > 0 && (
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {entradas.map((e, i) => {
+                const { label, url } = parseEntrada(e)
+                return (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-[11px] text-blue-500 hover:text-blue-400 transition w-fit max-w-full">
+                    <ExternalLink size={10} className="shrink-0" />
+                    <span className="truncate">{label ?? dominio(url)}</span>
+                  </a>
+                )
+              })}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Input value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="https://..."
+              className="h-7 text-xs flex-1" autoFocus
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregar() } }} />
+            <Input value={labelInput} onChange={e => setLabelInput(e.target.value)} placeholder="Etiqueta (opcional)"
+              className="h-7 text-xs w-28"
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregar() } }} />
+            <button type="button" onClick={agregar} disabled={!urlInput.trim()}
+              className="h-7 px-2.5 text-xs rounded-md bg-violet-600 hover:bg-violet-700 text-white disabled:opacity-40 transition shrink-0">
+              +
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Panel de links (en la tarjeta, después de creada la tarea) ─────────────
 
 function LinksPanel({ links, inputOpen, onAgregar }: {
   links: string | null
@@ -1014,7 +1345,7 @@ function LinksPanel({ links, inputOpen, onAgregar }: {
               type="button"
               onClick={enviar}
               disabled={guardando || !urlInput.trim()}
-              className="h-7 px-2.5 text-xs rounded-md bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-500 transition shrink-0"
+              className="h-7 px-2.5 text-xs rounded-md bg-violet-600 text-white disabled:opacity-40 hover:bg-violet-700 transition shrink-0"
             >
               {guardando ? "..." : "Guardar"}
             </button>
@@ -1049,7 +1380,7 @@ function CalendarioVista({
   while (celdas.length % 7 !== 0) celdas.push(null)
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl p-3">
+    <div className="border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-xl p-3 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <button
           type="button"
@@ -1089,12 +1420,12 @@ function CalendarioVista({
               onClick={() => onClickDia(iso)}
               className={`min-h-[72px] p-1 rounded border text-left flex flex-col gap-0.5 transition ${
                 esHoy
-                  ? "border-cyan-500/60 bg-cyan-500/10"
-                  : "border-slate-200 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                  ? "border-violet-400/60 bg-violet-500/10"
+                  : "border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               }`}
               title={`Crear tarea el ${iso}`}
             >
-              <span className={`text-[10px] font-semibold ${esHoy ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground"}`}>
+              <span className={`text-[10px] font-semibold ${esHoy ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-500"}`}>
                 {dia}
               </span>
               <div className="flex-1 space-y-0.5 overflow-hidden">
