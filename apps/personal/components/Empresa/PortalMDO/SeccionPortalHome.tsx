@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { GRUPOS, DEPT_ICONS } from "./PortalMDOSidebar"
 import { HeroCarusel } from "./HeroCarusel"
 import { PortalGlobe } from "./PortalGlobe"
+import { ActiveUsersCard } from "./ActiveUsersCard"
 import { GestionAvisosModal } from "./GestionAvisosModal"
 import { useGetAvisos } from "@/api/aviso/getAvisos"
 
@@ -92,15 +93,15 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
   }
 
   return (
-    <div className="relative">
-      <div className="hidden xl:block absolute top-0 right-0 w-1/2 max-w-[560px] h-[620px] pointer-events-none">
-        <PortalGlobe />
-      </div>
-
-      <div className="relative z-10 space-y-5">
+    <div className="space-y-5">
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-1.5">
         <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
+        <div className="hidden xl:block relative min-h-[480px] overflow-hidden rounded-2xl">
+          <PortalGlobe />
+        </div>
       </div>
+
+      <ActiveUsersCard />
 
       {gestionOpen && (
         <GestionAvisosModal onClose={() => setGestionOpen(false)} onUpdated={reloadAvisos} />
@@ -241,7 +242,6 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
           </div>
         </div>
       </section>
-      </div>
     </div>
   )
 }

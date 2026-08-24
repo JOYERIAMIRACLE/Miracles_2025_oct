@@ -15,7 +15,10 @@ export function PortalGlobe() {
     if (!wrap || !canvas) return
 
     const dark = theme === "dark"
-    const size = wrap.offsetWidth || 420
+    const measure = () => Math.max(80, Math.min(wrap.offsetWidth, wrap.offsetHeight, 640))
+    let size = measure()
+    canvas.style.width  = `${size}px`
+    canvas.style.height = `${size}px`
 
     const globe = createGlobe(canvas, {
       devicePixelRatio: 2,
@@ -44,24 +47,24 @@ export function PortalGlobe() {
     raf = requestAnimationFrame(frame)
 
     const onResize = () => {
-      if (!wrap) return
-      const s = wrap.offsetWidth || 420
-      globe.update({ width: s, height: s })
+      size = measure()
+      canvas.style.width  = `${size}px`
+      canvas.style.height = `${size}px`
+      globe.update({ width: size, height: size })
     }
-    window.addEventListener("resize", onResize)
+    const ro = new ResizeObserver(onResize)
+    ro.observe(wrap)
 
     return () => {
       cancelAnimationFrame(raf)
       globe.destroy()
-      window.removeEventListener("resize", onResize)
+      ro.disconnect()
     }
   }, [theme])
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div ref={wrapRef} className="relative" style={{ width: "min(100%, 560px)", aspectRatio: "1 / 1" }}>
-        <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />
-      </div>
+    <div ref={wrapRef} className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <canvas ref={canvasRef} />
     </div>
   )
 }
