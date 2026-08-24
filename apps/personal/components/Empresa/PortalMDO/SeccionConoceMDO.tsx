@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Building2, GitBranch, Users, Loader2, Camera, MapPin, Phone, Mail } from "lucide-react"
-import { useSectionTab, TabBar, Pending, Card, SeccionHero, useHeroImagen, useUploadImagen, boldify } from "./shared"
+import { useSectionTab, Pending, Card, SeccionHero, useHeroImagen, useUploadImagen, boldify, TabItem } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 
 const TABS = [
@@ -10,6 +10,33 @@ const TABS = [
   { id: "organigrama",   label: "Organigrama",      icon: GitBranch },
   { id: "directorio",    label: "Directorio",       icon: Users },
 ]
+
+// Fila de tabs pensada para vivir DENTRO del hero (sobre la imagen de fondo
+// con overlay oscuro) — mismo comportamiento que TabBar, pero con la
+// paleta translúcida blanca en vez de cards blancas/slate, para que la
+// sección se lea como una sola pieza en vez de hero + barra separada abajo.
+function HeroTabs({ tabs, active, onChange }: { tabs: TabItem[]; active: string; onChange: (id: string) => void }) {
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {tabs.map(t => {
+        const Icon = t.icon
+        const isActive = active === t.id
+        return (
+          <button key={t.id} type="button" onClick={() => onChange(t.id)}
+            className={[
+              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+              isActive
+                ? "bg-white/15 text-white font-bold"
+                : "text-white/60 hover:text-white/90 hover:bg-white/5",
+            ].join(" ")}>
+            {Icon && <Icon size={14} />}
+            {t.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 function TabQuienesSomos() {
   const { identidad, loading, reload } = useGetIdentidad()
@@ -177,8 +204,9 @@ export function SeccionConoceMDO() {
         onTrigger={hero.trigger}
         onFileChange={hero.handleFile}
         onSaveCrop={hero.saveCrop}
-      />
-      <div className="mb-4"><TabBar tabs={TABS} active={tab} onChange={setTab} /></div>
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHero>
       {tab === "quienes-somos" && <TabQuienesSomos />}
       {tab === "organigrama"   && <Pending owner="Medallitadeoro" desc="Todavía no existe esta información en Miracles." />}
       {tab === "directorio"    && <Pending owner="Medallitadeoro" desc="Todavía no existe un directorio de colaboradores en medallitadeoro." />}

@@ -264,6 +264,7 @@ export function SeccionHero({
   imagenUrl, imagenOriginalUrl,
   puedeEditar, uploading, inputRef, onTrigger, onFileChange, onSaveCrop,
   campoDescripcion, onDescripcionGuardada, documentId,
+  children,
 }: {
   breadcrumb: string[]
   titulo: string
@@ -279,6 +280,10 @@ export function SeccionHero({
   campoDescripcion?: keyof IdentidadEmpresa
   onDescripcionGuardada?: () => void
   documentId?: string | null
+  /** Slot opcional debajo de la descripción, dentro del mismo card con
+      imagen de fondo — ej. un TabBar propio para que la sección se vea como
+      una sola pieza en vez de hero + barra de tabs separada abajo. */
+  children?: React.ReactNode
 }) {
   const [showPopup, setShowPopup] = useState(false)
   const [editandoDesc, setEditandoDesc] = useState(false)
@@ -449,6 +454,11 @@ export function SeccionHero({
                 <Pencil size={13} />
               </button>
             )}
+          </div>
+        )}
+        {children && (
+          <div className="mt-4 pt-3 border-t border-white/10">
+            {children}
           </div>
         )}
       </div>
