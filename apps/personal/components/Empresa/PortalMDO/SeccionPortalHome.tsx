@@ -99,8 +99,16 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
           <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
           <ActiveUsersCard />
         </div>
-        <div className="hidden xl:block relative min-h-[560px] overflow-hidden rounded-2xl">
+        <div className="hidden xl:block relative w-full max-w-[640px] mx-auto min-h-[560px] overflow-hidden rounded-2xl">
           <PortalGlobe />
+          <a
+            href="https://medallitadeoro.com.mx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-4 inset-x-0 text-center text-sm font-semibold text-violet-400 hover:text-violet-300 transition-colors"
+          >
+            medallitadeoro.com.mx
+          </a>
         </div>
       </div>
 
