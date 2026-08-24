@@ -341,7 +341,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     completadas: tareas.filter(t => t.estado === "completada").length,
   }
 
-  const abrirCrear = (fechaVencimiento: string | null = null) => {
+  const abrirCrear = (fechaVencimiento: string | null = null, proyectoPreseleccionado: ProyectoRef | null = null) => {
     const hoy = isoHoy()
     setEditando(null)
     setForm({
@@ -350,7 +350,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       etiqueta: null, fechaVencimiento: fechaVencimiento ?? unaSemanaDespues(hoy), notas: null, links: null,
       responsable: user?.username ?? null, area: null, fechaInicio: hoy, esTicket: false,
     })
-    setProyectoForm(null)
+    setProyectoForm(proyectoPreseleccionado ? { tipo: "existente", proyecto: proyectoPreseleccionado } : null)
     setModalOpen(true)
   }
 
@@ -367,17 +367,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     })
     setProyectoForm(t.proyecto ? { tipo: "existente", proyecto: t.proyecto } : null)
     setModalOpen(true)
-  }
-
-  const toggleTicket = async (t: TareaType) => {
-    const nuevo = !(t.esTicket ?? false)
-    setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, esTicket: nuevo } : x))
-    try {
-      await updateTarea(t.documentId, { esTicket: nuevo })
-    } catch {
-      setTareas(prev => prev.map(x => x.documentId === t.documentId ? { ...x, esTicket: t.esTicket } : x))
-      toast.error("Error al actualizar")
-    }
   }
 
   const guardar = async () => {
@@ -670,18 +659,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               {t.titulo}
             </p>
             <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-              <button
-                type="button"
-                title={t.esTicket ? "Quitar ticket de servicio" : "Marcar como ticket de servicio"}
-                onClick={() => toggleTicket(t)}
-                className={`p-1 rounded transition-colors ${
-                  t.esTicket
-                    ? "text-blue-500 dark:text-blue-400 hover:text-blue-600"
-                    : "text-muted-foreground/30 hover:text-blue-400"
-                }`}
-              >
-                <Ticket size={12} />
-              </button>
               <button type="button" title="Eliminar" onClick={() => borrar(t)} className="p-1 text-muted-foreground hover:text-red-500 rounded hover:bg-muted">
                 <Trash2 size={12} />
               </button>
@@ -1072,6 +1049,11 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                         <ChevronDown size={13} className={`text-violet-500 shrink-0 transition-transform ${colapsado ? "-rotate-90" : ""}`} />
                         <span className="text-xs font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide truncate">{g.proyecto.nombre}</span>
                         <span className="text-[10px] text-violet-500/70 dark:text-violet-400/60 tabular-nums shrink-0">{g.tareas.length}</span>
+                      </button>
+                      <button type="button" title="Agregar tarea a este proyecto"
+                        onClick={() => abrirCrear(null, g.proyecto)}
+                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-0 group-hover/grupo:opacity-100 transition shrink-0">
+                        <Plus size={12} />
                       </button>
                       <button type="button" title="Renombrar proyecto"
                         onClick={() => { setRenombrandoProyecto(g.proyecto.documentId); setNombreRenombrado(g.proyecto.nombre) }}
