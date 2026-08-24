@@ -1,15 +1,12 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import createGlobe, { type COBEOptions } from "cobe"
+import createGlobe from "cobe"
 import { useTheme } from "next-themes"
-
-type CobeOptionsWithRender = COBEOptions & { onRender: (state: Record<string, number>) => void }
 
 export function PortalGlobe() {
   const wrapRef   = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const phiRef    = useRef(0)
   const { theme } = useTheme()
 
   useEffect(() => {
@@ -18,37 +15,43 @@ export function PortalGlobe() {
     if (!wrap || !canvas) return
 
     const dark = theme === "dark"
-    let size = wrap.offsetWidth
+    const size = wrap.offsetWidth || 420
 
-    const opts: CobeOptionsWithRender = {
+    const globe = createGlobe(canvas, {
       devicePixelRatio: 2,
-      width: size * 2,
-      height: size * 2,
+      width: size,
+      height: size,
       phi: 0,
       theta: 0.3,
       dark: 1,
       diffuse: 1.3,
       mapSamples: 16000,
-      mapBrightness: dark ? 4.2 : 3,
-      baseColor: dark ? [0.5, 0.42, 0.78] : [0.5, 0.42, 0.8],
+      mapBrightness: dark ? 6 : 5,
+      baseColor: dark ? [0.55, 0.46, 0.85] : [0.5, 0.42, 0.8],
       markerColor: [0.55, 0.36, 0.96],
-      glowColor: dark ? [0.3, 0.24, 0.5] : [0.62, 0.56, 0.85],
+      glowColor: dark ? [0.32, 0.25, 0.55] : [0.65, 0.58, 0.88],
       markers: [],
-      onRender: (state) => {
-        state.phi = phiRef.current
-        phiRef.current += 0.0032
-        state.width  = size * 2
-        state.height = size * 2
-      },
+    })
+
+    // cobe 2.x has no built-in render loop (README's onRender is stale) — drive it ourselves.
+    let phi = 0
+    let raf = 0
+    const frame = () => {
+      phi += 0.0035
+      globe.update({ phi })
+      raf = requestAnimationFrame(frame)
     }
-    const globe = createGlobe(canvas, opts)
+    raf = requestAnimationFrame(frame)
 
     const onResize = () => {
-      if (wrap) size = wrap.offsetWidth
+      if (!wrap) return
+      const s = wrap.offsetWidth || 420
+      globe.update({ width: s, height: s })
     }
     window.addEventListener("resize", onResize)
 
     return () => {
+      cancelAnimationFrame(raf)
       globe.destroy()
       window.removeEventListener("resize", onResize)
     }
@@ -56,7 +59,7 @@ export function PortalGlobe() {
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div ref={wrapRef} className="relative" style={{ width: "min(100%, 420px)", aspectRatio: "1 / 1" }}>
+      <div ref={wrapRef} className="relative" style={{ width: "min(100%, 560px)", aspectRatio: "1 / 1" }}>
         <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />
       </div>
     </div>
