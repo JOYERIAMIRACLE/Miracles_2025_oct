@@ -79,6 +79,17 @@
       "relation": "manyToOne",
       "target": "api::centro-costo.centro-costo",
       "inversedBy": "transacciones"
+    },
+    "cliente": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente.cliente"
+    },
+    "ventaOrigen": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::venta.venta",
+      "mappedBy": "transaccionGenerada"
     }
   }
 }

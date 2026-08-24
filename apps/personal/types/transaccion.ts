@@ -33,6 +33,8 @@ export type TransaccionType = {
   referencia:        string | null
   clienteDocumentId: string | null
   centro_costo:      { id: number; documentId: string; nombre: string } | null
+  cliente:           { id: number; documentId: string; nombre: string } | null
+  ventaOrigen:       { id: number; documentId: string; concepto: string } | null
   createdAt?:        string
 }
 
@@ -53,4 +55,5 @@ export type TransaccionPayload = {
   referencia?:        string | null
   clienteDocumentId?: string | null
   centro_costo?:      string | number | null
+  cliente?:           string | number | null
 }

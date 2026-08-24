@@ -380,6 +380,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
         notas:             form.notas || null,
         referencia:        clienteNombre,
         clienteDocumentId,
+        cliente:           clienteDocumentId,
         ambito:            "empresa",
       })
       onSaved(saved)

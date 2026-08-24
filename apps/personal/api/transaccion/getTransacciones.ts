@@ -35,7 +35,10 @@ export function useGetTransaccionesByCliente(clienteDocumentId: string | null) {
     if (!clienteDocumentId) { setLoading(false); return }
     ;(async () => {
       try {
-        const url  = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transaccions?filters[clienteDocumentId][$eq]=${clienteDocumentId}&filters[tipo][$eq]=ingreso&populate=*&pagination[pageSize]=200&sort=createdAt:asc`
+        // $or entre la relación real (cliente) y el campo de texto legado
+        // (clienteDocumentId) — así los registros viejos (solo tienen el
+        // texto) y los nuevos (ya tienen la relación) aparecen ambos.
+        const url  = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transaccions?filters[$or][0][clienteDocumentId][$eq]=${clienteDocumentId}&filters[$or][1][cliente][documentId][$eq]=${clienteDocumentId}&filters[tipo][$eq]=ingreso&populate=*&pagination[pageSize]=200&sort=createdAt:asc`
         const res  = await fetch(url)
         const json = await res.json()
         setTransacciones(json.data ?? [])
