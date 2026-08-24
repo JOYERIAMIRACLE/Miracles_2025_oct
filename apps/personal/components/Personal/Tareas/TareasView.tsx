@@ -168,8 +168,6 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     etiqueta: null, fechaVencimiento: null, notas: null, links: null, responsable: null,
     area: null, fechaInicio: null, esTicket: false,
   })
-  const cerrarModalSiVacio = useModalBackdropClose(form, () => setModalOpen(false), modalOpen)
-
   const [estadoOpen,  setEstadoOpen]  = useState(false)
   const [filtrosOpen, setFiltrosOpen] = useState(false)
   const estadoRef  = useRef<HTMLDivElement>(null)
@@ -184,16 +182,28 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
   const [etqQuery,  setEtqQuery]  = useState("")
   const [areaOpen,  setAreaOpen]  = useState(false)
   const [areaQuery, setAreaQuery] = useState("")
+  const [proyOpen,  setProyOpen]  = useState(false)
+  const [proyQuery, setProyQuery] = useState("")
+  const [proyectoSeccionAbierta, setProyectoSeccionAbierta] = useState(false)
   const estadoFieldRef    = useRef<HTMLDivElement>(null)
   const prioridadFieldRef = useRef<HTMLDivElement>(null)
   const respRef = useRef<HTMLDivElement>(null)
   const etqRef  = useRef<HTMLDivElement>(null)
   const areaRef = useRef<HTMLDivElement>(null)
+  const proyRef = useRef<HTMLDivElement>(null)
   const estadoPanelRef    = useAutoScrollPanel(estadoFieldOpen)
   const prioridadPanelRef = useAutoScrollPanel(prioridadFieldOpen)
   const respPanelRef      = useAutoScrollPanel(respOpen)
   const etqPanelRef       = useAutoScrollPanel(etqOpen)
   const areaPanelRef      = useAutoScrollPanel(areaOpen)
+  const proyPanelRef      = useAutoScrollPanel(proyOpen)
+
+  // Selección de proyecto pendiente en el modal — no se toca el backend hasta
+  // dar Guardar (mismo momento en que se guardan los demás campos). "nuevo"
+  // crea el Proyecto real recién al guardar, igual que un proyecto arrastrado.
+  type ProyectoSeleccion = { tipo: "existente"; proyecto: ProyectoRef } | { tipo: "nuevo"; nombre: string } | null
+  const [proyectoForm, setProyectoForm] = useState<ProyectoSeleccion>(null)
+  const cerrarModalSiVacio = useModalBackdropClose({ form, proyectoForm }, () => setModalOpen(false), modalOpen)
 
   // Agrupar tareas arrastrando una sobre otra: comparten la relación real
   // "proyecto" (misma colección que ya existe en el backend, sin UI propia
@@ -234,6 +244,12 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     const set = new Set<string>()
     tareas.forEach(t => { if (t.area) set.add(t.area) })
     return [...set].sort()
+  }, [tareas])
+
+  const proyectosUsados = useMemo(() => {
+    const map = new Map<string, ProyectoRef>()
+    tareas.forEach(t => { if (t.proyecto) map.set(t.proyecto.documentId, t.proyecto) })
+    return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))
   }, [tareas])
 
   // Al entrar a la vista, el filtro de Responsable arranca en el usuario con
@@ -334,6 +350,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       etiqueta: null, fechaVencimiento: fechaVencimiento ?? unaSemanaDespues(hoy), notas: null, links: null,
       responsable: user?.username ?? null, area: null, fechaInicio: hoy, esTicket: false,
     })
+    setProyectoForm(null)
     setModalOpen(true)
   }
 
@@ -348,6 +365,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       fechaInicio: t.fechaInicio ?? null,
       esTicket: t.esTicket ?? false,
     })
+    setProyectoForm(t.proyecto ? { tipo: "existente", proyecto: t.proyecto } : null)
     setModalOpen(true)
   }
 
@@ -366,6 +384,12 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
     if (!form.titulo.trim()) { toast.error("El título es obligatorio"); return }
     setGuardando(true)
     try {
+      // Si se eligió "+ Usar 'nombre'" para un proyecto nuevo, el Proyecto
+      // real recién se crea aquí — hasta ahora solo vivía en el form local.
+      let proyectoRef: ProyectoRef | null = null
+      if (proyectoForm?.tipo === "nuevo")      proyectoRef = await createProyecto({ nombre: proyectoForm.nombre })
+      else if (proyectoForm?.tipo === "existente") proyectoRef = proyectoForm.proyecto
+
       const payload: TareaPayload = { ...form }
       if (form.estado === "completada" && (!editando || editando.estado !== "completada")) {
         payload.fechaCompletada = new Date().toISOString()
@@ -375,14 +399,24 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       if (!editando) {
         payload.fechaInicio = new Date().toISOString()
       }
+      if (proyectoRef) {
+        payload.proyecto = { connect: [{ id: proyectoRef.id }] }
+      } else if (editando?.proyecto) {
+        payload.proyecto = { disconnect: [{ id: editando.proyecto.id }] }
+      }
 
+      // create/update no devuelven las relaciones populadas — se completa
+      // "proyecto" a mano con lo que ya sabemos que quedó guardado, para que
+      // la tarjeta refleje el grupo de inmediato sin esperar un refetch.
       if (editando) {
         const updated = await updateTarea(editando.documentId, payload)
-        setTareas(prev => prev.map(t => t.documentId === updated.documentId ? updated : t))
+        const merged = { ...updated, proyecto: proyectoRef }
+        setTareas(prev => prev.map(t => t.documentId === merged.documentId ? merged : t))
         toast.success("Tarea actualizada")
       } else {
         const nueva = await createTarea(payload)
-        setTareas(prev => [nueva, ...prev])
+        const merged = { ...nueva, proyecto: proyectoRef }
+        setTareas(prev => [merged, ...prev])
         toast.success("Tarea creada")
       }
       setModalOpen(false)
@@ -587,6 +621,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       if (respRef.current && !respRef.current.contains(t)) setRespOpen(false)
       if (etqRef.current  && !etqRef.current.contains(t))  setEtqOpen(false)
       if (areaRef.current && !areaRef.current.contains(t)) setAreaOpen(false)
+      if (proyRef.current && !proyRef.current.contains(t)) setProyOpen(false)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -1123,7 +1158,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       <div ref={estadoFieldRef} className="relative">
                         <button
                           type="button"
-                          onClick={() => { setEstadoFieldOpen(v => !v); setPrioridadFieldOpen(false); setRespOpen(false); setEtqOpen(false); setAreaOpen(false) }}
+                          onClick={() => { setEstadoFieldOpen(v => !v); setPrioridadFieldOpen(false); setRespOpen(false); setEtqOpen(false); setAreaOpen(false); setProyOpen(false) }}
                           className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm"
                         >
                           <span className={`h-2 w-2 rounded-full shrink-0 ${
@@ -1161,7 +1196,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       <div ref={prioridadFieldRef} className="relative">
                         <button
                           type="button"
-                          onClick={() => { setPrioridadFieldOpen(v => !v); setEstadoFieldOpen(false); setRespOpen(false); setEtqOpen(false); setAreaOpen(false) }}
+                          onClick={() => { setPrioridadFieldOpen(v => !v); setEstadoFieldOpen(false); setRespOpen(false); setEtqOpen(false); setAreaOpen(false); setProyOpen(false) }}
                           className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm"
                         >
                           <span className={`h-2 w-2 rounded-full shrink-0 ${
@@ -1217,7 +1252,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       <label className="text-xs text-slate-500 dark:text-slate-400">Responsable</label>
                       <div ref={respRef} className="relative">
                         <button type="button"
-                          onClick={() => { setRespOpen(v => !v); setRespQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setEtqOpen(false); setAreaOpen(false) }}
+                          onClick={() => { setRespOpen(v => !v); setRespQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setEtqOpen(false); setAreaOpen(false); setProyOpen(false) }}
                           className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
                           <span className={`flex-1 text-left truncate ${form.responsable ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
                             {form.responsable ?? "Sin responsable"}
@@ -1262,7 +1297,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                       <label className="text-xs text-slate-500 dark:text-slate-400">Área de solicitud</label>
                       <div ref={areaRef} className="relative">
                         <button type="button"
-                          onClick={() => { setAreaOpen(v => !v); setAreaQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setEtqOpen(false) }}
+                          onClick={() => { setAreaOpen(v => !v); setAreaQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setEtqOpen(false); setProyOpen(false) }}
                           className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
                           <span className={`flex-1 text-left truncate ${form.area ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
                             {form.area ?? "Sin área"}
@@ -1313,7 +1348,7 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
               <label className="text-xs text-slate-500 dark:text-slate-400">Etiqueta</label>
               <div ref={etqRef} className="relative">
                 <button type="button"
-                  onClick={() => { setEtqOpen(v => !v); setEtqQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setAreaOpen(false) }}
+                  onClick={() => { setEtqOpen(v => !v); setEtqQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setAreaOpen(false); setProyOpen(false) }}
                   className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
                   <span className={`flex-1 text-left truncate ${form.etiqueta ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
                     {form.etiqueta ?? "campaña, urgente..."}
@@ -1352,6 +1387,65 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Proyecto — mismo patrón desplegable que Notas/Enlaces (colapsado
+                por default); agrupa esta tarea con cualquier otra que ya
+                tenga el mismo proyecto, sin necesidad de arrastrarla (ver
+                también renderTareaCard/handleDropTarea para la vía drag&drop). */}
+            <div className="space-y-1">
+              <button type="button" onClick={() => setProyectoSeccionAbierta(a => !a)}
+                className="w-full flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <span>Proyecto {proyectoForm && (
+                  <span className="text-slate-400 dark:text-slate-500">
+                    ({proyectoForm.tipo === "existente" ? proyectoForm.proyecto.nombre : proyectoForm.nombre})
+                  </span>
+                )}</span>
+                <ChevronDown size={13} className={`transition-transform duration-150 ${proyectoSeccionAbierta ? "rotate-180" : ""}`} />
+              </button>
+              {proyectoSeccionAbierta && (
+                <div ref={proyRef} className="relative">
+                  <button type="button"
+                    onClick={() => { setProyOpen(v => !v); setProyQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setEtqOpen(false); setAreaOpen(false) }}
+                    className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
+                    <span className={`flex-1 text-left truncate ${proyectoForm ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
+                      {proyectoForm ? (proyectoForm.tipo === "existente" ? proyectoForm.proyecto.nombre : proyectoForm.nombre) : "Sin proyecto"}
+                    </span>
+                    <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 shrink-0 ${proyOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {proyOpen && (
+                    <div ref={proyPanelRef} className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-50 overflow-hidden">
+                      <div className="px-2 pt-2 pb-1">
+                        <input autoFocus value={proyQuery} onChange={e => setProyQuery(e.target.value)}
+                          placeholder="Buscar..." className={`text-sm ${fieldCls}`} />
+                      </div>
+                      <div className="max-h-44 overflow-y-auto py-1">
+                        <button type="button"
+                          onClick={() => { setProyectoForm(null); setProyOpen(false) }}
+                          className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${!proyectoForm ? "text-violet-500 font-medium" : "text-slate-400 dark:text-slate-500"}`}>
+                          Sin proyecto
+                        </button>
+                        {proyectosUsados
+                          .filter(p => p.nombre.toLowerCase().includes(proyQuery.toLowerCase()))
+                          .map(p => (
+                            <button key={p.documentId} type="button"
+                              onClick={() => { setProyectoForm({ tipo: "existente", proyecto: p }); setProyOpen(false) }}
+                              className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${proyectoForm?.tipo === "existente" && proyectoForm.proyecto.documentId === p.documentId ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}>
+                              {p.nombre}
+                            </button>
+                          ))}
+                        {proyQuery && !proyectosUsados.some(p => p.nombre.toLowerCase() === proyQuery.toLowerCase()) && (
+                          <button type="button"
+                            onClick={() => { setProyectoForm({ tipo: "nuevo", nombre: proyQuery.trim() }); setProyOpen(false) }}
+                            className="w-full text-left px-3 py-1.5 text-sm text-violet-500 dark:text-violet-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
+                            + Usar &quot;{proyQuery}&quot;
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Notas y Enlaces — desplegables, se pueden agregar antes de guardar */}
