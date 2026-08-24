@@ -16,9 +16,9 @@ const STATS = [
 export function ActiveUsersCard() {
   return (
     <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5 space-y-5">
-      <div className="rounded-xl p-5 h-40 flex items-end gap-1.5 bg-gradient-to-br from-violet-950 via-slate-900 to-black">
+      <div className="rounded-xl p-5 h-40 flex items-end justify-between gap-1.5 bg-gradient-to-br from-violet-950 via-slate-900 to-black">
         {BARS.map((h, i) => (
-          <div key={i} className="flex-1 rounded-full bg-white/90" style={{ height: `${h}%` }} />
+          <div key={i} className="w-2 sm:w-2.5 rounded-t-full bg-white/90" style={{ height: `${h}%` }} />
         ))}
       </div>
 

@@ -94,14 +94,15 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1.5">
-        <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
-        <div className="hidden xl:block relative min-h-[480px] overflow-hidden rounded-2xl">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1.5 items-stretch">
+        <div className="flex flex-col gap-1.5">
+          <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
+          <ActiveUsersCard />
+        </div>
+        <div className="hidden xl:block relative min-h-[560px] overflow-hidden rounded-2xl">
           <PortalGlobe />
         </div>
       </div>
-
-      <ActiveUsersCard />
 
       {gestionOpen && (
         <GestionAvisosModal onClose={() => setGestionOpen(false)} onUpdated={reloadAvisos} />
