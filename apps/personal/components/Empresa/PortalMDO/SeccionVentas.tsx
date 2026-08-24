@@ -1,7 +1,7 @@
 "use client"
 
 import { FileText, ShoppingBag } from "lucide-react"
-import { useSectionTab, TabBar, SeccionHero } from "./shared"
+import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
 import { CotizacionesView } from "@/components/Empresa/Ventas/CotizacionesView"
 import { PedidosView } from "@/components/Empresa/Ventas/PedidosView"
 
@@ -20,8 +20,9 @@ export function SeccionVentas() {
         breadcrumb={["Operación", "Ventas", activo.label]}
         titulo="Ventas"
         descripcion="Cotizaciones y pedidos — de la oferta al pedido confirmado."
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} />
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHero>
       {tab === "cotizaciones" && <CotizacionesView />}
       {tab === "pedidos"      && <PedidosView />}
     </div>

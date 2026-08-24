@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { GRUPOS, DEPT_ICONS } from "./PortalMDOSidebar"
 import { HeroCarusel } from "./HeroCarusel"
 import { PortalGlobe } from "./PortalGlobe"
-import { ActiveUsersCard } from "./ActiveUsersCard"
+import { DashboardCard } from "./DashboardCard"
 import { HistorialCambiosCard } from "./HistorialCambiosCard"
 import { HistorialTickerCard } from "./HistorialTickerCard"
 import { CalendarioPendientesCard } from "./CalendarioPendientesCard"
@@ -90,7 +90,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-1.5 items-stretch">
         <div className="flex flex-col gap-1.5">
           <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
-          <ActiveUsersCard />
+          <DashboardCard />
         </div>
         <div className="hidden xl:block relative w-full max-w-[640px] mx-auto min-h-[560px] overflow-hidden rounded-2xl">
           <PortalGlobe />

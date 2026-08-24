@@ -1,7 +1,7 @@
 "use client"
 
 import { Palette, LayoutTemplate, Images, Briefcase, ShoppingBag, Type } from "lucide-react"
-import { useSectionTab, TabBar, Card, SeccionHero } from "./shared"
+import { useSectionTab, HeroTabs, Card, SeccionHero } from "./shared"
 import { RecursosDescargables, type RecursoExtraTab } from "./RecursosDescargables"
 import { MerchView } from "./MerchView"
 
@@ -59,8 +59,9 @@ export function SeccionGestionMarca() {
         breadcrumb={["Recursos", "Gestión de marca", activo.label]}
         titulo="Gestión de marca"
         descripcion="Identidad, plantillas, galería, materiales comerciales y merch — todo lo de marca en un solo lugar."
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} />
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHero>
       {tab === "identidad"   && <RecursosDescargables seccion="marketing-identidad" layout="sidebar" extraTabs={IDENTIDAD_EXTRA_TABS} />}
       {tab === "plantillas"  && <RecursosDescargables seccion="marketing-plantillas" layout="sidebar" />}
       {tab === "galeria"     && <RecursosDescargables seccion="marketing-galeria" layout="sidebar" />}

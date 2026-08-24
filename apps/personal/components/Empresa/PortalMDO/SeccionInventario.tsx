@@ -1,7 +1,7 @@
 "use client"
 
 import { Boxes, Scale, Truck } from "lucide-react"
-import { useSectionTab, TabBar, SeccionHero } from "./shared"
+import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
 import { InventarioEmpresaView } from "@/components/Empresa/Almacen/InventarioEmpresaView"
 import { MateriaPrimaView } from "@/components/Empresa/Compras/MateriaPrimaView"
 import { EnviosView } from "@/components/Empresa/Suministro/EnviosView"
@@ -22,8 +22,9 @@ export function SeccionInventario() {
         breadcrumb={["Operación", "Inventario", activo.label]}
         titulo="Inventario"
         descripcion="Producto terminado, materia prima y su logística de envío."
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} />
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHero>
       {tab === "productos"    && <InventarioEmpresaView />}
       {tab === "materiaprima" && <MateriaPrimaView />}
       {tab === "logistica"    && <EnviosView />}

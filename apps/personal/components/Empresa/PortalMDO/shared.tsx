@@ -96,6 +96,33 @@ export function TabBar({ tabs, active, onChange }: { tabs: TabItem[]; active: st
   )
 }
 
+/** Igual que TabBar pero pensada para vivir DENTRO de SeccionHero (children),
+    sobre la imagen de fondo con overlay oscuro — pastillas translúcidas en
+    vez de cards blancas/slate, para que hero + tabs se lean como una sola
+    pieza en vez de una barra flotando debajo de la imagen. */
+export function HeroTabs({ tabs, active, onChange }: { tabs: TabItem[]; active: string; onChange: (id: string) => void }) {
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {tabs.map(t => {
+        const Icon = t.icon
+        const isActive = active === t.id
+        return (
+          <button key={t.id} type="button" onClick={() => onChange(t.id)}
+            className={[
+              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+              isActive
+                ? "bg-white/15 text-white font-bold"
+                : "text-white/60 hover:text-white/90 hover:bg-white/5",
+            ].join(" ")}>
+            {Icon && <Icon size={14} />}
+            {t.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 /** Portado de shared.tsx de SDI — mismo componente, acento violeta. */
 export function PageHeader({
   date, title, breadcrumb, badge, owner,

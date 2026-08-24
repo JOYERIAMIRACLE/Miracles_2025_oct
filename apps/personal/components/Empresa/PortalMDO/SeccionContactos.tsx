@@ -1,7 +1,7 @@
 "use client"
 
 import { UserCheck, Handshake } from "lucide-react"
-import { useSectionTab, TabBar, SeccionHero } from "./shared"
+import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
 import { ClientesView } from "@/components/Empresa/Ventas/ClientesView"
 import { ProveedoresView } from "@/components/Empresa/Compras/ProveedoresView"
 
@@ -20,8 +20,9 @@ export function SeccionContactos() {
         breadcrumb={["Operación", activo.label]}
         titulo="Contactos"
         descripcion="Clientes y proveedores de medallitadeoro, en un solo lugar."
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} />
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHero>
       {tab === "clientes"    && <ClientesView />}
       {tab === "proveedores" && <ProveedoresView />}
     </div>

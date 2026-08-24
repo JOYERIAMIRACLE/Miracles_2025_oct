@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Compass, HeartHandshake, Smile, LifeBuoy, GraduationCap, Camera } from "lucide-react"
-import { useSectionTab, TabBar, Card, SeccionHero, useHeroImagen, useUploadImagen } from "./shared"
+import { useSectionTab, HeroTabs, Card, SeccionHero, useHeroImagen, useUploadImagen } from "./shared"
 import type { IdentidadImagenCampo } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { RecursosDescargables } from "./RecursosDescargables"
@@ -207,8 +207,9 @@ export function SeccionMision() {
         onTrigger={hero.trigger}
         onFileChange={hero.handleFile}
         onSaveCrop={hero.saveCrop}
-      />
-      <TabBar tabs={TABS} active={tab} onChange={cambiarTab} />
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={cambiarTab} />
+      </SeccionHero>
       {TABS.map(t => visitadas.has(t.id) && (
         <div key={t.id} className={tab === t.id ? "" : "hidden"}>
           {renderTab(t.id)}

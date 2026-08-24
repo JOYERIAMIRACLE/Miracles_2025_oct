@@ -1,7 +1,7 @@
 "use client"
 
 import { TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, BarChart3 } from "lucide-react"
-import { useSectionTab, TabBar, SeccionHero, useHeroImagen } from "./shared"
+import { useSectionTab, HeroTabs, SeccionHero, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { IngresosEmpresaView } from "@/components/Empresa/Finanzas/IngresosEmpresaView"
 import { GastosEmpresaView } from "@/components/Empresa/Finanzas/GastosEmpresaView"
@@ -47,8 +47,9 @@ export function SeccionFinanzas() {
         onTrigger={hero.trigger}
         onFileChange={hero.handleFile}
         onSaveCrop={hero.saveCrop}
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} />
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHero>
       {tab === "ingresos"      && <IngresosEmpresaView />}
       {tab === "gastos"        && <GastosEmpresaView ambito="empresa" />}
       {tab === "presupuestos"  && <PresupuestosEmpresaView />}

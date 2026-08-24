@@ -1,7 +1,7 @@
 "use client"
 
 import { Users, UserSearch } from "lucide-react"
-import { useSectionTab, TabBar, SeccionHero } from "./shared"
+import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
 import { LeadsView } from "@/components/Empresa/Ventas/LeadsView"
 
@@ -20,8 +20,9 @@ export function SeccionCRM() {
         breadcrumb={["Operación", "CRM", activo.label]}
         titulo="CRM"
         descripcion="El embudo (Funnel) de clientes — de Lead a Oferta a Pedido."
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} />
+      >
+        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHero>
       {tab === "pipeline" && <PipelineView />}
       {tab === "leads"    && <LeadsView />}
     </div>
