@@ -28,10 +28,12 @@ export function CalendarioPendientesCard() {
   const [mesActual, setMesActual] = useState(new Date())
   const [filtro, setFiltro] = useState<"todos" | AmbitoTarea>("personal")
   const [pausado, setPausado] = useState(false)
+  const [hover,   setHover]   = useState(false)
   const [diaSel, setDiaSel] = useState<Date | null>(null)
+  const enPausa = pausado || hover
 
   useEffect(() => {
-    if (pausado) return
+    if (enPausa) return
     const iv = setInterval(() => {
       setFiltro(f => {
         const idx = LOOP.indexOf(f as AmbitoTarea)
@@ -39,7 +41,7 @@ export function CalendarioPendientesCard() {
       })
     }, CICLO_MS)
     return () => clearInterval(iv)
-  }, [pausado])
+  }, [enPausa])
 
   function seleccionar(v: "todos" | AmbitoTarea) {
     if (pausado && filtro === v) { setPausado(false); return }
@@ -68,7 +70,11 @@ export function CalendarioPendientesCard() {
   )
 
   return (
-    <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5">
+    <section
+      className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Pendientes</h2>
@@ -77,7 +83,7 @@ export function CalendarioPendientesCard() {
               {proximos7} esta semana
             </span>
           )}
-          {!pausado && (
+          {!enPausa && (
             <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500">
               <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" /> En vivo
             </span>
