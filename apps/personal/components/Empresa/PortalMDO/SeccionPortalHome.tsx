@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { GRUPOS, DEPT_ICONS } from "./PortalMDOSidebar"
 import { HeroCarusel } from "./HeroCarusel"
+import { PortalGlobe } from "./PortalGlobe"
 import { GestionAvisosModal } from "./GestionAvisosModal"
 import { useGetAvisos } from "@/api/aviso/getAvisos"
 
@@ -92,7 +93,12 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
 
   return (
     <div className="space-y-5">
-      <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-1.5 items-stretch">
+        <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
+        <div className="hidden xl:block relative min-h-[300px]">
+          <PortalGlobe />
+        </div>
+      </div>
 
       {gestionOpen && (
         <GestionAvisosModal onClose={() => setGestionOpen(false)} onUpdated={reloadAvisos} />
