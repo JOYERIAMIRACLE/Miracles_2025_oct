@@ -1,7 +1,22 @@
 "use client"
 
 import { Megaphone, History } from "lucide-react"
-import { AREA_ICON, EVENTOS_HISTORIAL } from "./HistorialCambiosCard"
+import { AREA_ICON, EVENTOS_HISTORIAL, type EventoHistorial } from "./HistorialCambiosCard"
+
+function FilaEvento({ e }: { e: EventoHistorial }) {
+  const Icon = AREA_ICON[e.area] ?? Megaphone
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5">
+      <div className="h-5 w-5 rounded bg-violet-500/15 text-violet-500 flex items-center justify-center shrink-0">
+        <Icon size={10} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] text-slate-600 dark:text-slate-300 truncate">{e.texto}</p>
+        <p className="text-[9px] text-slate-400 dark:text-slate-500">{e.cuando}</p>
+      </div>
+    </div>
+  )
+}
 
 export function HistorialTickerCard({ onOpen }: { onOpen: () => void }) {
   // Se duplica la lista para que el loop ambiental de translateY(-50%) sea continuo, sin salto.
@@ -18,39 +33,16 @@ export function HistorialTickerCard({ onOpen }: { onOpen: () => void }) {
       </button>
 
       <div className="relative h-24 mx-2 mb-2 rounded-lg bg-slate-50 dark:bg-slate-800/40">
-        {/* Loop ambiental — decorativo, activo mientras no hay hover */}
+        {/* Loop ambiental — decorativo, activo mientras no hay hover; con fecha para distinguir mas reciente/antiguo */}
         <div className="absolute inset-0 overflow-hidden group-hover:hidden">
           <div className="animate-marquee-vertical">
-            {dobles.map((e, i) => {
-              const Icon = AREA_ICON[e.area] ?? Megaphone
-              return (
-                <div key={i} className="flex items-center gap-2 px-3 py-1.5">
-                  <div className="h-5 w-5 rounded bg-violet-500/15 text-violet-500 flex items-center justify-center shrink-0">
-                    <Icon size={10} />
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 truncate">{e.texto}</p>
-                </div>
-              )
-            })}
+            {dobles.map((e, i) => <FilaEvento key={i} e={e} />)}
           </div>
         </div>
 
         {/* Scroll real — en hover, lista sin duplicar: tope arriba = mas reciente, tope abajo = mas antiguo */}
         <div className="hidden group-hover:block absolute inset-0 overflow-y-auto">
-          {EVENTOS_HISTORIAL.map((e, i) => {
-            const Icon = AREA_ICON[e.area] ?? Megaphone
-            return (
-              <div key={i} className="flex items-center gap-2 px-3 py-1.5">
-                <div className="h-5 w-5 rounded bg-violet-500/15 text-violet-500 flex items-center justify-center shrink-0">
-                  <Icon size={10} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 truncate">{e.texto}</p>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500">{e.cuando}</p>
-                </div>
-              </div>
-            )
-          })}
+          {EVENTOS_HISTORIAL.map((e, i) => <FilaEvento key={i} e={e} />)}
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-slate-50 dark:from-slate-800/40 to-transparent" />
