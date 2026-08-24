@@ -6,6 +6,7 @@ import { GRUPOS, DEPT_ICONS } from "./PortalMDOSidebar"
 import { HeroCarusel } from "./HeroCarusel"
 import { PortalGlobe } from "./PortalGlobe"
 import { ActiveUsersCard } from "./ActiveUsersCard"
+import { HistorialCambiosCard } from "./HistorialCambiosCard"
 import { GestionAvisosModal } from "./GestionAvisosModal"
 import { useGetAvisos } from "@/api/aviso/getAvisos"
 
@@ -116,30 +117,34 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
         <GestionAvisosModal onClose={() => setGestionOpen(false)} onUpdated={reloadAvisos} />
       )}
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Accesos rápidos</h2>
-          <button type="button" onClick={abrirModal}
-            className={`text-xs font-semibold transition-colors text-violet-500 hover:text-violet-700 dark:hover:text-violet-400 ${!isConfigured ? "animate-pulse" : ""}`}>
-            Personalizar
-          </button>
-        </div>
-        <div className="flex flex-col gap-2">
-          {!ready
-            ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-xl" />)
-            : accesosMostrados.flatMap(({ items }) => items).map(a => {
-                const Icon = a.icon
-                return (
-                  <button key={a.id} type="button" onClick={a.onClick}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer text-left">
-                    <Icon className="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" />
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{a.label}</span>
-                  </button>
-                )
-              })
-          }
-        </div>
-      </section>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Accesos rápidos</h2>
+            <button type="button" onClick={abrirModal}
+              className={`text-xs font-semibold transition-colors text-violet-500 hover:text-violet-700 dark:hover:text-violet-400 ${!isConfigured ? "animate-pulse" : ""}`}>
+              Personalizar
+            </button>
+          </div>
+          <div className="flex flex-col gap-2">
+            {!ready
+              ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-xl" />)
+              : accesosMostrados.flatMap(({ items }) => items).map(a => {
+                  const Icon = a.icon
+                  return (
+                    <button key={a.id} type="button" onClick={a.onClick}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer text-left">
+                      <Icon className="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" />
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{a.label}</span>
+                    </button>
+                  )
+                })
+            }
+          </div>
+        </section>
+
+        <HistorialCambiosCard />
+      </div>
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
