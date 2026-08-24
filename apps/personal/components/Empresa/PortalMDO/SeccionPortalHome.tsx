@@ -134,6 +134,10 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
         <CalendarioPendientesCard />
       </div>
 
+      <div className="xl:hidden relative w-full max-w-[480px] mx-auto min-h-[420px] overflow-hidden rounded-2xl">
+        <PortalGlobe />
+      </div>
+
       {historialOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setHistorialOpen(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
