@@ -7,22 +7,13 @@ import { HeroCarusel } from "./HeroCarusel"
 import { PortalGlobe } from "./PortalGlobe"
 import { ActiveUsersCard } from "./ActiveUsersCard"
 import { HistorialCambiosCard } from "./HistorialCambiosCard"
+import { CalendarioPendientesCard } from "./CalendarioPendientesCard"
 import { GestionAvisosModal } from "./GestionAvisosModal"
 import { useGetAvisos } from "@/api/aviso/getAvisos"
 
 const ACCESOS_KEY = "mdo_portal_accesos"
 const ACCESOS_CONFIGURED_KEY = "mdo_portal_accesos_configured"
 const DEFAULT_ACCESOS = ["quienes-somos", "crm", "ventas", "finanzas"]
-
-// Datos de ejemplo — mismo mockup decorativo que trae SDI Portal (no está
-// conectado a ventas/proyectos reales de medallitadeoro todavía).
-const CHART_BARS = [
-  { mes:"Feb",real:12, budget:20 },{ mes:"Mar",real:18, budget:20 },
-  { mes:"Abr",real:15, budget:20 },{ mes:"May",real:24, budget:20 },
-  { mes:"Jun",real:19, budget:20 },{ mes:"Jul",real:22, budget:20 },
-  { mes:"Ago",real:17, budget:20 },
-]
-const MAX_BAR = 30
 
 interface Acceso { id: string; label: string; icon: typeof DEPT_ICONS[string]; onClick: () => void }
 
@@ -62,7 +53,6 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
   const [modalOpen,    setModalOpen]    = useState(false)
   const [tempSel,      setTempSel]      = useState<Set<string>>(new Set())
   const [gestionOpen,  setGestionOpen]  = useState(false)
-  const [dashTab,      setDashTab]      = useState("todo")
 
   const { avisos, loading: loadingAvisos, reload: reloadAvisos } = useGetAvisos()
 
@@ -143,7 +133,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
           </div>
         </section>
 
-        <HistorialCambiosCard />
+        <CalendarioPendientesCard />
       </div>
 
       {modalOpen && (
@@ -197,65 +187,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
         </div>
       )}
 
-      {/* ── DASHBOARD — visual de ejemplo, sin conectar a datos reales todavía ── */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Dashboard</h2>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/25">Datos de ejemplo</span>
-        </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl overflow-hidden">
-          <div className="flex border-b border-slate-300 dark:border-slate-700">
-            {[["todo","Seleccionar todo"],["productos","Productos"],["proyectos","Proyectos"],["servicios","Servicios"]].map(([id,lbl]) => (
-              <button key={id} type="button" onClick={() => setDashTab(id)}
-                className={["px-4 py-3 text-xs font-semibold transition-colors whitespace-nowrap", dashTab === id ? "border-b-2 border-violet-500 text-violet-600" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"].join(" ")}>
-                {lbl}
-              </button>
-            ))}
-          </div>
-          <div className="p-5">
-            <div className="grid grid-cols-3 gap-3 mb-5">
-              {(dashTab === "todo" || dashTab === "productos")  && <div className="border border-slate-300 dark:border-slate-700 rounded-xl p-4 text-center"><p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">Piezas vendidas</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</p></div>}
-              {(dashTab === "todo" || dashTab === "proyectos") && <div className="border border-slate-300 dark:border-slate-700 rounded-xl p-4 text-center"><p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pedidos activos</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</p></div>}
-              {(dashTab === "todo" || dashTab === "servicios") && <div className="border border-slate-300 dark:border-slate-700 rounded-xl p-4 text-center"><p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">Ingresos</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</p></div>}
-            </div>
-            <div className="flex gap-5 items-end">
-              <div className="flex-1">
-                <div className="text-[10px] text-slate-400 dark:text-slate-500 mb-2 uppercase tracking-wider">Real vs Presupuesto (ejemplo)</div>
-                <div className="flex items-end gap-1 h-28">
-                  {CHART_BARS.map((b, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                      <div className="w-full flex items-end gap-0.5" style={{ height: "96px" }}>
-                        <div className="flex-1 bg-violet-400 rounded-t-sm" style={{ height: `${(b.real / MAX_BAR) * 96}px` }} />
-                        <div className="flex-1 border-t-2 border-violet-400 bg-violet-100/30 dark:bg-violet-900/20" style={{ height: `${(b.budget / MAX_BAR) * 96}px` }} />
-                      </div>
-                      <span className="text-[8px] text-slate-400 dark:text-slate-500 truncate">{b.mes}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-3 mt-2">
-                  <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400"><span className="h-2.5 w-2.5 rounded-sm bg-violet-400 shrink-0" />Real</span>
-                  <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400"><span className="h-2.5 w-2.5 rounded-sm bg-violet-400 shrink-0" />Presupuesto</span>
-                </div>
-              </div>
-              <div className="shrink-0 text-center w-36">
-                <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">VS Objetivo</div>
-                <div className="relative inline-flex items-center justify-center">
-                  <svg viewBox="0 0 100 60" className="w-32 h-20">
-                    <path d="M10,55 A40,40 0 0,1 90,55" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" className="text-slate-200 dark:text-slate-700" />
-                    <path d="M10,55 A40,40 0 0,1 90,55" fill="none" stroke="#8b5cf6" strokeWidth="10" strokeLinecap="round"
-                      strokeDasharray="125.6" strokeDashoffset={`${125.6 * (1 - 0.5)}`} />
-                  </svg>
-                  <div className="absolute bottom-0 inset-x-0 text-center">
-                    <p className="text-2xl font-black text-slate-900 dark:text-slate-100 leading-none">—</p>
-                  </div>
-                </div>
-                <p className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">Sin datos todavía</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HistorialCambiosCard />
     </div>
   )
 }
