@@ -99,6 +99,7 @@ export function PortalGlobe() {
         style={{
           width: "min(100%, 560px)",
           aspectRatio: "1 / 1",
+          maxHeight: "calc(100% - 76px)",
           filter: hover ? "drop-shadow(0 0 45px rgba(167,139,250,0.55))" : "drop-shadow(0 0 0 rgba(167,139,250,0))",
         }}
       >
