@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal, Layers, Pencil } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
+import { SeccionHero, HeroTabs } from "@/components/Empresa/PortalMDO/shared"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
@@ -141,8 +142,13 @@ const finSemana = (date: Date) => {
 }
 
 type Vista = "lista" | "calendario" | "metricas"
+const VISTA_TABS = [
+  { id: "lista",      label: "Lista",      icon: List },
+  { id: "calendario", label: "Calendario", icon: CalIcon },
+  { id: "metricas",   label: "Métricas",   icon: BarChart2 },
+]
 
-export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: string }) {
+export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea; titulo: string; breadcrumb?: string[] }) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const { user } = useCurrentUser()
@@ -809,38 +815,22 @@ export function TareasView({ ambito, titulo }: { ambito: AmbitoTarea; titulo: st
       <div className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.07) 0%, transparent 55%)" }} />
       <div className="relative p-4 sm:p-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">{titulo}</h1>
-          <p className="text-sm text-muted-foreground">Gestiona y da seguimiento a tus tareas</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex gap-1 bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700/50">
-            <button type="button" onClick={() => setVista("lista")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "lista" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}>
-              <List size={14} /> Lista
-            </button>
-            <button type="button" onClick={() => setVista("calendario")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "calendario" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}>
-              <CalIcon size={14} /> Calendario
-            </button>
-            <button type="button" onClick={() => setVista("metricas")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                vista === "metricas" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              }`}>
-              <BarChart2 size={14} /> Métricas
-            </button>
-          </div>
-          <Button onClick={() => abrirCrear()} size="sm" className="bg-violet-600 hover:bg-violet-700">
-            <Plus size={14} className="mr-1" />
-            <span className="hidden sm:inline">Nueva tarea</span>
-            <span className="sm:hidden">Nueva</span>
-          </Button>
-        </div>
+      <div className="mb-6">
+        <SeccionHero
+          breadcrumb={breadcrumb ?? [titulo]}
+          titulo={titulo}
+          descripcion="Gestiona y da seguimiento a tus tareas"
+        >
+          <HeroTabs tabs={VISTA_TABS} active={vista} onChange={id => setVista(id as Vista)} />
+        </SeccionHero>
+      </div>
+
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => abrirCrear()} size="sm" className="bg-violet-600 hover:bg-violet-700">
+          <Plus size={14} className="mr-1" />
+          <span className="hidden sm:inline">Nueva tarea</span>
+          <span className="sm:hidden">Nueva</span>
+        </Button>
       </div>
 
       {/* Barra de filtros */}
