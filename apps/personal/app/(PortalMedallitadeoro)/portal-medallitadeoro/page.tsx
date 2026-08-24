@@ -6,7 +6,6 @@ import { PortalMDOSidebar } from "@/components/Empresa/PortalMDO/PortalMDOSideba
 import { SeccionPortalHome } from "@/components/Empresa/PortalMDO/SeccionPortalHome"
 import { SeccionConoceMDO } from "@/components/Empresa/PortalMDO/SeccionConoceMDO"
 import { SeccionMision } from "@/components/Empresa/PortalMDO/SeccionMision"
-import { SeccionRH } from "@/components/Empresa/PortalMDO/SeccionRH"
 import { SeccionContactos } from "@/components/Empresa/PortalMDO/SeccionContactos"
 import { SeccionCRM } from "@/components/Empresa/PortalMDO/SeccionCRM"
 import { SeccionVentas } from "@/components/Empresa/PortalMDO/SeccionVentas"
@@ -20,7 +19,7 @@ import { SeccionEnlaces } from "@/components/Empresa/PortalMDO/SeccionEnlaces"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
 
 const SECCIONES_VALIDAS = [
-  "portal", "conoce", "mision", "rh",
+  "portal", "conoce", "mision",
   "tareas", "campanas", "contactos", "crm", "ventas", "inventario", "finanzas", "sitio-web",
   "documentos", "marca", "enlaces",
 ]
@@ -61,7 +60,6 @@ export default function PortalMedallitadeoroPage() {
       case "portal":      return <SeccionPortalHome onNavigate={navigate} />
       case "conoce":       return <SeccionConoceMDO />
       case "mision":       return <SeccionMision />
-      case "rh":           return <SeccionRH />
       case "tareas":       return <TareasView ambito="empresa" titulo="Tareas" />
       case "campanas":     return <SeccionCampanas />
       case "contactos":    return <SeccionContactos />

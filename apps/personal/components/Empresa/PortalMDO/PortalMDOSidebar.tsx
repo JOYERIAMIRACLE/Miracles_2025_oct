@@ -57,7 +57,6 @@ export const GRUPOS: NavGroup[] = [
   {
     id: "recursos", label: "Recursos", icon: FolderKanban, itemsAreOwnSection: true,
     items: [
-      { id: "rh",          label: "Recursos Humanos", icon: Users },
       { id: "documentos",  label: "Documentos",       icon: FileText },
       { id: "marca",       label: "Gestión de marca", icon: Palette },
     ],
@@ -74,7 +73,7 @@ export const DEPT_ICONS: Record<string, typeof Home> = {
   "quienes-somos": Building2, mision: Flag, organigrama: GitBranch, directorio: Users,
   tareas: ListChecks, campanas: Megaphone, contactos: Contact, crm: Target,
   ventas: ShoppingBag, inventario: Boxes, finanzas: DollarSign, "sitio-web": Globe,
-  rh: Users, documentos: FileText, marca: Palette, enlaces: Link2,
+  documentos: FileText, marca: Palette, enlaces: Link2,
 }
 
 interface Props {
