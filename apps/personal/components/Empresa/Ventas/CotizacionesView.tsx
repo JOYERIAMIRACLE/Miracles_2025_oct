@@ -2,11 +2,11 @@
 
 import { useState, useMemo } from "react"
 import {
-  FileText, X, Check, ArrowRight, Loader2,
-  User, Pencil, Trash2, Plus,
+  FileText, X, ArrowRight, Loader2,
+  User, Pencil, Trash2,
 } from "lucide-react"
 import { toast } from "sonner"
-import { useGetAllCotizaciones, deleteCotizacion } from "@/api/cotizacion/getCotizaciones"
+import { useGetAllCotizaciones, deleteCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
 import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
@@ -29,7 +29,7 @@ const fmtDt = (iso: string | null | undefined) => {
 function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
   cotizacion: Cotizacion
   onClose: () => void
-  onConverted: () => void
+  onConverted: (cotizacionActualizada: Cotizacion) => void
 }) {
   const clienteNombre = cotizacion.cliente?.nombre ?? ""
   const clienteId     = cotizacion.cliente?.documentId ?? null
@@ -79,8 +79,16 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
         })
       }
       if (form.estado !== "Cotizado") await updateVenta(creada.documentId, { estado: form.estado })
+      // Marca la cotización como Convertida y la liga al pedido real que
+      // acaba de nacer — antes este hilo se perdía por completo (la
+      // cotización se quedaba "Aceptada" para siempre, sin rastro de que
+      // ya se había vuelto un pedido).
+      const cotizacionActualizada = await updateCotizacion(cotizacion.documentId, {
+        estado: "Convertida",
+        ventaGenerada: { connect: [{ id: creada.id }] },
+      })
       toast.success("Pedido creado desde cotización")
-      onConverted()
+      onConverted(cotizacionActualizada)
       onClose()
     } catch {
       toast.error("Error al crear el pedido")
@@ -309,6 +317,9 @@ export function CotizacionesView() {
                     <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[cot.estado]}`}>
                       {cot.estado}
                     </span>
+                    {cot.ventaGenerada && (
+                      <span className="block text-[10px] text-emerald-500/80 mt-1">→ {cot.ventaGenerada.concepto}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                     {fmtDt(cot.fecha ?? cot.createdAt)}
@@ -369,7 +380,7 @@ export function CotizacionesView() {
         <ConvertirPedidoModal
           cotizacion={convertiendo}
           onClose={() => setConvertiendo(null)}
-          onConverted={() => setConvertiendo(null)}
+          onConverted={cotizacionActualizada => { handleCotizacionSaved(cotizacionActualizada); setConvertiendo(null) }}
         />
       )}
 

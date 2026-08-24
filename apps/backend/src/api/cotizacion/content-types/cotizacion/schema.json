@@ -33,7 +33,7 @@
     },
     "estado": {
       "type": "enumeration",
-      "enum": ["Borrador", "Enviada", "Aceptada", "Rechazada"],
+      "enum": ["Borrador", "Enviada", "Aceptada", "Rechazada", "Convertida"],
       "default": "Borrador"
     },
     "notas": {
@@ -41,6 +41,12 @@
     },
     "fecha": {
       "type": "datetime"
+    },
+    "ventaGenerada": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::venta.venta",
+      "inversedBy": "cotizacionOrigen"
     }
   }
 }

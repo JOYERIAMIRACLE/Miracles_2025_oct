@@ -41,8 +41,11 @@ export function useGetCotizaciones(clienteDocumentId: string | null) {
   return { cotizaciones, setCotizaciones, loading }
 }
 
+// populate=* en la respuesta de create/update — sin esto, "cliente" y
+// "ventaGenerada" vuelven sin poblar y se pierden del estado local al
+// fusionar la respuesta (aunque en la base de datos siguen intactos).
 export async function createCotizacion(payload: CotizacionPayload): Promise<Cotizacion> {
-  const res = await fetch(URL, {
+  const res = await fetch(`${URL}?populate=*`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -54,7 +57,7 @@ export async function createCotizacion(payload: CotizacionPayload): Promise<Coti
 }
 
 export async function updateCotizacion(documentId: string, payload: Partial<CotizacionPayload>): Promise<Cotizacion> {
-  const res = await fetch(`${URL}/${documentId}`, {
+  const res = await fetch(`${URL}/${documentId}?populate=*`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })

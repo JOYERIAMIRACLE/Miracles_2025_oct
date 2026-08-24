@@ -74,6 +74,24 @@
       "relation": "oneToMany",
       "target": "api::venta-linea.venta-linea",
       "mappedBy": "venta"
+    },
+    "cotizacionOrigen": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::cotizacion.cotizacion",
+      "mappedBy": "ventaGenerada"
+    },
+    "envios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::envio.envio",
+      "mappedBy": "venta"
+    },
+    "transaccionGenerada": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::transaccion.transaccion",
+      "inversedBy": "ventaOrigen"
     }
   }
 }
