@@ -419,7 +419,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
       // la tarjeta refleje el grupo de inmediato sin esperar un refetch.
       if (editando) {
         const updated = await updateTarea(editando.documentId, payload)
-        const merged = { ...updated, proyecto: proyectoRef }
+        const merged = { ...updated, proyecto: proyectoRef, ticket: editando.ticket }
         setTareas(prev => prev.map(t => t.documentId === merged.documentId ? merged : t))
         toast.success("Tarea actualizada")
       } else {
@@ -445,7 +445,11 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
         ...(!t.fechaInicio && nuevoEstado === "en_progreso" ? { fechaInicio: ahora } : {}),
       }
       const updated = await updateTarea(t.documentId, payload)
-      setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+      // updateTarea no pide populate, así que "proyecto"/"ticket" vuelven sin
+      // poblar en la respuesta — sin este merge, la tarea "se salía" del
+      // grupo de proyecto en la UI (aunque en la base de datos la relación
+      // seguía intacta, nunca se tocó en este payload).
+      setTareas(prev => prev.map(x => x.documentId === updated.documentId ? { ...updated, proyecto: x.proyecto, ticket: x.ticket } : x))
       // Log del cambio de estado — fire and forget
       createHistorialTarea({
         tareaDocumentId: t.documentId,
@@ -473,7 +477,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const actualizarProgreso = async (t: TareaType, pct: number) => {
     try {
       const updated = await updateTarea(t.documentId, { progreso: pct })
-      setTareas(prev => prev.map(x => x.documentId === updated.documentId ? updated : x))
+      setTareas(prev => prev.map(x => x.documentId === updated.documentId ? { ...updated, proyecto: x.proyecto, ticket: x.ticket } : x))
     } catch (e: any) {
       if (e?.message?.includes("400") || e?.status === 400) {
         toast.warning("El servidor aún no tiene el campo progreso. Espera el redeploy de Railway.")
