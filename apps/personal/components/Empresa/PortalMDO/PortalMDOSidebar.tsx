@@ -98,7 +98,7 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
 
   return (
     <>
-    <aside className="fixed md:sticky left-0 md:left-auto top-14 z-40 w-44 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700 shadow-[2px_0_12px_rgba(0,0,0,0.07)] flex flex-col h-[calc(100vh-56px)] self-start overflow-hidden">
+    <aside className="fixed md:sticky left-0 md:left-auto top-14 z-40 w-56 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700 shadow-[2px_0_12px_rgba(0,0,0,0.07)] flex flex-col h-[calc(100vh-56px)] self-start overflow-hidden">
       <nav className="flex-1 overflow-y-auto py-1 pt-3 pb-0">
         {GRUPOS.map(grupo => {
           const isOpen       = gruposOpen.has(grupo.id)
@@ -116,10 +116,10 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
               <div className={`flex items-center pr-2 rounded-r-lg mx-1 ${headerActive ? "bg-violet-50 dark:bg-slate-800" : ""}`}>
                 <button type="button" onClick={handleHeaderClick}
                   className={[
-                    "flex-1 flex items-center gap-2 text-left px-2.5 py-2 text-xs font-semibold transition-colors rounded-lg",
+                    "flex-1 flex items-center gap-2 text-left px-3 py-2.5 text-sm font-semibold transition-colors rounded-lg",
                     headerActive ? "text-violet-600 dark:text-violet-400" : "text-slate-700 dark:text-slate-300 hover:text-violet-500 hover:bg-slate-50 dark:hover:bg-slate-800",
                   ].join(" ")}>
-                  <grupo.icon className="h-4 w-4 shrink-0" />
+                  <grupo.icon className="h-[18px] w-[18px] shrink-0" />
                   {grupo.label}
                 </button>
                 {isToggleOnly && (
@@ -141,7 +141,7 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
                       <button key={item.id} type="button"
                         onClick={() => itemOwnSection ? onNavigate(item.id) : onNavigate(grupo.id, item.id)}
                         className={[
-                          "w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-all",
+                          "w-full flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all",
                           active
                             ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-slate-800 border-r-2 border-violet-500"
                             : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
