@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import {
   Plus, Pencil, Trash2, X, Check, ChevronDown,
-  CalendarDays, LayoutGrid, ChevronLeft, ChevronRight, BarChart2,
+  CalendarDays, ChevronLeft, ChevronRight,
   Paperclip, Search, Camera, SlidersHorizontal, Link2,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -997,9 +997,10 @@ function VistaMetricas({ campanas }: { campanas: CampanaType[] }) {
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
-export function CampanasPlannerView() {
+export type TabCampanas = "mensual" | "semanal" | "metricas"
+
+export function CampanasPlannerView({ tab }: { tab: TabCampanas }) {
   const { campanas, setCampanas, loading } = useGetCampanas(AMBITO)
-  const [tab, setTab] = useState<"mensual" | "semanal" | "metricas">("mensual")
   const [modal, setModal] = useState(false)
   const [editando, setEditando] = useState<CampanaType | null>(null)
   const [defOpts, setDefOpts] = useState<{ categoria: string | null; mes: MesCampana; anio: number; fecha: string | null }>({
@@ -1123,12 +1124,6 @@ export function CampanasPlannerView() {
 
   if (loading) return <p className="text-sm text-slate-400 text-center py-16">Cargando...</p>
 
-  const TABS = [
-    { id: "mensual" as const, label: "Calendario mensual", icon: LayoutGrid },
-    { id: "semanal" as const, label: "Calendario semanal", icon: CalendarDays },
-    { id: "metricas" as const, label: "Métricas", icon: BarChart2 },
-  ]
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
@@ -1140,15 +1135,6 @@ export function CampanasPlannerView() {
           className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-500 hover:bg-violet-600 text-white rounded-lg transition">
           <Plus size={15} /> Nueva campaña
         </button>
-      </div>
-
-      <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg w-fit border border-slate-200 dark:border-slate-800">
-        {TABS.map(t => (
-          <button key={t.id} type="button" onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === t.id ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm" : "text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
-            <t.icon size={14} /> {t.label}
-          </button>
-        ))}
       </div>
 
       {tab === "mensual" && (
