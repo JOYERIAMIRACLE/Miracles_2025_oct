@@ -111,13 +111,11 @@ export function CalendarioPendientesCard() {
 
       {loading ? (
         <div className="h-48 flex items-center justify-center text-xs text-slate-400 dark:text-slate-600">Cargando pendientes…</div>
-      ) : filtro === "eventos" ? (
-        <div className="h-48 flex flex-col items-center justify-center text-center gap-1">
-          <p className="text-xs text-slate-400 dark:text-slate-500">Módulo de Eventos aún no existe</p>
-          <p className="text-[11px] text-slate-300 dark:text-slate-600">Próximamente en Portal Medallitadeoro</p>
-        </div>
       ) : (
         <>
+          {filtro === "eventos" && (
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mb-2">Módulo de Eventos aún no existe · Próximamente en Portal Medallitadeoro</p>
+          )}
           <div className="grid grid-cols-7 mb-0.5">
             {DIAS_SEMANA.map((d, i) => (
               <div key={i} className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-medium py-0.5">{d}</div>
