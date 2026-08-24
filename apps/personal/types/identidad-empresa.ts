@@ -65,6 +65,9 @@ export type IdentidadEmpresa = {
   descripcion_tareas:      string | null
   portada_tareas:          IdentidadImagen
   portada_tareas_original: IdentidadImagen
+  descripcion_campanas:      string | null
+  portada_campanas:          IdentidadImagen
+  portada_campanas_original: IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }

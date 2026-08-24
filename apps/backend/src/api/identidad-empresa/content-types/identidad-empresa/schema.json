@@ -65,6 +65,9 @@
     "portada_depto_administracion_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "descripcion_tareas":      { "type": "text" },
     "portada_tareas":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "portada_tareas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "portada_tareas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "descripcion_campanas":      { "type": "text" },
+    "portada_campanas":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_campanas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }
