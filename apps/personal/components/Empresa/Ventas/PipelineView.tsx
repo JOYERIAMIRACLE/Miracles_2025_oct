@@ -11,8 +11,10 @@ import {
   ClienteEmpresa, ClientePayload,
   FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
 } from "@/types/clienteEmpresa"
-import { Cotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
-import { useGetCotizaciones } from "@/api/cotizacion/getCotizaciones"
+import { Cotizacion, ItemCotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
+import { useGetCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
+import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
+import { ProductType } from "@/types/product"
 import { CotizacionModal } from "./CotizacionModal"
 import { useGetTransaccionesByCliente } from "@/api/transaccion/getTransacciones"
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
@@ -473,6 +475,23 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
 }
 
 // ─── Modal: vincular pedido real (gate de Oferta → Pedido) ────────────────────
+// Nivel 2: checkpoint de disponibilidad antes de pasar a Pedido — no bloquea
+// (a veces sí se vende sobre pedido/personalizado), pero avisa con números
+// reales para que la decisión de continuar sea consciente, no accidental.
+function calcularFaltantes(items: ItemCotizacion[], productos: ProductType[]) {
+  const faltantes: { nombre: string; pedido: number; disponible: number }[] = []
+  for (const item of items) {
+    if (!item.productoId) continue
+    const producto = productos.find(p => p.documentId === item.productoId)
+    if (!producto) continue
+    const disponible = producto.stock ?? 0
+    if ((item.cantidad || 0) > disponible) {
+      faltantes.push({ nombre: producto.nombreProducto, pedido: item.cantidad, disponible })
+    }
+  }
+  return faltantes
+}
+
 export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, onCreated }: {
   cliente: ClienteEmpresa
   cotizacionesAceptadas: Cotizacion[]
@@ -481,6 +500,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
 }) {
   const [convirtiendo, setConvirtiendo] = useState<string | null>(null)
   const [modoRapido, setModoRapido] = useState(cotizacionesAceptadas.length === 0)
+  const { items: productos } = useGetInventario()
   const hoy = new Date().toISOString().split("T")[0]
   const [form, setForm] = useState({
     concepto: `Pedido — ${cliente.nombre}`,
@@ -494,6 +514,11 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
   const lbl = "block text-[11px] text-slate-500 mb-1"
 
   async function convertirCotizacion(cot: Cotizacion) {
+    const faltantes = calcularFaltantes(cot.items ?? [], productos)
+    if (faltantes.length > 0) {
+      const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`).join("\n")
+      if (!confirm(`Stock insuficiente para:\n\n${detalle}\n\n¿Continuar de todas formas?`)) return
+    }
     setConvirtiendo(cot.documentId)
     try {
       const creada = await createVenta({
@@ -510,6 +535,13 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, onClose, 
         })
       }
       const confirmada = await updateVenta(creada.documentId, { estado: "Pagado" })
+      // Igual que en CotizacionesView: marcar la cotización como Convertida
+      // y ligarla al pedido real — este era el segundo camino de conversión
+      // (desde el gate del Funnel) que se había quedado sin esta trazabilidad.
+      await updateCotizacion(cot.documentId, {
+        estado: "Convertida",
+        ventaGenerada: { connect: [{ id: confirmada.id }] },
+      })
       toast.success(`Pedido creado desde ${cot.numero}`)
       onCreated(confirmada)
     } catch { toast.error("Error al convertir la cotización"); setConvirtiendo(null) }

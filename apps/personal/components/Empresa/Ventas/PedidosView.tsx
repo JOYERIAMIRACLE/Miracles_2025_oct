@@ -35,6 +35,22 @@ function emptyLinea(): LineaForm {
 }
 const totalLinea = (l: LineaForm) => (Number(l.cantidad) || 0) * (Number(l.precioUnitario) || 0)
 
+// Nivel 2: checkpoint de disponibilidad — no bloquea (a veces sí se vende
+// sobre pedido/personalizado), pero avisa con números reales antes de
+// confirmar un pedido a un estado que ya descuenta stock.
+function calcularFaltantesLineas(lineas: LineaForm[], productos: ProductType[]) {
+  const faltantes: { nombre: string; pedido: number; disponible: number }[] = []
+  for (const l of lineas) {
+    if (!l.productoId) continue
+    const producto = productos.find(p => p.documentId === l.productoId)
+    if (!producto) continue
+    const disponible = producto.stock ?? 0
+    const cantidad = Number(l.cantidad) || 0
+    if (cantidad > disponible) faltantes.push({ nombre: producto.nombreProducto, pedido: cantidad, disponible })
+  }
+  return faltantes
+}
+
 function emptyForm(): VentaPayload {
   return {
     concepto: "",
@@ -182,9 +198,20 @@ export function PedidosView() {
   async function handleSave() {
     if (!form.concepto.trim()) { toast.error("El concepto es obligatorio"); return }
     if (!form.monto)           { toast.error("El monto es obligatorio"); return }
+
+    const lineasValidas = lineas.filter(l => l.descripcion.trim() && Number(l.cantidad) > 0)
+    const estadoObjetivo = (editing ? form.estado ?? editing.estado : form.estado) ?? "Cotizado"
+    const aplicaStockObjetivo = estadoObjetivo !== "Cotizado" && estadoObjetivo !== "Cancelado"
+    if (lineasEditables && aplicaStockObjetivo) {
+      const faltantes = calcularFaltantesLineas(lineasValidas, productos)
+      if (faltantes.length > 0) {
+        const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`).join("\n")
+        if (!confirm(`Stock insuficiente para:\n\n${detalle}\n\n¿Continuar de todas formas?`)) return
+      }
+    }
+
     setSaving(true)
     try {
-      const lineasValidas = lineas.filter(l => l.descripcion.trim() && Number(l.cantidad) > 0)
 
       if (editing) {
         if (lineasEditables) {

@@ -10,9 +10,11 @@ import { useGetAllCotizaciones, deleteCotizacion, updateCotizacion } from "@/api
 import { createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
 import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
+import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
 import { EstadoVenta } from "@/types/ventaEmpresa"
+import { ProductType } from "@/types/product"
 import {
-  Cotizacion, EstadoCotizacion, ESTADOS_COT, ESTADO_COT_COLOR,
+  Cotizacion, ItemCotizacion, EstadoCotizacion, ESTADOS_COT, ESTADO_COT_COLOR,
 } from "@/types/cotizacion"
 import { ClienteEmpresa } from "@/types/clienteEmpresa"
 import { CotizacionModal } from "./CotizacionModal"
@@ -25,6 +27,23 @@ const fmtDt = (iso: string | null | undefined) => {
   return new Date(iso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })
 }
 
+// Nivel 2: checkpoint de disponibilidad antes de pasar a Pedido — no bloquea
+// (a veces sí se vende sobre pedido/personalizado), pero avisa con números
+// reales para que la decisión de continuar sea consciente, no accidental.
+function calcularFaltantes(items: ItemCotizacion[], productos: ProductType[]) {
+  const faltantes: { nombre: string; pedido: number; disponible: number }[] = []
+  for (const item of items) {
+    if (!item.productoId) continue
+    const producto = productos.find(p => p.documentId === item.productoId)
+    if (!producto) continue
+    const disponible = producto.stock ?? 0
+    if ((item.cantidad || 0) > disponible) {
+      faltantes.push({ nombre: producto.nombreProducto, pedido: item.cantidad, disponible })
+    }
+  }
+  return faltantes
+}
+
 // ─── Modal convertir a pedido ─────────────────────────────────────────────────
 function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
   cotizacion: Cotizacion
@@ -33,6 +52,7 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
 }) {
   const clienteNombre = cotizacion.cliente?.nombre ?? ""
   const clienteId     = cotizacion.cliente?.documentId ?? null
+  const { items: productos } = useGetInventario()
 
   const concepto = cotizacion.items?.length
     ? cotizacion.items.map(i => `${i.descripcion} ×${i.cantidad}`).join(", ")
@@ -52,6 +72,11 @@ function ConvertirPedidoModal({ cotizacion, onClose, onConverted }: {
   const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
 
   const handleConvert = async () => {
+    const faltantes = calcularFaltantes(cotizacion.items ?? [], productos)
+    if (faltantes.length > 0) {
+      const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`).join("\n")
+      if (!confirm(`Stock insuficiente para:\n\n${detalle}\n\n¿Continuar de todas formas?`)) return
+    }
     setSaving(true)
     try {
       // Nace "Cotizado" (sin efecto de stock) para poder copiar las líneas
