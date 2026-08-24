@@ -1221,21 +1221,6 @@ export function PipelineView() {
   const leadsCalificados = clientes.filter(c => c.Funnel === "Lead" && c.calificado).length
   const rechazados       = clientes.filter(c => c.Funnel === "Rechazada").length
 
-  // De dónde viene cada cliente — no todos pasan por "Lead": el alta directo
-  // en la columna "Oferta" (ver botón "Agregar" de esa columna) no marca
-  // fechaLead, así que ese campo distingue de verdad "llegó como lead de
-  // marketing" de "se dio de alta ya cotizando". Y comparando cotizaciones
-  // vs. pedidos reales por cliente se ve quién se saltó la cotización.
-  const clientesDeLead = clientes.filter(c => !!c.fechaLead).length
-  const soloCotizaron  = clientes.filter(c =>
-    (cotizacionesPorCliente.get(c.documentId)?.length ?? 0) > 0 &&
-    (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0
-  ).length
-  const fueronDirectoAPedido = clientes.filter(c =>
-    (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) > 0 &&
-    (cotizacionesPorCliente.get(c.documentId)?.length ?? 0) === 0
-  ).length
-
   return (
     <div className="p-6 max-w-full mx-auto">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
@@ -1246,14 +1231,6 @@ export function PipelineView() {
             {leadsCalificados} calificados ·{" "}
             {clientes.filter(c => c.Funnel === "Entrega").length} entregas ·{" "}
             <span className="text-red-600">{rechazados} rechazadas</span>
-          </p>
-          {/* De dónde vienen los clientes — no todos entran por Lead: algunos
-              se dan de alta directo cotizando, otros directo con un pedido. */}
-          <p className="text-[11px] text-slate-600 mt-1">
-            De {clientes.length} clientes en total:{" "}
-            <span className="text-violet-400 font-semibold">{clientesDeLead} llegaron de lead</span> (marketing) ·{" "}
-            <span className="text-slate-400">{soloCotizaron} solo cotizaron</span> (sin pedido todavía) ·{" "}
-            <span className="text-slate-400">{fueronDirectoAPedido} fueron directo a pedido</span> (sin cotizar)
           </p>
         </div>
         <button type="button" onClick={() => abrirCrear("Lead")}

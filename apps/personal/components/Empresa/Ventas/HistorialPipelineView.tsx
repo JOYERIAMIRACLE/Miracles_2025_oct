@@ -1,10 +1,16 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { History, ChevronLeft, ChevronRight, User, TrendingUp } from "lucide-react"
+import { History, ChevronLeft, ChevronRight, User, TrendingUp, FileText, ShoppingBag, Users, ArrowRight, ArrowLeft, Truck } from "lucide-react"
 import { useGetClientes } from "@/api/clienteEmpresa/getClientes"
+import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
+import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
 import { ClienteEmpresa, FUNNEL_COLOR, FUNNEL_LABEL, FunnelEtapa } from "@/types/clienteEmpresa"
+import { ESTADO_COT_COLOR, ESTADOS_COT, EstadoCotizacion } from "@/types/cotizacion"
+import { ESTADO_VENTA_COLOR, ESTADOS_VENTA, EstadoVenta } from "@/types/ventaEmpresa"
 import { ListToolbar } from "./ListToolbar"
+
+const fmtMoney = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,8 +84,68 @@ function EtapaPill({ etapa }: { etapa: FunnelEtapa | null | undefined }) {
 }
 
 // ─── HistorialPipelineView ────────────────────────────────────────────────────
+type SubTab = "leads" | "cotizaciones" | "pedidos"
+const SUB_TABS: { id: SubTab; label: string; icon: typeof Users }[] = [
+  { id: "leads",        label: "Leads",        icon: Users },
+  { id: "cotizaciones", label: "Cotizaciones", icon: FileText },
+  { id: "pedidos",      label: "Pedidos",      icon: ShoppingBag },
+]
+
 export function HistorialPipelineView() {
   const { clientes, loading } = useGetClientes()
+  const { cotizaciones, loading: cotLoading } = useGetAllCotizaciones()
+  const { ventas, loading: ventasLoading } = useGetVentas()
+
+  const [subTab, setSubTab] = useState<SubTab>("leads")
+  const [buscaCot, setBuscaCot] = useState("")
+  const [buscaPed, setBuscaPed] = useState("")
+  const [filtroCot, setFiltroCot] = useState<EstadoCotizacion | "todas">("todas")
+  const [filtroPed, setFiltroPed] = useState<EstadoVenta | "todos">("todos")
+
+  // De dónde viene cada cliente — no todos pasan por "Lead": el alta directo
+  // en la columna "Oferta" del Pipeline no marca fechaLead, así que ese
+  // campo distingue de verdad "llegó como lead de marketing" de "se dio de
+  // alta ya cotizando". Comparando cotizaciones vs. pedidos reales por
+  // cliente se ve además quién se saltó la cotización.
+  const origenClientes = useMemo(() => {
+    const cotizacionesPorCliente = new Map<string, number>()
+    cotizaciones.forEach(c => {
+      const id = c.cliente?.documentId
+      if (id) cotizacionesPorCliente.set(id, (cotizacionesPorCliente.get(id) ?? 0) + 1)
+    })
+    const ventasPorCliente = new Map<string, number>()
+    ventas.forEach(v => {
+      const id = v.cliente?.documentId
+      if (id && v.estado !== "Cancelado") ventasPorCliente.set(id, (ventasPorCliente.get(id) ?? 0) + 1)
+    })
+    return {
+      deLead:  clientes.filter(c => !!c.fechaLead).length,
+      soloCotizaron: clientes.filter(c =>
+        (cotizacionesPorCliente.get(c.documentId) ?? 0) > 0 && (ventasPorCliente.get(c.documentId) ?? 0) === 0
+      ).length,
+      directoAPedido: clientes.filter(c =>
+        (ventasPorCliente.get(c.documentId) ?? 0) > 0 && (cotizacionesPorCliente.get(c.documentId) ?? 0) === 0
+      ).length,
+    }
+  }, [clientes, cotizaciones, ventas])
+
+  const cotizacionesFiltradas = useMemo(() => {
+    const q = buscaCot.trim().toLowerCase()
+    return cotizaciones.filter(c => {
+      if (filtroCot !== "todas" && c.estado !== filtroCot) return false
+      if (!q) return true
+      return (c.numero ?? "").toLowerCase().includes(q) || (c.cliente?.nombre ?? "").toLowerCase().includes(q)
+    })
+  }, [cotizaciones, buscaCot, filtroCot])
+
+  const pedidosFiltrados = useMemo(() => {
+    const q = buscaPed.trim().toLowerCase()
+    return ventas.filter(v => {
+      if (filtroPed !== "todos" && v.estado !== filtroPed) return false
+      if (!q) return true
+      return (v.numero ?? "").toLowerCase().includes(q) || v.concepto.toLowerCase().includes(q) || (v.cliente?.nombre ?? "").toLowerCase().includes(q)
+    })
+  }, [ventas, buscaPed, filtroPed])
 
   const hoy       = new Date()
   const [año,     setAño]     = useState(hoy.getFullYear())
@@ -178,27 +244,53 @@ export function HistorialPipelineView() {
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <History size={18} className="text-violet-400" />
-            <h1 className="text-2xl font-bold text-slate-100">Historial del Pipeline</h1>
+            <h1 className="text-2xl font-bold text-slate-100">Métricas</h1>
           </div>
           <p className="text-sm text-slate-500">
-            Rastrea el recorrido de cada contacto desde Lead hasta Entrega
+            El trayecto completo de cada lead, cotización y pedido
           </p>
         </div>
 
-        {/* Selector de año */}
-        <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5">
-          <button type="button" title="Año anterior" onClick={() => setAño(a => a - 1)}
-            className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
-            <ChevronLeft size={14} />
-          </button>
-          <span className="text-sm font-semibold text-slate-200 w-12 text-center">{año}</span>
-          <button type="button" title="Año siguiente" onClick={() => setAño(a => Math.min(a + 1, hoy.getFullYear()))}
-            className={`p-1 rounded transition ${año >= hoy.getFullYear() ? "text-slate-700 cursor-default" : "text-slate-600 hover:text-slate-300"}`}>
-            <ChevronRight size={14} />
-          </button>
-        </div>
+        {/* Selector de año — solo aplica al trayecto de leads */}
+        {subTab === "leads" && (
+          <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5">
+            <button type="button" title="Año anterior" onClick={() => setAño(a => a - 1)}
+              className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
+              <ChevronLeft size={14} />
+            </button>
+            <span className="text-sm font-semibold text-slate-200 w-12 text-center">{año}</span>
+            <button type="button" title="Año siguiente" onClick={() => setAño(a => Math.min(a + 1, hoy.getFullYear()))}
+              className={`p-1 rounded transition ${año >= hoy.getFullYear() ? "text-slate-700 cursor-default" : "text-slate-600 hover:text-slate-300"}`}>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Sub-tabs */}
+      <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit">
+        {SUB_TABS.map(t => (
+          <button key={t.id} type="button" onClick={() => setSubTab(t.id)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              subTab === t.id ? "bg-slate-800 text-violet-400" : "text-slate-500 hover:text-slate-300"
+            }`}>
+            <t.icon size={14} /> {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* De dónde vienen los clientes — no todos entran por Lead */}
+      {subTab === "leads" && (
+        <p className="text-[11px] text-slate-600">
+          De {clientes.length} clientes en total:{" "}
+          <span className="text-violet-400 font-semibold">{origenClientes.deLead} llegaron de lead</span> (marketing) ·{" "}
+          <span className="text-slate-400">{origenClientes.soloCotizaron} solo cotizaron</span> (sin pedido todavía) ·{" "}
+          <span className="text-slate-400">{origenClientes.directoAPedido} fueron directo a pedido</span> (sin cotizar)
+        </p>
+      )}
+
+      {subTab === "leads" && (
+      <>
       {/* KPIs del año */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
@@ -474,6 +566,143 @@ export function HistorialPipelineView() {
           )}
         </div>
       </div>
+      </>
+      )}
+
+      {/* Trayecto de cotizaciones — no hay fechas por etapa como en leads
+          (solo se guarda el estado actual), así que el "trayecto" aquí es
+          el estado + hacia dónde se conectó (pedido generado, si aplica). */}
+      {subTab === "cotizaciones" && (
+        <>
+          <ListToolbar search={buscaCot} onSearchChange={setBuscaCot} searchPlaceholder="Buscar por número o cliente…"
+            filtros={[
+              { value: "todas", label: "Todas" },
+              ...ESTADOS_COT.map(e => ({ value: e as string, label: e })),
+            ]}
+            filtroActivo={filtroCot} filtroDefault="todas" onFiltroChange={v => setFiltroCot(v as EstadoCotizacion | "todas")}
+            metricas={[
+              { label: "Total",      value: cotizaciones.length },
+              { label: "Aceptadas",  value: cotizaciones.filter(c => c.estado === "Aceptada").length,  colorClass: "text-violet-400" },
+              { label: "Convertidas", value: cotizaciones.filter(c => c.estado === "Convertida").length, colorClass: "text-emerald-400" },
+              { label: "Rechazadas", value: cotizaciones.filter(c => c.estado === "Rechazada").length, colorClass: "text-red-400" },
+            ]}
+          />
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-slate-800 bg-slate-950/50">
+                  <tr>
+                    {["#", "Cliente", "Fecha", "Estado", "Total", "Trayecto"].map(h => (
+                      <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {cotLoading && Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                  ))}
+                  {!cotLoading && cotizacionesFiltradas.map(c => (
+                    <tr key={c.documentId} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-300">{c.numero ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-400 text-xs">{c.cliente?.nombre ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-500 text-xs whitespace-nowrap">{fmtDt(c.fecha ?? c.createdAt)}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>{c.estado}</span>
+                      </td>
+                      <td className="px-4 py-2.5 text-violet-400 font-semibold text-xs">{fmtMoney(c.total)}</td>
+                      <td className="px-4 py-2.5">
+                        {c.ventaGenerada ? (
+                          <span className="flex items-center gap-1 text-[11px] text-emerald-400">
+                            <ArrowRight size={11} /> {c.ventaGenerada.numero ?? c.ventaGenerada.concepto}
+                          </span>
+                        ) : <span className="text-slate-700 text-[11px]">—</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!cotLoading && cotizacionesFiltradas.length === 0 && (
+                <div className="py-12 text-center">
+                  <FileText size={28} className="mx-auto mb-2 text-slate-700" />
+                  <p className="text-slate-600 text-sm">Sin cotizaciones para los filtros seleccionados.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Trayecto de pedidos — estado actual + de dónde vino (cotización
+          origen, si se convirtió de una) + envíos conectados. */}
+      {subTab === "pedidos" && (
+        <>
+          <ListToolbar search={buscaPed} onSearchChange={setBuscaPed} searchPlaceholder="Buscar por número, concepto o cliente…"
+            filtros={[
+              { value: "todos", label: "Todos" },
+              ...ESTADOS_VENTA.map(e => ({ value: e as string, label: e })),
+            ]}
+            filtroActivo={filtroPed} filtroDefault="todos" onFiltroChange={v => setFiltroPed(v as EstadoVenta | "todos")}
+            metricas={[
+              { label: "Total",      value: ventas.length },
+              { label: "Pagados",    value: ventas.filter(v => v.estado === "Pagado").length,    colorClass: "text-violet-400" },
+              { label: "Entregados", value: ventas.filter(v => v.estado === "Entregado").length, colorClass: "text-violet-400" },
+              { label: "Cancelados", value: ventas.filter(v => v.estado === "Cancelado").length, colorClass: "text-red-400" },
+            ]}
+          />
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-slate-800 bg-slate-950/50">
+                  <tr>
+                    {["#", "Cliente", "Fecha", "Estado", "Monto", "Trayecto"].map(h => (
+                      <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {ventasLoading && Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                  ))}
+                  {!ventasLoading && pedidosFiltrados.map(v => (
+                    <tr key={v.documentId} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-300">{v.numero ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-400 text-xs">{v.cliente?.nombre ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-500 text-xs whitespace-nowrap">{v.fecha ? fmtDt(v.fecha) : "—"}</td>
+                      <td className="px-4 py-2.5">
+                        {v.estado && <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>}
+                      </td>
+                      <td className="px-4 py-2.5 text-violet-400 font-semibold text-xs">{fmtMoney(v.monto)}</td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-col gap-0.5">
+                          {v.cotizacionOrigen && (
+                            <span className="flex items-center gap-1 text-[11px] text-emerald-400">
+                              <ArrowLeft size={11} /> {v.cotizacionOrigen.numero}
+                            </span>
+                          )}
+                          {v.envios && v.envios.length > 0 && (
+                            <span className="flex items-center gap-1 text-[11px] text-violet-400">
+                              <Truck size={11} /> {v.envios.length} envío{v.envios.length > 1 ? "s" : ""}
+                            </span>
+                          )}
+                          {!v.cotizacionOrigen && (!v.envios || v.envios.length === 0) && (
+                            <span className="text-slate-700 text-[11px]">—</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!ventasLoading && pedidosFiltrados.length === 0 && (
+                <div className="py-12 text-center">
+                  <ShoppingBag size={28} className="mx-auto mb-2 text-slate-700" />
+                  <p className="text-slate-600 text-sm">Sin pedidos para los filtros seleccionados.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
