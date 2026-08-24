@@ -5,15 +5,17 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 import { useGetTareas } from "@/api/tarea/getTareas"
-import type { AmbitoTarea, TareaType } from "@/types/tarea"
+import type { TareaType } from "@/types/tarea"
 
 const DIAS_SEMANA = ["D", "L", "M", "M", "J", "V", "S"]
-const AMBITO_LABEL: Record<AmbitoTarea, string> = { personal: "Tareas", trabajo: "Trabajo", empresa: "Eventos" }
 
-// El loop automático solo alterna entre personal y empresa (los pendientes reales
-// del usuario y los "eventos" de la empresa — hoy modelados como tareas ambito=empresa,
-// hasta que exista un módulo de Eventos dedicado). "Todos" queda como opción fija aparte.
-const LOOP: AmbitoTarea[] = ["personal", "empresa"]
+// Todo lo que se ve aquí es exclusivo de Portal Medallitadeoro: "Tareas" son
+// las tareas reales ambito=empresa (la misma colección que usa la sección
+// Tareas del portal). "Eventos" todavía no tiene módulo propio — por ahora
+// siempre está vacío, no se toman prestadas tareas de Gestión Personal
+// (ambito=personal) ni de ningún otro lado para rellenarlo.
+const LOOP = ["tareas", "eventos"] as const
+type Categoria = (typeof LOOP)[number]
 const CICLO_MS = 3000
 
 function diasRestantes(fecha: string | null): number | null {
@@ -24,9 +26,9 @@ function diasRestantes(fecha: string | null): number | null {
 }
 
 export function CalendarioPendientesCard() {
-  const { tareas, loading } = useGetTareas()
+  const { tareas, loading } = useGetTareas("empresa")
   const [mesActual, setMesActual] = useState(new Date())
-  const [filtro, setFiltro] = useState<"todos" | AmbitoTarea>("personal")
+  const [filtro, setFiltro] = useState<Categoria>("tareas")
   const [pausado, setPausado] = useState(false)
   const [hover,   setHover]   = useState(false)
   const [diaSel, setDiaSel] = useState<Date | null>(null)
@@ -35,28 +37,23 @@ export function CalendarioPendientesCard() {
   useEffect(() => {
     if (enPausa) return
     const iv = setInterval(() => {
-      setFiltro(f => {
-        const idx = LOOP.indexOf(f as AmbitoTarea)
-        return LOOP[idx === -1 ? 0 : (idx + 1) % LOOP.length]
-      })
+      setFiltro(f => LOOP[(LOOP.indexOf(f) + 1) % LOOP.length])
     }, CICLO_MS)
     return () => clearInterval(iv)
   }, [enPausa])
 
-  function seleccionar(v: "todos" | AmbitoTarea) {
+  function seleccionar(v: Categoria) {
     if (pausado && filtro === v) { setPausado(false); return }
     setFiltro(v)
     setPausado(true)
   }
 
-  const pendientes = useMemo(
-    () => tareas.filter(t => t.ambito !== "trabajo" && t.estado !== "completada" && t.fechaVencimiento),
+  const pendientesTareas = useMemo(
+    () => tareas.filter(t => t.estado !== "completada" && t.fechaVencimiento),
     [tareas]
   )
-  const filtradas = useMemo(
-    () => (filtro === "todos" ? pendientes : pendientes.filter(t => t.ambito === filtro)),
-    [pendientes, filtro]
-  )
+  // Eventos todavía no tiene fuente de datos propia — placeholder honesto, no toma nada de otra parte.
+  const filtradas: TareaType[] = filtro === "tareas" ? pendientesTareas : []
 
   const diasDelMes = eachDayOfInterval({ start: startOfMonth(mesActual), end: endOfMonth(mesActual) })
   const primerDia  = getDay(startOfMonth(mesActual))
@@ -90,7 +87,7 @@ export function CalendarioPendientesCard() {
           )}
         </div>
         <div className="flex gap-1">
-          {([["todos", "Todos"], ["personal", "Tareas"], ["empresa", "Eventos"]] as const).map(([v, l]) => {
+          {([["tareas", "Tareas"], ["eventos", "Eventos"]] as const).map(([v, l]) => {
             const activo = filtro === v
             return (
               <button key={v} type="button" onClick={() => seleccionar(v)}
@@ -114,6 +111,11 @@ export function CalendarioPendientesCard() {
 
       {loading ? (
         <div className="h-48 flex items-center justify-center text-xs text-slate-400 dark:text-slate-600">Cargando pendientes…</div>
+      ) : filtro === "eventos" ? (
+        <div className="h-48 flex flex-col items-center justify-center text-center gap-1">
+          <p className="text-xs text-slate-400 dark:text-slate-500">Módulo de Eventos aún no existe</p>
+          <p className="text-[11px] text-slate-300 dark:text-slate-600">Próximamente en Portal Medallitadeoro</p>
+        </div>
       ) : (
         <>
           <div className="grid grid-cols-7 mb-0.5">
@@ -153,7 +155,6 @@ export function CalendarioPendientesCard() {
                   <div key={t.documentId} className="flex items-center gap-2 text-xs">
                     <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shrink-0" />
                     <span className="text-slate-700 dark:text-slate-200 truncate flex-1">{t.titulo}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">{AMBITO_LABEL[t.ambito]}</span>
                   </div>
                 ))
               )
