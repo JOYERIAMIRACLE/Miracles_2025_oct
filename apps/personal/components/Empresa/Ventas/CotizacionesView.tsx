@@ -380,7 +380,7 @@ export function CotizacionesView() {
                           className="text-[11px] text-slate-500 hover:text-slate-300">No</button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1">
                         {(cot.estado === "Aceptada" || cot.estado === "Enviada") && (
                           <button type="button"
                             onClick={() => setConvertiendo(cot)}
@@ -389,6 +389,7 @@ export function CotizacionesView() {
                             <ArrowRight size={11} /> Pedido
                           </button>
                         )}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {cot.cliente && (
                           <button type="button"
                             onClick={() => handleEditarCotizacion(cot)}
@@ -403,6 +404,7 @@ export function CotizacionesView() {
                           className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
                           <Trash2 size={13} />
                         </button>
+                        </div>
                       </div>
                     )}
                   </td>

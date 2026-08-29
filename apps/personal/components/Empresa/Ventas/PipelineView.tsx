@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useRef } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle, MapPin,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
-  DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle,
+  DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -24,7 +24,8 @@ import { useGetCategorias } from "@/api/categoria/getCategorias"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
 import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
-import { VentaEmpresa, EstadoVenta, ESTADO_VENTA_COLOR } from "@/types/ventaEmpresa"
+import { VentaEmpresa, VentaPayload, EstadoVenta, ESTADO_VENTA_COLOR } from "@/types/ventaEmpresa"
+import { uploadMedia } from "@/lib/upload"
 import { useClientesPipeline } from "./useClientesPipeline"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
@@ -502,6 +503,8 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
   const [convirtiendo, setConvirtiendo] = useState<string | null>(null)
   const [modoRapido, setModoRapido] = useState(cotizacionesAceptadas.length === 0)
   const { items: productos } = useGetInventario()
+  const [comprobante, setComprobante] = useState<File | null>(null)
+  const comprobanteRef = useRef<HTMLInputElement>(null)
   const hoy = new Date().toISOString().split("T")[0]
   const [form, setForm] = useState({
     concepto: `Pedido — ${cliente.nombre}`,
@@ -536,7 +539,9 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
           precioUnitario: item.precio || 0, subtotal: item.subtotal,
         })
       }
-      const confirmada = await updateVenta(creada.documentId, { estado: "Pagado" })
+      const patch: Partial<VentaPayload> = { estado: "Pagado" }
+      if (comprobante) patch.comprobantePago = (await uploadMedia(comprobante)).id
+      const confirmada = await updateVenta(creada.documentId, patch)
       // Igual que en CotizacionesView: marcar la cotización como Convertida
       // y ligarla al pedido real — este era el segundo camino de conversión
       // (desde el gate del Funnel) que se había quedado sin esta trazabilidad.
@@ -587,6 +592,15 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
         {cotizacionesAceptadas.length > 0 && (
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Cotizaciones aceptadas</p>
+
+            <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
+              onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
+            <button type="button" onClick={() => comprobanteRef.current?.click()}
+              className="w-full flex items-center gap-2 h-8 mb-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 px-3 text-[11px] text-slate-400 hover:border-violet-500/50 hover:text-slate-200 transition-all">
+              <Paperclip size={12} className="shrink-0" />
+              <span className="truncate">{comprobante ? comprobante.name : "Adjuntar evidencia de pago (opcional)"}</span>
+            </button>
+
             <div className="space-y-1.5">
               {cotizacionesAceptadas.map(cot => (
                 <button key={cot.documentId} type="button" disabled={convirtiendo === cot.documentId}
