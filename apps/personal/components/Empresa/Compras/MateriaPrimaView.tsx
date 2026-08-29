@@ -15,6 +15,7 @@ import {
 } from "@/api/movimiento-material/mutateMovimientoMaterial"
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
 import { updateTransaccion } from "@/api/transaccion/updateTransaccion"
+import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
 import { useGetProveedores } from "@/api/proveedor/getProveedores"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
@@ -442,11 +443,23 @@ function ComprasTab() {
   const [recibiendo, setRecibiendo] = useState<CompraMaterial | null>(null)
   const [delId, setDelId] = useState<string | null>(null)
 
-  async function handleDelete(documentId: string) {
+  async function handleDelete(compra: CompraMaterial) {
     try {
-      await deleteCompraMaterial(documentId)
-      setCompras(prev => prev.filter(c => c.documentId !== documentId))
-      toast.success("Compra eliminada")
+      if (compra.estado === "recibida") {
+        // Deshace por completo lo que aplicó "Recibir": revierte el stock de
+        // cada línea (borra su movimiento) y borra el gasto ya registrado en
+        // Finanzas — si no, el material y la cuenta quedan con el efecto de
+        // una compra que ya no existe.
+        for (const linea of compra.lineas) {
+          const mov = await getMovimientoPorCompraLinea(linea.documentId)
+          if (mov) await deleteMovimientoMaterial(mov.documentId)
+        }
+        if (compra.transaccion) await deleteTransaccion(compra.transaccion.documentId)
+      }
+      for (const linea of compra.lineas) await deleteCompraMaterialLinea(linea.documentId)
+      await deleteCompraMaterial(compra.documentId)
+      setCompras(prev => prev.filter(c => c.documentId !== compra.documentId))
+      toast.success(compra.estado === "recibida" ? "Compra eliminada — stock y gasto revertidos" : "Compra eliminada")
     } catch { toast.error("Error al eliminar") } finally { setDelId(null) }
   }
 
@@ -511,18 +524,17 @@ function ComprasTab() {
                             <Check size={11} /> Recibir
                           </button>
                         )}
-                        {c.estado === "borrador" && (
-                          delId === c.documentId ? (
-                            <div className="flex items-center gap-1 px-1">
-                              <button type="button" onClick={() => handleDelete(c.documentId)} className="text-[11px] text-red-500 font-medium">Sí</button>
-                              <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-400">No</button>
-                            </div>
-                          ) : (
-                            <button type="button" title="Eliminar" onClick={() => setDelId(c.documentId)}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
-                              <Trash2 size={13} />
-                            </button>
-                          )
+                        {delId === c.documentId ? (
+                          <div className="flex items-center gap-1 px-1">
+                            <span className="text-[10px] text-slate-500">{c.estado === "recibida" ? "¿Revertir stock y gasto?" : "¿Eliminar?"}</span>
+                            <button type="button" onClick={() => handleDelete(c)} className="text-[11px] text-red-500 font-medium">Sí</button>
+                            <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-400">No</button>
+                          </div>
+                        ) : (
+                          <button type="button" title="Eliminar" onClick={() => setDelId(c.documentId)}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                            <Trash2 size={13} />
+                          </button>
                         )}
                       </div>
                     </td>
