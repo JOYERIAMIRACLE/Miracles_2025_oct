@@ -128,8 +128,13 @@ function MaterialesTab() {
                 </td></tr>
               )}
               {!loading && materiales.map(m => (
-                <tr key={m.documentId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
-                  onClick={() => { setEditando(m); setModalOpen(true) }}>
+                <tr key={m.documentId}
+                  onClick={() => { setEditando(m); setModalOpen(true) }}
+                  className={`cursor-pointer transition-colors group ${
+                    modalOpen && editando?.documentId === m.documentId
+                      ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
+                      : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                  }`}>
                   <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{m.nombre}</td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{fmt(m.precioReferenciaGramo)}</td>
                   <td className="px-4 py-3 text-violet-600 dark:text-violet-400 font-semibold">{fmtG(m.stockGramos)}</td>
@@ -475,8 +480,14 @@ function ComprasTab() {
               )}
               {!loading && compras.map(c => {
                 const total = c.lineas.reduce((s, l) => s + (l.total ?? l.gramos * l.precioPorGramo), 0)
+                const activa = modalOpen && editando?.documentId === c.documentId
                 return (
-                  <tr key={c.documentId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
+                  <tr key={c.documentId} onClick={() => { setEditando(c); setModalOpen(true) }}
+                    className={`cursor-pointer transition-colors group ${
+                      activa
+                        ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                    }`}>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">{c.fecha}</td>
                     <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{c.proveedor?.nombre ?? "—"}</td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{c.lineas.length}</td>
@@ -489,7 +500,7 @@ function ComprasTab() {
                       }`}>{ESTADO_LABEL[c.estado]}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                         <button type="button" title="Editar" onClick={() => { setEditando(c); setModalOpen(true) }}
                           className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
                           <Pencil size={13} />
