@@ -17,6 +17,7 @@ import { SeccionDocumentos } from "@/components/Empresa/PortalMDO/SeccionDocumen
 import { SeccionGestionMarca } from "@/components/Empresa/PortalMDO/SeccionGestionMarca"
 import { SeccionEnlaces } from "@/components/Empresa/PortalMDO/SeccionEnlaces"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
+import { NotasMejora } from "@/components/Empresa/PortalMDO/NotasMejora"
 
 const SECCIONES_VALIDAS = [
   "portal", "conoce", "mision",
@@ -86,8 +87,9 @@ export default function PortalMedallitadeoroPage() {
             <PortalMDOSidebar seccion={seccion} tab={tab} onNavigate={navigate} />
           </>
         )}
-        <main className="flex-1 min-w-0 p-6 text-slate-900 dark:text-slate-100">
+        <main className="flex-1 min-w-0 p-6 text-slate-900 dark:text-slate-100 relative">
           {renderContent()}
+          <NotasMejora onNavigate={navigate} />
         </main>
       </div>
     </div>

@@ -206,6 +206,20 @@ const PUBLIC_ACTIONS_PORTAL_MDO = [
   'api::venta-linea.venta-linea.delete',
 ];
 
+// Notas de mejora (Portal Medallita de Oro) — a diferencia del resto de
+// PUBLIC_ACTIONS_PORTAL_MDO, esto NO se otorga a "public": el contenido de
+// las notas es feedback interno, no información pública de la empresa.
+// Cualquier usuario autenticado puede ver/crear/editar/borrar cualquier
+// nota (sin distinción de admin) — así se decidió a propósito, ya que este
+// portal no tiene el sistema de roles granular de sdi-portal.
+const AUTHENTICATED_ACTIONS_NOTA_MEJORA = [
+  'api::nota-mejora.nota-mejora.find',
+  'api::nota-mejora.nota-mejora.findOne',
+  'api::nota-mejora.nota-mejora.create',
+  'api::nota-mejora.nota-mejora.update',
+  'api::nota-mejora.nota-mejora.delete',
+];
+
 // Mapa "Segundo Cerebro" (juego de exploración en /segundo-cerebro) — sin
 // login propio, así que solo necesita permisos de Public.
 const PUBLIC_ACTIONS_MAPA_IDENTIDAD = [
@@ -379,7 +393,10 @@ async function aplicarPermisosPublic(strapi) {
   // también necesita estos permisos o el guardado falla con 403 aunque el
   // GET (sin token) sí funcione.
   await otorgarPermisos(strapi, 'authenticated', PUBLIC_ACTIONS_PORTAL_MDO);
-  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo + Portal MDO) + Authenticated (Portal MDO)');
+  // Notas de mejora: solo Authenticated, nunca Public (ver comentario en la
+  // constante) -- por eso va aparte, no dentro de "todas".
+  await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_NOTA_MEJORA);
+  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo + Portal MDO) + Authenticated (Portal MDO + Notas de mejora)');
 }
 
 async function sembrarCategoriasSiVacio(strapi) {

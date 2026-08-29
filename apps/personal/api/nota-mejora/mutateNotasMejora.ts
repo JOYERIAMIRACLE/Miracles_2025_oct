@@ -1,0 +1,44 @@
+import type { NotaMejoraType, NotaMejoraEstado } from "@/types/nota-mejora"
+import { getToken } from "@/lib/auth"
+
+const BASE = () => `${process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}/api/notas-mejora`
+
+export type NotaMejoraPayload = {
+  texto?:        string
+  ruta?:         string
+  x?:            number
+  y?:            number
+  autor_nombre?: string | null
+  estado?:       NotaMejoraEstado
+  respuesta?:    string
+}
+
+function authHeaders() {
+  const token = getToken()
+  return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+}
+
+async function checkOk(res: Response) {
+  if (!res.ok) {
+    let detail = ""
+    try { const b = await res.json(); detail = b?.error?.message ?? "" } catch {}
+    throw new Error(`${res.status}${detail ? ` · ${detail}` : ""}`)
+  }
+}
+
+export async function createNotaMejora(payload: NotaMejoraPayload): Promise<NotaMejoraType> {
+  const res = await fetch(BASE(), { method: "POST", headers: authHeaders(), body: JSON.stringify({ data: payload }) })
+  await checkOk(res)
+  return (await res.json()).data
+}
+
+export async function updateNotaMejora(documentId: string, payload: NotaMejoraPayload): Promise<NotaMejoraType> {
+  const res = await fetch(`${BASE()}/${documentId}`, { method: "PUT", headers: authHeaders(), body: JSON.stringify({ data: payload }) })
+  await checkOk(res)
+  return (await res.json()).data
+}
+
+export async function deleteNotaMejora(documentId: string): Promise<void> {
+  const res = await fetch(`${BASE()}/${documentId}`, { method: "DELETE", headers: authHeaders() })
+  await checkOk(res)
+}

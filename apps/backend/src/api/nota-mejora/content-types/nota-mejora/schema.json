@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notas_mejora",
+  "info": {
+    "singularName": "nota-mejora",
+    "pluralName": "notas-mejora",
+    "displayName": "Nota de Mejora"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "texto": {
+      "type": "text",
+      "required": true
+    },
+    "ruta": {
+      "type": "string",
+      "required": true
+    },
+    "x": {
+      "type": "decimal",
+      "required": true
+    },
+    "y": {
+      "type": "decimal",
+      "required": true
+    },
+    "autor_nombre": {
+      "type": "string"
+    },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["pendiente", "resuelta"],
+      "default": "pendiente"
+    },
+    "respuesta": {
+      "type": "text"
+    }
+  }
+}
