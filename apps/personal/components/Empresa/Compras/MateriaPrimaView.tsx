@@ -10,8 +10,11 @@ import {
   createCompraMaterialLinea, updateCompraMaterialLinea, deleteCompraMaterialLinea,
 } from "@/api/compra-material/getComprasMaterial"
 import { CompraMaterial, CompraMaterialLinea } from "@/types/compra-material"
-import { createMovimientoMaterial } from "@/api/movimiento-material/mutateMovimientoMaterial"
+import {
+  createMovimientoMaterial, updateMovimientoMaterial, deleteMovimientoMaterial, getMovimientoPorCompraLinea,
+} from "@/api/movimiento-material/mutateMovimientoMaterial"
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
+import { updateTransaccion } from "@/api/transaccion/updateTransaccion"
 import { useGetProveedores } from "@/api/proveedor/getProveedores"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
@@ -196,6 +199,8 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
   const totalLinea = (l: LineaForm) => (Number(l.gramos) || 0) * (Number(l.precioPorGramo) || 0)
   const totalCompra = lineas.reduce((s, l) => s + totalLinea(l), 0)
 
+  const yaRecibida = editando?.estado === "recibida"
+
   async function guardar() {
     const validas = lineas.filter(l => l.material && l.descripcion.trim() && Number(l.gramos) > 0 && Number(l.precioPorGramo) > 0)
     if (validas.length === 0) { toast.error("Agrega al menos una línea completa"); return }
@@ -204,7 +209,19 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
       const compra = editando
         ? await updateCompraMaterial(editando.documentId, { fecha, proveedor: proveedor || null, notas: notas || null })
         : await createCompraMaterial({ fecha, proveedor: proveedor || null, notas: notas || null, estado: "borrador" })
-      for (const documentId of eliminadas) await deleteCompraMaterialLinea(documentId)
+
+      // Si la compra ya fue recibida, cada línea ya generó su movimiento de
+      // entrada (stock ya sumado) — hay que corregir/revertir esos
+      // movimientos en vez de solo tocar la línea, o el stock del material
+      // se desincroniza de lo que dice el recibo.
+      for (const documentId of eliminadas) {
+        if (yaRecibida) {
+          const mov = await getMovimientoPorCompraLinea(documentId)
+          if (mov) await deleteMovimientoMaterial(mov.documentId)
+        }
+        await deleteCompraMaterialLinea(documentId)
+      }
+
       const lineasFinales: CompraMaterialLinea[] = []
       for (const l of validas) {
         const payload = {
@@ -213,8 +230,35 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
         }
         const linea = l.documentId ? await updateCompraMaterialLinea(l.documentId, payload) : await createCompraMaterialLinea(payload)
         lineasFinales.push(linea)
+
+        if (yaRecibida) {
+          if (l.documentId) {
+            const mov = await getMovimientoPorCompraLinea(l.documentId)
+            if (mov) await updateMovimientoMaterial(mov.documentId, { material: l.material, gramos: Number(l.gramos) })
+          } else {
+            // Línea agregada después de recibida — entra directo al stock,
+            // no hay un segundo paso de "recibir" para ella.
+            await createMovimientoMaterial({
+              tipo: "entrada", material: l.material, gramos: Number(l.gramos),
+              fecha: `${fecha}T12:00:00`, compraLinea: linea.documentId,
+              notas: `Compra ${compra.numero ?? compra.documentId} · ${l.descripcion.trim()} (agregada tras recepción)`,
+            })
+          }
+          await updateMaterial(l.material, { precioReferenciaGramo: Number(l.precioPorGramo) })
+        }
       }
-      toast.success(editando ? "Compra actualizada" : "Compra registrada como borrador — recíbela para actualizar inventario y gasto")
+
+      // El gasto real ya se registró en Finanzas al recibir — si el total
+      // cambió con la edición, se ajusta esa transacción para que no quede
+      // desfasada del recibo corregido.
+      if (yaRecibida && editando?.transaccion) {
+        const nuevoTotal = lineasFinales.reduce((s, l) => s + (l.total ?? l.gramos * l.precioPorGramo), 0)
+        await updateTransaccion(editando.transaccion.documentId, { monto: nuevoTotal })
+      }
+
+      toast.success(editando
+        ? yaRecibida ? "Compra corregida — stock y gasto ajustados" : "Compra actualizada"
+        : "Compra registrada como borrador — recíbela para actualizar inventario y gasto")
       onSaved({ ...compra, lineas: lineasFinales })
     } catch (e: any) { toast.error(e.message ?? "Error al guardar la compra") } finally { setSaving(false) }
   }
@@ -226,6 +270,12 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar compra de materia prima" : "Nueva compra de materia prima"}</h2>
           <button type="button" title="Cerrar" onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
         </div>
+
+        {yaRecibida && (
+          <p className="text-xs text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-lg px-3 py-2">
+            Esta compra ya fue recibida — al guardar se ajustan automáticamente el stock del material y el gasto ya registrado en Finanzas.
+          </p>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -440,12 +490,10 @@ function ComprasTab() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {c.estado === "borrador" && (
-                          <button type="button" title="Editar" onClick={() => { setEditando(c); setModalOpen(true) }}
-                            className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
-                            <Pencil size={13} />
-                          </button>
-                        )}
+                        <button type="button" title="Editar" onClick={() => { setEditando(c); setModalOpen(true) }}
+                          className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                          <Pencil size={13} />
+                        </button>
                         {c.estado === "borrador" && (
                           <button type="button" onClick={() => setRecibiendo(c)}
                             className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium bg-violet-500 hover:bg-violet-600 text-white rounded-lg transition">
