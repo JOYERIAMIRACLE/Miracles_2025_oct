@@ -64,8 +64,8 @@ function SearchResultsPanel({ results, onSelect }: { results: Resultado[]; onSel
 function LogoEditable({ url, documentId, onUploaded }: { url?: string | null; documentId: string | null; onUploaded: () => void }) {
   const { uploading, inputRef, handleFile, trigger } = useUploadImagen("logo", documentId, onUploaded)
   return (
-    <div className="relative h-9 w-9 shrink-0 rounded-lg bg-violet-600 flex items-center justify-center overflow-hidden group">
-      {url ? <img src={url} alt="Logo" className="w-full h-full object-cover" /> : <Sparkles className="h-5 w-5 text-white" />}
+    <div className={`relative h-9 w-9 shrink-0 flex items-center justify-center overflow-hidden group ${url ? "" : "rounded-lg bg-violet-600"}`}>
+      {url ? <img src={url} alt="Logo" className="w-full h-full object-contain" /> : <Sparkles className="h-5 w-5 text-white" />}
       <button type="button" onClick={e => { e.stopPropagation(); trigger() }} disabled={uploading}
         title="Cambiar logo"
         className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition disabled:opacity-100">
