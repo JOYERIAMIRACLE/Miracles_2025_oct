@@ -6,9 +6,11 @@ import { useTheme } from "next-themes"
 import { Menu, Search, X as XIcon, Sun, Moon, Sparkles, LogOut, Bell, Camera } from "lucide-react"
 import { GRUPOS } from "./PortalMDOSidebar"
 import { logout } from "@/lib/auth"
-import { useCurrentUser } from "@/lib/useCurrentUser"
+import { useCurrentUser, updateFotoPerfil } from "@/lib/useCurrentUser"
+import { uploadMedia } from "@/lib/upload"
 import { useUploadImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
+import { toast } from "sonner"
 
 interface Props {
   onMenuClick: () => void
@@ -91,7 +93,8 @@ function ThemeToggleButton() {
   )
 }
 
-function AvatarCircle({ ini, className = "" }: { ini: string; className?: string }) {
+function AvatarCircle({ ini, fotoUrl, className = "" }: { ini: string; fotoUrl?: string | null; className?: string }) {
+  if (fotoUrl) return <img src={fotoUrl} alt="Foto de perfil" className={`w-full h-full rounded-full object-cover ${className}`} />
   return (
     <div className={`w-full h-full rounded-full bg-linear-to-br from-violet-500 to-violet-600 flex items-center justify-center font-bold text-white ${className}`}>
       {ini}
@@ -101,8 +104,10 @@ function AvatarCircle({ ini, className = "" }: { ini: string; className?: string
 
 function ProfileMenu() {
   const router = useRouter()
-  const { user } = useCurrentUser()
+  const { user, reload } = useCurrentUser()
   const [open, setOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -119,17 +124,40 @@ function ProfileMenu() {
     ? displayName.split(/[\s._-]+/).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?"
     : "?"
 
+  async function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploading(true)
+    try {
+      const { id } = await uploadMedia(file)
+      await updateFotoPerfil(user.id, id)
+      reload()
+      toast.success("Foto de perfil actualizada")
+    } catch (err) {
+      toast.error(`Error · ${(err as Error).message}`)
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ""
+    }
+  }
+
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen(o => !o)} aria-label="Perfil"
         className="h-9 w-9 rounded-full overflow-hidden shrink-0 ring-2 ring-transparent hover:ring-violet-400 transition-all text-[11px]">
-        <AvatarCircle ini={ini} />
+        <AvatarCircle ini={ini} fotoUrl={user?.fotoUrl} />
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full overflow-hidden shrink-0 text-sm">
-              <AvatarCircle ini={ini} />
+            <div className="relative h-10 w-10 rounded-full overflow-hidden shrink-0 text-sm group">
+              <AvatarCircle ini={ini} fotoUrl={user?.fotoUrl} />
+              <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
+                title="Cambiar foto de perfil"
+                className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition disabled:opacity-100">
+                {uploading ? <span className="text-[8px] font-bold">...</span> : <Camera className="h-3.5 w-3.5" />}
+              </button>
+              <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFotoChange} />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{displayName || "Medallitadeoro"}</p>
@@ -222,7 +250,7 @@ export function PortalMDOHeader({ onMenuClick, onLogoClick, onNavigate }: Props)
           <LogoEditable url={identidad?.logo?.url} documentId={identidad?.documentId ?? null} onUploaded={reload} />
           <div className="min-w-0 text-left hidden sm:block">
             <div className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">Portal organizacional</div>
-            <div className="text-[11px] text-slate-400 leading-none pt-0.5">Medallita de Oro</div>
+            <div className="text-[11px] text-slate-400 leading-none pt-0.5">Medalla de Oro</div>
           </div>
         </div>
 
