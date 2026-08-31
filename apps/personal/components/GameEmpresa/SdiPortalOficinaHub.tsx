@@ -1,9 +1,10 @@
 "use client"
 
 import {
-  KeyRound, Home, Building2, GitBranch, Users, Flag, Globe, ShoppingBag,
-  Megaphone, DollarSign, Shield, Monitor, Calendar, ClipboardList, Ticket,
-  Lock, Database, ListTodo, CalendarClock, Receipt, BarChart3, ExternalLink,
+  KeyRound, Home, Building2, GitBranch, Users, Flag, Globe, FolderOpen,
+  Palette, HardHat, Megaphone, Calendar, ClipboardList,
+  Ticket, Lock, Database, Monitor, ListTodo, CalendarClock, Receipt,
+  BarChart3, ExternalLink, Link2, MessageSquare, Package, BookOpen, Settings2,
 } from "lucide-react"
 import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 
@@ -11,9 +12,13 @@ const SDI_BASE = "https://sdi-portal.pages.dev"
 
 /**
  * Espejo del sidebar real de SDI Portal (components/Trabajo/PortalSDIView.tsx,
- * const GRUPOS) — mismo orden, mismos 4 bloques, mismos íconos. Los 3 marcados
- * "pendiente" abren su página real, que hoy solo muestra un placeholder — no
- * es un link roto, es el estado real de esa sección.
+ * const GRUPOS) — verificado directo contra el archivo fuente (19-ago-2026):
+ * el sidebar se aplanó, ya no hay grupo "Departamentos" con RH/Cadena/
+ * Comercial/Marketing/Administración/Seguridad/TI — esos 7 hubs siguen
+ * existiendo como componentes (SeccionRH, SeccionComercial, etc.) pero ya
+ * no tienen entrada en el nav, solo son alcanzables por hash directo.
+ * Los 3 de Servicios marcados "pendiente" abren su página real, que hoy
+ * solo muestra un placeholder — no es un link roto, es el estado real.
  */
 const SIDEBAR_REAL = [
   {
@@ -26,42 +31,55 @@ const SIDEBAR_REAL = [
     titulo: "Conoce a SDI",
     items: [
       { label: "¿Quiénes somos?", href: `${SDI_BASE}/portal#quienes-somos`, icon: Building2 },
+      { label: "Misión",          href: `${SDI_BASE}/portal#mision`,        icon: Flag      },
       { label: "Organigrama",     href: `${SDI_BASE}/portal#organigrama`,   icon: GitBranch },
       { label: "Directorio",      href: `${SDI_BASE}/portal#directorio`,    icon: Users     },
     ],
   },
   {
-    titulo: "Departamentos",
+    titulo: "Recursos",
     items: [
-      { label: "Misión",               href: `${SDI_BASE}/portal#mision`,         icon: Flag        },
-      { label: "Recursos Humanos",     href: `${SDI_BASE}/portal#rh`,             icon: Users       },
-      { label: "Cadena de suministros",href: `${SDI_BASE}/portal#cadena`,         icon: Globe       },
-      { label: "Comercial",            href: `${SDI_BASE}/portal#comercial`,      icon: ShoppingBag },
-      { label: "Marketing",            href: `${SDI_BASE}/portal#marketing`,      icon: Megaphone   },
-      { label: "Administración",       href: `${SDI_BASE}/portal#administracion`, icon: DollarSign  },
-      { label: "Seguridad",            href: `${SDI_BASE}/portal#seguridad`,      icon: Shield      },
-      { label: "TI y Soporte",         href: `${SDI_BASE}/portal#ti`,             icon: Monitor     },
+      { label: "Documentos",           href: `${SDI_BASE}/portal#documentos`,          icon: FolderOpen },
+      { label: "Galería de identidad", href: `${SDI_BASE}/portal#galeria-identidad`,   icon: Palette    },
+      { label: "Archivos Ingeniería",  href: `${SDI_BASE}/portal#archivos-ingenieria`, icon: HardHat    },
     ],
   },
   {
-    titulo: "Servicios y aplicaciones",
+    titulo: "Servicios",
     items: [
-      { label: "Vacaciones",           href: `${SDI_BASE}/portal#vacaciones`,   icon: Calendar,      pendiente: true },
-      { label: "Evaluaciones",         href: `${SDI_BASE}/portal#evaluaciones`, icon: ClipboardList, pendiente: true },
-      { label: "Tickets",              href: `${SDI_BASE}/portal#tickets`,      icon: Ticket,        pendiente: true },
-      { label: "VPN Corporativa",      href: `${SDI_BASE}/portal#vpn`,          icon: Lock    },
-      { label: "Odoo",                 href: `${SDI_BASE}/portal#odoo`,         icon: Monitor },
-      { label: "Intranet",             href: `${SDI_BASE}/portal#intranet`,     icon: Globe   },
-      { label: "Repositorios de datos",href: `${SDI_BASE}/portal#repositorios`, icon: Database },
+      { label: "Tickets",      href: `${SDI_BASE}/portal#tickets`,      icon: Ticket,        pendiente: true },
+      { label: "Evaluaciones", href: `${SDI_BASE}/portal#evaluaciones`, icon: ClipboardList, pendiente: true },
+      { label: "Vacaciones",   href: `${SDI_BASE}/portal#vacaciones`,   icon: Calendar,      pendiente: true },
+    ],
+  },
+  {
+    titulo: "Aplicaciones",
+    items: [
+      { label: "VPN Corporativa",       href: `${SDI_BASE}/portal#vpn`,          icon: Lock     },
+      { label: "Odoo",                  href: `${SDI_BASE}/portal#odoo`,         icon: Monitor  },
+      { label: "Intranet",              href: `${SDI_BASE}/portal#intranet`,     icon: Globe    },
+      { label: "Repositorio de datos",  href: `${SDI_BASE}/portal#repositorios`, icon: Database },
+      { label: "Portal de Marketing",   href: `${SDI_BASE}/marketing`,           icon: Megaphone },
     ],
   },
 ]
 
+/* App aparte de sidebar propio (components/Trabajo/TrabajoSidebar.tsx), en
+   /marketing — el módulo con datos reales más maduro de todo sdi-portal.
+   Se agregan aquí las rutas confirmadas contra el sidebar real; quedan
+   fuera "Roles" (huérfana, sin entrada en el nav) y "Tickets" (colección
+   `ticket` con vista hecha pero sin page.tsx — código muerto hoy). */
 const TEAM_MARKETING = [
-  { label: "Tareas",             href: `${SDI_BASE}/marketing/tareas`,         icon: ListTodo      },
-  { label: "Campañas",           href: `${SDI_BASE}/marketing/campanas`,       icon: CalendarClock },
-  { label: "Registro de gastos", href: `${SDI_BASE}/marketing/pagos`,          icon: Receipt       },
-  { label: "Ecosistema",         href: `${SDI_BASE}/marketing/mkt/ecosistema`, icon: BarChart3     },
+  { label: "Tareas",              href: `${SDI_BASE}/marketing/tareas`,          icon: ListTodo      },
+  { label: "Campañas",            href: `${SDI_BASE}/marketing/campanas`,        icon: CalendarClock },
+  { label: "Registro de gastos",  href: `${SDI_BASE}/marketing/pagos`,           icon: Receipt       },
+  { label: "Sitio web",           href: `${SDI_BASE}/marketing/sitio-web`,       icon: Globe         },
+  { label: "Tutorial de procesos",href: `${SDI_BASE}/marketing/mkt/tutoriales`,  icon: BookOpen      },
+  { label: "Ecosistema",          href: `${SDI_BASE}/marketing/mkt/ecosistema`,  icon: BarChart3     },
+  { label: "Enlaces cortos",      href: `${SDI_BASE}/marketing/enlaces-cortos`,  icon: Link2         },
+  { label: "Respuestas rápidas",  href: `${SDI_BASE}/marketing/respuestas`,      icon: MessageSquare },
+  { label: "Material físico",     href: `${SDI_BASE}/marketing/inventario`,      icon: Package       },
+  { label: "Catálogos",           href: `${SDI_BASE}/marketing/configuracion`,   icon: Settings2     },
 ]
 
 export function SdiPortalOficinaHub() {
@@ -71,7 +89,7 @@ export function SdiPortalOficinaHub() {
         tipo="oficina"
         icon={Building2}
         titulo="Oficina — SDI Portal"
-        descripcion="Espejo del sidebar real de SDI Portal: mismo orden, mismos 4 bloques. Otro dominio, otro login — cada acceso abre sdi-portal.pages.dev en pestaña nueva."
+        descripcion="Espejo del sidebar real de SDI Portal: mismo orden, mismos 5 bloques (Inicio/Conoce a SDI/Recursos/Servicios/Aplicaciones). Otro dominio, otro login — cada acceso abre sdi-portal.pages.dev en pestaña nueva."
       />
 
       <a

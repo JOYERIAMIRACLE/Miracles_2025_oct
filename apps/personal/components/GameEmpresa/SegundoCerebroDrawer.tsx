@@ -64,14 +64,18 @@ function Content({ module }: { module: string }) {
       return (
         <AlmacenPanel
           titulo="Bodega de medallitadeoro"
-          totalFichas={23}
+          totalFichas={32}
           adminUrl={MIRACLES_ADMIN}
+          notaCompartida="Actualizado contra el sidebar real de portal-medallitadeoro (5 grupos: Inicio/Conoce/Operación/Recursos/Servicios y apps)."
           estantes={[
             { nombre: "Catálogo / Inventario", fichas: "product (con peso, material real y atributos de joya), product-category, catalogo-joyeria" },
-            { nombre: "Ventas",                fichas: "venta, venta-linea, cliente, cotización, centro-venta, envío" },
+            { nombre: "Ventas y Contactos",    fichas: "venta, venta-linea, cliente, cotización, centro-venta, proveedor" },
             { nombre: "Materia prima",         fichas: "material, movimiento-material, compra-material, compra-material-linea" },
-            { nombre: "Compras (mercancía terminada, en desuso)", fichas: "proveedor, orden-compra — tab quitado de la navegación, datos históricos intactos" },
-            { nombre: "Marca / Sitio",         fichas: "identidad-empresa, sitio-web-miracles, blog-post, anuncio" },
+            { nombre: "Finanzas",              fichas: "transacción, categoría, cuenta, partida-presupuesto, pago-programado" },
+            { nombre: "Operación",             fichas: "tarea, historial-tarea, proyecto, campaña" },
+            { nombre: "Recursos y marca",      fichas: "identidad-empresa, sitio-web-miracles, documento-legal, recurso, material-trabajo, material-digital" },
+            { nombre: "Sistema",               fichas: "aviso, nota-mejora" },
+            { nombre: "Compras de mercancía terminada (en desuso)", fichas: "orden-compra — tab quitado de la navegación, datos históricos intactos. proveedor sí sigue vivo (Contactos, Materia prima)." },
           ]}
           extra={
             <div>
@@ -100,17 +104,17 @@ function Content({ module }: { module: string }) {
       return (
         <AlmacenPanel
           titulo="Bodega de SDI Portal"
-          totalFichas={47}
+          totalFichas={54}
           adminUrl={SDI_PORTAL_ADMIN}
-          notaCompartida="Backend propio, cuenta de Railway separada de Miracles."
+          notaCompartida="Backend propio, cuenta de Railway separada de Miracles. El sidebar público se aplanó (ya no departamentos sueltos): Inicio → Conoce a SDI → Recursos → Servicios → Aplicaciones, más la app de Marketing aparte en /marketing."
           estantes={[
-            { nombre: "Portal general / home / auth", fichas: "acceso-rápido, aviso, portal-empresa, portal-evento, portal-nota-mejora, portal-usuario, portal-herramienta-link..." },
-            { nombre: "RH / colaboradores",            fichas: "portal-colaborador, portal-prestación, portal-política" },
-            { nombre: "Comercial",                     fichas: "portal-catálogo-comercial" },
-            { nombre: "Cadena de suministro",          fichas: "portal-proveedor, portal-importación, portal-inventario, portal-logística, portal-compra, portal-proceso, portal-vehículo" },
-            { nombre: "TI / seguridad / legal",        fichas: "portal-política-ti, portal-documento-legal, portal-emergencia, portal-protocolo-hse, portal-normativa" },
-            { nombre: "Recursos descargables",         fichas: "portal-recurso, portal-recurso-categoría, portal-formato-mejora" },
-            { nombre: "Marketing (Team Marketing)",    fichas: "tarea, campaña, ecosistema-mkt, cdl-métrica, boxscore-semana, material-digital, material-trabajo, pago-trabajo, mkt-catálogo..." },
+            { nombre: "Portal general / home / auth",    fichas: "acceso-rápido, aviso, portal-aviso-banner, portal-empresa, portal-evento, portal-nota-mejora, portal-herramienta-link, portal-usuario (rutas de auth)" },
+            { nombre: "Conoce a SDI",                     fichas: "portal-asociacion, portal-colaborador" },
+            { nombre: "Recursos (Documentos / Galería / Ingeniería)", fichas: "portal-documento-legal, portal-prestación, portal-política, portal-política-ti, portal-recurso, portal-recurso-categoría, portal-protocolo-hse, portal-normativa" },
+            { nombre: "Servicios (Tickets/Evaluaciones/Vacaciones)", fichas: "todavía sin colección propia — placeholders \"contenido pendiente\"" },
+            { nombre: "Departamentos (legado, fuera del sidebar pero siguen vivos por URL directa)", fichas: "RH, Administración, TI, Marketing, Cadena, Comercial, Seguridad → portal-emergencia, portal-vehículo, portal-catálogo-comercial, portal-objetivo-comercial, portal-importación, portal-proveedor, portal-compra, portal-logística, portal-inventario, portal-formato-mejora, portal-rol-marketing" },
+            { nombre: "Equipo Marketing (app aparte, /marketing)", fichas: "tarea, historial-tarea, tarea-proyecto, campaña, campana-meta, pago-trabajo, categoría-pago, proceso-pago, sitio-web, mkt-mapa-procesos, ecosistema-mkt, boxscore-semana, cdl-métrica, enlace-corto, mkt-respuesta, material-trabajo, material-digital, mkt-catálogo, arbol-roles" },
+            { nombre: "Dina (asistente IA) y microsites", fichas: "portal-dina-pregunta, portal-dina-sugerencia, propuesta-concurso" },
           ]}
           infraestructura={[
             { label: "Login",     valor: "Strapi nativo (/api/auth/local), JWT propio" },

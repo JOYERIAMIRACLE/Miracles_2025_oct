@@ -5,6 +5,7 @@ import { useState } from "react"
 import {
   Home, Landmark, Layers, Building2, GitBranch, ShoppingBag,
   Flag, Users, Globe, DollarSign, ArrowRight, Waypoints,
+  ListChecks, Megaphone, Contact, Target, Boxes, FileText, Palette, Link2,
 } from "lucide-react"
 import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 import { MedallitadeoroDataMap } from "@/components/GameEmpresa/MedallitadeoroDataMap"
@@ -13,8 +14,10 @@ const PORTAL_BASE = "/portal-medallitadeoro"
 
 /* Espejo del sidebar real de portal-medallitadeoro
    (components/Empresa/PortalMDO/PortalMDOSidebar.tsx, const GRUPOS) —
-   reemplaza al viejo mirror de gestión-empresa: ahora este portal (clon
-   estructural de SDI Portal) es la puerta de entrada real. */
+   5 grupos reales, verificados contra el archivo fuente (19-ago-2026:
+   ya no existe el grupo "Departamentos" ni las secciones rh/cadena/
+   comercial/marketing/administracion — se reorganizó en Operación/
+   Recursos/Servicios y apps). */
 const SIDEBAR_REAL = [
   {
     titulo: "Inicio",
@@ -23,28 +26,38 @@ const SIDEBAR_REAL = [
     ],
   },
   {
-    titulo: "Conoce a Medallitadeoro",
+    titulo: "Conoce a Medallita de oro",
     items: [
       { label: "¿Quiénes somos?", href: `${PORTAL_BASE}#conoce/quienes-somos`, icon: Building2 },
-      { label: "Organigrama",     href: `${PORTAL_BASE}#conoce/organigrama`,   icon: GitBranch },
-      { label: "Directorio",      href: `${PORTAL_BASE}#conoce/directorio`,    icon: Users     },
+      { label: "Misión",          href: `${PORTAL_BASE}#mision`,               icon: Flag       },
+      { label: "Organigrama",     href: `${PORTAL_BASE}#conoce/organigrama`,   icon: GitBranch  },
+      { label: "Directorio",      href: `${PORTAL_BASE}#conoce/directorio`,    icon: Users      },
     ],
   },
   {
-    titulo: "Departamentos",
+    titulo: "Operación",
     items: [
-      { label: "Misión",                    href: `${PORTAL_BASE}#mision`,         icon: Flag        },
-      { label: "Recursos Humanos",          href: `${PORTAL_BASE}#rh`,             icon: Users       },
-      { label: "Cadena de suministro",      href: `${PORTAL_BASE}#cadena`,         icon: Globe       },
-      { label: "Comercial",                 href: `${PORTAL_BASE}#comercial`,      icon: ShoppingBag },
-      { label: "Marketing",                 href: `${PORTAL_BASE}#marketing`,      icon: GitBranch   },
-      { label: "Administración y Finanzas", href: `${PORTAL_BASE}#administracion`, icon: DollarSign  },
+      { label: "Tareas",     href: `${PORTAL_BASE}#tareas`,     icon: ListChecks },
+      { label: "Campañas",   href: `${PORTAL_BASE}#campanas`,   icon: Megaphone  },
+      { label: "Contactos",  href: `${PORTAL_BASE}#contactos`,  icon: Contact    },
+      { label: "CRM",        href: `${PORTAL_BASE}#crm`,        icon: Target     },
+      { label: "Ventas",     href: `${PORTAL_BASE}#ventas`,     icon: ShoppingBag },
+      { label: "Inventario", href: `${PORTAL_BASE}#inventario`, icon: Boxes      },
+      { label: "Finanzas",   href: `${PORTAL_BASE}#finanzas`,   icon: DollarSign },
+      { label: "Sitio web",  href: `${PORTAL_BASE}#sitio-web`,  icon: Globe      },
     ],
   },
   {
-    titulo: "Servicios y aplicaciones",
+    titulo: "Recursos",
     items: [
-      { label: "Tareas", href: `${PORTAL_BASE}#tareas`, icon: Layers },
+      { label: "Documentos",       href: `${PORTAL_BASE}#documentos`, icon: FileText },
+      { label: "Gestión de marca", href: `${PORTAL_BASE}#marca`,      icon: Palette  },
+    ],
+  },
+  {
+    titulo: "Servicios y apps",
+    items: [
+      { label: "Enlaces", href: `${PORTAL_BASE}#enlaces`, icon: Link2 },
     ],
   },
 ]
