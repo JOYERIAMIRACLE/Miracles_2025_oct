@@ -180,72 +180,104 @@ export function LeadsView() {
         ]}
       />
 
-      {/* Grid de leads */}
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-28 rounded-xl bg-slate-900 border border-slate-800 animate-pulse" />
-          ))}
-        </div>
-      ) : leads.length === 0 ? (
-        <div className="py-16 text-center">
-          <UserSearch size={32} className="mx-auto mb-3 text-slate-700" />
-          <p className="text-slate-600 text-sm">
-            {filtro === "todos" ? "No hay leads registrados." : "No hay leads con este filtro."}
-          </p>
-          {filtro === "todos" && (
-            <button type="button" onClick={abrirCrear}
-              className="mt-3 flex items-center gap-1.5 px-3 py-2 text-sm text-violet-400 border border-violet-800/50 rounded-lg hover:bg-violet-500/10 transition mx-auto">
-              <Plus size={14} /> Registrar primer lead
-            </button>
+      {/* Tabla de leads */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-800 bg-slate-950/50">
+              <tr>
+                {["Contacto", "Canal", "Datos de contacto", "Notas", "Calificación", "Fecha", ""].map(h => (
+                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60">
+              {loading && Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {!loading && leads.map(c => (
+                <tr key={c.documentId}
+                  className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  onClick={() => setSelectedLead(c)}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border text-slate-400 bg-slate-800 border-slate-700 shrink-0">
+                        #{numMap.get(c.documentId) ?? "—"}
+                      </span>
+                      <p className="font-medium text-slate-200">{c.nombre}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.canalContacto ? (
+                      <span className="flex items-center gap-1.5 text-[12px] text-slate-400">
+                        <CanalIcon canal={c.canalContacto} />{c.canalContacto}
+                      </span>
+                    ) : (
+                      <span className="text-slate-700 text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.telefono ? (
+                      <p className="text-xs text-slate-400 flex items-center gap-1"><Phone size={10} className="text-slate-600" />{c.telefono}</p>
+                    ) : (
+                      <span className="text-slate-700 text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.notas ? (
+                      <p className="text-[11px] text-slate-500 max-w-[220px] truncate italic">"{c.notas}"</p>
+                    ) : (
+                      <span className="text-slate-700 text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <button type="button" onClick={() => handleCalificar(c)}
+                      className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
+                        c.calificado
+                          ? "bg-violet-500/10 text-violet-400 border-violet-500/30 hover:bg-violet-500/20"
+                          : "bg-slate-800/60 text-slate-500 border-slate-700 hover:text-slate-300 hover:border-slate-600"
+                      }`}>
+                      <CheckCircle2 size={11} className={c.calificado ? "text-violet-400" : "text-slate-600"} />
+                      {c.calificado ? "Calificado" : "Calificar"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                    {c.fechaLead ? fmtDt(c.fechaLead) : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                      <button type="button" onClick={() => abrirEditar(c)}
+                        className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
+                      <button type="button" onClick={() => handleBorrar(c)}
+                        className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!loading && leads.length === 0 && (
+            <div className="py-14 text-center">
+              <UserSearch size={32} className="mx-auto mb-3 text-slate-700" />
+              <p className="text-slate-600 text-sm">
+                {filtro === "todos" ? "No hay leads registrados." : "No hay leads con este filtro."}
+              </p>
+              {filtro === "todos" && (
+                <button type="button" onClick={abrirCrear}
+                  className="mt-3 flex items-center gap-1.5 px-3 py-2 text-sm text-violet-400 border border-violet-800/50 rounded-lg hover:bg-violet-500/10 transition mx-auto">
+                  <Plus size={14} /> Registrar primer lead
+                </button>
+              )}
+            </div>
           )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {leads.map(c => (
-            <div key={c.documentId}
-              className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 group hover:border-slate-600 transition-colors cursor-pointer"
-              onClick={() => setSelectedLead(c)}>
-
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border text-slate-400 bg-slate-800 border-slate-700">
-                  #{numMap.get(c.documentId) ?? "—"}
-                </span>
-                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
-                  <button type="button" onClick={() => abrirEditar(c)}
-                    className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition"><Pencil size={11} /></button>
-                  <button type="button" onClick={() => handleBorrar(c)}
-                    className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition"><Trash2 size={11} /></button>
-                </div>
-              </div>
-
-              <p className="text-xs font-semibold text-slate-100 leading-snug">{c.nombre}</p>
-
-              <div className="space-y-1">
-                {c.canalContacto && (
-                  <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                    <CanalIcon canal={c.canalContacto} />{c.canalContacto}
-                  </span>
-                )}
-                {c.telefono && <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
-                {c.notas && <p className="text-[10px] text-slate-500 line-clamp-2 italic">"{c.notas}"</p>}
-                {c.fechaLead && <p className="text-[9px] text-slate-700">{fmtDt(c.fechaLead)}</p>}
-              </div>
-
-              <button type="button"
-                onClick={e => { e.stopPropagation(); handleCalificar(c) }}
-                className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
-                  c.calificado
-                    ? "bg-violet-500/10 text-violet-400 border-violet-500/30 hover:bg-violet-500/20"
-                    : "bg-slate-800/60 text-slate-500 border-slate-700 hover:text-slate-300 hover:border-slate-600"
-                }`}>
-                <CheckCircle2 size={11} className={c.calificado ? "text-violet-400" : "text-slate-600"} />
-                {c.calificado ? "Calificado" : "Calificar"}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      </div>
 
       {modalOpen && (
         <ClienteModal editando={editando} form={form} setForm={setForm}
