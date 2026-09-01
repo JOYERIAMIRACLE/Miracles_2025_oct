@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Eye, EyeOff, Mail, Lock, ShoppingBag, Sparkles } from "lucide-react"
 import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRole } from "@/lib/auth"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -13,8 +14,22 @@ function redirectForRole(role: string | null): string | null {
   return null
 }
 
+// Logo real (identidad-empresa.logo) sin fondo — si todavía no se ha
+// subido, cae al ícono genérico en su caja violeta de siempre.
+function LoginBrandMark({ logoUrl }: { logoUrl?: string | null }) {
+  if (logoUrl) {
+    return <img src={logoUrl} alt="Medalla de oro" className="h-14 w-14 object-contain shrink-0" />
+  }
+  return (
+    <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-violet-600 shadow-lg shadow-violet-500/20 shrink-0">
+      <Sparkles className="h-7 w-7 text-white" />
+    </div>
+  )
+}
+
 export default function LoginPage() {
   const router = useRouter()
+  const { identidad } = useGetIdentidad()
   const [email,        setEmail]        = useState("")
   const [password,     setPassword]     = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -67,9 +82,7 @@ export default function LoginPage() {
       {/* Columna izquierda — identidad medallitadeoro, oculta en móvil */}
       <div className="hidden lg:flex flex-1 flex-col justify-center px-16 xl:px-24 relative z-10">
         <div className="flex items-center gap-3 w-fit mb-10">
-          <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-violet-600 shadow-lg shadow-violet-500/20 shrink-0">
-            <Sparkles className="h-7 w-7 text-white" />
-          </div>
+          <LoginBrandMark logoUrl={identidad?.logo?.url} />
           <div className="text-left min-w-0">
             <div className="text-xl xl:text-2xl font-bold text-white leading-tight">Portal Medalla de oro</div>
             <div className="text-sm text-white/50 leading-tight mt-0.5">Joyería Miracles</div>
@@ -99,9 +112,7 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center px-6 py-12 lg:py-0 relative z-10">
         <div className="w-full max-w-sm">
           <div className="flex lg:hidden items-center justify-center gap-3 mb-8">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-violet-600 shadow-xl shadow-violet-500/20 shrink-0">
-              <Sparkles className="h-7 w-7 text-white" />
-            </div>
+            <LoginBrandMark logoUrl={identidad?.logo?.url} />
             <div className="text-left">
               <div className="text-lg font-bold text-zinc-100 leading-tight">Portal Medalla de oro</div>
               <div className="text-xs text-zinc-400 leading-tight mt-0.5">Joyería Miracles</div>
