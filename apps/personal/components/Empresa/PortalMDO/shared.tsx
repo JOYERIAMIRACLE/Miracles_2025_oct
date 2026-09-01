@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Pencil } from "lucide-react"
+import { Pencil, MoreVertical } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
@@ -313,9 +313,19 @@ export function SeccionHero({
   children?: React.ReactNode
 }) {
   const [showPopup, setShowPopup] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const [editandoDesc, setEditandoDesc] = useState(false)
   const [descBorrador, setDescBorrador] = useState(descripcion)
   const [guardandoDesc, setGuardandoDesc] = useState(false)
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener("mousedown", onClick)
+    return () => document.removeEventListener("mousedown", onClick)
+  }, [])
 
   function entrarEdicionDesc() {
     setDescBorrador(descripcion)
@@ -371,29 +381,37 @@ export function SeccionHero({
         <div className="absolute inset-0 bg-linear-to-r from-slate-800 to-slate-900" />
       )}
 
-      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
-        {imagenUrl && (
-          <button type="button" onClick={() => setShowPopup(true)}
-            className="px-2.5 py-1 text-[11px] font-semibold bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm transition">
-            Ver imagen
+      {(imagenUrl || puedeEditar) && (
+        <div ref={menuRef} className="absolute top-3 right-3 z-20">
+          <button type="button" onClick={() => setMenuOpen(o => !o)} title="Opciones de imagen"
+            className="h-7 w-7 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm transition">
+            <MoreVertical size={15} />
           </button>
-        )}
-        {puedeEditar && imagenUrl && (
-          <button type="button" onClick={abrirAjuste} disabled={uploading}
-            className="px-2.5 py-1 text-[11px] font-semibold bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm transition disabled:opacity-50">
-            Ajustar imagen
-          </button>
-        )}
-        {puedeEditar && (
-          <>
-            <button type="button" onClick={onTrigger} disabled={uploading}
-              className="px-2.5 py-1 text-[11px] font-semibold bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm transition disabled:opacity-50">
-              {uploading ? "Subiendo..." : "Cambiar imagen"}
-            </button>
-            <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
-          </>
-        )}
-      </div>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1.5 w-40 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
+              {imagenUrl && (
+                <button type="button" onClick={() => { setShowPopup(true); setMenuOpen(false) }}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition">
+                  Ver imagen
+                </button>
+              )}
+              {puedeEditar && imagenUrl && (
+                <button type="button" onClick={() => { abrirAjuste(); setMenuOpen(false) }} disabled={uploading}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition disabled:opacity-50">
+                  Ajustar imagen
+                </button>
+              )}
+              {puedeEditar && (
+                <button type="button" onClick={() => { onTrigger?.(); setMenuOpen(false) }} disabled={uploading}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition disabled:opacity-50">
+                  {uploading ? "Subiendo..." : "Cambiar imagen"}
+                </button>
+              )}
+            </div>
+          )}
+          {puedeEditar && <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />}
+        </div>
+      )}
 
       {showPopup && imagenUrl && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 cursor-zoom-out"
