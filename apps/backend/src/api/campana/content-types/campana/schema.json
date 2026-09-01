@@ -58,6 +58,10 @@
     "semana4Titulo":  { "type": "string" },
     "semana4Partes":  { "type": "text" },
     "semana4Archivo": { "type": "string" },
+    "semana5Fecha":   { "type": "date" },
+    "semana5Titulo":  { "type": "string" },
+    "semana5Partes":  { "type": "text" },
+    "semana5Archivo": { "type": "string" },
     "notas": {
       "type": "text"
     },

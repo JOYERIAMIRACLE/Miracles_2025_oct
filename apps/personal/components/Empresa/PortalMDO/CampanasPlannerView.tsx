@@ -17,13 +17,13 @@ import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 const AMBITO       = "empresa" as const
 const ANIO_ACTUAL  = new Date().getFullYear()
 const MES_ACTUAL   = MESES[new Date().getMonth()]
-const SEMANAS      = [1, 2, 3, 4] as const
+const SEMANAS      = [1, 2, 3, 4, 5] as const
 type NSemana       = typeof SEMANAS[number]
 
 const _now         = new Date()
 const ANIO_HOY     = _now.getFullYear()
 const MES_HOY_IDX  = _now.getMonth()
-const SEMANA_HOY   = Math.min(Math.ceil(_now.getDate() / 7), 4) as NSemana
+const SEMANA_HOY   = diaASemana(toYMD(_now))
 
 const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
 
@@ -65,6 +65,45 @@ function getFirstMonday(year: number, monthIdx: number): Date {
   const dow = d.getDay()
   d.setDate(d.getDate() + (dow === 0 ? 1 : dow === 1 ? 0 : 8 - dow))
   return d
+}
+
+// Cuántas semanas (lunes) caen realmente dentro de este mes — casi siempre
+// 4, pero 5 en cualquier mes cuyo último lunes completo (firstMonday + 4*7)
+// siga cayendo dentro del mismo mes.
+function semanasDelMes(anio: number, mesIdx: number): NSemana[] {
+  const firstMon = getFirstMonday(anio, mesIdx)
+  return SEMANAS.filter(n => addDays(firstMon, (n - 1) * 7).getMonth() === mesIdx)
+}
+
+// Mapea un día calendario a su semana Monday-aligned dentro de SU PROPIO mes
+// (1 a 5) — reemplaza el cálculo anterior (día-del-mes / 7, tope en 4), que
+// asignaba mal cualquier día a partir del 29 en un mes con 5 lunes.
+function diaASemana(dayStr: string): NSemana {
+  const d = new Date(dayStr + "T00:00:00")
+  const firstMon = getFirstMonday(d.getFullYear(), d.getMonth())
+  for (const n of SEMANAS) {
+    const monday = toYMD(addDays(firstMon, (n - 1) * 7))
+    const sunday = toYMD(addDays(addDays(firstMon, (n - 1) * 7), 6))
+    if (dayStr >= monday && dayStr <= sunday) return n
+  }
+  return 1
+}
+
+// A qué (mes, año) "pertenece" un día según el sistema de semanas de la app —
+// un mes puede empezar en un día cuyo lunes de esa semana todavía cae en el
+// mes anterior (ej. 1-6 sep son la semana 5 de agosto, no de septiembre); sin
+// esto, una campaña guardada como "Septiembre" con fecha 1-sep quedaba
+// invisible, porque septiembre nunca contiene esa fecha en ninguna de sus
+// propias filas.
+function mesPropietario(dayStr: string): { mes: MesCampana; anio: number } {
+  const d = new Date(dayStr + "T00:00:00")
+  let anio = d.getFullYear(), mesIdx = d.getMonth()
+  const firstMon = getFirstMonday(anio, mesIdx)
+  if (dayStr < toYMD(firstMon)) {
+    mesIdx -= 1
+    if (mesIdx < 0) { mesIdx = 11; anio -= 1 }
+  }
+  return { mes: MESES[mesIdx], anio }
 }
 
 // ─── Data helpers ─────────────────────────────────────────────────────────────
@@ -244,6 +283,7 @@ function emptyPayload(mes: MesCampana, anio: number, categoria: string | null): 
     semana2Fecha: null, semana2Titulo: null, semana2Partes: null, semana2Archivo: null,
     semana3Fecha: null, semana3Titulo: null, semana3Partes: null, semana3Archivo: null,
     semana4Fecha: null, semana4Titulo: null, semana4Partes: null, semana4Archivo: null,
+    semana5Fecha: null, semana5Titulo: null, semana5Partes: null, semana5Archivo: null,
     etapas: null, multimedia: null, publicacion: null,
   }
 }
@@ -255,6 +295,7 @@ function payloadDe(c: CampanaType): CampanaPayload {
     semana2Fecha: c.semana2Fecha, semana2Titulo: c.semana2Titulo, semana2Partes: c.semana2Partes, semana2Archivo: c.semana2Archivo,
     semana3Fecha: c.semana3Fecha, semana3Titulo: c.semana3Titulo, semana3Partes: c.semana3Partes, semana3Archivo: c.semana3Archivo,
     semana4Fecha: c.semana4Fecha, semana4Titulo: c.semana4Titulo, semana4Partes: c.semana4Partes, semana4Archivo: c.semana4Archivo,
+    semana5Fecha: c.semana5Fecha, semana5Titulo: c.semana5Titulo, semana5Partes: c.semana5Partes, semana5Archivo: c.semana5Archivo,
     etapas: c.etapas, multimedia: c.multimedia?.id ?? null, publicacion: c.publicacion,
   }
 }
@@ -368,7 +409,12 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
             </div>
             <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Fecha de publicación</label>
-              <input type="date" value={form.semana1Fecha ?? ""} onChange={e => setForm(f => ({ ...f, semana1Fecha: e.target.value || null }))} className={fieldCls} />
+              <input type="date" value={form.semana1Fecha ?? ""} onChange={e => {
+                const fecha = e.target.value || null
+                if (!fecha) { setForm(f => ({ ...f, semana1Fecha: null })); return }
+                const { mes, anio } = mesPropietario(fecha)
+                setForm(f => ({ ...f, semana1Fecha: fecha, mes, anio }))
+              }} className={fieldCls} />
             </div>
             <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Unidad de negocio</label>
@@ -576,7 +622,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
           </div>
 
           {isCurrentMonth && (() => {
-            const hayPasadas = SEMANAS.some(n => addDays(addDays(firstMon, (n - 1) * 7), 6) < hoy)
+            const hayPasadas = semanasDelMes(anio, mesIdx).some(n => addDays(addDays(firstMon, (n - 1) * 7), 6) < hoy)
             if (!hayPasadas) return null
             return (
               <button type="button" onClick={() => setShowPasadas(v => !v)}
@@ -588,7 +634,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
           })()}
 
           <div className="divide-y divide-slate-300 dark:divide-slate-700 overflow-x-auto">
-            {SEMANAS.map(n => {
+            {semanasDelMes(anio, mesIdx).map(n => {
               const sStart = addDays(firstMon, (n - 1) * 7)
               const sEnd = addDays(sStart, 6)
               const sStartStr = toYMD(sStart), sEndStr = toYMD(sEnd)
@@ -640,7 +686,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
                       <div key={`${c.documentId}-${n}`} className="flex items-start gap-1">
                         {fecha && <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium shrink-0 tabular-nums mt-2.5">{fmtFecha(fecha)}</span>}
                         <CampanaChip titulo={titulo} categoria={c.categoria} keyword={c.keyword} notas={c.notas} progreso={progresoDe(c)}
-                          archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo].filter(Boolean) as string[]}
+                          archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo, c.semana5Archivo].filter(Boolean) as string[]}
                           multimediaUrl={c.multimedia?.url ?? null}
                           onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
                       </div>
@@ -674,7 +720,7 @@ function VistaCatalogo({ campanas, hayFiltros, filtroDesde, filtroHasta, onEdit,
     campanas.forEach(c => {
       let anio: number, mesIdx: number
       if (hayRango) {
-        const fechas = [c.semana1Fecha, c.semana2Fecha, c.semana3Fecha, c.semana4Fecha].filter(Boolean) as string[]
+        const fechas = [c.semana1Fecha, c.semana2Fecha, c.semana3Fecha, c.semana4Fecha, c.semana5Fecha].filter(Boolean) as string[]
         const match = fechas.find(f => (!filtroDesde || f >= filtroDesde) && (!filtroHasta || f <= filtroHasta))
         if (!match) return
         const d = new Date(match + "T00:00:00")
@@ -740,9 +786,8 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
   onNueva: () => void; onAsignar: (c: CampanaType, semanaNum: NSemana) => void; onClose: () => void
 }) {
   const [busq, setBusq] = useState("")
-  const mes = MESES[new Date(dayStr + "T00:00:00").getMonth()]
-  const anio = new Date(dayStr + "T00:00:00").getFullYear()
-  const semanaNum = Math.min(Math.ceil(new Date(dayStr + "T00:00:00").getDate() / 7), 4) as NSemana
+  const { mes, anio } = mesPropietario(dayStr)
+  const semanaNum = diaASemana(dayStr)
 
   const opciones = useMemo(() => {
     const q = busq.toLowerCase().trim()
@@ -848,7 +893,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
                   <div key={di} className={`border-l border-slate-200 dark:border-slate-700 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-violet-50 dark:bg-violet-500/5" : ""}`}>
                     {items.map(({ campana, n, titulo }) => (
                       <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} keyword={campana.keyword} notas={campana.notas} fullWidth progreso={progresoDe(campana)}
-                        archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo].filter(Boolean) as string[]}
+                        archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo, campana.semana5Archivo].filter(Boolean) as string[]}
                         multimediaUrl={campana.multimedia?.url ?? null}
                         onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
                     ))}
@@ -866,7 +911,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
       <p className="text-[11px] text-slate-400 dark:text-slate-600 mt-3">Campañas con fecha exacta aparecen en su día. Sin fecha, se posicionan el lunes de su semana dentro del mes.</p>
       {picker && (
         <PopupAsignar dayStr={picker.dayStr} categoria={picker.categoria} campanas={campanas}
-          onNueva={() => onAgregar({ categoria: picker.categoria, mes: MESES[new Date(picker.dayStr + "T00:00:00").getMonth()], anio: new Date(picker.dayStr + "T00:00:00").getFullYear(), fecha: picker.dayStr })}
+          onNueva={() => { const { mes, anio } = mesPropietario(picker.dayStr); onAgregar({ categoria: picker.categoria, mes, anio, fecha: picker.dayStr }) }}
           onAsignar={(c, semanaNum) => { onAsignarExistente(c, picker.dayStr, semanaNum, picker.categoria); setPicker(null) }}
           onClose={() => setPicker(null)} />
       )}
@@ -1057,7 +1102,7 @@ export function CampanasPlannerView({ tab }: { tab: TabCampanas }) {
     if (filtroMedio) r = r.filter(c => !!c.publicacion && parsePublicacion(c.publicacion)[filtroMedio as RedPublicacionKey]?.publicado === true)
     if (filtroDesde || filtroHasta) {
       r = r.filter(c => {
-        const fechas = [c.semana1Fecha, c.semana2Fecha, c.semana3Fecha, c.semana4Fecha].filter(Boolean) as string[]
+        const fechas = [c.semana1Fecha, c.semana2Fecha, c.semana3Fecha, c.semana4Fecha, c.semana5Fecha].filter(Boolean) as string[]
         if (fechas.length === 0) return false
         return fechas.some(f => (!filtroDesde || f >= filtroDesde) && (!filtroHasta || f <= filtroHasta))
       })
