@@ -715,6 +715,22 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
     antiguedadDias < 30  ? `${antiguedadDias}d` :
     antiguedadDias < 365 ? `${Math.round(antiguedadDias / 30)} meses` :
     `${(antiguedadDias / 365).toFixed(1)} años`
+  const clienteDesdeTexto = new Date(cliente.createdAt).toLocaleDateString("es-MX", { month: "long", year: "numeric" })
+  const ultimaVenta = ventasReales.length > 0
+    ? ventasReales.slice().sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())[0]
+    : null
+  const diasUltimaCompra = ultimaVenta ? Math.floor((Date.now() - new Date(ultimaVenta.fecha).getTime()) / 86400000) : null
+  const pctConversion = cotizaciones.length > 0 ? Math.round((cotAceptadas / cotizaciones.length) * 100) : null
+  const CLASIFICACION_CAPTION: Record<string, string> = {
+    "Sin compras": "sin pedidos registrados",
+    "Nuevo":       "1 pedido registrado",
+    "Ocasional":   "2-3 pedidos registrados",
+    "Frecuente":   "4+ pedidos registrados",
+  }
+  const tituloCotizacion = (items: ItemCotizacion[]) =>
+    items.length === 0 ? "Sin artículos" :
+    items.length === 1 ? items[0].descripcion :
+    `${items[0].descripcion} +${items.length - 1} más`
 
   // Actividad de cotizaciones/pedidos agrupada por mes, para la gráfica
   const actividadPorMes = useMemo(() => {
@@ -764,7 +780,11 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
               {iniciales || <User size={18} />}
             </div>
             <div>
-              <p className="text-lg font-bold text-slate-100">{cliente.nombre}</p>
+              <p className="text-xl font-bold text-slate-100">{cliente.nombre}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Cliente desde {clienteDesdeTexto}
+                {diasUltimaCompra != null ? ` · Última compra hace ${diasUltimaCompra}d` : " · Sin compras todavía"}
+              </p>
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${STAGE_META[etapa].numColor}`}>#{num}</span>
                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>{FUNNEL_LABEL[etapa]}</span>
@@ -810,8 +830,10 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
             </p>
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Cliente desde</p>
-            <p className="text-xs font-medium text-slate-300">{fmtDt(cliente.createdAt)}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Clasificación</p>
+            <p className="text-xs font-medium text-slate-300">
+              {clasificacion} <span className="text-slate-600 font-normal">— {CLASIFICACION_CAPTION[clasificacion]}</span>
+            </p>
           </div>
         </div>
       </div>
@@ -820,30 +842,40 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-800 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Total histórico</p>
-          <p className="text-lg font-bold text-violet-400 font-mono">{fmtMoney(totalGastado)}</p>
+          <p className="text-2xl font-bold text-violet-400 font-mono tracking-tight">{fmtMoney(totalGastado)}</p>
+          <p className="text-[11px] text-slate-500 mt-1">{ventasReales.length} pedido{ventasReales.length === 1 ? "" : "s"} registrado{ventasReales.length === 1 ? "" : "s"}</p>
         </div>
         <div className="px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Ticket promedio</p>
-          <p className="text-lg font-bold text-slate-200 font-mono">{ventasReales.length > 0 ? fmtMoney(ticketPromedio) : "—"}</p>
+          <p className="text-2xl font-bold text-slate-200 font-mono tracking-tight">{ventasReales.length > 0 ? fmtMoney(ticketPromedio) : "—"}</p>
+          <p className="text-[11px] text-slate-500 mt-1">por pedido</p>
         </div>
         <div className="px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Cotiz. aceptadas</p>
-          <p className="text-lg font-bold text-slate-200 font-mono">{cotAceptadas}<span className="text-slate-600 font-normal text-sm"> / {cotizaciones.length}</span></p>
+          <p className="text-2xl font-bold text-slate-200 font-mono tracking-tight">{cotAceptadas}<span className="text-slate-600 font-normal text-base"> / {cotizaciones.length}</span></p>
+          <p className="text-[11px] text-slate-500 mt-1">{pctConversion != null ? `${pctConversion}% de conversión` : "sin cotizaciones"}</p>
         </div>
         <div className="px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Antigüedad</p>
-          <p className="text-lg font-bold text-slate-200 font-mono">{antiguedadTexto}</p>
+          <p className="text-2xl font-bold text-slate-200 font-mono tracking-tight">{antiguedadTexto}</p>
+          <p className="text-[11px] text-slate-500 mt-1">como cliente</p>
         </div>
       </div>
 
       {/* Pestañas */}
       <div className="flex items-center gap-1 border-b border-slate-800">
-        {([["general", "General"], ["ventas", "Ventas"]] as const).map(([id, label]) => (
-          <button key={id} type="button" onClick={() => setTab(id)}
+        {[
+          { id: "general" as const, label: "General", count: null as number | null },
+          { id: "ventas" as const,  label: "Ventas",  count: cotizaciones.length + ventasDelCliente.length },
+        ].map(t => (
+          <button key={t.id} type="button" onClick={() => setTab(t.id)}
             className={`px-3 pb-2.5 text-xs font-semibold border-b-2 transition-colors ${
-              tab === id ? "text-slate-100 border-violet-500" : "text-slate-500 border-transparent hover:text-slate-300"
+              tab === t.id ? "text-slate-100 border-violet-500" : "text-slate-500 border-transparent hover:text-slate-300"
             }`}>
-            {label}
+            {t.label}
+            {t.count != null && (
+              <span className={`ml-1.5 text-[10px] font-mono ${tab === t.id ? "text-violet-400" : "text-slate-600"}`}>{t.count}</span>
+            )}
           </button>
         ))}
       </div>
@@ -903,18 +935,17 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                     {cotizaciones.map(c => (
                       <button key={c.documentId} type="button"
                         onClick={() => setCotModalState(c)}
-                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-800/60 transition text-left">
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold font-mono text-slate-300">{c.numero}</p>
-                          <p className="text-[9px] text-slate-600">{fmtDt(c.fecha ?? c.createdAt)}</p>
+                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-800/60 transition text-left">
+                        <span className="text-[11px] font-bold font-mono text-violet-400 w-16 shrink-0">{c.numero}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] font-medium text-slate-200 truncate">{tituloCotizacion(c.items)}</p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">{c.estado} · {fmtDt(c.fecha ?? c.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>
                             {c.estado}
                           </span>
-                          <span className="text-[11px] font-semibold text-slate-300 font-mono">
-                            {c.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                          </span>
+                          <span className="text-[13px] font-semibold text-slate-200 font-mono">{fmtMoney(c.total)}</span>
                         </div>
                       </button>
                     ))}
@@ -939,16 +970,17 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 ) : (
                   <div className="space-y-0.5">
                     {ventasDelCliente.map(v => (
-                      <div key={v.documentId} className="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-800/60 transition">
-                        <div className="min-w-0">
-                          <p className="text-[11px] text-slate-300 truncate">{v.concepto}</p>
-                          <p className="text-[9px] text-slate-600">{v.fecha ? fmtDt(v.fecha) : "—"}</p>
+                      <div key={v.documentId} className="flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-800/60 transition">
+                        <span className="text-[11px] font-bold font-mono text-violet-400 w-16 shrink-0">{v.numero ?? "—"}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] font-medium text-slate-200 truncate">{v.concepto}</p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">{v.estado ?? "Sin estado"} · {v.fecha ? fmtDt(v.fecha) : "—"}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {v.estado && (
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
                           )}
-                          <span className="text-[11px] font-semibold text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
+                          <span className="text-[13px] font-semibold text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
                         </div>
                       </div>
                     ))}
