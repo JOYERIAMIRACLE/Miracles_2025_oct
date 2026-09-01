@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, X, Loader2, Package, Trash2, Lock, FileText, ChevronDown, Search, Paperclip, ArrowLeft } from "lucide-react"
+import { Plus, X, Loader2, Package, Trash2, Lock, FileText, ChevronDown, ChevronRight, Search, Paperclip, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { useGetVentas, createVenta, updateVenta, deleteVenta } from "@/api/ventaEmpresa/getVentas"
 import { useGetAllCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -78,10 +78,11 @@ export function PedidosView() {
   const { items: productos } = useGetInventario()
   const { cotizaciones } = useGetAllCotizaciones()
 
-  const [search,    setSearch]    = useState("")
-  const [filtroEst, setFiltroEst] = useState<EstadoVenta | "">("")
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing,   setEditing]   = useState<VentaEmpresa | null>(null)
+  const [search,      setSearch]      = useState("")
+  const [filtroEst,   setFiltroEst]   = useState<EstadoVenta | "">("")
+  const [clienteView, setClienteView] = useState<string | null>(null)
+  const [modalOpen,   setModalOpen]   = useState(false)
+  const [editing,     setEditing]     = useState<VentaEmpresa | null>(null)
   const [form,      setForm]      = useState<VentaPayload>(emptyForm())
   const [lineas,      setLineas]      = useState<LineaForm[]>([emptyLinea()])
   const [eliminadas,  setEliminadas]  = useState<string[]>([])
@@ -160,6 +161,41 @@ export function PedidosView() {
       })
       .sort((a, b) => (b.fecha ?? "").localeCompare(a.fecha ?? ""))
   }, [raw, search, filtroEst])
+
+  type GrupoPed = { key: string; nombre: string; pedidos: VentaEmpresa[]; montoTotal: number; ultimaFecha: string; estadoPrincipal: EstadoVenta }
+
+  const grupos: GrupoPed[] = useMemo(() => {
+    const PRIORIDAD: EstadoVenta[] = ["Preparando","Enviado","Pagado","Cotizado","Entregado","Cancelado"]
+    const map = new Map<string, GrupoPed>()
+    for (const v of raw) {
+      const key = v.cliente?.documentId ?? "__sin_cliente__"
+      if (!map.has(key)) map.set(key, { key, nombre: v.cliente?.nombre ?? "Sin cliente", pedidos: [], montoTotal: 0, ultimaFecha: "", estadoPrincipal: "Cotizado" })
+      const g = map.get(key)!
+      g.pedidos.push(v)
+      g.montoTotal += v.monto ?? 0
+      const fecha = v.fecha ?? ""
+      if (!g.ultimaFecha || fecha > g.ultimaFecha) g.ultimaFecha = fecha
+    }
+    return Array.from(map.values())
+      .map(g => ({ ...g, estadoPrincipal: PRIORIDAD.find(e => g.pedidos.some(v => v.estado === e)) ?? "Cotizado" }))
+      .sort((a, b) => b.ultimaFecha.localeCompare(a.ultimaFecha))
+  }, [raw])
+
+  const gruposFiltrados = useMemo(() => {
+    const q = search.toLowerCase()
+    return grupos.filter(g =>
+      !search ||
+      g.nombre.toLowerCase().includes(q) ||
+      g.pedidos.some(v => (v.numero ?? "").toLowerCase().includes(q) || v.concepto.toLowerCase().includes(q))
+    )
+  }, [grupos, search])
+
+  const pedidosDeCliente = useMemo(() => {
+    if (!clienteView) return []
+    return raw
+      .filter(v => (v.cliente?.documentId ?? "__sin_cliente__") === clienteView && (!filtroEst || v.estado === filtroEst))
+      .sort((a, b) => (b.fecha ?? "").localeCompare(a.fecha ?? ""))
+  }, [raw, clienteView, filtroEst])
 
   const totales = useMemo(() => {
     const todos = raw
@@ -346,29 +382,111 @@ export function PedidosView() {
     }
   }
 
-  // Editar una fila existente reemplaza toda la lista por una página
-  // completa (igual que la ficha de cliente); crear uno nuevo sigue siendo
-  // un modal flotante, ya que ahí no hay una fila que expandir.
+  // Editar una fila existente reemplaza toda la lista por una página completa
   if (modalOpen && editing) return renderPedidoForm()
 
+  // ── Vista drill-down: pedidos de un cliente específico ──────────────────────
+  if (clienteView) {
+    const nombreCliente = grupos.find(g => g.key === clienteView)?.nombre ?? "Cliente"
+    return (
+      <div className="p-4 md:p-6 space-y-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <button type="button" onClick={() => { setClienteView(null); setFiltroEst("") }}
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
+            <ArrowLeft size={14} /> Volver a Pedidos
+          </button>
+          <button type="button" onClick={openNuevo}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors">
+            <Plus size={15} /> Nuevo pedido
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl font-bold text-slate-100">{nombreCliente}</span>
+            <span className="text-sm text-slate-500">· {pedidosDeCliente.length} pedido{pedidosDeCliente.length !== 1 ? "s" : ""}</span>
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            {ESTADOS_VENTA.map(e => (
+              <button key={e} type="button" onClick={() => setFiltroEst(filtroEst === e ? "" : e)}
+                className={`text-[11px] px-2.5 py-1 rounded-full border font-medium transition ${filtroEst === e ? ESTADO_VENTA_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-slate-800 bg-slate-950/50">
+                <tr>
+                  {["Concepto", "Canal", "Fecha", "Estado", "Monto", ""].map(h => (
+                    <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {pedidosDeCliente.map(v => (
+                  <tr key={v.documentId} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    onClick={() => openEditar(v)}>
+                    <td className="px-4 py-3">
+                      {v.numero && <p className="text-[10px] font-bold font-mono text-slate-500">{v.numero}</p>}
+                      <p className="font-medium text-slate-200 leading-snug">{v.concepto}</p>
+                      {v.cotizacionOrigen && <p className="text-[10px] text-emerald-500/80 mt-0.5">← {v.cotizacionOrigen.numero}</p>}
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">{v.centro_venta?.nombre ?? <span className="text-slate-600">—</span>}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">{v.fecha ? fmtFecha(v.fecha) : "—"}</td>
+                    <td className="px-4 py-3">
+                      {v.estado
+                        ? <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
+                        : <span className="text-slate-600 text-xs">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(v.monto)}</td>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      {delId === v.documentId ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-slate-500">¿Eliminar?</span>
+                          <button type="button" onClick={() => handleDelete(v.documentId)} className="text-[11px] text-red-400 font-medium">Sí</button>
+                          <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500">No</button>
+                        </div>
+                      ) : (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button type="button" onClick={() => setDelId(v.documentId)}
+                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {pedidosDeCliente.length === 0 && (
+                  <tr><td colSpan={6} className="py-10 text-center text-slate-600 text-sm">Sin pedidos{filtroEst ? ` con estado "${filtroEst}"` : ""}.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {modalOpen && renderPedidoForm()}
+      </div>
+    )
+  }
+
+  // ── Vista principal: 1 fila por cliente ────────────────────────────────────
   return (
     <div className="p-4 md:p-6 space-y-5">
 
-      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[240px]">
+        <div className="flex-1 min-w-60">
           <ListToolbar
-            search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por número, concepto o cliente…"
-            filtros={[
-              { value: "", label: "Todos" },
-              ...ESTADOS_VENTA.map(e => ({ value: e as string, label: e })),
-            ]}
-            filtroActivo={filtroEst} filtroDefault="" onFiltroChange={v => setFiltroEst(v as EstadoVenta | "")}
+            search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por cliente, concepto o número…"
+            filtros={[{ value: "", label: "Todos los clientes" }]}
+            filtroActivo="" filtroDefault="" onFiltroChange={() => {}}
             metricas={[
-              { label: "Total pedidos", value: totales.total },
-              { label: "En proceso",    value: totales.activos,               colorClass: "text-violet-400" },
-              { label: "Monto activo",  value: fmt(totales.montoActivos),     colorClass: "text-violet-400" },
-              { label: "Entregados",    value: totales.entregados,            colorClass: "text-violet-400" },
+              { label: "Clientes",  value: grupos.length },
+              { label: "Pedidos",   value: totales.total },
+              { label: "En proceso", value: totales.activos,           colorClass: "text-violet-400" },
+              { label: "Entregados", value: totales.entregados,        colorClass: "text-violet-400" },
             ]}
           />
         </div>
@@ -378,91 +496,53 @@ export function PedidosView() {
         </button>
       </div>
 
-      {/* Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-800 bg-slate-950/50">
               <tr>
-                {["Concepto", "Cliente", "Canal", "Fecha", "Método pago", "Estado", "Monto", ""].map(h => (
+                {["Cliente", "Pedidos", "Estado activo", "Monto total", "Última fecha", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {loading && Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 8 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" />
-                    </td>
-                  ))}
-                </tr>
+              {loading && Array.from({ length: 4 }).map((_, i) => (
+                <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
+                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td>
+                ))}</tr>
               ))}
-              {!loading && ventas.map(v => (
-                <tr key={v.documentId} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
-                  onClick={() => openEditar(v)}>
+              {!loading && gruposFiltrados.map(g => (
+                <tr key={g.key} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  onClick={() => setClienteView(g.key)}>
                   <td className="px-4 py-3">
-                    {v.numero && <p className="text-[10px] font-bold font-mono text-slate-500">{v.numero}</p>}
-                    <p className="font-medium text-slate-200 leading-snug">{v.concepto}</p>
-                    {v.cotizacionOrigen && (
-                      <p className="text-[10px] text-emerald-500/80 mt-0.5">← {v.cotizacionOrigen.numero}</p>
-                    )}
-                    {v.lineas?.length > 0 ? (
-                      <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                        <Package size={10} /> {v.lineas.length} línea{v.lineas.length > 1 ? "s" : ""} de producto
-                      </p>
-                    ) : v.producto && (
-                      <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                        <Package size={10} /> {v.producto.nombreProducto} ×{v.cantidad}
-                      </p>
-                    )}
+                    <p className="font-medium text-slate-200">{g.nombre}</p>
                   </td>
-                  <td className="px-4 py-3 text-slate-400">{v.cliente?.nombre ?? <span className="text-slate-600">—</span>}</td>
-                  <td className="px-4 py-3 text-slate-400">{v.centro_venta?.nombre ?? <span className="text-slate-600">—</span>}</td>
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{v.fecha ? fmtFecha(v.fecha) : <span className="text-slate-600">—</span>}</td>
-                  <td className="px-4 py-3">
-                    {v.metodoPago
-                      ? <span className="text-xs text-slate-400">{v.metodoPago}</span>
-                      : <span className="text-slate-600 text-xs">—</span>}
+                  <td className="px-4 py-3 text-xs text-slate-400">
+                    <span className="font-semibold text-slate-200">{g.pedidos.length}</span> pedido{g.pedidos.length !== 1 ? "s" : ""}
                   </td>
                   <td className="px-4 py-3">
-                    {v.estado
-                      ? <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
-                      : <span className="text-slate-600 text-xs">—</span>}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${ESTADO_VENTA_COLOR[g.estadoPrincipal]}`}>
+                      {g.estadoPrincipal}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(v.monto)}</td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    {delId === v.documentId ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500">¿Eliminar?</span>
-                        <button type="button" onClick={() => handleDelete(v.documentId)}
-                          className="text-[11px] text-red-400 hover:text-red-300 font-medium">Sí</button>
-                        <button type="button" onClick={() => setDelId(null)}
-                          className="text-[11px] text-slate-500 hover:text-slate-300">No</button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => setDelId(v.documentId)} title="Eliminar"
-                          className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    )}
+                  <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(g.montoTotal)}</td>
+                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{g.ultimaFecha ? fmtFecha(g.ultimaFecha) : "—"}</td>
+                  <td className="px-4 py-3">
+                    <ChevronRight size={14} className="text-slate-700 group-hover:text-violet-400 transition-colors" />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!loading && ventas.length === 0 && (
+          {!loading && gruposFiltrados.length === 0 && (
             <div className="py-14 text-center text-slate-600 text-sm">
-              {search || filtroEst ? "Sin resultados para los filtros aplicados." : "No hay pedidos registrados."}
+              {search ? "Sin clientes para esa búsqueda." : "No hay pedidos registrados."}
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal / página completa (si se abrió desde una fila existente) */}
       {modalOpen && renderPedidoForm()}
     </div>
   )

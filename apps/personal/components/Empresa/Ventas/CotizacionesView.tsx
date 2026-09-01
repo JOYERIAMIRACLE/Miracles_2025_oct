@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useRef } from "react"
 import {
-  FileText, X, ArrowRight, Loader2,
-  User, Trash2, Paperclip,
+  FileText, X, ArrowRight, ArrowLeft, Loader2,
+  User, Trash2, Paperclip, ChevronRight,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetAllCotizaciones, deleteCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -232,16 +232,42 @@ export function CotizacionesView() {
   const [editando,        setEditando]         = useState<Cotizacion | null>(null)
   const [clienteParaEdit, setClienteParaEdit]  = useState<ClienteEmpresa | null>(null)
   const [delId,           setDelId]            = useState<string | null>(null)
+  const [clienteView,     setClienteView]      = useState<string | null>(null)
 
-  const cotizacionesFiltradas = useMemo(() => {
-    return cotizaciones.filter(c => {
-      const matchSearch = !search ||
-        (c.numero ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (c.cliente?.nombre ?? "").toLowerCase().includes(search.toLowerCase())
-      const matchEstado = !filtroEstado || c.estado === filtroEstado
-      return matchSearch && matchEstado
-    })
-  }, [cotizaciones, search, filtroEstado])
+  type GrupoCot = { key: string; nombre: string; cotizaciones: Cotizacion[]; totalAceptado: number; ultimaFecha: string; estadoPrincipal: EstadoCotizacion }
+
+  const grupos: GrupoCot[] = useMemo(() => {
+    const PRIORIDAD: EstadoCotizacion[] = ["Aceptada","Enviada","Borrador","Convertida","Rechazada"]
+    const map = new Map<string, GrupoCot>()
+    for (const cot of cotizaciones) {
+      const key = cot.cliente?.documentId ?? "__sin_cliente__"
+      if (!map.has(key)) map.set(key, { key, nombre: cot.cliente?.nombre ?? "Sin cliente", cotizaciones: [], totalAceptado: 0, ultimaFecha: "", estadoPrincipal: "Borrador" })
+      const g = map.get(key)!
+      g.cotizaciones.push(cot)
+      if (cot.estado === "Aceptada") g.totalAceptado += cot.total
+      const fecha = cot.fecha ?? cot.createdAt ?? ""
+      if (!g.ultimaFecha || fecha > g.ultimaFecha) g.ultimaFecha = fecha
+    }
+    return Array.from(map.values())
+      .map(g => ({ ...g, estadoPrincipal: PRIORIDAD.find(e => g.cotizaciones.some(c => c.estado === e)) ?? "Borrador" }))
+      .sort((a, b) => b.ultimaFecha.localeCompare(a.ultimaFecha))
+  }, [cotizaciones])
+
+  const gruposFiltrados = useMemo(() => {
+    const q = search.toLowerCase()
+    return grupos.filter(g =>
+      !search ||
+      g.nombre.toLowerCase().includes(q) ||
+      g.cotizaciones.some(c => (c.numero ?? "").toLowerCase().includes(q))
+    )
+  }, [grupos, search])
+
+  const cotizacionesDeCliente = useMemo(() => {
+    if (!clienteView) return []
+    return cotizaciones
+      .filter(c => (c.cliente?.documentId ?? "__sin_cliente__") === clienteView && (!filtroEstado || c.estado === filtroEstado))
+      .sort((a, b) => (b.fecha ?? b.createdAt ?? "").localeCompare(a.fecha ?? a.createdAt ?? ""))
+  }, [cotizaciones, clienteView, filtroEstado])
 
   const stats = useMemo(() => ({
     total:    cotizaciones.length,
@@ -297,10 +323,108 @@ export function CotizacionesView() {
     )
   }
 
+  // ── Vista drill-down: cotizaciones de un cliente específico ────────────────
+  if (clienteView) {
+    const nombreCliente = grupos.find(g => g.key === clienteView)?.nombre ?? "Cliente"
+    return (
+      <div className="p-4 md:p-6 space-y-5">
+        <button type="button" onClick={() => { setClienteView(null); setFiltroEstado("") }}
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
+          <ArrowLeft size={14} /> Volver a Cotizaciones
+        </button>
+
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <User size={16} className="text-violet-400" />
+            <h1 className="text-xl font-bold text-slate-100">{nombreCliente}</h1>
+            <span className="text-sm text-slate-500">· {cotizacionesDeCliente.length} cotizacion{cotizacionesDeCliente.length !== 1 ? "es" : ""}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {ESTADOS_COT.map(e => (
+              <button key={e} type="button" onClick={() => setFiltroEstado(filtroEstado === e ? "" : e)}
+                className={`text-[11px] px-2.5 py-1 rounded-full border font-medium transition ${filtroEstado === e ? ESTADO_COT_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-slate-800 bg-slate-950/50">
+                <tr>
+                  {["#", "Items", "Total", "Estado", "Fecha", ""].map(h => (
+                    <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {cotizacionesDeCliente.map(cot => (
+                  <tr key={cot.documentId} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    onClick={() => handleEditarCotizacion(cot)}>
+                    <td className="px-4 py-3 font-mono text-[11px] font-bold text-slate-300">{cot.numero ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {cot.items?.length
+                        ? <p className="text-[11px] text-slate-500 max-w-40 truncate">{cot.items.map(i => i.descripcion).filter(Boolean).join(", ")}</p>
+                        : <span className="text-slate-700 text-xs">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(cot.total)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[cot.estado]}`}>{cot.estado}</span>
+                      {cot.ventaGenerada && <span className="block text-[10px] text-emerald-500/80 mt-1">→ {cot.ventaGenerada.numero ?? cot.ventaGenerada.concepto}</span>}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                      {fmtDt(cot.fecha ?? cot.createdAt)}
+                      {cot.validoHasta && <p className="text-[10px] text-slate-600 mt-0.5">Vence {fmtDt(cot.validoHasta)}</p>}
+                    </td>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      {delId === cot.documentId ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-slate-500">¿Eliminar?</span>
+                          <button type="button" onClick={() => handleDelete(cot.documentId)} className="text-[11px] text-red-400 font-medium">Sí</button>
+                          <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500">No</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          {(cot.estado === "Aceptada" || cot.estado === "Enviada") && (
+                            <button type="button" onClick={() => setConvertiendo(cot)}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-violet-400 border border-violet-800/50 rounded-lg hover:bg-violet-500/10 transition">
+                              <ArrowRight size={11} /> Pedido
+                            </button>
+                          )}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button type="button" onClick={() => setDelId(cot.documentId)}
+                              className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {cotizacionesDeCliente.length === 0 && (
+                  <tr><td colSpan={6} className="py-10 text-center text-slate-600 text-sm">Sin cotizaciones{filtroEstado ? ` con estado "${filtroEstado}"` : ""}.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {convertiendo && (
+          <ConvertirPedidoModal cotizacion={convertiendo} totalVentas={todasVentas.length}
+            onClose={() => setConvertiendo(null)}
+            onConverted={cot => { handleCotizacionSaved(cot); setConvertiendo(null) }} />
+        )}
+      </div>
+    )
+  }
+
+  // ── Vista principal: 1 fila por cliente ────────────────────────────────────
   return (
     <div className="p-4 md:p-6 space-y-5">
 
-      {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
@@ -314,136 +438,77 @@ export function CotizacionesView() {
       </div>
 
       <ListToolbar
-        search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por número o cliente…"
-        filtros={[
-          { value: "", label: "Todas" },
-          ...ESTADOS_COT.map(e => ({ value: e as string, label: e })),
-        ]}
-        filtroActivo={filtroEstado} filtroDefault="" onFiltroChange={v => setFiltroEstado(v as EstadoCotizacion | "")}
+        search={search} onSearchChange={setSearch} searchPlaceholder="Buscar por cliente o número de cotización…"
+        filtros={[{ value: "", label: "Todos los clientes" }]}
+        filtroActivo="" filtroDefault="" onFiltroChange={() => {}}
         metricas={[
-          { label: "Total",      value: stats.total },
-          { label: "Enviadas",   value: stats.enviada,   colorClass: "text-violet-400" },
-          { label: "Aceptadas",  value: stats.aceptada,  colorClass: "text-violet-400" },
+          { label: "Clientes", value: grupos.length },
+          { label: "Cotizaciones", value: stats.total },
+          { label: "Aceptadas",  value: stats.aceptada, colorClass: "text-violet-400" },
           { label: "Rechazadas", value: stats.rechazada, colorClass: "text-red-400" },
         ]}
       />
 
-      {/* Tabla */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-800 bg-slate-950/50">
               <tr>
-                {["#", "Cliente", "Items", "Total", "Estado", "Fecha", ""].map(h => (
+                {["Cliente", "Cotizaciones", "Estado", "Valor aceptado", "Última actividad", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {loading && Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 7 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" />
-                    </td>
-                  ))}
-                </tr>
+              {loading && Array.from({ length: 4 }).map((_, i) => (
+                <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
+                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td>
+                ))}</tr>
               ))}
-              {!loading && cotizacionesFiltradas.map(cot => (
-                <tr key={cot.documentId}
-                  className={`hover:bg-slate-800/40 transition-colors group ${cot.cliente ? "cursor-pointer" : ""}`}
-                  onClick={() => cot.cliente && handleEditarCotizacion(cot)}>
+              {!loading && gruposFiltrados.map(g => (
+                <tr key={g.key} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  onClick={() => setClienteView(g.key)}>
                   <td className="px-4 py-3">
-                    <span className="text-[11px] font-bold font-mono text-slate-300">{cot.numero ?? "—"}</span>
+                    <div className="flex items-center gap-2">
+                      <User size={13} className="text-slate-600 shrink-0" />
+                      <span className="font-medium text-slate-200">{g.nombre}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
-                    {cot.cliente ? (
-                      <div className="flex items-center gap-1.5">
-                        <User size={11} className="text-slate-600 shrink-0" />
-                        <span className="text-slate-300 text-[12px]">{cot.cliente.nombre}</span>
-                      </div>
-                    ) : (
-                      <span className="text-slate-600 text-xs">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {cot.items?.length ? (
-                      <p className="text-[11px] text-slate-500 max-w-[160px] truncate">
-                        {cot.items.map(i => i.descripcion).filter(Boolean).join(", ")}
-                      </p>
-                    ) : <span className="text-slate-700 text-xs">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-violet-400 font-semibold">{fmt(cot.total)}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[cot.estado]}`}>
-                      {cot.estado}
+                    <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+                      <span className="font-semibold text-slate-200">{g.cotizaciones.length}</span>
+                      cotización{g.cotizaciones.length !== 1 ? "es" : ""}
                     </span>
-                    {cot.ventaGenerada && (
-                      <span className="block text-[10px] text-emerald-500/80 mt-1">→ {cot.ventaGenerada.numero ?? cot.ventaGenerada.concepto}</span>
-                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[g.estadoPrincipal]}`}>
+                      {g.estadoPrincipal}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {g.totalAceptado > 0
+                      ? <span className="text-violet-400 font-semibold">{fmt(g.totalAceptado)}</span>
+                      : <span className="text-slate-700 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                    {fmtDt(cot.fecha ?? cot.createdAt)}
-                    {cot.validoHasta && (
-                      <p className="text-[10px] text-slate-600 mt-0.5">Vence {fmtDt(cot.validoHasta)}</p>
-                    )}
+                    {g.ultimaFecha ? fmtDt(g.ultimaFecha) : "—"}
                   </td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    {delId === cot.documentId ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500">¿Eliminar?</span>
-                        <button type="button" onClick={() => handleDelete(cot.documentId)}
-                          className="text-[11px] text-red-400 hover:text-red-300 font-medium">Sí</button>
-                        <button type="button" onClick={() => setDelId(null)}
-                          className="text-[11px] text-slate-500 hover:text-slate-300">No</button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        {(cot.estado === "Aceptada" || cot.estado === "Enviada") && (
-                          <button type="button"
-                            onClick={() => setConvertiendo(cot)}
-                            title="Convertir a pedido"
-                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-violet-400 border border-violet-800/50 rounded-lg hover:bg-violet-500/10 transition">
-                            <ArrowRight size={11} /> Pedido
-                          </button>
-                        )}
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button"
-                          onClick={() => setDelId(cot.documentId)}
-                          title="Eliminar"
-                          className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
-                          <Trash2 size={13} />
-                        </button>
-                        </div>
-                      </div>
-                    )}
+                  <td className="px-4 py-3">
+                    <ChevronRight size={14} className="text-slate-700 group-hover:text-violet-400 transition-colors" />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!loading && cotizacionesFiltradas.length === 0 && (
+          {!loading && gruposFiltrados.length === 0 && (
             <div className="py-14 text-center">
               <FileText size={32} className="mx-auto mb-3 text-slate-700" />
-              <p className="text-slate-600 text-sm">
-                {search || filtroEstado ? "Sin cotizaciones para los filtros aplicados." : "No hay cotizaciones registradas."}
-              </p>
+              <p className="text-slate-600 text-sm">{search ? "Sin clientes para esa búsqueda." : "No hay cotizaciones registradas."}</p>
               <p className="text-[11px] text-slate-700 mt-1">Crea cotizaciones desde el módulo de Clientes o Leads.</p>
             </div>
           )}
         </div>
       </div>
-
-      {convertiendo && (
-        <ConvertirPedidoModal
-          cotizacion={convertiendo}
-          totalVentas={todasVentas.length}
-          onClose={() => setConvertiendo(null)}
-          onConverted={cotizacionActualizada => { handleCotizacionSaved(cotizacionActualizada); setConvertiendo(null) }}
-        />
-      )}
     </div>
   )
 }
