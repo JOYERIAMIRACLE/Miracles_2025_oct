@@ -21,7 +21,7 @@ export function SeccionInventario() {
       <SeccionHero
         breadcrumb={["Operación", "Inventario", activo.label]}
         titulo="Inventario"
-        descripcion="Producto terminado, materia prima y su logística de envío."
+        descripcion="Producto terminado, compras de material y su logística de envío."
       >
         <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
       </SeccionHero>
