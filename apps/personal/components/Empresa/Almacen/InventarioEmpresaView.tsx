@@ -1,7 +1,9 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent } from "lucide-react"
+import { useState, useMemo, useRef, useEffect } from "react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical } from "lucide-react"
+import { DropdownPicker } from "@/components/Shared/DropdownPicker"
+import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
 import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem } from "@/types/product"
@@ -85,7 +87,15 @@ export function InventarioEmpresaView() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [search,      setSearch]      = useState("")
-  const [filtroCat,   setFiltroCat]   = useState<CategoriaJoya | "todas">("todas")
+  const [filtroCat,   setFiltroCat]   = useState<CategoriaJoya | "">("")
+  const [filtroMat,   setFiltroMat]   = useState("")
+  const [menuOpen,    setMenuOpen]    = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    function h(e: MouseEvent) { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false) }
+    document.addEventListener("mousedown", h)
+    return () => document.removeEventListener("mousedown", h)
+  }, [])
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editing,     setEditing]     = useState<ProductType | null>(null)
   const [form,        setForm]        = useState<FormData>(emptyForm())
@@ -136,10 +146,16 @@ export function InventarioEmpresaView() {
   }
 
   const filtrados = useMemo(() => items.filter(it => {
-    const matchSearch = !search || it.nombreProducto.toLowerCase().includes(search.toLowerCase()) || (it.sku ?? "").toLowerCase().includes(search.toLowerCase())
-    const matchCat    = filtroCat === "todas" || it.categoriaJoya === filtroCat
-    return matchSearch && matchCat
-  }), [items, search, filtroCat])
+    const q = search.toLowerCase()
+    const matchSearch = !search
+      || it.nombreProducto.toLowerCase().includes(q)
+      || (it.sku ?? "").toLowerCase().includes(q)
+      || (it.materialProducto ?? "").toLowerCase().includes(q)
+      || (it.categoriaJoya ?? "").toLowerCase().includes(q)
+    const matchCat = !filtroCat || it.categoriaJoya === filtroCat
+    const matchMat = !filtroMat || it.materialProducto === filtroMat
+    return matchSearch && matchCat && matchMat
+  }), [items, search, filtroCat, filtroMat])
 
   const kpis = useMemo(() => ({
     total:      items.length,
@@ -412,52 +428,51 @@ export function InventarioEmpresaView() {
   return (
     <div className="p-4 md:p-6 space-y-5">
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        {[
-          { label:"SKUs",         value:kpis.total,           color:"text-slate-200" },
-          { label:"Stock total",  value:kpis.stockTotal,      color:"text-slate-200" },
-          { label:"Valor costo",  value:fmt(kpis.valorCosto), color:"text-violet-400" },
-          { label:"Valor venta",  value:fmt(kpis.valorVenta), color:"text-violet-400" },
-          { label:"En tienda",    value:kpis.enTienda,        color:"text-violet-400" },
-          { label:"Stock bajo",   value:kpis.stockBajo,       color:kpis.stockBajo>0?"text-red-400":"text-slate-500" },
-        ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
-            <p className={`text-lg font-bold tabular-nums ${k.color}`}>{k.value}</p>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 tracking-wide">Productos</h2>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={openNuevo}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-xs font-medium transition-colors">
+            <Plus size={13} /> Nuevo producto
+          </button>
+          <div ref={menuRef} className="relative">
+            <button type="button" onClick={() => setMenuOpen(o => !o)} title="Más opciones"
+              className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <MoreVertical size={15} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden py-1 z-30">
+                <button type="button" onClick={() => { setMargenPanel(v => !v); setMenuOpen(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
+                  <Percent size={13} className="text-violet-500" /> Margen global
+                </button>
+              </div>
+            )}
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Toolbar */}
+      {/* Filtros */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[160px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-          <input type="text" placeholder="Buscar nombre o SKU…" value={search}
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+          <input type="text" placeholder="Buscar nombre, SKU, categoría…" value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 rounded-lg border border-slate-700 bg-slate-900 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
+            className={`${fieldCls} pl-9 ${search ? "pr-8" : ""}`} />
+          {search && (
+            <button type="button" onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+              <X size={13} />
+            </button>
+          )}
         </div>
-        <div className="flex gap-1 flex-wrap">
-          <button type="button" onClick={() => setFiltroCat("todas")}
-            className={`h-7 px-2.5 rounded-lg text-[11px] font-medium border transition-all ${filtroCat==="todas"?"bg-slate-700 text-slate-100 border-slate-600":"border-slate-700 text-slate-500 hover:text-slate-300"}`}>Todas</button>
-          {CATEGORIAS_JOYA.map(c => (
-            <button key={c} type="button" onClick={() => setFiltroCat(prev => prev===c?"todas":c)}
-              className={`h-7 px-2.5 rounded-lg text-[11px] font-medium border transition-all ${filtroCat===c?`${CAT_COLOR[c]} shadow-sm`:"border-slate-700 text-slate-500 hover:text-slate-300"}`}>{c}</button>
-          ))}
+        <div className="w-44">
+          <DropdownPicker label="Categoría" value={filtroCat} onChange={v => setFiltroCat(v as CategoriaJoya | "")} placeholder="Todas las categorías"
+            options={[{ value: "", label: "Todas las categorías" }, ...CATEGORIAS_JOYA.map(c => ({ value: c, label: c }))]} />
         </div>
-        <div className="flex items-center gap-2 ml-auto">
-          <button type="button" onClick={() => setMargenPanel(v => !v)}
-            className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium border transition-all ${
-              margenPanel
-                ? "bg-violet-500/15 text-violet-400 border-violet-500/30"
-                : "border-slate-700 text-slate-500 hover:text-slate-300"
-            }`}>
-            <Percent size={13}/> Margen global
-          </button>
-          <button type="button" onClick={openNuevo}
-            className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 transition-colors">
-            <Plus size={15} /> Nuevo producto
-          </button>
+        <div className="w-40">
+          <DropdownPicker label="Material" value={filtroMat} onChange={setFiltroMat} placeholder="Todos los materiales"
+            options={[{ value: "", label: "Todos los materiales" }, ...MATERIALES.map(m => ({ value: m, label: m }))]} />
         </div>
       </div>
 
