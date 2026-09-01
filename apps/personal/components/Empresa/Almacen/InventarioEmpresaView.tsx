@@ -530,7 +530,7 @@ export function InventarioEmpresaView() {
                 const isPublishing = publishing===it.documentId
                 const isFeaturing  = featuring===it.documentId
                 return (
-                  <tr key={it.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                  <tr key={it.documentId} onClick={() => openEditar(it)} className="hover:bg-slate-800/40 transition-colors group cursor-pointer">
 
                     {/* Thumbnail */}
                     <td className="px-2 py-2 w-10">
@@ -593,7 +593,7 @@ export function InventarioEmpresaView() {
                     </td>
 
                     {/* Stock */}
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
                         <button type="button" onClick={() => handleStock(it,-1)}
                           className="h-5 w-5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">−</button>
@@ -604,7 +604,7 @@ export function InventarioEmpresaView() {
                     </td>
 
                     {/* Tienda (visible/oculto) */}
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                       <button type="button" onClick={() => it.activo ? handleToggleActivo(it) : handlePublish(it)}
                         disabled={isPublishing}
                         title={it.activo ? "Visible en tienda — clic para ocultar" : "Oculto — clic para publicar"}
@@ -620,7 +620,7 @@ export function InventarioEmpresaView() {
                     </td>
 
                     {/* Destacado */}
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                       <button type="button" onClick={() => handleToggleFeatured(it)}
                         disabled={isFeaturing}
                         title={it.isFeatured ? "Destacado — clic para quitar" : "No destacado — clic para marcar"}
@@ -630,7 +630,7 @@ export function InventarioEmpresaView() {
                     </td>
 
                     {/* Acciones */}
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                       {delId===it.documentId ? (
                         <div className="flex items-center gap-1">
                           <span className="text-[10px] text-slate-500">¿Eliminar?</span>
