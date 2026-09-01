@@ -198,6 +198,79 @@ function MaterialesTab({ triggerNuevo }: { triggerNuevo: number }) {
   )
 }
 
+// ─── Combobox de material con creación rápida ─────────────────────────────────
+
+function MaterialCombobox({ value, materiales, onChange, onCreated }: {
+  value: string
+  materiales: Material[]
+  onChange: (docId: string) => void
+  onCreated: (m: Material) => void
+}) {
+  const [open,     setOpen]     = useState(false)
+  const [text,     setText]     = useState("")
+  const [creating, setCreating] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const m = materiales.find(m => m.documentId === value)
+    setText(m?.nombre ?? "")
+  }, [value, materiales])
+
+  useEffect(() => {
+    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener("mousedown", h)
+    return () => document.removeEventListener("mousedown", h)
+  }, [])
+
+  const filtrados   = text.trim() ? materiales.filter(m => m.nombre.toLowerCase().includes(text.toLowerCase())) : materiales
+  const exactMatch  = materiales.some(m => m.nombre.toLowerCase() === text.trim().toLowerCase())
+  const puedeCrear  = text.trim().length > 0 && !exactMatch
+
+  async function crear() {
+    if (!text.trim() || creating) return
+    setCreating(true)
+    try {
+      const m = await createMaterial({ nombre: text.trim(), unidadMedida: "gramo", precioReferenciaGramo: null, activo: true, notas: null })
+      onCreated(m)
+      onChange(m.documentId)
+      setOpen(false)
+      toast.success(`Material "${m.nombre}" creado`)
+    } catch (e: any) { toast.error(e.message ?? "Error al crear material") }
+    finally { setCreating(false) }
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <input value={text}
+        onChange={e => { setText(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        placeholder="Material…"
+        className={`${fieldCls} h-8 text-xs`} />
+      {open && (
+        <div className="absolute top-full mt-1 left-0 right-0 min-w-[160px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 overflow-hidden max-h-48 overflow-y-auto">
+          {filtrados.map(m => (
+            <button key={m.documentId} type="button"
+              onClick={() => { onChange(m.documentId); setText(m.nombre); setOpen(false) }}
+              className={`w-full px-3 py-2 text-xs text-left transition ${m.documentId === value ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+              {m.nombre}
+            </button>
+          ))}
+          {filtrados.length === 0 && !puedeCrear && (
+            <p className="px-3 py-2 text-xs text-slate-500">Sin materiales</p>
+          )}
+          {puedeCrear && (
+            <button type="button" onClick={crear} disabled={creating}
+              className="w-full flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition text-left border-t border-slate-100 dark:border-slate-700 disabled:opacity-50">
+              {creating ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+              {creating ? "Creando…" : `Crear "${text.trim()}"`}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Modal: nueva compra (cabecera + líneas tipo recibo) ───────────────────────
 
 type LineaForm = { documentId?: string; material: string; descripcion: string; gramos: string; precioPorGramo: string }
@@ -218,6 +291,7 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
   const [lineas, setLineas] = useState<LineaForm[]>(editando && editando.lineas.length > 0 ? editando.lineas.map(lineaFormDe) : [emptyLinea()])
   const [eliminadas, setEliminadas] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [mats, setMats] = useState<Material[]>(materiales)
   const cerrarSiVacio = useModalBackdropClose({ proveedor, fecha, notas, lineas }, onClose, editando?.documentId)
 
   function actualizarLinea(i: number, campo: keyof LineaForm, valor: string) {
@@ -225,7 +299,7 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
       if (idx !== i) return l
       const nueva = { ...l, [campo]: valor }
       if (campo === "material" && !l.precioPorGramo) {
-        const mat = materiales.find(m => m.documentId === valor)
+        const mat = mats.find(m => m.documentId === valor)
         if (mat?.precioReferenciaGramo) nueva.precioPorGramo = String(mat.precioReferenciaGramo)
       }
       return nueva
@@ -348,8 +422,9 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
                         placeholder="Ej. Cadena tejido chino" className={`${fieldCls} h-8 text-xs`} />
                     </td>
                     <td className="p-1.5 min-w-[130px]">
-                      <DropdownPicker label="Material" value={l.material} onChange={v => actualizarLinea(i, "material", v)}
-                        placeholder="—" options={materiales.map(m => ({ value: m.documentId, label: m.nombre }))} />
+                      <MaterialCombobox value={l.material} materiales={mats}
+                        onChange={v => actualizarLinea(i, "material", v)}
+                        onCreated={m => setMats(prev => [...prev, m])} />
                     </td>
                     <td className="p-1.5 w-24">
                       <input type="number" min="0" step="0.01" value={l.precioPorGramo} onChange={e => actualizarLinea(i, "precioPorGramo", e.target.value)}
