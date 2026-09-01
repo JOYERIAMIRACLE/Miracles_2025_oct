@@ -1,15 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Building2, GitBranch, Users, Loader2, Camera, MapPin, Phone, Mail } from "lucide-react"
-import { useSectionTab, Pending, Card, SeccionHero, HeroTabs, useHeroImagen, useUploadImagen, boldify } from "./shared"
+import { Loader2, Camera, MapPin, Phone, Mail } from "lucide-react"
+import { Card, SeccionHero, useHeroImagen, useUploadImagen, boldify } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
-
-const TABS = [
-  { id: "quienes-somos", label: "¿Quiénes somos?", icon: Building2 },
-  { id: "organigrama",   label: "Organigrama",      icon: GitBranch },
-  { id: "directorio",    label: "Directorio",       icon: Users },
-]
 
 function TabQuienesSomos() {
   const { identidad, loading, reload } = useGetIdentidad()
@@ -155,15 +149,13 @@ function TabQuienesSomos() {
 }
 
 export function SeccionConoceMDO() {
-  const { tab, setTab } = useSectionTab("conoce", "quienes-somos")
-  const activo = TABS.find(t => t.id === tab) ?? TABS[0]
   const { identidad, loading, reload } = useGetIdentidad()
   const hero = useHeroImagen("portada_conoce", identidad?.documentId ?? null, reload)
 
   return (
     <div className="space-y-4">
       <SeccionHero
-        breadcrumb={["Conoce a Medallitadeoro", activo.label]}
+        breadcrumb={["Conoce a Medallitadeoro", "¿Quiénes somos?"]}
         titulo="Conoce a Medallitadeoro"
         descripcion={identidad?.descripcion_conoce || "Historia, propósito, visión y equipo de Joyería Miracles — todo lo que necesitas saber sobre medallitadeoro."}
         campoDescripcion="descripcion_conoce"
@@ -177,12 +169,8 @@ export function SeccionConoceMDO() {
         onTrigger={hero.trigger}
         onFileChange={hero.handleFile}
         onSaveCrop={hero.saveCrop}
-      >
-        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
-      </SeccionHero>
-      {tab === "quienes-somos" && <TabQuienesSomos />}
-      {tab === "organigrama"   && <Pending owner="Medallitadeoro" desc="Todavía no existe esta información en Miracles." />}
-      {tab === "directorio"    && <Pending owner="Medallitadeoro" desc="Todavía no existe un directorio de colaboradores en medallitadeoro." />}
+      />
+      <TabQuienesSomos />
     </div>
   )
 }

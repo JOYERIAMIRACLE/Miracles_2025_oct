@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import {
-  Home, Landmark, Building2, GitBranch, Users, Flag, Briefcase, ListChecks,
+  Home, Landmark, Building2, Flag, Briefcase, ListChecks,
   Megaphone, Contact, Target, ShoppingBag, Boxes, DollarSign, Globe,
   FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings,
 } from "lucide-react"
@@ -37,8 +37,6 @@ export const GRUPOS: NavGroup[] = [
     items: [
       { id: "quienes-somos", label: "¿Quiénes somos?", icon: Building2 },
       { id: "mision",        label: "Misión",           icon: Flag, ownSection: true },
-      { id: "organigrama",   label: "Organigrama",      icon: GitBranch },
-      { id: "directorio",    label: "Directorio",       icon: Users },
     ],
   },
   {
@@ -70,7 +68,7 @@ export const GRUPOS: NavGroup[] = [
 ]
 
 export const DEPT_ICONS: Record<string, typeof Home> = {
-  "quienes-somos": Building2, mision: Flag, organigrama: GitBranch, directorio: Users,
+  "quienes-somos": Building2, mision: Flag,
   tareas: ListChecks, campanas: Megaphone, contactos: Contact, crm: Target,
   ventas: ShoppingBag, inventario: Boxes, finanzas: DollarSign, "sitio-web": Globe,
   documentos: FileText, marca: Palette, enlaces: Link2,
