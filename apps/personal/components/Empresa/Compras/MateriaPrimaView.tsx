@@ -419,11 +419,14 @@ function RecibirModal({ compra, onClose, onRecibida }: {
     try {
       for (const linea of compra.lineas) {
         if (!linea.material) continue
-        await createMovimientoMaterial({
-          tipo: "entrada", material: linea.material.documentId, gramos: linea.gramos,
-          fecha: `${compra.fecha}T12:00:00`, compraLinea: linea.documentId,
-          notas: `Compra ${compra.numero ?? compra.documentId} · ${linea.descripcion}`,
-        })
+        const existing = await getMovimientoPorCompraLinea(linea.documentId)
+        if (!existing) {
+          await createMovimientoMaterial({
+            tipo: "entrada", material: linea.material.documentId, gramos: linea.gramos,
+            fecha: `${compra.fecha}T12:00:00`, compraLinea: linea.documentId,
+            notas: `Compra ${compra.numero ?? compra.documentId} · ${linea.descripcion}`,
+          })
+        }
         await updateMaterial(linea.material.documentId, { precioReferenciaGramo: linea.precioPorGramo })
       }
       const tx = await createTransaccion({
