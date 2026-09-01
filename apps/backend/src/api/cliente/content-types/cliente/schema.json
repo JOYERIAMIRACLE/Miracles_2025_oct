@@ -81,6 +81,25 @@
     "notas": {
       "type": "text"
     },
+    "tallaAnillo": {
+      "type": "string"
+    },
+    "ocasionFrecuente": {
+      "type": "string"
+    },
+    "estadoCivil": {
+      "type": "enumeration",
+      "enum": [
+        "Soltero(a)",
+        "En una relación",
+        "Comprometido(a)",
+        "Casado(a)",
+        "Otro"
+      ]
+    },
+    "redesSociales": {
+      "type": "string"
+    },
     "ventas": {
       "type": "relation",
       "relation": "oneToMany",

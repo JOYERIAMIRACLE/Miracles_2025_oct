@@ -63,6 +63,7 @@ export function LeadsView() {
       nombre: c.nombre, email: c.email, telefono: c.telefono, direccion: c.direccion,
       segmento: c.segmento, Funnel: "Lead", calificado: c.calificado,
       canalContacto: c.canalContacto, origenContacto: c.origenContacto, Estado: c.Estado, notas: c.notas,
+      tallaAnillo: c.tallaAnillo, ocasionFrecuente: c.ocasionFrecuente, estadoCivil: c.estadoCivil, redesSociales: c.redesSociales,
       fechaLead: c.fechaLead, fechaCalificado: c.fechaCalificado,
       fechaOferta: c.fechaOferta, fechaPedido: c.fechaPedido, fechaEntrega: c.fechaEntrega,
     })

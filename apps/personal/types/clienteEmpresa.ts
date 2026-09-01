@@ -1,6 +1,7 @@
 export type FunnelEtapa     = "Lead" | "Oferta" | "Pedido" | "Entrega" | "Rechazada"
 export type SegmentoCliente = "Pareja" | "Matrimonio" | "Familiar" | "Personalizado"
 export type EstadoCliente   = "Activo" | "Inactivo"
+export type EstadoCivil     = "Soltero(a)" | "En una relación" | "Comprometido(a)" | "Casado(a)" | "Otro"
 
 // Progresión lineal (sin Rechazada — es un estado terminal lateral)
 export const FUNNEL_ETAPAS: FunnelEtapa[] = ["Lead", "Oferta", "Pedido", "Entrega"]
@@ -27,7 +28,8 @@ export const FUNNEL_COLOR: Record<FunnelEtapa, string> = {
   Rechazada: "bg-red-500/15 text-red-300 border-red-500/30",
 }
 
-export const SEGMENTOS: SegmentoCliente[] = ["Pareja", "Matrimonio", "Familiar", "Personalizado"]
+export const SEGMENTOS:      SegmentoCliente[] = ["Pareja", "Matrimonio", "Familiar", "Personalizado"]
+export const ESTADOS_CIVILES: EstadoCivil[]    = ["Soltero(a)", "En una relación", "Comprometido(a)", "Casado(a)", "Otro"]
 
 export type ClienteEmpresa = {
   id:               number
@@ -43,6 +45,10 @@ export type ClienteEmpresa = {
   origenContacto:   string | null
   Estado:           EstadoCliente | null
   notas:            string | null
+  tallaAnillo:      string | null
+  ocasionFrecuente: string | null
+  estadoCivil:      EstadoCivil | null
+  redesSociales:    string | null
   fechaLead:        string | null
   fechaCalificado:  string | null
   fechaOferta:      string | null
@@ -64,6 +70,10 @@ export type ClientePayload = {
   origenContacto?:   string | null
   Estado?:           EstadoCliente | null
   notas?:            string | null
+  tallaAnillo?:      string | null
+  ocasionFrecuente?: string | null
+  estadoCivil?:      EstadoCivil | null
+  redesSociales?:    string | null
   fechaLead?:        string | null
   fechaCalificado?:  string | null
   fechaOferta?:      string | null

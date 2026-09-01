@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef } from "react"
 import {
-  Plus, X, Check, Phone, Mail, MessageCircle, MapPin, ArrowLeft,
+  Plus, X, Check, Phone, Mail, MessageCircle, ArrowLeft,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
   DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
 } from "lucide-react"
@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import {
   ClienteEmpresa, ClientePayload,
-  FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
+  FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS, ESTADOS_CIVILES,
 } from "@/types/clienteEmpresa"
 import { Cotizacion, ItemCotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
 import { useGetCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -883,15 +883,43 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       {tab === "general" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div className={cardCls}>
-            <div className={cardHeadCls}><h3 className={cardTitleCls}>Dirección y canal</h3></div>
-            <div className="p-4 space-y-2.5">
-              {cliente.direccion      && <p className="text-xs text-slate-300 flex items-center gap-2"><MapPin size={11} className="text-slate-600 shrink-0" />{cliente.direccion}</p>}
-              {cliente.canalContacto  && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
-              {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
-              {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
-              {!cliente.direccion && !cliente.canalContacto && !cliente.origenContacto && !cliente.segmento && (
-                <p className="text-[11px] text-slate-700">Sin datos adicionales todavía.</p>
-              )}
+            <div className={cardHeadCls}><h3 className={cardTitleCls}>Contacto y dirección</h3></div>
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Dirección</p>
+                <p className="text-[13px] font-medium text-slate-200">{cliente.direccion || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Canal preferido</p>
+                <p className="text-[13px] font-medium text-slate-200 flex items-center gap-1.5">
+                  {cliente.canalContacto && <CanalIcon canal={cliente.canalContacto} />}
+                  {cliente.canalContacto || "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Talla de anillo</p>
+                <p className="text-[13px] font-medium text-slate-200">{cliente.tallaAnillo || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Ocasión frecuente</p>
+                <p className="text-[13px] font-medium text-slate-200">{cliente.ocasionFrecuente || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Estado civil</p>
+                <p className="text-[13px] font-medium text-slate-200">{cliente.estadoCivil || "—"}</p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Redes sociales</p>
+                <p className="text-[13px] font-medium text-slate-200 truncate">{cliente.redesSociales || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Origen del contacto</p>
+                <p className="text-[13px] font-medium text-slate-200">{cliente.origenContacto || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Segmento</p>
+                <p className="text-[13px] font-medium text-slate-200">{cliente.segmento || "—"}</p>
+              </div>
             </div>
           </div>
           <div className={cardCls}>
@@ -1242,6 +1270,38 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
             placeholder="Calle, número, colonia, ciudad…" className={inp} />
         </div>
 
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={lbl}>Talla de anillo</label>
+            <input value={form.tallaAnillo ?? ""}
+              onChange={e => setForm(f => ({ ...f, tallaAnillo: e.target.value || null }))}
+              placeholder="6.5 MX" className={inp} />
+          </div>
+          <div>
+            <label className={lbl}>Estado civil</label>
+            <select value={form.estadoCivil ?? ""} title="Estado civil"
+              onChange={e => setForm(f => ({ ...f, estadoCivil: (e.target.value || null) as typeof f.estadoCivil }))}
+              className={inp}>
+              <option value="">— Sin especificar —</option>
+              {ESTADOS_CIVILES.map(e => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className={lbl}>Ocasión frecuente</label>
+          <input value={form.ocasionFrecuente ?? ""}
+            onChange={e => setForm(f => ({ ...f, ocasionFrecuente: e.target.value || null }))}
+            placeholder="Regalos de aniversario, cumpleaños…" className={inp} />
+        </div>
+
+        <div>
+          <label className={lbl}>Redes sociales</label>
+          <input value={form.redesSociales ?? ""}
+            onChange={e => setForm(f => ({ ...f, redesSociales: e.target.value || null }))}
+            placeholder="@usuario_instagram" className={inp} />
+        </div>
+
         {etapa === "Lead" && (
           <>
             <div>
@@ -1314,6 +1374,7 @@ export function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
     nombre: "", email: null, telefono: null, direccion: null,
     segmento: null, Funnel: etapa, calificado: false,
     canalContacto: null, origenContacto: null, Estado: "Activo", notas: null,
+    tallaAnillo: null, ocasionFrecuente: null, estadoCivil: null, redesSociales: null,
     fechaLead: etapa === "Lead" ? new Date().toISOString() : null,
     fechaCalificado: null, fechaOferta: null, fechaPedido: null, fechaEntrega: null,
   }
@@ -1359,6 +1420,7 @@ export function PipelineView() {
       nombre: c.nombre, email: c.email, telefono: c.telefono, direccion: c.direccion,
       segmento: c.segmento, Funnel: c.Funnel ?? "Lead", calificado: c.calificado,
       canalContacto: c.canalContacto, origenContacto: c.origenContacto, Estado: c.Estado, notas: c.notas,
+      tallaAnillo: c.tallaAnillo, ocasionFrecuente: c.ocasionFrecuente, estadoCivil: c.estadoCivil, redesSociales: c.redesSociales,
       fechaLead: c.fechaLead, fechaCalificado: c.fechaCalificado,
       fechaOferta: c.fechaOferta, fechaPedido: c.fechaPedido, fechaEntrega: c.fechaEntrega,
     })
