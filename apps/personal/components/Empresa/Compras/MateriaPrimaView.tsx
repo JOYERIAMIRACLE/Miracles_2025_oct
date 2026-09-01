@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2, ScanLine } from "lucide-react"
 import { toast } from "sonner"
 import { useGetMateriales, createMaterial, updateMaterial, deleteMaterial } from "@/api/material/getMateriales"
@@ -217,7 +218,9 @@ function MaterialCombobox({ value, materiales, onChange, onCreated }: {
   const [open,     setOpen]     = useState(false)
   const [text,     setText]     = useState("")
   const [creating, setCreating] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [rect,     setRect]     = useState<{ top: number; left: number; width: number } | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const m = materiales.find(m => m.documentId === value)
@@ -225,10 +228,21 @@ function MaterialCombobox({ value, materiales, onChange, onCreated }: {
   }, [value, materiales])
 
   useEffect(() => {
-    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    function h(e: MouseEvent) {
+      const t = e.target as Node
+      if (!inputRef.current?.contains(t) && !panelRef.current?.contains(t)) setOpen(false)
+    }
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [])
+
+  function abrirConPos() {
+    if (inputRef.current) {
+      const r = inputRef.current.getBoundingClientRect()
+      setRect({ top: r.bottom + 2, left: r.left, width: r.width })
+    }
+    setOpen(true)
+  }
 
   const filtrados   = text.trim() ? materiales.filter(m => m.nombre.toLowerCase().includes(text.toLowerCase())) : materiales
   const exactMatch  = materiales.some(m => m.nombre.toLowerCase() === text.trim().toLowerCase())
@@ -248,14 +262,16 @@ function MaterialCombobox({ value, materiales, onChange, onCreated }: {
   }
 
   return (
-    <div ref={ref} className="relative">
-      <input value={text}
-        onChange={e => { setText(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(true)}
+    <div className="relative">
+      <input ref={inputRef} value={text}
+        onChange={e => { setText(e.target.value); abrirConPos() }}
+        onFocus={abrirConPos}
         placeholder="Material…"
         className={`${fieldCls} h-8 text-xs`} />
-      {open && (
-        <div className="absolute top-full mt-1 left-0 right-0 min-w-[160px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 overflow-hidden max-h-48 overflow-y-auto">
+      {open && rect && createPortal(
+        <div ref={panelRef}
+          style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 160), zIndex: 9999 }}
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden max-h-52 overflow-y-auto">
           {filtrados.map(m => (
             <button key={m.documentId} type="button"
               onClick={() => { onChange(m.documentId); setText(m.nombre); setOpen(false) }}
@@ -273,7 +289,8 @@ function MaterialCombobox({ value, materiales, onChange, onCreated }: {
               {creating ? "Creando…" : `Crear "${text.trim()}"`}
             </button>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -556,17 +573,30 @@ function RecibirModal({ compra, onClose, onRecibida }: {
 const TIPOS_CONCEPTO = ["Anillos","Cadenas","Esclavas","Dijes","Broqueles","Aretes","Pulsos","Rosarios","Argollas","Arracadas","Pulseras","Collares"] as const
 
 function ConceptoCombobox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const [text, setText] = useState(value)
-  const ref = useRef<HTMLDivElement>(null)
+  const [open, setOpen]     = useState(false)
+  const [text, setText]     = useState(value)
+  const [rect, setRect]     = useState<{ top: number; left: number; width: number } | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { setText(value) }, [value])
 
   useEffect(() => {
-    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    function h(e: MouseEvent) {
+      const t = e.target as Node
+      if (!inputRef.current?.contains(t) && !panelRef.current?.contains(t)) setOpen(false)
+    }
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [])
+
+  function abrirConPos() {
+    if (inputRef.current) {
+      const r = inputRef.current.getBoundingClientRect()
+      setRect({ top: r.bottom + 2, left: r.left, width: r.width })
+    }
+    setOpen(true)
+  }
 
   const filtrados = text.trim()
     ? TIPOS_CONCEPTO.filter(c => c.toLowerCase().includes(text.toLowerCase()))
@@ -575,18 +605,20 @@ function ConceptoCombobox({ value, onChange }: { value: string; onChange: (v: st
   const esNuevo = text.trim().length > 0 && !exacto
 
   return (
-    <div ref={ref} className="relative">
-      <input value={text}
-        onChange={e => { setText(e.target.value); onChange(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(true)}
+    <div className="relative">
+      <input ref={inputRef} value={text}
+        onChange={e => { setText(e.target.value); onChange(e.target.value); abrirConPos() }}
+        onFocus={abrirConPos}
         placeholder="Tipo de producto…"
         className={`${fieldCls} h-8 text-xs`} />
-      {open && (filtrados.length > 0 || esNuevo) && (
-        <div className="absolute top-full mt-1 left-0 z-30 min-w-[160px] w-max bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+      {open && rect && (filtrados.length > 0 || esNuevo) && createPortal(
+        <div ref={panelRef}
+          style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 160), zIndex: 9999 }}
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden max-h-52 overflow-y-auto">
           {filtrados.map(c => (
             <button key={c} type="button"
               onClick={() => { setText(c); onChange(c); setOpen(false) }}
-              className={`w-full px-3 py-2 text-xs text-left transition whitespace-nowrap ${
+              className={`w-full px-3 py-2 text-xs text-left transition ${
                 value.toLowerCase() === c.toLowerCase()
                   ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 font-medium"
                   : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
@@ -601,7 +633,8 @@ function ConceptoCombobox({ value, onChange }: { value: string; onChange: (v: st
               <Plus size={11} /> Usar &ldquo;{text.trim()}&rdquo;
             </button>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
