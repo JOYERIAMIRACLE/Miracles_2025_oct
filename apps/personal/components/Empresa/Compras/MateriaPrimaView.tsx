@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2 } from "lucide-react"
+import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2, ScanLine } from "lucide-react"
 import { toast } from "sonner"
 import { useGetMateriales, createMaterial, updateMaterial } from "@/api/material/getMateriales"
 import { Material, MaterialPayload } from "@/types/material"
@@ -16,6 +16,7 @@ import {
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
 import { updateTransaccion } from "@/api/transaccion/updateTransaccion"
 import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
+import { getToken } from "@/lib/auth"
 import { useGetProveedores } from "@/api/proveedor/getProveedores"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
@@ -432,16 +433,248 @@ function RecibirModal({ compra, onClose, onRecibida }: {
   )
 }
 
+// ─── Modal: inspección de piezas ──────────────────────────────────────────────
+
+const CATEGORIAS_JOYA = ["Anillos","Cadenas","Esclavas","Dijes","Broqueles","Aretes","Pulsos","Rosarios","Argollas"] as const
+type CategoriaJoya = typeof CATEGORIAS_JOYA[number]
+
+type PiezaForm = { nombre: string; categoriaJoya: CategoriaJoya | ""; talla: string; pesoGramos: string; cantidad: string }
+const emptyPieza = (): PiezaForm => ({ nombre: "", categoriaJoya: "", talla: "", pesoGramos: "", cantidad: "1" })
+
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+
+async function crearProductoDesdeInspeccion(data: {
+  nombreProducto: string; categoriaJoya: CategoriaJoya; materialProducto: string
+  talla: string; pesoGramos: number; stock: number; costoProduccion: number
+  materialInsumoId: string
+}): Promise<string> {
+  const r = await fetch(`${BASE_URL}/api/products`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+    body: JSON.stringify({ data: {
+      nombreProducto: data.nombreProducto, categoriaJoya: data.categoriaJoya,
+      materialProducto: data.materialProducto, talla: data.talla || null,
+      pesoGramos: data.pesoGramos, stock: data.stock, costoProduccion: data.costoProduccion,
+      material: "producto", activo: false,
+      materialInsumo: { connect: [{ documentId: data.materialInsumoId }] },
+    }}),
+  })
+  if (!r.ok) throw new Error("Error al crear producto en inventario")
+  return ((await r.json()).data as { documentId: string }).documentId
+}
+
+function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
+  compra: CompraMaterial; materiales: Material[]
+  onClose: () => void; onDone: () => void
+}) {
+  type LineaState = { piezas: PiezaForm[]; agregando: boolean }
+  const [lineasState, setLineasState] = useState<LineaState[]>(
+    () => compra.lineas.map(() => ({ piezas: [], agregando: false }))
+  )
+  const [guardando, setGuardando] = useState(false)
+
+  function setPiezas(li: number, fn: (prev: PiezaForm[]) => PiezaForm[]) {
+    setLineasState(prev => prev.map((s, i) => i === li ? { ...s, piezas: fn(s.piezas) } : s))
+  }
+  function setAgregando(li: number, v: boolean) {
+    setLineasState(prev => prev.map((s, i) => i === li ? { ...s, agregando: v } : s))
+  }
+  function updatePieza(li: number, pi: number, campo: keyof PiezaForm, valor: string) {
+    setPiezas(li, prev => prev.map((p, i) => i === pi ? { ...p, [campo]: valor } : p))
+  }
+
+  const gramosAsignados = (li: number) =>
+    lineasState[li]?.piezas.reduce((s, p) => s + (Number(p.pesoGramos) || 0) * (Number(p.cantidad) || 0), 0) ?? 0
+
+  const totalPiezas = lineasState.reduce((s, l) => s + l.piezas.length, 0)
+
+  async function confirmar() {
+    setGuardando(true)
+    try {
+      for (let li = 0; li < compra.lineas.length; li++) {
+        const linea = compra.lineas[li]!
+        const estado = lineasState[li]!
+        const matObj = linea.material ? materiales.find(m => m.documentId === linea.material!.documentId) : null
+
+        for (const pieza of estado.piezas) {
+          if (!pieza.nombre.trim() || !pieza.categoriaJoya || !Number(pieza.pesoGramos) || !Number(pieza.cantidad)) continue
+          const pesoG = Number(pieza.pesoGramos)
+          const cant  = Number(pieza.cantidad)
+          const costo = pesoG * (linea.precioPorGramo ?? matObj?.precioReferenciaGramo ?? 0)
+
+          const prodId = await crearProductoDesdeInspeccion({
+            nombreProducto: pieza.nombre.trim(),
+            categoriaJoya: pieza.categoriaJoya as CategoriaJoya,
+            materialProducto: linea.material?.nombre ?? "",
+            talla: pieza.talla.trim(),
+            pesoGramos: pesoG, stock: cant, costoProduccion: costo,
+            materialInsumoId: linea.material?.documentId ?? "",
+          })
+
+          // Movimiento salida: descuenta gramos del stock del material
+          if (linea.material) {
+            await createMovimientoMaterial({
+              tipo: "salida", material: linea.material.documentId,
+              gramos: pesoG * cant, fecha: `${compra.fecha}T12:00:00`,
+              producto: prodId,
+              notas: `Inspección · ${pieza.nombre.trim()} × ${cant} · ${compra.numero ?? compra.documentId}`,
+            })
+          }
+        }
+      }
+      toast.success(`Inspección completa — ${totalPiezas} grupo${totalPiezas !== 1 ? "s" : ""} de piezas creados en inventario`)
+      onDone()
+    } catch (e: any) { toast.error(e.message ?? "Error al guardar la inspección") }
+    finally { setGuardando(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <ScanLine size={16} className="text-violet-500" /> Inspección de piezas
+            </h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {compra.fecha} · {compra.proveedor?.nombre ?? "Sin proveedor"} · {compra.lineas.length} línea{compra.lineas.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button type="button" title="Cerrar" onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <X size={16} />
+          </button>
+        </div>
+
+        <p className="px-6 py-3 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 shrink-0">
+          Clasifica pieza por pieza lo que entró en cada línea. Al confirmar se crean como productos en el inventario (no publicados en tienda).
+        </p>
+
+        {/* Líneas */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          {compra.lineas.map((linea, li) => {
+            const asignados = gramosAsignados(li)
+            const pct = linea.gramos > 0 ? Math.min(100, (asignados / linea.gramos) * 100) : 0
+            const merma = linea.gramos - asignados
+            const estado = lineasState[li]!
+
+            return (
+              <div key={linea.documentId} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                {/* Cabecera línea */}
+                <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{linea.descripcion}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{linea.material?.nombre ?? "—"} · {fmtG(linea.gramos)} · {fmt(linea.precioPorGramo)}/g</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{fmtG(asignados)} / {fmtG(linea.gramos)}</p>
+                    <p className={`text-[10px] font-medium ${merma > 0 ? "text-amber-500" : "text-emerald-500"}`}>
+                      {merma > 0 ? `merma: ${merma.toLocaleString("es-MX", { maximumFractionDigits: 2 })}g` : "✓ completo"}
+                    </p>
+                  </div>
+                </div>
+                {/* Barra de progreso */}
+                <div className="h-1.5 bg-slate-100 dark:bg-slate-800">
+                  <div className={`h-full transition-all ${pct >= 100 ? "bg-emerald-500" : "bg-violet-500"}`} style={{ width: `${pct}%` }} />
+                </div>
+
+                {/* Tabla de piezas */}
+                <div className="p-4 space-y-2">
+                  {estado.piezas.length > 0 && (
+                    <div className="border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden mb-2">
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-800/60">
+                          <tr>
+                            {["Nombre/descripción","Categoría","Talla","g/pz","Cant.","Total g",""].map(h => (
+                              <th key={h} className="px-2 py-1.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {estado.piezas.map((p, pi) => (
+                            <tr key={pi} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                              <td className="px-2 py-1">
+                                <input value={p.nombre} onChange={e => updatePieza(li, pi, "nombre", e.target.value)}
+                                  placeholder="Ej. Esclava Cartier" className={`${fieldCls} h-7 text-xs`} />
+                              </td>
+                              <td className="px-2 py-1 min-w-[110px]">
+                                <select value={p.categoriaJoya} onChange={e => updatePieza(li, pi, "categoriaJoya", e.target.value)}
+                                  className={`${fieldCls} h-7 text-xs`}>
+                                  <option value="">—</option>
+                                  {CATEGORIAS_JOYA.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                              </td>
+                              <td className="px-2 py-1 w-20">
+                                <input value={p.talla} onChange={e => updatePieza(li, pi, "talla", e.target.value)}
+                                  placeholder="21cm" className={`${fieldCls} h-7 text-xs`} />
+                              </td>
+                              <td className="px-2 py-1 w-16">
+                                <input type="number" min="0" step="0.1" value={p.pesoGramos} onChange={e => updatePieza(li, pi, "pesoGramos", e.target.value)}
+                                  placeholder="0" className={`${fieldCls} h-7 text-xs`} />
+                              </td>
+                              <td className="px-2 py-1 w-14">
+                                <input type="number" min="1" step="1" value={p.cantidad} onChange={e => updatePieza(li, pi, "cantidad", e.target.value)}
+                                  placeholder="1" className={`${fieldCls} h-7 text-xs`} />
+                              </td>
+                              <td className="px-2 py-1 w-16 font-semibold text-slate-700 dark:text-slate-200 text-right">
+                                {((Number(p.pesoGramos) || 0) * (Number(p.cantidad) || 0)).toLocaleString("es-MX", { maximumFractionDigits: 2 })}g
+                              </td>
+                              <td className="px-2 py-1 w-8">
+                                <button type="button" title="Quitar" onClick={() => setPiezas(li, prev => prev.filter((_, i) => i !== pi))}
+                                  className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-500 transition"><X size={12} /></button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  <button type="button" onClick={() => setPiezas(li, prev => [...prev, emptyPieza()])}
+                    className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
+                    <Plus size={13} /> Agregar pieza
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            {totalPiezas} grupo{totalPiezas !== 1 ? "s" : ""} de piezas · se crearán en inventario como no publicados
+          </p>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose}
+              className="px-3 py-2 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg transition">
+              Cancelar
+            </button>
+            <button type="button" onClick={confirmar} disabled={guardando || totalPiezas === 0}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-500 hover:bg-violet-600 disabled:opacity-50 text-white rounded-lg transition">
+              {guardando ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              {guardando ? "Creando productos..." : `Confirmar inspección`}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Sub-vista: compras ────────────────────────────────────────────────────────
 
 function ComprasTab() {
   const { compras, setCompras, loading } = useGetComprasMaterial()
   const { materiales } = useGetMateriales()
   const { proveedores } = useGetProveedores()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editando, setEditando] = useState<CompraMaterial | null>(null)
-  const [recibiendo, setRecibiendo] = useState<CompraMaterial | null>(null)
-  const [delId, setDelId] = useState<string | null>(null)
+  const [modalOpen,      setModalOpen]      = useState(false)
+  const [editando,       setEditando]       = useState<CompraMaterial | null>(null)
+  const [recibiendo,     setRecibiendo]     = useState<CompraMaterial | null>(null)
+  const [inspeccionando, setInspeccionando] = useState<CompraMaterial | null>(null)
+  const [delId,          setDelId]          = useState<string | null>(null)
 
   async function handleDelete(compra: CompraMaterial) {
     try {
@@ -524,6 +757,12 @@ function ComprasTab() {
                             <Check size={11} /> Recibir
                           </button>
                         )}
+                        {c.estado === "recibida" && (
+                          <button type="button" onClick={() => setInspeccionando(c)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition">
+                            <ScanLine size={11} /> Inspeccionar
+                          </button>
+                        )}
                         {delId === c.documentId ? (
                           <div className="flex items-center gap-1 px-1">
                             <span className="text-[10px] text-slate-500">{c.estado === "recibida" ? "¿Revertir stock y gasto?" : "¿Eliminar?"}</span>
@@ -556,6 +795,11 @@ function ComprasTab() {
       {recibiendo && (
         <RecibirModal compra={recibiendo} onClose={() => setRecibiendo(null)}
           onRecibida={c => { setCompras(prev => prev.map(x => x.documentId === c.documentId ? c : x)); setRecibiendo(null) }} />
+      )}
+      {inspeccionando && (
+        <InspeccionCompraModal compra={inspeccionando} materiales={materiales}
+          onClose={() => setInspeccionando(null)}
+          onDone={() => setInspeccionando(null)} />
       )}
     </div>
   )
