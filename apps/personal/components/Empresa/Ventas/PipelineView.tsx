@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useRef } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle, ArrowLeft,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
-  DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
+  DollarSign, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
 } from "lucide-react"
 import { toast } from "sonner"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
@@ -18,7 +18,7 @@ import { useGetCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotiza
 import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType } from "@/types/product"
 import { CotizacionModal } from "./CotizacionModal"
-import { useGetTransaccionesByCliente } from "@/api/transaccion/getTransacciones"
+import { useGetTransaccionesByVenta } from "@/api/transaccion/getTransacciones"
 import { createTransaccion } from "@/api/transaccion/createTransaccion"
 import { deleteTransaccion } from "@/api/transaccion/deleteTransaccion"
 import { TransaccionType, METODOS_PAGO, MetodoPagoTransaccion } from "@/types/transaccion"
@@ -534,6 +534,22 @@ export function PedidoModal({ venta, onClose, onSaved }: {
   const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
   const lbl = "text-[11px] font-medium text-slate-400 mb-1.5 block"
 
+  // Pagos — viven aquí (dentro del pedido), no en la ficha del cliente, ya
+  // que un pedido puede recibir varios (anticipo, liquidación).
+  const { transacciones: pagos, setTransacciones: setPagos, loading: pagosLoading } = useGetTransaccionesByVenta(venta.documentId)
+  const [pagoModalOpen, setPagoModalOpen] = useState(false)
+  const totalPagado = pagos.reduce((s, p) => s + (p.monto ?? 0), 0)
+  const saldo = venta.monto - totalPagado
+
+  const eliminarPago = async (documentId: string) => {
+    if (!confirm("¿Eliminar este pago?")) return
+    try {
+      await deleteTransaccion(documentId)
+      setPagos(prev => prev.filter(p => p.documentId !== documentId))
+      toast.success("Pago eliminado")
+    } catch { toast.error("Error al eliminar") }
+  }
+
   const guardar = async () => {
     if (!form.concepto.trim()) { toast.error("El concepto es obligatorio"); return }
     if (!form.monto) { toast.error("El monto es obligatorio"); return }
@@ -551,6 +567,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
@@ -632,6 +649,53 @@ export function PedidoModal({ venta, onClose, onSaved }: {
             <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
               rows={2} className={inp + " resize-none h-auto py-2"} />
           </div>
+
+          {/* Pagos de este pedido — anticipo, liquidación, etc. */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className={lbl + " mb-0"}>Pagos</label>
+              {venta.cliente && (
+                <button type="button" onClick={() => setPagoModalOpen(true)}
+                  className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                  <Plus size={10} /> Registrar
+                </button>
+              )}
+            </div>
+            <div className="border border-slate-700 rounded-lg overflow-hidden">
+              <div className="flex gap-3 px-3 py-2 bg-slate-950/50 text-[11px]">
+                <span className="text-slate-500">Pagado: <span className="text-violet-400 font-mono font-semibold">{fmtMoney(totalPagado)}</span></span>
+                <span className={saldo > 0 ? "text-violet-400" : "text-slate-500"}>
+                  Saldo: <span className="font-mono font-semibold">{fmtMoney(Math.max(saldo, 0))}</span>
+                </span>
+              </div>
+              <div className="divide-y divide-slate-800">
+                {pagosLoading ? (
+                  <p className="text-[11px] text-slate-600 px-3 py-3">Cargando...</p>
+                ) : pagos.length === 0 ? (
+                  <p className="text-[11px] text-slate-600 px-3 py-3">Sin pagos registrados todavía.</p>
+                ) : (
+                  pagos.map(p => (
+                    <div key={p.documentId} className="flex items-center justify-between px-3 py-2 group">
+                      <div className="min-w-0">
+                        <p className="text-[12px] text-slate-200 truncate">{p.descripcion}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] text-slate-600">{fmtDt(p.fecha)}</span>
+                          {p.metodoPago && <span className="text-[9px] text-slate-500">{p.metodoPago}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[12px] font-semibold text-violet-400 font-mono">{fmtMoney(p.monto)}</span>
+                        <button type="button" onClick={() => eliminarPago(p.documentId)} title="Eliminar pago"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
@@ -644,6 +708,20 @@ export function PedidoModal({ venta, onClose, onSaved }: {
         </div>
       </div>
     </div>
+
+    {pagoModalOpen && venta.cliente && (
+      <PagoModal
+        clienteNombre={venta.cliente.nombre}
+        clienteDocumentId={venta.cliente.documentId}
+        pedidosDelCliente={[venta]}
+        onClose={() => setPagoModalOpen(false)}
+        onSaved={p => {
+          setPagos(prev => [...prev, p])
+          setPagoModalOpen(false)
+        }}
+      />
+    )}
+    </>
   )
 }
 
@@ -848,7 +926,6 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
-  const [pagoModalOpen, setPagoModalOpen] = useState(false)
   const [tab, setTab] = useState<"general" | "ventas">("ventas")
   const [pedidoAbierto, setPedidoAbierto] = useState<VentaEmpresa | null>(null)
 
@@ -894,7 +971,6 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
     } catch { toast.error("Error al guardar") } finally { setGuardandoNotas(false) }
   }
   const { cotizaciones, setCotizaciones, loading: cotLoading } = useGetCotizaciones(cliente.documentId)
-  const { transacciones: ingresos, setTransacciones: setIngresos, loading: ingLoading } = useGetTransaccionesByCliente(cliente.documentId)
 
   const handleCotizacionSaved = useCallback((saved: Cotizacion) => {
     setCotizaciones(prev => {
@@ -1326,103 +1402,6 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
               </div>
             </div>
           </div>
-
-          {/* Pagos — a lo ancho, debajo de las 2 tarjetas */}
-          <div className={cardCls}>
-            <div className={cardHeadCls}>
-              <h3 className={cardTitleCls}>Pagos</h3>
-              <button type="button"
-                onClick={() => setPagoModalOpen(true)}
-                className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
-                <Plus size={10} /> Registrar
-              </button>
-            </div>
-            <div className="p-4">
-              {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
-              {(() => {
-                const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
-                const totalAcordado = cotizacionesAceptadas.length > 0
-                  ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
-                  : null
-                const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
-                const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
-                return totalAcordado !== null || totalPagado > 0 ? (
-                  <div className="flex gap-2 mb-3 flex-wrap">
-                    {totalAcordado !== null && (
-                      <span className="text-[10px] text-slate-500">
-                        Total: <span className="text-slate-300 font-mono">
-                          {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                        </span>
-                      </span>
-                    )}
-                    <span className="text-[10px] text-violet-400 font-mono">
-                      Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                    </span>
-                    {saldo !== null && saldo > 0 && (
-                      <span className="flex items-center gap-0.5 text-[10px] text-violet-400 font-mono">
-                        <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                      </span>
-                    )}
-                    {saldo !== null && saldo <= 0 && (
-                      <span className="text-[10px] text-violet-400">✓ Liquidado</span>
-                    )}
-                  </div>
-                ) : null
-              })()}
-
-              {ingLoading ? (
-                <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
-              ) : ingresos.length === 0 ? (
-                <button type="button"
-                  onClick={() => setPagoModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-1.5 py-4 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
-                  <Banknote size={11} /> Registrar primer pago
-                </button>
-              ) : (
-                <div className="space-y-1">
-                  {ingresos.map(ing => (
-                    <div key={ing.documentId}
-                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 group">
-                      <div>
-                        <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
-                          {ing.metodoPago && (
-                            <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
-                              {ing.metodoPago}
-                            </span>
-                          )}
-                          {ing.ventaOrigen ? (
-                            <span className="text-[9px] text-violet-400 font-mono">→ {ing.ventaOrigen.numero ?? ing.ventaOrigen.concepto}</span>
-                          ) : (
-                            <span className="text-[9px] text-slate-700">sin pedido ligado</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[12px] font-bold text-violet-400 font-mono">
-                          {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                        </span>
-                        <button type="button"
-                          onClick={async () => {
-                            if (!confirm("¿Eliminar este pago?")) return
-                            try {
-                              await deleteTransaccion(ing.documentId)
-                              setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
-                              toast.success("Pago eliminado")
-                            } catch { toast.error("Error al eliminar") }
-                          }}
-                          title="Eliminar pago"
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
-                          <Trash2 size={10} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       )}
 
@@ -1491,19 +1470,6 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
           totalCotizaciones={cotizaciones.length}
           onClose={() => setCotModalState(null)}
           onSaved={handleCotizacionSaved}
-        />
-      )}
-
-      {pagoModalOpen && (
-        <PagoModal
-          clienteNombre={cliente.nombre}
-          clienteDocumentId={cliente.documentId}
-          pedidosDelCliente={ventasDelCliente}
-          onClose={() => setPagoModalOpen(false)}
-          onSaved={ing => {
-            setIngresos(prev => [...prev, ing])
-            setPagoModalOpen(false)
-          }}
         />
       )}
 

@@ -27,6 +27,29 @@ export function useGetTransacciones(ambito: "trabajo" | "empresa" = "trabajo") {
   return { transacciones, setTransacciones, loading, error }
 }
 
+// Pagos de un pedido puntual — vive dentro del pedido, no del cliente en
+// general, ya que un pedido puede tener varios pagos (anticipo, liquidación).
+export function useGetTransaccionesByVenta(ventaDocumentId: string | null) {
+  const [transacciones, setTransacciones] = useState<TransaccionType[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!ventaDocumentId) { setLoading(false); return }
+    ;(async () => {
+      try {
+        const url  = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transaccions?filters[ventaOrigen][documentId][$eq]=${ventaDocumentId}&filters[tipo][$eq]=ingreso&populate=*&pagination[pageSize]=100&sort=createdAt:asc`
+        const res  = await fetch(url)
+        const json = await res.json()
+        setTransacciones(json.data ?? [])
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [ventaDocumentId])
+
+  return { transacciones, setTransacciones, loading }
+}
+
 export function useGetTransaccionesByCliente(clienteDocumentId: string | null) {
   const [transacciones, setTransacciones] = useState<TransaccionType[]>([])
   const [loading, setLoading] = useState(true)
