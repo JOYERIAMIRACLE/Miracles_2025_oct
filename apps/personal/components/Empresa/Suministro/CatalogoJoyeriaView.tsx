@@ -11,8 +11,8 @@ import {
   CatalogoNodo, TipoNodo, Caracteristica, Modelo,
   TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia, arbolInicial,
 } from "@/types/catalogoJoyeria"
-import { fetchCatalogo, saveCatalogo, fetchSkus } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
-import { SkuEntry } from "@/types/skuCatalogo"
+import { fetchCatalogo, saveCatalogo, fetchSkus, saveSkus } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
+import { SkuEntry, MATERIALES_SKU, ESTILOS_SKU, TIPOS_SKU } from "@/types/skuCatalogo"
 import { SkuBuilder } from "@/components/Shared/SkuBuilder"
 
 // ─── Tree helpers ─────────────────────────────────────────────────────────────
@@ -417,9 +417,220 @@ function DetailPanel({
   )
 }
 
-// ─── Main View ────────────────────────────────────────────────────────────────
+// ─── SKU Browser Panel ────────────────────────────────────────────────────────
 
-type TabView = "arbol" | "constructor"
+function SkuBrowserPanel({
+  skus,
+  categoryFilter,
+  onSkuDeleted,
+  onSkuAdded,
+}: {
+  skus: SkuEntry[]
+  categoryFilter: string | null
+  onSkuDeleted: (id: string) => void
+  onSkuAdded: (entry: SkuEntry) => void
+}) {
+  const [q,            setQ]            = useState("")
+  const [filterMat,    setFilterMat]    = useState<string[]>([])
+  const [filterEstilo, setFilterEstilo] = useState<string[]>([])
+  const [filterTalla,  setFilterTalla]  = useState<string[]>([])
+  const [showBuilder,  setShowBuilder]  = useState(false)
+
+  // Cuando cambia la categoría, limpiar filtros
+  useEffect(() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]); setQ("") }, [categoryFilter])
+
+  const tipoCat = categoryFilter ? TIPOS_SKU.find(t => t.catJoya === categoryFilter) : null
+
+  const scopeSkus = useMemo(
+    () => categoryFilter ? skus.filter(s => s.tipoCategoria === categoryFilter) : skus,
+    [skus, categoryFilter]
+  )
+
+  const availMat    = useMemo(() => [...new Set(scopeSkus.map(s => s.mat))],    [scopeSkus])
+  const availEstilo = useMemo(() => [...new Set(scopeSkus.map(s => s.estilo))], [scopeSkus])
+  const availTalla  = useMemo(() => [...new Set(scopeSkus.map(s => s.talla))],  [scopeSkus])
+
+  const visible = useMemo(() => {
+    let list = scopeSkus
+    if (filterMat.length > 0)    list = list.filter(s => filterMat.includes(s.mat))
+    if (filterEstilo.length > 0) list = list.filter(s => filterEstilo.includes(s.estilo))
+    if (filterTalla.length > 0)  list = list.filter(s => filterTalla.includes(s.talla))
+    if (q.trim()) {
+      const lq = q.toLowerCase()
+      list = list.filter(s =>
+        s.sku.toLowerCase().includes(lq) ||
+        s.nombre.toLowerCase().includes(lq) ||
+        s.estiloLabel.toLowerCase().includes(lq) ||
+        s.matLabel.toLowerCase().includes(lq)
+      )
+    }
+    return list
+  }, [scopeSkus, filterMat, filterEstilo, filterTalla, q])
+
+  function toggle(arr: string[], set: (v: string[]) => void, val: string) {
+    set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
+  }
+
+  const hasFilters = filterMat.length + filterEstilo.length + filterTalla.length > 0
+  const lbl = "text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2"
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+
+      {/* Sub-header */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-800 shrink-0 bg-slate-900/40">
+        <div>
+          <p className="text-sm font-semibold text-slate-200">
+            {categoryFilter ?? "Todos los SKUs"}
+          </p>
+          <p className="text-[10px] text-slate-600 mt-0.5">
+            {visible.length}{visible.length !== scopeSkus.length ? ` de ${scopeSkus.length}` : ""} SKU{scopeSkus.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+            <input value={q} onChange={e => setQ(e.target.value)}
+              placeholder="Buscar…"
+              className="pl-7 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-32 transition" />
+          </div>
+          <button type="button" onClick={() => setShowBuilder(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition ${
+              showBuilder
+                ? "bg-violet-600 border-violet-500 text-white"
+                : "border-slate-700 text-slate-400 hover:text-violet-300 hover:border-violet-500/40"
+            }`}>
+            <Wand2 size={12} />
+            {showBuilder ? "Cerrar" : "Nueva pieza"}
+          </button>
+        </div>
+      </div>
+
+      {/* SkuBuilder expandible */}
+      {showBuilder && (
+        <div className="shrink-0 border-b border-slate-800 p-4 overflow-y-auto max-h-[50vh] bg-slate-950/40">
+          <SkuBuilder
+            defaultTipo={tipoCat?.code}
+            onAdd={entry => { onSkuAdded(entry); setShowBuilder(false) }}
+          />
+        </div>
+      )}
+
+      <div className="flex flex-1 overflow-hidden min-h-0">
+
+        {/* Filtros laterales */}
+        <div className="w-40 shrink-0 border-r border-slate-800 overflow-y-auto p-3 space-y-4">
+
+          {availMat.length > 1 && (
+            <div>
+              <p className={lbl}>Material</p>
+              <div className="space-y-1.5">
+                {MATERIALES_SKU.filter(m => availMat.includes(m.code)).map(m => (
+                  <label key={m.code} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={filterMat.includes(m.code)}
+                      onChange={() => toggle(filterMat, setFilterMat, m.code)}
+                      className="accent-violet-500 rounded shrink-0" />
+                    <span className={`text-[11px] leading-tight transition ${filterMat.includes(m.code) ? "text-violet-300 font-medium" : "text-slate-400"}`}>
+                      {m.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {availEstilo.length > 1 && (
+            <div>
+              <p className={lbl}>Estilo</p>
+              <div className="space-y-1.5">
+                {availEstilo.map(code => {
+                  const label = Object.values(ESTILOS_SKU).flat().find(e => e.code === code)?.label ?? code
+                  return (
+                    <label key={code} className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={filterEstilo.includes(code)}
+                        onChange={() => toggle(filterEstilo, setFilterEstilo, code)}
+                        className="accent-violet-500 rounded shrink-0" />
+                      <span className={`text-[11px] leading-tight transition ${filterEstilo.includes(code) ? "text-violet-300 font-medium" : "text-slate-400"}`}>
+                        {label}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {availTalla.length > 1 && (
+            <div>
+              <p className={lbl}>Talla</p>
+              <div className="space-y-1.5">
+                {availTalla.map(t => (
+                  <label key={t} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={filterTalla.includes(t)}
+                      onChange={() => toggle(filterTalla, setFilterTalla, t)}
+                      className="accent-violet-500 rounded shrink-0" />
+                    <span className={`text-[11px] leading-tight transition ${filterTalla.includes(t) ? "text-violet-300 font-medium" : "text-slate-400"}`}>
+                      {t}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasFilters && (
+            <button type="button"
+              onClick={() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]) }}
+              className="text-[10px] text-slate-600 hover:text-violet-400 transition">
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+
+        {/* Grid de SKUs */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {visible.length === 0 ? (
+            <div className="py-16 text-center">
+              <Gem size={24} className="mx-auto mb-3 text-slate-700" />
+              <p className="text-slate-600 text-xs">
+                {scopeSkus.length === 0
+                  ? "Sin SKUs — usa \"Nueva pieza\" para crear"
+                  : "Sin resultados para estos filtros"}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2">
+              {visible.map(s => (
+                <div key={s.id}
+                  className="group relative flex flex-col gap-1.5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 hover:border-violet-500/30 transition">
+                  <button type="button" title="Eliminar"
+                    onClick={async () => {
+                      onSkuDeleted(s.id)
+                      await saveSkus(skus.filter(x => x.id !== s.id))
+                    }}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-slate-700 hover:text-red-400 transition p-0.5 rounded">
+                    <X size={11} />
+                  </button>
+                  <p className="text-xs font-semibold text-slate-200 pr-4 leading-snug">{s.nombre}</p>
+                  <p className="text-[11px] font-mono text-violet-400 tracking-wider">{s.sku}</p>
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-400">{s.matLabel}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-400">T {s.talla}</span>
+                    {s.extras.map(e => (
+                      <span key={e} className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400">{e}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main View ────────────────────────────────────────────────────────────────
 
 export function CatalogoJoyeriaView() {
   const [tree,      setTree]      = useState<CatalogoNodo[]>([])
@@ -429,7 +640,6 @@ export function CatalogoJoyeriaView() {
   const [offline,   setOffline]   = useState(false)
   const [selected,  setSelected]  = useState<string | null>(null)
   const [busqueda,  setBusqueda]  = useState("")
-  const [tab,       setTab]       = useState<TabView>("arbol")
   const [skus,      setSkus]      = useState<SkuEntry[]>([])
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -523,26 +733,6 @@ export function CatalogoJoyeriaView() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Tabs */}
-          <div className="flex rounded-lg border border-slate-700/60 overflow-hidden">
-            <button type="button" onClick={() => setTab("arbol")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
-                tab === "arbol"
-                  ? "bg-violet-600 text-white"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-              }`}>
-              <Layers size={12} /> Árbol
-            </button>
-            <button type="button" onClick={() => setTab("constructor")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-slate-700/60 transition ${
-                tab === "constructor"
-                  ? "bg-violet-600 text-white"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-              }`}>
-              <Wand2 size={12} /> Constructor
-            </button>
-          </div>
-
           {/* Estado de guardado */}
           {saving && (
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
@@ -560,160 +750,102 @@ export function CatalogoJoyeriaView() {
             </div>
           )}
 
-          {tab === "arbol" && (
-            <>
-              {/* Búsqueda */}
-              <div className="relative">
-                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
-                <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-                  placeholder="Buscar…"
-                  className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44 transition" />
-                {busqueda && (
-                  <button type="button" title="Limpiar búsqueda" onClick={() => setBusqueda("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
-                    <X size={11} />
-                  </button>
-                )}
-              </div>
-
-              {/* Inicializar plantilla */}
-              {tree.length === 0 && (
-                <button type="button"
-                  onClick={() => { const t = arbolInicial(); setTree(t); scheduleSave(t) }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
-                  <Layers size={13} /> Inicializar plantilla
-                </button>
-              )}
-
-              {/* Agregar material */}
-              <button type="button" onClick={handleAddMaterial}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
-                <Plus size={13} /> Material
+          {/* Búsqueda árbol */}
+          <div className="relative">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+            <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
+              placeholder="Buscar en árbol…"
+              className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-40 transition" />
+            {busqueda && (
+              <button type="button" title="Limpiar" onClick={() => setBusqueda("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
+                <X size={11} />
               </button>
-            </>
+            )}
+          </div>
+
+          {tree.length === 0 && (
+            <button type="button"
+              onClick={() => { const t = arbolInicial(); setTree(t); scheduleSave(t) }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
+              <Layers size={13} /> Inicializar plantilla
+            </button>
           )}
+
+          <button type="button" onClick={handleAddMaterial}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
+            <Plus size={13} /> Material
+          </button>
         </div>
       </div>
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
 
-        {tab === "arbol" ? (
-          <>
-            {/* Árbol — panel izquierdo */}
-            <div className="w-72 shrink-0 border-r border-slate-800 overflow-y-auto p-3 space-y-0.5">
-              {tree.length === 0 ? (
-                <div className="py-12 text-center">
-                  <Gem size={28} className="mx-auto mb-3 text-slate-700" />
-                  <p className="text-slate-600 text-xs mb-3">Sin materiales</p>
-                  <button type="button" onClick={handleAddMaterial}
-                    className="text-xs text-violet-400 hover:text-violet-300 transition">
-                    + Agregar material
-                  </button>
-                </div>
-              ) : tree.map(node => (
-                <TreeRow
-                  key={node.id}
-                  node={node}
-                  depth={0}
-                  selected={selected}
-                  onSelect={setSelected}
-                  onAdd={handleAdd}
-                  onDel={handleDel}
-                  onMov={handleMov}
-                  busqueda={busqueda}
-                />
-              ))}
+        {/* Árbol — panel izquierdo, siempre visible */}
+        <div className="w-64 shrink-0 border-r border-slate-800 overflow-y-auto p-3 space-y-0.5">
+          {tree.length === 0 ? (
+            <div className="py-12 text-center">
+              <Gem size={28} className="mx-auto mb-3 text-slate-700" />
+              <p className="text-slate-600 text-xs mb-3">Sin materiales</p>
+              <button type="button" onClick={handleAddMaterial}
+                className="text-xs text-violet-400 hover:text-violet-300 transition">
+                + Agregar material
+              </button>
             </div>
+          ) : tree.map(node => (
+            <TreeRow
+              key={node.id}
+              node={node}
+              depth={0}
+              selected={selected}
+              onSelect={setSelected}
+              onAdd={handleAdd}
+              onDel={handleDel}
+              onMov={handleMov}
+              busqueda={busqueda}
+            />
+          ))}
+        </div>
 
-            {/* Panel derecho — detalle */}
+        {/* Panel derecho — cambia según selección */}
+        <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+          {selectedNode?.tipo === "producto" || selectedNode?.tipo === "material" ? (
+            /* Material o Producto seleccionado → editor de detalles */
             <div className="flex-1 overflow-y-auto">
-              {selectedNode ? (
-                <>
-                  <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/40 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-semibold ${TIPO_CONFIG[selectedNode.tipo].color}`}>
-                        {TIPO_CONFIG[selectedNode.tipo].label}
-                      </span>
-                      <span className="text-slate-300 text-sm font-medium">
-                        {selectedNode.nombre || "sin nombre"}
-                      </span>
-                    </div>
-                    {TIPO_CONFIG[selectedNode.tipo].childTipo && (
-                      <button type="button"
-                        onClick={() => handleAdd(selectedNode.id, TIPO_CONFIG[selectedNode.tipo].childTipo!)}
-                        className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-400 transition border border-slate-700 rounded-lg px-2.5 py-1">
-                        <Plus size={11} />
-                        {TIPO_CONFIG[selectedNode.tipo].childLabel}
-                      </button>
-                    )}
-                  </div>
-                  <DetailPanel
-                    node={selectedNode}
-                    onUpdate={patch => handleUpdate(selectedNode.id, patch)}
-                  />
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-3">
-                  <SlidersHorizontal size={32} className="text-slate-700" />
-                  <p className="text-slate-600 text-sm">Selecciona un elemento del árbol para editarlo</p>
-                  <p className="text-slate-700 text-xs">Material → Categoría → Producto</p>
+              <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/40 shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-semibold ${TIPO_CONFIG[selectedNode.tipo].color}`}>
+                    {TIPO_CONFIG[selectedNode.tipo].label}
+                  </span>
+                  <span className="text-slate-300 text-sm font-medium">
+                    {selectedNode.nombre || "sin nombre"}
+                  </span>
                 </div>
-              )}
-            </div>
-          </>
-        ) : (
-          /* Tab Constructor */
-          <div className="flex flex-1 overflow-hidden">
-            {/* Builder */}
-            <div className="w-[420px] shrink-0 border-r border-slate-800 overflow-y-auto p-4">
-              <SkuBuilder
-                onAdd={entry => setSkus(prev => {
-                  const next = [...prev.filter(s => s.id !== entry.id), entry]
-                  return next
-                })}
+                {TIPO_CONFIG[selectedNode.tipo].childTipo && (
+                  <button type="button"
+                    onClick={() => handleAdd(selectedNode.id, TIPO_CONFIG[selectedNode.tipo].childTipo!)}
+                    className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-400 transition border border-slate-700 rounded-lg px-2.5 py-1">
+                    <Plus size={11} />
+                    {TIPO_CONFIG[selectedNode.tipo].childLabel}
+                  </button>
+                )}
+              </div>
+              <DetailPanel
+                node={selectedNode}
+                onUpdate={patch => handleUpdate(selectedNode.id, patch)}
               />
             </div>
-
-            {/* Lista de SKUs guardados */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">
-                SKUs en catálogo ({skus.length})
-              </p>
-              {skus.length === 0 ? (
-                <div className="py-16 text-center">
-                  <Wand2 size={28} className="mx-auto mb-3 text-slate-700" />
-                  <p className="text-slate-600 text-xs">Usa el constructor para generar tu primer SKU</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {skus.map(s => (
-                    <div key={s.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-slate-800/40 border border-slate-700/40 group">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-slate-200 truncate">{s.nombre}</p>
-                        <p className="text-[10px] font-mono text-violet-400 mt-0.5">{s.sku}</p>
-                        <p className="text-[9px] text-slate-600 mt-0.5">{s.matLabel} · {s.tipoCategoria} · Talla {s.talla}</p>
-                      </div>
-                      <button
-                        type="button"
-                        title="Eliminar SKU"
-                        onClick={async () => {
-                          const next = skus.filter(x => x.id !== s.id)
-                          setSkus(next)
-                          const { saveSkus } = await import("@/api/catalogoJoyeria/getCatalogoJoyeria")
-                          await saveSkus(next)
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-1 shrink-0"
-                      >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          ) : (
+            /* Categoría seleccionada o nada → SKU Browser */
+            <SkuBrowserPanel
+              skus={skus}
+              categoryFilter={selectedNode?.tipo === "categoria" ? selectedNode.nombre : null}
+              onSkuDeleted={id => setSkus(prev => prev.filter(s => s.id !== id))}
+              onSkuAdded={entry => setSkus(prev => [...prev.filter(s => s.id !== entry.id), entry])}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
