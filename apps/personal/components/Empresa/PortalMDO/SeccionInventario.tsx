@@ -1,19 +1,21 @@
 "use client"
 
-import { Boxes, Scale, Truck } from "lucide-react"
+import { Boxes, Scale, Truck, BookOpen } from "lucide-react"
 import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
 import { InventarioEmpresaView } from "@/components/Empresa/Almacen/InventarioEmpresaView"
 import { MateriaPrimaView } from "@/components/Empresa/Compras/MateriaPrimaView"
 import { EnviosView } from "@/components/Empresa/Suministro/EnviosView"
+import { CatalogoJoyeriaView } from "@/components/Empresa/Suministro/CatalogoJoyeriaView"
 
 const TABS = [
-  { id: "materiaprima", label: "Compras",   icon: Scale },
-  { id: "productos",    label: "Productos", icon: Boxes },
-  { id: "logistica",    label: "Logística", icon: Truck },
+  { id: "materiaprima", label: "Compras",   icon: Scale    },
+  { id: "productos",    label: "Productos", icon: Boxes    },
+  { id: "catalogo",     label: "Catálogo",  icon: BookOpen },
+  { id: "logistica",    label: "Logística", icon: Truck    },
 ]
 
 export function SeccionInventario() {
-  const { tab, setTab } = useSectionTab("inventario", "productos")
+  const { tab, setTab } = useSectionTab("inventario", "materiaprima")
   const activo = TABS.find(t => t.id === tab) ?? TABS[0]
 
   return (
@@ -21,12 +23,13 @@ export function SeccionInventario() {
       <SeccionHero
         breadcrumb={["Operación", "Inventario", activo.label]}
         titulo="Inventario"
-        descripcion="Producto terminado, compras de material y su logística de envío."
+        descripcion="Compras, producto terminado, catálogo de SKUs y logística."
       >
         <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
       </SeccionHero>
-      {tab === "productos"    && <InventarioEmpresaView />}
       {tab === "materiaprima" && <MateriaPrimaView />}
+      {tab === "productos"    && <InventarioEmpresaView />}
+      {tab === "catalogo"     && <CatalogoJoyeriaView />}
       {tab === "logistica"    && <EnviosView />}
     </div>
   )
