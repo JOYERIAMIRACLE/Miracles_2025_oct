@@ -68,6 +68,9 @@ export type IdentidadEmpresa = {
   descripcion_campanas:      string | null
   portada_campanas:          IdentidadImagen
   portada_campanas_original: IdentidadImagen
+  descripcion_contactos:      string | null
+  portada_contactos:          IdentidadImagen
+  portada_contactos_original: IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }

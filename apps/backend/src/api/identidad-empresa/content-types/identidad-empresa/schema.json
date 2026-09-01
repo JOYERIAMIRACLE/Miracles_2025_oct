@@ -68,6 +68,9 @@
     "portada_tareas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "descripcion_campanas":      { "type": "text" },
     "portada_campanas":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "portada_campanas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "portada_campanas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "descripcion_contactos":      { "type": "text" },
+    "portada_contactos":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_contactos_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }
