@@ -8,7 +8,7 @@ import { EnviosView } from "@/components/Empresa/Suministro/EnviosView"
 
 const TABS = [
   { id: "productos",    label: "Productos",     icon: Boxes },
-  { id: "materiaprima", label: "Materia prima", icon: Scale },
+  { id: "materiaprima", label: "Compras",       icon: Scale },
   { id: "logistica",    label: "Logística",     icon: Truck },
 ]
 
