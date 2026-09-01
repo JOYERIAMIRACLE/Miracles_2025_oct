@@ -41,7 +41,10 @@ function useStaticAccesos(onNavigate: (id: string, tab?: string) => void): { gru
     },
     {
       grupo: servicios.label,
-      items: servicios.items.map(it => ({ id: it.id, label: it.label, icon: it.icon, onClick: () => onNavigate(it.id) })),
+      items: servicios.items.map(it => ({
+        id: it.id, label: it.label, icon: it.icon,
+        onClick: it.href ? () => window.open(it.href!, "_blank", "noopener,noreferrer") : () => onNavigate(it.id),
+      })),
     },
   ]
 }

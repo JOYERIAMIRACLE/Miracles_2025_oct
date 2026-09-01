@@ -4,7 +4,7 @@ import { useState } from "react"
 import {
   Home, Landmark, Building2, Flag, Briefcase, ListChecks,
   Megaphone, Contact, ShoppingBag, Boxes, DollarSign, Globe,
-  FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings,
+  FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings, Brain,
 } from "lucide-react"
 import { PortalMDOConfigModal } from "./PortalMDOConfigModal"
 
@@ -17,6 +17,10 @@ export interface NavItem {
       dentro del grupo "Conoce a Medallita de oro", que por lo demás
       funciona por pestañas de una sola sección. */
   ownSection?: boolean
+  /** Si se define, el item no navega a una sección interna del portal —
+      abre esta ruta en pestaña nueva (ej. Second Brain, que vive en su
+      propio layout fuera del portal-medallitadeoro). */
+  href?: string
 }
 
 export interface NavGroup {
@@ -62,6 +66,7 @@ export const GRUPOS: NavGroup[] = [
     id: "servicios", label: "Servicios y apps", icon: Layers, itemsAreOwnSection: true,
     items: [
       { id: "enlaces", label: "Enlaces", icon: Link2 },
+      { id: "segundo-cerebro", label: "Second Brain", icon: Brain, href: "/segundo-cerebro" },
     ],
   },
 ]
@@ -70,7 +75,7 @@ export const DEPT_ICONS: Record<string, typeof Home> = {
   "quienes-somos": Building2, mision: Flag,
   tareas: ListChecks, campanas: Megaphone, contactos: Contact,
   ventas: ShoppingBag, inventario: Boxes, finanzas: DollarSign, "sitio-web": Globe,
-  documentos: FileText, marca: Palette, enlaces: Link2,
+  documentos: FileText, marca: Palette, enlaces: Link2, "segundo-cerebro": Brain,
 }
 
 interface Props {
@@ -133,15 +138,24 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
                     const Icon = item.icon
                     const itemOwnSection = item.ownSection ?? grupo.itemsAreOwnSection
                     const active = itemOwnSection ? seccion === item.id : seccion === grupo.id && tab === item.id
+                    const itemCls = [
+                      "w-full flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all",
+                      active
+                        ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-slate-800 border-r-2 border-violet-500"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
+                    ].join(" ")
+                    if (item.href) {
+                      return (
+                        <a key={item.id} href={item.href} target="_blank" rel="noopener noreferrer" className={itemCls}>
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="flex-1 text-left truncate">{item.label}</span>
+                        </a>
+                      )
+                    }
                     return (
                       <button key={item.id} type="button"
                         onClick={() => itemOwnSection ? onNavigate(item.id) : onNavigate(grupo.id, item.id)}
-                        className={[
-                          "w-full flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all",
-                          active
-                            ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-slate-800 border-r-2 border-violet-500"
-                            : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800",
-                        ].join(" ")}>
+                        className={itemCls}>
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="flex-1 text-left truncate">{item.label}</span>
                       </button>
