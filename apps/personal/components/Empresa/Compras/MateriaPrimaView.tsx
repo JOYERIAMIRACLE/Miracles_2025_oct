@@ -694,9 +694,9 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
             const estado = lineasState[li]!
 
             return (
-              <div key={linea.documentId} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+              <div key={linea.documentId} className="border border-slate-200 dark:border-slate-700 rounded-xl">
                 {/* Cabecera línea */}
-                <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between gap-4 flex-wrap">
+                <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between gap-4 flex-wrap rounded-t-xl">
                   <div>
                     <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{linea.descripcion}</p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">{linea.material?.nombre ?? "—"} · {fmtG(linea.gramos)} · {fmt(linea.precioPorGramo)}/g</p>
@@ -782,7 +782,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                         </button>
                       )}
                       {prodsFiltrados.length > 0 && (
-                        <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 overflow-y-auto max-h-56">
+                        <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-70 overflow-y-auto max-h-56">
                           {prodsFiltrados.map(p => (
                             <button key={p.sku} type="button"
                               onClick={() => {
