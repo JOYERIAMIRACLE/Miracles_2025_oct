@@ -7,9 +7,9 @@ import { MateriaPrimaView } from "@/components/Empresa/Compras/MateriaPrimaView"
 import { EnviosView } from "@/components/Empresa/Suministro/EnviosView"
 
 const TABS = [
-  { id: "productos",    label: "Productos",     icon: Boxes },
-  { id: "materiaprima", label: "Compras",       icon: Scale },
-  { id: "logistica",    label: "Logística",     icon: Truck },
+  { id: "materiaprima", label: "Compras",   icon: Scale },
+  { id: "productos",    label: "Productos", icon: Boxes },
+  { id: "logistica",    label: "Logística", icon: Truck },
 ]
 
 export function SeccionInventario() {
