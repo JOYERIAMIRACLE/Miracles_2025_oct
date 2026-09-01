@@ -2,12 +2,14 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2, ScanLine } from "lucide-react"
+import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2, ScanLine, Wand2 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetMateriales, createMaterial, updateMaterial, deleteMaterial } from "@/api/material/getMateriales"
 import { Material, MaterialPayload } from "@/types/material"
-import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
+import { fetchCatalogo, fetchSkus } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
+import { SkuEntry } from "@/types/skuCatalogo"
+import { SkuBuilder } from "@/components/Shared/SkuBuilder"
 import {
   useGetComprasMaterial, createCompraMaterial, updateCompraMaterial, deleteCompraMaterial,
   createCompraMaterialLinea, updateCompraMaterialLinea, deleteCompraMaterialLinea,
@@ -678,14 +680,31 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   const [lineasState,    setLineasState]    = useState<LineaState[]>(
     () => compra.lineas.map(() => ({ piezas: [], agregando: false }))
   )
-  const [guardando,      setGuardando]      = useState(false)
-  const [catalogoProds,  setCatalogoProds]  = useState<CatalogoProd[]>([])
-  const [busquedaCat,    setBusquedaCat]    = useState("")
-  const [lineaBuscando,  setLineaBuscando]  = useState<number | null>(null)
+  const [guardando,       setGuardando]       = useState(false)
+  const [catalogoProds,   setCatalogoProds]   = useState<CatalogoProd[]>([])
+  const [busquedaCat,     setBusquedaCat]     = useState("")
+  const [lineaBuscando,   setLineaBuscando]   = useState<number | null>(null)
+  const [skuBuilderLinea, setSkuBuilderLinea] = useState<number | null>(null)
   const searchRefs = useRef<Record<number, HTMLDivElement | null>>({})
 
   useEffect(() => {
-    fetchCatalogo().then(arbol => setCatalogoProds(flattenProductos(arbol))).catch(() => {})
+    // Carga árbol legacy + SKUs planos y los fusiona en la lista buscable
+    Promise.all([
+      fetchCatalogo().catch(() => [] as import("@/types/catalogoJoyeria").CatalogoNodo[]),
+      fetchSkus().catch(() => [] as SkuEntry[]),
+    ]).then(([arbol, skuEntries]) => {
+      const fromTree = flattenProductos(arbol)
+      const fromSkus: CatalogoProd[] = skuEntries.map(s => ({
+        sku: s.sku, nombre: s.nombre, categoria: s.tipoCategoria, material: s.matLabel, talla: s.talla,
+      }))
+      // Merge: SKUs planos tienen prioridad (deduplicar por sku)
+      const seen = new Set<string>()
+      const merged: CatalogoProd[] = []
+      for (const p of [...fromSkus, ...fromTree]) {
+        if (!seen.has(p.sku)) { seen.add(p.sku); merged.push(p) }
+      }
+      setCatalogoProds(merged)
+    })
   }, [])
 
   function guessCat(desc: string): CategoriaJoya | "" {
@@ -919,6 +938,42 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                               <span className="text-slate-400 text-[10px] shrink-0 ml-2 font-mono">{p.sku}</span>
                             </button>
                           ))}
+                        </div>
+                      )}
+                      {/* Cuando no hay resultados y hay texto buscado → ofrecer constructor */}
+                      {lineaBuscando === li && busquedaCat.trim() && prodsFiltrados.length === 0 && skuBuilderLinea !== li && (
+                        <button type="button"
+                          onClick={() => { setSkuBuilderLinea(li); setLineaBuscando(null) }}
+                          className="flex items-center gap-2 px-3 py-2 text-xs text-violet-400 hover:text-violet-300 border border-violet-500/30 hover:border-violet-400/50 rounded-lg bg-violet-500/5 transition w-full">
+                          <Wand2 size={12} />
+                          <span>&quot;{busquedaCat}&quot; no está en catálogo — Crear con constructor</span>
+                        </button>
+                      )}
+                      {/* SkuBuilder inline cuando está abierto para esta línea */}
+                      {skuBuilderLinea === li && (
+                        <div className="mt-2">
+                          <SkuBuilder
+                            defaultTipo={undefined}
+                            onClose={() => setSkuBuilderLinea(null)}
+                            onAdd={(entry: SkuEntry) => {
+                              const cat = CATEGORIAS_JOYA.find(
+                                c => c.toLowerCase() === entry.tipoCategoria.toLowerCase()
+                              ) ?? guessCat(linea.descripcion)
+                              setCatalogoProds(prev => [
+                                ...prev.filter(p => p.sku !== entry.sku),
+                                { sku: entry.sku, nombre: entry.nombre, categoria: entry.tipoCategoria, material: entry.matLabel, talla: entry.talla },
+                              ])
+                              setPiezas(li, prev => [...prev, {
+                                ...emptyPieza(),
+                                nombre: entry.nombre,
+                                categoriaJoya: cat as CategoriaJoya | "",
+                                talla: entry.talla,
+                              }])
+                              setBusquedaCat("")
+                              setSkuBuilderLinea(null)
+                              toast.success(`SKU ${entry.sku} guardado en catálogo`)
+                            }}
+                          />
                         </div>
                       )}
                     </div>

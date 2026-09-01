@@ -1,5 +1,6 @@
 import { getToken } from "@/lib/auth"
 import { CatalogoNodo, arbolInicial } from "@/types/catalogoJoyeria"
+import { SkuEntry } from "@/types/skuCatalogo"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -34,4 +35,34 @@ export async function saveCatalogo(arbol: CatalogoNodo[]): Promise<void> {
     },
     body: JSON.stringify({ data: { arbol } }),
   })
+}
+
+export async function fetchSkus(): Promise<SkuEntry[]> {
+  const token = getToken()
+  const res = await fetch(`${BASE}/api/catalogo-joyeria`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  })
+  if (!res.ok) return []
+  const json = await res.json()
+  return Array.isArray(json?.data?.skus) ? json.data.skus : []
+}
+
+export async function saveSkus(skus: SkuEntry[]): Promise<void> {
+  const token = getToken()
+  await fetch(`${BASE}/api/catalogo-joyeria`, {
+    method:  "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization:  `Bearer ${token}`,
+    },
+    body: JSON.stringify({ data: { skus } }),
+  })
+}
+
+export async function addSku(entry: SkuEntry): Promise<SkuEntry[]> {
+  const current = await fetchSkus()
+  const next = [...current.filter(s => s.id !== entry.id), entry]
+  await saveSkus(next)
+  return next
 }

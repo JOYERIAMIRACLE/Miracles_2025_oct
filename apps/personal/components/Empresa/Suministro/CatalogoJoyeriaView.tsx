@@ -4,14 +4,16 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
   BookOpen, ChevronRight, ChevronDown, Plus, Trash2,
   ChevronUp, Loader2, Search, X, SlidersHorizontal,
-  Tag, Gem, Layers, CheckCircle, WifiOff, ImagePlus, Package,
+  Tag, Gem, Layers, CheckCircle, WifiOff, ImagePlus, Package, Wand2,
 } from "lucide-react"
 import { uploadFoto } from "@/api/inventarioEmpresa/getInventario"
 import {
   CatalogoNodo, TipoNodo, Caracteristica, Modelo,
   TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia, arbolInicial,
 } from "@/types/catalogoJoyeria"
-import { fetchCatalogo, saveCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
+import { fetchCatalogo, saveCatalogo, fetchSkus } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
+import { SkuEntry } from "@/types/skuCatalogo"
+import { SkuBuilder } from "@/components/Shared/SkuBuilder"
 
 // ─── Tree helpers ─────────────────────────────────────────────────────────────
 
@@ -417,6 +419,8 @@ function DetailPanel({
 
 // ─── Main View ────────────────────────────────────────────────────────────────
 
+type TabView = "arbol" | "constructor"
+
 export function CatalogoJoyeriaView() {
   const [tree,      setTree]      = useState<CatalogoNodo[]>([])
   const [loading,   setLoading]   = useState(true)
@@ -425,17 +429,20 @@ export function CatalogoJoyeriaView() {
   const [offline,   setOffline]   = useState(false)
   const [selected,  setSelected]  = useState<string | null>(null)
   const [busqueda,  setBusqueda]  = useState("")
+  const [tab,       setTab]       = useState<TabView>("arbol")
+  const [skus,      setSkus]      = useState<SkuEntry[]>([])
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialized = useRef(false)
 
-  // Cargar árbol
+  // Cargar árbol y SKUs planos
   useEffect(() => {
     fetchCatalogo().then(arbol => {
       setTree(arbol)
       setLoading(false)
       initialized.current = true
     })
+    fetchSkus().then(setSkus)
   }, [])
 
   // Auto-save debounced
@@ -510,12 +517,32 @@ export function CatalogoJoyeriaView() {
           <div>
             <h1 className="text-lg font-bold text-slate-100 leading-none">Catálogo de Joyería</h1>
             <p className="text-[10px] text-slate-600 mt-0.5">
-              {stats.materiales} materiales · {stats.categorias} categorías · {stats.productos} productos
+              {stats.materiales} materiales · {stats.categorias} categorías · {stats.productos} productos · {skus.length} SKUs
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Tabs */}
+          <div className="flex rounded-lg border border-slate-700/60 overflow-hidden">
+            <button type="button" onClick={() => setTab("arbol")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
+                tab === "arbol"
+                  ? "bg-violet-600 text-white"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+              }`}>
+              <Layers size={12} /> Árbol
+            </button>
+            <button type="button" onClick={() => setTab("constructor")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-slate-700/60 transition ${
+                tab === "constructor"
+                  ? "bg-violet-600 text-white"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+              }`}>
+              <Wand2 size={12} /> Constructor
+            </button>
+          </div>
+
           {/* Estado de guardado */}
           {saving && (
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
@@ -533,103 +560,160 @@ export function CatalogoJoyeriaView() {
             </div>
           )}
 
-          {/* Búsqueda */}
-          <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
-            <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar…"
-              className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44 transition" />
-            {busqueda && (
-              <button type="button" title="Limpiar búsqueda" onClick={() => setBusqueda("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
-                <X size={11} />
+          {tab === "arbol" && (
+            <>
+              {/* Búsqueda */}
+              <div className="relative">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+                <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
+                  placeholder="Buscar…"
+                  className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44 transition" />
+                {busqueda && (
+                  <button type="button" title="Limpiar búsqueda" onClick={() => setBusqueda("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+
+              {/* Inicializar plantilla */}
+              {tree.length === 0 && (
+                <button type="button"
+                  onClick={() => { const t = arbolInicial(); setTree(t); scheduleSave(t) }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
+                  <Layers size={13} /> Inicializar plantilla
+                </button>
+              )}
+
+              {/* Agregar material */}
+              <button type="button" onClick={handleAddMaterial}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
+                <Plus size={13} /> Material
               </button>
-            )}
-          </div>
-
-          {/* Inicializar plantilla */}
-          {tree.length === 0 && (
-            <button type="button"
-              onClick={() => { const t = arbolInicial(); setTree(t); scheduleSave(t) }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
-              <Layers size={13} /> Inicializar plantilla
-            </button>
+            </>
           )}
-
-          {/* Agregar material */}
-          <button type="button" onClick={handleAddMaterial}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
-            <Plus size={13} /> Material
-          </button>
         </div>
       </div>
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Árbol — panel izquierdo */}
-        <div className="w-72 shrink-0 border-r border-slate-800 overflow-y-auto p-3 space-y-0.5">
-          {tree.length === 0 ? (
-            <div className="py-12 text-center">
-              <Gem size={28} className="mx-auto mb-3 text-slate-700" />
-              <p className="text-slate-600 text-xs mb-3">Sin materiales</p>
-              <button type="button" onClick={handleAddMaterial}
-                className="text-xs text-violet-400 hover:text-violet-300 transition">
-                + Agregar material
-              </button>
-            </div>
-          ) : tree.map(node => (
-            <TreeRow
-              key={node.id}
-              node={node}
-              depth={0}
-              selected={selected}
-              onSelect={setSelected}
-              onAdd={handleAdd}
-              onDel={handleDel}
-              onMov={handleMov}
-              busqueda={busqueda}
-            />
-          ))}
-        </div>
-
-        {/* Panel derecho — detalle */}
-        <div className="flex-1 overflow-y-auto">
-          {selectedNode ? (
-            <>
-              {/* Sub-header del nodo */}
-              <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/40 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold ${TIPO_CONFIG[selectedNode.tipo].color}`}>
-                    {TIPO_CONFIG[selectedNode.tipo].label}
-                  </span>
-                  <span className="text-slate-300 text-sm font-medium">
-                    {selectedNode.nombre || "sin nombre"}
-                  </span>
-                </div>
-                {/* Agregar hijo */}
-                {TIPO_CONFIG[selectedNode.tipo].childTipo && (
-                  <button type="button"
-                    onClick={() => handleAdd(selectedNode.id, TIPO_CONFIG[selectedNode.tipo].childTipo!)}
-                    className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-400 transition border border-slate-700 rounded-lg px-2.5 py-1">
-                    <Plus size={11} />
-                    {TIPO_CONFIG[selectedNode.tipo].childLabel}
+        {tab === "arbol" ? (
+          <>
+            {/* Árbol — panel izquierdo */}
+            <div className="w-72 shrink-0 border-r border-slate-800 overflow-y-auto p-3 space-y-0.5">
+              {tree.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Gem size={28} className="mx-auto mb-3 text-slate-700" />
+                  <p className="text-slate-600 text-xs mb-3">Sin materiales</p>
+                  <button type="button" onClick={handleAddMaterial}
+                    className="text-xs text-violet-400 hover:text-violet-300 transition">
+                    + Agregar material
                   </button>
-                )}
-              </div>
-              <DetailPanel
-                node={selectedNode}
-                onUpdate={patch => handleUpdate(selectedNode.id, patch)}
-              />
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-3">
-              <SlidersHorizontal size={32} className="text-slate-700" />
-              <p className="text-slate-600 text-sm">Selecciona un elemento del árbol para editarlo</p>
-              <p className="text-slate-700 text-xs">Material → Categoría → Producto</p>
+                </div>
+              ) : tree.map(node => (
+                <TreeRow
+                  key={node.id}
+                  node={node}
+                  depth={0}
+                  selected={selected}
+                  onSelect={setSelected}
+                  onAdd={handleAdd}
+                  onDel={handleDel}
+                  onMov={handleMov}
+                  busqueda={busqueda}
+                />
+              ))}
             </div>
-          )}
-        </div>
+
+            {/* Panel derecho — detalle */}
+            <div className="flex-1 overflow-y-auto">
+              {selectedNode ? (
+                <>
+                  <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/40 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-semibold ${TIPO_CONFIG[selectedNode.tipo].color}`}>
+                        {TIPO_CONFIG[selectedNode.tipo].label}
+                      </span>
+                      <span className="text-slate-300 text-sm font-medium">
+                        {selectedNode.nombre || "sin nombre"}
+                      </span>
+                    </div>
+                    {TIPO_CONFIG[selectedNode.tipo].childTipo && (
+                      <button type="button"
+                        onClick={() => handleAdd(selectedNode.id, TIPO_CONFIG[selectedNode.tipo].childTipo!)}
+                        className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-400 transition border border-slate-700 rounded-lg px-2.5 py-1">
+                        <Plus size={11} />
+                        {TIPO_CONFIG[selectedNode.tipo].childLabel}
+                      </button>
+                    )}
+                  </div>
+                  <DetailPanel
+                    node={selectedNode}
+                    onUpdate={patch => handleUpdate(selectedNode.id, patch)}
+                  />
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-3">
+                  <SlidersHorizontal size={32} className="text-slate-700" />
+                  <p className="text-slate-600 text-sm">Selecciona un elemento del árbol para editarlo</p>
+                  <p className="text-slate-700 text-xs">Material → Categoría → Producto</p>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          /* Tab Constructor */
+          <div className="flex flex-1 overflow-hidden">
+            {/* Builder */}
+            <div className="w-[420px] shrink-0 border-r border-slate-800 overflow-y-auto p-4">
+              <SkuBuilder
+                onAdd={entry => setSkus(prev => {
+                  const next = [...prev.filter(s => s.id !== entry.id), entry]
+                  return next
+                })}
+              />
+            </div>
+
+            {/* Lista de SKUs guardados */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">
+                SKUs en catálogo ({skus.length})
+              </p>
+              {skus.length === 0 ? (
+                <div className="py-16 text-center">
+                  <Wand2 size={28} className="mx-auto mb-3 text-slate-700" />
+                  <p className="text-slate-600 text-xs">Usa el constructor para generar tu primer SKU</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {skus.map(s => (
+                    <div key={s.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-slate-800/40 border border-slate-700/40 group">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-slate-200 truncate">{s.nombre}</p>
+                        <p className="text-[10px] font-mono text-violet-400 mt-0.5">{s.sku}</p>
+                        <p className="text-[9px] text-slate-600 mt-0.5">{s.matLabel} · {s.tipoCategoria} · Talla {s.talla}</p>
+                      </div>
+                      <button
+                        type="button"
+                        title="Eliminar SKU"
+                        onClick={async () => {
+                          const next = skus.filter(x => x.id !== s.id)
+                          setSkus(next)
+                          const { saveSkus } = await import("@/api/catalogoJoyeria/getCatalogoJoyeria")
+                          await saveSkus(next)
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-1 shrink-0"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
