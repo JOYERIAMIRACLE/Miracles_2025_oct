@@ -883,24 +883,17 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
 // ─── Vista principal ────────────────────────────────────────────────────────────
 
 export function MateriaPrimaView() {
-  const [tab,          setTab]          = useState<"compras" | "materiales">("compras")
   const [triggerNuevo, setTriggerNuevo] = useState(0)
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-lg p-1">
-          {([["compras", "Compras"], ["materiales", "Materiales"]] as const).map(([key, label]) => (
-            <button key={key} type="button" onClick={() => setTab(key)} className={pill(tab === key)}>{label}</button>
-          ))}
-        </div>
+      <div className="flex items-center justify-end gap-3 flex-wrap">
         <button type="button" onClick={() => setTriggerNuevo(t => t + 1)}
           className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 transition-colors">
-          <Plus size={15} /> {tab === "compras" ? "Nueva compra" : "Nuevo material"}
+          <Plus size={15} /> Nueva compra
         </button>
       </div>
-      {tab === "compras"    && <ComprasTab    triggerNuevo={triggerNuevo} />}
-      {tab === "materiales" && <MaterialesTab triggerNuevo={triggerNuevo} />}
+      <ComprasTab triggerNuevo={triggerNuevo} />
     </div>
   )
 }
