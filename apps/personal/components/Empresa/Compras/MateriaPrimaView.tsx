@@ -5,8 +5,8 @@ import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2, ScanLine } fro
 import { toast } from "sonner"
 import { useGetMateriales, createMaterial, updateMaterial, deleteMaterial } from "@/api/material/getMateriales"
 import { Material, MaterialPayload } from "@/types/material"
-import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
-import { CatalogoNodo } from "@/types/catalogoJoyeria"
+import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
+import { ProductType } from "@/types/product"
 import {
   useGetComprasMaterial, createCompraMaterial, updateCompraMaterial, deleteCompraMaterial,
   createCompraMaterialLinea, updateCompraMaterialLinea, deleteCompraMaterialLinea,
@@ -37,25 +37,6 @@ function ymdToDate(s: string): Date | null { return s ? new Date(`${s}T00:00:00Z
 
 const ESTADO_LABEL: Record<string, string> = { borrador: "Borrador", recibida: "Recibida" }
 
-type CatalogoProd = { sku: string; nombre: string; categoria: string; material: string; talla: string }
-function flattenProductos(nodos: CatalogoNodo[], cat = "", mat = ""): CatalogoProd[] {
-  const out: CatalogoProd[] = []
-  for (const n of nodos) {
-    const m = n.tipo === "material"  ? n.nombre : mat
-    const c = n.tipo === "categoria" ? n.nombre : cat
-    if (n.tipo === "producto") {
-      if (n.modelos && n.modelos.length > 0) {
-        for (const mo of n.modelos) {
-          out.push({ sku: mo.sku || n.sku, nombre: `${n.nombre} ${mo.nombre}`.trim(), categoria: c, material: m, talla: mo.nombre })
-        }
-      } else {
-        out.push({ sku: n.sku, nombre: n.nombre, categoria: c, material: m, talla: "" })
-      }
-    }
-    out.push(...flattenProductos(n.children, c, m))
-  }
-  return out
-}
 
 // ─── Modal: nuevo / editar material ────────────────────────────────────────────
 
@@ -591,23 +572,21 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
     () => compra.lineas.map(() => ({ piezas: [], agregando: false }))
   )
   const [guardando,      setGuardando]      = useState(false)
-  const [catalogoProds,  setCatalogoProds]  = useState<CatalogoProd[]>([])
   const [busquedaCat,    setBusquedaCat]    = useState("")
-  // Línea cuyo buscador está activo — el dropdown de resultados se ancla a
-  // ESA línea específica (antes una sola búsqueda se compartía entre todas
-  // las líneas, y el dropdown se recortaba al salir del scroll del modal).
   const [lineaBuscando,  setLineaBuscando]  = useState<number | null>(null)
   const searchRefs = useRef<Record<number, HTMLDivElement | null>>({})
+  const { items: inventarioProds } = useGetInventario()
 
-  useEffect(() => {
-    fetchCatalogo().then(arbol => setCatalogoProds(flattenProductos(arbol))).catch(() => {})
-  }, [])
+  function guessCat(desc: string): CategoriaJoya | "" {
+    const d = desc.toLowerCase()
+    return CATEGORIAS_JOYA.find(c => d.includes(c.toLowerCase())) ?? ""
+  }
 
-  const prodsFiltrados = busquedaCat.trim()
-    ? catalogoProds.filter(p =>
-        p.nombre.toLowerCase().includes(busquedaCat.toLowerCase()) ||
-        p.sku.toLowerCase().includes(busquedaCat.toLowerCase()) ||
-        p.categoria.toLowerCase().includes(busquedaCat.toLowerCase())
+  const prodsFiltrados: ProductType[] = busquedaCat.trim()
+    ? inventarioProds.filter(p =>
+        p.nombreProducto.toLowerCase().includes(busquedaCat.toLowerCase()) ||
+        (p.sku ?? "").toLowerCase().includes(busquedaCat.toLowerCase()) ||
+        (p.categoriaJoya ?? "").toLowerCase().includes(busquedaCat.toLowerCase())
       ).slice(0, 8)
     : []
   useEffect(() => {
@@ -746,7 +725,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                       <table className="w-full text-xs">
                         <thead className="bg-slate-50 dark:bg-slate-800/60">
                           <tr>
-                            {["Nombre/descripción","Categoría","Talla","g/pz","Cant.","Total g",""].map(h => (
+                            {["Categoría","Nombre/descripción","G/pz","Cant.","Talla","Total g",""].map(h => (
                               <th key={h} className="px-2 py-1.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
@@ -754,12 +733,9 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                           {estado.piezas.map((p, pi) => {
                             const incompleta = p.nombre.trim() && (!p.categoriaJoya || !Number(p.pesoGramos))
+                            const numInp = "w-full h-8 px-2 text-center text-sm font-bold rounded-lg border-2 border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-violet-500 dark:focus:border-violet-400"
                             return (
                             <tr key={pi} className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 ${incompleta ? "bg-red-50/40 dark:bg-red-900/10" : ""}`}>
-                              <td className="px-2 py-1">
-                                <input value={p.nombre} onChange={e => updatePieza(li, pi, "nombre", e.target.value)}
-                                  placeholder="Ej. Esclava Cartier" className={`${fieldCls} h-7 text-xs`} />
-                              </td>
                               <td className="px-2 py-1 min-w-[110px]">
                                 <select value={p.categoriaJoya} onChange={e => updatePieza(li, pi, "categoriaJoya", e.target.value)}
                                   className={`${fieldCls} h-7 text-xs`}>
@@ -767,17 +743,21 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                                   {CATEGORIAS_JOYA.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                               </td>
-                              <td className="px-2 py-1 w-20">
-                                <input value={p.talla} onChange={e => updatePieza(li, pi, "talla", e.target.value)}
-                                  placeholder="21cm" className={`${fieldCls} h-7 text-xs`} />
+                              <td className="px-2 py-1">
+                                <input value={p.nombre} onChange={e => updatePieza(li, pi, "nombre", e.target.value)}
+                                  placeholder="Ej. Esclava Cubana" className={`${fieldCls} h-7 text-xs`} />
                               </td>
                               <td className="px-2 py-1 w-16">
                                 <input type="number" min="0" step="0.1" value={p.pesoGramos} onChange={e => updatePieza(li, pi, "pesoGramos", e.target.value)}
-                                  placeholder="0" className={`${fieldCls} h-7 text-xs`} />
+                                  placeholder="0.0" className={numInp} />
                               </td>
                               <td className="px-2 py-1 w-14">
                                 <input type="number" min="1" step="1" value={p.cantidad} onChange={e => updatePieza(li, pi, "cantidad", e.target.value)}
-                                  placeholder="1" className={`${fieldCls} h-7 text-xs`} />
+                                  placeholder="1" className={numInp} />
+                              </td>
+                              <td className="px-2 py-1 w-20">
+                                <input value={p.talla} onChange={e => updatePieza(li, pi, "talla", e.target.value)}
+                                  placeholder="20cm" className={`${fieldCls} h-7 text-xs`} />
                               </td>
                               <td className="px-2 py-1 w-16 font-semibold text-slate-700 dark:text-slate-200 text-right">
                                 {((Number(p.pesoGramos) || 0) * (Number(p.cantidad) || 0)).toLocaleString("es-MX", { maximumFractionDigits: 2 })}g
@@ -795,7 +775,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                   )}
 
                   <div className="flex items-start gap-3 flex-wrap">
-                    <button type="button" onClick={() => setPiezas(li, prev => [...prev, emptyPieza()])}
+                    <button type="button" onClick={() => setPiezas(li, prev => [...prev, { ...emptyPieza(), categoriaJoya: guessCat(linea.descripcion) }])}
                       className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition mt-0.5">
                       <Plus size={13} /> Agregar pieza
                     </button>
@@ -804,7 +784,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                         <input value={lineaBuscando === li ? busquedaCat : ""}
                           onFocus={() => setLineaBuscando(li)}
                           onChange={e => { setLineaBuscando(li); setBusquedaCat(e.target.value) }}
-                          placeholder="Buscar en catálogo (nombre o SKU)…"
+                          placeholder="Buscar en inventario (nombre o SKU)…"
                           className={`${fieldCls} h-7 text-xs pr-6`} />
                         {lineaBuscando === li && busquedaCat && (
                           <button type="button" onClick={() => { setBusquedaCat(""); setLineaBuscando(null) }}
@@ -816,15 +796,19 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                       {lineaBuscando === li && prodsFiltrados.length > 0 && (
                         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-y-auto max-h-56">
                           {prodsFiltrados.map(p => (
-                            <button key={p.sku} type="button"
+                            <button key={p.documentId} type="button"
                               onClick={() => {
-                                const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? ""
-                                setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla }])
+                                setPiezas(li, prev => [...prev, {
+                                  ...emptyPieza(),
+                                  nombre: p.nombreProducto,
+                                  categoriaJoya: p.categoriaJoya ?? guessCat(linea.descripcion),
+                                  talla: p.talla ?? "",
+                                }])
                                 setBusquedaCat("")
                                 setLineaBuscando(null)
                               }}
                               className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition text-left border-b border-slate-100 dark:border-slate-700 last:border-0">
-                              <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{p.nombre}</span>
+                              <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{p.nombreProducto}</span>
                               <span className="text-slate-400 text-[10px] shrink-0 ml-2 font-mono">{p.sku}</span>
                             </button>
                           ))}
