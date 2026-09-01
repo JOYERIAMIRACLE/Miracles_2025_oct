@@ -1376,7 +1376,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                         <span className="text-[11px] font-bold font-mono text-violet-400 w-16 shrink-0">{c.numero}</span>
                         <div className="min-w-0 flex-1">
                           <p className="text-[13px] font-medium text-slate-200 truncate">{tituloCotizacion(c.items)}</p>
-                          <p className="text-[10px] text-slate-600 mt-0.5">{c.estado} · {fmtDt(c.fecha ?? c.createdAt)}</p>
+                          <p className="text-[10px] text-slate-600 mt-0.5">
+                            {c.validoHasta ? `Válida hasta ${fmtDt(c.validoHasta)}` : `${c.estado} · ${fmtDt(c.fecha ?? c.createdAt)}`}
+                          </p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>

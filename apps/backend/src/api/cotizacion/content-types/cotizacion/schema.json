@@ -42,6 +42,9 @@
     "fecha": {
       "type": "datetime"
     },
+    "validoHasta": {
+      "type": "date"
+    },
     "ventaGenerada": {
       "type": "relation",
       "relation": "oneToOne",

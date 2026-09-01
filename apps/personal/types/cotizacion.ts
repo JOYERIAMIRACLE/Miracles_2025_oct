@@ -32,6 +32,7 @@ export type Cotizacion = {
   estado:      EstadoCotizacion
   notas:       string | null
   fecha:       string | null
+  validoHasta: string | null
   createdAt:   string
   cliente?:    { documentId: string; nombre: string; telefono: string | null; email: string | null } | null
   ventaGenerada?: { id: number; documentId: string; numero: string | null; concepto: string; estado: string } | null
@@ -46,5 +47,6 @@ export type CotizacionPayload = {
   estado?:      EstadoCotizacion
   notas?:       string | null
   fecha?:       string | null
+  validoHasta?: string | null
   ventaGenerada?: { connect: [{ id: number }] } | null
 }

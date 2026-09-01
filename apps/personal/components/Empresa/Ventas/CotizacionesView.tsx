@@ -386,6 +386,9 @@ export function CotizacionesView() {
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                     {fmtDt(cot.fecha ?? cot.createdAt)}
+                    {cot.validoHasta && (
+                      <p className="text-[10px] text-slate-600 mt-0.5">Vence {fmtDt(cot.validoHasta)}</p>
+                    )}
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     {delId === cot.documentId ? (

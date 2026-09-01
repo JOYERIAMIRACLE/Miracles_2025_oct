@@ -41,6 +41,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
   const [precioEnvio, setPrecioEnvio] = useState<number>(cotizacion?.precioEnvio ?? 0)
   const [estado,      setEstado]      = useState<EstadoCotizacion>(cotizacion?.estado ?? "Borrador")
   const [notas,       setNotas]       = useState(cotizacion?.notas ?? "")
+  const [validoHasta, setValidoHasta] = useState(cotizacion?.validoHasta ?? "")
   const [guardando,   setGuardando]   = useState(false)
 
   const { items: productos } = useGetInventario()
@@ -82,6 +83,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
         estado,
         notas:  notas.trim() || null,
         fecha:  cotizacion?.fecha ?? new Date().toISOString(),
+        validoHasta: validoHasta || null,
       }
       const saved = cotizacion
         ? await updateCotizacion(cotizacion.documentId, payload)
@@ -210,7 +212,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
             </div>
           </div>
 
-          {/* Estado + Notas */}
+          {/* Estado + Válido hasta + Notas */}
           <div className="grid grid-cols-2 gap-5">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Estado</p>
@@ -226,12 +228,18 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Notas</p>
-              <textarea value={notas} onChange={e => setNotas(e.target.value)}
-                placeholder="Términos, condiciones, observaciones…"
-                rows={3}
-                className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 resize-none" />
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Válido hasta</p>
+              <input type="date" value={validoHasta ?? ""} onChange={e => setValidoHasta(e.target.value)}
+                className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-slate-500" />
             </div>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Notas</p>
+            <textarea value={notas} onChange={e => setNotas(e.target.value)}
+              placeholder="Términos, condiciones, observaciones…"
+              rows={3}
+              className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 resize-none" />
           </div>
         </div>
 
