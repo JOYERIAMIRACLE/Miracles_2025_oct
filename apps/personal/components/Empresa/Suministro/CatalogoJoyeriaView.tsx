@@ -119,58 +119,63 @@ function TreeRow({
       ? Layers
       : Tag
 
+  // Las categorías son hojas de navegación — no se expanden, solo seleccionan
+  const canExpand = hasChildren && !isCat
+
   return (
     <div>
       <div
-        className={`group flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer transition-colors ${
+        className={`group flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer transition-colors select-none ${
           isActive
-            ? "bg-slate-700/60 border border-slate-600/50"
-            : "hover:bg-slate-800/50"
+            ? "bg-violet-600/15 border border-violet-500/25"
+            : isCat
+              ? "hover:bg-slate-800/60"
+              : "hover:bg-slate-800/40"
         }`}
         style={{ paddingLeft: `${8 + depth * 18}px` }}
         onClick={() => onSelect(node.id)}
       >
-        {/* Expand toggle */}
-        <button type="button" onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        {/* Expand toggle — solo para material */}
+        <button type="button"
+          onClick={e => { e.stopPropagation(); if (canExpand) setOpen(v => !v) }}
           className="w-4 shrink-0 flex items-center justify-center text-slate-600 hover:text-slate-400">
-          {hasChildren
+          {canExpand
             ? (open || forceOpen)
               ? <ChevronDown size={11} />
               : <ChevronRight size={11} />
-            : <span className="w-1 h-1 rounded-full bg-slate-700 inline-block" />
+            : isCat
+              ? <span className={`w-1.5 h-1.5 rounded-full inline-block transition-colors ${isActive ? "bg-violet-500" : "bg-slate-700"}`} />
+              : <span className="w-1 h-1 rounded-full bg-slate-700 inline-block" />
           }
         </button>
 
         {/* Icono tipo */}
-        <TipoIcon size={11} className={`shrink-0 ${cfg.color}`} />
+        <TipoIcon size={11} className={`shrink-0 ${isActive ? "text-violet-400" : cfg.color}`} />
 
-        {/* Nombre + SKU apilados */}
+        {/* Nombre */}
         <span className="flex-1 min-w-0 leading-tight">
-          <span className={`block text-[12px] wrap-break-word ${isActive ? "text-slate-100 font-medium" : "text-slate-300"}`}>
+          <span className={`block text-[12px] truncate ${
+            isActive ? "text-slate-100 font-semibold" : isCat ? "text-slate-300" : "text-slate-400"
+          }`}>
             {node.nombre || <span className="italic text-slate-600">sin nombre</span>}
           </span>
-          {node.sku && (
-            <span className="block text-[9px] font-mono text-slate-600 truncate">
-              {node.sku}
-            </span>
-          )}
         </span>
 
-        {/* SKU count badge en categorías */}
+        {/* Badge SKUs en categoría */}
         {isCat && skuCount && (skuCount[node.nombre] ?? 0) > 0 && (
-          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 transition-colors ${
-            isActive ? "bg-violet-500/30 text-violet-300" : "bg-slate-700/60 text-slate-500"
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+            isActive ? "bg-violet-500/40 text-violet-200" : "bg-slate-700 text-slate-400"
           }`}>{skuCount[node.nombre]}</span>
         )}
 
-        {/* Modelos count */}
-        {node.modelos.length > 0 && (
+        {/* Modelos count — solo productos */}
+        {!isCat && node.modelos.length > 0 && (
           <span className="text-[9px] text-slate-600 shrink-0">{node.modelos.length} mod.</span>
         )}
 
-        {/* Actions (visible on hover or active) */}
+        {/* Actions */}
         <div className={`flex items-center gap-0.5 shrink-0 ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}>
-          {childTipo && (
+          {childTipo && !isCat && (
             <button type="button" title={`Agregar ${TIPO_CONFIG[childTipo].label}`}
               onClick={e => { e.stopPropagation(); onAdd(node.id, childTipo) }}
               className="p-0.5 text-slate-600 hover:text-violet-400 rounded">
@@ -192,8 +197,8 @@ function TreeRow({
         </div>
       </div>
 
-      {/* Children */}
-      {hasChildren && (open || forceOpen) && (
+      {/* Children — solo para materiales, nunca para categorías */}
+      {canExpand && (open || forceOpen) && (
         <div className="border-l border-slate-800/50 ml-5">
           {node.children.map(child => (
             <TreeRow
@@ -430,6 +435,19 @@ function DetailPanel({
 
 // ─── SKU Browser Panel ────────────────────────────────────────────────────────
 
+function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+        active
+          ? "bg-violet-600/20 border-violet-500/60 text-violet-300"
+          : "bg-slate-800/60 border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300"
+      }`}>
+      {label}
+    </button>
+  )
+}
+
 function SkuBrowserPanel({
   skus,
   categoryFilter,
@@ -447,8 +465,7 @@ function SkuBrowserPanel({
   const [filterTalla,  setFilterTalla]  = useState<string[]>([])
   const [showBuilder,  setShowBuilder]  = useState(false)
 
-  // Cuando cambia la categoría, limpiar filtros
-  useEffect(() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]); setQ("") }, [categoryFilter])
+  useEffect(() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]); setQ(""); setShowBuilder(false) }, [categoryFilter])
 
   const tipoCat = categoryFilter ? TIPOS_SKU.find(t => t.catJoya === categoryFilter) : null
 
@@ -459,7 +476,7 @@ function SkuBrowserPanel({
 
   const availMat    = useMemo(() => [...new Set(scopeSkus.map(s => s.mat))],    [scopeSkus])
   const availEstilo = useMemo(() => [...new Set(scopeSkus.map(s => s.estilo))], [scopeSkus])
-  const availTalla  = useMemo(() => [...new Set(scopeSkus.map(s => s.talla))],  [scopeSkus])
+  const availTalla  = useMemo(() => [...new Set(scopeSkus.map(s => s.talla))].sort(), [scopeSkus])
 
   const visible = useMemo(() => {
     let list = scopeSkus
@@ -483,43 +500,88 @@ function SkuBrowserPanel({
   }
 
   const hasFilters = filterMat.length + filterEstilo.length + filterTalla.length > 0
-  const lbl = "text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2"
+  const showFilterBar = availMat.length > 1 || availEstilo.length > 1 || availTalla.length > 1
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
-      {/* Sub-header */}
-      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-800 shrink-0 bg-slate-900/40">
-        <div>
-          <p className="text-sm font-semibold text-slate-200">
-            {categoryFilter ?? "Todos los SKUs"}
-          </p>
-          <p className="text-[10px] text-slate-600 mt-0.5">
-            {visible.length}{visible.length !== scopeSkus.length ? ` de ${scopeSkus.length}` : ""} SKU{scopeSkus.length !== 1 ? "s" : ""}
-          </p>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-800 shrink-0">
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-100 leading-none">
+              {categoryFilter ?? "Todos los SKUs"}
+            </h2>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              {visible.length !== scopeSkus.length
+                ? `${visible.length} de ${scopeSkus.length} SKUs`
+                : `${scopeSkus.length} SKU${scopeSkus.length !== 1 ? "s" : ""}`}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+            <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" />
             <input value={q} onChange={e => setQ(e.target.value)}
-              placeholder="Buscar…"
-              className="pl-7 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-32 transition" />
+              placeholder="Buscar SKU…"
+              className="pl-7 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700/50 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-36 transition" />
           </div>
           <button type="button" onClick={() => setShowBuilder(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
               showBuilder
-                ? "bg-violet-600 border-violet-500 text-white"
-                : "border-slate-700 text-slate-400 hover:text-violet-300 hover:border-violet-500/40"
+                ? "bg-violet-600 text-white shadow-sm shadow-violet-500/20"
+                : "bg-slate-800 border border-slate-700/60 text-slate-300 hover:border-violet-500/40 hover:text-violet-300"
             }`}>
             <Wand2 size={12} />
-            {showBuilder ? "Cerrar" : "Nueva pieza"}
+            {showBuilder ? "Cerrar constructor" : "Nueva pieza"}
           </button>
         </div>
       </div>
 
+      {/* Barra de filtros horizontal — solo si hay variedad */}
+      {showFilterBar && (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-5 py-2.5 border-b border-slate-800/60 bg-slate-950/30 shrink-0">
+          {availMat.length > 1 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Mat.</span>
+              {MATERIALES_SKU.filter(m => availMat.includes(m.code)).map(m => (
+                <FilterChip key={m.code} label={m.label} active={filterMat.includes(m.code)}
+                  onClick={() => toggle(filterMat, setFilterMat, m.code)} />
+              ))}
+            </div>
+          )}
+          {availEstilo.length > 1 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Estilo</span>
+              {availEstilo.map(code => {
+                const label = Object.values(ESTILOS_SKU).flat().find(e => e.code === code)?.label ?? code
+                return <FilterChip key={code} label={label} active={filterEstilo.includes(code)}
+                  onClick={() => toggle(filterEstilo, setFilterEstilo, code)} />
+              })}
+            </div>
+          )}
+          {availTalla.length > 1 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Talla</span>
+              {availTalla.map(t => (
+                <FilterChip key={t} label={t} active={filterTalla.includes(t)}
+                  onClick={() => toggle(filterTalla, setFilterTalla, t)} />
+              ))}
+            </div>
+          )}
+          {hasFilters && (
+            <button type="button"
+              onClick={() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]) }}
+              className="flex items-center gap-1 text-[10px] text-slate-600 hover:text-violet-400 transition ml-auto shrink-0">
+              <X size={9} /> Limpiar
+            </button>
+          )}
+        </div>
+      )}
+
       {/* SkuBuilder expandible */}
       {showBuilder && (
-        <div className="shrink-0 border-b border-slate-800 p-4 overflow-y-auto max-h-[50vh] bg-slate-950/40">
+        <div className="shrink-0 border-b border-slate-800 p-5 overflow-y-auto max-h-[55vh] bg-slate-950/50">
           <SkuBuilder
             defaultTipo={tipoCat?.code}
             onAdd={entry => { onSkuAdded(entry); setShowBuilder(false) }}
@@ -527,115 +589,55 @@ function SkuBrowserPanel({
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden min-h-0">
+      {/* Grid de SKUs — ocupa todo el ancho */}
+      <div className="flex-1 overflow-y-auto p-5">
+        {visible.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+            <Gem size={28} className="text-slate-700" />
+            <p className="text-slate-500 text-sm">
+              {scopeSkus.length === 0
+                ? "Sin SKUs — crea tu primera pieza con el constructor"
+                : "Sin resultados para estos filtros"}
+            </p>
+            {scopeSkus.length === 0 && (
+              <button type="button" onClick={() => setShowBuilder(true)}
+                className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition">
+                <Wand2 size={12} /> Nueva pieza
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+            {visible.map(s => (
+              <div key={s.id}
+                className="group relative flex flex-col gap-2 p-3.5 rounded-xl bg-slate-800/30 border border-slate-700/40 hover:border-violet-500/30 hover:bg-slate-800/50 transition-all">
+                <button type="button" title="Eliminar"
+                  onClick={async () => {
+                    onSkuDeleted(s.id)
+                    await saveSkus(skus.filter(x => x.id !== s.id))
+                  }}
+                  className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-0.5 rounded">
+                  <X size={11} />
+                </button>
 
-        {/* Filtros laterales */}
-        <div className="w-40 shrink-0 border-r border-slate-800 overflow-y-auto p-3 space-y-4">
+                {/* Nombre */}
+                <p className="text-[13px] font-semibold text-slate-100 pr-5 leading-snug">{s.nombre}</p>
 
-          {availMat.length > 1 && (
-            <div>
-              <p className={lbl}>Material</p>
-              <div className="space-y-1.5">
-                {MATERIALES_SKU.filter(m => availMat.includes(m.code)).map(m => (
-                  <label key={m.code} className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={filterMat.includes(m.code)}
-                      onChange={() => toggle(filterMat, setFilterMat, m.code)}
-                      className="accent-violet-500 rounded shrink-0" />
-                    <span className={`text-[11px] leading-tight transition ${filterMat.includes(m.code) ? "text-violet-300 font-medium" : "text-slate-400"}`}>
-                      {m.label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+                {/* SKU */}
+                <p className="text-[11px] font-mono text-violet-400 tracking-widest">{s.sku}</p>
 
-          {availEstilo.length > 1 && (
-            <div>
-              <p className={lbl}>Estilo</p>
-              <div className="space-y-1.5">
-                {availEstilo.map(code => {
-                  const label = Object.values(ESTILOS_SKU).flat().find(e => e.code === code)?.label ?? code
-                  return (
-                    <label key={code} className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={filterEstilo.includes(code)}
-                        onChange={() => toggle(filterEstilo, setFilterEstilo, code)}
-                        className="accent-violet-500 rounded shrink-0" />
-                      <span className={`text-[11px] leading-tight transition ${filterEstilo.includes(code) ? "text-violet-300 font-medium" : "text-slate-400"}`}>
-                        {label}
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {availTalla.length > 1 && (
-            <div>
-              <p className={lbl}>Talla</p>
-              <div className="space-y-1.5">
-                {availTalla.map(t => (
-                  <label key={t} className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={filterTalla.includes(t)}
-                      onChange={() => toggle(filterTalla, setFilterTalla, t)}
-                      className="accent-violet-500 rounded shrink-0" />
-                    <span className={`text-[11px] leading-tight transition ${filterTalla.includes(t) ? "text-violet-300 font-medium" : "text-slate-400"}`}>
-                      {t}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {hasFilters && (
-            <button type="button"
-              onClick={() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]) }}
-              className="text-[10px] text-slate-600 hover:text-violet-400 transition">
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-
-        {/* Grid de SKUs */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {visible.length === 0 ? (
-            <div className="py-16 text-center">
-              <Gem size={24} className="mx-auto mb-3 text-slate-700" />
-              <p className="text-slate-600 text-xs">
-                {scopeSkus.length === 0
-                  ? "Sin SKUs — usa \"Nueva pieza\" para crear"
-                  : "Sin resultados para estos filtros"}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2">
-              {visible.map(s => (
-                <div key={s.id}
-                  className="group relative flex flex-col gap-1.5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 hover:border-violet-500/30 transition">
-                  <button type="button" title="Eliminar"
-                    onClick={async () => {
-                      onSkuDeleted(s.id)
-                      await saveSkus(skus.filter(x => x.id !== s.id))
-                    }}
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-slate-700 hover:text-red-400 transition p-0.5 rounded">
-                    <X size={11} />
-                  </button>
-                  <p className="text-xs font-semibold text-slate-200 pr-4 leading-snug">{s.nombre}</p>
-                  <p className="text-[11px] font-mono text-violet-400 tracking-wider">{s.sku}</p>
-                  <div className="flex flex-wrap gap-1 mt-0.5">
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-400">{s.matLabel}</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-400">T {s.talla}</span>
-                    {s.extras.map(e => (
-                      <span key={e} className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400">{e}</span>
-                    ))}
-                  </div>
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-700/60 text-slate-400 font-medium">{s.matLabel}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-700/60 text-slate-400 font-medium">T {s.talla}</span>
+                  {s.extras.map(e => (
+                    <span key={e} className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 font-medium">{e}</span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
