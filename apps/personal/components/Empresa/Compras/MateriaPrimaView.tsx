@@ -37,13 +37,21 @@ function ymdToDate(s: string): Date | null { return s ? new Date(`${s}T00:00:00Z
 
 const ESTADO_LABEL: Record<string, string> = { borrador: "Borrador", recibida: "Recibida" }
 
-type CatalogoProd = { sku: string; nombre: string; categoria: string; material: string }
+type CatalogoProd = { sku: string; nombre: string; categoria: string; material: string; talla: string }
 function flattenProductos(nodos: CatalogoNodo[], cat = "", mat = ""): CatalogoProd[] {
   const out: CatalogoProd[] = []
   for (const n of nodos) {
     const m = n.tipo === "material"  ? n.nombre : mat
     const c = n.tipo === "categoria" ? n.nombre : cat
-    if (n.tipo === "producto") out.push({ sku: n.sku, nombre: n.nombre, categoria: c, material: m })
+    if (n.tipo === "producto") {
+      if (n.modelos && n.modelos.length > 0) {
+        for (const mo of n.modelos) {
+          out.push({ sku: mo.sku || n.sku, nombre: `${n.nombre} ${mo.nombre}`.trim(), categoria: c, material: m, talla: mo.nombre })
+        }
+      } else {
+        out.push({ sku: n.sku, nombre: n.nombre, categoria: c, material: m, talla: "" })
+      }
+    }
     out.push(...flattenProductos(n.children, c, m))
   }
   return out
@@ -779,12 +787,12 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                             <button key={p.sku} type="button"
                               onClick={() => {
                                 const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? ""
-                                setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "" }])
+                                setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla }])
                                 setBusquedaCat("")
                               }}
                               className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition text-left border-b border-slate-100 dark:border-slate-700 last:border-0">
                               <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{p.nombre}</span>
-                              <span className="text-slate-400 text-[10px] shrink-0 ml-2">{p.categoria} · {p.sku}</span>
+                              <span className="text-slate-400 text-[10px] shrink-0 ml-2 font-mono">{p.sku}</span>
                             </button>
                           ))}
                         </div>
