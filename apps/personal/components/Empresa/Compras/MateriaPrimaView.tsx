@@ -426,8 +426,7 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
                 {lineas.map((l, i) => (
                   <tr key={i}>
                     <td className="p-1.5 min-w-[130px]">
-                      <input value={l.descripcion} onChange={e => actualizarLinea(i, "descripcion", e.target.value)}
-                        placeholder="Ej. Cadena tejido chino" className={`${fieldCls} h-8 text-xs`} />
+                      <ConceptoCombobox value={l.descripcion} onChange={v => actualizarLinea(i, "descripcion", v)} />
                     </td>
                     <td className="p-1.5 min-w-[130px]">
                       <MaterialCombobox value={l.material} materiales={mats}
@@ -548,6 +547,62 @@ function RecibirModal({ compra, onClose, onRecibida }: {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Combobox de concepto/tipo de producto ────────────────────────────────────
+
+const TIPOS_CONCEPTO = ["Anillos","Cadenas","Esclavas","Dijes","Broqueles","Aretes","Pulsos","Rosarios","Argollas","Arracadas","Pulseras","Collares"] as const
+
+function ConceptoCombobox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState(value)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setText(value) }, [value])
+
+  useEffect(() => {
+    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener("mousedown", h)
+    return () => document.removeEventListener("mousedown", h)
+  }, [])
+
+  const filtrados = text.trim()
+    ? TIPOS_CONCEPTO.filter(c => c.toLowerCase().includes(text.toLowerCase()))
+    : [...TIPOS_CONCEPTO]
+  const exacto = TIPOS_CONCEPTO.some(c => c.toLowerCase() === text.trim().toLowerCase())
+  const esNuevo = text.trim().length > 0 && !exacto
+
+  return (
+    <div ref={ref} className="relative">
+      <input value={text}
+        onChange={e => { setText(e.target.value); onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        placeholder="Tipo de producto…"
+        className={`${fieldCls} h-8 text-xs`} />
+      {open && (filtrados.length > 0 || esNuevo) && (
+        <div className="absolute top-full mt-1 left-0 z-30 min-w-[160px] w-max bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+          {filtrados.map(c => (
+            <button key={c} type="button"
+              onClick={() => { setText(c); onChange(c); setOpen(false) }}
+              className={`w-full px-3 py-2 text-xs text-left transition whitespace-nowrap ${
+                value.toLowerCase() === c.toLowerCase()
+                  ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 font-medium"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+              }`}>
+              {c}
+            </button>
+          ))}
+          {esNuevo && (
+            <button type="button"
+              onClick={() => { onChange(text.trim()); setOpen(false) }}
+              className="w-full flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition text-left border-t border-slate-100 dark:border-slate-700">
+              <Plus size={11} /> Usar &ldquo;{text.trim()}&rdquo;
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
