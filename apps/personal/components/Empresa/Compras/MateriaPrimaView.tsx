@@ -699,7 +699,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                         </button>
                       )}
                       {prodsFiltrados.length > 0 && (
-                        <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-10 overflow-hidden">
+                        <div className="absolute bottom-full mb-1 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-10 overflow-hidden">
                           {prodsFiltrados.map(p => (
                             <button key={p.sku} type="button"
                               onClick={() => {
