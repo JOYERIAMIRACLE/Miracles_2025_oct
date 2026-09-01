@@ -1,9 +1,124 @@
 "use client"
 
 import { useState } from "react"
-import { Loader2, Camera, MapPin, Phone, Mail } from "lucide-react"
+import { Loader2, Camera, MapPin, Phone, Mail, Pencil } from "lucide-react"
+import { toast } from "sonner"
 import { Card, SeccionHero, useHeroImagen, useUploadImagen, boldify } from "./shared"
-import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
+import { useGetIdentidad, saveIdentidad } from "@/api/identidad-empresa/getIdentidad"
+
+// ── Bloque "¿Quiénes somos?" — nombre + slogan en un mismo mini-formulario,
+// mismo patrón de lápiz-al-hover que ya usa SeccionHero para su descripción.
+function BloqueQuienesSomos({ nombre, slogan, documentId, reload }: {
+  nombre: string; slogan: string; documentId: string | null; reload: () => void
+}) {
+  const [editando, setEditando] = useState(false)
+  const [nombreB, setNombreB]   = useState(nombre)
+  const [sloganB, setSloganB]   = useState(slogan)
+  const [guardando, setGuardando] = useState(false)
+
+  function entrar() { setNombreB(nombre); setSloganB(slogan); setEditando(true) }
+  async function guardar() {
+    setGuardando(true)
+    try {
+      await saveIdentidad(documentId, { nombre: nombreB.trim() || null, slogan: sloganB.trim() || null })
+      setEditando(false)
+      reload()
+    } catch (e) {
+      toast.error(`Error · ${(e as Error).message}`)
+    } finally { setGuardando(false) }
+  }
+
+  return (
+    <div className="group/bloque">
+      <div className="flex items-center gap-1.5">
+        <h2 className="text-xl font-bold text-violet-600 dark:text-violet-400">¿Quiénes somos?</h2>
+        {!editando && (
+          <button type="button" title="Editar ¿Quiénes somos?" onClick={entrar}
+            className="opacity-0 group-hover/bloque:opacity-100 text-slate-400 hover:text-violet-500 transition">
+            <Pencil size={13} />
+          </button>
+        )}
+      </div>
+      {editando ? (
+        <div className="space-y-2 mt-1.5">
+          <input autoFocus value={nombreB} onChange={e => setNombreB(e.target.value)} placeholder="Nombre"
+            className="w-full h-8 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
+          <input value={sloganB} onChange={e => setSloganB(e.target.value)} placeholder="Slogan"
+            className="w-full h-8 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setEditando(false)}
+              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Cancelar
+            </button>
+            <button type="button" onClick={guardar} disabled={guardando}
+              className="px-2.5 py-1 text-xs rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-40 text-white font-semibold transition">
+              {guardando ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          {nombre}{slogan ? ` — ${slogan}` : ""}
+        </p>
+      )}
+    </div>
+  )
+}
+
+// ── Bloque Misión / Visión — un solo textarea, mismo patrón.
+function BloqueMisionVision({ titulo, valor, campo, documentId, reload }: {
+  titulo: string; valor: string; campo: "mision" | "vision"; documentId: string | null; reload: () => void
+}) {
+  const [editando, setEditando] = useState(false)
+  const [borrador, setBorrador] = useState(valor)
+  const [guardando, setGuardando] = useState(false)
+
+  function entrar() { setBorrador(valor); setEditando(true) }
+  async function guardar() {
+    setGuardando(true)
+    try {
+      await saveIdentidad(documentId, { [campo]: borrador.trim() || null })
+      setEditando(false)
+      reload()
+    } catch (e) {
+      toast.error(`Error · ${(e as Error).message}`)
+    } finally { setGuardando(false) }
+  }
+
+  return (
+    <div className="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1 group/bloque">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <h3 className="text-xl font-bold text-violet-600 dark:text-violet-400">{titulo}</h3>
+        {!editando && (
+          <button type="button" title={`Editar ${titulo}`} onClick={entrar}
+            className="opacity-0 group-hover/bloque:opacity-100 text-slate-400 hover:text-violet-500 transition">
+            <Pencil size={13} />
+          </button>
+        )}
+      </div>
+      {editando ? (
+        <div className="space-y-2">
+          <textarea autoFocus rows={3} value={borrador} onChange={e => setBorrador(e.target.value)}
+            className="w-full text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setEditando(false)}
+              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Cancelar
+            </button>
+            <button type="button" onClick={guardar} disabled={guardando}
+              className="px-2.5 py-1 text-xs rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-40 text-white font-semibold transition">
+              {guardando ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      ) : valor ? (
+        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{boldify(valor)}</p>
+      ) : (
+        <p className="text-sm text-slate-400 dark:text-slate-500 italic">Pendiente de definir</p>
+      )}
+    </div>
+  )
+}
 
 function TabQuienesSomos() {
   const { identidad, loading, reload } = useGetIdentidad()
@@ -22,24 +137,13 @@ function TabQuienesSomos() {
       {/* ── BLOQUE UNIFICADO empresa + misión + visión ─────── */}
       <Card className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-1.5! overflow-hidden">
         <div className="p-6 flex flex-col gap-3">
-          <h2 className="text-xl font-bold text-violet-600 dark:text-violet-400">¿Quiénes somos?</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            {identidad?.nombre ?? "Medallitadeoro"}{identidad?.slogan ? ` — ${identidad.slogan}` : ""}
-          </p>
-
-          <div className="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
-            <h3 className="text-xl font-bold text-violet-600 dark:text-violet-400 mb-1.5">Misión</h3>
-            {identidad?.mision
-              ? <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{boldify(identidad.mision)}</p>
-              : <p className="text-sm text-slate-400 dark:text-slate-500 italic">Pendiente de definir</p>}
-          </div>
-
-          <div className="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
-            <h3 className="text-xl font-bold text-violet-600 dark:text-violet-400 mb-1.5">Visión</h3>
-            {identidad?.vision
-              ? <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{boldify(identidad.vision)}</p>
-              : <p className="text-sm text-slate-400 dark:text-slate-500 italic">Pendiente de definir</p>}
-          </div>
+          <BloqueQuienesSomos
+            nombre={identidad?.nombre ?? "Medallitadeoro"} slogan={identidad?.slogan ?? ""}
+            documentId={documentId} reload={reload} />
+          <BloqueMisionVision titulo="Misión" campo="mision" valor={identidad?.mision ?? ""}
+            documentId={documentId} reload={reload} />
+          <BloqueMisionVision titulo="Visión" campo="vision" valor={identidad?.vision ?? ""}
+            documentId={documentId} reload={reload} />
         </div>
 
         <div className="relative min-h-[260px] rounded-xl overflow-hidden group cursor-pointer bg-violet-600"
