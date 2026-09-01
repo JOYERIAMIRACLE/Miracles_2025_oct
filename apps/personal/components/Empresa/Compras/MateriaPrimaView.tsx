@@ -636,7 +636,17 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   const totalPiezas = lineasState.reduce((s, l) => s + l.piezas.length, 0)
 
   async function confirmar() {
+    // Validar antes de guardar
+    const incompletas = lineasState.flatMap(l => l.piezas).filter(
+      p => p.nombre.trim() && (!p.categoriaJoya || !Number(p.pesoGramos))
+    )
+    if (incompletas.length > 0) {
+      toast.error(`${incompletas.length} pieza${incompletas.length > 1 ? "s" : ""} incompleta${incompletas.length > 1 ? "s" : ""} — verifica categoría y gramos`)
+      return
+    }
+
     setGuardando(true)
+    let creadas = 0
     try {
       for (let li = 0; li < compra.lineas.length; li++) {
         const linea = compra.lineas[li]!
@@ -657,6 +667,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
             pesoGramos: pesoG, stock: cant, costoProduccion: costo,
             materialInsumoId: linea.material?.documentId ?? "",
           })
+          creadas++
 
           // Movimiento salida: descuenta gramos del stock del material
           if (linea.material) {
@@ -669,7 +680,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
           }
         }
       }
-      toast.success(`Inspección completa — ${totalPiezas} grupo${totalPiezas !== 1 ? "s" : ""} de piezas creados en inventario`)
+      toast.success(`Inspección completa — ${creadas} grupo${creadas !== 1 ? "s" : ""} de piezas creados en inventario`)
       onDone()
     } catch (e: any) { toast.error(e.message ?? "Error al guardar la inspección") }
     finally { setGuardando(false) }
@@ -741,8 +752,10 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                          {estado.piezas.map((p, pi) => (
-                            <tr key={pi} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                          {estado.piezas.map((p, pi) => {
+                            const incompleta = p.nombre.trim() && (!p.categoriaJoya || !Number(p.pesoGramos))
+                            return (
+                            <tr key={pi} className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 ${incompleta ? "bg-red-50/40 dark:bg-red-900/10" : ""}`}>
                               <td className="px-2 py-1">
                                 <input value={p.nombre} onChange={e => updatePieza(li, pi, "nombre", e.target.value)}
                                   placeholder="Ej. Esclava Cartier" className={`${fieldCls} h-7 text-xs`} />
@@ -774,7 +787,8 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                                   className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-500 transition"><X size={12} /></button>
                               </td>
                             </tr>
-                          ))}
+                          )
+                          })}
                         </tbody>
                       </table>
                     </div>
