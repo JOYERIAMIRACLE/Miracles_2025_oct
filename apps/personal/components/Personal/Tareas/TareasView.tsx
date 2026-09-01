@@ -236,9 +236,11 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   // que SÍ está abierto, no al revés, para que el default "nada aquí"
   // signifique "todo cerrado").
   const [proyectosAbiertos, setProyectosAbiertos] = useState<Set<string>>(new Set())
-  // Igual que proyectosAbiertos pero para la capa de proceso (etiqueta) que
-  // envuelve los grupos por proyecto — mismo criterio: vacío = todo colapsado.
-  const [procesosAbiertos, setProcesosAbiertos] = useState<Set<string>>(new Set())
+  // Capa de proceso (etiqueta) que envuelve los grupos por proyecto — al
+  // revés que proyectosAbiertos: acá se guardan los que el usuario cerró a
+  // mano, así que vacío por default = todos los procesos aparecen
+  // desplegados de entrada.
+  const [procesosCerrados, setProcesosCerrados] = useState<Set<string>>(new Set())
   const [nombrandoProyecto, setNombrandoProyecto] = useState<{ origenId: string; destinoId: string } | null>(null)
   const [nombreProyectoInput, setNombreProyectoInput] = useState("")
   const [renombrandoProyecto, setRenombrandoProyecto] = useState<string | null>(null) // documentId del proyecto
@@ -279,11 +281,17 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     return [...set].sort()
   }, [tareas])
 
-  const proyectosUsados = useMemo(() => {
+  // El campo "Proyecto" del formulario queda acotado al mismo proceso
+  // (etiqueta) de la tarea que se está editando — igual que en Portal
+  // Marketing (sdi-portal): un proyecto de Generación de Demanda no debe
+  // aparecer como opción al agrupar una tarea de Administración, por ejemplo.
+  const proyectosUsadosDelProceso = useMemo(() => {
     const map = new Map<string, ProyectoRef>()
-    tareas.forEach(t => { if (t.proyecto) map.set(t.proyecto.documentId, t.proyecto) })
+    tareas.forEach(t => {
+      if (t.proyecto && (t.etiqueta?.trim() ?? "") === (form.etiqueta?.trim() ?? "")) map.set(t.proyecto.documentId, t.proyecto)
+    })
     return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))
-  }, [tareas])
+  }, [tareas, form.etiqueta])
 
   // Al entrar a la vista, el filtro de Responsable arranca en el usuario con
   // la sesión iniciada (así cada quien ve sus propias tareas por default) —
@@ -634,7 +642,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   }
 
   function toggleProcesoColapsado(proceso: string) {
-    setProcesosAbiertos(prev => {
+    setProcesosCerrados(prev => {
       const next = new Set(prev)
       next.has(proceso) ? next.delete(proceso) : next.add(proceso)
       return next
@@ -1146,7 +1154,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
         ) : (
           <div className="space-y-3">
             {seccionesPorProceso.map(seccion => {
-              const procesoColapsado = !procesosAbiertos.has(seccion.proceso)
+              const procesoColapsado = procesosCerrados.has(seccion.proceso)
               const etiquetaSeccion = seccion.proceso === SIN_PROCESO ? null : seccion.proceso
               const puedeReordenar = seccion.proceso !== SIN_PROCESO
               const renombrandoEsteProceso = renombrandoProceso === seccion.proceso
@@ -1598,7 +1606,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                           className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${!proyectoForm ? "text-violet-500 font-medium" : "text-slate-400 dark:text-slate-500"}`}>
                           Sin proyecto
                         </button>
-                        {proyectosUsados
+                        {proyectosUsadosDelProceso
                           .filter(p => p.nombre.toLowerCase().includes(proyQuery.toLowerCase()))
                           .map(p => (
                             <button key={p.documentId} type="button"
@@ -1607,7 +1615,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                               {p.nombre}
                             </button>
                           ))}
-                        {proyQuery && !proyectosUsados.some(p => p.nombre.toLowerCase() === proyQuery.toLowerCase()) && (
+                        {proyQuery && !proyectosUsadosDelProceso.some(p => p.nombre.toLowerCase() === proyQuery.toLowerCase()) && (
                           <button type="button"
                             onClick={() => { setProyectoForm({ tipo: "nuevo", nombre: proyQuery.trim() }); setProyOpen(false) }}
                             className="w-full text-left px-3 py-1.5 text-sm text-violet-500 dark:text-violet-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
