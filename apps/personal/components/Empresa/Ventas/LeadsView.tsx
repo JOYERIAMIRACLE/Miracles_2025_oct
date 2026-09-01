@@ -109,7 +109,7 @@ export function LeadsView() {
 
   if (selectedLead) {
     return (
-      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6">
         <ClientePanel
           cliente={selectedLead}
           num={numMap.get(selectedLead.documentId) ?? "—"}

@@ -1374,7 +1374,7 @@ export function PipelineView() {
 
   if (selectedCliente) {
     return (
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-6">
         <ClientePanel
           cliente={selectedCliente}
           num={numMap.get(selectedCliente.documentId) ?? "—"}

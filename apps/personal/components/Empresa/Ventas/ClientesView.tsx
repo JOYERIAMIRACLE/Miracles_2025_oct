@@ -119,7 +119,7 @@ export function ClientesView() {
 
   if (selectedCliente) {
     return (
-      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+      <div className="p-4 md:p-6">
         <ClientePanel
           cliente={selectedCliente}
           num={numMap.get(selectedCliente.documentId) ?? "—"}
