@@ -66,7 +66,7 @@ function Content({ module }: { module: string }) {
           titulo="Bodega de medallitadeoro"
           totalFichas={32}
           adminUrl={MIRACLES_ADMIN}
-          notaCompartida="Actualizado contra el sidebar real de portal-medallitadeoro (5 grupos: Inicio/Conoce/Operación/Recursos/Servicios y apps)."
+          notaCompartida="Actualizado contra el sidebar real de portal-medalladeoro (5 grupos: Inicio/Conoce/Operación/Recursos/Servicios y apps)."
           estantes={[
             { nombre: "Catálogo / Inventario", fichas: "product (con peso, material real y atributos de joya), product-category, catalogo-joyeria" },
             { nombre: "Ventas y Contactos",    fichas: "venta, venta-linea, cliente, cotización, centro-venta, proveedor" },

@@ -9,7 +9,7 @@ import type { TareaType } from "@/types/tarea"
 
 const DIAS_SEMANA = ["D", "L", "M", "M", "J", "V", "S"]
 
-// Todo lo que se ve aquí es exclusivo de Portal Medallitadeoro: "Tareas" son
+// Todo lo que se ve aquí es exclusivo de Portal Medalla de oro: "Tareas" son
 // las tareas reales ambito=empresa (la misma colección que usa la sección
 // Tareas del portal). "Eventos" todavía no tiene módulo propio — por ahora
 // siempre está vacío, no se toman prestadas tareas de Gestión Personal
@@ -114,7 +114,7 @@ export function CalendarioPendientesCard() {
       ) : (
         <>
           {filtro === "eventos" && (
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mb-2">Módulo de Eventos aún no existe · Próximamente en Portal Medallitadeoro</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mb-2">Módulo de Eventos aún no existe · Próximamente en Portal Medalla de oro</p>
           )}
           <div className="grid grid-cols-7 mb-0.5">
             {DIAS_SEMANA.map((d, i) => (

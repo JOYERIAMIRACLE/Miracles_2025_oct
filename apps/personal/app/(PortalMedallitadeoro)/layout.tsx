@@ -3,9 +3,9 @@ import type { Metadata } from "next"
 import { AuthGuard } from "@/components/AuthGuard"
 
 export const metadata: Metadata = {
-  title: { absolute: "Portal Medallita de oro" },
+  title: { absolute: "Portal Medalla de oro" },
 }
 
-export default function PortalMedallitadeoroLayout({ children }: { children: ReactNode }) {
+export default function PortalMedalladeoroLayout({ children }: { children: ReactNode }) {
   return <AuthGuard>{children}</AuthGuard>
 }

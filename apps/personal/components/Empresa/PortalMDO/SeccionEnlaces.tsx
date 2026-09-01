@@ -214,7 +214,7 @@ export function SeccionEnlaces() {
       <SeccionHero
         breadcrumb={["Servicios y apps", "Enlaces"]}
         titulo="Enlaces"
-        descripcion="Links de utilidad y accesos a bases de datos de medallitadeoro."
+        descripcion="Links de utilidad y accesos a bases de datos de medalla de oro."
       />
 
       {loading ? (

@@ -31,7 +31,7 @@ function limpiarPinDestino() {
 function rutaLegible(ruta: string): string {
   const [path, hash] = ruta.split("#")
   const segmentos = [
-    ...path.split("/").filter(Boolean).filter(s => s !== "portal-medallitadeoro"),
+    ...path.split("/").filter(Boolean).filter(s => s !== "portal-medalladeoro"),
     ...(hash ? hash.split("/").filter(Boolean) : []),
   ]
   if (segmentos.length === 0) return "Inicio"

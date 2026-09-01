@@ -161,8 +161,8 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
 
   // La imagen/descripción del header viven en identidad-empresa (un solo
   // registro global) — solo tiene sentido editarlas desde el ambito
-  // "empresa" (portal-medallitadeoro); en Personal/Trabajo el header se
-  // queda en modo simple, sin la imagen de marca de medallitadeoro.
+  // "empresa" (portal-medalladeoro); en Personal/Trabajo el header se
+  // queda en modo simple, sin la imagen de marca de medalla de oro.
   const esEmpresa = ambito === "empresa"
   const { identidad, loading: identidadLoading, reload: reloadIdentidad } = useGetIdentidad()
   const documentIdIdentidad = identidad?.documentId ?? null

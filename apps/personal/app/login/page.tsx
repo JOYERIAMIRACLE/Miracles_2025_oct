@@ -9,7 +9,7 @@ const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 function redirectForRole(role: string | null): string | null {
   if (!role) return null
-  if (role === "authenticated") return "/portal-medallitadeoro"
+  if (role === "authenticated") return "/portal-medalladeoro"
   return null
 }
 
@@ -71,14 +71,14 @@ export default function LoginPage() {
             <Sparkles className="h-7 w-7 text-white" />
           </div>
           <div className="text-left min-w-0">
-            <div className="text-xl xl:text-2xl font-bold text-white leading-tight">Portal Medallitadeoro</div>
+            <div className="text-xl xl:text-2xl font-bold text-white leading-tight">Portal Medalla de oro</div>
             <div className="text-sm text-white/50 leading-tight mt-0.5">Joyería Miracles</div>
           </div>
         </div>
 
         <div className="max-w-md">
           <p className="text-white/50 text-base leading-relaxed mb-5">
-            Bienvenido al panel interno de medallitadeoro.
+            Bienvenido al panel interno de medalla de oro.
           </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="border border-white/10 bg-white/[0.03] rounded-xl p-4">
@@ -103,7 +103,7 @@ export default function LoginPage() {
               <Sparkles className="h-7 w-7 text-white" />
             </div>
             <div className="text-left">
-              <div className="text-lg font-bold text-zinc-100 leading-tight">Portal Medallitadeoro</div>
+              <div className="text-lg font-bold text-zinc-100 leading-tight">Portal Medalla de oro</div>
               <div className="text-xs text-zinc-400 leading-tight mt-0.5">Joyería Miracles</div>
             </div>
           </div>

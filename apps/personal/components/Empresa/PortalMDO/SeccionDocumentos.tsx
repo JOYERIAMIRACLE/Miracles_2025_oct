@@ -9,7 +9,7 @@ export function SeccionDocumentos() {
       <SeccionHero
         breadcrumb={["Recursos", "Documentos"]}
         titulo="Documentos"
-        descripcion="Documentos legales de medallitadeoro — antes vivía dentro de Finanzas, ahora aquí junto al resto de recursos."
+        descripcion="Documentos legales de medalla de oro — antes vivía dentro de Finanzas, ahora aquí junto al resto de recursos."
       />
       <DocumentosLegalesView />
     </div>

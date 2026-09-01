@@ -180,7 +180,7 @@ export function DocumentosLegalesView({ puedeEditar = true }: { puedeEditar?: bo
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-500 dark:text-slate-400">Documentos legales y fiscales oficiales de medallitadeoro. Los más solicitados por proveedores, clientes y trámites externos. Da clic en uno para ver el detalle.</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400">Documentos legales y fiscales oficiales de medalla de oro. Los más solicitados por proveedores, clientes y trámites externos. Da clic en uno para ver el detalle.</p>
 
       {documentos.length === 0 ? (
         puedeEditar ? (
@@ -448,7 +448,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
               <div className="col-span-12">
                 <label className={labelCls}>Descripción corta</label>
                 <input value={form.subtitulo} onChange={e => setForm(f => ({ ...f, subtitulo: e.target.value }))}
-                  placeholder="Ej. RFC y datos fiscales de medallitadeoro. Se actualiza al cambiar datos del SAT."
+                  placeholder="Ej. RFC y datos fiscales de medalla de oro. Se actualiza al cambiar datos del SAT."
                   className={fieldCls} />
               </div>
 

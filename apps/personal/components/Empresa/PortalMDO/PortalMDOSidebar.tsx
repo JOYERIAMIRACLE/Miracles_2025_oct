@@ -14,12 +14,12 @@ export interface NavItem {
   icon: typeof Home
   /** Si se define, sobreescribe itemsAreOwnSection del grupo SOLO para este
       item — ej. "Misión" es su propia sección aunque viva visualmente
-      dentro del grupo "Conoce a Medallita de oro", que por lo demás
+      dentro del grupo "Conoce a Medalla de oro", que por lo demás
       funciona por pestañas de una sola sección. */
   ownSection?: boolean
   /** Si se define, el item no navega a una sección interna del portal —
       abre esta ruta en pestaña nueva (ej. Second Brain, que vive en su
-      propio layout fuera del portal-medallitadeoro). */
+      propio layout fuera del portal-medalladeoro). */
   href?: string
 }
 
@@ -37,7 +37,7 @@ export interface NavGroup {
 export const GRUPOS: NavGroup[] = [
   { id: "portal", label: "Inicio", icon: Home, itemsAreOwnSection: true, items: [] },
   {
-    id: "conoce", label: "Conoce a Medallita de oro", icon: Landmark, itemsAreOwnSection: false,
+    id: "conoce", label: "Conoce a Medalla de oro", icon: Landmark, itemsAreOwnSection: false,
     items: [
       { id: "quienes-somos", label: "¿Quiénes somos?", icon: Building2 },
       { id: "mision",        label: "Misión",           icon: Flag, ownSection: true },

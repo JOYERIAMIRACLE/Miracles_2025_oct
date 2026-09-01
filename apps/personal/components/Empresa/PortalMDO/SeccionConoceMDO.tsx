@@ -138,7 +138,7 @@ function TabQuienesSomos() {
       <Card className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-1.5! overflow-hidden">
         <div className="p-6 flex flex-col gap-3">
           <BloqueQuienesSomos
-            nombre={identidad?.nombre ?? "Medallitadeoro"} slogan={identidad?.slogan ?? ""}
+            nombre={identidad?.nombre ?? "Medalla de oro"} slogan={identidad?.slogan ?? ""}
             documentId={documentId} reload={reload} />
           <BloqueMisionVision titulo="Misión" campo="mision" valor={identidad?.mision ?? ""}
             documentId={documentId} reload={reload} />
@@ -149,7 +149,7 @@ function TabQuienesSomos() {
         <div className="relative min-h-[260px] rounded-xl overflow-hidden group cursor-pointer bg-violet-600"
           onClick={() => identidad?.foto_equipo?.url && setPopupImg(identidad.foto_equipo.url)}>
           {identidad?.foto_equipo?.url
-            ? <img src={identidad.foto_equipo.url} alt="Equipo Medallitadeoro" className="absolute inset-0 w-full h-full object-cover object-top" />
+            ? <img src={identidad.foto_equipo.url} alt="Equipo Medalla de oro" className="absolute inset-0 w-full h-full object-cover object-top" />
             : <div className="min-h-[200px] h-full flex flex-col items-center justify-center text-white select-none px-4">
                 <div className="text-5xl font-bold opacity-30">MDO</div>
                 <div className="text-xs mt-2 opacity-60 text-center">Foto del equipo · Pendiente</div>
@@ -259,9 +259,9 @@ export function SeccionConoceMDO() {
   return (
     <div className="space-y-4">
       <SeccionHero
-        breadcrumb={["Conoce a Medallitadeoro", "¿Quiénes somos?"]}
-        titulo="Conoce a Medallitadeoro"
-        descripcion={identidad?.descripcion_conoce || "Historia, propósito, visión y equipo de Joyería Miracles — todo lo que necesitas saber sobre medallitadeoro."}
+        breadcrumb={["Conoce a Medalla de oro", "¿Quiénes somos?"]}
+        titulo="Conoce a Medalla de oro"
+        descripcion={identidad?.descripcion_conoce || "Historia, propósito, visión y equipo de Joyería Miracles — todo lo que necesitas saber sobre medalla de oro."}
         campoDescripcion="descripcion_conoce"
         onDescripcionGuardada={reload}
         imagenUrl={identidad?.portada_conoce?.url}

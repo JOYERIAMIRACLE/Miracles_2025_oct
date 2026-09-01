@@ -106,7 +106,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
               </button>
             )}
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-              {view === "list" ? "Comunicados · Portal Medallitadeoro" : editando ? "Editar comunicado" : "Nuevo comunicado"}
+              {view === "list" ? "Comunicados · Portal Medalla de oro" : editando ? "Editar comunicado" : "Nuevo comunicado"}
             </h2>
             {view === "list" && !loading && (
               <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded font-mono">{avisos.length}</span>

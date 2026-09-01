@@ -10,9 +10,9 @@ import {
 import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 import { MedallitadeoroDataMap } from "@/components/GameEmpresa/MedallitadeoroDataMap"
 
-const PORTAL_BASE = "/portal-medallitadeoro"
+const PORTAL_BASE = "/portal-medalladeoro"
 
-/* Espejo del sidebar real de portal-medallitadeoro
+/* Espejo del sidebar real de portal-medalladeoro
    (components/Empresa/PortalMDO/PortalMDOSidebar.tsx, const GRUPOS) —
    5 grupos reales, verificados contra el archivo fuente (19-ago-2026:
    ya no existe el grupo "Departamentos" ni las secciones rh/cadena/
@@ -76,7 +76,7 @@ export function MedallitadeoroOficinaHub() {
         tipo="oficina"
         icon={Landmark}
         titulo="Oficina — Medallitadeoro"
-        descripcion="Espejo del sidebar real de portal-medallitadeoro (el portal de verdad, clon estructural de SDI Portal — ya no gestión-empresa suelto). Cada acceso te lleva a la página real, sales del mapa."
+        descripcion="Espejo del sidebar real de portal-medalladeoro (el portal de verdad, clon estructural de SDI Portal — ya no gestión-empresa suelto). Cada acceso te lleva a la página real, sales del mapa."
       />
 
       <div className="flex gap-1.5">

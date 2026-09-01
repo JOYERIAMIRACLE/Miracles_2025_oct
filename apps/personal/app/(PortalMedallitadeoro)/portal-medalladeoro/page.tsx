@@ -30,7 +30,7 @@ function leerHash(): { seccion: string; tab: string } {
   return { seccion: seccion && SECCIONES_VALIDAS.includes(seccion) ? seccion : "portal", tab: tab ?? "" }
 }
 
-export default function PortalMedallitadeoroPage() {
+export default function PortalMedalladeoroPage() {
   const [seccion, setSeccion]         = useState("portal")
   const [tab, setTabState]            = useState("")
   const [sidebarOpen, setSidebarOpen] = useState(true)

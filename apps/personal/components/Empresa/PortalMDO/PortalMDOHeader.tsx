@@ -160,7 +160,7 @@ function ProfileMenu() {
               <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFotoChange} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{displayName || "Medallitadeoro"}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{displayName || "Medalla de oro"}</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{displaySub || "Sesión activa"}</p>
             </div>
           </div>

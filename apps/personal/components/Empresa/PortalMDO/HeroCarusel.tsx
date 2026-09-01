@@ -107,7 +107,7 @@ export function HeroCarusel({ avisos, onGestionar, isAdmin, loading }: { avisos:
           ? <img src={a.imagen.url} alt={a.titulo} className="absolute inset-0 w-full h-full object-cover" />
           : <>
               <span className="text-6xl select-none">{a.emoji}</span>
-              <p className="text-white/80 text-[11px] font-semibold tracking-widest uppercase text-center">Medallitadeoro · Comunicados</p>
+              <p className="text-white/80 text-[11px] font-semibold tracking-widest uppercase text-center">Medalla de oro · Comunicados</p>
             </>
         }
         <div className="absolute inset-y-0 left-0 flex items-center pl-3">

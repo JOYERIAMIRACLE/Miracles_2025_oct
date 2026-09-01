@@ -35,7 +35,7 @@ export function SeccionFinanzas() {
       <SeccionHero
         breadcrumb={["Operación", "Finanzas", activo.label]}
         titulo="Finanzas"
-        descripcion={identidad?.descripcion_depto_administracion || "Ingresos, gastos, presupuestos, cuentas y métricas de medallitadeoro."}
+        descripcion={identidad?.descripcion_depto_administracion || "Ingresos, gastos, presupuestos, cuentas y métricas de medalla de oro."}
         campoDescripcion="descripcion_depto_administracion"
         onDescripcionGuardada={reload}
         imagenUrl={identidad?.portada_depto_administracion?.url}

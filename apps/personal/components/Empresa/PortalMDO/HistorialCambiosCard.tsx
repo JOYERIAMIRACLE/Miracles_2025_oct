@@ -15,7 +15,7 @@ export const AREA_ICON: Record<string, LucideIcon> = {
 export type EventoHistorial = { area: string; texto: string; autor: string; cuando: string }
 
 export const EVENTOS_HISTORIAL: EventoHistorial[] = [
-  { area: "Comunicados", texto: "Se publicó el comunicado “Nuevo portal Medallita de oro”", autor: "Ricardo", cuando: "hace 2 días" },
+  { area: "Comunicados", texto: "Se publicó el comunicado “Nuevo portal Medalla de oro”", autor: "Ricardo", cuando: "hace 2 días" },
   { area: "Operación",   texto: "Se actualizó el estado de un pedido en Ventas",                        autor: "Ricardo", cuando: "hace 3 días" },
   { area: "Recursos",    texto: "Se agregó un nuevo material descargable",                              autor: "Ricardo", cuando: "hace 5 días" },
   { area: "Conoce",      texto: "Se editó la sección “¿Quiénes somos?”",                       autor: "Ricardo", cuando: "hace 1 semana" },

@@ -23,7 +23,7 @@ export function SeccionContactos() {
       <SeccionHero
         breadcrumb={["Operación", activo.label]}
         titulo="Contactos"
-        descripcion={identidad?.descripcion_contactos || "Clientes y proveedores de medallitadeoro, en un solo lugar."}
+        descripcion={identidad?.descripcion_contactos || "Clientes y proveedores de medalla de oro, en un solo lugar."}
         campoDescripcion="descripcion_contactos"
         onDescripcionGuardada={reload}
         imagenUrl={identidad?.portada_contactos?.url}

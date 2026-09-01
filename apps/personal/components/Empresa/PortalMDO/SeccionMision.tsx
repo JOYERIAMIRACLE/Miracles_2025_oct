@@ -195,7 +195,7 @@ export function SeccionMision() {
       <SeccionHero
         breadcrumb={["Departamentos", "Misión", activo.label]}
         titulo="Misión"
-        descripcion={identidad?.descripcion_depto_mision || "Principios, valores y actitudes que guían nuestra manera de trabajar y relacionarnos en medallitadeoro."}
+        descripcion={identidad?.descripcion_depto_mision || "Principios, valores y actitudes que guían nuestra manera de trabajar y relacionarnos en medalla de oro."}
         campoDescripcion="descripcion_depto_mision"
         onDescripcionGuardada={reload}
         imagenUrl={identidad?.portada_depto_mision?.url}
