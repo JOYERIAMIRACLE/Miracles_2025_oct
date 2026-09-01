@@ -14,7 +14,7 @@ import { useGetAvisos } from "@/api/aviso/getAvisos"
 
 const ACCESOS_KEY = "mdo_portal_accesos"
 const ACCESOS_CONFIGURED_KEY = "mdo_portal_accesos_configured"
-const DEFAULT_ACCESOS = ["quienes-somos", "crm", "ventas", "finanzas"]
+const DEFAULT_ACCESOS = ["quienes-somos", "contactos", "ventas", "finanzas"]
 
 interface Acceso { id: string; label: string; icon: typeof DEPT_ICONS[string]; onClick: () => void }
 

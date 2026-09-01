@@ -5,7 +5,7 @@ import { useState } from "react"
 import {
   Home, Landmark, Layers, Building2, GitBranch, ShoppingBag,
   Flag, Users, Globe, DollarSign, ArrowRight, Waypoints,
-  ListChecks, Megaphone, Contact, Target, Boxes, FileText, Palette, Link2,
+  ListChecks, Megaphone, Contact, Boxes, FileText, Palette, Link2,
 } from "lucide-react"
 import { PortalPurposeHeader } from "@/components/GameEmpresa/PortalPurposeHeader"
 import { MedallitadeoroDataMap } from "@/components/GameEmpresa/MedallitadeoroDataMap"
@@ -40,7 +40,6 @@ const SIDEBAR_REAL = [
       { label: "Tareas",     href: `${PORTAL_BASE}#tareas`,     icon: ListChecks },
       { label: "Campañas",   href: `${PORTAL_BASE}#campanas`,   icon: Megaphone  },
       { label: "Contactos",  href: `${PORTAL_BASE}#contactos`,  icon: Contact    },
-      { label: "CRM",        href: `${PORTAL_BASE}#crm`,        icon: Target     },
       { label: "Ventas",     href: `${PORTAL_BASE}#ventas`,     icon: ShoppingBag },
       { label: "Inventario", href: `${PORTAL_BASE}#inventario`, icon: Boxes      },
       { label: "Finanzas",   href: `${PORTAL_BASE}#finanzas`,   icon: DollarSign },
