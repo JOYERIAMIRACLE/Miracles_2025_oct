@@ -12,6 +12,7 @@ import {
   ClienteEmpresa, ClientePayload,
   FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS, ESTADOS_CIVILES,
 } from "@/types/clienteEmpresa"
+import { updateCliente } from "@/api/clienteEmpresa/getClientes"
 import { Cotizacion, ItemCotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
 import { useGetCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
@@ -685,6 +686,48 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
   const [pagoModalOpen, setPagoModalOpen] = useState(false)
   const [tab, setTab] = useState<"general" | "ventas">("ventas")
+
+  // Edición rápida en línea por tarjeta — evita meter todos los campos en
+  // el modal grande de alta/edición (ese se queda corto y enfocado al
+  // registrar un contacto nuevo).
+  const [editandoContacto, setEditandoContacto] = useState(false)
+  const [contactoForm, setContactoForm]         = useState<ClientePayload | null>(null)
+  const [guardandoContacto, setGuardandoContacto] = useState(false)
+  const [editandoNotas, setEditandoNotas]       = useState(false)
+  const [notasForm, setNotasForm]               = useState("")
+  const [guardandoNotas, setGuardandoNotas]     = useState(false)
+
+  const abrirEditarContacto = () => {
+    setContactoForm({
+      nombre: cliente.nombre,
+      direccion: cliente.direccion, canalContacto: cliente.canalContacto,
+      tallaAnillo: cliente.tallaAnillo, ocasionFrecuente: cliente.ocasionFrecuente,
+      estadoCivil: cliente.estadoCivil, redesSociales: cliente.redesSociales,
+      origenContacto: cliente.origenContacto, segmento: cliente.segmento,
+    })
+    setEditandoContacto(true)
+  }
+  const guardarContacto = async () => {
+    if (!contactoForm) return
+    setGuardandoContacto(true)
+    try {
+      const updated = await updateCliente(cliente.documentId, contactoForm)
+      onUpdate(updated)
+      toast.success("Datos actualizados")
+      setEditandoContacto(false)
+    } catch { toast.error("Error al guardar") } finally { setGuardandoContacto(false) }
+  }
+
+  const abrirEditarNotas = () => { setNotasForm(cliente.notas ?? ""); setEditandoNotas(true) }
+  const guardarNotas = async () => {
+    setGuardandoNotas(true)
+    try {
+      const updated = await updateCliente(cliente.documentId, { notas: notasForm || null })
+      onUpdate(updated)
+      toast.success("Notas actualizadas")
+      setEditandoNotas(false)
+    } catch { toast.error("Error al guardar") } finally { setGuardandoNotas(false) }
+  }
   const { cotizaciones, setCotizaciones, loading: cotLoading } = useGetCotizaciones(cliente.documentId)
   const { transacciones: ingresos, setTransacciones: setIngresos, loading: ingLoading } = useGetTransaccionesByCliente(cliente.documentId)
 
@@ -764,6 +807,11 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   const cardCls = "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden"
   const cardHeadCls = "flex items-center justify-between px-4 py-3 border-b border-slate-800"
   const cardTitleCls = "text-xs font-bold text-slate-200"
+  const editLblCls = "text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1 block"
+  const editInpCls = "w-full px-2.5 py-1.5 text-[13px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-violet-500"
+  const editCancelCls = "px-3 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-200 border border-slate-700 hover:border-slate-600 rounded-lg transition"
+  const editSaveCls = "flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition disabled:opacity-50"
+  const cardEditBtnCls = "flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition"
 
   return (
     <div className="space-y-5">
@@ -883,49 +931,143 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       {tab === "general" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <div className={cardCls}>
-            <div className={cardHeadCls}><h3 className={cardTitleCls}>Contacto y dirección</h3></div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Dirección</p>
-                <p className="text-[13px] font-medium text-slate-200">{cliente.direccion || "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Canal preferido</p>
-                <p className="text-[13px] font-medium text-slate-200 flex items-center gap-1.5">
-                  {cliente.canalContacto && <CanalIcon canal={cliente.canalContacto} />}
-                  {cliente.canalContacto || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Talla de anillo</p>
-                <p className="text-[13px] font-medium text-slate-200">{cliente.tallaAnillo || "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Ocasión frecuente</p>
-                <p className="text-[13px] font-medium text-slate-200">{cliente.ocasionFrecuente || "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Estado civil</p>
-                <p className="text-[13px] font-medium text-slate-200">{cliente.estadoCivil || "—"}</p>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Redes sociales</p>
-                <p className="text-[13px] font-medium text-slate-200 truncate">{cliente.redesSociales || "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Origen del contacto</p>
-                <p className="text-[13px] font-medium text-slate-200">{cliente.origenContacto || "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Segmento</p>
-                <p className="text-[13px] font-medium text-slate-200">{cliente.segmento || "—"}</p>
-              </div>
+            <div className={cardHeadCls}>
+              <h3 className={cardTitleCls}>Contacto y dirección</h3>
+              {!editandoContacto && (
+                <button type="button" onClick={abrirEditarContacto} className={cardEditBtnCls}>
+                  <Pencil size={10} /> Editar
+                </button>
+              )}
             </div>
+            {editandoContacto && contactoForm ? (
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                <div>
+                  <label className={editLblCls}>Dirección</label>
+                  <input value={contactoForm.direccion ?? ""}
+                    onChange={e => setContactoForm(f => f && ({ ...f, direccion: e.target.value || null }))}
+                    className={editInpCls} />
+                </div>
+                <div>
+                  <label className={editLblCls}>Canal preferido</label>
+                  <select value={contactoForm.canalContacto ?? ""} title="Canal preferido"
+                    onChange={e => setContactoForm(f => f && ({ ...f, canalContacto: e.target.value || null }))}
+                    className={editInpCls}>
+                    <option value="">— Sin especificar —</option>
+                    {CANALES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={editLblCls}>Talla de anillo</label>
+                  <input value={contactoForm.tallaAnillo ?? ""}
+                    onChange={e => setContactoForm(f => f && ({ ...f, tallaAnillo: e.target.value || null }))}
+                    placeholder="6.5 MX" className={editInpCls} />
+                </div>
+                <div>
+                  <label className={editLblCls}>Ocasión frecuente</label>
+                  <input value={contactoForm.ocasionFrecuente ?? ""}
+                    onChange={e => setContactoForm(f => f && ({ ...f, ocasionFrecuente: e.target.value || null }))}
+                    placeholder="Regalos de aniversario…" className={editInpCls} />
+                </div>
+                <div>
+                  <label className={editLblCls}>Estado civil</label>
+                  <select value={contactoForm.estadoCivil ?? ""} title="Estado civil"
+                    onChange={e => setContactoForm(f => f && ({ ...f, estadoCivil: (e.target.value || null) as typeof f.estadoCivil }))}
+                    className={editInpCls}>
+                    <option value="">— Sin especificar —</option>
+                    {ESTADOS_CIVILES.map(e => <option key={e} value={e}>{e}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={editLblCls}>Redes sociales</label>
+                  <input value={contactoForm.redesSociales ?? ""}
+                    onChange={e => setContactoForm(f => f && ({ ...f, redesSociales: e.target.value || null }))}
+                    placeholder="@usuario_instagram" className={editInpCls} />
+                </div>
+                <div>
+                  <label className={editLblCls}>Origen del contacto</label>
+                  <input value={contactoForm.origenContacto ?? ""}
+                    onChange={e => setContactoForm(f => f && ({ ...f, origenContacto: e.target.value || null }))}
+                    className={editInpCls} />
+                </div>
+                <div>
+                  <label className={editLblCls}>Segmento</label>
+                  <select value={contactoForm.segmento ?? ""} title="Segmento"
+                    onChange={e => setContactoForm(f => f && ({ ...f, segmento: (e.target.value || null) as typeof f.segmento }))}
+                    className={editInpCls}>
+                    <option value="">— Sin segmento —</option>
+                    {SEGMENTOS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="sm:col-span-2 flex justify-end gap-2 pt-1">
+                  <button type="button" onClick={() => setEditandoContacto(false)} className={editCancelCls}>Cancelar</button>
+                  <button type="button" onClick={guardarContacto} disabled={guardandoContacto} className={editSaveCls}>
+                    <Check size={12} /> {guardandoContacto ? "Guardando..." : "Guardar"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Dirección</p>
+                  <p className="text-[13px] font-medium text-slate-200">{cliente.direccion || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Canal preferido</p>
+                  <p className="text-[13px] font-medium text-slate-200 flex items-center gap-1.5">
+                    {cliente.canalContacto && <CanalIcon canal={cliente.canalContacto} />}
+                    {cliente.canalContacto || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Talla de anillo</p>
+                  <p className="text-[13px] font-medium text-slate-200">{cliente.tallaAnillo || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Ocasión frecuente</p>
+                  <p className="text-[13px] font-medium text-slate-200">{cliente.ocasionFrecuente || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Estado civil</p>
+                  <p className="text-[13px] font-medium text-slate-200">{cliente.estadoCivil || "—"}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Redes sociales</p>
+                  <p className="text-[13px] font-medium text-slate-200 truncate">{cliente.redesSociales || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Origen del contacto</p>
+                  <p className="text-[13px] font-medium text-slate-200">{cliente.origenContacto || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Segmento</p>
+                  <p className="text-[13px] font-medium text-slate-200">{cliente.segmento || "—"}</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className={cardCls}>
-            <div className={cardHeadCls}><h3 className={cardTitleCls}>Notas</h3></div>
+            <div className={cardHeadCls}>
+              <h3 className={cardTitleCls}>Notas</h3>
+              {!editandoNotas && (
+                <button type="button" onClick={abrirEditarNotas} className={cardEditBtnCls}>
+                  <Pencil size={10} /> Editar
+                </button>
+              )}
+            </div>
             <div className="p-4">
-              {cliente.notas ? (
+              {editandoNotas ? (
+                <div className="space-y-2">
+                  <textarea value={notasForm} onChange={e => setNotasForm(e.target.value)} rows={4}
+                    placeholder="Preferencias, ocasiones, detalles a recordar…"
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-700 bg-slate-800 text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500 resize-none" />
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setEditandoNotas(false)} className={editCancelCls}>Cancelar</button>
+                    <button type="button" onClick={guardarNotas} disabled={guardandoNotas} className={editSaveCls}>
+                      <Check size={12} /> {guardandoNotas ? "Guardando..." : "Guardar"}
+                    </button>
+                  </div>
+                </div>
+              ) : cliente.notas ? (
                 <p className="text-xs text-slate-400 leading-relaxed bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
               ) : (
                 <p className="text-[11px] text-slate-700">Sin notas todavía.</p>
