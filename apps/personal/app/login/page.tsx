@@ -60,7 +60,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="dark min-h-screen bg-[#0a0714] text-white flex flex-col lg:flex-row overflow-hidden relative">
+    <div className="dark h-dvh bg-[#0a0714] text-white flex flex-col lg:flex-row overflow-y-auto relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_20%_25%,rgba(139,92,246,0.12),transparent)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_45%_at_85%_75%,rgba(139,92,246,0.07),transparent)] pointer-events-none" />
 
