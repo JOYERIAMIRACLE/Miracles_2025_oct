@@ -233,6 +233,9 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   // que SÍ está abierto, no al revés, para que el default "nada aquí"
   // signifique "todo cerrado").
   const [proyectosAbiertos, setProyectosAbiertos] = useState<Set<string>>(new Set())
+  // Igual que proyectosAbiertos pero para la capa de proceso (etiqueta) que
+  // envuelve los grupos por proyecto — mismo criterio: vacío = todo colapsado.
+  const [procesosAbiertos, setProcesosAbiertos] = useState<Set<string>>(new Set())
   const [nombrandoProyecto, setNombrandoProyecto] = useState<{ origenId: string; destinoId: string } | null>(null)
   const [nombreProyectoInput, setNombreProyectoInput] = useState("")
   const [renombrandoProyecto, setRenombrandoProyecto] = useState<string | null>(null) // documentId del proyecto
@@ -332,25 +335,50 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   // una tarea sobre otra las agrupa, ver handleDropTarea) — las tareas de un
   // mismo proyecto se juntan bajo un encabezado colapsable en la posición de
   // la primera que aparece; las sueltas se quedan igual que antes. Toggle
-  // solo de vista — no toca el campo "proyecto" de ninguna tarea.
+  // solo de vista — no toca el campo "proyecto" de ninguna tarea. La
+  // agrupación en sí vive dentro de seccionesPorProceso (más abajo), que
+  // aplica este mismo criterio DENTRO de cada sección de proceso.
   type GrupoTareas = { tipo: "proyecto"; proyecto: ProyectoRef; tareas: TareaType[] } | { tipo: "suelta"; tarea: TareaType }
-  const gruposRenderizados = useMemo<GrupoTareas[]>(() => {
-    if (!agruparPorProyecto) {
-      return filtradas.map(t => ({ tipo: "suelta" as const, tarea: t }))
-    }
-    const vistos = new Set<string>()
-    const resultado: GrupoTareas[] = []
-    for (const t of filtradas) {
-      const proyecto = t.proyecto
-      if (proyecto) {
-        if (vistos.has(proyecto.documentId)) continue
-        vistos.add(proyecto.documentId)
-        resultado.push({ tipo: "proyecto", proyecto, tareas: filtradas.filter(x => x.proyecto?.documentId === proyecto.documentId) })
-      } else {
-        resultado.push({ tipo: "suelta", tarea: t })
+
+  // Capa de "proceso": divide filtradas por etiqueta (el mismo campo libre
+  // que ya existía en el formulario) antes de aplicar la agrupación por
+  // proyecto de arriba dentro de cada una — mismo mecanismo agregado en
+  // Portal Marketing (sdi-portal), pero sin una lista fija de procesos (ahí
+  // son específicos de Marketing y no aplican aquí): cualquier etiqueta en
+  // uso se vuelve su propia sección, ordenadas alfabéticamente, con "Sin
+  // proceso" al final para las tareas sin etiqueta. Las secciones siempre
+  // se muestran, sin importar el toggle "Agrupado/Sin agrupar" — ese solo
+  // controla si DENTRO de cada proceso se subagrupa por proyecto.
+  const SIN_PROCESO = "Sin proceso"
+  type SeccionProceso = { proceso: string; grupos: GrupoTareas[] }
+  const seccionesPorProceso = useMemo<SeccionProceso[]>(() => {
+    const porEtiqueta = new Map<string, TareaType[]>()
+    filtradas.forEach(t => {
+      const key = t.etiqueta?.trim() || SIN_PROCESO
+      if (!porEtiqueta.has(key)) porEtiqueta.set(key, [])
+      porEtiqueta.get(key)!.push(t)
+    })
+    const claves = [...porEtiqueta.keys()].filter(k => k !== SIN_PROCESO).sort((a, b) => a.localeCompare(b, "es"))
+    if (porEtiqueta.has(SIN_PROCESO)) claves.push(SIN_PROCESO)
+
+    function construirGrupos(lista: TareaType[]): GrupoTareas[] {
+      if (!agruparPorProyecto) return lista.map(t => ({ tipo: "suelta" as const, tarea: t }))
+      const vistos = new Set<string>()
+      const resultado: GrupoTareas[] = []
+      for (const t of lista) {
+        const proyecto = t.proyecto
+        if (proyecto) {
+          if (vistos.has(proyecto.documentId)) continue
+          vistos.add(proyecto.documentId)
+          resultado.push({ tipo: "proyecto", proyecto, tareas: lista.filter(x => x.proyecto?.documentId === proyecto.documentId) })
+        } else {
+          resultado.push({ tipo: "suelta", tarea: t })
+        }
       }
+      return resultado
     }
-    return resultado
+
+    return claves.map(key => ({ proceso: key, grupos: construirGrupos(porEtiqueta.get(key)!) }))
   }, [filtradas, agruparPorProyecto])
 
   const stats = {
@@ -361,13 +389,13 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     completadas: tareas.filter(t => t.estado === "completada").length,
   }
 
-  const abrirCrear = (fechaVencimiento: string | null = null, proyectoPreseleccionado: ProyectoRef | null = null) => {
+  const abrirCrear = (fechaVencimiento: string | null = null, proyectoPreseleccionado: ProyectoRef | null = null, etiquetaPreseleccionada: string | null = null) => {
     const hoy = isoHoy()
     setEditando(null)
     setForm({
       titulo: "", descripcion: "", ambito,
       estado: "en_progreso", prioridad: "media",
-      etiqueta: null, fechaVencimiento: fechaVencimiento ?? unaSemanaDespues(hoy), notas: null, links: null,
+      etiqueta: etiquetaPreseleccionada, fechaVencimiento: fechaVencimiento ?? unaSemanaDespues(hoy), notas: null, links: null,
       responsable: user?.username ?? null, area: null, fechaInicio: hoy, esTicket: false,
     })
     setProyectoForm(proyectoPreseleccionado ? { tipo: "existente", proyecto: proyectoPreseleccionado } : null)
@@ -579,6 +607,14 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     setProyectosAbiertos(prev => {
       const next = new Set(prev)
       next.has(documentId) ? next.delete(documentId) : next.add(documentId)
+      return next
+    })
+  }
+
+  function toggleProcesoColapsado(proceso: string) {
+    setProcesosAbiertos(prev => {
+      const next = new Set(prev)
+      next.has(proceso) ? next.delete(proceso) : next.add(proceso)
       return next
     })
   }
@@ -848,13 +884,18 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
         </SeccionHero>
       </div>
 
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => abrirCrear()} size="sm" className="bg-violet-600 hover:bg-violet-700">
-          <Plus size={14} className="mr-1" />
-          <span className="hidden sm:inline">Nueva tarea</span>
-          <span className="sm:hidden">Nueva</span>
-        </Button>
-      </div>
+      {/* En Lista, "Nueva tarea" vive dentro de la barra de filtros (más abajo)
+          para no dejar una fila vacía encima; en Calendario/Métricas, que no
+          tienen esa barra, se queda en su propia fila. */}
+      {vista !== "lista" && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={() => abrirCrear()} size="sm" className="bg-violet-600 hover:bg-violet-700">
+            <Plus size={14} className="mr-1" />
+            <span className="hidden sm:inline">Nueva tarea</span>
+            <span className="sm:hidden">Nueva</span>
+          </Button>
+        </div>
+      )}
 
       {/* Barra de filtros */}
       {vista === "lista" && (
@@ -956,8 +997,8 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                 </div>
                 {etiquetasUsadas.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Etiqueta</p>
-                    <DropdownPicker label="Etiqueta" value={filtroEtiqueta} onChange={setFiltroEtiqueta}
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Proceso</p>
+                    <DropdownPicker label="Proceso" value={filtroEtiqueta} onChange={setFiltroEtiqueta}
                       placeholder="Todas"
                       options={[{ value: "", label: "Todas" }, ...etiquetasUsadas.map(et => ({ value: et, label: et }))]} />
                   </div>
@@ -1016,6 +1057,12 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
               Limpiar todo
             </button>
           )}
+
+          <Button onClick={() => abrirCrear()} size="sm" className="bg-violet-600 hover:bg-violet-700 ml-auto">
+            <Plus size={14} className="mr-1" />
+            <span className="hidden sm:inline">Nueva tarea</span>
+            <span className="sm:hidden">Nueva</span>
+          </Button>
         </div>
       )}
 
@@ -1032,54 +1079,82 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
             {tareas.length === 0 ? "No hay tareas. Crea una." : "Sin resultados con los filtros actuales."}
           </p>
         ) : (
-          <div className="space-y-2">
-            {gruposRenderizados.map(g => {
-              if (g.tipo === "suelta") return renderTareaCard(g.tarea)
-
-              const colapsado = !proyectosAbiertos.has(g.proyecto.documentId)
-              const renombrandoEste = renombrandoProyecto === g.proyecto.documentId
+          <div className="space-y-3">
+            {seccionesPorProceso.map(seccion => {
+              const procesoColapsado = !procesosAbiertos.has(seccion.proceso)
+              const etiquetaSeccion = seccion.proceso === SIN_PROCESO ? null : seccion.proceso
               return (
-                <div key={`proyecto-${g.proyecto.documentId}`}
-                  className={`rounded-xl border border-violet-200 dark:border-violet-800/40 p-2 space-y-2 ${
-                    colapsado ? "bg-white dark:bg-slate-900 shadow-sm" : "bg-violet-50/40 dark:bg-violet-500/5"
-                  }`}>
-                  {renombrandoEste ? (
-                    <div className="flex items-center gap-1.5 px-1.5 py-0.5" onClick={e => e.stopPropagation()}>
-                      <input autoFocus value={nombreRenombrado} onChange={e => setNombreRenombrado(e.target.value)}
-                        onKeyDown={e => { if (e.key === "Enter") confirmarRenombrarProyecto(); if (e.key === "Escape") setRenombrandoProyecto(null) }}
-                        className={`flex-1 h-7 text-xs ${fieldCls}`} />
-                      <button type="button" onClick={confirmarRenombrarProyecto} title="Guardar"
-                        className="p-1 text-emerald-600 hover:text-emerald-700 rounded transition-colors shrink-0">
-                        <Check size={13} />
-                      </button>
-                      <button type="button" onClick={() => setRenombrandoProyecto(null)} title="Cancelar"
-                        className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0">
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="w-full flex items-center gap-2 px-1.5 py-1 group/grupo">
-                      <button type="button" onClick={() => toggleProyectoColapsado(g.proyecto.documentId)}
-                        className="flex items-center gap-2 flex-1 min-w-0 text-left">
-                        <ChevronDown size={13} className={`text-violet-500 shrink-0 transition-transform ${colapsado ? "-rotate-90" : ""}`} />
-                        <span className="text-xs font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide truncate">{g.proyecto.nombre}</span>
-                        <span className="text-[10px] text-violet-500/70 dark:text-violet-400/60 tabular-nums shrink-0">{g.tareas.length}</span>
-                      </button>
-                      <button type="button" title="Agregar tarea a este proyecto"
-                        onClick={() => abrirCrear(null, g.proyecto)}
-                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/grupo:opacity-100 transition shrink-0">
-                        <Plus size={12} />
-                      </button>
-                      <button type="button" title="Renombrar proyecto"
-                        onClick={() => { setRenombrandoProyecto(g.proyecto.documentId); setNombreRenombrado(g.proyecto.nombre) }}
-                        className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/grupo:opacity-100 transition shrink-0">
-                        <Pencil size={12} />
-                      </button>
-                    </div>
-                  )}
-                  {!colapsado && (
-                    <div className="space-y-2">
-                      {g.tareas.map(t => renderTareaCard(t))}
+                <div key={`proceso-${seccion.proceso}`} className="space-y-2">
+                  <div className="w-full flex items-center gap-2 px-1 py-1 group/proceso">
+                    <button type="button" onClick={() => toggleProcesoColapsado(seccion.proceso)}
+                      className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                      <ChevronDown size={14} className={`text-slate-500 dark:text-slate-400 shrink-0 transition-transform ${procesoColapsado ? "-rotate-90" : ""}`} />
+                      <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide truncate">{seccion.proceso}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums shrink-0">
+                        {seccion.grupos.reduce((n, g) => n + (g.tipo === "suelta" ? 1 : g.tareas.length), 0)}
+                      </span>
+                    </button>
+                    <button type="button" title="Agregar tarea a este proceso"
+                      onClick={() => abrirCrear(null, null, etiquetaSeccion)}
+                      className="p-1 text-slate-400 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/proceso:opacity-100 transition shrink-0">
+                      <Plus size={13} />
+                    </button>
+                  </div>
+
+                  {!procesoColapsado && (
+                    <div className="space-y-2 pl-1">
+                      {seccion.grupos.map(g => {
+                        if (g.tipo === "suelta") return renderTareaCard(g.tarea)
+
+                        const colapsado = !proyectosAbiertos.has(g.proyecto.documentId)
+                        const renombrandoEste = renombrandoProyecto === g.proyecto.documentId
+                        return (
+                          <div key={`proyecto-${g.proyecto.documentId}`}
+                            className={`rounded-xl border border-violet-200 dark:border-violet-800/40 p-2 space-y-2 ${
+                              colapsado ? "bg-white dark:bg-slate-900 shadow-sm" : "bg-violet-50/40 dark:bg-violet-500/5"
+                            }`}>
+                            {renombrandoEste ? (
+                              <div className="flex items-center gap-1.5 px-1.5 py-0.5" onClick={e => e.stopPropagation()}>
+                                <input autoFocus value={nombreRenombrado} onChange={e => setNombreRenombrado(e.target.value)}
+                                  onKeyDown={e => { if (e.key === "Enter") confirmarRenombrarProyecto(); if (e.key === "Escape") setRenombrandoProyecto(null) }}
+                                  className={`flex-1 h-7 text-xs ${fieldCls}`} />
+                                <button type="button" onClick={confirmarRenombrarProyecto} title="Guardar"
+                                  className="p-1 text-emerald-600 hover:text-emerald-700 rounded transition-colors shrink-0">
+                                  <Check size={13} />
+                                </button>
+                                <button type="button" onClick={() => setRenombrandoProyecto(null)} title="Cancelar"
+                                  className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0">
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="w-full flex items-center gap-2 px-1.5 py-1 group/grupo">
+                                <button type="button" onClick={() => toggleProyectoColapsado(g.proyecto.documentId)}
+                                  className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                                  <ChevronDown size={13} className={`text-violet-500 shrink-0 transition-transform ${colapsado ? "-rotate-90" : ""}`} />
+                                  <span className="text-xs font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide truncate">{g.proyecto.nombre}</span>
+                                  <span className="text-[10px] text-violet-500/70 dark:text-violet-400/60 tabular-nums shrink-0">{g.tareas.length}</span>
+                                </button>
+                                <button type="button" title="Agregar tarea a este proyecto"
+                                  onClick={() => abrirCrear(null, g.proyecto, etiquetaSeccion)}
+                                  className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/grupo:opacity-100 transition shrink-0">
+                                  <Plus size={12} />
+                                </button>
+                                <button type="button" title="Renombrar proyecto"
+                                  onClick={() => { setRenombrandoProyecto(g.proyecto.documentId); setNombreRenombrado(g.proyecto.nombre) }}
+                                  className="p-1 text-violet-400/60 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/grupo:opacity-100 transition shrink-0">
+                                  <Pencil size={12} />
+                                </button>
+                              </div>
+                            )}
+                            {!colapsado && (
+                              <div className="space-y-2">
+                                {g.tareas.map(t => renderTareaCard(t))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -1340,15 +1415,15 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
               )}
             </div>
 
-            {/* Etiqueta */}
+            {/* Proceso (campo "etiqueta") */}
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 dark:text-slate-400">Etiqueta</label>
+              <label className="text-xs text-slate-500 dark:text-slate-400">Proceso</label>
               <div ref={etqRef} className="relative">
                 <button type="button"
                   onClick={() => { setEtqOpen(v => !v); setEtqQuery(""); setEstadoFieldOpen(false); setPrioridadFieldOpen(false); setRespOpen(false); setAreaOpen(false); setProyOpen(false) }}
                   className="w-full h-9 flex items-center gap-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm transition-colors hover:border-slate-400 dark:hover:border-slate-600 shadow-sm">
                   <span className={`flex-1 text-left truncate ${form.etiqueta ? "text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
-                    {form.etiqueta ?? "campaña, urgente..."}
+                    {form.etiqueta ?? "Ventas, Producción..."}
                   </span>
                   <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 shrink-0 ${etqOpen ? "rotate-180" : ""}`} />
                 </button>
