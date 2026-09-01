@@ -87,9 +87,9 @@
     },
     "ventaOrigen": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "manyToOne",
       "target": "api::venta.venta",
-      "mappedBy": "transaccionGenerada"
+      "inversedBy": "pagos"
     }
   }
 }

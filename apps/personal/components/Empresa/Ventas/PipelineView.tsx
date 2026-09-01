@@ -26,7 +26,10 @@ import { useGetCategorias } from "@/api/categoria/getCategorias"
 import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { createVenta, updateVenta } from "@/api/ventaEmpresa/getVentas"
 import { createVentaLinea } from "@/api/venta-linea/mutateVentaLinea"
-import { VentaEmpresa, VentaPayload, EstadoVenta, ESTADO_VENTA_COLOR } from "@/types/ventaEmpresa"
+import {
+  VentaEmpresa, VentaPayload, EstadoVenta, ESTADOS_VENTA, ESTADO_VENTA_COLOR,
+  MetodoPago as MetodoPagoVenta, METODOS_PAGO as METODOS_PAGO_VENTA,
+} from "@/types/ventaEmpresa"
 import { uploadMedia } from "@/lib/upload"
 import { useClientesPipeline } from "./useClientesPipeline"
 
@@ -347,11 +350,13 @@ type PagoForm = {
   cuentaId:   string
   concepto:   string
   notas:      string
+  ventaId:    string
 }
 
-function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
+function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClose, onSaved }: {
   clienteNombre:     string
   clienteDocumentId: string
+  pedidosDelCliente: VentaEmpresa[]
   onClose:           () => void
   onSaved:           (i: TransaccionType) => void
 }) {
@@ -360,6 +365,8 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
   const { cuentas } = useGetCuentas("empresa")
   const categoriasIngreso = categorias.filter(c => c.tipo === "ingreso" && c.activa)
   const cuentasDisponibles = cuentas.filter(c => c.activa !== false && c.tipo !== "Crédito")
+  // Si solo hay un pedido, se preselecciona — el pago casi siempre es para
+  // ese; con varios, se deja en blanco para forzar la elección consciente.
   const [form, setForm] = useState<PagoForm>({
     monto:      "",
     fecha:      hoy,
@@ -368,6 +375,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
     cuentaId:   "",
     concepto:   `Pago — ${clienteNombre}`,
     notas:      "",
+    ventaId:    pedidosDelCliente.length === 1 ? pedidosDelCliente[0].documentId : "",
   })
   const [guardando, setGuardando] = useState(false)
   const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
@@ -379,6 +387,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
     if (!form.fecha)   { toast.error("Fecha requerida"); return }
     if (!form.concepto.trim()) { toast.error("Concepto requerido"); return }
     if (!form.cuentaId) { toast.error("Selecciona la cuenta destino"); return }
+    if (pedidosDelCliente.length > 0 && !form.ventaId) { toast.error("Selecciona a qué pedido corresponde este pago"); return }
     setGuardando(true)
     try {
       const saved = await createTransaccion({
@@ -393,6 +402,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
         referencia:        clienteNombre,
         clienteDocumentId,
         cliente:           clienteDocumentId,
+        ventaOrigen:       form.ventaId || null,
         ambito:            "empresa",
       })
       onSaved(saved)
@@ -416,6 +426,24 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
           <label className={lbl}>Concepto</label>
           <input value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))}
             placeholder="Pago total, Anticipo 50%…" className={inp} />
+        </div>
+
+        <div>
+          <label className={lbl}>Pedido al que corresponde{pedidosDelCliente.length > 0 ? " *" : ""}</label>
+          {pedidosDelCliente.length > 0 ? (
+            <select value={form.ventaId} title="Pedido"
+              onChange={e => setForm(f => ({ ...f, ventaId: e.target.value }))}
+              className={inp}>
+              <option value="">— Seleccionar —</option>
+              {pedidosDelCliente.map(v => (
+                <option key={v.documentId} value={v.documentId}>
+                  {v.numero ? `${v.numero} — ` : ""}{v.concepto} ({fmtMoney(v.monto)})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-[11px] text-slate-600 px-1">Este cliente todavía no tiene pedidos reales — el pago quedará sin ligar a uno.</p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -477,6 +505,141 @@ function PagoModal({ clienteNombre, clienteDocumentId, onClose, onSaved }: {
           <button type="button" onClick={guardar} disabled={guardando}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} />{guardando ? "Guardando..." : "Registrar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal: ver/editar un pedido real existente (abierto desde su fila en la
+// ficha de cliente) — las líneas de producto se muestran de solo lectura aquí;
+// para reordenarlas/agregar productos se usa el editor completo en Ventas · Pedidos.
+export function PedidoModal({ venta, onClose, onSaved }: {
+  venta:   VentaEmpresa
+  onClose: () => void
+  onSaved: (v: VentaEmpresa) => void
+}) {
+  const [form, setForm] = useState({
+    concepto:   venta.concepto,
+    monto:      venta.monto,
+    fecha:      venta.fecha,
+    estado:     (venta.estado ?? "Cotizado") as EstadoVenta,
+    metodoPago: venta.metodoPago,
+    notas:      venta.notas ?? "",
+  })
+  const [comprobante, setComprobante] = useState<File | null>(null)
+  const comprobanteRef = useRef<HTMLInputElement>(null)
+  const [guardando, setGuardando] = useState(false)
+  const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+  const lbl = "text-[11px] font-medium text-slate-400 mb-1.5 block"
+
+  const guardar = async () => {
+    if (!form.concepto.trim()) { toast.error("El concepto es obligatorio"); return }
+    if (!form.monto) { toast.error("El monto es obligatorio"); return }
+    setGuardando(true)
+    try {
+      const comprobanteId = comprobante ? (await uploadMedia(comprobante)).id : undefined
+      const updated = await updateVenta(venta.documentId, {
+        concepto: form.concepto, monto: form.monto, fecha: form.fecha,
+        estado: form.estado, metodoPago: form.metodoPago, notas: form.notas || null,
+        ...(comprobanteId !== undefined ? { comprobantePago: comprobanteId } : {}),
+      })
+      toast.success("Pedido actualizado")
+      onSaved(updated)
+    } catch { toast.error("Error al guardar") } finally { setGuardando(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-100">{venta.numero ?? "Pedido"}</h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">{venta.cliente?.nombre ?? "Sin cliente"}</p>
+          </div>
+          <button type="button" title="Cerrar" onClick={onClose}
+            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={16} /></button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+          {venta.lineas?.length > 0 && (
+            <div>
+              <label className={lbl}>Productos del pedido</label>
+              <div className="border border-slate-700 rounded-lg divide-y divide-slate-800 overflow-hidden">
+                {venta.lineas.map(l => (
+                  <div key={l.documentId} className="flex items-center justify-between px-3 py-2 text-[12px]">
+                    <span className="text-slate-300">{l.descripcion} ×{l.cantidad}</span>
+                    <span className="text-slate-400 font-mono">{fmtMoney(l.subtotal ?? 0)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className={lbl}>Concepto *</label>
+            <input value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} className={inp} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={lbl}>Monto *</label>
+              <input type="number" min="0" step="0.01" value={form.monto || ""}
+                onChange={e => setForm(f => ({ ...f, monto: Number(e.target.value) || 0 }))} className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>Fecha</label>
+              <input type="date" value={form.fecha ?? ""}
+                onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className={inp} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={lbl}>Estado</label>
+              <select title="Estado" value={form.estado}
+                onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoVenta }))} className={inp + " cursor-pointer"}>
+                {ESTADOS_VENTA.map(e => <option key={e} value={e}>{e}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={lbl}>Método de pago</label>
+              <select title="Método de pago" value={form.metodoPago ?? ""}
+                onChange={e => setForm(f => ({ ...f, metodoPago: (e.target.value || null) as MetodoPagoVenta | null }))} className={inp + " cursor-pointer"}>
+                <option value="">— Sin especificar —</option>
+                {METODOS_PAGO_VENTA.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className={lbl}>Evidencia de pago (opcional)</label>
+            <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
+              onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
+            <button type="button" onClick={() => comprobanteRef.current?.click()}
+              className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 px-3 text-sm text-slate-400 hover:border-violet-500/50 hover:text-slate-200 transition-all">
+              <Paperclip size={13} className="shrink-0" />
+              <span className="truncate">
+                {comprobante ? comprobante.name : venta.comprobantePago ? `Ya adjunto: ${venta.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
+              </span>
+            </button>
+          </div>
+
+          <div>
+            <label className={lbl}>Notas</label>
+            <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+              rows={2} className={inp + " resize-none h-auto py-2"} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
+          <button type="button" onClick={onClose} disabled={guardando}
+            className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+          <button type="button" onClick={guardar} disabled={guardando}
+            className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
+            {guardando ? "Guardando..." : "Guardar cambios"}
           </button>
         </div>
       </div>
@@ -668,7 +831,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
 }
 
 // ─── Panel de cliente (compartido por Pipeline, Leads y Contactos) ────────────
-export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar, onNuevoPedido, backLabel = "Volver", mostrarAccionesEtapa = true }: {
+export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar, onNuevoPedido, onVentaActualizada, backLabel = "Volver", mostrarAccionesEtapa = true }: {
   cliente: ClienteEmpresa; num: string; ventasDelCliente: VentaEmpresa[]
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
   onAvanzar:    (c: ClienteEmpresa) => void
@@ -676,6 +839,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   onRechazar:   (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
   onRecuperar:  (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
   onNuevoPedido: (c: ClienteEmpresa) => void
+  onVentaActualizada: (v: VentaEmpresa) => void
   backLabel?: string
   // Avanzar/Rechazar/Retroceder etapa solo tiene sentido cuando el cliente
   // se está gestionando activamente en el embudo (Leads/Pipeline) — en el
@@ -686,6 +850,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
   const [pagoModalOpen, setPagoModalOpen] = useState(false)
   const [tab, setTab] = useState<"general" | "ventas">("ventas")
+  const [pedidoAbierto, setPedidoAbierto] = useState<VentaEmpresa | null>(null)
 
   // Edición rápida en línea por tarjeta — evita meter todos los campos en
   // el modal grande de alta/edición (ese se queda corto y enfocado al
@@ -1140,7 +1305,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 ) : (
                   <div className="space-y-0.5">
                     {ventasDelCliente.map(v => (
-                      <div key={v.documentId} className="flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-800/60 transition">
+                      <button key={v.documentId} type="button"
+                        onClick={() => setPedidoAbierto(v)}
+                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-800/60 transition text-left">
                         <span className="text-[11px] font-bold font-mono text-violet-400 w-16 shrink-0">{v.numero ?? "—"}</span>
                         <div className="min-w-0 flex-1">
                           <p className="text-[13px] font-medium text-slate-200 truncate">{v.concepto}</p>
@@ -1152,7 +1319,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                           )}
                           <span className="text-[13px] font-semibold text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -1224,6 +1391,11 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                             <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
                               {ing.metodoPago}
                             </span>
+                          )}
+                          {ing.ventaOrigen ? (
+                            <span className="text-[9px] text-violet-400 font-mono">→ {ing.ventaOrigen.numero ?? ing.ventaOrigen.concepto}</span>
+                          ) : (
+                            <span className="text-[9px] text-slate-700">sin pedido ligado</span>
                           )}
                         </div>
                       </div>
@@ -1326,10 +1498,22 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
         <PagoModal
           clienteNombre={cliente.nombre}
           clienteDocumentId={cliente.documentId}
+          pedidosDelCliente={ventasDelCliente}
           onClose={() => setPagoModalOpen(false)}
           onSaved={ing => {
             setIngresos(prev => [...prev, ing])
             setPagoModalOpen(false)
+          }}
+        />
+      )}
+
+      {pedidoAbierto && (
+        <PedidoModal
+          venta={pedidoAbierto}
+          onClose={() => setPedidoAbierto(null)}
+          onSaved={updated => {
+            onVentaActualizada(updated)
+            setPedidoAbierto(null)
           }}
         />
       )}
@@ -1526,7 +1710,7 @@ export function PipelineView() {
   const {
     clientes, loading,
     totalVentas,
-    ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
+    ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente, actualizarVenta,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
@@ -1625,6 +1809,7 @@ export function PipelineView() {
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
           onNuevoPedido={setPedidoGateFor}
+          onVentaActualizada={actualizarVenta}
           backLabel="Volver al Pipeline"
         />
 

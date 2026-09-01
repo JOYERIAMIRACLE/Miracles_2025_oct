@@ -12,7 +12,7 @@ export function LeadsView() {
   const {
     clientes, loading,
     totalVentas,
-    ventasPorCliente, cotizacionesPorCliente,
+    ventasPorCliente, cotizacionesPorCliente, actualizarVenta,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
@@ -123,6 +123,7 @@ export function LeadsView() {
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
           onNuevoPedido={setPedidoGateFor}
+          onVentaActualizada={actualizarVenta}
           backLabel="Volver a Leads"
         />
 

@@ -15,7 +15,7 @@ export function ClientesView() {
   const {
     clientes, loading,
     totalVentas,
-    ventasPorCliente, cotizacionesPorCliente, valorPorCliente,
+    ventasPorCliente, cotizacionesPorCliente, valorPorCliente, actualizarVenta,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
@@ -133,6 +133,7 @@ export function ClientesView() {
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
           onNuevoPedido={setPedidoGateFor}
+          onVentaActualizada={actualizarVenta}
           backLabel="Volver a Contactos"
           mostrarAccionesEtapa={false}
         />

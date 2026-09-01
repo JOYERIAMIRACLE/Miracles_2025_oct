@@ -167,6 +167,12 @@ export function useClientesPipeline() {
     return nuevo
   }
 
+  // Refresca una venta puntual en la caché compartida (ej. tras editarla desde
+  // el modal de detalle en la ficha de cliente) sin tener que recargar todas.
+  const actualizarVenta = (updated: VentaEmpresa) => {
+    setTodasVentas(prev => prev.map(v => v.documentId === updated.documentId ? updated : v))
+  }
+
   const borrar = async (c: ClienteEmpresa) => {
     if (!confirm(`¿Eliminar "${c.nombre}"?`)) return false
     try {
@@ -181,6 +187,7 @@ export function useClientesPipeline() {
     clientes, setClientes, loading,
     totalVentas: todasVentas.length,
     ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
+    actualizarVenta,
     avanzar, avanzarA, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
     syncSelected,

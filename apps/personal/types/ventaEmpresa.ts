@@ -38,7 +38,6 @@ export type VentaEmpresa = {
   createdAt:   string
   cotizacionOrigen?:    { id: number; documentId: string; numero: string | null } | null
   envios?:              { id: number; documentId: string; estado: string }[]
-  transaccionGenerada?: { id: number; documentId: string } | null
   comprobantePago?:     { id: number; url: string; name: string } | null
 }
 

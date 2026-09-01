@@ -90,11 +90,11 @@
       "target": "api::envio.envio",
       "mappedBy": "venta"
     },
-    "transaccionGenerada": {
+    "pagos": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "oneToMany",
       "target": "api::transaccion.transaccion",
-      "inversedBy": "ventaOrigen"
+      "mappedBy": "ventaOrigen"
     },
     "comprobantePago": {
       "type": "media",
