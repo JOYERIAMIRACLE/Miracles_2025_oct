@@ -860,17 +860,17 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
               <tr>
-                {["Fecha", "Proveedor", "Líneas", "Total", "Estado", ""].map(h => (
+                {["Fecha", "Concepto", "Material", "Gramos", "Precio/g", "Total", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {loading && Array.from({ length: 3 }).map((_, i) => (
-                <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                <tr key={i}><td colSpan={7} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
               ))}
               {!loading && compras.length === 0 && (
-                <tr><td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-600">
+                <tr><td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-600">
                   <Package size={28} className="mx-auto mb-2 opacity-30" /><p className="text-sm">Sin compras registradas.</p>
                 </td></tr>
               )}
@@ -885,16 +885,19 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
                         : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                     }`}>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">{c.fecha}</td>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{c.proveedor?.nombre ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{c.lineas.length}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{fmt(total)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
-                        c.estado === "recibida"
-                          ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
-                      }`}>{ESTADO_LABEL[c.estado]}</span>
+                    <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">
+                      {c.lineas.map((l, i) => <div key={i}>{l.descripcion || "—"}</div>)}
                     </td>
+                    <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+                      {c.lineas.map((l, i) => <div key={i}>{l.material?.nombre ?? "—"}</div>)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                      {c.lineas.map((l, i) => <div key={i}>{l.gramos} g</div>)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                      {c.lineas.map((l, i) => <div key={i}>{fmt(l.precioPorGramo)}</div>)}
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100 tabular-nums text-xs">{fmt(total)}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                         <button type="button" title="Editar" onClick={() => { setEditando(c); setModalOpen(true) }}
