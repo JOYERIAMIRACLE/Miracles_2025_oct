@@ -7,6 +7,7 @@ import {
   DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
 } from "lucide-react"
 import { toast } from "sonner"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import {
   ClienteEmpresa, ClientePayload,
   FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS,
@@ -40,6 +41,11 @@ export const fmtMoney = (n: number) => n.toLocaleString("es-MX", { style: "curre
 // Días sin movimiento antes de mostrar alerta de estancado
 const DIAS_ESTANCADO_AVISO = 14
 const DIAS_ESTANCADO_ALERTA = 30
+
+const TOOLTIP_STYLE = {
+  background: "#0f172a", border: "1px solid #334155",
+  borderRadius: "8px", fontSize: "12px", color: "#e2e8f0",
+}
 
 // ─── Metadatos por etapa ──────────────────────────────────────────────────────
 
@@ -104,6 +110,8 @@ export function CanalIcon({ canal }: { canal: string | null }) {
 }
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
+// Reservado para mostrarse dentro del flujo de una cotización/lead/pedido
+// puntual (no en la ficha del cliente, que ahora muestra actividad agregada).
 export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
   const etapaActual = cliente.Funnel ?? "Lead"
   const idxActual   = FUNNEL_ETAPAS.indexOf(etapaActual)
@@ -704,6 +712,33 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
     antiguedadDias < 365 ? `${Math.round(antiguedadDias / 30)} meses` :
     `${(antiguedadDias / 365).toFixed(1)} años`
 
+  // Actividad de cotizaciones/pedidos agrupada por mes, para la gráfica
+  const actividadPorMes = useMemo(() => {
+    const map = new Map<string, { cotizaciones: number; pedidos: number }>()
+    cotizaciones.forEach(c => {
+      const fecha = c.fecha ?? c.createdAt
+      if (!fecha) return
+      const key = fecha.slice(0, 7)
+      const row = map.get(key) ?? { cotizaciones: 0, pedidos: 0 }
+      row.cotizaciones += 1
+      map.set(key, row)
+    })
+    ventasReales.forEach(v => {
+      if (!v.fecha) return
+      const key = v.fecha.slice(0, 7)
+      const row = map.get(key) ?? { cotizaciones: 0, pedidos: 0 }
+      row.pedidos += 1
+      map.set(key, row)
+    })
+    return [...map.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([mes, v]) => {
+        const [y, m] = mes.split("-")
+        const label = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("es-MX", { month: "short", year: "2-digit" })
+        return { mes: label, ...v }
+      })
+  }, [cotizaciones, ventasReales])
+
   const iniciales = cliente.nombre.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() ?? "").join("")
 
   const cardCls = "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden"
@@ -1017,9 +1052,26 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
         </div>
       )}
 
-      {/* Recorrido — a lo ancho, debajo de todo */}
-      <div className="rounded-xl border border-slate-800 bg-slate-800/20">
-        <Timeline cliente={cliente} />
+      {/* Actividad por mes — cotizaciones y pedidos, a lo ancho */}
+      <div className={cardCls}>
+        <div className={cardHeadCls}><h3 className={cardTitleCls}>Actividad por mes</h3></div>
+        <div className="p-4">
+          {actividadPorMes.length === 0 ? (
+            <p className="text-[11px] text-slate-700 py-6 text-center">Todavía no hay cotizaciones ni pedidos para graficar.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={actividadPorMes} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={24} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(139,92,246,0.06)" }} />
+                <Legend wrapperStyle={{ fontSize: 11, color: "#94a3b8" }} />
+                <Bar dataKey="cotizaciones" name="Cotizaciones" fill="#c4b5fd" radius={[3, 3, 0, 0]} maxBarSize={22} />
+                <Bar dataKey="pedidos" name="Pedidos" fill="#7c3aed" radius={[3, 3, 0, 0]} maxBarSize={22} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
 
       {/* Acciones de etapa */}
