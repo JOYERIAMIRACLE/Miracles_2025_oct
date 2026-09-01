@@ -89,7 +89,7 @@ function matchSearch(n: CatalogoNodo, q: string): boolean {
 // ─── TreeRow ──────────────────────────────────────────────────────────────────
 
 function TreeRow({
-  node, depth, selected, onSelect, onAdd, onDel, onMov, busqueda,
+  node, depth, selected, onSelect, onAdd, onDel, onMov, busqueda, skuCount,
 }: {
   node:     CatalogoNodo
   depth:    number
@@ -99,12 +99,15 @@ function TreeRow({
   onDel:    (id: string) => void
   onMov:    (id: string, dir: 1 | -1) => void
   busqueda: string
+  /** Mapa categoríaNombre → cantidad de SKUs */
+  skuCount?: Record<string, number>
 }) {
   const [open, setOpen] = useState(depth === 0)
   const cfg   = TIPO_CONFIG[node.tipo]
   const childTipo = cfg.childTipo
   const hasChildren = node.children.length > 0
   const isActive = selected === node.id
+  const isCat = node.tipo === "categoria"
 
   if (!matchSearch(node, busqueda)) return null
 
@@ -153,6 +156,13 @@ function TreeRow({
           )}
         </span>
 
+        {/* SKU count badge en categorías */}
+        {isCat && skuCount && (skuCount[node.nombre] ?? 0) > 0 && (
+          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 transition-colors ${
+            isActive ? "bg-violet-500/30 text-violet-300" : "bg-slate-700/60 text-slate-500"
+          }`}>{skuCount[node.nombre]}</span>
+        )}
+
         {/* Modelos count */}
         {node.modelos.length > 0 && (
           <span className="text-[9px] text-slate-600 shrink-0">{node.modelos.length} mod.</span>
@@ -196,6 +206,7 @@ function TreeRow({
               onDel={onDel}
               onMov={onMov}
               busqueda={busqueda}
+              skuCount={skuCount}
             />
           ))}
         </div>
@@ -710,6 +721,15 @@ export function CatalogoJoyeriaView() {
   const selectedNode = selected ? find(tree, selected) : null
   const stats = useMemo(() => countAll(tree), [tree])
 
+  // Mapa categoríaNombre → cantidad de SKUs (para badge en árbol)
+  const skuCountByCat = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const s of skus) {
+      map[s.tipoCategoria] = (map[s.tipoCategoria] ?? 0) + 1
+    }
+    return map
+  }, [skus])
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <Loader2 size={20} className="animate-spin text-slate-500 mr-2" />
@@ -804,6 +824,7 @@ export function CatalogoJoyeriaView() {
               onDel={handleDel}
               onMov={handleMov}
               busqueda={busqueda}
+              skuCount={skuCountByCat}
             />
           ))}
         </div>
