@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef } from "react"
 import {
   FileText, X, ArrowRight, Loader2,
-  User, Pencil, Trash2, Paperclip,
+  User, Trash2, Paperclip,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetAllCotizaciones, deleteCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -282,6 +282,21 @@ export function CotizacionesView() {
     finally { setDelId(null) }
   }
 
+  if (editando && clienteParaEdit) {
+    return (
+      <div className="p-4 md:p-6">
+        <CotizacionModal
+          fullPage
+          cliente={clienteParaEdit}
+          cotizacion={editando}
+          totalCotizaciones={cotizaciones.filter(c => c.cliente?.documentId === clienteParaEdit.documentId).length}
+          onClose={() => { setEditando(null); setClienteParaEdit(null) }}
+          onSaved={handleCotizacionSaved}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-5">
 
@@ -335,7 +350,9 @@ export function CotizacionesView() {
                 </tr>
               ))}
               {!loading && cotizacionesFiltradas.map(cot => (
-                <tr key={cot.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                <tr key={cot.documentId}
+                  className={`hover:bg-slate-800/40 transition-colors group ${cot.cliente ? "cursor-pointer" : ""}`}
+                  onClick={() => cot.cliente && handleEditarCotizacion(cot)}>
                   <td className="px-4 py-3">
                     <span className="text-[11px] font-bold font-mono text-slate-300">{cot.numero ?? "—"}</span>
                   </td>
@@ -370,7 +387,7 @@ export function CotizacionesView() {
                   <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                     {fmtDt(cot.fecha ?? cot.createdAt)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     {delId === cot.documentId ? (
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-slate-500">¿Eliminar?</span>
@@ -390,14 +407,6 @@ export function CotizacionesView() {
                           </button>
                         )}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {cot.cliente && (
-                          <button type="button"
-                            onClick={() => handleEditarCotizacion(cot)}
-                            title="Editar"
-                            className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
-                            <Pencil size={13} />
-                          </button>
-                        )}
                         <button type="button"
                           onClick={() => setDelId(cot.documentId)}
                           title="Eliminar"
@@ -430,16 +439,6 @@ export function CotizacionesView() {
           totalVentas={todasVentas.length}
           onClose={() => setConvertiendo(null)}
           onConverted={cotizacionActualizada => { handleCotizacionSaved(cotizacionActualizada); setConvertiendo(null) }}
-        />
-      )}
-
-      {editando && clienteParaEdit && (
-        <CotizacionModal
-          cliente={clienteParaEdit}
-          cotizacion={editando}
-          totalCotizaciones={cotizaciones.filter(c => c.cliente?.documentId === clienteParaEdit.documentId).length}
-          onClose={() => { setEditando(null); setClienteParaEdit(null) }}
-          onSaved={handleCotizacionSaved}
         />
       )}
     </div>

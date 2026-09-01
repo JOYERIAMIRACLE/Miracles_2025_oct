@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, X, Loader2, Package, Pencil, Trash2, Lock, FileText, ChevronDown, Search, Paperclip } from "lucide-react"
+import { Plus, X, Loader2, Package, Trash2, Lock, FileText, ChevronDown, Search, Paperclip, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { useGetVentas, createVenta, updateVenta, deleteVenta } from "@/api/ventaEmpresa/getVentas"
 import { useGetAllCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -346,6 +346,11 @@ export function PedidosView() {
     }
   }
 
+  // Editar una fila existente reemplaza toda la lista por una página
+  // completa (igual que la ficha de cliente); crear uno nuevo sigue siendo
+  // un modal flotante, ya que ahí no hay una fila que expandir.
+  if (modalOpen && editing) return renderPedidoForm()
+
   return (
     <div className="p-4 md:p-6 space-y-5">
 
@@ -395,7 +400,8 @@ export function PedidosView() {
                 </tr>
               ))}
               {!loading && ventas.map(v => (
-                <tr key={v.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                <tr key={v.documentId} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  onClick={() => openEditar(v)}>
                   <td className="px-4 py-3">
                     {v.numero && <p className="text-[10px] font-bold font-mono text-slate-500">{v.numero}</p>}
                     <p className="font-medium text-slate-200 leading-snug">{v.concepto}</p>
@@ -426,7 +432,7 @@ export function PedidosView() {
                       : <span className="text-slate-600 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(v.monto)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     {delId === v.documentId ? (
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-slate-500">¿Eliminar?</span>
@@ -437,10 +443,6 @@ export function PedidosView() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => openEditar(v)} title="Editar"
-                          className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
-                          <Pencil size={13} />
-                        </button>
                         <button type="button" onClick={() => setDelId(v.documentId)} title="Eliminar"
                           className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
                           <Trash2 size={13} />
@@ -460,19 +462,27 @@ export function PedidosView() {
         </div>
       </div>
 
-      {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+      {/* Modal / página completa (si se abrió desde una fila existente) */}
+      {modalOpen && renderPedidoForm()}
+    </div>
+  )
+
+  // Contenido del formulario (crear/editar) — se muestra como página completa
+  // al hacer clic en una fila existente, y como modal flotante al crear uno
+  // nuevo desde el botón "+ Nuevo pedido" (ahí no hay una fila que expandir).
+  function renderPedidoForm() {
+    const tarjeta = (
+          <div className={editing ? "bg-slate-900 border border-slate-700 rounded-xl" : "w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl"}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
-              <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar pedido" : "Nuevo pedido"}</h2>
-              <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800">
-                <X size={16} />
-              </button>
+              <h2 className="text-sm font-semibold text-slate-100">{editing ? `Pedido ${editing.numero ?? ""}` : "Nuevo pedido"}</h2>
+              {!editing && (
+                <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800">
+                  <X size={16} />
+                </button>
+              )}
             </div>
 
-            <div className="px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto">
+            <div className={editing ? "px-5 py-4 space-y-4" : "px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto"}>
 
               {/* Cotización de origen — al elegirla, hereda cliente/líneas/monto
                   reales de esa cotización (no se vuelven a capturar a mano) y
@@ -707,8 +717,25 @@ export function PedidosView() {
               </button>
             </div>
           </div>
+    )
+
+    if (editing) {
+      return (
+        <div className="p-4 md:p-6 max-w-2xl mx-auto">
+          <button type="button" onClick={() => setModalOpen(false)}
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition mb-4">
+            <ArrowLeft size={14} /> Volver a Pedidos
+          </button>
+          {tarjeta}
         </div>
-      )}
-    </div>
-  )
+      )
+    }
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
+        {tarjeta}
+      </div>
+    )
+  }
 }

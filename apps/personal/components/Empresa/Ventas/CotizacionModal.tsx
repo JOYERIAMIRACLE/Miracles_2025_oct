@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Plus, Trash2, Check, FileText } from "lucide-react"
+import { X, Plus, Trash2, Check, FileText, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import {
   Cotizacion, CotizacionPayload, ItemCotizacion,
@@ -28,9 +28,13 @@ interface Props {
   totalCotizaciones: number
   onClose:           () => void
   onSaved:           (c: Cotizacion) => void
+  // Cuando se abre desde la lista global de Cotizaciones, la fila se
+  // convierte en página completa (igual que la ficha de cliente) en vez de
+  // modal flotante; desde dentro de un cliente sigue siendo modal rápido.
+  fullPage?: boolean
 }
 
-export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClose, onSaved }: Props) {
+export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClose, onSaved, fullPage = false }: Props) {
   const [items,       setItems]       = useState<ItemCotizacion[]>(
     cotizacion?.items?.length ? cotizacion.items : [emptyItem()]
   )
@@ -93,9 +97,12 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
 
   const inp = "px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 w-full"
 
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
+  const cardCls = fullPage
+    ? "bg-slate-900 border border-slate-700 rounded-xl flex flex-col"
+    : "bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
+
+  const contenido = (
+      <div className={cardCls}
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -114,14 +121,16 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
               {cliente.direccion && <span className="text-slate-500">{cliente.direccion}</span>}
             </div>
           </div>
-          <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition shrink-0">
-            <X size={16} />
-          </button>
+          {!fullPage && (
+            <button type="button" title="Cerrar" onClick={onClose}
+              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition shrink-0">
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-5">
+        <div className={fullPage ? "space-y-5 p-5" : "overflow-y-auto flex-1 p-5 space-y-5"}>
 
           {/* Items */}
           <div>
@@ -238,6 +247,23 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
           </button>
         </div>
       </div>
+  )
+
+  if (fullPage) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-4">
+        <button type="button" onClick={onClose}
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
+          <ArrowLeft size={14} /> Volver a Cotizaciones
+        </button>
+        {contenido}
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
+      {contenido}
     </div>
   )
 }
