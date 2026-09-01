@@ -667,7 +667,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
 }
 
 // ─── Panel de cliente (compartido por Pipeline, Leads y Contactos) ────────────
-export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar, onNuevoPedido, backLabel = "Volver" }: {
+export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar, onNuevoPedido, backLabel = "Volver", mostrarAccionesEtapa = true }: {
   cliente: ClienteEmpresa; num: string; ventasDelCliente: VentaEmpresa[]
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
   onAvanzar:    (c: ClienteEmpresa) => void
@@ -676,6 +676,10 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   onRecuperar:  (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
   onNuevoPedido: (c: ClienteEmpresa) => void
   backLabel?: string
+  // Avanzar/Rechazar/Retroceder etapa solo tiene sentido cuando el cliente
+  // se está gestionando activamente en el embudo (Leads/Pipeline) — en el
+  // directorio de Contactos se oculta, ahí solo aplica ver/editar datos.
+  mostrarAccionesEtapa?: boolean
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
@@ -777,10 +781,6 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
             <button type="button" onClick={onEdit}
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-400">
               <Pencil size={12} /> Editar
-            </button>
-            <button type="button" onClick={() => onNuevoPedido(cliente)}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
-              <Plus size={12} /> Nuevo pedido
             </button>
           </div>
         </div>
@@ -1074,7 +1074,8 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
         </div>
       </div>
 
-      {/* Acciones de etapa */}
+      {/* Acciones de etapa — solo si se está gestionando el embudo (Leads/Pipeline) */}
+      {mostrarAccionesEtapa && (
       <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
         {etapa === "Rechazada" ? (
           <button type="button"
@@ -1107,6 +1108,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
           </>
         )}
       </div>
+      )}
 
       {cotModalState && (
         <CotizacionModal

@@ -133,6 +133,7 @@ export function ClientesView() {
           onRecuperar={handleRecuperar}
           onNuevoPedido={setPedidoGateFor}
           backLabel="Volver a Contactos"
+          mostrarAccionesEtapa={false}
         />
 
         {modalOpen && (
