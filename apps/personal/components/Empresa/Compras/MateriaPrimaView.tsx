@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2, ScanLine } from "lucide-react"
 import { toast } from "sonner"
-import { useGetMateriales, createMaterial, updateMaterial } from "@/api/material/getMateriales"
+import { useGetMateriales, createMaterial, updateMaterial, deleteMaterial } from "@/api/material/getMateriales"
 import { Material, MaterialPayload } from "@/types/material"
+import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
+import { CatalogoNodo } from "@/types/catalogoJoyeria"
 import {
   useGetComprasMaterial, createCompraMaterial, updateCompraMaterial, deleteCompraMaterial,
   createCompraMaterialLinea, updateCompraMaterialLinea, deleteCompraMaterialLinea,
@@ -34,6 +36,18 @@ function toYMD(d: Date): string { return d.toISOString().split("T")[0] }
 function ymdToDate(s: string): Date | null { return s ? new Date(`${s}T00:00:00Z`) : null }
 
 const ESTADO_LABEL: Record<string, string> = { borrador: "Borrador", recibida: "Recibida" }
+
+type CatalogoProd = { sku: string; nombre: string; categoria: string; material: string }
+function flattenProductos(nodos: CatalogoNodo[], cat = "", mat = ""): CatalogoProd[] {
+  const out: CatalogoProd[] = []
+  for (const n of nodos) {
+    const m = n.tipo === "material"  ? n.nombre : mat
+    const c = n.tipo === "categoria" ? n.nombre : cat
+    if (n.tipo === "producto") out.push({ sku: n.sku, nombre: n.nombre, categoria: c, material: m })
+    out.push(...flattenProductos(n.children, c, m))
+  }
+  return out
+}
 
 // ─── Modal: nuevo / editar material ────────────────────────────────────────────
 
@@ -97,19 +111,24 @@ function MaterialModal({ editando, onClose, onSaved }: {
 
 // ─── Sub-vista: catálogo de materiales ─────────────────────────────────────────
 
-function MaterialesTab() {
+function MaterialesTab({ triggerNuevo }: { triggerNuevo: number }) {
   const { materiales, setMateriales, loading } = useGetMateriales()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editando, setEditando] = useState<Material | null>(null)
+  const [modalOpen,  setModalOpen]  = useState(false)
+  const [editando,   setEditando]   = useState<Material | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  useEffect(() => { if (triggerNuevo > 0) { setEditando(null); setModalOpen(true) } }, [triggerNuevo])
+
+  async function handleDelete(m: Material) {
+    try {
+      await deleteMaterial(m.documentId)
+      setMateriales(prev => prev.filter(x => x.documentId !== m.documentId))
+      toast.success("Material eliminado")
+    } catch { toast.error("Error al eliminar") } finally { setDeletingId(null) }
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
-        <button type="button" onClick={() => { setEditando(null); setModalOpen(true) }}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 transition-colors">
-          <Plus size={15} /> Nuevo material
-        </button>
-      </div>
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -145,8 +164,22 @@ function MaterialesTab() {
                       ? <span className="text-[10px] px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">Activo</span>
                       : <span className="text-[10px] px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600">Inactivo</span>}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <Pencil size={13} className="text-slate-300 dark:text-slate-600 group-hover:text-violet-500 transition inline" />
+                  <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1">
+                      <Pencil size={13} className="text-slate-300 dark:text-slate-600 group-hover:text-violet-500 transition" onClick={() => { setEditando(m); setModalOpen(true) }} />
+                      {deletingId === m.documentId ? (
+                        <span className="flex items-center gap-1 text-[10px]">
+                          <span className="text-slate-500">¿Eliminar?</span>
+                          <button type="button" onClick={() => handleDelete(m)} className="text-red-500 font-medium">Sí</button>
+                          <button type="button" onClick={() => setDeletingId(null)} className="text-slate-400">No</button>
+                        </span>
+                      ) : (
+                        <button type="button" title="Eliminar" onClick={() => setDeletingId(m.documentId)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition rounded">
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -468,10 +501,24 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   onClose: () => void; onDone: () => void
 }) {
   type LineaState = { piezas: PiezaForm[]; agregando: boolean }
-  const [lineasState, setLineasState] = useState<LineaState[]>(
+  const [lineasState,    setLineasState]    = useState<LineaState[]>(
     () => compra.lineas.map(() => ({ piezas: [], agregando: false }))
   )
-  const [guardando, setGuardando] = useState(false)
+  const [guardando,      setGuardando]      = useState(false)
+  const [catalogoProds,  setCatalogoProds]  = useState<CatalogoProd[]>([])
+  const [busquedaCat,    setBusquedaCat]    = useState("")
+
+  useEffect(() => {
+    fetchCatalogo().then(arbol => setCatalogoProds(flattenProductos(arbol))).catch(() => {})
+  }, [])
+
+  const prodsFiltrados = busquedaCat.trim()
+    ? catalogoProds.filter(p =>
+        p.nombre.toLowerCase().includes(busquedaCat.toLowerCase()) ||
+        p.sku.toLowerCase().includes(busquedaCat.toLowerCase()) ||
+        p.categoria.toLowerCase().includes(busquedaCat.toLowerCase())
+      ).slice(0, 8)
+    : []
 
   function setPiezas(li: number, fn: (prev: PiezaForm[]) => PiezaForm[]) {
     setLineasState(prev => prev.map((s, i) => i === li ? { ...s, piezas: fn(s.piezas) } : s))
@@ -632,10 +679,40 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                     </div>
                   )}
 
-                  <button type="button" onClick={() => setPiezas(li, prev => [...prev, emptyPieza()])}
-                    className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
-                    <Plus size={13} /> Agregar pieza
-                  </button>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button type="button" onClick={() => setPiezas(li, prev => [...prev, emptyPieza()])}
+                      className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
+                      <Plus size={13} /> Agregar pieza
+                    </button>
+                    {/* Buscar en catálogo */}
+                    <div className="relative flex-1 max-w-xs">
+                      <input value={busquedaCat} onChange={e => setBusquedaCat(e.target.value)}
+                        placeholder="Buscar en catálogo (nombre o SKU)…"
+                        className={`${fieldCls} h-7 text-xs pr-6`} />
+                      {busquedaCat && (
+                        <button type="button" onClick={() => setBusquedaCat("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                          <X size={11} />
+                        </button>
+                      )}
+                      {prodsFiltrados.length > 0 && (
+                        <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-10 overflow-hidden">
+                          {prodsFiltrados.map(p => (
+                            <button key={p.sku} type="button"
+                              onClick={() => {
+                                const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? ""
+                                setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "" }])
+                                setBusquedaCat("")
+                              }}
+                              className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition text-left border-b border-slate-100 dark:border-slate-700 last:border-0">
+                              <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{p.nombre}</span>
+                              <span className="text-slate-400 text-[10px] shrink-0 ml-2">{p.categoria} · {p.sku}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )
@@ -666,7 +743,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
 
 // ─── Sub-vista: compras ────────────────────────────────────────────────────────
 
-function ComprasTab() {
+function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
   const { compras, setCompras, loading } = useGetComprasMaterial()
   const { materiales } = useGetMateriales()
   const { proveedores } = useGetProveedores()
@@ -675,6 +752,8 @@ function ComprasTab() {
   const [recibiendo,     setRecibiendo]     = useState<CompraMaterial | null>(null)
   const [inspeccionando, setInspeccionando] = useState<CompraMaterial | null>(null)
   const [delId,          setDelId]          = useState<string | null>(null)
+
+  useEffect(() => { if (triggerNuevo > 0) { setEditando(null); setModalOpen(true) } }, [triggerNuevo])
 
   async function handleDelete(compra: CompraMaterial) {
     try {
@@ -698,13 +777,6 @@ function ComprasTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
-        <button type="button" onClick={() => { setEditando(null); setModalOpen(true) }}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 transition-colors">
-          <Plus size={15} /> Nueva compra
-        </button>
-      </div>
-
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -808,17 +880,24 @@ function ComprasTab() {
 // ─── Vista principal ────────────────────────────────────────────────────────────
 
 export function MateriaPrimaView() {
-  const [tab, setTab] = useState<"compras" | "materiales">("compras")
+  const [tab,          setTab]          = useState<"compras" | "materiales">("compras")
+  const [triggerNuevo, setTriggerNuevo] = useState(0)
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-lg p-1 w-fit">
-        {([["compras", "Compras"], ["materiales", "Materiales"]] as const).map(([key, label]) => (
-          <button key={key} type="button" onClick={() => setTab(key)} className={pill(tab === key)}>{label}</button>
-        ))}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-lg p-1">
+          {([["compras", "Compras"], ["materiales", "Materiales"]] as const).map(([key, label]) => (
+            <button key={key} type="button" onClick={() => setTab(key)} className={pill(tab === key)}>{label}</button>
+          ))}
+        </div>
+        <button type="button" onClick={() => setTriggerNuevo(t => t + 1)}
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 transition-colors">
+          <Plus size={15} /> {tab === "compras" ? "Nueva compra" : "Nuevo material"}
+        </button>
       </div>
-      {tab === "compras" && <ComprasTab />}
-      {tab === "materiales" && <MaterialesTab />}
+      {tab === "compras"    && <ComprasTab    triggerNuevo={triggerNuevo} />}
+      {tab === "materiales" && <MaterialesTab triggerNuevo={triggerNuevo} />}
     </div>
   )
 }
