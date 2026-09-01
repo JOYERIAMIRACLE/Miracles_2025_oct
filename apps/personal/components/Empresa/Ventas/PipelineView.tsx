@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { DndContext, useDraggable, useDroppable, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
 import {
   ClienteEmpresa, ClientePayload,
   FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS, ESTADOS_CIVILES,
@@ -239,7 +240,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
         <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${meta.numColor}`}>
           #{num}
         </span>
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0" onClick={e => e.stopPropagation()}>
+        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
           <button type="button" onClick={onEdit} title="Editar"
             className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition"><Pencil size={11} /></button>
           <button type="button" onClick={onDelete} title="Eliminar"
@@ -300,7 +301,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {/* Badge calificado (solo en Lead) */}
       {etapa === "Lead" && (
         <button type="button"
-          onClick={e => { e.stopPropagation(); onCalificar?.() }}
+          onClick={e => { e.stopPropagation(); onCalificar?.() }} onPointerDown={e => e.stopPropagation()}
           className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
             c.calificado
               ? "bg-violet-500/10 text-violet-400 border-violet-500/30 hover:bg-violet-500/20"
@@ -314,7 +315,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {/* Recuperar (solo en Rechazada) */}
       {onRecuperar && (
         <button type="button"
-          onClick={e => { e.stopPropagation(); onRecuperar() }}
+          onClick={e => { e.stopPropagation(); onRecuperar() }} onPointerDown={e => e.stopPropagation()}
           className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-violet-500 hover:text-violet-300 border border-dashed border-violet-900/50 hover:border-violet-700 rounded-lg transition">
           <RotateCcw size={10} /> Recuperar
         </button>
@@ -323,7 +324,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {/* Avanzar */}
       {onAvanzar && meta.nextLabel && (
         <button type="button"
-          onClick={e => { e.stopPropagation(); onAvanzar() }}
+          onClick={e => { e.stopPropagation(); onAvanzar() }} onPointerDown={e => e.stopPropagation()}
           className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-slate-600 hover:text-slate-300 border border-dashed border-slate-800 hover:border-slate-600 rounded-lg transition">
           <ArrowRight size={10} /> {meta.nextLabel}
         </button>
@@ -332,11 +333,36 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {/* Rechazar */}
       {onRechazar && (
         <button type="button"
-          onClick={e => { e.stopPropagation(); onRechazar() }}
+          onClick={e => { e.stopPropagation(); onRechazar() }} onPointerDown={e => e.stopPropagation()}
           className="flex items-center justify-center gap-1 w-full py-1 text-[10px] text-red-700 hover:text-red-400 border border-dashed border-red-900/30 hover:border-red-800/50 rounded-lg transition">
           <XCircle size={10} /> Rechazar
         </button>
       )}
+    </div>
+  )
+}
+
+// Envuelve ClienteCard para hacerla arrastrable entre columnas del Pipeline.
+// La distancia mínima de activación (ver useSensor en el tablero) evita que
+// un clic normal se interprete como arrastre.
+function DraggableClienteCard(props: Parameters<typeof ClienteCard>[0]) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: props.c.documentId })
+  const style = transform
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 10, opacity: isDragging ? 0.6 : 1 }
+    : undefined
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+      <ClienteCard {...props} />
+    </div>
+  )
+}
+
+// Columna del Pipeline como zona donde soltar una tarjeta arrastrada.
+function DroppableColumn({ etapa, children }: { etapa: FunnelEtapa; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: etapa })
+  return (
+    <div ref={setNodeRef} className={`flex flex-col gap-2 min-h-[40px] rounded-xl transition-colors ${isOver ? "bg-violet-500/5 ring-2 ring-violet-500/30" : ""}`}>
+      {children}
     </div>
   )
 }
@@ -1676,7 +1702,8 @@ export function PipelineView() {
   const {
     clientes, loading,
     totalVentas,
-    ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente, actualizarVenta,
+    ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
+    actualizarVenta, actualizarCotizacion,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
@@ -1686,6 +1713,9 @@ export function PipelineView() {
   const [form,            setForm]            = useState<ClientePayload>(emptyCliente())
   const [guardando,       setGuardando]       = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<ClienteEmpresa | null>(null)
+  const [cotizacionAbierta, setCotizacionAbierta] = useState<{ cliente: ClienteEmpresa; cotizacion: Cotizacion } | null>(null)
+  const [pedidoAbiertoBoard, setPedidoAbiertoBoard] = useState<VentaEmpresa | null>(null)
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const porFunnel = useMemo(() => {
     const map = new Map<FunnelEtapa, ClienteEmpresa[]>()
@@ -1757,6 +1787,56 @@ export function PipelineView() {
     if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
   }
 
+  // Al abrir una tarjeta, se va directo a lo que representa esa etapa —
+  // Oferta abre su cotización real, Pedido/Entrega abren su pedido real; si
+  // todavía no hay nada conectado, cae a la ficha completa del contacto.
+  const abrirTarjeta = (c: ClienteEmpresa) => {
+    const etapa = c.Funnel ?? "Lead"
+    if (etapa === "Oferta") {
+      const cots = (cotizacionesPorCliente.get(c.documentId) ?? [])
+        .slice()
+        .sort((a, b) => new Date(b.fecha ?? b.createdAt).getTime() - new Date(a.fecha ?? a.createdAt).getTime())
+      const activa = cots.find(ct => ct.estado !== "Rechazada") ?? cots[0]
+      if (activa) { setCotizacionAbierta({ cliente: c, cotizacion: activa }); return }
+    }
+    if (etapa === "Pedido" || etapa === "Entrega") {
+      const ventas = (ventasPorCliente.get(c.documentId) ?? [])
+        .filter(v => v.estado !== "Cancelado")
+        .slice()
+        .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+      if (ventas[0]) { setPedidoAbiertoBoard(ventas[0]); return }
+    }
+    setSelectedCliente(c)
+  }
+
+  // Arrastrar una tarjeta reusa exactamente las mismas funciones que ya usan
+  // los botones (avanzar/retroceder/rechazar/recuperar) — mismo poka-yoke de
+  // siempre (ej. no se puede avanzar a Pedido sin un pedido real conectado),
+  // solo un gesto distinto para dispararlo. Solo se permite moverse a la
+  // etapa adyacente, igual que con los botones (nunca saltos de más de una).
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over) return
+    const cliente = clientes.find(c => c.documentId === active.id)
+    if (!cliente) return
+    const etapaOrigen  = cliente.Funnel ?? "Lead"
+    const etapaDestino = over.id as FunnelEtapa
+    if (etapaOrigen === etapaDestino) return
+
+    if (etapaDestino === "Rechazada") { handleRechazar(cliente); return }
+    if (etapaOrigen === "Rechazada") {
+      if (etapaDestino === "Lead") handleRecuperar(cliente)
+      else toast.error("Primero recupérala a Lead antes de moverla a otra etapa")
+      return
+    }
+
+    const idxOrigen  = FUNNEL_ETAPAS.indexOf(etapaOrigen)
+    const idxDestino = FUNNEL_ETAPAS.indexOf(etapaDestino)
+    if (idxDestino === idxOrigen + 1) { handleAvanzar(cliente); return }
+    if (idxDestino === idxOrigen - 1) { retroceder(cliente); return }
+    toast.error("Solo puedes mover una etapa a la vez")
+  }
+
   const leadsCalificados = clientes.filter(c => c.Funnel === "Lead" && c.calificado).length
   const rechazados       = clientes.filter(c => c.Funnel === "Rechazada").length
 
@@ -1818,6 +1898,7 @@ export function PipelineView() {
       {loading ? (
         <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
       ) : (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="overflow-x-auto pb-4">
           <div className="flex gap-3 min-w-[1100px]">
             {FUNNEL_ALL.map(etapa => {
@@ -1841,23 +1922,23 @@ export function PipelineView() {
                     <p className="text-[10px] opacity-60 mt-0.5 leading-snug">{STAGE_META[etapa].desc}</p>
                   </div>
 
-                  <div className="flex flex-col gap-2">
+                  <DroppableColumn etapa={etapa}>
                     {items.map((c, i) => (
-                      <ClienteCard key={c.documentId} c={c}
+                      <DraggableClienteCard key={c.documentId} c={c}
                         num={numDisplay(etapa, i)} etapa={etapa}
                         valor={valorPorCliente.get(c.documentId) ?? null}
                         dias={diasSinMovimiento(c, etapa)}
                         sinPedidoReal={(etapa === "Pedido" || etapa === "Entrega") && (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0}
                         onEdit={() => abrirEditar(c)}
                         onDelete={() => handleBorrar(c)}
-                        onSelect={() => setSelectedCliente(c)}
+                        onSelect={() => abrirTarjeta(c)}
                         onAvanzar={!esRechazada && etapa !== "Entrega" ? () => handleAvanzar(c) : undefined}
                         onCalificar={etapa === "Lead" ? () => handleCalificar(c) : undefined}
                         onRechazar={!esRechazada && etapa !== "Entrega" ? () => handleRechazar(c) : undefined}
                         onRecuperar={esRechazada ? () => handleRecuperar(c) : undefined}
                       />
                     ))}
-                  </div>
+                  </DroppableColumn>
 
                   {/* Solo se puede dar de alta directo en Lead/Oferta — Pedido/Entrega
                       solo se alcanzan avanzando con un pedido real conectado (poka-yoke) */}
@@ -1872,6 +1953,7 @@ export function PipelineView() {
             })}
           </div>
         </div>
+        </DndContext>
       )}
 
       {modalOpen && (
@@ -1886,6 +1968,24 @@ export function PipelineView() {
           totalVentas={totalVentas}
           onClose={() => setPedidoGateFor(null)}
           onCreated={onPedidoCreado}
+        />
+      )}
+
+      {cotizacionAbierta && (
+        <CotizacionModal
+          cliente={cotizacionAbierta.cliente}
+          cotizacion={cotizacionAbierta.cotizacion}
+          totalCotizaciones={cotizacionesPorCliente.get(cotizacionAbierta.cliente.documentId)?.length ?? 0}
+          onClose={() => setCotizacionAbierta(null)}
+          onSaved={saved => { actualizarCotizacion(saved); setCotizacionAbierta(null) }}
+        />
+      )}
+
+      {pedidoAbiertoBoard && (
+        <PedidoModal
+          venta={pedidoAbiertoBoard}
+          onClose={() => setPedidoAbiertoBoard(null)}
+          onSaved={updated => { actualizarVenta(updated); setPedidoAbiertoBoard(null) }}
         />
       )}
     </div>

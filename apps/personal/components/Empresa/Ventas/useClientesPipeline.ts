@@ -21,7 +21,7 @@ export const FECHA_FIELD: Record<FunnelEtapa, keyof ClientePayload> = {
 export function useClientesPipeline() {
   const { clientes, setClientes, loading } = useGetClientes()
   const { ventas: todasVentas, setVentas: setTodasVentas } = useGetVentas()
-  const { cotizaciones: todasCotizaciones } = useGetAllCotizaciones()
+  const { cotizaciones: todasCotizaciones, setCotizaciones: setTodasCotizaciones } = useGetAllCotizaciones()
   const [pedidoGateFor, setPedidoGateFor] = useState<ClienteEmpresa | null>(null)
 
   const ventasPorCliente = useMemo(() => {
@@ -173,6 +173,12 @@ export function useClientesPipeline() {
     setTodasVentas(prev => prev.map(v => v.documentId === updated.documentId ? updated : v))
   }
 
+  // Igual, pero para una cotización puntual (ej. editada desde su tarjeta
+  // en el Pipeline sin pasar por la lista global de Cotizaciones).
+  const actualizarCotizacion = (updated: Cotizacion) => {
+    setTodasCotizaciones(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
+  }
+
   const borrar = async (c: ClienteEmpresa) => {
     if (!confirm(`¿Eliminar "${c.nombre}"?`)) return false
     try {
@@ -187,7 +193,7 @@ export function useClientesPipeline() {
     clientes, setClientes, loading,
     totalVentas: todasVentas.length,
     ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
-    actualizarVenta,
+    actualizarVenta, actualizarCotizacion,
     avanzar, avanzarA, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
     syncSelected,
