@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { Plus, X, Check, Trash2, Pencil, Package, Boxes, Loader2, ScanLine } from "lucide-react"
 import { toast } from "sonner"
 import { useGetMateriales, createMaterial, updateMaterial, deleteMaterial } from "@/api/material/getMateriales"
@@ -593,6 +594,13 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   const [guardando,      setGuardando]      = useState(false)
   const [catalogoProds,  setCatalogoProds]  = useState<CatalogoProd[]>([])
   const [busquedaCat,    setBusquedaCat]    = useState("")
+  // Línea cuyo buscador está activo — el dropdown de resultados se ancla a
+  // ESA línea específica (antes una sola búsqueda se compartía entre todas
+  // las líneas, y el dropdown se recortaba al salir del scroll del modal).
+  const [lineaBuscando,  setLineaBuscando]  = useState<number | null>(null)
+  const searchRefs = useRef<Record<number, HTMLDivElement | null>>({})
+  const panelRef    = useRef<HTMLDivElement>(null)
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
   useEffect(() => {
     fetchCatalogo().then(arbol => setCatalogoProds(flattenProductos(arbol))).catch(() => {})
@@ -605,6 +613,38 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
         p.categoria.toLowerCase().includes(busquedaCat.toLowerCase())
       ).slice(0, 8)
     : []
+  const mostrarDropdown = lineaBuscando !== null && prodsFiltrados.length > 0
+
+  // El dropdown se saca del flujo normal (portal a document.body) porque el
+  // body del modal es un contenedor con scroll — cualquier position:absolute
+  // ahí se recorta al salir de su borde sin importar el z-index.
+  useEffect(() => {
+    if (!mostrarDropdown || lineaBuscando === null) { setDropdownRect(null); return }
+    function actualizarPosicion() {
+      const el = lineaBuscando !== null ? searchRefs.current[lineaBuscando] : null
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      setDropdownRect({ top: r.bottom + 4, left: r.left, width: r.width })
+    }
+    actualizarPosicion()
+    window.addEventListener("scroll", actualizarPosicion, true)
+    window.addEventListener("resize", actualizarPosicion)
+    return () => {
+      window.removeEventListener("scroll", actualizarPosicion, true)
+      window.removeEventListener("resize", actualizarPosicion)
+    }
+  }, [mostrarDropdown, lineaBuscando])
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (lineaBuscando === null) return
+      const dentroInput = searchRefs.current[lineaBuscando]?.contains(e.target as Node)
+      const dentroPanel = panelRef.current?.contains(e.target as Node)
+      if (!dentroInput && !dentroPanel) setLineaBuscando(null)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [lineaBuscando])
 
   function setPiezas(li: number, fn: (prev: PiezaForm[]) => PiezaForm[]) {
     setLineasState(prev => prev.map((s, i) => i === li ? { ...s, piezas: fn(s.piezas) } : s))
@@ -662,6 +702,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   }
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl">
 
@@ -770,32 +811,19 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                       className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
                       <Plus size={13} /> Agregar pieza
                     </button>
-                    {/* Buscar en catálogo */}
-                    <div className="relative flex-1 max-w-xs">
-                      <input value={busquedaCat} onChange={e => setBusquedaCat(e.target.value)}
+                    {/* Buscar en catálogo — el dropdown de resultados se renderiza
+                        una sola vez, fuera de este bucle, vía portal */}
+                    <div ref={el => { searchRefs.current[li] = el }} className="relative flex-1 max-w-xs">
+                      <input value={lineaBuscando === li ? busquedaCat : ""}
+                        onFocus={() => setLineaBuscando(li)}
+                        onChange={e => { setLineaBuscando(li); setBusquedaCat(e.target.value) }}
                         placeholder="Buscar en catálogo (nombre o SKU)…"
                         className={`${fieldCls} h-7 text-xs pr-6`} />
-                      {busquedaCat && (
-                        <button type="button" onClick={() => setBusquedaCat("")}
+                      {lineaBuscando === li && busquedaCat && (
+                        <button type="button" onClick={() => { setBusquedaCat(""); setLineaBuscando(null) }}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                           <X size={11} />
                         </button>
-                      )}
-                      {prodsFiltrados.length > 0 && (
-                        <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-70 overflow-y-auto max-h-56">
-                          {prodsFiltrados.map(p => (
-                            <button key={p.sku} type="button"
-                              onClick={() => {
-                                const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? ""
-                                setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla }])
-                                setBusquedaCat("")
-                              }}
-                              className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition text-left border-b border-slate-100 dark:border-slate-700 last:border-0">
-                              <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{p.nombre}</span>
-                              <span className="text-slate-400 text-[10px] shrink-0 ml-2 font-mono">{p.sku}</span>
-                            </button>
-                          ))}
-                        </div>
                       )}
                     </div>
                   </div>
@@ -824,6 +852,31 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
         </div>
       </div>
     </div>
+
+    {/* Resultados del buscador — portal a document.body: el body del modal
+        tiene scroll propio y recorta cualquier position:absolute normal
+        que salga de su borde, sin importar el z-index. */}
+    {mostrarDropdown && dropdownRect && lineaBuscando !== null && createPortal(
+      <div ref={panelRef}
+        style={{ position: "fixed", top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 9999 }}
+        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-y-auto max-h-56">
+        {prodsFiltrados.map(p => (
+          <button key={p.sku} type="button"
+            onClick={() => {
+              const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? ""
+              setPiezas(lineaBuscando, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla }])
+              setBusquedaCat("")
+              setLineaBuscando(null)
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition text-left border-b border-slate-100 dark:border-slate-700 last:border-0">
+            <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{p.nombre}</span>
+            <span className="text-slate-400 text-[10px] shrink-0 ml-2 font-mono">{p.sku}</span>
+          </button>
+        ))}
+      </div>,
+      document.body
+    )}
+    </>
   )
 }
 
