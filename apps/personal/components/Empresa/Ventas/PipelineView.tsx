@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useRef } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle, MapPin,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
-  DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip,
+  DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -671,6 +671,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
   const [pagoModalOpen, setPagoModalOpen] = useState(false)
+  const [tab, setTab] = useState<"general" | "ventas">("ventas")
   const { cotizaciones, setCotizaciones, loading: cotLoading } = useGetCotizaciones(cliente.documentId)
   const { transacciones: ingresos, setTransacciones: setIngresos, loading: ingLoading } = useGetTransaccionesByCliente(cliente.documentId)
 
@@ -683,6 +684,24 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
     })
     setCotModalState(null)
   }, [setCotizaciones])
+
+  // Resumen de valor de vida del cliente — mismos datos que ya se cargan
+  // arriba (ventasDelCliente/cotizaciones), solo agregados distinto.
+  const ventasReales   = ventasDelCliente.filter(v => v.estado !== "Cancelado")
+  const totalGastado   = ventasReales.reduce((s, v) => s + (v.monto ?? 0), 0)
+  const ticketPromedio = ventasReales.length > 0 ? totalGastado / ventasReales.length : 0
+  const cotAceptadas   = cotizaciones.filter(c => c.estado === "Aceptada").length
+  // Clasificación de primer intento por # de compras reales — ajustable si
+  // luego se quiere basar en frecuencia/monto en vez de conteo simple.
+  const clasificacion =
+    ventasReales.length === 0 ? "Sin compras" :
+    ventasReales.length === 1 ? "Nuevo" :
+    ventasReales.length <= 3  ? "Ocasional" : "Frecuente"
+  const antiguedadDias = Math.floor((Date.now() - new Date(cliente.createdAt).getTime()) / 86400000)
+  const antiguedadTexto =
+    antiguedadDias < 30  ? `${antiguedadDias}d` :
+    antiguedadDias < 365 ? `${Math.round(antiguedadDias / 30)} meses` :
+    `${(antiguedadDias / 365).toFixed(1)} años`
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
@@ -711,50 +730,88 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
               className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition shrink-0"><X size={18} /></button>
           </div>
 
-          {/* Contadores — resumen rápido de todo lo que este cliente ha
-              generado, sin tener que contar las listas de abajo a ojo. */}
-          <div className="flex items-center gap-3 mt-3 flex-wrap text-[10px]">
-            <span className="text-slate-500">
-              <span className="text-slate-200 font-bold font-mono">{cotizaciones.length}</span> cotización{cotizaciones.length !== 1 ? "es" : ""}
-            </span>
-            <span className="text-slate-700">·</span>
-            <span className="text-slate-500">
-              <span className="text-slate-200 font-bold font-mono">{ventasDelCliente.length}</span> pedido{ventasDelCliente.length !== 1 ? "s" : ""}
-            </span>
-            <span className="text-slate-700">·</span>
-            <span className="text-slate-500">
-              Total: <span className="text-violet-400 font-bold font-mono">
-                {ventasDelCliente.reduce((s, v) => s + (v.monto ?? 0), 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-              </span>
+          {/* Fila de contacto glanceable — teléfono/correo clicables + clasificación */}
+          <div className="flex items-center gap-4 mt-3 flex-wrap text-[11px]">
+            {cliente.telefono && (
+              <a href={`tel:${cliente.telefono}`} className="flex items-center gap-1.5 text-slate-400 hover:text-violet-400 transition">
+                <Phone size={11} />{cliente.telefono}
+              </a>
+            )}
+            {cliente.email && (
+              <a href={`mailto:${cliente.email}`} className="flex items-center gap-1.5 text-slate-400 hover:text-violet-400 transition">
+                <Mail size={11} />{cliente.email}
+              </a>
+            )}
+            <span className="flex items-center gap-1.5 text-violet-400 font-semibold">
+              <Tag size={11} />{clasificacion}
             </span>
           </div>
         </div>
 
-        {/* Body — 2 columnas en pantallas anchas, apiladas en celular */}
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+        {/* Resumen de valor de vida del cliente */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-800 border-b border-slate-800 shrink-0">
+          <div className="px-4 py-3">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Total histórico</p>
+            <p className="text-sm font-bold text-violet-400 font-mono">{fmtMoney(totalGastado)}</p>
+          </div>
+          <div className="px-4 py-3">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Ticket promedio</p>
+            <p className="text-sm font-bold text-slate-200 font-mono">{ventasReales.length > 0 ? fmtMoney(ticketPromedio) : "—"}</p>
+          </div>
+          <div className="px-4 py-3">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Cotiz. aceptadas</p>
+            <p className="text-sm font-bold text-slate-200 font-mono">{cotAceptadas}<span className="text-slate-600 font-normal"> / {cotizaciones.length}</span></p>
+          </div>
+          <div className="px-4 py-3">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Antigüedad</p>
+            <p className="text-sm font-bold text-slate-200 font-mono">{antiguedadTexto}</p>
+          </div>
+        </div>
 
-            {/* Columna izquierda: contacto + notas */}
+        {/* Pestañas */}
+        <div className="flex items-center gap-1 px-6 pt-2.5 border-b border-slate-800 shrink-0">
+          {([["general", "General"], ["ventas", "Ventas"]] as const).map(([id, label]) => (
+            <button key={id} type="button" onClick={() => setTab(id)}
+              className={`px-3 pb-2.5 text-xs font-semibold border-b-2 transition-colors ${
+                tab === id ? "text-slate-100 border-violet-500" : "text-slate-500 border-transparent hover:text-slate-300"
+              }`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
+
+          {tab === "general" && (
             <div className="space-y-5">
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Contacto</p>
-                {cliente.telefono      && <p className="text-xs text-slate-300 flex items-center gap-2"><Phone size={11} className="text-slate-600" />{cliente.telefono}</p>}
-                {cliente.email         && <p className="text-xs text-slate-300 flex items-center gap-2"><Mail size={11} className="text-slate-600" />{cliente.email}</p>}
-                {cliente.direccion     && <p className="text-xs text-slate-300 flex items-center gap-2"><MapPin size={11} className="text-slate-600 shrink-0" />{cliente.direccion}</p>}
-                {cliente.canalContacto && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Dirección y canal</p>
+                {cliente.direccion      && <p className="text-xs text-slate-300 flex items-center gap-2"><MapPin size={11} className="text-slate-600 shrink-0" />{cliente.direccion}</p>}
+                {cliente.canalContacto  && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
                 {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
                 {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
+                {!cliente.direccion && !cliente.canalContacto && !cliente.origenContacto && !cliente.segmento && (
+                  <p className="text-[11px] text-slate-700">Sin datos adicionales todavía.</p>
+                )}
               </div>
 
-              {cliente.notas && (
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Notas</p>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Notas</p>
+                {cliente.notas ? (
                   <p className="text-xs text-slate-400 leading-relaxed bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
-                </div>
-              )}
+                ) : (
+                  <p className="text-[11px] text-slate-700">Sin notas todavía.</p>
+                )}
+              </div>
             </div>
+          )}
 
-            {/* Columna derecha: pedidos, cotizaciones, pagos */}
+          {tab === "ventas" && (
+          <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+
+            {/* Columna izquierda: pedidos reales */}
             <div className="space-y-5">
               {/* Pedidos reales */}
               <div>
@@ -788,6 +845,10 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 )}
               </div>
 
+            </div>
+
+            {/* Columna derecha: cotizaciones */}
+            <div className="space-y-5">
               {/* Cotizaciones */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -829,101 +890,103 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   </div>
                 )}
               </div>
-
-              {/* Pagos */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Pagos</p>
-                  <button type="button"
-                    onClick={() => setPagoModalOpen(true)}
-                    className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
-                    <Plus size={10} /> Registrar
-                  </button>
-                </div>
-
-                {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
-                {(() => {
-                  const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
-                  const totalAcordado = cotizacionesAceptadas.length > 0
-                    ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
-                    : null
-                  const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
-                  const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
-                  return totalAcordado !== null || totalPagado > 0 ? (
-                    <div className="flex gap-2 mb-2 flex-wrap">
-                      {totalAcordado !== null && (
-                        <span className="text-[10px] text-slate-500">
-                          Total: <span className="text-slate-300 font-mono">
-                            {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                          </span>
-                        </span>
-                      )}
-                      <span className="text-[10px] text-violet-400 font-mono">
-                        Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                      </span>
-                      {saldo !== null && saldo > 0 && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-violet-400 font-mono">
-                          <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                        </span>
-                      )}
-                      {saldo !== null && saldo <= 0 && (
-                        <span className="text-[10px] text-violet-400">✓ Liquidado</span>
-                      )}
-                    </div>
-                  ) : null
-                })()}
-
-                {ingLoading ? (
-                  <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
-                ) : ingresos.length === 0 ? (
-                  <button type="button"
-                    onClick={() => setPagoModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
-                    <Banknote size={11} /> Registrar primer pago
-                  </button>
-                ) : (
-                  <div className="space-y-1">
-                    {ingresos.map(ing => (
-                      <div key={ing.documentId}
-                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 group">
-                        <div>
-                          <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
-                            {ing.metodoPago && (
-                              <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
-                                {ing.metodoPago}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[12px] font-bold text-violet-400 font-mono">
-                            {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                          </span>
-                          <button type="button"
-                            onClick={async () => {
-                              if (!confirm("¿Eliminar este pago?")) return
-                              try {
-                                await deleteTransaccion(ing.documentId)
-                                setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
-                                toast.success("Pago eliminado")
-                              } catch { toast.error("Error al eliminar") }
-                            }}
-                            title="Eliminar pago"
-                            className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
-                            <Trash2 size={10} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
-          {/* Recorrido — a lo ancho, debajo de las 2 columnas */}
+          {/* Pagos — a lo ancho, debajo de las 2 columnas */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Pagos</p>
+              <button type="button"
+                onClick={() => setPagoModalOpen(true)}
+                className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                <Plus size={10} /> Registrar
+              </button>
+            </div>
+
+            {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
+            {(() => {
+              const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
+              const totalAcordado = cotizacionesAceptadas.length > 0
+                ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
+                : null
+              const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
+              const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
+              return totalAcordado !== null || totalPagado > 0 ? (
+                <div className="flex gap-2 mb-2 flex-wrap">
+                  {totalAcordado !== null && (
+                    <span className="text-[10px] text-slate-500">
+                      Total: <span className="text-slate-300 font-mono">
+                        {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                      </span>
+                    </span>
+                  )}
+                  <span className="text-[10px] text-violet-400 font-mono">
+                    Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                  </span>
+                  {saldo !== null && saldo > 0 && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-violet-400 font-mono">
+                      <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                    </span>
+                  )}
+                  {saldo !== null && saldo <= 0 && (
+                    <span className="text-[10px] text-violet-400">✓ Liquidado</span>
+                  )}
+                </div>
+              ) : null
+            })()}
+
+            {ingLoading ? (
+              <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
+            ) : ingresos.length === 0 ? (
+              <button type="button"
+                onClick={() => setPagoModalOpen(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
+                <Banknote size={11} /> Registrar primer pago
+              </button>
+            ) : (
+              <div className="space-y-1">
+                {ingresos.map(ing => (
+                  <div key={ing.documentId}
+                    className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 group">
+                    <div>
+                      <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
+                        {ing.metodoPago && (
+                          <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
+                            {ing.metodoPago}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] font-bold text-violet-400 font-mono">
+                        {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                      </span>
+                      <button type="button"
+                        onClick={async () => {
+                          if (!confirm("¿Eliminar este pago?")) return
+                          try {
+                            await deleteTransaccion(ing.documentId)
+                            setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
+                            toast.success("Pago eliminado")
+                          } catch { toast.error("Error al eliminar") }
+                        }}
+                        title="Eliminar pago"
+                        className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
+                        <Trash2 size={10} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          </div>
+          )}
+
+          {/* Recorrido — a lo ancho, debajo de todo */}
           <div className="rounded-xl border border-slate-800 bg-slate-800/20">
             <Timeline cliente={cliente} />
           </div>
