@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal, Layers, Pencil } from "lucide-react"
+import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal, Layers, Pencil, GripVertical } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
 import { SeccionHero, HeroTabs, useHeroImagen } from "@/components/Empresa/PortalMDO/shared"
@@ -21,6 +21,8 @@ import { TareaType, TareaPayload, AmbitoTarea, EstadoTarea, PrioridadTarea } fro
 import { useGetHistorialTarea } from "@/api/historial-tarea/getHistorialTarea"
 import { createHistorialTarea } from "@/api/historial-tarea/mutateHistorialTarea"
 import { createProyecto, updateProyecto } from "@/api/proyecto/mutateProyecto"
+import { useGetProcesosTarea } from "@/api/proceso-tarea/getProcesosTarea"
+import { createProcesoTarea, updateProcesoTarea } from "@/api/proceso-tarea/mutateProcesoTarea"
 import { ProgresoBar, AvancesPanel } from "@/components/Shared/TareasWidgets"
 
 type ProyectoRef = NonNullable<TareaType["proyecto"]>
@@ -155,6 +157,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const { user } = useCurrentUser()
   const { tareas, setTareas, loading } = useGetTareas(ambito)
   const { historial, setHistorial }    = useGetHistorialTarea(ambito)
+  const { procesos, reload: reloadProcesos } = useGetProcesosTarea(ambito)
 
   // La imagen/descripción del header viven en identidad-empresa (un solo
   // registro global) — solo tiene sentido editarlas desde el ambito
@@ -240,6 +243,13 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const [nombreProyectoInput, setNombreProyectoInput] = useState("")
   const [renombrandoProyecto, setRenombrandoProyecto] = useState<string | null>(null) // documentId del proyecto
   const [nombreRenombrado, setNombreRenombrado] = useState("")
+  // Arrastrar encabezados de proceso para reordenarlos, y renombrarlos —
+  // "proceso" es la etiqueta libre de la tarea, así que renombrar actualiza
+  // esa etiqueta en todas las tareas que la usan (ver confirmarRenombrarProceso).
+  const [dragProceso, setDragProceso] = useState<string | null>(null)
+  const [dragOverProceso, setDragOverProceso] = useState<string | null>(null)
+  const [renombrandoProceso, setRenombrandoProceso] = useState<string | null>(null) // nombre actual del proceso
+  const [nombreProcesoRenombrado, setNombreProcesoRenombrado] = useState("")
 
   // Etiquetas/responsables/áreas usados — se derivan de las tareas ya
   // existentes (no hay un catálogo genérico separado en este proyecto), así
@@ -358,7 +368,19 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
       if (!porEtiqueta.has(key)) porEtiqueta.set(key, [])
       porEtiqueta.get(key)!.push(t)
     })
-    const claves = [...porEtiqueta.keys()].filter(k => k !== SIN_PROCESO).sort((a, b) => a.localeCompare(b, "es"))
+    // Orden: los procesos ya reordenados a mano (ver handleReordenarProcesos)
+    // van primero, respetando su "orden" guardado; cualquier etiqueta nueva
+    // que todavía no se ha arrastrado nunca cae alfabética al final, y "Sin
+    // proceso" siempre queda último de todos.
+    const ordenPersistido = new Map(procesos.map(p => [p.nombre, p.orden]))
+    const claves = [...porEtiqueta.keys()].filter(k => k !== SIN_PROCESO).sort((a, b) => {
+      const oa = ordenPersistido.get(a)
+      const ob = ordenPersistido.get(b)
+      if (oa !== undefined && ob !== undefined) return oa - ob
+      if (oa !== undefined) return -1
+      if (ob !== undefined) return 1
+      return a.localeCompare(b, "es")
+    })
     if (porEtiqueta.has(SIN_PROCESO)) claves.push(SIN_PROCESO)
 
     function construirGrupos(lista: TareaType[]): GrupoTareas[] {
@@ -379,7 +401,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     }
 
     return claves.map(key => ({ proceso: key, grupos: construirGrupos(porEtiqueta.get(key)!) }))
-  }, [filtradas, agruparPorProyecto])
+  }, [filtradas, agruparPorProyecto, procesos])
 
   const stats = {
     total:       tareas.length,
@@ -617,6 +639,49 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
       next.has(proceso) ? next.delete(proceso) : next.add(proceso)
       return next
     })
+  }
+
+  async function handleReordenarProcesos(nombresEnOrden: string[]) {
+    try {
+      await Promise.all(nombresEnOrden.map((nombre, i) => {
+        const persistido = procesos.find(p => p.nombre === nombre)
+        return persistido ? updateProcesoTarea(persistido.documentId, { orden: i }) : createProcesoTarea(nombre, ambito, i)
+      }))
+      reloadProcesos()
+    } catch {
+      toast.error("No se pudo reordenar")
+    }
+  }
+
+  function handleDropProceso(destino: string) {
+    const origen = dragProceso
+    setDragProceso(null); setDragOverProceso(null)
+    if (!origen || origen === destino || origen === SIN_PROCESO || destino === SIN_PROCESO) return
+    const ordenActual = seccionesPorProceso.map(s => s.proceso).filter(p => p !== SIN_PROCESO)
+    const sinOrigen = ordenActual.filter(p => p !== origen)
+    const idxDestino = sinOrigen.indexOf(destino)
+    sinOrigen.splice(idxDestino, 0, origen)
+    handleReordenarProcesos(sinOrigen)
+  }
+
+  async function confirmarRenombrarProceso() {
+    if (!renombrandoProceso) return
+    const viejo = renombrandoProceso
+    const nuevo = nombreProcesoRenombrado.trim()
+    setRenombrandoProceso(null)
+    if (!nuevo || nuevo === viejo) return
+    const afectadas = tareas.filter(t => (t.etiqueta?.trim() || SIN_PROCESO) === viejo)
+    const persistido = procesos.find(p => p.nombre === viejo)
+    setTareas(prev => prev.map(t => afectadas.some(a => a.documentId === t.documentId) ? { ...t, etiqueta: nuevo } : t))
+    try {
+      await Promise.all(afectadas.map(t => updateTarea(t.documentId, { etiqueta: nuevo })))
+      if (persistido) await updateProcesoTarea(persistido.documentId, { nombre: nuevo })
+      reloadProcesos()
+      toast.success(`Proceso renombrado a "${nuevo}"`)
+    } catch {
+      setTareas(prev => prev.map(t => afectadas.some(a => a.documentId === t.documentId) ? { ...t, etiqueta: viejo } : t))
+      toast.error("Error al renombrar")
+    }
   }
 
   async function confirmarRenombrarProyecto() {
@@ -1083,23 +1148,59 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
             {seccionesPorProceso.map(seccion => {
               const procesoColapsado = !procesosAbiertos.has(seccion.proceso)
               const etiquetaSeccion = seccion.proceso === SIN_PROCESO ? null : seccion.proceso
+              const puedeReordenar = seccion.proceso !== SIN_PROCESO
+              const renombrandoEsteProceso = renombrandoProceso === seccion.proceso
               return (
                 <div key={`proceso-${seccion.proceso}`} className="space-y-2">
-                  <div className="w-full flex items-center gap-2 px-1 py-1 group/proceso">
-                    <button type="button" onClick={() => toggleProcesoColapsado(seccion.proceso)}
-                      className="flex items-center gap-2 flex-1 min-w-0 text-left">
-                      <ChevronDown size={14} className={`text-slate-500 dark:text-slate-400 shrink-0 transition-transform ${procesoColapsado ? "-rotate-90" : ""}`} />
-                      <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide truncate">{seccion.proceso}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums shrink-0">
-                        {seccion.grupos.reduce((n, g) => n + (g.tipo === "suelta" ? 1 : g.tareas.length), 0)}
-                      </span>
-                    </button>
-                    <button type="button" title="Agregar tarea a este proceso"
-                      onClick={() => abrirCrear(null, null, etiquetaSeccion)}
-                      className="p-1 text-slate-400 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/proceso:opacity-100 transition shrink-0">
-                      <Plus size={13} />
-                    </button>
-                  </div>
+                  {renombrandoEsteProceso ? (
+                    <div className="flex items-center gap-1.5 px-1 py-1" onClick={e => e.stopPropagation()}>
+                      <input autoFocus value={nombreProcesoRenombrado} onChange={e => setNombreProcesoRenombrado(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") confirmarRenombrarProceso(); if (e.key === "Escape") setRenombrandoProceso(null) }}
+                        className={`flex-1 h-7 text-xs ${fieldCls}`} />
+                      <button type="button" onClick={confirmarRenombrarProceso} title="Guardar"
+                        className="p-1 text-emerald-600 hover:text-emerald-700 rounded transition-colors shrink-0">
+                        <Check size={13} />
+                      </button>
+                      <button type="button" onClick={() => setRenombrandoProceso(null)} title="Cancelar"
+                        className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0">
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div draggable={puedeReordenar}
+                      onDragStart={() => puedeReordenar && setDragProceso(seccion.proceso)}
+                      onDragOver={e => { if (puedeReordenar && dragProceso && dragProceso !== seccion.proceso) { e.preventDefault(); setDragOverProceso(seccion.proceso) } }}
+                      onDragLeave={() => setDragOverProceso(prev => prev === seccion.proceso ? null : prev)}
+                      onDrop={e => { e.preventDefault(); handleDropProceso(seccion.proceso) }}
+                      onDragEnd={() => { setDragProceso(null); setDragOverProceso(null) }}
+                      className={`w-full flex items-center gap-1 px-1 py-1 group/proceso rounded-lg transition-colors ${
+                        dragOverProceso === seccion.proceso ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-400/50" : ""
+                      } ${dragProceso === seccion.proceso ? "opacity-40" : ""}`}>
+                      {puedeReordenar && (
+                        <GripVertical size={13} className="text-slate-300 dark:text-slate-600 shrink-0 cursor-grab opacity-0 md:group-hover/proceso:opacity-100 transition" />
+                      )}
+                      <button type="button" onClick={() => toggleProcesoColapsado(seccion.proceso)}
+                        className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                        <ChevronDown size={14} className={`text-slate-500 dark:text-slate-400 shrink-0 transition-transform ${procesoColapsado ? "-rotate-90" : ""}`} />
+                        <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide truncate">{seccion.proceso}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums shrink-0">
+                          {seccion.grupos.reduce((n, g) => n + (g.tipo === "suelta" ? 1 : g.tareas.length), 0)}
+                        </span>
+                      </button>
+                      {puedeReordenar && (
+                        <button type="button" title="Renombrar proceso"
+                          onClick={() => { setRenombrandoProceso(seccion.proceso); setNombreProcesoRenombrado(seccion.proceso) }}
+                          className="p-1 text-slate-400 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/proceso:opacity-100 transition shrink-0">
+                          <Pencil size={12} />
+                        </button>
+                      )}
+                      <button type="button" title="Agregar tarea a este proceso"
+                        onClick={() => abrirCrear(null, null, etiquetaSeccion)}
+                        className="p-1 text-slate-400 hover:text-violet-600 dark:hover:text-violet-300 rounded opacity-100 md:opacity-0 md:group-hover/proceso:opacity-100 transition shrink-0">
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                  )}
 
                   {!procesoColapsado && (
                     <div className="space-y-2 pl-1">

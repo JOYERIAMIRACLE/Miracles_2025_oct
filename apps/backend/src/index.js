@@ -41,6 +41,11 @@ const PUBLIC_ACTIONS_TAREA = [
   'api::tarea.tarea.create',
   'api::tarea.tarea.update',
   'api::tarea.tarea.delete',
+  'api::proceso-tarea.proceso-tarea.find',
+  'api::proceso-tarea.proceso-tarea.findOne',
+  'api::proceso-tarea.proceso-tarea.create',
+  'api::proceso-tarea.proceso-tarea.update',
+  'api::proceso-tarea.proceso-tarea.delete',
 ];
 
 const PUBLIC_ACTIONS_SNAPSHOT = [
