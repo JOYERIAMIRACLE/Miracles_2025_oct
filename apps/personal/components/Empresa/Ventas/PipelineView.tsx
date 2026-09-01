@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef } from "react"
 import {
-  Plus, X, Check, Phone, Mail, MessageCircle, MapPin,
+  Plus, X, Check, Phone, Mail, MessageCircle, MapPin, ArrowLeft,
   ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
   DollarSign, Banknote, AlertCircle, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
 } from "lucide-react"
@@ -659,7 +659,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
 }
 
 // ─── Panel de cliente (compartido por Pipeline, Leads y Contactos) ────────────
-export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar, onNuevoPedido }: {
+export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate, onEdit, onAvanzar, onRetroceder, onRechazar, onRecuperar, onNuevoPedido, backLabel = "Volver" }: {
   cliente: ClienteEmpresa; num: string; ventasDelCliente: VentaEmpresa[]
   onClose: () => void; onUpdate: (u: ClienteEmpresa) => void; onEdit: () => void
   onAvanzar:    (c: ClienteEmpresa) => void
@@ -667,6 +667,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   onRechazar:   (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
   onRecuperar:  (c: ClienteEmpresa) => Promise<ClienteEmpresa | null>
   onNuevoPedido: (c: ClienteEmpresa) => void
+  backLabel?: string
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
@@ -703,186 +704,181 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
     antiguedadDias < 365 ? `${Math.round(antiguedadDias / 30)} meses` :
     `${(antiguedadDias / 365).toFixed(1)} años`
 
+  const iniciales = cliente.nombre.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() ?? "").join("")
+
+  const cardCls = "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden"
+  const cardHeadCls = "flex items-center justify-between px-4 py-3 border-b border-slate-800"
+  const cardTitleCls = "text-xs font-bold text-slate-200"
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[90vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col"
-        onClick={e => e.stopPropagation()}>
+    <div className="space-y-5">
+      <button type="button" onClick={onClose}
+        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
+        <ArrowLeft size={14} /> {backLabel}
+      </button>
 
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 shrink-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                <User size={18} className="text-slate-400" />
-              </div>
-              <div>
-                <p className="text-base font-bold text-slate-100">{cliente.nombre}</p>
-                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${STAGE_META[etapa].numColor}`}>#{num}</span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>{FUNNEL_LABEL[etapa]}</span>
-                  {etapa === "Lead" && cliente.calificado && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-500/15 text-violet-300 border-violet-500/30">Calificado</span>
-                  )}
-                </div>
+      {/* Identidad */}
+      <div className={`${cardCls} p-5 space-y-4`}>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-violet-800 flex items-center justify-center text-white font-bold text-base shrink-0">
+              {iniciales || <User size={18} />}
+            </div>
+            <div>
+              <p className="text-lg font-bold text-slate-100">{cliente.nombre}</p>
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${STAGE_META[etapa].numColor}`}>#{num}</span>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>{FUNNEL_LABEL[etapa]}</span>
+                {etapa === "Lead" && cliente.calificado && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-500/15 text-violet-300 border-violet-500/30">Calificado</span>
+                )}
+                <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-500/10 text-violet-400 border-violet-500/20">
+                  <Tag size={9} />{clasificacion}
+                </span>
               </div>
             </div>
-            <button type="button" title="Cerrar" onClick={onClose}
-              className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-slate-800 transition shrink-0"><X size={18} /></button>
           </div>
-
-          {/* Fila de contacto glanceable — teléfono/correo clicables + clasificación */}
-          <div className="flex items-center gap-4 mt-3 flex-wrap text-[11px]">
-            {cliente.telefono && (
-              <a href={`tel:${cliente.telefono}`} className="flex items-center gap-1.5 text-slate-400 hover:text-violet-400 transition">
-                <Phone size={11} />{cliente.telefono}
-              </a>
-            )}
-            {cliente.email && (
-              <a href={`mailto:${cliente.email}`} className="flex items-center gap-1.5 text-slate-400 hover:text-violet-400 transition">
-                <Mail size={11} />{cliente.email}
-              </a>
-            )}
-            <span className="flex items-center gap-1.5 text-violet-400 font-semibold">
-              <Tag size={11} />{clasificacion}
-            </span>
-          </div>
-        </div>
-
-        {/* Resumen de valor de vida del cliente */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-800 border-b border-slate-800 shrink-0">
-          <div className="px-4 py-3">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Total histórico</p>
-            <p className="text-sm font-bold text-violet-400 font-mono">{fmtMoney(totalGastado)}</p>
-          </div>
-          <div className="px-4 py-3">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Ticket promedio</p>
-            <p className="text-sm font-bold text-slate-200 font-mono">{ventasReales.length > 0 ? fmtMoney(ticketPromedio) : "—"}</p>
-          </div>
-          <div className="px-4 py-3">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Cotiz. aceptadas</p>
-            <p className="text-sm font-bold text-slate-200 font-mono">{cotAceptadas}<span className="text-slate-600 font-normal"> / {cotizaciones.length}</span></p>
-          </div>
-          <div className="px-4 py-3">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Antigüedad</p>
-            <p className="text-sm font-bold text-slate-200 font-mono">{antiguedadTexto}</p>
-          </div>
-        </div>
-
-        {/* Pestañas */}
-        <div className="flex items-center gap-1 px-6 pt-2.5 border-b border-slate-800 shrink-0">
-          {([["general", "General"], ["ventas", "Ventas"]] as const).map(([id, label]) => (
-            <button key={id} type="button" onClick={() => setTab(id)}
-              className={`px-3 pb-2.5 text-xs font-semibold border-b-2 transition-colors ${
-                tab === id ? "text-slate-100 border-violet-500" : "text-slate-500 border-transparent hover:text-slate-300"
-              }`}>
-              {label}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button type="button" onClick={onEdit}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-400">
+              <Pencil size={12} /> Editar
             </button>
-          ))}
+            <button type="button" onClick={() => onNuevoPedido(cliente)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
+              <Plus size={12} /> Nuevo pedido
+            </button>
+          </div>
         </div>
 
-        {/* Body */}
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-800">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Teléfono</p>
+            {cliente.telefono ? (
+              <a href={`tel:${cliente.telefono}`} className="text-xs font-medium text-slate-300 hover:text-violet-400 transition flex items-center gap-1.5">
+                <Phone size={11} className="text-slate-600 shrink-0" />{cliente.telefono}
+              </a>
+            ) : <p className="text-xs text-slate-700">—</p>}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Correo</p>
+            {cliente.email ? (
+              <a href={`mailto:${cliente.email}`} className="text-xs font-medium text-slate-300 hover:text-violet-400 transition flex items-center gap-1.5 truncate">
+                <Mail size={11} className="text-slate-600 shrink-0" />{cliente.email}
+              </a>
+            ) : <p className="text-xs text-slate-700">—</p>}
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Canal de origen</p>
+            <p className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+              {cliente.canalContacto ? <CanalIcon canal={cliente.canalContacto} /> : null}
+              {cliente.origenContacto || cliente.canalContacto || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Cliente desde</p>
+            <p className="text-xs font-medium text-slate-300">{fmtDt(cliente.createdAt)}</p>
+          </div>
+        </div>
+      </div>
 
-          {tab === "general" && (
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Dirección y canal</p>
-                {cliente.direccion      && <p className="text-xs text-slate-300 flex items-center gap-2"><MapPin size={11} className="text-slate-600 shrink-0" />{cliente.direccion}</p>}
-                {cliente.canalContacto  && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
-                {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
-                {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
-                {!cliente.direccion && !cliente.canalContacto && !cliente.origenContacto && !cliente.segmento && (
-                  <p className="text-[11px] text-slate-700">Sin datos adicionales todavía.</p>
-                )}
-              </div>
+      {/* Resumen de valor de vida del cliente */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-800 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="px-5 py-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Total histórico</p>
+          <p className="text-lg font-bold text-violet-400 font-mono">{fmtMoney(totalGastado)}</p>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Ticket promedio</p>
+          <p className="text-lg font-bold text-slate-200 font-mono">{ventasReales.length > 0 ? fmtMoney(ticketPromedio) : "—"}</p>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Cotiz. aceptadas</p>
+          <p className="text-lg font-bold text-slate-200 font-mono">{cotAceptadas}<span className="text-slate-600 font-normal text-sm"> / {cotizaciones.length}</span></p>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Antigüedad</p>
+          <p className="text-lg font-bold text-slate-200 font-mono">{antiguedadTexto}</p>
+        </div>
+      </div>
 
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Notas</p>
-                {cliente.notas ? (
-                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
-                ) : (
-                  <p className="text-[11px] text-slate-700">Sin notas todavía.</p>
-                )}
-              </div>
+      {/* Pestañas */}
+      <div className="flex items-center gap-1 border-b border-slate-800">
+        {([["general", "General"], ["ventas", "Ventas"]] as const).map(([id, label]) => (
+          <button key={id} type="button" onClick={() => setTab(id)}
+            className={`px-3 pb-2.5 text-xs font-semibold border-b-2 transition-colors ${
+              tab === id ? "text-slate-100 border-violet-500" : "text-slate-500 border-transparent hover:text-slate-300"
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "general" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+          <div className={cardCls}>
+            <div className={cardHeadCls}><h3 className={cardTitleCls}>Dirección y canal</h3></div>
+            <div className="p-4 space-y-2.5">
+              {cliente.direccion      && <p className="text-xs text-slate-300 flex items-center gap-2"><MapPin size={11} className="text-slate-600 shrink-0" />{cliente.direccion}</p>}
+              {cliente.canalContacto  && <p className="text-xs text-slate-300 flex items-center gap-2"><CanalIcon canal={cliente.canalContacto} />{cliente.canalContacto}</p>}
+              {cliente.origenContacto && <p className="text-[11px] text-slate-500">Origen: {cliente.origenContacto}</p>}
+              {cliente.segmento       && <p className="text-[11px] text-slate-500">Segmento: {cliente.segmento}</p>}
+              {!cliente.direccion && !cliente.canalContacto && !cliente.origenContacto && !cliente.segmento && (
+                <p className="text-[11px] text-slate-700">Sin datos adicionales todavía.</p>
+              )}
             </div>
-          )}
-
-          {tab === "ventas" && (
-          <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-
-            {/* Columna izquierda: pedidos reales */}
-            <div className="space-y-5">
-              {/* Pedidos reales */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Pedidos</p>
-                  <button type="button"
-                    onClick={() => onNuevoPedido(cliente)}
-                    className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
-                    <Plus size={10} /> Nuevo
-                  </button>
-                </div>
-                {ventasDelCliente.length === 0 ? (
-                  <p className="text-[11px] text-slate-700 py-1">Sin pedidos reales conectados todavía.</p>
-                ) : (
-                  <div className="space-y-1">
-                    {ventasDelCliente.map(v => (
-                      <div key={v.documentId} className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-800/40">
-                        <div className="min-w-0">
-                          <p className="text-[11px] text-slate-300 truncate">{v.concepto}</p>
-                          <p className="text-[9px] text-slate-600">{v.fecha ? fmtDt(v.fecha) : "—"}</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[11px] font-semibold text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
-                          {v.estado && (
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
+          </div>
+          <div className={cardCls}>
+            <div className={cardHeadCls}><h3 className={cardTitleCls}>Notas</h3></div>
+            <div className="p-4">
+              {cliente.notas ? (
+                <p className="text-xs text-slate-400 leading-relaxed bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
+              ) : (
+                <p className="text-[11px] text-slate-700">Sin notas todavía.</p>
+              )}
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* Columna derecha: cotizaciones */}
-            <div className="space-y-5">
-              {/* Cotizaciones */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Cotizaciones</p>
-                  <button type="button"
-                    onClick={() => setCotModalState("nueva")}
-                    className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
-                    <Plus size={10} /> Nueva
-                  </button>
-                </div>
+      {tab === "ventas" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+
+            {/* Cotizaciones */}
+            <div className={cardCls}>
+              <div className={cardHeadCls}>
+                <h3 className={cardTitleCls}>Cotizaciones</h3>
+                <button type="button"
+                  onClick={() => setCotModalState("nueva")}
+                  className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                  <Plus size={10} /> Nueva
+                </button>
+              </div>
+              <div className="p-2">
                 {cotLoading ? (
-                  <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
+                  <p className="text-[11px] text-slate-700 py-3 px-2">Cargando...</p>
                 ) : cotizaciones.length === 0 ? (
                   <button type="button"
                     onClick={() => setCotModalState("nueva")}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
+                    className="w-full flex items-center justify-center gap-1.5 py-6 text-[11px] text-slate-700 hover:text-violet-400 transition">
                     <FileText size={11} /> Crear primera cotización
                   </button>
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {cotizaciones.map(c => (
                       <button key={c.documentId} type="button"
                         onClick={() => setCotModalState(c)}
-                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800 transition text-left">
-                        <div>
+                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-800/60 transition text-left">
+                        <div className="min-w-0">
                           <p className="text-[11px] font-bold font-mono text-slate-300">{c.numero}</p>
                           <p className="text-[9px] text-slate-600">{fmtDt(c.fecha ?? c.createdAt)}</p>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-slate-300">
-                            {c.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                          </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>
                             {c.estado}
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-300 font-mono">
+                            {c.total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
                           </span>
                         </div>
                       </button>
@@ -891,147 +887,173 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 )}
               </div>
             </div>
+
+            {/* Pedidos reales */}
+            <div className={cardCls}>
+              <div className={cardHeadCls}>
+                <h3 className={cardTitleCls}>Pedidos</h3>
+                <button type="button"
+                  onClick={() => onNuevoPedido(cliente)}
+                  className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                  <Plus size={10} /> Nuevo
+                </button>
+              </div>
+              <div className="p-2">
+                {ventasDelCliente.length === 0 ? (
+                  <p className="text-[11px] text-slate-700 py-6 px-2 text-center">Sin pedidos reales conectados todavía.</p>
+                ) : (
+                  <div className="space-y-0.5">
+                    {ventasDelCliente.map(v => (
+                      <div key={v.documentId} className="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-slate-800/60 transition">
+                        <div className="min-w-0">
+                          <p className="text-[11px] text-slate-300 truncate">{v.concepto}</p>
+                          <p className="text-[9px] text-slate-600">{v.fecha ? fmtDt(v.fecha) : "—"}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {v.estado && (
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
+                          )}
+                          <span className="text-[11px] font-semibold text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Pagos — a lo ancho, debajo de las 2 columnas */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Pagos</p>
+          {/* Pagos — a lo ancho, debajo de las 2 tarjetas */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <h3 className={cardTitleCls}>Pagos</h3>
               <button type="button"
                 onClick={() => setPagoModalOpen(true)}
                 className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
                 <Plus size={10} /> Registrar
               </button>
             </div>
-
-            {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
-            {(() => {
-              const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
-              const totalAcordado = cotizacionesAceptadas.length > 0
-                ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
-                : null
-              const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
-              const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
-              return totalAcordado !== null || totalPagado > 0 ? (
-                <div className="flex gap-2 mb-2 flex-wrap">
-                  {totalAcordado !== null && (
-                    <span className="text-[10px] text-slate-500">
-                      Total: <span className="text-slate-300 font-mono">
-                        {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+            <div className="p-4">
+              {/* Saldo — suma TODAS las cotizaciones aceptadas, no solo la primera */}
+              {(() => {
+                const cotizacionesAceptadas = cotizaciones.filter(c => c.estado === "Aceptada")
+                const totalAcordado = cotizacionesAceptadas.length > 0
+                  ? cotizacionesAceptadas.reduce((s, c) => s + c.total, 0)
+                  : null
+                const totalPagado   = ingresos.reduce((s, i) => s + (i.monto ?? 0), 0)
+                const saldo         = totalAcordado !== null ? totalAcordado - totalPagado : null
+                return totalAcordado !== null || totalPagado > 0 ? (
+                  <div className="flex gap-2 mb-3 flex-wrap">
+                    {totalAcordado !== null && (
+                      <span className="text-[10px] text-slate-500">
+                        Total: <span className="text-slate-300 font-mono">
+                          {totalAcordado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                        </span>
                       </span>
+                    )}
+                    <span className="text-[10px] text-violet-400 font-mono">
+                      Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
                     </span>
-                  )}
-                  <span className="text-[10px] text-violet-400 font-mono">
-                    Pagado: {totalPagado.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                  </span>
-                  {saldo !== null && saldo > 0 && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-violet-400 font-mono">
-                      <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                    </span>
-                  )}
-                  {saldo !== null && saldo <= 0 && (
-                    <span className="text-[10px] text-violet-400">✓ Liquidado</span>
-                  )}
-                </div>
-              ) : null
-            })()}
+                    {saldo !== null && saldo > 0 && (
+                      <span className="flex items-center gap-0.5 text-[10px] text-violet-400 font-mono">
+                        <AlertCircle size={9} /> Saldo: {saldo.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                      </span>
+                    )}
+                    {saldo !== null && saldo <= 0 && (
+                      <span className="text-[10px] text-violet-400">✓ Liquidado</span>
+                    )}
+                  </div>
+                ) : null
+              })()}
 
-            {ingLoading ? (
-              <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
-            ) : ingresos.length === 0 ? (
-              <button type="button"
-                onClick={() => setPagoModalOpen(true)}
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
-                <Banknote size={11} /> Registrar primer pago
-              </button>
-            ) : (
-              <div className="space-y-1">
-                {ingresos.map(ing => (
-                  <div key={ing.documentId}
-                    className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 group">
-                    <div>
-                      <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
-                        {ing.metodoPago && (
-                          <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
-                            {ing.metodoPago}
-                          </span>
-                        )}
+              {ingLoading ? (
+                <p className="text-[11px] text-slate-700 py-1">Cargando...</p>
+              ) : ingresos.length === 0 ? (
+                <button type="button"
+                  onClick={() => setPagoModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-1.5 py-4 text-[11px] text-slate-700 hover:text-violet-400 border border-dashed border-slate-800 hover:border-violet-800/50 rounded-lg transition">
+                  <Banknote size={11} /> Registrar primer pago
+                </button>
+              ) : (
+                <div className="space-y-1">
+                  {ingresos.map(ing => (
+                    <div key={ing.documentId}
+                      className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 group">
+                      <div>
+                        <p className="text-[11px] font-medium text-slate-200">{ing.descripcion}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {ing.fecha && <span className="text-[9px] text-slate-600">{fmtDt(ing.fecha)}</span>}
+                          {ing.metodoPago && (
+                            <span className={`text-[8px] px-1 py-0.5 rounded border font-semibold ${METODO_COLOR[ing.metodoPago]}`}>
+                              {ing.metodoPago}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-bold text-violet-400 font-mono">
+                          {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+                        </span>
+                        <button type="button"
+                          onClick={async () => {
+                            if (!confirm("¿Eliminar este pago?")) return
+                            try {
+                              await deleteTransaccion(ing.documentId)
+                              setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
+                              toast.success("Pago eliminado")
+                            } catch { toast.error("Error al eliminar") }
+                          }}
+                          title="Eliminar pago"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
+                          <Trash2 size={10} />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12px] font-bold text-violet-400 font-mono">
-                        {(ing.monto ?? 0).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-                      </span>
-                      <button type="button"
-                        onClick={async () => {
-                          if (!confirm("¿Eliminar este pago?")) return
-                          try {
-                            await deleteTransaccion(ing.documentId)
-                            setIngresos(prev => prev.filter(i => i.documentId !== ing.documentId))
-                            toast.success("Pago eliminado")
-                          } catch { toast.error("Error al eliminar") }
-                        }}
-                        title="Eliminar pago"
-                        className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
-                        <Trash2 size={10} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          </div>
-          )}
-
-          {/* Recorrido — a lo ancho, debajo de todo */}
-          <div className="rounded-xl border border-slate-800 bg-slate-800/20">
-            <Timeline cliente={cliente} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Footer — acciones */}
-        <div className="px-6 py-4 border-t border-slate-800 shrink-0 flex flex-wrap items-center justify-between gap-2">
-          <button type="button" onClick={onEdit}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-400">
-            <Pencil size={12} /> Editar datos
+      {/* Recorrido — a lo ancho, debajo de todo */}
+      <div className="rounded-xl border border-slate-800 bg-slate-800/20">
+        <Timeline cliente={cliente} />
+      </div>
+
+      {/* Acciones de etapa */}
+      <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+        {etapa === "Rechazada" ? (
+          <button type="button"
+            onClick={async () => { const u = await onRecuperar(cliente); if (u) onUpdate(u) }}
+            className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-violet-800/50 hover:border-violet-600 text-violet-500 hover:text-violet-300 rounded-lg transition">
+            <RotateCcw size={12} /> Recuperar (volver a Lead)
           </button>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            {etapa === "Rechazada" ? (
+        ) : (
+          <>
+            {etapa !== "Entrega" && (
               <button type="button"
-                onClick={async () => { const u = await onRecuperar(cliente); if (u) onUpdate(u) }}
-                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-violet-800/50 hover:border-violet-600 text-violet-500 hover:text-violet-300 rounded-lg transition">
-                <RotateCcw size={12} /> Recuperar (volver a Lead)
+                onClick={async () => { const u = await onRechazar(cliente); if (u) onUpdate(u) }}
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-red-900/40 hover:border-red-700 text-red-700 hover:text-red-400 rounded-lg transition">
+                <XCircle size={12} /> Rechazar
               </button>
-            ) : (
-              <>
-                {etapa !== "Entrega" && (
-                  <button type="button"
-                    onClick={async () => { const u = await onRechazar(cliente); if (u) onUpdate(u) }}
-                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-red-900/40 hover:border-red-700 text-red-700 hover:text-red-400 rounded-lg transition">
-                    <XCircle size={12} /> Rechazar
-                  </button>
-                )}
-                {etapa !== "Lead" && (
-                  <button type="button"
-                    onClick={async () => { const u = await onRetroceder(cliente); if (u) onUpdate(u) }}
-                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
-                    <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
-                  </button>
-                )}
-                {etapa !== "Entrega" && (
-                  <button type="button" onClick={() => onAvanzar(cliente)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border border-violet-600/60 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500 text-violet-300 rounded-lg transition">
-                    {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
-                  </button>
-                )}
-              </>
             )}
-          </div>
-        </div>
+            {etapa !== "Lead" && (
+              <button type="button"
+                onClick={async () => { const u = await onRetroceder(cliente); if (u) onUpdate(u) }}
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
+                <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
+              </button>
+            )}
+            {etapa !== "Entrega" && (
+              <button type="button" onClick={() => onAvanzar(cliente)}
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border border-violet-600/60 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500 text-violet-300 rounded-lg transition">
+                {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       {cotModalState && (
@@ -1298,6 +1320,42 @@ export function PipelineView() {
   const leadsCalificados = clientes.filter(c => c.Funnel === "Lead" && c.calificado).length
   const rechazados       = clientes.filter(c => c.Funnel === "Rechazada").length
 
+  if (selectedCliente) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto">
+        <ClientePanel
+          cliente={selectedCliente}
+          num={numMap.get(selectedCliente.documentId) ?? "—"}
+          ventasDelCliente={ventasPorCliente.get(selectedCliente.documentId) ?? []}
+          onClose={() => setSelectedCliente(null)}
+          onUpdate={setSelectedCliente}
+          onEdit={() => { abrirEditar(selectedCliente); setSelectedCliente(null) }}
+          onAvanzar={handleAvanzar}
+          onRetroceder={retroceder}
+          onRechazar={handleRechazar}
+          onRecuperar={handleRecuperar}
+          onNuevoPedido={setPedidoGateFor}
+          backLabel="Volver al Pipeline"
+        />
+
+        {modalOpen && (
+          <ClienteModal editando={editando} form={form} setForm={setForm}
+            onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
+        )}
+
+        {pedidoGateFor && (
+          <NuevoPedidoGateModal
+            cliente={pedidoGateFor}
+            cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+            totalVentas={totalVentas}
+            onClose={() => setPedidoGateFor(null)}
+            onCreated={onPedidoCreado}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 max-w-full mx-auto">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
@@ -1378,22 +1436,6 @@ export function PipelineView() {
       {modalOpen && (
         <ClienteModal editando={editando} form={form} setForm={setForm}
           onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
-      )}
-
-      {selectedCliente && (
-        <ClientePanel
-          cliente={selectedCliente}
-          num={numMap.get(selectedCliente.documentId) ?? "—"}
-          ventasDelCliente={ventasPorCliente.get(selectedCliente.documentId) ?? []}
-          onClose={() => setSelectedCliente(null)}
-          onUpdate={setSelectedCliente}
-          onEdit={() => { abrirEditar(selectedCliente); setSelectedCliente(null) }}
-          onAvanzar={handleAvanzar}
-          onRetroceder={retroceder}
-          onRechazar={handleRechazar}
-          onRecuperar={handleRecuperar}
-          onNuevoPedido={setPedidoGateFor}
-        />
       )}
 
       {pedidoGateFor && (

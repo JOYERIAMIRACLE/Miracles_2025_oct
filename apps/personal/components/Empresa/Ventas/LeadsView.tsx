@@ -107,6 +107,42 @@ export function LeadsView() {
     if (u && selectedLead?.documentId === u.documentId) setSelectedLead(null)
   }
 
+  if (selectedLead) {
+    return (
+      <div className="p-4 md:p-6 max-w-5xl mx-auto">
+        <ClientePanel
+          cliente={selectedLead}
+          num={numMap.get(selectedLead.documentId) ?? "—"}
+          ventasDelCliente={ventasPorCliente.get(selectedLead.documentId) ?? []}
+          onClose={() => setSelectedLead(null)}
+          onUpdate={setSelectedLead}
+          onEdit={() => { abrirEditar(selectedLead); setSelectedLead(null) }}
+          onAvanzar={handleAvanzar}
+          onRetroceder={retroceder}
+          onRechazar={handleRechazar}
+          onRecuperar={handleRecuperar}
+          onNuevoPedido={setPedidoGateFor}
+          backLabel="Volver a Leads"
+        />
+
+        {modalOpen && (
+          <ClienteModal editando={editando} form={form} setForm={setForm}
+            onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
+        )}
+
+        {pedidoGateFor && (
+          <NuevoPedidoGateModal
+            cliente={pedidoGateFor}
+            cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+            totalVentas={totalVentas}
+            onClose={() => setPedidoGateFor(null)}
+            onCreated={onPedidoCreado}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-5">
 
@@ -212,22 +248,6 @@ export function LeadsView() {
       {modalOpen && (
         <ClienteModal editando={editando} form={form} setForm={setForm}
           onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
-      )}
-
-      {selectedLead && (
-        <ClientePanel
-          cliente={selectedLead}
-          num={numMap.get(selectedLead.documentId) ?? "—"}
-          ventasDelCliente={ventasPorCliente.get(selectedLead.documentId) ?? []}
-          onClose={() => setSelectedLead(null)}
-          onUpdate={setSelectedLead}
-          onEdit={() => { abrirEditar(selectedLead); setSelectedLead(null) }}
-          onAvanzar={handleAvanzar}
-          onRetroceder={retroceder}
-          onRechazar={handleRechazar}
-          onRecuperar={handleRecuperar}
-          onNuevoPedido={setPedidoGateFor}
-        />
       )}
 
       {pedidoGateFor && (
