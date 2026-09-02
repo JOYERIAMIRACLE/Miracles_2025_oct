@@ -357,7 +357,7 @@ export function InventarioEmpresaView() {
         },
         activo:     form.tiendaActivo,
         isFeatured: form.esFavorito,
-        // puntoVenta: form.puntoVenta,  // agregar campo Boolean en Strapi → api::product.product antes de habilitar
+        puntoVenta: form.puntoVenta,
         ...(needsSlug ? { slug: slugify(form.nombreProducto.trim()) } : {}),
         ...(fotoData ? { imagenes: [fotoData.id] } : {}),
       }
