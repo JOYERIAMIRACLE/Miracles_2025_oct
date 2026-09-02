@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink } from "lucide-react"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
@@ -159,7 +159,7 @@ export function InventarioEmpresaView() {
   const [localMargen,  setLocalMargen]  = useState(70)
   const [applyingMar,  setApplyingMar]  = useState(false)
   const [marProgress,  setMarProgress]  = useState({ done: 0, total: 0 })
-  const [collapse,     setCollapse]     = useState({ foto:true, identificacion:true, atributos:true, peso:true, precios:true, ubicacion:true })
+  const [collapse,     setCollapse]     = useState({ foto:false, identificacion:false, atributos:false, peso:false, precios:false, ubicacion:false })
   function toggleSection(k: keyof typeof collapse) { setCollapse(c => ({ ...c, [k]: !c[k] })) }
   const [showCatPick, setShowCatPick] = useState(false)
   const [catSearch,   setCatSearch]   = useState("")
@@ -293,7 +293,7 @@ export function InventarioEmpresaView() {
       esFavorito: it.isFeatured ?? false,
       puntoVenta: (it as Record<string, unknown>).puntoVenta as boolean ?? false,
     })
-    setCollapse({ foto:true, identificacion:true, atributos:true, peso:true, precios:true, ubicacion:true })
+    setCollapse({ foto:false, identificacion:false, atributos:false, peso:false, precios:false, ubicacion:false })
     setModalOpen(true)
   }
 
@@ -1106,6 +1106,24 @@ export function InventarioEmpresaView() {
                           <option value="servicio">Servicio</option>
                         </select>
                       </div>
+                      {editing.slug && (
+                        <div className="col-span-2">
+                          <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">URL en tienda</label>
+                          <div className="flex items-center gap-2 h-9 rounded-lg border border-slate-700/50 bg-slate-800/30 px-3">
+                            <span className="text-[11px] text-slate-600 shrink-0">/producto/</span>
+                            <span className="text-[11px] font-mono text-violet-400 truncate flex-1">{editing.slug}</span>
+                            <button type="button" title="Copiar URL"
+                              onClick={() => { navigator.clipboard.writeText(`https://miracles-frontend.pages.dev/producto/${editing.slug}`); }}
+                              className="shrink-0 text-slate-600 hover:text-slate-300 transition p-1">
+                              <Copy size={12}/>
+                            </button>
+                            <a href={`https://miracles-frontend.pages.dev/producto/${editing.slug}`} target="_blank" rel="noopener noreferrer"
+                              title="Abrir en tienda" className="shrink-0 text-slate-600 hover:text-violet-400 transition p-1">
+                              <ExternalLink size={12}/>
+                            </a>
+                          </div>
+                        </div>
+                      )}
                       <div className="col-span-2">
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Descripción</label>
                         <textarea placeholder="Detalles…" value={form.descripcion}
