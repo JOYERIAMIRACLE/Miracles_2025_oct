@@ -12,7 +12,7 @@ import {
   TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia, arbolInicial,
 } from "@/types/catalogoJoyeria"
 import { fetchCatalogo, saveCatalogo, fetchSkus, saveSkus } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
-import { SkuEntry, MATERIALES_SKU, ESTILOS_SKU, TIPOS_SKU } from "@/types/skuCatalogo"
+import { SkuEntry, MATERIALES_SKU, ESTILOS_SKU, TIPOS_SKU, EXTRAS_SKU, PIEDRAS_SKU } from "@/types/skuCatalogo"
 import { SkuBuilder } from "@/components/Shared/SkuBuilder"
 
 // ─── Tree helpers ─────────────────────────────────────────────────────────────
@@ -86,21 +86,54 @@ function matchSearch(n: CatalogoNodo, q: string): boolean {
   )
 }
 
+// Códigos de piedras para detectar "con/sin piedra" en extras
+const PIEDRA_CODES = new Set([...PIEDRAS_SKU.map(p => p.code), "PIE"])
+
+function tienePiedra(s: SkuEntry) { return s.extras.some(e => PIEDRA_CODES.has(e)) }
+
+// ─── Paleta por material ──────────────────────────────────────────────────────
+
+const MAT_STYLE = {
+  gold: {
+    dot:       "bg-amber-400",
+    matBadge:  "bg-amber-400/15 text-amber-300 border-amber-400/25",
+    skuColor:  "text-amber-400",
+    iconColor: "text-amber-400/80",
+  },
+  silv: {
+    dot:       "bg-slate-400",
+    matBadge:  "bg-slate-700/70 text-slate-300 border-slate-600/50",
+    skuColor:  "text-violet-400",
+    iconColor: "text-slate-400",
+  },
+} as const
+
+function matKindFromName(name: string): "gold" | "silv" {
+  return name.toLowerCase().includes("oro") ? "gold" : "silv"
+}
+
+/** Devuelve el nodo material padre de una categoría (árbol de 2 niveles: material → categoría) */
+function findParentMat(tree: CatalogoNodo[], catId: string): CatalogoNodo | null {
+  return tree.find(mat => mat.children.some(c => c.id === catId)) ?? null
+}
+
 // ─── TreeRow ──────────────────────────────────────────────────────────────────
 
 function TreeRow({
-  node, depth, selected, onSelect, onAdd, onDel, onMov, busqueda, skuCount,
+  node, depth, selected, onSelect, onAdd, onDel, onMov, busqueda, skuCount, parentMatKind,
 }: {
-  node:     CatalogoNodo
-  depth:    number
-  selected: string | null
-  onSelect: (id: string) => void
-  onAdd:    (parentId: string, tipo: TipoNodo) => void
-  onDel:    (id: string) => void
-  onMov:    (id: string, dir: 1 | -1) => void
-  busqueda: string
-  /** Mapa categoríaNombre → cantidad de SKUs */
-  skuCount?: Record<string, number>
+  node:          CatalogoNodo
+  depth:         number
+  selected:      string | null
+  onSelect:      (id: string) => void
+  onAdd:         (parentId: string, tipo: TipoNodo) => void
+  onDel:         (id: string) => void
+  onMov:         (id: string, dir: 1 | -1) => void
+  busqueda:      string
+  /** Mapa "matKind:categoría" → cantidad de SKUs */
+  skuCount?:     Record<string, number>
+  /** matKind del material padre — lo pasa el material a sus categorías hijas */
+  parentMatKind?: "gold" | "silv"
 }) {
   const [open, setOpen] = useState(depth === 0)
   const cfg   = TIPO_CONFIG[node.tipo]
@@ -108,6 +141,8 @@ function TreeRow({
   const hasChildren = node.children.length > 0
   const isActive = selected === node.id
   const isCat = node.tipo === "categoria"
+  const matKind = node.tipo === "material" ? matKindFromName(node.nombre) : null
+  const matMs   = matKind ? MAT_STYLE[matKind] : null
 
   if (!matchSearch(node, busqueda)) return null
 
@@ -125,12 +160,12 @@ function TreeRow({
   return (
     <div>
       <div
-        className={`group flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer transition-colors select-none ${
+        className={`group flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer transition-all select-none ${
           isActive
-            ? "bg-violet-600/15 border border-violet-500/25"
+            ? "bg-violet-600/15 border border-violet-500/25 shadow-sm"
             : isCat
-              ? "hover:bg-slate-800/60"
-              : "hover:bg-slate-800/40"
+              ? "hover:bg-slate-800/70 border border-transparent"
+              : "hover:bg-slate-800/50 border border-transparent"
         }`}
         style={{ paddingLeft: `${8 + depth * 18}px` }}
         onClick={() => onSelect(node.id)}
@@ -150,7 +185,7 @@ function TreeRow({
         </button>
 
         {/* Icono tipo */}
-        <TipoIcon size={11} className={`shrink-0 ${isActive ? "text-violet-400" : cfg.color}`} />
+        <TipoIcon size={11} className={`shrink-0 ${isActive ? "text-violet-400" : matMs?.iconColor ?? cfg.color}`} />
 
         {/* Nombre */}
         <span className="flex-1 min-w-0 leading-tight">
@@ -161,11 +196,13 @@ function TreeRow({
           </span>
         </span>
 
-        {/* Badge SKUs en categoría */}
-        {isCat && skuCount && (skuCount[node.nombre] ?? 0) > 0 && (
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-            isActive ? "bg-violet-500/40 text-violet-200" : "bg-slate-700 text-slate-400"
-          }`}>{skuCount[node.nombre]}</span>
+        {/* Badge SKUs en categoría — clave "matKind:categoría" para no mezclar materiales */}
+        {isCat && skuCount && parentMatKind && (skuCount[`${parentMatKind}:${node.nombre}`] ?? 0) > 0 && (
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 tabular-nums ${
+            isActive
+              ? "bg-violet-500/40 text-violet-200 border border-violet-500/30"
+              : "bg-slate-800 text-slate-500 border border-slate-700/60"
+          }`}>{skuCount[`${parentMatKind}:${node.nombre}`]}</span>
         )}
 
         {/* Modelos count — solo productos */}
@@ -212,6 +249,7 @@ function TreeRow({
               onMov={onMov}
               busqueda={busqueda}
               skuCount={skuCount}
+              parentMatKind={matKind ?? parentMatKind}
             />
           ))}
         </div>
@@ -438,10 +476,10 @@ function DetailPanel({
 function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+      className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${
         active
-          ? "bg-violet-600/20 border-violet-500/60 text-violet-300"
-          : "bg-slate-800/60 border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300"
+          ? "bg-violet-500/20 border-violet-400/50 text-violet-200 shadow-sm shadow-violet-500/10"
+          : "bg-slate-800/50 border-slate-700/40 text-slate-400 hover:border-slate-600/70 hover:text-slate-200 hover:bg-slate-800"
       }`}>
       {label}
     </button>
@@ -451,11 +489,14 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
 function SkuBrowserPanel({
   skus,
   categoryFilter,
+  materialFilter,
   onSkuDeleted,
   onSkuAdded,
 }: {
   skus: SkuEntry[]
   categoryFilter: string | null
+  /** "gold" | "silv" cuando se seleccionó una categoría de un material específico */
+  materialFilter: "gold" | "silv" | null
   onSkuDeleted: (id: string) => void
   onSkuAdded: (entry: SkuEntry) => void
 }) {
@@ -463,26 +504,50 @@ function SkuBrowserPanel({
   const [filterMat,    setFilterMat]    = useState<string[]>([])
   const [filterEstilo, setFilterEstilo] = useState<string[]>([])
   const [filterTalla,  setFilterTalla]  = useState<string[]>([])
+  const [filterExtras, setFilterExtras] = useState<string[]>([])
+  const [filterPiedra, setFilterPiedra] = useState<"con" | "sin" | null>(null)
   const [showBuilder,  setShowBuilder]  = useState(false)
 
-  useEffect(() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]); setQ(""); setShowBuilder(false) }, [categoryFilter])
+  function clearFilters() {
+    setFilterMat([]); setFilterEstilo([]); setFilterTalla([])
+    setFilterExtras([]); setFilterPiedra(null)
+  }
+
+  useEffect(() => { clearFilters(); setQ(""); setShowBuilder(false) }, [categoryFilter, materialFilter])
 
   const tipoCat = categoryFilter ? TIPOS_SKU.find(t => t.catJoya === categoryFilter) : null
 
-  const scopeSkus = useMemo(
-    () => categoryFilter ? skus.filter(s => s.tipoCategoria === categoryFilter) : skus,
-    [skus, categoryFilter]
-  )
+  const scopeSkus = useMemo(() => {
+    let list = categoryFilter ? skus.filter(s => s.tipoCategoria === categoryFilter) : skus
+    if (materialFilter) list = list.filter(s => s.matKind === materialFilter)
+    return list
+  }, [skus, categoryFilter, materialFilter])
 
   const availMat    = useMemo(() => [...new Set(scopeSkus.map(s => s.mat))],    [scopeSkus])
   const availEstilo = useMemo(() => [...new Set(scopeSkus.map(s => s.estilo))], [scopeSkus])
   const availTalla  = useMemo(() => [...new Set(scopeSkus.map(s => s.talla))].sort(), [scopeSkus])
+
+  // Extras no-piedra disponibles en el scope (ej. DIA=Diamantada, PLA=Con placa)
+  const availExtrasNoPiedra = useMemo(() => {
+    const set = new Set<string>()
+    for (const s of scopeSkus)
+      for (const e of s.extras)
+        if (!PIEDRA_CODES.has(e)) set.add(e)
+    return [...set]
+  }, [scopeSkus])
+
+  // Si hay algún SKU con piedra y alguno sin piedra → mostrar filtro
+  const scopeConPiedra   = useMemo(() => scopeSkus.some(tienePiedra),  [scopeSkus])
+  const showPiedraFilter = scopeConPiedra
 
   const visible = useMemo(() => {
     let list = scopeSkus
     if (filterMat.length > 0)    list = list.filter(s => filterMat.includes(s.mat))
     if (filterEstilo.length > 0) list = list.filter(s => filterEstilo.includes(s.estilo))
     if (filterTalla.length > 0)  list = list.filter(s => filterTalla.includes(s.talla))
+    if (filterExtras.length > 0) list = list.filter(s => filterExtras.some(fe => s.extras.includes(fe)))
+    if (filterPiedra === "con")  list = list.filter(tienePiedra)
+    if (filterPiedra === "sin")  list = list.filter(s => !tienePiedra(s))
     if (q.trim()) {
       const lq = q.toLowerCase()
       list = list.filter(s =>
@@ -493,14 +558,14 @@ function SkuBrowserPanel({
       )
     }
     return list
-  }, [scopeSkus, filterMat, filterEstilo, filterTalla, q])
+  }, [scopeSkus, filterMat, filterEstilo, filterTalla, filterExtras, filterPiedra, q])
 
   function toggle(arr: string[], set: (v: string[]) => void, val: string) {
     set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
   }
 
-  const hasFilters = filterMat.length + filterEstilo.length + filterTalla.length > 0
-  const showFilterBar = availMat.length > 1 || availEstilo.length > 1 || availTalla.length > 1
+  const hasFilters = filterMat.length + filterEstilo.length + filterTalla.length + filterExtras.length > 0 || filterPiedra !== null
+  const showFilterBar = scopeSkus.length > 0
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -509,10 +574,17 @@ function SkuBrowserPanel({
       <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-800 shrink-0">
         <div className="flex items-center gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-slate-100 leading-none">
-              {categoryFilter ?? "Todos los SKUs"}
-            </h2>
-            <p className="text-[10px] text-slate-500 mt-0.5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-100 leading-none">
+                {categoryFilter ?? "Catálogo completo"}
+              </h2>
+              {tipoCat && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-violet-500/25 bg-violet-500/10 text-violet-400 tracking-widest uppercase">
+                  {tipoCat.code}
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1 tabular-nums">
               {visible.length !== scopeSkus.length
                 ? `${visible.length} de ${scopeSkus.length} SKUs`
                 : `${scopeSkus.length} SKU${scopeSkus.length !== 1 ? "s" : ""}`}
@@ -541,7 +613,7 @@ function SkuBrowserPanel({
       {/* Barra de filtros horizontal — solo si hay variedad */}
       {showFilterBar && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-5 py-2.5 border-b border-slate-800/60 bg-slate-950/30 shrink-0">
-          {availMat.length > 1 && (
+          {availMat.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Mat.</span>
               {MATERIALES_SKU.filter(m => availMat.includes(m.code)).map(m => (
@@ -550,7 +622,7 @@ function SkuBrowserPanel({
               ))}
             </div>
           )}
-          {availEstilo.length > 1 && (
+          {availEstilo.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Estilo</span>
               {availEstilo.map(code => {
@@ -560,7 +632,7 @@ function SkuBrowserPanel({
               })}
             </div>
           )}
-          {availTalla.length > 1 && (
+          {availTalla.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Talla</span>
               {availTalla.map(t => (
@@ -569,10 +641,32 @@ function SkuBrowserPanel({
               ))}
             </div>
           )}
+          {/* Extras (Diamantada, Con placa…) */}
+          {availExtrasNoPiedra.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Acabado</span>
+              {EXTRAS_SKU.filter(ex => availExtrasNoPiedra.includes(ex.code)).map(ex => (
+                <FilterChip key={ex.code} label={ex.label} active={filterExtras.includes(ex.code)}
+                  onClick={() => toggle(filterExtras, setFilterExtras, ex.code)} />
+              ))}
+            </div>
+          )}
+
+          {/* Con/Sin piedras */}
+          {showPiedraFilter && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Piedras</span>
+              <FilterChip label="Con piedras" active={filterPiedra === "con"}
+                onClick={() => setFilterPiedra(prev => prev === "con" ? null : "con")} />
+              <FilterChip label="Sin piedras" active={filterPiedra === "sin"}
+                onClick={() => setFilterPiedra(prev => prev === "sin" ? null : "sin")} />
+            </div>
+          )}
+
           {hasFilters && (
             <button type="button"
-              onClick={() => { setFilterMat([]); setFilterEstilo([]); setFilterTalla([]) }}
-              className="flex items-center gap-1 text-[10px] text-slate-600 hover:text-violet-400 transition ml-auto shrink-0">
+              onClick={clearFilters}
+              className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-700/40 text-slate-500 hover:border-violet-500/30 hover:text-violet-400 transition ml-auto shrink-0 bg-slate-900/60">
               <X size={9} /> Limpiar
             </button>
           )}
@@ -592,50 +686,65 @@ function SkuBrowserPanel({
       {/* Grid de SKUs — ocupa todo el ancho */}
       <div className="flex-1 overflow-y-auto p-5">
         {visible.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-            <Gem size={28} className="text-slate-700" />
-            <p className="text-slate-500 text-sm">
-              {scopeSkus.length === 0
-                ? "Sin SKUs — crea tu primera pieza con el constructor"
-                : "Sin resultados para estos filtros"}
-            </p>
+          <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-12">
+            <div className="w-14 h-14 rounded-full bg-slate-800/80 border border-slate-700/50 flex items-center justify-center">
+              <Gem size={22} className="text-slate-600" />
+            </div>
+            <div>
+              <p className="text-slate-300 text-sm font-semibold">
+                {scopeSkus.length === 0 ? "Sin piezas registradas" : "Sin resultados"}
+              </p>
+              <p className="text-slate-600 text-xs mt-1">
+                {scopeSkus.length === 0
+                  ? "Crea tu primer SKU con el constructor"
+                  : "Prueba ajustando los filtros"}
+              </p>
+            </div>
             {scopeSkus.length === 0 && (
               <button type="button" onClick={() => setShowBuilder(true)}
-                className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition">
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-violet-600/15 border border-violet-500/25 text-violet-300 hover:bg-violet-600/25 hover:text-violet-200 rounded-lg transition">
                 <Wand2 size={12} /> Nueva pieza
               </button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-            {visible.map(s => (
-              <div key={s.id}
-                className="group relative flex flex-col gap-2 p-3.5 rounded-xl bg-slate-800/30 border border-slate-700/40 hover:border-violet-500/30 hover:bg-slate-800/50 transition-all">
-                <button type="button" title="Eliminar"
-                  onClick={async () => {
-                    onSkuDeleted(s.id)
-                    await saveSkus(skus.filter(x => x.id !== s.id))
-                  }}
-                  className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-0.5 rounded">
-                  <X size={11} />
-                </button>
+            {visible.map(s => {
+              const ms = MAT_STYLE[s.matKind]
+              return (
+                <div key={s.id}
+                  className="group relative flex flex-col rounded-xl bg-slate-800/25 border border-slate-700/40 hover:border-slate-600/60 hover:bg-slate-800/50 transition-all overflow-hidden">
 
-                {/* Nombre */}
-                <p className="text-[13px] font-semibold text-slate-100 pr-5 leading-snug">{s.nombre}</p>
+                  {/* Stripe de material */}
+                  <div className={`absolute left-0 inset-y-0 w-0.75 rounded-l-xl ${ms.dot}`} aria-hidden />
 
-                {/* SKU */}
-                <p className="text-[11px] font-mono text-violet-400 tracking-widest">{s.sku}</p>
+                  {/* Botón eliminar */}
+                  <button type="button" title="Eliminar"
+                    onClick={async () => {
+                      onSkuDeleted(s.id)
+                      await saveSkus(skus.filter(x => x.id !== s.id))
+                    }}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-0.5 rounded z-10">
+                    <X size={10} />
+                  </button>
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-700/60 text-slate-400 font-medium">{s.matLabel}</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-700/60 text-slate-400 font-medium">T {s.talla}</span>
-                  {s.extras.map(e => (
-                    <span key={e} className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 font-medium">{e}</span>
-                  ))}
+                  {/* Cuerpo */}
+                  <div className="flex flex-col gap-1.5 pl-5 pr-4 pt-3.5 pb-3">
+                    <p className="text-[13px] font-bold text-slate-100 pr-4 leading-snug">{s.nombre}</p>
+                    <p className={`text-[10px] font-mono tracking-widest ${ms.skuColor}`}>{s.sku}</p>
+                  </div>
+
+                  {/* Footer con tags */}
+                  <div className="flex flex-wrap gap-1 pl-5 pr-3 py-2 border-t border-slate-800/70 bg-slate-900/30">
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ms.matBadge}`}>{s.matLabel}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-slate-700/50 bg-slate-800/50 text-slate-400 font-medium">T {s.talla}</span>
+                    {s.extras.map(e => (
+                      <span key={e} className="text-[9px] px-1.5 py-0.5 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-400 font-medium">{e}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
@@ -723,11 +832,19 @@ export function CatalogoJoyeriaView() {
   const selectedNode = selected ? find(tree, selected) : null
   const stats = useMemo(() => countAll(tree), [tree])
 
-  // Mapa categoríaNombre → cantidad de SKUs (para badge en árbol)
+  // Cuando se selecciona una categoría, identifica el material padre para filtrar SKUs por él
+  const selectedMatKind = useMemo<"gold" | "silv" | null>(() => {
+    if (selectedNode?.tipo !== "categoria") return null
+    const parentMat = findParentMat(tree, selectedNode.id)
+    return parentMat ? matKindFromName(parentMat.nombre) : null
+  }, [selectedNode, tree])
+
+  // Mapa "matKind:categoría" → cantidad de SKUs (badge correcto por material)
   const skuCountByCat = useMemo(() => {
     const map: Record<string, number> = {}
     for (const s of skus) {
-      map[s.tipoCategoria] = (map[s.tipoCategoria] ?? 0) + 1
+      const key = `${s.matKind}:${s.tipoCategoria}`
+      map[key] = (map[key] ?? 0) + 1
     }
     return map
   }, [skus])
@@ -748,9 +865,11 @@ export function CatalogoJoyeriaView() {
           <BookOpen size={16} className="text-violet-400" />
           <div>
             <h1 className="text-lg font-bold text-slate-100 leading-none">Catálogo de Joyería</h1>
-            <p className="text-[10px] text-slate-600 mt-0.5">
-              {stats.materiales} materiales · {stats.categorias} categorías · {stats.productos} productos · {skus.length} SKUs
-            </p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60">{stats.materiales} materiales</span>
+              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60">{stats.categorias} categorías</span>
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 tabular-nums">{skus.length} SKUs</span>
+            </div>
           </div>
         </div>
 
@@ -815,20 +934,27 @@ export function CatalogoJoyeriaView() {
                 + Agregar material
               </button>
             </div>
-          ) : tree.map(node => (
-            <TreeRow
-              key={node.id}
-              node={node}
-              depth={0}
-              selected={selected}
-              onSelect={setSelected}
-              onAdd={handleAdd}
-              onDel={handleDel}
-              onMov={handleMov}
-              busqueda={busqueda}
-              skuCount={skuCountByCat}
-            />
-          ))}
+          ) : (
+            <>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-700 px-2 pt-1 pb-2 select-none">
+                Materiales
+              </p>
+              {tree.map(node => (
+                <TreeRow
+                  key={node.id}
+                  node={node}
+                  depth={0}
+                  selected={selected}
+                  onSelect={setSelected}
+                  onAdd={handleAdd}
+                  onDel={handleDel}
+                  onMov={handleMov}
+                  busqueda={busqueda}
+                  skuCount={skuCountByCat}
+                />
+              ))}
+            </>
+          )}
         </div>
 
         {/* Panel derecho — cambia según selección */}
@@ -836,13 +962,13 @@ export function CatalogoJoyeriaView() {
           {selectedNode?.tipo === "producto" || selectedNode?.tipo === "material" ? (
             /* Material o Producto seleccionado → editor de detalles */
             <div className="flex-1 overflow-y-auto">
-              <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/40 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold ${TIPO_CONFIG[selectedNode.tipo].color}`}>
+              <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${TIPO_CONFIG[selectedNode.tipo].color} bg-slate-800/80 border-slate-700/50 uppercase tracking-widest`}>
                     {TIPO_CONFIG[selectedNode.tipo].label}
                   </span>
-                  <span className="text-slate-300 text-sm font-medium">
-                    {selectedNode.nombre || "sin nombre"}
+                  <span className="text-slate-100 text-sm font-semibold">
+                    {selectedNode.nombre || <span className="text-slate-600 italic font-normal">sin nombre</span>}
                   </span>
                 </div>
                 {TIPO_CONFIG[selectedNode.tipo].childTipo && (
@@ -864,6 +990,7 @@ export function CatalogoJoyeriaView() {
             <SkuBrowserPanel
               skus={skus}
               categoryFilter={selectedNode?.tipo === "categoria" ? selectedNode.nombre : null}
+              materialFilter={selectedMatKind}
               onSkuDeleted={id => setSkus(prev => prev.filter(s => s.id !== id))}
               onSkuAdded={entry => setSkus(prev => [...prev.filter(s => s.id !== entry.id), entry])}
             />

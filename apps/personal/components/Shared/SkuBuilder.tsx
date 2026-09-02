@@ -56,6 +56,33 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
   const [piedra, setPiedra] = useState<string>("")
   const [saving, setSaving] = useState(false)
 
+  async function guardarParcial(opts: {
+    estilo?: typeof estilo | null
+    talla?: string
+    extras?: string[]
+  }) {
+    if (!mat || !tipo) return
+    const e = opts.estilo === undefined ? estilo : opts.estilo
+    const ta = opts.talla !== undefined ? opts.talla : (opts.estilo === null ? "" : talla)
+    const ex = opts.extras ?? []
+    const parts = [mat.code, tipo.code, e?.code, ta, ...ex].filter(Boolean)
+    const sku = parts.join("-")
+    const entry: SkuEntry = {
+      id: sku, sku,
+      mat: mat.code, matLabel: mat.label, matKind: mat.kind,
+      tipo: tipo.code, tipoLabel: tipo.label, tipoCategoria: tipo.catJoya,
+      estilo: e?.code ?? "", estiloLabel: e?.label ?? "",
+      talla: ta, extras: ex,
+      nombre: buildNombre(tipo.label, e?.label ?? ""),
+    }
+    setSaving(true)
+    try {
+      try { await addSku(entry) } catch {}
+      await onAdd(entry)
+      reset()
+    } finally { setSaving(false) }
+  }
+
   const step: Step = !mat ? "mat" : !tipo ? "tipo" : !estilo ? "estilo" : !talla ? "talla" : "extras"
   const stepIndex = STEPS.indexOf(step)
 
@@ -174,7 +201,16 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
         {/* Tipo — visible si hay material */}
         {mat && (
           <div>
-            <p className={lbl}>Tipo de pieza</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className={lbl.replace("mb-2", "mb-0")}>Tipo de pieza</p>
+              {tipo && (
+                <button type="button" disabled={saving}
+                  onClick={() => guardarParcial({ estilo: null, talla: "", extras: [] })}
+                  className="flex items-center gap-1 h-5 px-2 text-[9px] font-mono text-violet-400 bg-violet-500/8 border border-violet-500/20 rounded hover:bg-violet-500/15 transition-colors disabled:opacity-40">
+                  <Plus size={7} /> {mat.code}-{tipo.code}
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {TIPOS_SKU.map(t => (
                 <Chip key={t.code} label={t.label} active={tipo?.code === t.code}
@@ -187,7 +223,16 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
         {/* Estilo — visible si hay tipo */}
         {tipo && (
           <div>
-            <p className={lbl}>Estilo</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className={lbl.replace("mb-2", "mb-0")}>Estilo</p>
+              {estilo && (
+                <button type="button" disabled={saving}
+                  onClick={() => guardarParcial({ talla: "", extras: [] })}
+                  className="flex items-center gap-1 h-5 px-2 text-[9px] font-mono text-violet-400 bg-violet-500/8 border border-violet-500/20 rounded hover:bg-violet-500/15 transition-colors disabled:opacity-40">
+                  <Plus size={7} /> {mat!.code}-{tipo.code}-{estilo.code}
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {estilosDisponibles.map(e => (
                 <Chip key={e.code} label={e.label} active={estilo?.code === e.code}
@@ -200,7 +245,16 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
         {/* Talla — visible si hay estilo */}
         {estilo && (
           <div>
-            <p className={lbl}>Talla</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className={lbl.replace("mb-2", "mb-0")}>Talla</p>
+              {talla && (
+                <button type="button" disabled={saving}
+                  onClick={() => guardarParcial({ extras: [] })}
+                  className="flex items-center gap-1 h-5 px-2 text-[9px] font-mono text-violet-400 bg-violet-500/8 border border-violet-500/20 rounded hover:bg-violet-500/15 transition-colors disabled:opacity-40">
+                  <Plus size={7} /> {mat!.code}-{tipo!.code}-{estilo.code}-{talla}
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {tallasDisponibles.map(t => (
                 <Chip key={t} label={t} active={talla === t}

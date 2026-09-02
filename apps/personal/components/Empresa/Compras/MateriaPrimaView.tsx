@@ -677,10 +677,28 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   onClose: () => void; onDone: () => void
 }) {
   type LineaState = { piezas: PiezaForm[]; agregando: boolean }
-  const [lineasState,    setLineasState]    = useState<LineaState[]>(
-    () => compra.lineas.map(() => ({ piezas: [], agregando: false }))
-  )
+  const [lineasState,    setLineasState]    = useState<LineaState[]>(() => {
+    try {
+      const saved = localStorage.getItem(`draft_insp_${compra.documentId}`)
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return compra.lineas.map(() => ({ piezas: [], agregando: false }))
+  })
   const [guardando,       setGuardando]       = useState(false)
+
+  // Auto-save borrador en localStorage
+  useEffect(() => {
+    try { localStorage.setItem(`draft_insp_${compra.documentId}`, JSON.stringify(lineasState)) } catch {}
+  }, [lineasState, compra.documentId])
+
+  // Historial de inspecciones anteriores
+  const historialKey = "insp_historial"
+  const historialPrevio = useMemo(() => {
+    try {
+      const h = JSON.parse(localStorage.getItem(historialKey) ?? "{}")
+      return h[compra.documentId] as { fecha: string; total: number; gramos?: number[] } | undefined
+    } catch { return undefined }
+  }, [compra.documentId])
   const [catalogoProds,   setCatalogoProds]   = useState<CatalogoProd[]>([])
   const [busquedaCat,     setBusquedaCat]     = useState("")
   const [lineaBuscando,   setLineaBuscando]   = useState<number | null>(null)
@@ -717,8 +735,8 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
         p.nombre.toLowerCase().includes(busquedaCat.toLowerCase()) ||
         p.sku.toLowerCase().includes(busquedaCat.toLowerCase()) ||
         p.categoria.toLowerCase().includes(busquedaCat.toLowerCase())
-      ).slice(0, 8)
-    : []
+      ).slice(0, 10)
+    : catalogoProds.slice(0, 10)  // muestra todos al abrir (sin filtro)
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (lineaBuscando === null) return
@@ -789,6 +807,18 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
           }
         }
       }
+      try {
+        localStorage.removeItem(`draft_insp_${compra.documentId}`)
+        const h = JSON.parse(localStorage.getItem(historialKey) ?? "{}")
+        const prevGramos: number[] = h[compra.documentId]?.gramos ?? compra.lineas.map(() => 0)
+        const newGramos = compra.lineas.map((_, li) => (prevGramos[li] ?? 0) + gramosAsignados(li))
+        h[compra.documentId] = {
+          fecha: new Date().toISOString(),
+          total: (h[compra.documentId]?.total ?? 0) + creadas,
+          gramos: newGramos,
+        }
+        localStorage.setItem(historialKey, JSON.stringify(h))
+      } catch {}
       toast.success(`Inspección completa — ${creadas} grupo${creadas !== 1 ? "s" : ""} de piezas creados en inventario`)
       onDone()
     } catch (e: any) { toast.error(e.message ?? "Error al guardar la inspección") }
@@ -820,12 +850,31 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
           Clasifica pieza por pieza lo que entró en cada línea. Al confirmar se crean como productos en el inventario (no publicados en tienda).
         </p>
 
+        {/* Banner de inspección previa */}
+        {historialPrevio && (
+          <div className="px-6 py-2.5 bg-violet-500/10 border-b border-violet-500/20 shrink-0 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+            <p className="text-[11px] text-violet-400">
+              Ya se crearon <span className="font-semibold">{historialPrevio.total} producto{historialPrevio.total !== 1 ? "s" : ""}</span> de esta compra
+              {historialPrevio.gramos && historialPrevio.gramos.length > 0 && (
+                <> · <span className="font-semibold">{historialPrevio.gramos.reduce((a, b) => a + b, 0).toLocaleString("es-MX", { maximumFractionDigits: 2 })}g</span> inspeccionados</>
+              )}
+              {" "}· {new Date(historialPrevio.fecha).toLocaleDateString("es-MX", { day:"numeric", month:"short" })}
+              {" "}· El borrador actual es un <span className="font-semibold">ajuste adicional</span>
+            </p>
+          </div>
+        )}
+
         {/* Líneas */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           {compra.lineas.map((linea, li) => {
-            const asignados = gramosAsignados(li)
-            const pct = linea.gramos > 0 ? Math.min(100, (asignados / linea.gramos) * 100) : 0
-            const merma = linea.gramos - asignados
+            const asignados    = gramosAsignados(li)
+            const gHistorial   = historialPrevio?.gramos?.[li] ?? 0
+            const asignadosTotal = asignados + gHistorial
+            const pct          = linea.gramos > 0 ? Math.min(100, (asignadosTotal / linea.gramos) * 100) : 0
+            const pctHistorial = linea.gramos > 0 ? Math.min(100, (gHistorial / linea.gramos) * 100) : 0
+            const pctActual    = linea.gramos > 0 ? Math.min(100 - pctHistorial, (asignados / linea.gramos) * 100) : 0
+            const merma        = Math.max(0, linea.gramos - asignadosTotal)
             const estado = lineasState[li]!
 
             return (
@@ -837,15 +886,27 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">{linea.material?.nombre ?? "—"} · {fmtG(linea.gramos)} · {fmt(linea.precioPorGramo)}/g</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{fmtG(asignados)} / {fmtG(linea.gramos)}</p>
-                    <p className={`text-[10px] font-medium ${merma > 0 ? "text-amber-500" : "text-emerald-500"}`}>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {fmtG(asignadosTotal)} / {fmtG(linea.gramos)}
+                      {gHistorial > 0 && asignados === 0 && (
+                        <span className="ml-1 text-violet-400/70">(prev. {fmtG(gHistorial)})</span>
+                      )}
+                    </p>
+                    <p className={`text-[10px] font-medium ${merma > 0 ? "text-amber-500" : "text-violet-400"}`}>
                       {merma > 0 ? `merma: ${merma.toLocaleString("es-MX", { maximumFractionDigits: 2 })}g` : "✓ completo"}
                     </p>
                   </div>
                 </div>
-                {/* Barra de progreso */}
-                <div className="h-1.5 bg-slate-100 dark:bg-slate-800">
-                  <div className={`h-full transition-all ${pct >= 100 ? "bg-emerald-500" : "bg-violet-500"}`} style={{ width: `${pct}%` }} />
+                {/* Barra de progreso — segmento previo (claro) + actual (sólido) */}
+                <div className="h-1.5 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  {gHistorial > 0 ? (
+                    <div className="h-full flex">
+                      <div className="h-full bg-violet-400/40 shrink-0" style={{ width: `${pctHistorial}%` }} />
+                      <div className="h-full bg-violet-500 transition-all shrink-0" style={{ width: `${pctActual}%` }} />
+                    </div>
+                  ) : (
+                    <div className="h-full transition-all bg-violet-500" style={{ width: `${pct}%` }} />
+                  )}
                 </div>
 
                 {/* Tabla de piezas */}
@@ -905,43 +966,84 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                   )}
 
                   <div className="flex items-start gap-3 flex-wrap">
-                    <button type="button" onClick={() => setPiezas(li, prev => [...prev, { ...emptyPieza(), categoriaJoya: guessCat(linea.descripcion) }])}
-                      className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition mt-0.5">
-                      <Plus size={13} /> Agregar pieza
-                    </button>
-                    <div ref={el => { searchRefs.current[li] = el }} className="flex-1 max-w-xs space-y-1">
-                      <div className="relative">
-                        <input value={lineaBuscando === li ? busquedaCat : ""}
-                          onFocus={() => setLineaBuscando(li)}
-                          onChange={e => { setLineaBuscando(li); setBusquedaCat(e.target.value) }}
-                          placeholder="Buscar en catálogo (nombre o SKU)…"
-                          className={`${fieldCls} h-7 text-xs pr-6`} />
-                        {lineaBuscando === li && busquedaCat && (
-                          <button type="button" onClick={() => { setBusquedaCat(""); setLineaBuscando(null) }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                            <X size={11} />
+                    <div ref={el => { searchRefs.current[li] = el }} className="flex-1 max-w-sm space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <div className="relative flex-1">
+                          <input value={lineaBuscando === li ? busquedaCat : ""}
+                            onFocus={() => { setLineaBuscando(li); setBusquedaCat("") }}
+                            onChange={e => { setLineaBuscando(li); setBusquedaCat(e.target.value) }}
+                            placeholder="Buscar en catálogo (nombre o SKU)…"
+                            className={`${fieldCls} h-7 text-xs pr-6`} />
+                          {lineaBuscando === li && busquedaCat && (
+                            <button type="button" onClick={() => { setBusquedaCat(""); setLineaBuscando(null) }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                              <X size={11} />
+                            </button>
+                          )}
+                        </div>
+                        {/* Crear SKU siempre visible */}
+                        {skuBuilderLinea !== li && (
+                          <button type="button"
+                            onClick={() => { setSkuBuilderLinea(li); setLineaBuscando(null) }}
+                            title="Crear nuevo SKU"
+                            className="shrink-0 h-7 px-2 flex items-center gap-1 text-[11px] text-violet-400 hover:text-violet-300 border border-violet-500/30 hover:border-violet-400/50 rounded-lg bg-violet-500/5 transition">
+                            <Wand2 size={11} /> Nuevo SKU
                           </button>
                         )}
                       </div>
-                      {lineaBuscando === li && prodsFiltrados.length > 0 && (
-                        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-y-auto max-h-56">
-                          {prodsFiltrados.map(p => (
-                            <button key={p.sku} type="button"
-                              onClick={() => {
-                                const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? guessCat(linea.descripcion)
-                                setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla }])
-                                setBusquedaCat("")
-                                setLineaBuscando(null)
-                              }}
-                              className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition text-left border-b border-slate-100 dark:border-slate-700 last:border-0">
-                              <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{p.nombre}</span>
-                              <span className="text-slate-400 text-[10px] shrink-0 ml-2 font-mono">{p.sku}</span>
-                            </button>
-                          ))}
+                      {lineaBuscando === li && (
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl overflow-y-auto max-h-60 mt-0.5">
+                          {/* Header */}
+                          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                              {busquedaCat.trim() ? `${prodsFiltrados.length} resultado${prodsFiltrados.length !== 1 ? "s" : ""}` : "SKUs en catálogo"}
+                            </span>
+                            {!busquedaCat.trim() && catalogoProds.length > 10 && (
+                              <span className="text-[9px] text-slate-500">Escribe para filtrar · {catalogoProds.length} total</span>
+                            )}
+                          </div>
+
+                          {/* Items */}
+                          {prodsFiltrados.length > 0 ? prodsFiltrados.map(p => {
+                            const isGold = p.material.toLowerCase().includes("oro")
+                            return (
+                              <button key={p.sku} type="button"
+                                onClick={() => {
+                                  const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? guessCat(linea.descripcion)
+                                  setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla }])
+                                  setBusquedaCat("")
+                                  setLineaBuscando(null)
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition text-left border-b border-slate-100 dark:border-slate-800 last:border-0 group">
+                                {/* Indicador material */}
+                                <div className={`w-1 self-stretch rounded-full shrink-0 ${isGold ? "bg-amber-400/60" : "bg-slate-400/50"}`} />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{p.nombre}</p>
+                                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    <span className={`text-[10px] font-mono ${isGold ? "text-amber-500 dark:text-amber-400" : "text-violet-500 dark:text-violet-400"}`}>{p.sku}</span>
+                                    {p.categoria && (
+                                      <span className="text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{p.categoria}</span>
+                                    )}
+                                    {p.talla && (
+                                      <span className="text-[9px] text-slate-400">T:{p.talla}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="text-[9px] text-slate-400 dark:text-slate-500 shrink-0">{p.material}</span>
+                              </button>
+                            )
+                          }) : (
+                            <div className="px-3 py-4 text-center">
+                              <p className="text-xs text-slate-500">Sin resultados para &quot;{busquedaCat}&quot;</p>
+                            </div>
+                          )}
                         </div>
                       )}
-                      {/* Cuando no hay resultados y hay texto buscado → ofrecer constructor */}
-                      {lineaBuscando === li && busquedaCat.trim() && prodsFiltrados.length === 0 && skuBuilderLinea !== li && (
+                      {/* Cuando hay texto buscado sin resultados → ofrecer constructor */}
+                      {lineaBuscando === li && busquedaCat.trim() && catalogoProds.filter(p =>
+                        p.nombre.toLowerCase().includes(busquedaCat.toLowerCase()) ||
+                        p.sku.toLowerCase().includes(busquedaCat.toLowerCase())
+                      ).length === 0 && skuBuilderLinea !== li && (
                         <button type="button"
                           onClick={() => { setSkuBuilderLinea(li); setLineaBuscando(null) }}
                           className="flex items-center gap-2 px-3 py-2 text-xs text-violet-400 hover:text-violet-300 border border-violet-500/30 hover:border-violet-400/50 rounded-lg bg-violet-500/5 transition w-full">

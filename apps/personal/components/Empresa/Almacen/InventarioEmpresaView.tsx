@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag } from "lucide-react"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
@@ -72,14 +72,61 @@ type FormData = {
   material: MaterialItem
   materialInsumo: string; pesoGramos: string; costoManoObra: string
   conPiedra: boolean; tipoPiedra: string; kilates: string; largoCm: string; cierre: string
+  tiendaActivo: boolean; esFavorito: boolean; puntoVenta: boolean
 }
 const emptyForm = (): FormData => ({
   nombreProducto:"", sku:"", descripcion:"", figura:"", categoriaJoya:"", materialProducto:"",
   talla:"", costoProduccion:"", costo:"", stock:"0", material:"producto",
   materialInsumo:"", pesoGramos:"", costoManoObra:"",
   conPiedra:false, tipoPiedra:"", kilates:"", largoCm:"", cierre:"",
+  tiendaActivo:false, esFavorito:false, puntoVenta:false,
 })
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
+const inp    = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
+const selCls = inp + " cursor-pointer"
+
+function SectLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 mb-2.5">
+      <div className="w-0.5 h-3.5 rounded-full bg-violet-500/40 shrink-0" />
+      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{children}</p>
+    </div>
+  )
+}
+
+function SectCollapse({ title, open, onToggle, children }: {
+  title: string; open: boolean; onToggle: () => void; children: React.ReactNode
+}) {
+  return (
+    <div>
+      <button type="button" onClick={onToggle}
+        className="flex items-center gap-2 w-full mb-2.5 group">
+        <div className="w-0.5 h-3.5 rounded-full bg-violet-500/40 shrink-0" />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex-1 text-left group-hover:text-slate-300 transition-colors">{title}</p>
+        <ChevronDown size={12} className={`text-slate-600 transition-transform shrink-0 ${open ? "" : "-rotate-90"}`} />
+      </button>
+      {open && <div className="mb-1">{children}</div>}
+    </div>
+  )
+}
+
+function UbicToggle({ checked, onChange, label, desc, icon: Icon }: {
+  checked: boolean; onChange: (v: boolean) => void
+  label: string; desc: string; icon: React.ElementType
+}) {
+  return (
+    <button type="button" onClick={() => onChange(!checked)}
+      className="flex items-center gap-3 w-full py-2 px-3 rounded-lg hover:bg-slate-800/50 transition-colors group text-left">
+      <div className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${checked ? "bg-violet-600" : "bg-slate-700"}`}>
+        <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
+      </div>
+      <Icon size={14} className={`shrink-0 transition-colors ${checked ? "text-violet-400" : "text-slate-600"}`} />
+      <div className="min-w-0">
+        <p className={`text-sm font-medium transition-colors ${checked ? "text-slate-100" : "text-slate-400"}`}>{label}</p>
+        <p className="text-[10px] text-slate-600">{desc}</p>
+      </div>
+    </button>
+  )
+}
 
 export function InventarioEmpresaView() {
   const { items, setItems, loading } = useGetInventario()
@@ -109,8 +156,11 @@ export function InventarioEmpresaView() {
   const [catalogo,     setCatalogo]     = useState<CatalogoNodo[]>([])
   const [margenPanel,  setMargenPanel]  = useState(false)
   const [globalMargen, setGlobalMargen] = useState(70)
+  const [localMargen,  setLocalMargen]  = useState(70)
   const [applyingMar,  setApplyingMar]  = useState(false)
   const [marProgress,  setMarProgress]  = useState({ done: 0, total: 0 })
+  const [collapse,     setCollapse]     = useState({ foto:true, identificacion:true, atributos:true, peso:true, precios:true, ubicacion:true })
+  function toggleSection(k: keyof typeof collapse) { setCollapse(c => ({ ...c, [k]: !c[k] })) }
   const [showCatPick, setShowCatPick] = useState(false)
   const [catSearch,   setCatSearch]   = useState("")
   const [catalogCard, setCatalogCard] = useState<{
@@ -175,6 +225,7 @@ export function InventarioEmpresaView() {
     setEditing(null); setForm(emptyForm()); setSkuAuto(true); setPrecioAuto(true)
     setFotoPreview(null); setFotoFile(null)
     setCatalogCard(null); setCatSearch(""); resetCascada()
+    setLocalMargen(globalMargen)
     setModalOpen(true); openModal()
   }
 
@@ -215,6 +266,8 @@ export function InventarioEmpresaView() {
 
   function openEditar(it: ProductType) {
     openModal(); setEditing(it); setSkuAuto(true); setPrecioAuto(false)
+    const m = margen(it.costoProduccion, it.costo)
+    setLocalMargen(m !== null ? m : globalMargen)
     setFotoPreview(it.imagenes?.[0] ? imgUrl(it.imagenes[0].url) : null)
     setFotoFile(null)
     const cat = it.categoriaJoya ?? ""
@@ -236,7 +289,11 @@ export function InventarioEmpresaView() {
       kilates: it.atributos?.kilates ?? "",
       largoCm: it.atributos?.largoCm != null ? String(it.atributos.largoCm) : "",
       cierre: it.atributos?.cierre ?? "",
+      tiendaActivo: it.activo ?? false,
+      esFavorito: it.isFeatured ?? false,
+      puntoVenta: (it as Record<string, unknown>).puntoVenta as boolean ?? false,
     })
+    setCollapse({ foto:true, identificacion:true, atributos:true, peso:true, precios:true, ubicacion:true })
     setModalOpen(true)
   }
 
@@ -298,6 +355,9 @@ export function InventarioEmpresaView() {
           largoCm:    form.largoCm ? Number(form.largoCm) : null,
           cierre:     form.cierre.trim() || null,
         },
+        activo:     form.tiendaActivo,
+        isFeatured: form.esFavorito,
+        puntoVenta: form.puntoVenta,
         ...(needsSlug ? { slug: slugify(form.nombreProducto.trim()) } : {}),
         ...(fotoData ? { imagenes: [fotoData.id] } : {}),
       }
@@ -586,7 +646,7 @@ export function InventarioEmpresaView() {
                     {/* Margen */}
                     <td className="px-3 py-3">
                       {m!=null
-                        ? <span className={`flex items-center gap-0.5 text-xs font-medium ${m>=40?"text-violet-400":m>=20?"text-violet-400":"text-red-400"}`}>
+                        ? <span className={`flex items-center gap-0.5 text-xs font-medium ${m>=30?"text-violet-400":"text-red-400"}`}>
                             <TrendingUp size={10}/> {m}%
                           </span>
                         : <span className="text-slate-700 text-xs">—</span>}
@@ -670,17 +730,43 @@ export function InventarioEmpresaView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target===e.currentTarget) setModalOpen(false) }}>
-          <div className={`w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col ${
+          <div className={`w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden ${
             !editing && !catalogCard ? "max-w-xl" : "max-w-lg"
           }`}>
+            {/* Franja de material */}
+            <div className={`h-0.5 shrink-0 ${
+              editing && form.materialProducto?.includes("Oro")
+                ? "bg-linear-to-r from-amber-400/80 via-amber-300/30 to-transparent"
+                : editing && form.materialProducto
+                  ? "bg-linear-to-r from-slate-400/60 via-slate-300/20 to-transparent"
+                  : "bg-linear-to-r from-violet-500/60 via-violet-400/20 to-transparent"
+            }`} />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
-              <h2 className="text-sm font-semibold text-slate-100">
-                {editing ? "Editar producto" : catalogCard ? catalogCard.nombre : "Nuevo producto"}
-              </h2>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 shrink-0">
+              {editing ? (
+                <div className="flex items-center gap-3 min-w-0">
+                  {fotoPreview ? (
+                    <img src={fotoPreview} alt="" className="w-9 h-9 rounded-lg object-cover border border-slate-700 shrink-0" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                      <Package size={14} className="text-slate-600" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-100 truncate leading-snug">{editing.nombreProducto}</p>
+                    {editing.sku && (
+                      <span className="text-[10px] font-mono text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded">{editing.sku}</span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <h2 className="text-sm font-semibold text-slate-100">
+                  {catalogCard ? catalogCard.nombre : "Nuevo producto"}
+                </h2>
+              )}
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
-                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16}/></button>
+                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 shrink-0"><X size={16}/></button>
             </div>
 
             {/* ── ESTADO 1: Picker de catálogo (nuevo sin selección) ── */}
@@ -841,19 +927,19 @@ export function InventarioEmpresaView() {
                         <ImagePlus size={14}/> {fotoPreview ? "Cambiar foto" : "Subir foto"}
                       </button>
                       <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
-                      <input ref={fileRef} type="file" accept="image/*" title="Foto" className="hidden" onChange={handleFotoChange}/>
+                      <input ref={fileRef} type="file" accept="image/*" title="Foto" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5" onChange={handleFotoChange}/>
                     </div>
                   </div>
 
                   {/* Peso / insumo real (individualización de piezas) */}
                   <div>
-                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Peso e insumo (costeo automático)</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Peso e insumo (costeo automático)</p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
                         <select title="Material real" value={form.materialInsumo}
                           onChange={e => recalcularCosto({ materialInsumo: e.target.value })}
-                          className={inp+" cursor-pointer"}>
+                          className={selCls}>
                           <option value="">Sin especificar</option>
                           {materiales.map(m => <option key={m.documentId} value={m.documentId}>{m.nombre} {m.precioReferenciaGramo ? `· $${m.precioReferenciaGramo}/g` : ""}</option>)}
                         </select>
@@ -879,7 +965,7 @@ export function InventarioEmpresaView() {
                     const rel = atributosRelevantes(form.categoriaJoya)
                     return (
                       <div>
-                        <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos de joya</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Atributos de joya</p>
                         <div className="grid grid-cols-3 gap-3">
                           {rel.largo && (
                             <div>
@@ -957,11 +1043,10 @@ export function InventarioEmpresaView() {
             {/* ── ESTADO 3: Editar producto existente — form completo ── */}
             {editing && (
               <>
-                <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+                <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
 
                   {/* Foto */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Foto</p>
+                  <SectCollapse title="Foto" open={collapse.foto} onToggle={() => toggleSection("foto")}>
                     <div className="flex items-center gap-4">
                       {fotoPreview ? (
                         <div className="relative shrink-0">
@@ -986,11 +1071,10 @@ export function InventarioEmpresaView() {
                         <input ref={fileRef} type="file" accept="image/*" title="Foto" className="hidden" onChange={handleFotoChange}/>
                       </div>
                     </div>
-                  </div>
+                  </SectCollapse>
 
                   {/* Identificación */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Identificación</p>
+                  <SectCollapse title="Identificación" open={collapse.identificacion} onToggle={() => toggleSection("identificacion")}>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="col-span-2">
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Nombre <span className="text-red-400">*</span></label>
@@ -1017,7 +1101,7 @@ export function InventarioEmpresaView() {
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
                         <select title="Tipo" value={form.material}
                           onChange={e => setForm(f => ({...f, material:e.target.value as MaterialItem}))}
-                          className={inp+" cursor-pointer"}>
+                          className={selCls}>
                           <option value="producto">Producto</option>
                           <option value="servicio">Servicio</option>
                         </select>
@@ -1029,17 +1113,16 @@ export function InventarioEmpresaView() {
                           rows={2} className={inp+" resize-none h-auto py-2"}/>
                       </div>
                     </div>
-                  </div>
+                  </SectCollapse>
 
                   {/* Atributos */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos</p>
+                  <SectCollapse title="Atributos" open={collapse.atributos} onToggle={() => toggleSection("atributos")}>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
                         <select title="Categoría" value={form.categoriaJoya}
                           onChange={e => { const cat=e.target.value as CategoriaJoya|""; setForm(f => ({...f,categoriaJoya:cat,sku:skuAuto?buildSku(cat,f.materialProducto,f.figura,f.talla):f.sku})) }}
-                          className={inp+" cursor-pointer"}>
+                          className={selCls}>
                           <option value="">— —</option>
                           {CATEGORIAS_JOYA.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -1048,7 +1131,7 @@ export function InventarioEmpresaView() {
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
                         <select title="Material" value={form.materialProducto}
                           onChange={e => { const mat=e.target.value as MaterialProducto|""; setForm(f => ({...f,materialProducto:mat,sku:skuAuto?buildSku(f.categoriaJoya,mat,f.figura,f.talla):f.sku})) }}
-                          className={inp+" cursor-pointer"}>
+                          className={selCls}>
                           <option value="">— —</option>
                           {MATERIALES.map(m => <option key={m} value={m}>{m}</option>)}
                         </select>
@@ -1064,17 +1147,16 @@ export function InventarioEmpresaView() {
                           onChange={e => { const fig=e.target.value; setForm(f => ({...f,figura:fig,sku:skuAuto?buildSku(f.categoriaJoya,f.materialProducto,fig,f.talla):f.sku})) }} className={inp}/>
                       </div>
                     </div>
-                  </div>
+                  </SectCollapse>
 
-                  {/* Peso / insumo real (individualización de piezas) */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Peso e insumo (costeo automático)</p>
-                    <div className="grid grid-cols-2 gap-3">
+                  {/* Peso / insumo */}
+                  <SectCollapse title="Peso e insumo (costeo automático)" open={collapse.peso} onToggle={() => toggleSection("peso")}>
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
                         <select title="Material real" value={form.materialInsumo}
                           onChange={e => recalcularCosto({ materialInsumo: e.target.value })}
-                          className={inp+" cursor-pointer"}>
+                          className={selCls}>
                           <option value="">Sin especificar</option>
                           {materiales.map(m => <option key={m.documentId} value={m.documentId}>{m.nombre} {m.precioReferenciaGramo ? `· $${m.precioReferenciaGramo}/g` : ""}</option>)}
                         </select>
@@ -1084,69 +1166,43 @@ export function InventarioEmpresaView() {
                         <input type="number" min="0" step="0.01" placeholder="0.00" value={form.pesoGramos}
                           onChange={e => recalcularCosto({ pesoGramos: e.target.value })} className={inp}/>
                       </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Mano de obra ($)</label>
+                        <input type="number" min="0" step="0.01" placeholder="0.00" value={form.costoManoObra}
+                          onChange={e => recalcularCosto({ costoManoObra: e.target.value })} className={inp}/>
+                      </div>
                     </div>
-                    {!editing && costeoAutomatico && (
-                      <p className="text-[11px] text-violet-500 mt-2">
-                        Costo calculado solo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
-                        {Number(form.costoManoObra) > 0 ? ` + $${form.costoManoObra} mano de obra` : ""} = ${form.costoProduccion}
-                        {Number(form.stock) > 1 ? ` · se descontarán ${(Number(form.pesoGramos) * Number(form.stock)).toFixed(2)}g en total (${form.stock} piezas)` : ""}
-                      </p>
-                    )}
-                    {editing && costeoAutomatico && (
+                    {costeoAutomatico && (
                       <p className="text-[11px] text-slate-600 mt-2">El costo se recalculó con el peso/material actuales — editar aquí no vuelve a descontar material (solo pasa al crear la pieza o al sumar stock).</p>
                     )}
-                  </div>
-
-                  {/* Atributos de joya */}
-                  {form.categoriaJoya && (() => {
-                    const rel = atributosRelevantes(form.categoriaJoya)
-                    return (
-                      <div>
-                        <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Atributos de joya</p>
-                        <div className="grid grid-cols-3 gap-3">
-                          {rel.largo && (
-                            <div>
-                              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Largo (cm)</label>
-                              <input type="number" min="0" step="0.5" placeholder="0" value={form.largoCm}
-                                onChange={e => setForm(f => ({...f, largoCm:e.target.value}))} className={inp}/>
-                            </div>
-                          )}
-                          {rel.cierre && (
-                            <div>
-                              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cierre</label>
-                              <input type="text" placeholder="Mariposa, presión…" value={form.cierre}
-                                onChange={e => setForm(f => ({...f, cierre:e.target.value}))} className={inp}/>
-                            </div>
-                          )}
-                          {rel.piedra && (
-                            <>
-                              <div className="flex items-center gap-2 pt-6">
-                                <input type="checkbox" id="con-piedra" checked={form.conPiedra}
-                                  onChange={e => setForm(f => ({...f, conPiedra:e.target.checked}))}
-                                  className="h-4 w-4 rounded border-slate-600 bg-slate-800"/>
-                                <label htmlFor="con-piedra" className="text-sm text-slate-300">Con piedra</label>
-                              </div>
-                              {form.conPiedra && (
-                                <div className="col-span-2">
-                                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo de piedra</label>
-                                  <input type="text" placeholder="Circonia, zafiro, perla…" value={form.tipoPiedra}
-                                    onChange={e => setForm(f => ({...f, tipoPiedra:e.target.value}))} className={inp}/>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })()}
+                  </SectCollapse>
 
                   {/* Precios y stock */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">Precios y Stock</p>
+                  <SectCollapse title="Precios y Stock" open={collapse.precios} onToggle={() => toggleSection("precios")}>
+                    {Number(form.costoProduccion) > 0 && (
+                      <div className="mb-3 flex items-center gap-2 bg-slate-800/50 border border-slate-700/60 rounded-lg px-3 py-2 flex-wrap">
+                        <span className="text-[11px] text-slate-400 shrink-0">Margen</span>
+                        <input type="number" min={0} max={500} step={5} title="Margen objetivo %"
+                          value={localMargen}
+                          onChange={e => {
+                            const m = Math.max(0, Number(e.target.value))
+                            setLocalMargen(m)
+                            setForm(f => ({ ...f, costo: String(Math.round(Number(f.costoProduccion) * (1 + m / 100) * 100) / 100) }))
+                          }}
+                          className="w-14 h-7 rounded-lg border border-slate-600 bg-slate-900 px-2 text-sm text-center font-mono text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                        />
+                        <span className="text-xs text-slate-500">%</span>
+                        <span className="text-slate-700 text-sm">→</span>
+                        <span className="text-sm font-bold text-violet-400 tabular-nums">
+                          {fmt(Math.round(Number(form.costoProduccion) * (1 + localMargen / 100) * 100) / 100)}
+                        </span>
+                        <span className="text-[10px] text-slate-600 ml-auto hidden sm:block">costo × {(1 + localMargen / 100).toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
-                          Costo ($) {costeoAutomatico && <span className="text-violet-500 normal-case">· automático</span>}
+                          Costo ($) {costeoAutomatico && <span className="text-violet-500 normal-case">· auto</span>}
                         </label>
                         <input type="number" placeholder="0" value={form.costoProduccion} readOnly={costeoAutomatico}
                           onChange={e => setForm(f => ({...f, costoProduccion:e.target.value}))}
@@ -1155,7 +1211,12 @@ export function InventarioEmpresaView() {
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Precio venta ($)</label>
                         <input type="number" placeholder="0" value={form.costo}
-                          onChange={e => setForm(f => ({...f, costo:e.target.value}))} className={inp}/>
+                          onChange={e => {
+                            const price = Number(e.target.value)
+                            const cost  = Number(form.costoProduccion)
+                            setForm(f => ({ ...f, costo: e.target.value }))
+                            if (cost > 0 && price > 0) setLocalMargen(Math.round(((price - cost) / price) * 100))
+                          }} className={inp}/>
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Stock</label>
@@ -1165,12 +1226,27 @@ export function InventarioEmpresaView() {
                     </div>
                     {form.costoProduccion && form.costo && (
                       <p className="text-[11px] mt-2 text-slate-500">
-                        Margen: <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=40?"text-violet-400":"text-violet-400"}`}>
+                        Margen: <span className={`font-semibold ${(margen(Number(form.costoProduccion),Number(form.costo))??0)>=30?"text-violet-400":"text-red-400"}`}>
                           {margen(Number(form.costoProduccion),Number(form.costo))??0}%
                         </span>
                       </p>
                     )}
-                  </div>
+                  </SectCollapse>
+
+                  {/* Ubicación */}
+                  <SectCollapse title="Ubicación" open={collapse.ubicacion} onToggle={() => toggleSection("ubicacion")}>
+                    <div className="rounded-xl border border-slate-800 overflow-hidden">
+                      <UbicToggle checked={form.tiendaActivo} onChange={v => setForm(f => ({...f, tiendaActivo:v}))}
+                        label="Tienda online" desc="Visible en el catálogo de la tienda" icon={Store} />
+                      <div className="h-px bg-slate-800/80 mx-3" />
+                      <UbicToggle checked={form.esFavorito} onChange={v => setForm(f => ({...f, esFavorito:v}))}
+                        label="Favoritos" desc="Aparece en la sección de destacados" icon={Heart} />
+                      <div className="h-px bg-slate-800/80 mx-3" />
+                      <UbicToggle checked={form.puntoVenta} onChange={v => setForm(f => ({...f, puntoVenta:v}))}
+                        label="Punto de venta" desc="Disponible en ventas presenciales" icon={ShoppingBag} />
+                    </div>
+                  </SectCollapse>
+
                 </div>
 
                 <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
