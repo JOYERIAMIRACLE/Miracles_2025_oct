@@ -19,9 +19,16 @@ export interface SegundoCerebroGameHandle {
   addIdentidad: (item: MapaIdentidadType) => void
 }
 
-/* Mundo a 16:9 — llena pantallas anchas comunes sin dejar tanto margen vacío */
+/* Mundo a 16:9 — llena pantallas anchas comunes sin dejar tanto margen vacío.
+   El centro (plaza, jugador, cruce de caminos) sigue siendo MAP_W/2, MAP_H/2
+   — no se toca, para no descuadrar los edificios ya guardados con sus
+   posiciones reales. PAD_X/PAD_Y agregan vacío explorable alrededor de ese
+   mismo centro (simétrico, así el centro no se mueve) para poder navegar en
+   modo aéreo con espacio real de paneo, no solo zoom. */
 const MAP_W = 1600
 const MAP_H = 900
+const PAD_X = 1200
+const PAD_Y = 675
 
 const BOX_W = 150
 const BOX_H = 95
@@ -110,27 +117,30 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           constructor() { super({ key: "SegundoCerebroScene" }) }
 
           create() {
-            this.physics.world.setBounds(0, 0, MAP_W, MAP_H)
-            this.cameras.main.setBounds(0, 0, MAP_W, MAP_H)
+            const worldLeft = -PAD_X, worldTop = -PAD_Y
+            const worldW = MAP_W + PAD_X * 2, worldH = MAP_H + PAD_Y * 2
+            this.physics.world.setBounds(worldLeft, worldTop, worldW, worldH)
+            this.cameras.main.setBounds(worldLeft, worldTop, worldW, worldH)
 
             const bgGfx = this.add.graphics()
 
-            /* ── Fondo (violeta muy oscuro) ── */
+            /* ── Fondo (violeta muy oscuro) — cubre todo el espacio explorable,
+               no solo el núcleo original ── */
             bgGfx.fillStyle(0x0a0714)
-            bgGfx.fillRect(0, 0, MAP_W, MAP_H)
+            bgGfx.fillRect(worldLeft, worldTop, worldW, worldH)
 
             /* ── Cuadrícula ── */
             bgGfx.lineStyle(1, 0x150f24, 0.6)
-            for (let x = 0; x <= MAP_W; x += 48) bgGfx.lineBetween(x, 0, x, MAP_H)
-            for (let y = 0; y <= MAP_H; y += 48) bgGfx.lineBetween(0, y, MAP_W, y)
+            for (let x = worldLeft; x <= worldLeft + worldW; x += 48) bgGfx.lineBetween(x, worldTop, x, worldTop + worldH)
+            for (let y = worldTop; y <= worldTop + worldH; y += 48) bgGfx.lineBetween(worldLeft, y, worldLeft + worldW, y)
 
-            /* ── Caminos principales ── */
+            /* ── Caminos principales — se extienden hasta el borde explorable ── */
             bgGfx.lineStyle(24, 0x120c1f, 1)
-            bgGfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
-            bgGfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
+            bgGfx.lineBetween(worldLeft, MAP_H / 2, worldLeft + worldW, MAP_H / 2)
+            bgGfx.lineBetween(MAP_W / 2, worldTop, MAP_W / 2, worldTop + worldH)
             bgGfx.lineStyle(1, 0x1a1330, 0.8)
-            bgGfx.lineBetween(0, MAP_H / 2, MAP_W, MAP_H / 2)
-            bgGfx.lineBetween(MAP_W / 2, 0, MAP_W / 2, MAP_H)
+            bgGfx.lineBetween(worldLeft, MAP_H / 2, worldLeft + worldW, MAP_H / 2)
+            bgGfx.lineBetween(MAP_W / 2, worldTop, MAP_W / 2, worldTop + worldH)
 
             /* ── Plaza central ── */
             const cx = MAP_W / 2, cy = MAP_H / 2
@@ -145,11 +155,12 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
               color: "#3d2a63", align: "center",
             }).setOrigin(0.5)
 
-            /* ── Puntos ambientales ── */
+            /* ── Puntos ambientales — misma densidad que antes, ahora sobre
+               toda el área explorable (~6x más grande que el núcleo) ── */
             const dotGfx = this.add.graphics()
-            for (let i = 0; i < 80; i++) {
-              const dx = Math.random() * MAP_W
-              const dy = Math.random() * MAP_H
+            for (let i = 0; i < 480; i++) {
+              const dx = worldLeft + Math.random() * worldW
+              const dy = worldTop + Math.random() * worldH
               const alpha = Math.random() * 0.3 + 0.05
               dotGfx.fillStyle(0x3d2a63, alpha)
               dotGfx.fillCircle(dx, dy, 1)
