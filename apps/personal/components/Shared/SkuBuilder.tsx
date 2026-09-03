@@ -129,8 +129,11 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
     if (!label || !step) return
     const code = label.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
                       .replace(/[^A-Z0-9]/g, "").slice(0, 8)
+    const catMap: Record<string, SkuOpcionRaw["categoria"]> = {
+      mat: "material", tipo: "tipo", estilo: "estilo", talla: "talla", extra: "extra",
+    }
     const data: Omit<SkuOpcionRaw, "documentId"> = {
-      categoria: step === "talla" ? "talla" : step === "extra" ? "extra" : step as SkuOpcionRaw["categoria"],
+      categoria: catMap[step!],
       code, label,
       ...(step === "mat"    ? { meta: { kind: extra ?? "silv" } } : {}),
       ...(step === "tipo"   ? { meta: { catJoya: label } } : {}),
