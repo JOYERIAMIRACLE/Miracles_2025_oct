@@ -325,18 +325,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className={lbl.replace("mb-2","mb-0")}>Tipo de pieza</p>
-              <div className="flex items-center gap-2">
-                {tipo && (
-                  <button type="button" disabled={saving}
-                    onClick={() => guardarParcial({ estilo: null, talla: "", extras: [] })}
-                    className="flex items-center gap-1 h-5 px-2 text-[9px] font-mono text-violet-400
-                               bg-violet-500/8 border border-violet-500/20 rounded hover:bg-violet-500/15
-                               transition-colors disabled:opacity-40">
-                    <Plus size={7} /> {mat.code}-{tipo.code}
-                  </button>
-                )}
-                <AddBtn onClick={() => setAddingTo("tipo")} />
-              </div>
+              <AddBtn onClick={() => setAddingTo("tipo")} />
             </div>
             <div className="flex flex-wrap gap-2">
               {tipos.map(t => (
@@ -357,18 +346,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className={lbl.replace("mb-2","mb-0")}>Estilo</p>
-              <div className="flex items-center gap-2">
-                {estilo && (
-                  <button type="button" disabled={saving}
-                    onClick={() => guardarParcial({ talla: "", extras: [] })}
-                    className="flex items-center gap-1 h-5 px-2 text-[9px] font-mono text-violet-400
-                               bg-violet-500/8 border border-violet-500/20 rounded hover:bg-violet-500/15
-                               transition-colors disabled:opacity-40">
-                    <Plus size={7} /> {mat!.code}-{tipo.code}-{estilo.code}
-                  </button>
-                )}
-                <AddBtn onClick={() => setAddingTo("estilo")} />
-              </div>
+              <AddBtn onClick={() => setAddingTo("estilo")} />
             </div>
             <div className="flex flex-wrap gap-2">
               {estilosDisponibles.map(e => (
@@ -389,18 +367,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className={lbl.replace("mb-2","mb-0")}>Talla</p>
-              <div className="flex items-center gap-2">
-                {talla && (
-                  <button type="button" disabled={saving}
-                    onClick={() => guardarParcial({ extras: [] })}
-                    className="flex items-center gap-1 h-5 px-2 text-[9px] font-mono text-violet-400
-                               bg-violet-500/8 border border-violet-500/20 rounded hover:bg-violet-500/15
-                               transition-colors disabled:opacity-40">
-                    <Plus size={7} /> {mat!.code}-{tipo!.code}-{estilo.code}-{talla}
-                  </button>
-                )}
-                <AddBtn onClick={() => setAddingTo("talla")} />
-              </div>
+              <AddBtn onClick={() => setAddingTo("talla")} />
             </div>
             <div className="flex flex-wrap gap-2">
               {tallasDisponibles.map(t => (
