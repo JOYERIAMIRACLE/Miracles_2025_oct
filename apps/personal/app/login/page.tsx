@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, Eye, EyeOff, Mail, Lock, ShoppingBag, Sparkles } from "lucide-react"
-import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRole } from "@/lib/auth"
+import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRole, setSessionCookie } from "@/lib/auth"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -28,7 +28,8 @@ function LoginBrandMark({ logoUrl }: { logoUrl?: string | null }) {
 }
 
 export default function LoginPage() {
-  const router = useRouter()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
   const { identidad } = useGetIdentidad()
   const [email,        setEmail]        = useState("")
   const [password,     setPassword]     = useState("")
@@ -66,7 +67,9 @@ export default function LoginPage() {
       }
       setToken(json.jwt)
       if (role) setUserRole(role)
-      router.push(dest)
+      setSessionCookie()
+      const from = searchParams.get("from")
+      router.push(from && from !== "/login" ? from : dest)
     } catch {
       setError("No se pudo conectar con el servidor")
     } finally {

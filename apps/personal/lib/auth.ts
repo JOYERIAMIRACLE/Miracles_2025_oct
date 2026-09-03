@@ -1,5 +1,17 @@
-const KEY      = "miracles_jwt"
-const ROLE_KEY = "miracles_role"
+const KEY         = "miracles_jwt"
+const ROLE_KEY    = "miracles_role"
+const COOKIE_NAME = "miracles_session"
+const COOKIE_TTL  = 60 * 60 * 24 * 7 // 7 días en segundos
+
+export function setSessionCookie() {
+  if (typeof document === "undefined") return
+  document.cookie = `${COOKIE_NAME}=1; path=/; SameSite=Lax; max-age=${COOKIE_TTL}`
+}
+
+export function clearSessionCookie() {
+  if (typeof document === "undefined") return
+  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0`
+}
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null
@@ -42,6 +54,7 @@ export function removeUserRole() {
 export function logout() {
   removeToken()
   removeUserRole()
+  clearSessionCookie()
 }
 
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
