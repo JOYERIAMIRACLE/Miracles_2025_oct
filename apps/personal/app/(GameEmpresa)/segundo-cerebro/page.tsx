@@ -129,7 +129,7 @@ export default function SegundoCerebroPage() {
       {/* Controles hint */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
         <p className="text-[9px] font-mono text-slate-700 bg-[#0a0714]/80 border border-violet-900/30 px-4 py-1.5 rounded-full">
-          WASD / ↑↓←→ &nbsp;·&nbsp; E para entrar &nbsp;·&nbsp; Arrastra el fondo para moverte &nbsp;·&nbsp; Arrastra una caja o un grupo entero para reposicionar
+          WASD / ↑↓←→ &nbsp;·&nbsp; E para entrar &nbsp;·&nbsp; Arrastra el fondo para moverte &nbsp;·&nbsp; Arrastra una caja o un grupo entero para reposicionar &nbsp;·&nbsp; Clic derecho para quitar del mapa
         </p>
       </div>
 

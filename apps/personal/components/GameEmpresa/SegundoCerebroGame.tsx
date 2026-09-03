@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react"
 import { getIdentidades } from "@/api/mapa-identidad/getIdentidades"
 import { updateIdentidadPosicion } from "@/api/mapa-identidad/updateIdentidadPosicion"
+import { updateIdentidadActivo } from "@/api/mapa-identidad/updateIdentidadActivo"
 import { MapaIdentidadType } from "@/types/mapa-identidad"
 
 interface Props {
@@ -269,6 +270,11 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
               container.add([iconT, labelT])
               container.setSize(BOX_W + 40, BOX_H + 40)
               container.setInteractive({ useHandCursor: true, draggable: true })
+              container.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+                if (!pointer.rightButtonDown()) return
+                const entry = this.buildings.find(b => b.data === item)
+                if (entry) this.requestRemoveBuilding(entry)
+              })
               return { container, data: item, icon: iconT, label: labelT, hex }
             }
 
@@ -320,8 +326,41 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
 
             container.setSize(BOX_W + 40, BOX_H + 40)
             container.setInteractive({ useHandCursor: true, draggable: true })
+            container.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+              if (!pointer.rightButtonDown()) return
+              const entry = this.buildings.find(b => b.data === item)
+              if (entry) this.requestRemoveBuilding(entry)
+            })
 
             return { container, data: item, icon: iconT, label: labelT, hex }
+          }
+
+          /* Click derecho en un edificio (real o placeholder) lo quita del
+             mapa. Soft-delete (activo=false, nunca un DELETE real) — mismo
+             criterio de "nunca perder información" que el resto de la app;
+             sigue existiendo en Strapi por si algún día se quiere de vuelta. */
+          requestRemoveBuilding(entry: BuildingEntry) {
+            if (!window.confirm(`¿Quitar "${entry.data.nombre}" del mapa?`)) return
+            if (this.nearBuilding === entry) {
+              this.nearTween?.stop()
+              this.nearBuilding = null
+            }
+            this.buildings = this.buildings.filter(b => b !== entry)
+            updateIdentidadActivo(entry.data.documentId, false).catch(err => {
+              console.error("No se pudo quitar del mapa:", err)
+            })
+            if (this.reducedMotion) {
+              entry.container.destroy()
+              this.redrawDynamic()
+              return
+            }
+            this.tweens.add({
+              targets: entry.container,
+              scale: 0, alpha: 0,
+              duration: 260,
+              ease: "Cubic.easeIn",
+              onComplete: () => { entry.container.destroy(); this.redrawDynamic() },
+            })
           }
 
           /* Farola: poste + charco de luz cálido en el piso + foco arriba.
@@ -714,6 +753,9 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           input: {
             activePointers: 2,
           },
+          /* Click derecho = quitar edificio del mapa (ver makeBuilding) — sin
+             esto el navegador abriría su menú contextual encima. */
+          disableContextMenu: true,
         }
 
         game = new Phaser.Game(config)
