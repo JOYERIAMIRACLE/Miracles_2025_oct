@@ -40,6 +40,7 @@ const CLICK_THRESHOLD = 6 // px de pantalla — menos que esto = clic, más = ar
 type SceneBridge = {
   setPaused:    (v: boolean) => void
   zoomBy:       (factor: number) => void
+  zoomByEased:  (factor: number) => void
   addBuilding:  (item: MapaIdentidadType) => void
 }
 
@@ -56,8 +57,8 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
     const [loadError,   setLoadError]   = useState("")
 
     useImperativeHandle(ref, () => ({
-      zoomIn:       () => sceneRef.current?.zoomBy(1.25),
-      zoomOut:      () => sceneRef.current?.zoomBy(1 / 1.25),
+      zoomIn:       () => sceneRef.current?.zoomByEased(1.25),
+      zoomOut:      () => sceneRef.current?.zoomByEased(1 / 1.25),
       addIdentidad: item => sceneRef.current?.addBuilding(item),
     }))
 
@@ -109,6 +110,15 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           buildings: BuildingEntry[] = []
           sectorContainers = new Map<Phaser.GameObjects.Container, { sector: string; members: BuildingEntry[] }>()
 
+          /* Vida de videojuego: bamboleo del jugador al caminar, "respiración"
+             del edificio más cercano cuando se puede entrar, y zoom con
+             inercia — todo apagable con prefers-reduced-motion. */
+          reducedMotion = false
+          walkT = 0
+          nearBuilding: BuildingEntry | null = null
+          nearTween: Phaser.Tweens.Tween | null = null
+          activeDragTarget: Phaser.GameObjects.Container | null = null
+
           isPanning = false
           dragMoved = false
           dragStartScreen = { x: 0, y: 0 }
@@ -117,6 +127,9 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           constructor() { super({ key: "SegundoCerebroScene" }) }
 
           create() {
+            this.reducedMotion = typeof window !== "undefined"
+              && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
+
             const worldLeft = -PAD_X, worldTop = -PAD_Y
             const worldW = MAP_W + PAD_X * 2, worldH = MAP_H + PAD_Y * 2
             this.physics.world.setBounds(worldLeft, worldTop, worldW, worldH)
@@ -217,6 +230,7 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             sceneRef.current = {
               setPaused:   v => this.setPaused(v),
               zoomBy:      f => this.zoomBy(f),
+              zoomByEased: f => this.zoomByEased(f),
               addBuilding: item => this.addBuildingLive(item),
             }
             this.setPaused(pausedRef.current)
@@ -359,8 +373,20 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           /* Agrega una identidad nueva en vivo (después de crearla desde el
              formulario del "+") sin recargar la página. */
           addBuildingLive(item: MapaIdentidadType) {
-            this.buildings.push(this.makeBuilding(item))
+            const entry = this.makeBuilding(item)
+            this.buildings.push(entry)
             this.redrawDynamic()
+
+            /* Mismo lenguaje de "pop" que ya usa popBuilding al entrar a un
+               edificio (Back.easeOut) — no un efecto nuevo, el mismo. */
+            if (this.reducedMotion) return
+            entry.container.setScale(0)
+            this.tweens.add({
+              targets: entry.container,
+              scale: { from: 0, to: 1 },
+              duration: 380,
+              ease: "Back.easeOut",
+            })
           }
 
           /* Cámara libre: arrastrar sobre espacio vacío mueve la cámara; la
@@ -393,22 +419,39 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
               cam.scrollY -= (pointer.y - pointer.prevPosition.y) / cam.zoom
             })
             this.input.on("wheel", (_p: Phaser.Input.Pointer, _go: unknown, _dx: number, deltaY: number) => {
-              this.zoomBy(deltaY > 0 ? 0.9 : 1.1)
+              this.zoomByEased(deltaY > 0 ? 0.9 : 1.1)
             })
           }
 
+          /* Instantáneo — para el pellizco de dos dedos, que ya es un gesto
+             continuo; agregarle inercia encima lo haría sentir con retraso. */
           zoomBy(factor: number) {
             const cam = this.cameras.main
             cam.zoom = Phaser.Math.Clamp(cam.zoom * factor, MIN_ZOOM, MAX_ZOOM)
+          }
+
+          /* Con inercia — para gestos discretos (un tick de rueda, un click
+             en +/-), donde el salto instantáneo se siente brusco. */
+          zoomByEased(factor: number) {
+            const cam = this.cameras.main
+            const target = Phaser.Math.Clamp(cam.zoom * factor, MIN_ZOOM, MAX_ZOOM)
+            if (this.reducedMotion) { cam.zoom = target; return }
+            this.tweens.add({ targets: cam, zoom: target, duration: 180, ease: "Cubic.easeOut" })
           }
 
           /* Arrastrar una caja la mueve; arrastrar el fondo de un sector mueve
              TODO el grupo junto. Si el movimiento fue mínimo, cuenta como
              clic normal (entrar a la zona) en vez de arrastre. */
           setupDragControls() {
-            this.input.on("dragstart", (pointer: Phaser.Input.Pointer) => {
+            this.input.on("dragstart", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
               this.dragMoved = false
               this.dragStartScreen = { x: pointer.x, y: pointer.y }
+
+              const container = gameObject as Phaser.GameObjects.Container
+              this.activeDragTarget = container
+              if (!this.reducedMotion) {
+                this.tweens.add({ targets: container, scale: 1.06, duration: 120, ease: "Cubic.easeOut" })
+              }
             })
 
             this.input.on("drag", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
@@ -439,6 +482,13 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
 
             this.input.on("dragend", (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
               const container = gameObject as Phaser.GameObjects.Container
+
+              this.activeDragTarget = null
+              if (!this.reducedMotion) {
+                this.tweens.add({ targets: container, scale: 1, duration: 150, ease: "Cubic.easeOut" })
+              } else {
+                container.setScale(1)
+              }
 
               const sectorInfo = this.sectorContainers.get(container)
               if (sectorInfo) {
@@ -500,7 +550,7 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             })
           }
 
-          update() {
+          update(_time: number, delta: number) {
             if (this.gamePaused) return
 
             const body  = this.player.body as Phaser.Physics.Arcade.Body
@@ -512,12 +562,29 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             const right = this.cursors.right.isDown || this.d.isDown
             const up    = this.cursors.up.isDown    || this.w.isDown
             const down  = this.cursors.down.isDown  || this.s.isDown
+            const moving = left || right || up || down
 
             if (left)  body.setVelocityX(-SPEED)
             if (right) body.setVelocityX(SPEED)
             if (up)    body.setVelocityY(-SPEED)
             if (down)  body.setVelocityY(SPEED)
             if ((left || right) && (up || down)) body.velocity.normalize().scale(SPEED)
+
+            /* Bamboleo al caminar — nada de esto si el jugador pidió menos
+               movimiento; el desplazamiento en sí (que sí importa para saber
+               "dónde estoy") se conserva siempre. */
+            if (!this.reducedMotion) {
+              if (moving) {
+                this.walkT += delta
+                const bob = Math.sin(this.walkT / 85) * 0.14
+                this.player.setScale(1 - bob * 0.4, 1 + bob)
+                this.playerGlow.setScale(1 - bob * 0.4, 1 + bob)
+              } else {
+                this.walkT = 0
+                this.player.setScale(1, 1)
+                this.playerGlow.setScale(1, 1)
+              }
+            }
 
             this.playerGlow.setPosition(this.player.x, this.player.y)
 
@@ -529,9 +596,34 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
               if (dx < BOX_W / 2 + 20 && dy < BOX_H / 2 + 20) { found = b; break }
             }
 
+            /* El edificio al que te puedes acercar "respira" mientras estás
+               cerca — refuerzo visual del prompt "[E] ENTRAR", no un efecto
+               suelto. Se detiene solo si ese edificio se está arrastrando. */
+            if (found !== this.nearBuilding) {
+              if (this.nearBuilding) {
+                this.nearTween?.stop()
+                if (this.nearBuilding.container !== this.activeDragTarget) {
+                  this.tweens.add({ targets: this.nearBuilding.container, scale: 1, duration: 160, ease: "Cubic.easeOut" })
+                }
+              }
+              this.nearBuilding = found
+              if (found && !this.reducedMotion && found.container !== this.activeDragTarget) {
+                this.nearTween = this.tweens.add({
+                  targets: found.container,
+                  scale: { from: 1, to: 1.045 },
+                  duration: 700,
+                  yoyo: true,
+                  repeat: -1,
+                  ease: "Sine.easeInOut",
+                })
+              }
+            }
+
             if (found) {
               this.prompt.setPosition(found.container.x, found.container.y - BOX_H / 2 - 18).setAlpha(this.prompt.alpha || 0.7)
               if (Phaser.Input.Keyboard.JustDown(this.eKey)) {
+                this.nearTween?.stop()
+                found.container.setScale(1)
                 this.popBuilding(found)
                 callbackRef.current(found.data.moduleId!)
               }
