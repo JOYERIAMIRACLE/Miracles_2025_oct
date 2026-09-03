@@ -107,6 +107,8 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
           gamePaused = false
 
           pathsGfx!:  Phaser.GameObjects.Graphics
+          staticLamps:  Phaser.GameObjects.Container[] = []
+          dynamicLamps: Phaser.GameObjects.Container[] = []
           buildings: BuildingEntry[] = []
           sectorContainers = new Map<Phaser.GameObjects.Container, { sector: string; members: BuildingEntry[] }>()
 
@@ -154,6 +156,15 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             bgGfx.lineStyle(1, 0x1a1330, 0.8)
             bgGfx.lineBetween(worldLeft, MAP_H / 2, worldLeft + worldW, MAP_H / 2)
             bgGfx.lineBetween(MAP_W / 2, worldTop, MAP_W / 2, worldTop + worldH)
+
+            /* ── Farolas de las avenidas principales — no se vuelven a
+               calcular nunca, las avenidas no se mueven ── */
+            this.staticLamps.push(
+              ...this.placeLampsAlong(worldLeft, MAP_H / 2, MAP_W / 2 - 110, MAP_H / 2, 190, 40),
+              ...this.placeLampsAlong(MAP_W / 2 + 110, MAP_H / 2, worldLeft + worldW, MAP_H / 2, 190, 40),
+              ...this.placeLampsAlong(MAP_W / 2, worldTop, MAP_W / 2, MAP_H / 2 - 110, 190, 40),
+              ...this.placeLampsAlong(MAP_W / 2, MAP_H / 2 + 110, MAP_W / 2, worldTop + worldH, 190, 40),
+            )
 
             /* ── Plaza central ── */
             const cx = MAP_W / 2, cy = MAP_H / 2
@@ -313,6 +324,55 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             return { container, data: item, icon: iconT, label: labelT, hex }
           }
 
+          /* Farola: poste + charco de luz cálido en el piso + foco arriba.
+             Cálido a propósito — es luz de calle, no de ningún edificio, así
+             que no compite con "cada edificio es dueño de su color" ni con
+             el cian exclusivo del jugador. Respira suave si hay movimiento. */
+          makeLamp(x: number, y: number): Phaser.GameObjects.Container {
+            const c = this.add.container(x, y)
+            /* Sin profundidad negativa a propósito: bgGfx (el fondo, cuadrícula
+               y avenidas) es opaco y se dibuja primero — cualquier cosa con
+               profundidad < 0 queda tapada debajo de ese relleno sólido. Con
+               profundidad por default (0) y creada DESPUÉS de bgGfx, la
+               farola pinta encima del fondo por orden de inserción, que es
+               lo que se necesita para que se vea. */
+            const gfx = this.add.graphics()
+            gfx.fillStyle(0x1a1330, 1)
+            gfx.fillRect(-1.5, -14, 3, 14)
+            gfx.fillStyle(0xffb877, 0.045)
+            gfx.fillCircle(0, 1, 34)
+            gfx.fillStyle(0xffb877, 0.08)
+            gfx.fillCircle(0, 1, 18)
+            gfx.fillStyle(0xffb877, 0.25)
+            gfx.fillCircle(0, -14, 7)
+            gfx.fillStyle(0xffb877, 0.9)
+            gfx.fillCircle(0, -14, 2.5)
+            c.add(gfx)
+            if (!this.reducedMotion) {
+              this.tweens.add({
+                targets: gfx, alpha: { from: 0.7, to: 1 },
+                duration: 1300 + Math.random() * 900, delay: Math.random() * 800,
+                yoyo: true, repeat: -1, ease: "Sine.easeInOut",
+              })
+            }
+            return c
+          }
+
+          /* Reparte farolas a lo largo de un tramo recto, dejando margen en
+             ambas puntas (para no encimarlas con la plaza o un edificio). */
+          placeLampsAlong(x1: number, y1: number, x2: number, y2: number, step: number, margin: number): Phaser.GameObjects.Container[] {
+            const dist = Phaser.Math.Distance.Between(x1, y1, x2, y2)
+            const usable = dist - margin * 2
+            if (usable < step * 0.5) return []
+            const count = Math.max(1, Math.round(usable / step))
+            const lamps: Phaser.GameObjects.Container[] = []
+            for (let i = 1; i <= count; i++) {
+              const t = (margin + (usable * i) / (count + 1)) / dist
+              lamps.push(this.makeLamp(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t))
+            }
+            return lamps
+          }
+
           /* Recalcula los contenedores de sector (arrastrables como grupo) + los
              caminos a la plaza, a partir de las posiciones ACTUALES de cada
              caja — se llama al cargar, al soltar un arrastre, y al agregar una
@@ -322,11 +382,14 @@ export const SegundoCerebroGame = forwardRef<SegundoCerebroGameHandle, Props>(
             this.pathsGfx.clear()
             this.sectorContainers.forEach((_info, container) => container.destroy())
             this.sectorContainers.clear()
+            this.dynamicLamps.forEach(l => l.destroy())
+            this.dynamicLamps = []
 
             const cx = MAP_W / 2, cy = MAP_H / 2
             this.pathsGfx.lineStyle(10, 0x0f0a1a, 1)
             this.buildings.forEach(b => {
               this.pathsGfx.lineBetween(b.container.x, b.container.y, cx, cy)
+              this.dynamicLamps.push(...this.placeLampsAlong(b.container.x, b.container.y, cx, cy, 130, 80))
             })
 
             const bySector = new Map<string, BuildingEntry[]>()
