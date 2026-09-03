@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sku_opciones",
+  "info": {
+    "singularName": "sku-opcion",
+    "pluralName": "sku-opciones",
+    "displayName": "SKU Opción"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "categoria": {
+      "type": "enumeration",
+      "enum": ["material", "tipo", "estilo", "talla", "extra", "piedra"],
+      "required": true
+    },
+    "code": {
+      "type": "string",
+      "required": true
+    },
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "parentCode": {
+      "type": "string"
+    },
+    "meta": {
+      "type": "json"
+    },
+    "orden": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}
