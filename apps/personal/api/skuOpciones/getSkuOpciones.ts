@@ -34,12 +34,19 @@ export async function createSkuOpcion(
   data: Omit<SkuOpcionRaw, "documentId">
 ): Promise<SkuOpcionRaw | null> {
   try {
+    const headers = { "Content-Type": "application/json", ...authHeaders() }
     const res = await fetch(URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers,
       body: JSON.stringify({ data }),
     })
     const json = await res.json()
+    if (!res.ok) {
+      console.warn("[sku-opcion] POST falló", res.status, json?.error?.message ?? json)
+    }
     return json.data ?? null
-  } catch { return null }
+  } catch (e) {
+    console.error("[sku-opcion] POST excepción", e)
+    return null
+  }
 }
