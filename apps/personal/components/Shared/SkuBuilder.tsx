@@ -157,37 +157,35 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
     }
   }
 
-  // ── opciones derivadas (server si cargó, fallback a estáticas) ─────────────
-  const useSrv = (cat: SkuOpcionRaw["categoria"]) =>
-    loaded && serverOps.some(o => o.categoria === cat)
+  // ── opciones derivadas: siempre base estática + extras del servidor ─────────
+  function mergeOps<T extends { code: string }>(base: T[], srv: T[]): T[] {
+    const baseCodes = new Set(base.map(o => o.code))
+    return [...base, ...srv.filter(o => !baseCodes.has(o.code))]
+  }
 
-  const materiales = useSrv("material")
-    ? serverOps.filter(o => o.categoria === "material").map(toMat)
-    : MATERIALES_SKU
+  const srvMat     = serverOps.filter(o => o.categoria === "material").map(toMat)
+  const srvTipo    = serverOps.filter(o => o.categoria === "tipo").map(toTipo)
+  const srvExtras  = serverOps.filter(o => o.categoria === "extra")
+  const srvPiedras = serverOps.filter(o => o.categoria === "piedra")
 
-  const tipos = useSrv("tipo")
-    ? serverOps.filter(o => o.categoria === "tipo").map(toTipo)
-    : TIPOS_SKU
+  const materiales = mergeOps(MATERIALES_SKU, srvMat)
+  const tipos      = mergeOps(TIPOS_SKU, srvTipo)
+  const extrasOpciones  = mergeOps(EXTRAS_SKU,  srvExtras)
+  const piedrasOpciones = mergeOps(PIEDRAS_SKU, srvPiedras)
 
-  const estilosDisponibles = tipo
-    ? (loaded && serverOps.some(o => o.categoria === "estilo" && o.parentCode === tipo.code)
-        ? serverOps.filter(o => o.categoria === "estilo" && o.parentCode === tipo.code).map(toEstilo)
-        : (ESTILOS_SKU[tipo.code] ?? []))
-    : []
+  const estilosDisponibles = tipo ? (() => {
+    const base = ESTILOS_SKU[tipo.code] ?? []
+    const srv  = serverOps.filter(o => o.categoria === "estilo" && o.parentCode === tipo.code).map(toEstilo)
+    return mergeOps(base, srv)
+  })() : []
 
-  const tallasDisponibles = tipo
-    ? (loaded && serverOps.some(o => o.categoria === "talla" && o.parentCode === tipo.code)
-        ? serverOps.filter(o => o.categoria === "talla" && o.parentCode === tipo.code).map(o => o.code)
-        : (TALLAS_SKU[tipo.code] ?? []))
-    : []
-
-  const extrasOpciones = useSrv("extra")
-    ? serverOps.filter(o => o.categoria === "extra")
-    : EXTRAS_SKU
-
-  const piedrasOpciones = useSrv("piedra")
-    ? serverOps.filter(o => o.categoria === "piedra")
-    : PIEDRAS_SKU
+  const tallasDisponibles = tipo ? (() => {
+    const base    = TALLAS_SKU[tipo.code] ?? []
+    const srvCods = serverOps
+      .filter(o => o.categoria === "talla" && o.parentCode === tipo.code)
+      .map(o => o.code)
+    return [...base, ...srvCods.filter(c => !base.includes(c))]
+  })() : []
 
   // ── lógica del wizard ──────────────────────────────────────────────────────
   const step      = !mat ? "mat" : !tipo ? "tipo" : !estilo ? "estilo" : !talla ? "talla" : "extras"
