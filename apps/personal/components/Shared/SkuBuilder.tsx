@@ -122,7 +122,8 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
 
   // ── mini-form "+" ──────────────────────────────────────────────────────────
   type AddingStep = "mat" | "tipo" | "estilo" | "talla" | "extra" | null
-  const [addingTo, setAddingTo] = useState<AddingStep>(null)
+  const [addingTo,   setAddingTo]   = useState<AddingStep>(null)
+  const [saveWarn,   setSaveWarn]   = useState<string | null>(null)
 
   async function handleAdd(step: AddingStep, label: string, extra?: string) {
     if (!label || !step) return
@@ -136,9 +137,21 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
       ...(step === "estilo" ? { parentCode: tipo?.code } : {}),
       ...(step === "talla"  ? { parentCode: tipo?.code } : {}),
     }
-    const created = await createSkuOpcion(data)
-    if (created) setServerOps(prev => [...prev, created])
+    // Optimistic: agrega inmediatamente aunque Strapi falle
+    const tempId = `local-${Date.now()}`
+    const tempEntry: SkuOpcionRaw = { documentId: tempId, ...data }
+    setServerOps(prev => [...prev, tempEntry])
     setAddingTo(null)
+    setSaveWarn(null)
+
+    const created = await createSkuOpcion(data)
+    if (created) {
+      // reemplaza el temporal con el real (con documentId real de Strapi)
+      setServerOps(prev => prev.map(o => o.documentId === tempId ? created : o))
+    } else {
+      // Strapi rechazó — la opción queda solo en esta sesión
+      setSaveWarn(`"${label}" agregado solo en esta sesión. Activa el permiso "create" en Strapi Admin → Roles → Public → Sku-opcion para persistirlo.`)
+    }
   }
 
   // ── opciones derivadas (server si cargó, fallback a estáticas) ─────────────
@@ -250,6 +263,11 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
             Paso a paso: Material → Tipo → Estilo → Talla → Extras
             {loaded && <span className="ml-1.5 text-violet-500/60">· catálogo en línea</span>}
           </p>
+          {saveWarn && (
+            <p className="text-[10px] text-amber-400/80 mt-1 leading-snug max-w-xs">
+              ⚠ {saveWarn}
+            </p>
+          )}
         </div>
         {onClose && (
           <button type="button" onClick={onClose}
