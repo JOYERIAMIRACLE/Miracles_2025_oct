@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Check, ChevronRight, Loader2, X } from "lucide-react"
+import { Check, ChevronRight, Loader2, X, Plus } from "lucide-react"
 import {
   MATERIALES_SKU, TIPOS_SKU, ESTILOS_SKU, TALLAS_SKU, EXTRAS_SKU, PIEDRAS_SKU,
   SkuEntry, buildSku, buildNombre,
