@@ -150,7 +150,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
       setServerOps(prev => prev.map(o => o.documentId === tempId ? created : o))
     } else {
       // Strapi rechazó — la opción queda solo en esta sesión
-      setSaveWarn(`"${label}" agregado solo en esta sesión. Activa el permiso "create" en Strapi Admin → Roles → Public → Sku-opcion para persistirlo.`)
+      setSaveWarn(`"${label}" agregado solo en esta sesión. Activa el permiso "create" en Strapi Admin → Roles → Authenticated → Sku-opcion para persistirlo.`)
     }
   }
 
