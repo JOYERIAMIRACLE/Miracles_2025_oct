@@ -20,14 +20,32 @@ export type SkuOpcionRaw = {
 
 export async function fetchSkuOpciones(): Promise<SkuOpcionRaw[]> {
   try {
+    const headers = authHeaders()
     const res = await fetch(
       `${URL}?pagination[pageSize]=300&sort=orden:asc,label:asc`,
-      { cache: "no-store" }
+      { cache: "no-store", headers }
     )
-    if (!res.ok) return []
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      console.warn("[sku-opcion] GET falló", res.status, err?.error?.message ?? "")
+      return []
+    }
     const json = await res.json()
     return (json.data ?? []) as SkuOpcionRaw[]
-  } catch { return [] }
+  } catch (e) {
+    console.error("[sku-opcion] GET excepción", e)
+    return []
+  }
+}
+
+export async function deleteSkuOpcion(documentId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${URL}/${documentId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    })
+    return res.ok
+  } catch { return false }
 }
 
 export async function createSkuOpcion(

@@ -910,8 +910,11 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                     </p>
                   </div>
                 </div>
-                {/* Barra de progreso — segmento previo (claro) + actual (sólido) */}
-                <div className="h-1.5 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                {/* Barra de progreso — segmento previo (claro) + actual (sólido).
+                    Track con contraste explícito (no solo un tono más del
+                    mismo gris del panel): en fondo oscuro se perdía casi
+                    por completo contra el resto del modal. */}
+                <div className="h-2 bg-slate-200 dark:bg-slate-950 border-y border-slate-300/60 dark:border-slate-700/60 overflow-hidden">
                   {gHistorial > 0 ? (
                     <div className="h-full flex">
                       <div className="h-full bg-violet-400/40 shrink-0" style={{ width: `${pctHistorial}%` }} />
