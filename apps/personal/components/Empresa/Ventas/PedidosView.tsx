@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, X, Loader2, Package, Trash2, Lock, FileText, ChevronDown, ChevronRight, Search, Paperclip, ArrowLeft } from "lucide-react"
+import { Plus, X, Loader2, Package, Trash2, Lock, FileText, ChevronDown, ChevronRight, Search, Paperclip, ArrowLeft, Ban } from "lucide-react"
 import { toast } from "sonner"
 import { useGetVentas, createVenta, updateVenta, deleteVenta } from "@/api/ventaEmpresa/getVentas"
 import { useGetAllCotizaciones, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -12,6 +12,7 @@ import { createVentaLinea, updateVentaLinea, deleteVentaLinea } from "@/api/vent
 import { uploadMedia } from "@/lib/upload"
 import { ProductoSearch } from "./ProductoSearch"
 import { ListToolbar } from "./ListToolbar"
+import { confirmDialog } from "../ConfirmDialog"
 import {
   VentaEmpresa, VentaPayload,
   ESTADOS_VENTA, EstadoVenta, ESTADO_VENTA_COLOR,
@@ -69,7 +70,7 @@ function emptyForm(): VentaPayload {
   }
 }
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+const inp = "w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
 
 export function PedidosView() {
   const { ventas: raw, setVentas, loading } = useGetVentas()
@@ -90,6 +91,7 @@ export function PedidosView() {
   const [montoAuto,    setMontoAuto]    = useState(true)
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
+  const [cancelId,  setCancelId]  = useState<string | null>(null)
 
   // Cotización de origen (opcional, solo al crear) — al elegirla, el pedido
   // hereda cliente/líneas/monto reales de esa cotización en vez de volver a
@@ -303,8 +305,14 @@ export function PedidosView() {
     if (lineasEditables && aplicaStockObjetivo) {
       const faltantes = calcularFaltantesLineas(lineasValidas, productos)
       if (faltantes.length > 0) {
-        const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`).join("\n")
-        if (!confirm(`Stock insuficiente para:\n\n${detalle}\n\n¿Continuar de todas formas?`)) return
+        const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`)
+        const ok = await confirmDialog({
+          title: "Stock insuficiente",
+          message: detalle,
+          confirmLabel: "Continuar de todas formas",
+          variant: "action",
+        })
+        if (!ok) return
       }
     }
 
@@ -375,10 +383,22 @@ export function PedidosView() {
       await deleteVenta(documentId)
       setVentas(prev => prev.filter(v => v.documentId !== documentId))
       toast.success("Pedido eliminado")
-    } catch {
-      toast.error("No se pudo eliminar")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar")
     } finally {
       setDelId(null)
+    }
+  }
+
+  async function handleCancelar(documentId: string) {
+    try {
+      const actualizado = await updateVenta(documentId, { estado: "Cancelado" })
+      setVentas(prev => prev.map(v => v.documentId === documentId ? actualizado : v))
+      toast.success("Pedido cancelado — stock y pagos revertidos")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo cancelar")
+    } finally {
+      setCancelId(null)
     }
   }
 
@@ -392,7 +412,7 @@ export function PedidosView() {
       <div className="p-4 md:p-6 space-y-5">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <button type="button" onClick={() => { setClienteView(null); setFiltroEst("") }}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">
             <ArrowLeft size={14} /> Volver a Pedidos
           </button>
           <button type="button" onClick={openNuevo}
@@ -403,64 +423,75 @@ export function PedidosView() {
 
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl font-bold text-slate-100">{nombreCliente}</span>
-            <span className="text-sm text-slate-500">· {pedidosDeCliente.length} pedido{pedidosDeCliente.length !== 1 ? "s" : ""}</span>
+            <span className="text-xl font-bold text-slate-900 dark:text-slate-100">{nombreCliente}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-500">· {pedidosDeCliente.length} pedido{pedidosDeCliente.length !== 1 ? "s" : ""}</span>
           </div>
           <div className="flex items-center gap-2 ml-auto">
             {ESTADOS_VENTA.map(e => (
               <button key={e} type="button" onClick={() => setFiltroEst(filtroEst === e ? "" : e)}
-                className={`text-[11px] px-2.5 py-1 rounded-full border font-medium transition ${filtroEst === e ? ESTADO_VENTA_COLOR[e] : "border-slate-700 text-slate-500 hover:text-slate-300"}`}>
+                className={`text-[11px] px-2.5 py-1 rounded-full border font-medium transition ${filtroEst === e ? ESTADO_VENTA_COLOR[e] : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
                 {e}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-800 bg-slate-950/50">
+              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                 <tr>
                   {["Concepto", "Canal", "Fecha", "Estado", "Monto", ""].map(h => (
-                    <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                 {pedidosDeCliente.map(v => (
-                  <tr key={v.documentId} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  <tr key={v.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
                     onClick={() => openEditar(v)}>
                     <td className="px-4 py-3">
-                      {v.numero && <p className="text-[10px] font-bold font-mono text-slate-500">{v.numero}</p>}
-                      <p className="font-medium text-slate-200 leading-snug">{v.concepto}</p>
-                      {v.cotizacionOrigen && <p className="text-[10px] text-emerald-500/80 mt-0.5">← {v.cotizacionOrigen.numero}</p>}
+                      {v.numero && <p className="text-[10px] font-bold font-mono text-slate-500 dark:text-slate-500">{v.numero}</p>}
+                      <p className="font-medium text-slate-800 dark:text-slate-200 leading-snug">{v.concepto}</p>
+                      {v.cotizacionOrigen && <p className="text-[10px] text-emerald-600 dark:text-emerald-500/80 mt-0.5">← {v.cotizacionOrigen.numero}</p>}
                     </td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{v.centro_venta?.nombre ?? <span className="text-slate-600">—</span>}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">{v.fecha ? fmtFecha(v.fecha) : "—"}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{v.centro_venta?.nombre ?? <span className="text-slate-400 dark:text-slate-600">—</span>}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{v.fecha ? fmtFecha(v.fecha) : "—"}</td>
                     <td className="px-4 py-3">
                       {v.estado
                         ? <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
-                        : <span className="text-slate-600 text-xs">—</span>}
+                        : <span className="text-slate-400 dark:text-slate-600 text-xs">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(v.monto)}</td>
+                    <td className="px-4 py-3 text-violet-600 dark:text-violet-400 font-semibold">{fmt(v.monto)}</td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       {delId === v.documentId ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] text-slate-500">¿Eliminar?</span>
-                          <button type="button" onClick={() => handleDelete(v.documentId)} className="text-[11px] text-red-400 font-medium">Sí</button>
-                          <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500">No</button>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-500">¿Eliminar?</span>
+                          <button type="button" onClick={() => handleDelete(v.documentId)} className="text-[11px] text-red-600 dark:text-red-400 font-medium">Sí</button>
+                          <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500 dark:text-slate-500">No</button>
+                        </div>
+                      ) : cancelId === v.documentId ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-500 whitespace-nowrap">¿Cancelar? Revierte stock y pagos</span>
+                          <button type="button" onClick={() => handleCancelar(v.documentId)} className="text-[11px] text-red-600 dark:text-red-400 font-medium">Sí</button>
+                          <button type="button" onClick={() => setCancelId(null)} className="text-[11px] text-slate-500 dark:text-slate-500">No</button>
+                        </div>
+                      ) : v.estado === "Cotizado" || v.estado === "Cancelado" ? (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button type="button" onClick={() => setDelId(v.documentId)}
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
                         </div>
                       ) : (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button type="button" onClick={() => setDelId(v.documentId)}
-                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
+                          <button type="button" onClick={() => setCancelId(v.documentId)} title="Cancelar pedido"
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Ban size={13} /></button>
                         </div>
                       )}
                     </td>
                   </tr>
                 ))}
                 {pedidosDeCliente.length === 0 && (
-                  <tr><td colSpan={6} className="py-10 text-center text-slate-600 text-sm">Sin pedidos{filtroEst ? ` con estado "${filtroEst}"` : ""}.</td></tr>
+                  <tr><td colSpan={6} className="py-10 text-center text-slate-400 dark:text-slate-600 text-sm">Sin pedidos{filtroEst ? ` con estado "${filtroEst}"` : ""}.</td></tr>
                 )}
               </tbody>
             </table>
@@ -485,8 +516,8 @@ export function PedidosView() {
             metricas={[
               { label: "Clientes",  value: grupos.length },
               { label: "Pedidos",   value: totales.total },
-              { label: "En proceso", value: totales.activos,           colorClass: "text-violet-400" },
-              { label: "Entregados", value: totales.entregados,        colorClass: "text-violet-400" },
+              { label: "En proceso", value: totales.activos,           colorClass: "text-violet-600 dark:text-violet-400" },
+              { label: "Entregados", value: totales.entregados,        colorClass: "text-violet-600 dark:text-violet-400" },
             ]}
           />
         </div>
@@ -496,47 +527,47 @@ export function PedidosView() {
         </button>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
               <tr>
                 {["Cliente", "Pedidos", "Estado activo", "Monto total", "Última fecha", ""].map(h => (
-                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {loading && Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
-                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td>
+                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td>
                 ))}</tr>
               ))}
               {!loading && gruposFiltrados.map(g => (
-                <tr key={g.key} className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                <tr key={g.key} className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
                   onClick={() => setClienteView(g.key)}>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-200">{g.nombre}</p>
+                    <p className="font-medium text-slate-800 dark:text-slate-200">{g.nombre}</p>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">
-                    <span className="font-semibold text-slate-200">{g.pedidos.length}</span> pedido{g.pedidos.length !== 1 ? "s" : ""}
+                  <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{g.pedidos.length}</span> pedido{g.pedidos.length !== 1 ? "s" : ""}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${ESTADO_VENTA_COLOR[g.estadoPrincipal]}`}>
                       {g.estadoPrincipal}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-violet-400 font-semibold">{fmt(g.montoTotal)}</td>
-                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{g.ultimaFecha ? fmtFecha(g.ultimaFecha) : "—"}</td>
+                  <td className="px-4 py-3 text-violet-600 dark:text-violet-400 font-semibold">{fmt(g.montoTotal)}</td>
+                  <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap">{g.ultimaFecha ? fmtFecha(g.ultimaFecha) : "—"}</td>
                   <td className="px-4 py-3">
-                    <ChevronRight size={14} className="text-slate-700 group-hover:text-violet-400 transition-colors" />
+                    <ChevronRight size={14} className="text-slate-300 dark:text-slate-700 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors" />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           {!loading && gruposFiltrados.length === 0 && (
-            <div className="py-14 text-center text-slate-600 text-sm">
+            <div className="py-14 text-center text-slate-400 dark:text-slate-600 text-sm">
               {search ? "Sin clientes para esa búsqueda." : "No hay pedidos registrados."}
             </div>
           )}
@@ -552,11 +583,11 @@ export function PedidosView() {
   // nuevo desde el botón "+ Nuevo pedido" (ahí no hay una fila que expandir).
   function renderPedidoForm() {
     const tarjeta = (
-          <div className={editing ? "bg-slate-900 border border-slate-700 rounded-xl" : "w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl"}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
-              <h2 className="text-sm font-semibold text-slate-100">{editing ? `Pedido ${editing.numero ?? ""}` : "Nuevo pedido"}</h2>
+          <div className={editing ? "bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl" : "w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl"}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? `Pedido ${editing.numero ?? ""}` : "Nuevo pedido"}</h2>
               {!editing && (
-                <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800">
+                <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
                   <X size={16} />
                 </button>
               )}
@@ -570,40 +601,40 @@ export function PedidosView() {
                   pierda sin importar por dónde se cree el pedido. */}
               {!editing && (
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Cotización de origen (opcional)</label>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Cotización de origen (opcional)</label>
                   <div ref={cotRef} className="relative">
                     <button type="button" onClick={() => setCotOpen(o => !o)}
                       className={inp + " cursor-pointer flex items-center gap-2 text-left"}>
-                      <FileText size={13} className="text-slate-500 shrink-0" />
-                      <span className={`flex-1 truncate ${cotizacionOrigen ? "text-slate-100" : "text-slate-500"}`}>
+                      <FileText size={13} className="text-slate-500 dark:text-slate-500 shrink-0" />
+                      <span className={`flex-1 truncate ${cotizacionOrigen ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-500"}`}>
                         {cotizacionOrigen ? `${cotizacionOrigen.numero} — ${cotizacionOrigen.cliente?.nombre ?? "sin cliente"} · ${fmt(cotizacionOrigen.total)}` : "Sin cotización — capturar a mano"}
                       </span>
-                      <ChevronDown size={13} className={`text-slate-500 shrink-0 transition-transform ${cotOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown size={13} className={`text-slate-500 dark:text-slate-500 shrink-0 transition-transform ${cotOpen ? "rotate-180" : ""}`} />
                     </button>
                     {cotOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-slate-900 border border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
                         <div className="px-2 pt-2 pb-1">
                           <div className="relative">
-                            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-500" />
                             <input autoFocus value={cotQuery} onChange={e => setCotQuery(e.target.value)}
                               placeholder="Buscar por número o cliente…"
-                              className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-500 outline-none focus:border-violet-500" />
+                              className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 outline-none focus:border-violet-500" />
                           </div>
                         </div>
                         <div className="max-h-48 overflow-y-auto py-1">
                           <button type="button" onClick={() => elegirCotizacion(null)}
-                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${!cotizacionOrigen ? "text-violet-400 font-medium" : "text-slate-500"}`}>
+                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${!cotizacionOrigen ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-500 dark:text-slate-500"}`}>
                             Sin cotización — capturar a mano
                           </button>
                           {cotizacionesFiltradas.map(c => (
                             <button key={c.documentId} type="button" onClick={() => elegirCotizacion(c)}
-                              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${cotizacionOrigen?.documentId === c.documentId ? "text-violet-400 font-medium" : "text-slate-300"}`}>
+                              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${cotizacionOrigen?.documentId === c.documentId ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-300"}`}>
                               <span className="block truncate">{c.numero} — {fmt(c.total)}</span>
-                              {c.cliente?.nombre && <span className="block text-[10px] text-slate-500 truncate">{c.cliente.nombre}</span>}
+                              {c.cliente?.nombre && <span className="block text-[10px] text-slate-500 dark:text-slate-500 truncate">{c.cliente.nombre}</span>}
                             </button>
                           ))}
                           {cotizacionesFiltradas.length === 0 && (
-                            <p className="text-[11px] text-slate-600 text-center py-3">Sin cotizaciones que coincidan.</p>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-600 text-center py-3">Sin cotizaciones que coincidan.</p>
                           )}
                         </div>
                       </div>
@@ -615,27 +646,27 @@ export function PedidosView() {
               {/* Líneas de productos */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-[11px] font-medium text-slate-400 block">
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
                     Productos del pedido {!lineasEditables && (
-                      <span className="inline-flex items-center gap-1 text-violet-400 normal-case ml-1">
+                      <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
                         <Lock size={10} /> confirmado — solo lectura
                       </span>
                     )}
                   </label>
                   {lineasEditables && (
                     <button type="button" onClick={agregarLinea}
-                      className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                      className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
                       <Plus size={11} /> Agregar línea
                     </button>
                   )}
                 </div>
-                <div className="border border-slate-700 rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 px-2 py-1.5 bg-slate-950/50">
+                <div className="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-slate-950/50">
                     {["Producto / concepto", "Cant.", "Precio", "Subtotal", ""].map(h => (
-                      <span key={h} className="text-[9px] font-semibold uppercase text-slate-600">{h}</span>
+                      <span key={h} className="text-[9px] font-semibold uppercase text-slate-400 dark:text-slate-600">{h}</span>
                     ))}
                   </div>
-                  <div className="divide-y divide-slate-800">
+                  <div className="divide-y divide-slate-200 dark:divide-slate-800">
                     {lineas.map((l, idx) => (
                       <div key={idx} className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 items-center px-2 py-1.5">
                         {lineasEditables ? (
@@ -650,24 +681,24 @@ export function PedidosView() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-[11px] text-slate-300 flex items-center gap-1">
-                            {l.productoId && <Package size={10} className="text-violet-500 shrink-0" />} {l.descripcion}
+                          <span className="text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                            {l.productoId && <Package size={10} className="text-violet-600 dark:text-violet-500 shrink-0" />} {l.descripcion}
                           </span>
                         )}
                         {lineasEditables ? (
                           <input type="number" min="1" title="Cantidad" value={l.cantidad}
                             onChange={e => actualizarLinea(idx, "cantidad", e.target.value)}
-                            className="px-2 py-1.5 text-[11px] text-center rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-slate-500 w-full" />
-                        ) : <span className="text-[11px] text-slate-400 text-center">{l.cantidad}</span>}
+                            className="px-2 py-1.5 text-[11px] text-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
+                        ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-center">{l.cantidad}</span>}
                         {lineasEditables ? (
                           <input type="number" min="0" step="0.01" title="Precio unitario" value={l.precioUnitario}
                             onChange={e => actualizarLinea(idx, "precioUnitario", e.target.value)}
-                            placeholder="0.00" className="px-2 py-1.5 text-[11px] text-right rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-slate-500 w-full" />
-                        ) : <span className="text-[11px] text-slate-400 text-right">{fmt(Number(l.precioUnitario) || 0)}</span>}
-                        <span className="text-[11px] text-right text-slate-300 font-medium">{fmt(totalLinea(l))}</span>
+                            placeholder="0.00" className="px-2 py-1.5 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
+                        ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-right">{fmt(Number(l.precioUnitario) || 0)}</span>}
+                        <span className="text-[11px] text-right text-slate-700 dark:text-slate-300 font-medium">{fmt(totalLinea(l))}</span>
                         {lineasEditables && lineas.length > 1 ? (
                           <button type="button" title="Quitar línea" onClick={() => quitarLinea(idx)}
-                            className="p-1 text-slate-700 hover:text-red-400 rounded transition flex items-center justify-center">
+                            className="p-1 text-slate-300 dark:text-slate-700 hover:text-red-600 dark:hover:text-red-400 rounded transition flex items-center justify-center">
                             <Trash2 size={11} />
                           </button>
                         ) : <span />}
@@ -675,31 +706,31 @@ export function PedidosView() {
                     ))}
                   </div>
                   {totalLineas > 0 && (
-                    <div className="flex justify-end px-3 py-1.5 bg-slate-950/50 border-t border-slate-800">
-                      <span className="text-[11px] text-slate-400">Total líneas: <span className="text-slate-200 font-semibold">{fmt(totalLineas)}</span></span>
+                    <div className="flex justify-end px-3 py-1.5 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Total líneas: <span className="text-slate-800 dark:text-slate-200 font-semibold">{fmt(totalLineas)}</span></span>
                     </div>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Concepto <span className="text-red-400">*</span></label>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Concepto <span className="text-red-600 dark:text-red-400">*</span></label>
                 <input type="text" placeholder="Ej. Anillo compromiso oro 14k" value={form.concepto}
                   onChange={e => { setConceptoAuto(false); setForm(f => ({ ...f, concepto: e.target.value })) }} className={inp} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
-                    Monto ($) <span className="text-red-400">*</span>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">
+                    Monto ($) <span className="text-red-600 dark:text-red-400">*</span>
                     {cotizacionOrigen && (
-                      <span className="inline-flex items-center gap-1 text-violet-400 normal-case ml-1">
+                      <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
                         <Lock size={10} /> de la cotización
                       </span>
                     )}
                   </label>
                   {cotizacionOrigen ? (
-                    <div className="h-9 rounded-lg border border-slate-800 bg-slate-800/40 px-3 flex items-center text-sm font-semibold text-violet-400">
+                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/40 px-3 flex items-center text-sm font-semibold text-violet-600 dark:text-violet-400">
                       {fmt(form.monto || 0)}
                     </div>
                   ) : (
@@ -708,7 +739,7 @@ export function PedidosView() {
                   )}
                 </div>
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Canal de venta</label>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Canal de venta</label>
                   <select title="Canal de venta" value={form.centro_venta ?? ""}
                     onChange={e => setForm(f => ({ ...f, centro_venta: e.target.value || null }))} className={inp + " cursor-pointer"}>
                     <option value="">— Sin especificar —</option>
@@ -719,12 +750,12 @@ export function PedidosView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha</label>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Fecha</label>
                   <input type="date" value={form.fecha ?? ""}
                     onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className={inp} />
                 </div>
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estado</label>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Estado</label>
                   <select title="Estado" value={form.estado ?? ""}
                     onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoVenta }))} className={inp + " cursor-pointer"}>
                     {ESTADOS_VENTA.map(e => <option key={e} value={e}>{e}</option>)}
@@ -734,7 +765,7 @@ export function PedidosView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Método de pago</label>
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Método de pago</label>
                   <select title="Método de pago" value={form.metodoPago ?? ""}
                     onChange={e => setForm(f => ({ ...f, metodoPago: (e.target.value || null) as MetodoPago | null }))} className={inp + " cursor-pointer"}>
                     <option value="">— Sin especificar —</option>
@@ -742,16 +773,16 @@ export function PedidosView() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">
+                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">
                     Cliente
                     {cotizacionOrigen && (
-                      <span className="inline-flex items-center gap-1 text-violet-400 normal-case ml-1">
+                      <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
                         <Lock size={10} /> de la cotización
                       </span>
                     )}
                   </label>
                   {cotizacionOrigen ? (
-                    <div className="h-9 rounded-lg border border-slate-800 bg-slate-800/40 px-3 flex items-center text-sm text-slate-300">
+                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/40 px-3 flex items-center text-sm text-slate-700 dark:text-slate-300">
                       {cotizacionOrigen.cliente?.nombre ?? "— Sin cliente —"}
                     </div>
                   ) : (
@@ -765,11 +796,11 @@ export function PedidosView() {
               </div>
 
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Evidencia de pago (opcional)</label>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Evidencia de pago (opcional)</label>
                 <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
                   onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
                 <button type="button" onClick={() => comprobanteRef.current?.click()}
-                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 px-3 text-sm text-slate-400 hover:border-violet-500/50 hover:text-slate-200 transition-all">
+                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
                   <Paperclip size={13} className="shrink-0" />
                   <span className="truncate">
                     {comprobante ? comprobante.name : editing?.comprobantePago ? `Ya adjunto: ${editing.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
@@ -778,16 +809,16 @@ export function PedidosView() {
               </div>
 
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Notas</label>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Notas</label>
                 <textarea placeholder="Observaciones, detalles del pedido…" value={form.notas ?? ""}
                   onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
                   rows={2} className={inp + " resize-none h-auto py-2"} />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">
+                className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                 Cancelar
               </button>
               <button type="button" onClick={handleSave} disabled={saving}
@@ -803,7 +834,7 @@ export function PedidosView() {
       return (
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
           <button type="button" onClick={() => setModalOpen(false)}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition mb-4">
+            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition mb-4">
             <ArrowLeft size={14} /> Volver a Pedidos
           </button>
           {tarjeta}

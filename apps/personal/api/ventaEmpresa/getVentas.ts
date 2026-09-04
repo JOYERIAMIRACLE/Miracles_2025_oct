@@ -60,5 +60,9 @@ export async function updateVenta(documentId: string, payload: Partial<VentaPayl
 }
 
 export async function deleteVenta(documentId: string) {
-  await fetch(`${URL}/${documentId}`, { method: "DELETE" })
+  const res = await fetch(`${URL}/${documentId}`, { method: "DELETE" })
+  if (!res.ok) {
+    const json = await res.json().catch(() => null)
+    throw new Error(json?.error?.message ?? "No se pudo eliminar el pedido")
+  }
 }

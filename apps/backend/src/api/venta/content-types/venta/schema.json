@@ -96,6 +96,12 @@
       "target": "api::transaccion.transaccion",
       "mappedBy": "ventaOrigen"
     },
+    "transaccionGenerada": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::transaccion.transaccion",
+      "inversedBy": "ventaQueLoGenero"
+    },
     "comprobantePago": {
       "type": "media",
       "multiple": false,

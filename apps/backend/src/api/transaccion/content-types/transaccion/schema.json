@@ -90,6 +90,12 @@
       "relation": "manyToOne",
       "target": "api::venta.venta",
       "inversedBy": "pagos"
+    },
+    "ventaQueLoGenero": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::venta.venta",
+      "mappedBy": "transaccionGenerada"
     }
   }
 }

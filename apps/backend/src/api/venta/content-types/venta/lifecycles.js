@@ -1,5 +1,7 @@
 'use strict';
 
+const { ApplicationError } = require('@strapi/utils').errors;
+
 // Lifecycles de Venta (pedido)
 // Descuenta product.stock automáticamente cuando el pedido pasa a un estado
 // confirmado (todo menos "Cotizado"/"Cancelado") y lo restaura si vuelve a
@@ -19,6 +21,16 @@
 // mismo ingreso dos veces. Se guarda en venta.transaccionGenerada para que
 // nunca se cree una segunda transacción para el mismo pedido, sin importar
 // cuántas veces se actualice después de llegar a "Pagado".
+//
+// Un pedido solo se puede ELIMINAR de verdad (hard delete) mientras sigue en
+// "Cotizado" y no tiene ningún pago real vinculado — en ese estado nunca tuvo
+// efecto en stock ni en Finanzas, así que borrarlo no deja nada huérfano (y
+// de paso limpia sus venta-lineas). Cualquier pedido que ya afectó stock o
+// dinero real se debe CANCELAR en vez de borrar: pasar a estado "Cancelado"
+// ya restaura el stock automáticamente (afterUpdate, igual que siempre) y
+// además borra aquí cada transacción vinculada uno por uno para que el
+// beforeDelete de transaccion revierta su saldoActual — nunca queda un
+// ingreso fantasma en Finanzas de un pedido que ya no existe.
 
 const ESTADOS_SIN_STOCK = new Set(['Cotizado', 'Cancelado']);
 
@@ -37,7 +49,13 @@ async function loadFull(id) {
   if (!id) return null;
   return strapi.db.query('api::venta.venta').findOne({
     where: { id },
-    populate: { lineas: { populate: ['producto'] }, producto: true, cliente: true, transaccionGenerada: true },
+    populate: {
+      lineas: { populate: ['producto'] },
+      producto: true,
+      cliente: true,
+      transaccionGenerada: true,
+      pagos: true,
+    },
   });
 }
 
@@ -55,9 +73,20 @@ async function crearTransaccionDeVenta(venta) {
       referencia: clienteNombre,
       ambito: 'empresa',
       cliente: clienteId || undefined,
+      ventaOrigen: venta.id,
       publishedAt: new Date(),
     },
   });
+}
+
+// Borra cada transacción vinculada al pedido una por una (nunca deleteMany)
+// para que el beforeDelete de transaccion dispare su propia reversión de
+// cuenta.saldoActual por cada una — un delete masivo se saltaría esas hooks.
+async function borrarPagosDeVenta(venta) {
+  const pagos = venta?.pagos || [];
+  for (const pago of pagos) {
+    await strapi.db.query('api::transaccion.transaccion').delete({ where: { id: pago.id } });
+  }
 }
 
 // [{ productoId, cantidad }] — usa las líneas reales si existen, si no cae
@@ -131,12 +160,29 @@ module.exports = {
     const current = await loadFull(event.result.id);
     if (previous) await aplicarVenta(previous, -1);
     if (current) await aplicarVenta(current, +1);
+
+    // Cancelar un pedido que ya tenía pagos reales revierte esos pagos —
+    // si no, el ingreso se queda contado en Finanzas para un pedido que ya
+    // no existe. El stock ya se restauró arriba (Cancelado no aplica stock).
+    if (current?.estado === 'Cancelado' && previous?.estado !== 'Cancelado') {
+      await borrarPagosDeVenta(current);
+    }
   },
 
   async beforeDelete(event) {
     const id = event.params?.where?.id;
     if (!id) return;
     const venta = await loadFull(id);
-    if (venta) await aplicarVenta(venta, -1);
+    if (!venta) return;
+
+    const tienePagos = (venta.pagos || []).length > 0;
+    if (aplicaStock(venta.estado) || tienePagos) {
+      throw new ApplicationError(
+        'Este pedido ya afectó stock o tiene pagos registrados — no se puede borrar. Cancélalo en su lugar.'
+      );
+    }
+
+    await aplicarVenta(venta, -1);
+    await strapi.db.query('api::venta-linea.venta-linea').deleteMany({ where: { venta: id } });
   },
 };
