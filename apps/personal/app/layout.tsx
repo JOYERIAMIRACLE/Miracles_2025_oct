@@ -61,7 +61,7 @@ export default function RootLayout({
           {children}
           {/* <ChatWidget /> */}
         </ThemeProvider>
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" closeButton />
       </body>
     </html>
   )
