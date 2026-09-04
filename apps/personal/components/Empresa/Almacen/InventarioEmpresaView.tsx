@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink, Settings2 } from "lucide-react"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
@@ -336,8 +336,25 @@ export function InventarioEmpresaView() {
     setShowSkuBuilder(false)
   }
 
+  // Al editar, el constructor solo reemplaza el SKU (y lo que ese SKU implica:
+  // categoría/material/talla) — a diferencia de applyFromSku no toca el nombre,
+  // que en un producto existente ya pudo haberse personalizado a mano.
+  function applyFromSkuEdit(entry: SkuEntry) {
+    const cat = (entry.tipoCategoria as CategoriaJoya) ?? ""
+    const mat = (MAT_MAP[entry.matLabel] ?? entry.matLabel) as MaterialProducto | ""
+    setSkuAuto(false)
+    setForm(f => ({
+      ...f,
+      sku:              entry.sku,
+      categoriaJoya:    cat,
+      materialProducto: mat,
+      talla:            entry.talla,
+    }))
+    setShowSkuBuilder(false)
+  }
+
   function openEditar(it: ProductType) {
-    openModal(); setEditing(it); setSkuAuto(true); setPrecioAuto(false)
+    openModal(); setEditing(it); setSkuAuto(true); setPrecioAuto(false); setShowSkuBuilder(false)
     const m = margen(it.costoProduccion, it.costo)
     setLocalMargen(m !== null ? m : globalMargen)
     setFotos(prev => {
@@ -1120,14 +1137,21 @@ export function InventarioEmpresaView() {
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
                           <label className="text-[11px] font-medium text-slate-400">SKU</label>
-                          {skuAuto && form.categoriaJoya
-                            ? <span className="text-[10px] font-medium text-violet-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
-                            : form.categoriaJoya
-                              ? <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya,f.materialProducto,f.figura,f.talla)})) }}
-                                  className="text-[10px] text-slate-500 hover:text-violet-400 flex items-center gap-0.5 transition-colors">
-                                  <RefreshCw size={9}/> Regenerar
-                                </button>
-                              : null}
+                          <div className="flex items-center gap-2">
+                            {skuAuto && form.categoriaJoya && (
+                              <span className="text-[10px] font-medium text-violet-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
+                            )}
+                            {!skuAuto && form.categoriaJoya && (
+                              <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya,f.materialProducto,f.figura,f.talla)})) }}
+                                className="text-[10px] text-slate-500 hover:text-violet-400 flex items-center gap-0.5 transition-colors">
+                                <RefreshCw size={9}/> Regenerar
+                              </button>
+                            )}
+                            <button type="button" onClick={() => setShowSkuBuilder(s => !s)}
+                              className={`text-[10px] font-medium flex items-center gap-0.5 transition-colors ${showSkuBuilder ? "text-violet-400" : "text-slate-500 hover:text-violet-400"}`}>
+                              <Settings2 size={9}/> Elegir con constructor
+                            </button>
+                          </div>
                         </div>
                         <input type="text" placeholder="Auto" value={form.sku}
                           onChange={e => { setSkuAuto(false); setForm(f => ({...f, sku:e.target.value})) }}
@@ -1142,6 +1166,11 @@ export function InventarioEmpresaView() {
                           <option value="servicio">Servicio</option>
                         </select>
                       </div>
+                      {showSkuBuilder && (
+                        <div className="col-span-2">
+                          <SkuBuilder defaultTipo={form.categoriaJoya || undefined} onAdd={applyFromSkuEdit} onClose={() => setShowSkuBuilder(false)} />
+                        </div>
+                      )}
                       {editing.slug && (
                         <div className="col-span-2">
                           <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">URL en tienda</label>
