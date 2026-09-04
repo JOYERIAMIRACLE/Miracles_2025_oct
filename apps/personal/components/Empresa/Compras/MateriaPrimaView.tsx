@@ -648,13 +648,40 @@ function ConceptoCombobox({ value, onChange }: { value: string; onChange: (v: st
 const CATEGORIAS_JOYA = ["Anillos","Cadenas","Esclavas","Dijes","Broqueles","Aretes","Pulsos","Rosarios","Argollas"] as const
 type CategoriaJoya = typeof CATEGORIAS_JOYA[number]
 
-type PiezaForm = { nombre: string; categoriaJoya: CategoriaJoya | ""; talla: string; pesoGramos: string; cantidad: string }
-const emptyPieza = (): PiezaForm => ({ nombre: "", categoriaJoya: "", talla: "", pesoGramos: "", cantidad: "1" })
+type PiezaForm = { sku: string; nombre: string; categoriaJoya: CategoriaJoya | ""; talla: string; pesoGramos: string; cantidad: string }
+const emptyPieza = (): PiezaForm => ({ sku: "", nombre: "", categoriaJoya: "", talla: "", pesoGramos: "", cantidad: "1" })
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
+// Si la pieza trae SKU y ese SKU ya existe como producto real, la inspección
+// debe SUMAR stock a ese producto — no crear un duplicado invisible. Sin esto,
+// elegir "Esclava Cubana" del catálogo y confirmar creaba una segunda
+// "Esclava Cubana" nueva (sin publicar) en vez de reflejarse en la ya
+// existente, que es justo lo que no se veía reflejado.
+async function buscarProductoPorSku(sku: string): Promise<{ documentId: string; stock: number } | null> {
+  if (!sku.trim()) return null
+  try {
+    const params = new URLSearchParams({
+      "filters[sku][$eq]": sku.trim(), "fields[0]": "stock", "pagination[pageSize]": "1",
+    })
+    const r = await fetch(`${BASE_URL}/api/products?${params}`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    if (!r.ok) return null
+    const json = await r.json()
+    const prod = json.data?.[0] as { documentId: string; stock: number } | undefined
+    return prod ? { documentId: prod.documentId, stock: prod.stock ?? 0 } : null
+  } catch { return null }
+}
+
+async function sumarStockProducto(documentId: string, stockActual: number, delta: number): Promise<void> {
+  await fetch(`${BASE_URL}/api/products/${documentId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+    body: JSON.stringify({ data: { stock: stockActual + delta } }),
+  })
+}
+
 async function crearProductoDesdeInspeccion(data: {
-  nombreProducto: string; categoriaJoya: CategoriaJoya; materialProducto: string
+  sku: string; nombreProducto: string; categoriaJoya: CategoriaJoya; materialProducto: string
   talla: string; pesoGramos: number; stock: number; costoProduccion: number
   materialInsumoId: string
 }): Promise<string> {
@@ -662,6 +689,7 @@ async function crearProductoDesdeInspeccion(data: {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
     body: JSON.stringify({ data: {
+      sku: data.sku || null,
       nombreProducto: data.nombreProducto, categoriaJoya: data.categoriaJoya,
       materialProducto: data.materialProducto, talla: data.talla || null,
       pesoGramos: data.pesoGramos, stock: data.stock, costoProduccion: data.costoProduccion,
@@ -787,6 +815,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
 
     setGuardando(true)
     let creadas = 0
+    let restockeadas = 0
     try {
       for (let li = 0; li < compra.lineas.length; li++) {
         const linea = compra.lineas[li]!
@@ -799,15 +828,28 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
           const cant  = Number(pieza.cantidad)
           const costo = pesoG * (linea.precioPorGramo ?? matObj?.precioReferenciaGramo ?? 0)
 
-          const prodId = await crearProductoDesdeInspeccion({
-            nombreProducto: pieza.nombre.trim(),
-            categoriaJoya: pieza.categoriaJoya as CategoriaJoya,
-            materialProducto: linea.material?.nombre ?? "",
-            talla: pieza.talla.trim(),
-            pesoGramos: pesoG, stock: cant, costoProduccion: costo,
-            materialInsumoId: linea.material?.documentId ?? "",
-          })
-          creadas++
+          // Si la pieza viene de un SKU que ya es un producto real, suma
+          // stock a ese producto en vez de crear uno nuevo — así "Esclava
+          // Cubana" elegida del catálogo termina reflejada en la Esclava
+          // Cubana real, no en un duplicado sin publicar.
+          const existente = await buscarProductoPorSku(pieza.sku)
+          let prodId: string
+          if (existente) {
+            await sumarStockProducto(existente.documentId, existente.stock, cant)
+            prodId = existente.documentId
+            restockeadas++
+          } else {
+            prodId = await crearProductoDesdeInspeccion({
+              sku: pieza.sku,
+              nombreProducto: pieza.nombre.trim(),
+              categoriaJoya: pieza.categoriaJoya as CategoriaJoya,
+              materialProducto: linea.material?.nombre ?? "",
+              talla: pieza.talla.trim(),
+              pesoGramos: pesoG, stock: cant, costoProduccion: costo,
+              materialInsumoId: linea.material?.documentId ?? "",
+            })
+            creadas++
+          }
 
           // Movimiento salida: descuenta gramos del stock del material
           if (linea.material) {
@@ -827,12 +869,15 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
         const newGramos = compra.lineas.map((_, li) => (prevGramos[li] ?? 0) + gramosAsignados(li))
         h[compra.documentId] = {
           fecha: new Date().toISOString(),
-          total: (h[compra.documentId]?.total ?? 0) + creadas,
+          total: (h[compra.documentId]?.total ?? 0) + creadas + restockeadas,
           gramos: newGramos,
         }
         localStorage.setItem(historialKey, JSON.stringify(h))
       } catch {}
-      toast.success(`Inspección completa — ${creadas} grupo${creadas !== 1 ? "s" : ""} de piezas creados en inventario`)
+      const partes = []
+      if (creadas > 0) partes.push(`${creadas} nueva${creadas !== 1 ? "s" : ""}`)
+      if (restockeadas > 0) partes.push(`${restockeadas} sumada${restockeadas !== 1 ? "s" : ""} a stock existente`)
+      toast.success(`Inspección completa — ${partes.join(" · ")}`)
       onDone()
     } catch (e: any) { toast.error(e.message ?? "Error al guardar la inspección") }
     finally { setGuardando(false) }
@@ -953,6 +998,11 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                               <td className="px-2 py-1">
                                 <input value={p.nombre} onChange={e => updatePieza(li, pi, "nombre", e.target.value)}
                                   placeholder="Ej. Esclava Cubana" className={`${fieldCls} h-7 text-xs`} />
+                                {p.sku && (
+                                  <p className="text-[9px] font-mono text-violet-500 dark:text-violet-400 mt-0.5">
+                                    SKU {p.sku} — si ya existe en inventario, se le suma stock en vez de duplicarlo
+                                  </p>
+                                )}
                               </td>
                               <td className="px-2 py-1 w-16">
                                 <input type="number" min="0" step="0.1" value={p.pesoGramos} onChange={e => updatePieza(li, pi, "pesoGramos", e.target.value)}
@@ -1027,7 +1077,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                                 onClick={() => {
                                   const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? guessCat(linea.descripcion)
                                   setPiezas(li, prev => [...prev, {
-                                    ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla,
+                                    ...emptyPieza(), sku: p.sku, nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla,
                                     pesoGramos: p.pesoGramos ? String(p.pesoGramos) : "",
                                   }])
                                   setBusquedaCat("")
@@ -1086,6 +1136,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                               ])
                               setPiezas(li, prev => [...prev, {
                                 ...emptyPieza(),
+                                sku: entry.sku,
                                 nombre: entry.nombre,
                                 categoriaJoya: cat as CategoriaJoya | "",
                                 talla: entry.talla,
