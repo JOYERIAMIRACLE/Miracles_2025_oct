@@ -5,10 +5,12 @@ import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, R
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
-import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured } from "@/api/inventarioEmpresa/getInventario"
+import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured, resolverCategoriaId } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem } from "@/types/product"
 import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
+import { SkuBuilder } from "@/components/Shared/SkuBuilder"
+import { SkuEntry } from "@/types/skuCatalogo"
 import { useGetMateriales } from "@/api/material/getMateriales"
 import { createMovimientoMaterial } from "@/api/movimiento-material/mutateMovimientoMaterial"
 
@@ -24,6 +26,18 @@ function atributosRelevantes(cat: CategoriaJoya | "") {
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const imgUrl  = (url: string) => url.startsWith("http") ? url : `${BACKEND}${url}`
+
+// Una foto es "existing" (ya subida, viene de Strapi o de una sugerencia del
+// catálogo) o "new" (File local recién elegido, todavía sin subir). La
+// primera del arreglo es la portada — la que se ve en listas y tarjetas.
+type FotoItem =
+  | { kind: "existing"; id: number; url: string }
+  | { kind: "new"; file: File; preview: string }
+
+function fotoSrc(f: FotoItem) { return f.kind === "existing" ? imgUrl(f.url) : f.preview }
+function revokeNewPreviews(list: FotoItem[]) {
+  for (const f of list) if (f.kind === "new") URL.revokeObjectURL(f.preview)
+}
 
 function slugify(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -97,14 +111,14 @@ function SectCollapse({ title, open, onToggle, children }: {
   title: string; open: boolean; onToggle: () => void; children: React.ReactNode
 }) {
   return (
-    <div>
+    <div className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-violet-500/30 bg-slate-800/50" : "border-slate-800 bg-slate-800/30"}`}>
       <button type="button" onClick={onToggle}
-        className="flex items-center gap-2 w-full mb-2.5 group">
-        <div className="w-0.5 h-3.5 rounded-full bg-violet-500/40 shrink-0" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex-1 text-left group-hover:text-slate-300 transition-colors">{title}</p>
-        <ChevronDown size={12} className={`text-slate-600 transition-transform shrink-0 ${open ? "" : "-rotate-90"}`} />
+        className="flex items-center gap-3 w-full px-4 py-3.5 group hover:bg-slate-800/60 transition-colors">
+        <div className={`w-1 h-4 rounded-full shrink-0 transition-colors ${open ? "bg-violet-400" : "bg-violet-500/40 group-hover:bg-violet-500/70"}`} />
+        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-300 flex-1 text-left group-hover:text-slate-100 transition-colors">{title}</p>
+        <ChevronDown size={14} className={`text-slate-500 group-hover:text-slate-300 transition-transform shrink-0 ${open ? "" : "-rotate-90"}`} />
       </button>
-      {open && <div className="mb-1">{children}</div>}
+      {open && <div className="px-4 pb-4 pt-1 border-t border-slate-800/80">{children}</div>}
     </div>
   )
 }
@@ -128,10 +142,43 @@ function UbicToggle({ checked, onChange, label, desc, icon: Icon }: {
   )
 }
 
+function FotoManager({ fotos, onAdd, onRemove }: {
+  fotos: FotoItem[]; onAdd: (files: FileList) => void; onRemove: (index: number) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  return (
+    <div>
+      <div className="flex flex-wrap gap-3">
+        {fotos.map((f, i) => (
+          <div key={i} className="relative shrink-0">
+            <img src={fotoSrc(f)} alt="" className={`w-20 h-20 rounded-xl object-cover border ${i === 0 ? "border-violet-500/60" : "border-slate-700"}`} />
+            {i === 0 && (
+              <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wide bg-violet-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap shadow">
+                Portada
+              </span>
+            )}
+            <button type="button" title="Quitar foto" onClick={() => onRemove(i)}
+              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow hover:bg-red-400 transition-colors">
+              <X size={10}/>
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={() => inputRef.current?.click()}
+          className="w-20 h-20 rounded-xl bg-slate-800 border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-1 shrink-0 text-slate-500 hover:border-violet-500/50 hover:text-violet-400 transition-colors">
+          <ImagePlus size={18}/>
+          <span className="text-[10px] font-medium">Agregar</span>
+        </button>
+      </div>
+      <p className="text-[10px] text-slate-600 mt-2">JPG, PNG, WEBP · Máx. 10 MB · La primera foto es la portada</p>
+      <input ref={inputRef} type="file" accept="image/*" multiple title="Fotos" className="hidden"
+        onChange={e => { if (e.target.files?.length) onAdd(e.target.files); e.target.value = "" }}/>
+    </div>
+  )
+}
+
 export function InventarioEmpresaView() {
   const { items, setItems, loading } = useGetInventario()
   const { materiales } = useGetMateriales()
-  const fileRef = useRef<HTMLInputElement>(null)
 
   const [search,      setSearch]      = useState("")
   const [filtroCat,   setFiltroCat]   = useState<CategoriaJoya | "">("")
@@ -149,8 +196,7 @@ export function InventarioEmpresaView() {
   const [saving,      setSaving]      = useState(false)
   const [delId,       setDelId]       = useState<string | null>(null)
   const [skuAuto,     setSkuAuto]     = useState(true)
-  const [fotoPreview, setFotoPreview] = useState<string | null>(null)
-  const [fotoFile,    setFotoFile]    = useState<File | null>(null)
+  const [fotos,       setFotos]       = useState<FotoItem[]>([])
   const [publishing,  setPublishing]  = useState<string | null>(null)
   const [featuring,    setFeaturing]    = useState<string | null>(null)
   const [catalogo,     setCatalogo]     = useState<CatalogoNodo[]>([])
@@ -161,8 +207,9 @@ export function InventarioEmpresaView() {
   const [marProgress,  setMarProgress]  = useState({ done: 0, total: 0 })
   const [collapse,     setCollapse]     = useState({ foto:false, identificacion:false, atributos:false, peso:false, precios:false, ubicacion:false })
   function toggleSection(k: keyof typeof collapse) { setCollapse(c => ({ ...c, [k]: !c[k] })) }
-  const [showCatPick, setShowCatPick] = useState(false)
-  const [catSearch,   setCatSearch]   = useState("")
+  const [showCatPick,    setShowCatPick]    = useState(false)
+  const [catSearch,      setCatSearch]      = useState("")
+  const [showSkuBuilder, setShowSkuBuilder] = useState(false)
   const [catalogCard, setCatalogCard] = useState<{
     sku: string; nombre: string; categoria: string; material: string; notas: string
     descripcion: string; fotoUrl: string; fotoId: number | null
@@ -223,8 +270,8 @@ export function InventarioEmpresaView() {
 
   function openNuevo() {
     setEditing(null); setForm(emptyForm()); setSkuAuto(true); setPrecioAuto(true)
-    setFotoPreview(null); setFotoFile(null)
-    setCatalogCard(null); setCatSearch(""); resetCascada()
+    setFotos(prev => { revokeNewPreviews(prev); return [] })
+    setCatalogCard(null); setCatSearch(""); resetCascada(); setShowSkuBuilder(false)
     setLocalMargen(globalMargen)
     setModalOpen(true); openModal()
   }
@@ -260,16 +307,43 @@ export function InventarioEmpresaView() {
       ? prod.fotoUrl.startsWith("http") ? prod.fotoUrl : `${backendUrl}${prod.fotoUrl}`
       : ""
     setCatalogCard({ sku, nombre, categoria: catNombre, material: matNombre, notas: prod.notas, descripcion: prod.descripcion ?? "", fotoUrl, fotoId: prod.fotoId ?? null })
-    if (fotoUrl) setFotoPreview(fotoUrl)
+    // Solo sugiere la foto del catálogo si todavía no hay ninguna elegida —
+    // no pisa fotos que el usuario ya haya subido a mano.
+    if (fotoUrl && prod.fotoId) {
+      setFotos(prev => prev.length === 0 ? [{ kind: "existing", id: prod.fotoId!, url: fotoUrl }] : prev)
+    }
     setShowCatPick(false); setCatSearch("")
+  }
+
+  function applyFromSku(entry: SkuEntry) {
+    const cat = (entry.tipoCategoria as CategoriaJoya) ?? ""
+    const mat = (MAT_MAP[entry.matLabel] ?? entry.matLabel) as MaterialProducto | ""
+    setForm(f => ({
+      ...f,
+      nombreProducto: entry.nombre,
+      sku:            entry.sku,
+      categoriaJoya:  cat,
+      materialProducto: mat,
+      talla:          entry.talla,
+    }))
+    setCatalogCard({
+      sku:  entry.sku,
+      nombre: entry.nombre,
+      categoria: entry.tipoCategoria,
+      material:  entry.matLabel,
+      notas: "", descripcion: "", fotoUrl: "", fotoId: null,
+    })
+    setShowSkuBuilder(false)
   }
 
   function openEditar(it: ProductType) {
     openModal(); setEditing(it); setSkuAuto(true); setPrecioAuto(false)
     const m = margen(it.costoProduccion, it.costo)
     setLocalMargen(m !== null ? m : globalMargen)
-    setFotoPreview(it.imagenes?.[0] ? imgUrl(it.imagenes[0].url) : null)
-    setFotoFile(null)
+    setFotos(prev => {
+      revokeNewPreviews(prev)
+      return (it.imagenes ?? []).map(img => ({ kind: "existing" as const, id: img.id, url: img.url }))
+    })
     const cat = it.categoriaJoya ?? ""
     const mat = it.materialProducto ?? ""
     const tal = it.talla ?? ""
@@ -317,20 +391,40 @@ export function InventarioEmpresaView() {
   }
   const costeoAutomatico = !!(form.materialInsumo && form.pesoGramos)
 
-  function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setFotoFile(file); setFotoPreview(URL.createObjectURL(file))
+  function handleFotosAdd(files: FileList) {
+    const nuevas: FotoItem[] = Array.from(files).map(file => ({ kind: "new", file, preview: URL.createObjectURL(file) }))
+    setFotos(prev => [...prev, ...nuevas])
+  }
+  function handleFotoRemove(index: number) {
+    setFotos(prev => {
+      const target = prev[index]
+      if (target?.kind === "new") URL.revokeObjectURL(target.preview)
+      return prev.filter((_, i) => i !== index)
+    })
   }
 
   async function handleSave() {
     if (!form.nombreProducto.trim()) { toast.error("El nombre es obligatorio"); return }
     setSaving(true)
     try {
-      let fotoData: { id: number; url: string } | undefined
-      if (fotoFile) fotoData = await uploadFoto(fotoFile)
-      else if (!editing && catalogCard?.fotoId && catalogCard.fotoUrl)
-        fotoData = { id: catalogCard.fotoId, url: catalogCard.fotoUrl }
+      // Sube solo las fotos nuevas (Files locales); las "existing" ya viven
+      // en Strapi y solo se referencian por id. El orden final respeta el
+      // orden del arreglo — la primera sigue siendo la portada.
+      const nuevas = fotos.filter((f): f is Extract<FotoItem, { kind: "new" }> => f.kind === "new")
+      const subidas = await Promise.all(nuevas.map(f => uploadFoto(f.file)))
+      let si = 0
+      const imagenesFinal = fotos.map(f => {
+        if (f.kind === "existing") return { id: f.id, url: f.url, alternativeText: null }
+        const s = subidas[si++]
+        return { id: s.id, url: s.url, alternativeText: null }
+      })
+
+      // La categoría de tienda (relación real que usan las páginas públicas)
+      // se resuelve siempre a partir de categoriaJoya, aquí y no solo al usar
+      // "Publicar en tienda" — así nunca queda un producto activo sin quedar
+      // ligado a su categoría real (lo que pasaba antes: activo=true directo
+      // desde este form nunca tocaba la relación categoria).
+      const categoriaDocId = form.categoriaJoya ? await resolverCategoriaId(form.categoriaJoya) : undefined
 
       const needsSlug = !editing || !editing.slug
       const payload: Record<string, unknown> = {
@@ -359,7 +453,8 @@ export function InventarioEmpresaView() {
         isFeatured: form.esFavorito,
         puntoVenta: form.puntoVenta,
         ...(needsSlug ? { slug: slugify(form.nombreProducto.trim()) } : {}),
-        ...(fotoData ? { imagenes: [fotoData.id] } : {}),
+        imagenes: imagenesFinal.map(img => img.id),
+        categoria: categoriaDocId ?? null,
       }
 
       // Al crear una pieza con material+peso capturados, consume ese peso del
@@ -380,22 +475,18 @@ export function InventarioEmpresaView() {
         const merged: ProductType = {
           ...editing, ...updated,
           slug: updated.slug ?? editing.slug ?? slugify(form.nombreProducto.trim()),
-          imagenes: fotoData
-            ? [{ id: fotoData.id, url: fotoData.url, alternativeText: null }, ...(editing.imagenes ?? []).slice(1)]
-            : editing.imagenes ?? [],
+          imagenes: imagenesFinal,
           categoria: editing.categoria,
         }
         setItems(prev => prev.map(i => i.documentId === merged.documentId ? merged : i))
         toast.success("Producto actualizado")
       } else {
         const nuevo = await createProducto(payload as any)
-        const withFoto: ProductType = {
-          ...nuevo,
-          imagenes: fotoData ? [{ id: fotoData.id, url: fotoData.url, alternativeText: null }] : [],
-        }
+        const withFoto: ProductType = { ...nuevo, imagenes: imagenesFinal }
         setItems(prev => [...prev, withFoto].sort((a,b) => a.nombreProducto.localeCompare(b.nombreProducto)))
         toast.success("Producto creado")
       }
+      revokeNewPreviews(fotos)
       setModalOpen(false)
     } catch (e: any) {
       toast.error(e?.message ?? "Error al guardar")
@@ -731,7 +822,7 @@ export function InventarioEmpresaView() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target===e.currentTarget) setModalOpen(false) }}>
           <div className={`w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden ${
-            !editing && !catalogCard ? "max-w-xl" : "max-w-lg"
+            !editing && !catalogCard && showSkuBuilder ? "max-w-2xl" : !editing && !catalogCard ? "max-w-xl" : "max-w-lg"
           }`}>
             {/* Franja de material */}
             <div className={`h-0.5 shrink-0 ${
@@ -746,8 +837,8 @@ export function InventarioEmpresaView() {
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 shrink-0">
               {editing ? (
                 <div className="flex items-center gap-3 min-w-0">
-                  {fotoPreview ? (
-                    <img src={fotoPreview} alt="" className="w-9 h-9 rounded-lg object-cover border border-slate-700 shrink-0" />
+                  {fotos[0] ? (
+                    <img src={fotoSrc(fotos[0])} alt="" className="w-9 h-9 rounded-lg object-cover border border-slate-700 shrink-0" />
                   ) : (
                     <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
                       <Package size={14} className="text-slate-600" />
@@ -772,17 +863,41 @@ export function InventarioEmpresaView() {
             {/* ── ESTADO 1: Picker de catálogo (nuevo sin selección) ── */}
             {!editing && !catalogCard && (
               <>
-                <div className="px-5 pt-4 pb-2 shrink-0">
-                  <p className="text-xs text-slate-500 mb-3">Elige por categoría o busca directo</p>
+                {/* Tabs: Buscar vs Construir */}
+                <div className="flex items-center gap-1 px-5 pt-4 pb-2 shrink-0 border-b border-slate-800">
+                  <button type="button"
+                    onClick={() => setShowSkuBuilder(false)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${!showSkuBuilder ? "bg-violet-600 text-white" : "text-slate-500 hover:text-slate-300"}`}>
+                    Buscar en catálogo
+                  </button>
+                  <button type="button"
+                    onClick={() => setShowSkuBuilder(true)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${showSkuBuilder ? "bg-violet-600 text-white" : "text-slate-500 hover:text-slate-300"}`}>
+                    + Construir SKU nuevo
+                  </button>
+                </div>
+
+                {/* ── Tab: Construir SKU ── */}
+                {showSkuBuilder && (
+                  <div className="overflow-y-auto flex-1 p-4">
+                    <SkuBuilder
+                      onAdd={applyFromSku}
+                      onClose={() => setShowSkuBuilder(false)}
+                    />
+                  </div>
+                )}
+
+                {/* ── Tab: Buscar ── */}
+                {!showSkuBuilder && <div className="px-5 pt-3 pb-2 shrink-0">
                   <div className="relative">
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"/>
                     <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catSearch}
                       onChange={e => setCatSearch(e.target.value)}
                       className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500/40"/>
                   </div>
-                </div>
+                </div>}
 
-                {catSearch ? (
+                {!showSkuBuilder && catSearch ? (
                   <div className="overflow-y-auto flex-1 px-3 pb-3 space-y-3">
                     {catalogo.map(mat => mat.children.map(cat => {
                       const prods = cat.children.filter(p =>
@@ -830,60 +945,24 @@ export function InventarioEmpresaView() {
                       )
                     }))}
                   </div>
-                ) : catalogo.length === 0 ? (
+                ) : !showSkuBuilder && catalogo.length === 0 ? (
                   <div className="py-8 text-center flex-1">
                     <Loader2 size={20} className="mx-auto mb-2 text-slate-700 animate-spin"/>
                     <p className="text-xs text-slate-600">Cargando catálogo…</p>
                   </div>
-                ) : (
-                  /* Cascada Material → Categoría → Producto → Talla/Tamaño */
-                  <div className="overflow-y-auto flex-1 px-5 pb-4 space-y-3">
-                    <div>
-                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
-                      <select title="Material" value={cascMaterial}
-                        onChange={e => { setCascMaterial(e.target.value); setCascCategoria(""); setCascProducto(""); setCascModelo("") }}
-                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
-                        <option value="">Selecciona material…</option>
-                        {catalogo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
-                      </select>
-                    </div>
-                    {matNode && (
-                      <div>
-                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
-                        <select title="Categoría" value={cascCategoria}
-                          onChange={e => { setCascCategoria(e.target.value); setCascProducto(""); setCascModelo("") }}
-                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
-                          <option value="">Selecciona categoría…</option>
-                          {matNode.children.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                        </select>
-                      </div>
-                    )}
-                    {catNode && (
-                      <div>
-                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo / Producto</label>
-                        <select title="Tipo de producto" value={cascProducto} onChange={e => handleCascProducto(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
-                          <option value="">Selecciona tipo…</option>
-                          {catNode.children.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                        </select>
-                      </div>
-                    )}
-                    {prodNode && prodNode.modelos.length > 0 && (
-                      <div>
-                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Talla / Tamaño</label>
-                        <select title="Talla o tamaño" value={cascModelo} onChange={e => handleCascModelo(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 outline-none focus:border-violet-500/40 cursor-pointer">
-                          <option value="">Selecciona talla…</option>
-                          {prodNode.modelos.map(mo => <option key={mo.id} value={mo.id}>{mo.nombre}</option>)}
-                        </select>
-                      </div>
-                    )}
+                ) : !showSkuBuilder ? (
+                  <div className="flex-1 flex items-center justify-center px-5 py-6">
+                    <p className="text-xs text-slate-600 text-center">
+                      Escribe para buscar un SKU existente<br/>o usa <span className="text-violet-400">+ Construir SKU nuevo</span>
+                    </p>
                   </div>
-                )}
+                ) : null}
 
+                {!showSkuBuilder && (
                 <div className="px-5 py-3 border-t border-slate-800 shrink-0 text-center">
                   <button type="button" onClick={() => setModalOpen(false)} className="text-xs text-slate-600 hover:text-slate-400 transition">Cancelar</button>
                 </div>
+                )}
               </>
             )}
 
@@ -906,29 +985,9 @@ export function InventarioEmpresaView() {
                   </div>
 
                   {/* Foto */}
-                  <div className="flex items-center gap-4">
-                    {fotoPreview ? (
-                      <div className="relative shrink-0">
-                        <img src={fotoPreview} alt="preview" className="w-20 h-20 rounded-xl object-cover border border-slate-700"/>
-                        <button type="button" title="Quitar foto"
-                          onClick={() => { setFotoPreview(null); setFotoFile(null); if (fileRef.current) fileRef.current.value="" }}
-                          className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
-                          <X size={10}/>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 rounded-xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center shrink-0">
-                        <Package size={22} className="text-slate-600"/>
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <button type="button" onClick={() => fileRef.current?.click()}
-                        className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-violet-500/50 hover:text-violet-400 transition-colors">
-                        <ImagePlus size={14}/> {fotoPreview ? "Cambiar foto" : "Subir foto"}
-                      </button>
-                      <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
-                      <input ref={fileRef} type="file" accept="image/*" title="Foto" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5" onChange={handleFotoChange}/>
-                    </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Fotos</p>
+                    <FotoManager fotos={fotos} onAdd={handleFotosAdd} onRemove={handleFotoRemove} />
                   </div>
 
                   {/* Peso / insumo real (individualización de piezas) */}
@@ -1046,31 +1105,8 @@ export function InventarioEmpresaView() {
                 <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
 
                   {/* Foto */}
-                  <SectCollapse title="Foto" open={collapse.foto} onToggle={() => toggleSection("foto")}>
-                    <div className="flex items-center gap-4">
-                      {fotoPreview ? (
-                        <div className="relative shrink-0">
-                          <img src={fotoPreview} alt="preview" className="w-20 h-20 rounded-xl object-cover border border-slate-700"/>
-                          <button type="button" title="Quitar foto"
-                            onClick={() => { setFotoPreview(null); setFotoFile(null); if (fileRef.current) fileRef.current.value="" }}
-                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
-                            <X size={10}/>
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="w-20 h-20 rounded-xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center shrink-0">
-                          <Package size={22} className="text-slate-600"/>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <button type="button" onClick={() => fileRef.current?.click()}
-                          className="flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-300 hover:border-violet-500/50 hover:text-violet-400 transition-colors">
-                          <ImagePlus size={14}/> {fotoPreview?"Cambiar foto":"Subir foto"}
-                        </button>
-                        <p className="text-[10px] text-slate-600 mt-1.5">JPG, PNG, WEBP · Máx. 10 MB</p>
-                        <input ref={fileRef} type="file" accept="image/*" title="Foto" className="hidden" onChange={handleFotoChange}/>
-                      </div>
-                    </div>
+                  <SectCollapse title="Fotos" open={collapse.foto} onToggle={() => toggleSection("foto")}>
+                    <FotoManager fotos={fotos} onAdd={handleFotosAdd} onRemove={handleFotoRemove} />
                   </SectCollapse>
 
                   {/* Identificación */}

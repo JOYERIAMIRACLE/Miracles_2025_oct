@@ -95,7 +95,7 @@ export async function toggleActivoTienda(documentId: string, activo: boolean): P
   }
 }
 
-async function resolverCategoriaId(categoriaJoya: string | null): Promise<string | undefined> {
+export async function resolverCategoriaId(categoriaJoya: string | null): Promise<string | undefined> {
   if (!categoriaJoya) return undefined
   try {
     const res = await fetch(
