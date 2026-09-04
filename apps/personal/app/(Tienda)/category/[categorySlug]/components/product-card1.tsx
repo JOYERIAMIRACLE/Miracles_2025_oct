@@ -15,12 +15,21 @@ const ProductCard1 = ({ product }: ProductCardProps) => {
 
   if (!product.slug) return null
 
+  // stock null = sin control de inventario para esta pieza (se asume disponible);
+  // solo un 0 o negativo explícito cuenta como agotado.
+  const outOfStock = typeof product.stock === 'number' && product.stock <= 0
+
   return (
     <Link href={`/producto/${product.slug}`}
       className='relative p-2 transition-all duration-100 rounded-lg hover:shadow-md group/card'>
 
       {/* Badges */}
       <div className='absolute flex items-center gap-2 px-2 z-1 top-4'>
+        {outOfStock && (
+          <span className='px-2 py-1 text-xs font-semibold text-white bg-red-600/90 rounded-full backdrop-blur-sm'>
+            Agotado
+          </span>
+        )}
         {product.figura && (
           <span className='px-2 py-1 text-xs text-white bg-black/70 rounded-full backdrop-blur-sm'>
             {product.figura}
@@ -52,13 +61,16 @@ const ProductCard1 = ({ product }: ProductCardProps) => {
                   src={img.url?.startsWith('http') ? img.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${img.url}`}
                   alt={img.alternativeText ?? product.nombreProducto}
                   className='rounded-xl w-full aspect-square object-cover'
+                  loading='lazy'
                 />
                 <div className='absolute w-full px-6 transition duration-200 opacity-0 group-hover:opacity-100 bottom-16'>
                   <div className='flex justify-center gap-x-6'>
                     <IconButton onClick={() => router.push(`/producto/${product.slug}`)}
                       icon={<Expand size={20} className='text-gray-600' />} />
-                    <IconButton onClick={() => addItem(product)}
-                      icon={<ShoppingCart size={20} className='text-gray-600' />} />
+                    {!outOfStock && (
+                      <IconButton onClick={() => addItem(product)}
+                        icon={<ShoppingCart size={20} className='text-gray-600' />} />
+                    )}
                   </div>
                 </div>
               </CarouselItem>

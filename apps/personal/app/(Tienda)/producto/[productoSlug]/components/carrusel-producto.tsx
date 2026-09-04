@@ -8,14 +8,15 @@ import { ImageType } from "@/types/product"
 
 interface CarouselProductoProps {
   imagenes: ImageType[]
+  productName?: string
 }
 
 function imgSrc(imagen: ImageType) {
   return imagen.url?.startsWith("http") ? imagen.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${imagen.url}`
 }
 
-function Lightbox({ imagenes, index, onClose, onNavigate }: {
-  imagenes: ImageType[]; index: number; onClose: () => void; onNavigate: (i: number) => void
+function Lightbox({ imagenes, index, onClose, onNavigate, productName }: {
+  imagenes: ImageType[]; index: number; onClose: () => void; onNavigate: (i: number) => void; productName?: string
 }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -60,7 +61,7 @@ function Lightbox({ imagenes, index, onClose, onNavigate }: {
 
       <img
         src={imgSrc(imagen)}
-        alt={imagen.alternativeText ?? "Imagen del producto"}
+        alt={imagen.alternativeText ?? (productName ? `Imagen de ${productName}` : "Imagen del producto")}
         className="max-w-full max-h-full object-contain rounded-lg"
         onClick={e => e.stopPropagation()}
       />
@@ -75,7 +76,7 @@ function Lightbox({ imagenes, index, onClose, onNavigate }: {
   )
 }
 
-const CarouselProducto = ({ imagenes }: CarouselProductoProps) => {
+const CarouselProducto = ({ imagenes, productName }: CarouselProductoProps) => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   if (imagenes.length === 0) {
@@ -96,8 +97,9 @@ const CarouselProducto = ({ imagenes }: CarouselProductoProps) => {
                 className="group relative block w-full aspect-square overflow-hidden rounded-lg cursor-zoom-in">
                 <img
                   src={imgSrc(imagen)}
-                  alt={imagen.alternativeText ?? "Imagen producto"}
+                  alt={imagen.alternativeText ?? (productName ? `Imagen de ${productName}` : "Imagen del producto")}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
                 <span className="absolute bottom-2 right-2 p-1.5 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity">
                   <ZoomIn size={16} />
@@ -116,6 +118,7 @@ const CarouselProducto = ({ imagenes }: CarouselProductoProps) => {
           index={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
           onNavigate={setLightboxIndex}
+          productName={productName}
         />
       )}
     </div>

@@ -5,7 +5,7 @@ import { BlogPostType, CATEGORIA_BLOG_LABELS } from "@/types/blog-post"
 import BlocksRenderer from "../components/BlocksRenderer"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://joyeriamiraclesweb.com"
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 
 async function fetchPost(slug: string): Promise<BlogPostType | null> {
   try {
@@ -60,6 +60,7 @@ export async function generateMetadata({
   return {
     title: metaTitulo,
     description: descripcion,
+    alternates: { canonical: `${SITE}/blog/${post.slug}` },
     ...(post.seo_keywords && { keywords: post.seo_keywords }),
     openGraph: {
       title: `${metaTitulo} | Joyería Miracles`,
@@ -177,6 +178,7 @@ export default async function BlogPostPage({
               src={imgUrl}
               alt={post.imagen_portada?.alternativeText ?? post.titulo}
               className="w-full object-cover max-h-[480px]"
+              loading="lazy"
             />
           </figure>
         )}

@@ -161,7 +161,7 @@ export default async function Page({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CategoryClient categorySlug={categorySlug} categoryName={categoryName} />
+      <CategoryClient categorySlug={categorySlug} categoryName={categoryName} initialProducts={products} />
     </>
   )
 }

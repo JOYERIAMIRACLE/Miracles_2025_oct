@@ -24,18 +24,27 @@ const FeatureProducts = () => {
                     {loading && <SkeletonSchema grid={3} />}
 
                     {result !== null && result.map((producto: ProductType) => {
-                        const { id, imagenes, nombreProducto, materialProducto, costo, slug, documentId } = producto
+                        const { id, imagenes, nombreProducto, materialProducto, costo, slug, documentId, stock } = producto
                         const key = id ?? documentId
+                        // stock null = sin control de inventario para esta pieza (se asume
+                        // disponible); solo un 0 o negativo explícito cuenta como agotado.
+                        const outOfStock = typeof stock === 'number' && stock <= 0
 
                         return (
                             <CarouselItem key={key} className="md:basis-1/2 lg:basis-1/3 group">
                                 <div className="p-1">
                                     <Card className="py-4 border border-gray-200 shadow-none">
                                         <CardContent className="relative flex items-center justify-center px-6 py-2">
+                                            {outOfStock && (
+                                                <span className="absolute top-2 left-2 z-10 px-2 py-1 text-xs font-semibold text-white bg-red-600/90 rounded-full backdrop-blur-sm">
+                                                    Agotado
+                                                </span>
+                                            )}
                                             {imagenes && imagenes.length > 0 && imagenes[0]?.url ? (
                                                 <img
                                                     src={imagenes[0].url.startsWith('http') ? imagenes[0].url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${imagenes[0].url}`}
-                                                    alt={nombreProducto} />
+                                                    alt={nombreProducto}
+                                                    loading="lazy" />
                                             ) : (
                                                 <div className="w-full aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
                                                     <span className="text-5xl">💍</span>
@@ -50,19 +59,21 @@ const FeatureProducts = () => {
                                                             className="text-gray-600"
                                                         />
                                                     )}
-                                                    <IconButton
-                                                        onClick={() => addItem(producto)}
-                                                        icon={<ShoppingCart size={20}/>}
-                                                        className="text-gray-600"
-                                                    />
+                                                    {!outOfStock && (
+                                                        <IconButton
+                                                            onClick={() => addItem(producto)}
+                                                            icon={<ShoppingCart size={20}/>}
+                                                            className="text-gray-600"
+                                                        />
+                                                    )}
                                                 </div>
                                             </div>
                                         </CardContent>
                                         <div className="flex justify-between gap-4 px-8">
                                             <h3 className="text-lg font-bold">{nombreProducto}</h3>
                                             <div className="flex items-center justify-between gap-3">
-                                                <p className="px-2 py-1 text-white bg-black rounded-full dark:bg-white dark:text-black w-fit">{materialProducto}</p>
-                                                <p className="px-2 py-1 text-white bg-yellow-900 rounded-full w-fit">{costo}</p>
+                                                <p className="px-2 py-1 text-xs text-white bg-amber-800/80 backdrop-blur-sm rounded-full w-fit">{materialProducto}</p>
+                                                <p className="px-2 py-1 text-white bg-amber-900 rounded-full w-fit">{costo}</p>
                                             </div>
                                         </div>
                                     </Card>

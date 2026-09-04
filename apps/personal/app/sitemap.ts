@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next"
 
 export const dynamic = "force-static"
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://joyeriamiraclesweb.com"
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 async function fetchSlugs(endpoint: string, field: string): Promise<string[]> {
@@ -32,6 +32,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
     { url: `${SITE}/nosotros`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    { url: `${SITE}/terminos`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE}/privacidad`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE}/envios`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE}/devoluciones`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
   ]
 
   const categoryRoutes: MetadataRoute.Sitemap = categorySlugs.map(slug => ({

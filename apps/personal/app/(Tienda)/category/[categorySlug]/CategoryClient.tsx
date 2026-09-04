@@ -7,26 +7,39 @@ import FiltersControlsCategory from "./components/filters-controls-category"
 import ProductCard1 from "./components/product-card1"
 import { useState } from "react"
 import { useGetCategoryProduct } from "@/api/getCategoryProduct"
+import { ProductType } from "@/types/product"
 
 interface Props {
   categorySlug: string
   categoryName: string
+  initialProducts?: ProductType[]
 }
 
 function tituloDesdeSlug(slug: string) {
   return slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
 }
 
-export default function CategoryClient({ categorySlug, categoryName }: Props) {
+export default function CategoryClient({ categorySlug, categoryName, initialProducts }: Props) {
   const pathname = usePathname()
   // El shell "loading" (ver generateStaticParams) no trae el slug real —
-  // se lee de la URL, igual que ya hace /producto/[productoSlug].
+  // se lee de la URL, igual que ya hace /producto/[productoSlug]. Los
+  // productos que trajo el server para ese shell son de un slug ficticio
+  // ("loading"), así que ahí no se pueden usar como dato inicial real.
   const realSlug = categorySlug !== "loading" ? categorySlug : (pathname.split("/").filter(Boolean).pop() ?? "")
   const displayName = categorySlug !== "loading" ? categoryName : tituloDesdeSlug(realSlug)
+  const usableInitialProducts = categorySlug !== "loading" ? initialProducts : undefined
 
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo, setFilterEstilo] = useState("")
-  const { result: products, loading } = useGetCategoryProduct(realSlug)
+  const { result: fetchedProducts, loading: fetching } = useGetCategoryProduct(realSlug)
+
+  // El fetch server-side (page.tsx) ya trajo los productos para el primer
+  // render — se usan de inmediato en vez de mostrar el skeleton mientras
+  // useGetCategoryProduct hace su propio fetch client-side (que sigue
+  // corriendo de fondo y termina reemplazando este dato si cambia algo,
+  // por ejemplo un slug obsoleto en un build viejo).
+  const products: ProductType[] | null = fetchedProducts ?? usableInitialProducts ?? null
+  const loading = products === null && fetching
 
   const filteredProducts = (products ?? []).filter((product) => {
     const matchesMaterial = filterMaterial === "" || product.materialProducto === filterMaterial
@@ -53,6 +66,13 @@ export default function CategoryClient({ categorySlug, categoryName }: Props) {
       </div>
 
       <div className="max-w-6xl py-8 mx-auto sm:py-16 px-6 sm:px-24">
+        {/* Breadcrumb */}
+        <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
+          <Link href="/" className="hover:text-amber-600">Inicio</Link>
+          <span>/</span>
+          <span className="text-gray-700 dark:text-gray-300">{displayName}</span>
+        </nav>
+
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-semibold italic text-gray-500">Catálogo de Productos</h2>
           <Separator />

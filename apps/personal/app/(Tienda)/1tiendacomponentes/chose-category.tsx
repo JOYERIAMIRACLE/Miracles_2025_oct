@@ -45,6 +45,7 @@ const ChoseCategory = () => {
                   src={category.MainImage.url.startsWith('http') ? category.MainImage.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${category.MainImage.url}`}
                   alt={category.NombreCategoria}
                   className='max-w-[270px] transition duration-300 ease-in-out rounded-lg group-hover:scale-110 '
+                  loading='lazy'
                   />
                 ) : (
                   <div className='max-w-[270px] w-full aspect-square bg-slate-800 rounded-lg flex items-center justify-center'>

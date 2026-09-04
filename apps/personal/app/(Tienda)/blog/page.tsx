@@ -3,6 +3,7 @@ import { BlogPostType } from "@/types/blog-post"
 import BlogCard from "./components/BlogCard"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+const SITE_URL = "https://miracles-frontend.pages.dev"
 
 async function fetchBlogPosts(): Promise<BlogPostType[]> {
   try {
@@ -21,7 +22,16 @@ async function fetchBlogPosts(): Promise<BlogPostType[]> {
 export const metadata: Metadata = {
   title: "Blog",
   description: "Tips de joyería, tendencias, guías de regalo y cuidado de tus joyas. Todo lo que necesitas saber sobre joyería en Miracles.",
+  alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
+    title: "Blog | Joyería Miracles",
+    description: "Tips de joyería, tendencias y guías de regalo.",
+    url: `${SITE_URL}/blog`,
+    siteName: "Joyería Miracles",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
     title: "Blog | Joyería Miracles",
     description: "Tips de joyería, tendencias y guías de regalo.",
   },

@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import { ProductType } from "@/types/product"
 import ProductoClient from "./ProductoClient"
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+const BACKEND  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+const SITE_URL = "https://miracles-frontend.pages.dev"
 
 async function fetchProduct(slug: string): Promise<ProductType | null> {
   try {
@@ -66,16 +67,14 @@ export async function generateMetadata({
     ? imagen.url.startsWith("http") ? imagen.url : `${BACKEND}${imagen.url}`
     : undefined
 
-  const siteUrl = "https://miracles-frontend.pages.dev"
-
   return {
     title: `${nombre} | Joyería Miracles`,
     description: descripcion,
-    alternates: { canonical: `${siteUrl}/producto/${product.slug}` },
+    alternates: { canonical: `${SITE_URL}/producto/${product.slug}` },
     openGraph: {
       title: `${nombre} | Joyería Miracles`,
       description: descripcion,
-      url: `${siteUrl}/producto/${product.slug}`,
+      url: `${SITE_URL}/producto/${product.slug}`,
       siteName: "Joyería Miracles",
       type: "website",
       ...(imageUrl && { images: [{ url: imageUrl, width: 800, height: 800, alt: nombre }] }),
@@ -117,7 +116,7 @@ export default async function Page({
     material: product.materialProducto ?? undefined,
     offers: {
       "@type": "Offer",
-      url: `https://miracles-frontend.pages.dev/producto/${product.slug}`,
+      url: `${SITE_URL}/producto/${product.slug}`,
       priceCurrency: "MXN",
       price: product.costo ?? 0,
       availability: "https://schema.org/InStock",

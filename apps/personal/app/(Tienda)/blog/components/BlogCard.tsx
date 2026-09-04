@@ -32,6 +32,7 @@ export default function BlogCard({ post }: { post: BlogPostType }) {
               src={imgUrl}
               alt={post.imagen_portada?.alternativeText ?? post.titulo}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
             />
           </div>
         ) : (

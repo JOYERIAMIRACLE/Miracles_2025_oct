@@ -1,5 +1,31 @@
 import Image from "next/image"
 import Link  from "next/link"
+import type { Metadata } from "next"
+
+const SITE_URL = "https://miracles-frontend.pages.dev"
+
+const TITLE = "Joyería Miracles | Oro y Plata de Alta Calidad"
+const DESCRIPTION = "Joyería fina en oro de 10k y plata 925: anillos, cadenas, aretes, dijes, pulsos y más. Envíos a todo México."
+
+export const metadata: Metadata = {
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Joyería Miracles",
+    type: "website",
+    images: [{ url: `${SITE_URL}/portada%20home.jpg.jpg`, width: 1200, height: 630, alt: "Joyería Miracles" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [`${SITE_URL}/portada%20home.jpg.jpg`],
+  },
+}
 
 export default function HeroPage() {
   return (
@@ -45,7 +71,7 @@ export default function HeroPage() {
           </Link>
           <Link
             href="/tienda"
-            className="px-10 py-3 bg-yellow-600/90 text-white text-xs tracking-widest uppercase hover:bg-yellow-500 transition-all duration-300"
+            className="px-10 py-3 bg-amber-600/90 text-white text-xs tracking-widest uppercase hover:bg-amber-700 transition-all duration-300"
           >
             Descubrir más
           </Link>
