@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { useGetMateriales, createMaterial, updateMaterial, deleteMaterial } from "@/api/material/getMateriales"
 import { Material, MaterialPayload } from "@/types/material"
 import { fetchCatalogo, fetchSkus } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
+import { fetchProductosConSku } from "@/api/inventarioEmpresa/getInventario"
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
 import { SkuEntry } from "@/types/skuCatalogo"
 import { SkuBuilder } from "@/components/Shared/SkuBuilder"
@@ -40,7 +41,7 @@ function ymdToDate(s: string): Date | null { return s ? new Date(`${s}T00:00:00Z
 
 const ESTADO_LABEL: Record<string, string> = { borrador: "Borrador", recibida: "Recibida" }
 
-type CatalogoProd = { sku: string; nombre: string; categoria: string; material: string; talla: string }
+type CatalogoProd = { sku: string; nombre: string; categoria: string; material: string; talla: string; pesoGramos?: number }
 function flattenProductos(nodos: CatalogoNodo[], cat = "", mat = ""): CatalogoProd[] {
   const out: CatalogoProd[] = []
   for (const n of nodos) {
@@ -706,19 +707,31 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   const searchRefs = useRef<Record<number, HTMLDivElement | null>>({})
 
   useEffect(() => {
-    // Carga árbol legacy + SKUs planos y los fusiona en la lista buscable
+    // Carga piezas ya reales en inventario + árbol legacy + SKUs planos, y
+    // los fusiona en la lista buscable. Las piezas reales van primero: si
+    // "Esclava Cubana" ya existe con su peso real conocido, buscarla aquí
+    // debe encontrar ESE producto (y ese peso), no solo una combinación de
+    // SKU armada en el constructor que nunca se llegó a fabricar.
     Promise.all([
+      fetchProductosConSku().catch(() => []),
       fetchCatalogo().catch(() => [] as import("@/types/catalogoJoyeria").CatalogoNodo[]),
       fetchSkus().catch(() => [] as SkuEntry[]),
-    ]).then(([arbol, skuEntries]) => {
+    ]).then(([productos, arbol, skuEntries]) => {
+      const fromProductos: CatalogoProd[] = productos.map(p => ({
+        sku: p.sku, nombre: p.nombreProducto, categoria: p.categoriaJoya ?? "",
+        material: p.materialProducto ?? "", talla: p.talla ?? "",
+        pesoGramos: p.pesoGramos ?? undefined,
+      }))
       const fromTree = flattenProductos(arbol)
       const fromSkus: CatalogoProd[] = skuEntries.map(s => ({
         sku: s.sku, nombre: s.nombre, categoria: s.tipoCategoria, material: s.matLabel, talla: s.talla,
+        pesoGramos: s.pesoGramos,
       }))
-      // Merge: SKUs planos tienen prioridad (deduplicar por sku)
+      // Merge: piezas reales primero, luego SKUs planos, luego árbol legacy
+      // (deduplicar por sku, el primero que aparece gana)
       const seen = new Set<string>()
       const merged: CatalogoProd[] = []
-      for (const p of [...fromSkus, ...fromTree]) {
+      for (const p of [...fromProductos, ...fromSkus, ...fromTree]) {
         if (!seen.has(p.sku)) { seen.add(p.sku); merged.push(p) }
       }
       setCatalogoProds(merged)
@@ -1010,7 +1023,10 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                               <button key={p.sku} type="button"
                                 onClick={() => {
                                   const cat = CATEGORIAS_JOYA.find(c => c.toLowerCase() === p.categoria.toLowerCase()) ?? guessCat(linea.descripcion)
-                                  setPiezas(li, prev => [...prev, { ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla }])
+                                  setPiezas(li, prev => [...prev, {
+                                    ...emptyPieza(), nombre: p.nombre, categoriaJoya: cat as CategoriaJoya | "", talla: p.talla,
+                                    pesoGramos: p.pesoGramos ? String(p.pesoGramos) : "",
+                                  }])
                                   setBusquedaCat("")
                                   setLineaBuscando(null)
                                 }}
@@ -1063,17 +1079,20 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                               ) ?? guessCat(linea.descripcion)
                               setCatalogoProds(prev => [
                                 ...prev.filter(p => p.sku !== entry.sku),
-                                { sku: entry.sku, nombre: entry.nombre, categoria: entry.tipoCategoria, material: entry.matLabel, talla: entry.talla },
+                                { sku: entry.sku, nombre: entry.nombre, categoria: entry.tipoCategoria, material: entry.matLabel, talla: entry.talla, pesoGramos: entry.pesoGramos },
                               ])
                               setPiezas(li, prev => [...prev, {
                                 ...emptyPieza(),
                                 nombre: entry.nombre,
                                 categoriaJoya: cat as CategoriaJoya | "",
                                 talla: entry.talla,
+                                pesoGramos: entry.pesoGramos ? String(entry.pesoGramos) : "",
                               }])
                               setBusquedaCat("")
                               setSkuBuilderLinea(null)
-                              toast.success(`SKU ${entry.sku} guardado en catálogo`)
+                              toast.success(entry.pesoGramos
+                                ? `SKU ${entry.sku} guardado · ${entry.pesoGramos}g prellenados`
+                                : `SKU ${entry.sku} guardado en catálogo`)
                             }}
                           />
                         </div>

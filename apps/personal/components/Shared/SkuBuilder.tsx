@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Check, ChevronRight, Loader2, X, Plus } from "lucide-react"
-import {
-  MATERIALES_SKU, TIPOS_SKU, ESTILOS_SKU, TALLAS_SKU, EXTRAS_SKU, PIEDRAS_SKU,
-  SkuEntry, buildSku, buildNombre,
-} from "@/types/skuCatalogo"
+import { Check, ChevronRight, Loader2, X, Plus, Settings2, Trash2 } from "lucide-react"
+import { SkuEntry, buildSku, buildNombre } from "@/types/skuCatalogo"
+
+type MatEntry   = { code: string; label: string; kind: "gold" | "silv" }
+type TipoEntry  = { code: string; label: string; catJoya: string }
 import { addSku } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
-import { fetchSkuOpciones, createSkuOpcion, SkuOpcionRaw } from "@/api/skuOpciones/getSkuOpciones"
+import { fetchSkuOpciones, createSkuOpcion, deleteSkuOpcion, SkuOpcionRaw } from "@/api/skuOpciones/getSkuOpciones"
 
 interface Props {
   defaultTipo?: string
@@ -60,12 +60,13 @@ function AddBtn({ onClick }: { onClick: () => void }) {
 
 // ── mini-form inline ─────────────────────────────────────────────────────────
 function MiniForm({
-  placeholder, onSave, onCancel, extraField,
+  placeholder, onSave, onCancel, extraField, numberField,
 }: {
   placeholder: string
   onSave: (label: string, extra?: string) => void
   onCancel: () => void
   extraField?: { label: string; options: { value: string; label: string }[] }
+  numberField?: { label: string; placeholder?: string }
 }) {
   const [val, setVal] = useState("")
   const [extra, setExtra] = useState(extraField?.options[0]?.value ?? "")
@@ -75,7 +76,7 @@ function MiniForm({
 
   return (
     <form className="flex items-center gap-1.5 mt-2 flex-wrap"
-      onSubmit={e => { e.preventDefault(); if (val.trim()) onSave(val.trim(), extra) }}>
+      onSubmit={e => { e.preventDefault(); if (val.trim()) onSave(val.trim(), extra || undefined) }}>
       <input ref={ref} value={val} onChange={e => setVal(e.target.value)}
         placeholder={placeholder} maxLength={40}
         className="h-7 px-2 text-xs bg-slate-800 border border-violet-500/40 rounded
@@ -87,6 +88,11 @@ function MiniForm({
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
+      )}
+      {numberField && (
+        <input type="number" min="0" step="0.1" value={extra} onChange={e => setExtra(e.target.value)}
+          title={numberField.label} placeholder={numberField.placeholder ?? numberField.label}
+          className="h-7 w-20 px-2 text-xs bg-slate-800 border border-slate-700 rounded text-slate-300 outline-none focus:border-violet-500"/>
       )}
       <button type="submit"
         className="h-7 px-2.5 text-[10px] font-semibold bg-violet-600 hover:bg-violet-500 text-white rounded transition-colors">
@@ -102,15 +108,15 @@ function MiniForm({
 
 // ── componente principal ─────────────────────────────────────────────────────
 export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
-  const [mat,    setMat]    = useState<typeof MATERIALES_SKU[number] | null>(null)
-  const [tipo,   setTipo]   = useState<typeof TIPOS_SKU[number] | null>(
-    defaultTipo ? (TIPOS_SKU.find(t => t.code === defaultTipo) ?? null) : null
-  )
+  const [mat,    setMat]    = useState<MatEntry | null>(null)
+  const [tipo,   setTipo]   = useState<TipoEntry | null>(null)
   const [estilo, setEstilo] = useState<{ code: string; label: string } | null>(null)
   const [talla,  setTalla]  = useState<string>("")
   const [extras, setExtras] = useState<string[]>([])
   const [piedra, setPiedra] = useState<string>("")
-  const [saving, setSaving] = useState(false)
+  const [saving,     setSaving]     = useState(false)
+  const [showManage, setShowManage] = useState(false)
+  const [deleting,   setDeleting]   = useState<Set<string>>(new Set())
 
   // ── opciones del servidor ──────────────────────────────────────────────────
   const [serverOps, setServerOps] = useState<SkuOpcionRaw[]>([])
@@ -119,6 +125,14 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
   useEffect(() => {
     fetchSkuOpciones().then(ops => { setServerOps(ops); setLoaded(true) })
   }, [])
+
+  // cuando carga el catálogo, aplica defaultTipo
+  useEffect(() => {
+    if (defaultTipo && !tipo && serverOps.length > 0) {
+      const found = serverOps.find(o => o.categoria === "tipo" && o.code === defaultTipo)
+      if (found) setTipo(toTipo(found))
+    }
+  }, [serverOps, defaultTipo, tipo])
 
   // ── mini-form "+" ──────────────────────────────────────────────────────────
   type AddingStep = "mat" | "tipo" | "estilo" | "talla" | "extra" | null
@@ -138,7 +152,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
       ...(step === "mat"    ? { meta: { kind: extra ?? "silv" } } : {}),
       ...(step === "tipo"   ? { meta: { catJoya: label } } : {}),
       ...(step === "estilo" ? { parentCode: tipo?.code } : {}),
-      ...(step === "talla"  ? { parentCode: tipo?.code } : {}),
+      ...(step === "talla"  ? { parentCode: tipo?.code, ...(extra ? { meta: { pesoGramos: Number(extra) } } : {}) } : {}),
     }
     // Optimistic: agrega inmediatamente aunque Strapi falle
     const tempId = `local-${Date.now()}`
@@ -157,35 +171,34 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
     }
   }
 
-  // ── opciones derivadas: siempre base estática + extras del servidor ─────────
-  function mergeOps<T extends { code: string }>(base: T[], srv: T[]): T[] {
-    const baseCodes = new Set(base.map(o => o.code))
-    return [...base, ...srv.filter(o => !baseCodes.has(o.code))]
+  async function handleDelete(op: SkuOpcionRaw) {
+    if (!op.documentId || op.documentId.startsWith("local-")) return
+    setDeleting(prev => new Set(prev).add(op.documentId))
+    const ok = await deleteSkuOpcion(op.documentId)
+    setDeleting(prev => { const s = new Set(prev); s.delete(op.documentId); return s })
+    if (ok) setServerOps(prev => prev.filter(o => o.documentId !== op.documentId))
   }
 
-  const srvMat     = serverOps.filter(o => o.categoria === "material").map(toMat)
-  const srvTipo    = serverOps.filter(o => o.categoria === "tipo").map(toTipo)
-  const srvExtras  = serverOps.filter(o => o.categoria === "extra")
-  const srvPiedras = serverOps.filter(o => o.categoria === "piedra")
+  // ── opciones 100% desde Strapi ─────────────────────────────────────────────
+  const materiales      = serverOps.filter(o => o.categoria === "material").map(toMat)
+  const tipos           = serverOps.filter(o => o.categoria === "tipo").map(toTipo)
+  const extrasOpciones  = serverOps.filter(o => o.categoria === "extra")
+  const piedrasOpciones = serverOps.filter(o => o.categoria === "piedra")
 
-  const materiales = mergeOps(MATERIALES_SKU, srvMat)
-  const tipos      = mergeOps(TIPOS_SKU, srvTipo)
-  const extrasOpciones  = mergeOps(EXTRAS_SKU,  srvExtras)
-  const piedrasOpciones = mergeOps(PIEDRAS_SKU, srvPiedras)
+  const estilosDisponibles = tipo
+    ? serverOps.filter(o => o.categoria === "estilo" && o.parentCode === tipo.code).map(toEstilo)
+    : []
 
-  const estilosDisponibles = tipo ? (() => {
-    const base = ESTILOS_SKU[tipo.code] ?? []
-    const srv  = serverOps.filter(o => o.categoria === "estilo" && o.parentCode === tipo.code).map(toEstilo)
-    return mergeOps(base, srv)
-  })() : []
-
-  const tallasDisponibles = tipo ? (() => {
-    const base    = TALLAS_SKU[tipo.code] ?? []
-    const srvCods = serverOps
-      .filter(o => o.categoria === "talla" && o.parentCode === tipo.code)
-      .map(o => o.code)
-    return [...base, ...srvCods.filter(c => !base.includes(c))]
-  })() : []
+  const tallaOpciones = tipo
+    ? serverOps.filter(o => o.categoria === "talla" && o.parentCode === tipo.code)
+    : []
+  const tallasDisponibles = tallaOpciones.map(o => o.code)
+  // Peso sugerido (g) guardado en la opción de talla — prellena el peso por
+  // pieza en Inspección de compras sin obligar a nada, se sigue editando ahí.
+  function pesoParaTalla(code: string): number | undefined {
+    return tallaOpciones.find(o => o.code === code)?.meta?.pesoGramos as number | undefined
+  }
+  const pesoSugerido = talla ? pesoParaTalla(talla) : undefined
 
   // ── lógica del wizard ──────────────────────────────────────────────────────
   const step      = !mat ? "mat" : !tipo ? "tipo" : !estilo ? "estilo" : !talla ? "talla" : "extras"
@@ -223,6 +236,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
       estilo: e?.code ?? "", estiloLabel: e?.label ?? "",
       talla: ta, extras: ex,
       nombre: buildNombre(tipo.label, e?.label ?? ""),
+      pesoGramos: ta ? pesoParaTalla(ta) : undefined,
     }
     setSaving(true)
     try {
@@ -242,6 +256,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
       estilo: estilo.code, estiloLabel: estilo.label,
       talla, extras: extrasConPiedra,
       nombre: buildNombre(tipo.label, estilo.label),
+      pesoGramos: pesoParaTalla(talla),
     }
     setSaving(true)
     try {
@@ -270,13 +285,78 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
             </p>
           )}
         </div>
-        {onClose && (
-          <button type="button" onClick={onClose}
-            className="text-slate-600 hover:text-slate-300 transition p-1 rounded">
-            <X size={15} />
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => setShowManage(m => !m)}
+            title={showManage ? "Volver al constructor" : "Gestionar catálogo"}
+            className={`transition p-1.5 rounded hover:bg-slate-800 ${showManage ? "text-violet-400" : "text-slate-500 hover:text-slate-300"}`}>
+            <Settings2 size={15} />
           </button>
-        )}
+          {onClose && (
+            <button type="button" onClick={onClose}
+              className="text-slate-600 hover:text-slate-300 transition p-1 rounded">
+              <X size={15} />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Panel de gestión */}
+      {showManage && (
+        <div className="px-4 py-4 space-y-5">
+          <p className="text-[10px] text-slate-500 leading-relaxed">
+            Todo el catálogo vive en Strapi. Elimina o agrega desde aquí; los cambios aplican de inmediato.
+          </p>
+          {(
+            [
+              { key: "material" as const, label: "Materiales" },
+              { key: "tipo"     as const, label: "Tipos de pieza" },
+              { key: "estilo"   as const, label: "Estilos" },
+              { key: "talla"    as const, label: "Tallas" },
+              { key: "extra"    as const, label: "Extras" },
+              { key: "piedra"   as const, label: "Piedras" },
+            ] as const
+          ).map(cat => {
+            const ops = serverOps.filter(o => o.categoria === cat.key)
+            return (
+              <div key={cat.key}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+                  {cat.label}
+                </p>
+                {ops.length === 0 ? (
+                  <p className="text-[11px] text-slate-600 italic">Vacío — corre el seed o agrega desde el constructor</p>
+                ) : (
+                  <div className="space-y-1">
+                    {ops.map(op => (
+                      <div key={op.documentId}
+                        className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/40">
+                        <div className="min-w-0 flex items-center gap-2">
+                          <span className="text-xs text-slate-200 font-medium truncate">{op.label}</span>
+                          <span className="text-[10px] font-mono text-slate-600 shrink-0">{op.code}</span>
+                          {op.parentCode && (
+                            <span className="text-[9px] text-slate-400 bg-slate-700/50 px-1 rounded shrink-0">
+                              /{op.parentCode}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          disabled={deleting.has(op.documentId)}
+                          onClick={() => handleDelete(op)}
+                          className="shrink-0 text-slate-400 hover:text-red-400 disabled:opacity-40 transition-colors p-1 rounded hover:bg-red-500/10">
+                          {deleting.has(op.documentId)
+                            ? <Loader2 size={13} className="animate-spin" />
+                            : <Trash2 size={13} />
+                          }
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Progreso */}
       <div className="flex items-center gap-1 px-4 pt-4">
@@ -297,11 +377,18 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
         ))}
       </div>
 
+      {!showManage && (<>
       {/* Cuerpo */}
       <div className="px-4 py-4 space-y-4">
+        {!loaded && (
+          <div className="flex items-center gap-2 py-6 justify-center text-slate-500">
+            <Loader2 size={15} className="animate-spin" />
+            <span className="text-xs">Cargando catálogo…</span>
+          </div>
+        )}
 
         {/* Material */}
-        <div>
+        {loaded && <div>
           <div className="flex items-center justify-between mb-2">
             <p className={lbl.replace("mb-2","mb-0")}>Material</p>
             <AddBtn onClick={() => setAddingTo("mat")} />
@@ -318,10 +405,10 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
               onSave={(label, kind) => handleAdd("mat", label, kind)}
               onCancel={() => setAddingTo(null)} />
           )}
-        </div>
+        </div>}
 
         {/* Tipo */}
-        {mat && (
+        {loaded && mat && (
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className={lbl.replace("mb-2","mb-0")}>Tipo de pieza</p>
@@ -376,8 +463,16 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
             </div>
             {addingTo === "talla" && (
               <MiniForm placeholder="ej. 19cm o T13"
-                onSave={(label) => handleAdd("talla", label)}
+                numberField={{ label: "Peso sugerido (g)", placeholder: "g (opcional)" }}
+                onSave={(label, extra) => handleAdd("talla", label, extra)}
                 onCancel={() => setAddingTo(null)} />
+            )}
+            {talla && (
+              <p className="text-[10px] text-slate-500 mt-2">
+                {pesoSugerido
+                  ? <>Peso sugerido: <span className="text-violet-400 font-semibold">{pesoSugerido}g</span> por pieza — se prellenará en Inspección, ahí se puede ajustar.</>
+                  : "Esta talla no tiene peso sugerido guardado — en Inspección se captura a mano."}
+              </p>
             )}
           </div>
         )}
@@ -423,7 +518,10 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
             <div>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">SKU generado</p>
               <p className="text-base font-mono font-bold text-violet-400 tracking-widest mt-0.5">{skuPreview}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{nombrePreview} · {mat?.label}</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {nombrePreview} · {mat?.label}
+                {pesoSugerido && <> · <span className="text-violet-400">{pesoSugerido}g sugeridos</span></>}
+              </p>
             </div>
             <button type="button" onClick={guardar} disabled={saving}
               className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500
@@ -436,6 +534,7 @@ export function SkuBuilder({ defaultTipo, onAdd, onClose }: Props) {
           </div>
         </div>
       )}
+      </>)}
     </div>
   )
 }

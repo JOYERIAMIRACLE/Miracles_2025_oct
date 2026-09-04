@@ -32,6 +32,29 @@ export function useGetInventario() {
   return { items, setItems, loading }
 }
 
+// Piezas reales ya existentes en inventario (con SKU) — usado por Inspección
+// de compras para que buscar "esclava cubana" encuentre el producto real ya
+// creado, con su peso real ya conocido, en vez de solo las combinaciones de
+// SKU armadas en el constructor que nunca se llegaron a fabricar.
+export type ProductoConSku = {
+  sku: string; nombreProducto: string; categoriaJoya: string | null
+  materialProducto: string | null; talla: string | null; pesoGramos: number | null
+}
+export async function fetchProductosConSku(): Promise<ProductoConSku[]> {
+  try {
+    const params = new URLSearchParams({
+      "pagination[pageSize]": "500",
+      "filters[sku][$notNull]": "true",
+      "fields[0]": "sku", "fields[1]": "nombreProducto", "fields[2]": "categoriaJoya",
+      "fields[3]": "materialProducto", "fields[4]": "talla", "fields[5]": "pesoGramos",
+    })
+    const res = await fetch(`${URL}?${params}`)
+    if (!res.ok) return []
+    const json = await res.json()
+    return (json.data ?? []) as ProductoConSku[]
+  } catch { return [] }
+}
+
 export async function createProducto(payload: Partial<ProductType> & { categoria?: string | null }): Promise<ProductType> {
   const res = await fetch(URL, {
     method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },

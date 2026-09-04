@@ -114,6 +114,10 @@ export type SkuEntry = {
   talla: string
   extras: string[]
   nombre: string
+  // Peso sugerido en gramos para esta talla — viene de la opción de talla
+  // en el catálogo de SKUs (sku-opcion), no es obligatorio ni definitivo:
+  // solo prellena el peso por pieza en Inspección, sigue siendo editable.
+  pesoGramos?: number
 }
 
 export function buildSku(mat: string, tipo: string, estilo: string, talla: string, extras: string[]): string {
