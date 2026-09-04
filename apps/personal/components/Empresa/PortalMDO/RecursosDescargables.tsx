@@ -11,6 +11,7 @@ import { uploadMedia } from "@/lib/upload"
 import { getToken, getUserRole } from "@/lib/auth"
 import { Card, TabBar } from "./shared"
 import { Skeleton } from "@/components/ui/skeleton"
+import { confirmDialog } from "../ConfirmDialog"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
@@ -555,6 +556,7 @@ function RecursoCard({ variantes, puedeSubir, eliminando, onPreview, onDescargar
   onEliminar: (documentId: string, nombre: string) => void; onEditar: (r: RecursoType) => void
 }) {
   const [activoId, setActivoId] = useState(variantes[0].documentId)
+  const [confirmando, setConfirmando] = useState(false)
   const r = variantes.find(v => v.documentId === activoId) ?? variantes[0]
   const mime = r.archivo?.mime ?? ""
   const ext = (r.archivo?.ext ?? r.archivo?.name?.split(".").pop() ?? "").replace(".", "").toUpperCase()
@@ -590,17 +592,29 @@ function RecursoCard({ variantes, puedeSubir, eliminando, onPreview, onDescargar
               <Download className="h-3.5 w-3.5" />
             </button>
           )}
-          {puedeSubir && (
-            <button type="button" onClick={e => { e.stopPropagation(); onEditar(r) }}
-              className="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-slate-300 dark:text-slate-600 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors opacity-0 group-hover:opacity-100" title="Editar recurso">
-              <Pencil className="h-3 w-3" />
-            </button>
-          )}
-          {puedeSubir && (
-            <button type="button" onClick={e => { e.stopPropagation(); onEliminar(r.documentId, r.nombre) }} disabled={eliminando === r.documentId}
-              className="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100">
-              <Trash2 className="h-3 w-3" />
-            </button>
+          {confirmando ? (
+            <span className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">¿Eliminar?</span>
+              <button type="button" onClick={() => { setConfirmando(false); onEliminar(r.documentId, r.nombre) }} disabled={eliminando === r.documentId}
+                className="text-[10px] text-red-500 dark:text-red-400 font-medium disabled:opacity-50">Sí</button>
+              <button type="button" onClick={() => setConfirmando(false)}
+                className="text-[10px] text-slate-500 dark:text-slate-400">No</button>
+            </span>
+          ) : (
+            <>
+              {puedeSubir && (
+                <button type="button" onClick={e => { e.stopPropagation(); onEditar(r) }}
+                  className="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-slate-300 dark:text-slate-600 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors opacity-0 group-hover:opacity-100" title="Editar recurso">
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
+              {puedeSubir && (
+                <button type="button" onClick={e => { e.stopPropagation(); setConfirmando(true) }}
+                  className="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100">
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              )}
+            </>
           )}
         </div>
         {(r.variante?.trim() || r.descripcion) && <p className="text-xs text-slate-500 dark:text-slate-400 truncate leading-tight">{r.variante?.trim() || r.descripcion}</p>}
@@ -655,12 +669,13 @@ function SidebarNav({ tabs, activo, onSelect, onCrear, huerfanos, verHuerfanos, 
 }) {
   const [arrastrando, setArrastrando] = useState<number | null>(null)
   const [menuAbierto, setMenuAbierto] = useState<string | null>(null)
+  const [confirmandoElim, setConfirmandoElim] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const reordenables = tabs.filter(t => !t.esExtra)
 
   useEffect(() => {
     if (!menuAbierto) return
-    function handler(e: MouseEvent) { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuAbierto(null) }
+    function handler(e: MouseEvent) { if (menuRef.current && !menuRef.current.contains(e.target as Node)) { setMenuAbierto(null); setConfirmandoElim(null) } }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [menuAbierto])
@@ -704,16 +719,26 @@ function SidebarNav({ tabs, activo, onSelect, onCrear, huerfanos, verHuerfanos, 
             </button>
             {onEliminarCategoria && !t.esExtra && (conteos?.[t.id] ?? 0) === 0 && (
               <div ref={menuAbierto === t.id ? menuRef : undefined} className="relative shrink-0">
-                <button type="button" onClick={e => { e.stopPropagation(); setMenuAbierto(m => m === t.id ? null : t.id) }} title="Más opciones"
+                <button type="button" onClick={e => { e.stopPropagation(); setMenuAbierto(m => m === t.id ? null : t.id); setConfirmandoElim(null) }} title="Más opciones"
                   className={`h-6 w-6 flex items-center justify-center rounded-md text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${menuAbierto === t.id ? "opacity-100 bg-slate-100 dark:bg-slate-700" : "opacity-0 group-hover:opacity-100"}`}>
                   <MoreVertical className="h-3.5 w-3.5" />
                 </button>
                 {menuAbierto === t.id && (
-                  <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
-                    <button type="button" onClick={e => { e.stopPropagation(); setMenuAbierto(null); onEliminarCategoria(t.id) }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left">
-                      <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                    </button>
+                  <div className="absolute right-0 top-full mt-1 z-20 w-40 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
+                    {confirmandoElim === t.id ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5" onClick={e => e.stopPropagation()}>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">¿Eliminar?</span>
+                        <button type="button" onClick={() => { setMenuAbierto(null); setConfirmandoElim(null); onEliminarCategoria(t.id) }}
+                          className="text-xs text-red-500 font-medium">Sí</button>
+                        <button type="button" onClick={() => setConfirmandoElim(null)}
+                          className="text-xs text-slate-500 dark:text-slate-400">No</button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={e => { e.stopPropagation(); setConfirmandoElim(t.id) }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left">
+                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -953,9 +978,8 @@ export function RecursosDescargables({ seccion, extraTabs = [], layout = "tabs" 
   }
 
   async function handleEliminar(documentId: string, nombre: string) {
-    if (!window.confirm(`¿Eliminar "${nombre}"?`)) return
     setEliminando(documentId)
-    try { await deleteRecurso(documentId); reload() }
+    try { await deleteRecurso(documentId); toast.success(`"${nombre}" eliminado`); reload() }
     catch (e) { toast.error(`Error · ${(e as Error).message}`) }
     finally { setEliminando(null) }
   }
@@ -984,7 +1008,6 @@ export function RecursosDescargables({ seccion, extraTabs = [], layout = "tabs" 
   async function handleEliminarCategoria(id: string) {
     const persistida = categoriasPersistidas.find(c => c.nombre === id)
     if (!persistida) return
-    if (!window.confirm(`¿Eliminar la categoría "${id}"? Está vacía, no tiene recursos.`)) return
     try {
       await deleteRecursoCategoria(persistida.documentId)
       if (tabActivo === id) setTabActivo("")
@@ -1004,7 +1027,15 @@ export function RecursosDescargables({ seccion, extraTabs = [], layout = "tabs" 
     const mensaje = yaExiste
       ? `"${valorNuevo}" ya existe. Esto va a fusionar "${valorViejo}" con "${valorNuevo}"${sufijo}. ¿Continuar?`
       : `¿Renombrar "${valorViejo}" a "${valorNuevo}"${sufijo}?`
-    if ((afectados.length > 0 || categoriaPersistida || yaExiste) && !window.confirm(mensaje)) return
+    if (afectados.length > 0 || categoriaPersistida || yaExiste) {
+      const ok = await confirmDialog({
+        title: yaExiste ? "Fusionar valores" : "Renombrar valor",
+        message: mensaje,
+        confirmLabel: yaExiste ? "Fusionar" : "Renombrar",
+        variant: "action",
+      })
+      if (!ok) return
+    }
 
     try {
       await Promise.all(afectados.map(r => updateRecurso(r.documentId, { [campo]: valorNuevo })))

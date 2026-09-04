@@ -65,17 +65,17 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="flex items-center gap-1.5">
-      <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[11px] font-semibold text-slate-300 w-4 text-right">{value}</span>
+      <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-4 text-right">{value}</span>
     </div>
   )
 }
 
 // Pill de etapa
 function EtapaPill({ etapa }: { etapa: FunnelEtapa | null | undefined }) {
-  if (!etapa) return <span className="text-slate-700 text-[10px]">—</span>
+  if (!etapa) return <span className="text-slate-300 dark:text-slate-700 text-[10px]">—</span>
   return (
     <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>
       {FUNNEL_LABEL[etapa]}
@@ -243,24 +243,24 @@ export function HistorialPipelineView() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <History size={18} className="text-violet-400" />
-            <h1 className="text-2xl font-bold text-slate-100">Métricas</h1>
+            <History size={18} className="text-violet-600 dark:text-violet-400" />
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Métricas</h1>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-500">
             El trayecto completo de cada lead, cotización y pedido
           </p>
         </div>
 
         {/* Selector de año — solo aplica al trayecto de leads */}
         {subTab === "leads" && (
-          <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5">
+          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5">
             <button type="button" title="Año anterior" onClick={() => setAño(a => a - 1)}
-              className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
+              className="p-1 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 rounded transition">
               <ChevronLeft size={14} />
             </button>
-            <span className="text-sm font-semibold text-slate-200 w-12 text-center">{año}</span>
+            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 w-12 text-center">{año}</span>
             <button type="button" title="Año siguiente" onClick={() => setAño(a => Math.min(a + 1, hoy.getFullYear()))}
-              className={`p-1 rounded transition ${año >= hoy.getFullYear() ? "text-slate-700 cursor-default" : "text-slate-600 hover:text-slate-300"}`}>
+              className={`p-1 rounded transition ${año >= hoy.getFullYear() ? "text-slate-300 dark:text-slate-700 cursor-default" : "text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300"}`}>
               <ChevronRight size={14} />
             </button>
           </div>
@@ -268,11 +268,11 @@ export function HistorialPipelineView() {
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 w-fit">
         {SUB_TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setSubTab(t.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              subTab === t.id ? "bg-slate-800 text-violet-400" : "text-slate-500 hover:text-slate-300"
+              subTab === t.id ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400" : "text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}>
             <t.icon size={14} /> {t.label}
           </button>
@@ -281,11 +281,11 @@ export function HistorialPipelineView() {
 
       {/* De dónde vienen los clientes — no todos entran por Lead */}
       {subTab === "leads" && (
-        <p className="text-[11px] text-slate-600">
+        <p className="text-[11px] text-slate-400 dark:text-slate-600">
           De {clientes.length} clientes en total:{" "}
-          <span className="text-violet-400 font-semibold">{origenClientes.deLead} llegaron de lead</span> (marketing) ·{" "}
-          <span className="text-slate-400">{origenClientes.soloCotizaron} solo cotizaron</span> (sin pedido todavía) ·{" "}
-          <span className="text-slate-400">{origenClientes.directoAPedido} fueron directo a pedido</span> (sin cotizar)
+          <span className="text-violet-600 dark:text-violet-400 font-semibold">{origenClientes.deLead} llegaron de lead</span> (marketing) ·{" "}
+          <span className="text-slate-500 dark:text-slate-400">{origenClientes.soloCotizaron} solo cotizaron</span> (sin pedido todavía) ·{" "}
+          <span className="text-slate-500 dark:text-slate-400">{origenClientes.directoAPedido} fueron directo a pedido</span> (sin cotizar)
         </p>
       )}
 
@@ -294,28 +294,28 @@ export function HistorialPipelineView() {
       {/* KPIs del año */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Leads",       value: totalesAño.leads,       color: "text-slate-300",   pct: null },
-          { label: "Calificados", value: totalesAño.calificados, color: "text-violet-400",    pct: conv.cal },
-          { label: "Ofertas",     value: totalesAño.ofertas,     color: "text-violet-400",   pct: conv.of },
-          { label: "Pedidos",     value: totalesAño.pedidos,     color: "text-violet-400", pct: conv.ped },
-          { label: "Entregas",    value: totalesAño.entregas,    color: "text-violet-400",  pct: conv.ent },
-          { label: "Rechazadas",  value: totalesAño.rechazadas,  color: "text-red-400",     pct: Math.round((totalesAño.rechazadas / (totalesAño.leads || 1)) * 100) },
+          { label: "Leads",       value: totalesAño.leads,       color: "text-slate-700 dark:text-slate-300",   pct: null },
+          { label: "Calificados", value: totalesAño.calificados, color: "text-violet-600 dark:text-violet-400",    pct: conv.cal },
+          { label: "Ofertas",     value: totalesAño.ofertas,     color: "text-violet-600 dark:text-violet-400",   pct: conv.of },
+          { label: "Pedidos",     value: totalesAño.pedidos,     color: "text-violet-600 dark:text-violet-400", pct: conv.ped },
+          { label: "Entregas",    value: totalesAño.entregas,    color: "text-violet-600 dark:text-violet-400",  pct: conv.ent },
+          { label: "Rechazadas",  value: totalesAño.rechazadas,  color: "text-red-600 dark:text-red-400",     pct: Math.round((totalesAño.rechazadas / (totalesAño.leads || 1)) * 100) },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
+          <div key={k.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+            <p className="text-[11px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
             {k.pct !== null && (
-              <p className="text-[10px] text-slate-600 mt-0.5">{k.pct}% de leads</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-0.5">{k.pct}% de leads</p>
             )}
           </div>
         ))}
       </div>
 
       {/* Embudo de conversión */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
-          <TrendingUp size={13} className="text-slate-500" />
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Conversión {año}</p>
+          <TrendingUp size={13} className="text-slate-500 dark:text-slate-500" />
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">Conversión {año}</p>
         </div>
         {/* Barras — separadas de labels para que no desborden sobre el título */}
         <div className="flex items-end gap-2 h-14">
@@ -347,38 +347,38 @@ export function HistorialPipelineView() {
             { label: "Rechaz.",  value: totalesAño.rechazadas },
           ].map((b) => (
             <div key={b.label} className="flex-1 text-center">
-              <div className="text-[9px] text-slate-500 truncate">{b.label}</div>
-              <div className="text-[10px] font-bold text-slate-300">{b.value}</div>
+              <div className="text-[9px] text-slate-500 dark:text-slate-500 truncate">{b.label}</div>
+              <div className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{b.value}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Tabla de evolución mensual */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Evolución mensual {año}</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">Evolución mensual {año}</p>
           {mesFiltro !== null && (
             <button type="button" onClick={() => setMesFiltro(null)}
-              className="text-[10px] text-slate-500 hover:text-slate-300 border border-slate-700 rounded px-2 py-0.5 transition">
+              className="text-[10px] text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 border border-slate-300 dark:border-slate-700 rounded px-2 py-0.5 transition">
               Limpiar mes
             </button>
           )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
               <tr>
-                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Mes</th>
-                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Leads</th>
-                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Calificados</th>
-                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Ofertas</th>
-                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Pedidos</th>
-                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest w-28">Entregas</th>
-                <th className="h-9 px-4 text-left text-[10px] font-semibold text-red-800 uppercase tracking-widest w-28">Rechazadas</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest">Mes</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest w-28">Leads</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest w-28">Calificados</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest w-28">Ofertas</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest w-28">Pedidos</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest w-28">Entregas</th>
+                <th className="h-9 px-4 text-left text-[10px] font-semibold text-red-600 dark:text-red-800 uppercase tracking-widest w-28">Rechazadas</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
               {rowsMes.map(row => {
                 const esMesFiltrado = mesFiltro === row.month
                 const tieneData    = row.leads + row.calificados + row.ofertas + row.pedidos + row.entregas + row.rechazadas > 0
@@ -388,16 +388,16 @@ export function HistorialPipelineView() {
                     onClick={() => setMesFiltro(prev => prev === row.month ? null : row.month)}
                     className={`transition-colors cursor-pointer ${
                       esMesFiltrado
-                        ? "bg-violet-500/10 border-l-2 border-l-violet-500"
+                        ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
                         : tieneData
-                          ? "hover:bg-slate-800/50"
+                          ? "hover:bg-slate-100 dark:hover:bg-slate-800/50"
                           : "opacity-40 hover:opacity-60"
                     }`}>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-300">{MESES[row.month]}</span>
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{MESES[row.month]}</span>
                         {esMesActual && (
-                          <span className="text-[9px] px-1 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 font-semibold">hoy</span>
+                          <span className="text-[9px] px-1 py-0.5 rounded bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30 font-semibold">hoy</span>
                         )}
                       </div>
                     </td>
@@ -424,11 +424,11 @@ export function HistorialPipelineView() {
               })}
 
               {/* Fila de totales */}
-              <tr className="bg-slate-800/40 font-semibold">
-                <td className="px-4 py-2.5 text-[11px] text-slate-400 font-bold uppercase tracking-widest">Total</td>
+              <tr className="bg-slate-100 dark:bg-slate-800/40 font-semibold">
+                <td className="px-4 py-2.5 text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Total</td>
                 {[totalesAño.leads, totalesAño.calificados, totalesAño.ofertas, totalesAño.pedidos, totalesAño.entregas, totalesAño.rechazadas].map((v, i) => (
                   <td key={i} className="px-4 py-2.5">
-                    <span className="text-sm font-bold text-slate-200">{v}</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{v}</span>
                   </td>
                 ))}
               </tr>
@@ -450,37 +450,37 @@ export function HistorialPipelineView() {
           />
         </div>
         {mesFiltro !== null && (
-          <span className="text-[11px] text-violet-400 border border-violet-500/30 rounded-full px-2.5 py-0.5 bg-violet-500/10">
+          <span className="text-[11px] text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/30 rounded-full px-2.5 py-0.5 bg-violet-50 dark:bg-violet-500/10">
             {MESES[mesFiltro]} {año}
           </span>
         )}
       </div>
 
       {/* Tabla de contactos con su recorrido completo */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-800">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">
             Recorrido por contacto
             {contactosFiltrados.length > 0 && (
-              <span className="ml-2 text-slate-400 normal-case font-normal">({contactosFiltrados.length})</span>
+              <span className="ml-2 text-slate-500 dark:text-slate-400 normal-case font-normal">({contactosFiltrados.length})</span>
             )}
           </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
               <tr>
                 {["Contacto", "Lead", "Calificado", "Oferta", "Pedido", "Entrega", "Rechazada", "Etapa actual"].map(h => (
-                  <th key={h} className={`h-9 px-4 text-left text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap ${h === "Rechazada" ? "text-red-800" : "text-slate-500"}`}>{h}</th>
+                  <th key={h} className={`h-9 px-4 text-left text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap ${h === "Rechazada" ? "text-red-600 dark:text-red-800" : "text-slate-500 dark:text-slate-500"}`}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
               {loading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 7 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-3 rounded bg-slate-800 animate-pulse w-3/4" />
+                      <div className="h-3 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" />
                     </td>
                   ))}
                 </tr>
@@ -488,15 +488,15 @@ export function HistorialPipelineView() {
               {!loading && contactosFiltrados.map(c => {
                 const etapa = c.Funnel ?? "Lead"
                 return (
-                  <tr key={c.documentId} className="hover:bg-slate-800/30 transition-colors">
+                  <tr key={c.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                          <User size={10} className="text-slate-500" />
+                        <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                          <User size={10} className="text-slate-500 dark:text-slate-500" />
                         </div>
                         <div>
-                          <p className="text-[12px] font-medium text-slate-200 leading-snug">{c.nombre}</p>
-                          {c.canalContacto && <p className="text-[9px] text-slate-600">{c.canalContacto}</p>}
+                          <p className="text-[12px] font-medium text-slate-800 dark:text-slate-200 leading-snug">{c.nombre}</p>
+                          {c.canalContacto && <p className="text-[9px] text-slate-400 dark:text-slate-600">{c.canalContacto}</p>}
                         </div>
                       </div>
                     </td>
@@ -505,48 +505,48 @@ export function HistorialPipelineView() {
                     <td className="px-4 py-2.5">
                       {c.fechaLead ? (
                         <div>
-                          <p className="text-[11px] text-slate-400">{fmtDt(c.fechaLead)}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">{fmtDt(c.fechaLead)}</p>
                           <div className={`inline-block mt-0.5 w-1.5 h-1.5 rounded-full bg-slate-500`} />
                         </div>
-                      ) : <span className="text-slate-700">—</span>}
+                      ) : <span className="text-slate-300 dark:text-slate-700">—</span>}
                     </td>
 
                     {/* Calificado */}
                     <td className="px-4 py-2.5">
                       {c.calificado ? (
                         <div>
-                          <p className="text-[11px] text-violet-400">{fmtDt(c.fechaCalificado) ?? "Sí"}</p>
+                          <p className="text-[11px] text-violet-600 dark:text-violet-400">{fmtDt(c.fechaCalificado) ?? "Sí"}</p>
                           <div className="inline-block mt-0.5 w-1.5 h-1.5 rounded-full bg-violet-500" />
                         </div>
-                      ) : <span className="text-slate-700 text-[10px]">No</span>}
+                      ) : <span className="text-slate-300 dark:text-slate-700 text-[10px]">No</span>}
                     </td>
 
                     {/* Oferta */}
                     <td className="px-4 py-2.5">
                       {c.fechaOferta
-                        ? <p className="text-[11px] text-violet-400">{fmtDt(c.fechaOferta)}</p>
-                        : <span className="text-slate-700">—</span>}
+                        ? <p className="text-[11px] text-violet-600 dark:text-violet-400">{fmtDt(c.fechaOferta)}</p>
+                        : <span className="text-slate-300 dark:text-slate-700">—</span>}
                     </td>
 
                     {/* Pedido */}
                     <td className="px-4 py-2.5">
                       {c.fechaPedido
-                        ? <p className="text-[11px] text-violet-400">{fmtDt(c.fechaPedido)}</p>
-                        : <span className="text-slate-700">—</span>}
+                        ? <p className="text-[11px] text-violet-600 dark:text-violet-400">{fmtDt(c.fechaPedido)}</p>
+                        : <span className="text-slate-300 dark:text-slate-700">—</span>}
                     </td>
 
                     {/* Entrega */}
                     <td className="px-4 py-2.5">
                       {c.fechaEntrega
-                        ? <p className="text-[11px] text-violet-400">{fmtDt(c.fechaEntrega)}</p>
-                        : <span className="text-slate-700">—</span>}
+                        ? <p className="text-[11px] text-violet-600 dark:text-violet-400">{fmtDt(c.fechaEntrega)}</p>
+                        : <span className="text-slate-300 dark:text-slate-700">—</span>}
                     </td>
 
                     {/* Rechazada */}
                     <td className="px-4 py-2.5">
                       {c.fechaRechazada
-                        ? <p className="text-[11px] text-red-400">{fmtDt(c.fechaRechazada)}</p>
-                        : <span className="text-slate-800">—</span>}
+                        ? <p className="text-[11px] text-red-600 dark:text-red-400">{fmtDt(c.fechaRechazada)}</p>
+                        : <span className="text-slate-200 dark:text-slate-800">—</span>}
                     </td>
 
                     {/* Etapa actual */}
@@ -560,8 +560,8 @@ export function HistorialPipelineView() {
           </table>
           {!loading && contactosFiltrados.length === 0 && (
             <div className="py-12 text-center">
-              <History size={28} className="mx-auto mb-2 text-slate-700" />
-              <p className="text-slate-600 text-sm">Sin registros para los filtros seleccionados.</p>
+              <History size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+              <p className="text-slate-400 dark:text-slate-600 text-sm">Sin registros para los filtros seleccionados.</p>
             </div>
           )}
         </div>
@@ -582,40 +582,40 @@ export function HistorialPipelineView() {
             filtroActivo={filtroCot} filtroDefault="todas" onFiltroChange={v => setFiltroCot(v as EstadoCotizacion | "todas")}
             metricas={[
               { label: "Total",      value: cotizaciones.length },
-              { label: "Aceptadas",  value: cotizaciones.filter(c => c.estado === "Aceptada").length,  colorClass: "text-violet-400" },
-              { label: "Convertidas", value: cotizaciones.filter(c => c.estado === "Convertida").length, colorClass: "text-emerald-400" },
-              { label: "Rechazadas", value: cotizaciones.filter(c => c.estado === "Rechazada").length, colorClass: "text-red-400" },
+              { label: "Aceptadas",  value: cotizaciones.filter(c => c.estado === "Aceptada").length,  colorClass: "text-violet-600 dark:text-violet-400" },
+              { label: "Convertidas", value: cotizaciones.filter(c => c.estado === "Convertida").length, colorClass: "text-emerald-600 dark:text-emerald-400" },
+              { label: "Rechazadas", value: cotizaciones.filter(c => c.estado === "Rechazada").length, colorClass: "text-red-600 dark:text-red-400" },
             ]}
           />
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-800 bg-slate-950/50">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                   <tr>
                     {["#", "Cliente", "Fecha", "Estado", "Total", "Trayecto"].map(h => (
-                      <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                      <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/50">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                   {cotLoading && Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
                   ))}
                   {!cotLoading && cotizacionesFiltradas.map(c => (
-                    <tr key={c.documentId} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-300">{c.numero ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-400 text-xs">{c.cliente?.nombre ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-500 text-xs whitespace-nowrap">{fmtDt(c.fecha ?? c.createdAt)}</td>
+                    <tr key={c.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-700 dark:text-slate-300">{c.numero ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.cliente?.nombre ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap">{fmtDt(c.fecha ?? c.createdAt)}</td>
                       <td className="px-4 py-2.5">
                         <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>{c.estado}</span>
                       </td>
-                      <td className="px-4 py-2.5 text-violet-400 font-semibold text-xs">{fmtMoney(c.total)}</td>
+                      <td className="px-4 py-2.5 text-violet-600 dark:text-violet-400 font-semibold text-xs">{fmtMoney(c.total)}</td>
                       <td className="px-4 py-2.5">
                         {c.ventaGenerada ? (
-                          <span className="flex items-center gap-1 text-[11px] text-emerald-400">
+                          <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
                             <ArrowRight size={11} /> {c.ventaGenerada.numero ?? c.ventaGenerada.concepto}
                           </span>
-                        ) : <span className="text-slate-700 text-[11px]">—</span>}
+                        ) : <span className="text-slate-300 dark:text-slate-700 text-[11px]">—</span>}
                       </td>
                     </tr>
                   ))}
@@ -623,8 +623,8 @@ export function HistorialPipelineView() {
               </table>
               {!cotLoading && cotizacionesFiltradas.length === 0 && (
                 <div className="py-12 text-center">
-                  <FileText size={28} className="mx-auto mb-2 text-slate-700" />
-                  <p className="text-slate-600 text-sm">Sin cotizaciones para los filtros seleccionados.</p>
+                  <FileText size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                  <p className="text-slate-400 dark:text-slate-600 text-sm">Sin cotizaciones para los filtros seleccionados.</p>
                 </div>
               )}
             </div>
@@ -644,48 +644,48 @@ export function HistorialPipelineView() {
             filtroActivo={filtroPed} filtroDefault="todos" onFiltroChange={v => setFiltroPed(v as EstadoVenta | "todos")}
             metricas={[
               { label: "Total",      value: ventas.length },
-              { label: "Pagados",    value: ventas.filter(v => v.estado === "Pagado").length,    colorClass: "text-violet-400" },
-              { label: "Entregados", value: ventas.filter(v => v.estado === "Entregado").length, colorClass: "text-violet-400" },
-              { label: "Cancelados", value: ventas.filter(v => v.estado === "Cancelado").length, colorClass: "text-red-400" },
+              { label: "Pagados",    value: ventas.filter(v => v.estado === "Pagado").length,    colorClass: "text-violet-600 dark:text-violet-400" },
+              { label: "Entregados", value: ventas.filter(v => v.estado === "Entregado").length, colorClass: "text-violet-600 dark:text-violet-400" },
+              { label: "Cancelados", value: ventas.filter(v => v.estado === "Cancelado").length, colorClass: "text-red-600 dark:text-red-400" },
             ]}
           />
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-800 bg-slate-950/50">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                   <tr>
                     {["#", "Cliente", "Fecha", "Estado", "Monto", "Trayecto"].map(h => (
-                      <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                      <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/50">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                   {ventasLoading && Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
                   ))}
                   {!ventasLoading && pedidosFiltrados.map(v => (
-                    <tr key={v.documentId} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-300">{v.numero ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-400 text-xs">{v.cliente?.nombre ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-500 text-xs whitespace-nowrap">{v.fecha ? fmtDt(v.fecha) : "—"}</td>
+                    <tr key={v.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-700 dark:text-slate-300">{v.numero ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{v.cliente?.nombre ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap">{v.fecha ? fmtDt(v.fecha) : "—"}</td>
                       <td className="px-4 py-2.5">
                         {v.estado && <span className={`text-[11px] px-2 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>}
                       </td>
-                      <td className="px-4 py-2.5 text-violet-400 font-semibold text-xs">{fmtMoney(v.monto)}</td>
+                      <td className="px-4 py-2.5 text-violet-600 dark:text-violet-400 font-semibold text-xs">{fmtMoney(v.monto)}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex flex-col gap-0.5">
                           {v.cotizacionOrigen && (
-                            <span className="flex items-center gap-1 text-[11px] text-emerald-400">
+                            <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
                               <ArrowLeft size={11} /> {v.cotizacionOrigen.numero}
                             </span>
                           )}
                           {v.envios && v.envios.length > 0 && (
-                            <span className="flex items-center gap-1 text-[11px] text-violet-400">
+                            <span className="flex items-center gap-1 text-[11px] text-violet-600 dark:text-violet-400">
                               <Truck size={11} /> {v.envios.length} envío{v.envios.length > 1 ? "s" : ""}
                             </span>
                           )}
                           {!v.cotizacionOrigen && (!v.envios || v.envios.length === 0) && (
-                            <span className="text-slate-700 text-[11px]">—</span>
+                            <span className="text-slate-300 dark:text-slate-700 text-[11px]">—</span>
                           )}
                         </div>
                       </td>
@@ -695,8 +695,8 @@ export function HistorialPipelineView() {
               </table>
               {!ventasLoading && pedidosFiltrados.length === 0 && (
                 <div className="py-12 text-center">
-                  <ShoppingBag size={28} className="mx-auto mb-2 text-slate-700" />
-                  <p className="text-slate-600 text-sm">Sin pedidos para los filtros seleccionados.</p>
+                  <ShoppingBag size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                  <p className="text-slate-400 dark:text-slate-600 text-sm">Sin pedidos para los filtros seleccionados.</p>
                 </div>
               )}
             </div>

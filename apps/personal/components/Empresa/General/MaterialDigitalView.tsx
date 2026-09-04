@@ -211,6 +211,7 @@ function MaterialCard({ material, onEdit, onDelete }: {
   const dot      = CAT_DOT[cat.color] ?? "bg-slate-400"
   const Icon     = TIPO_ICON[material.tipo]
   const iconBg   = TIPO_ICON_BG[material.tipo]
+  const [confirmando, setConfirmando] = useState(false)
 
   return (
     <a href={material.url} target="_blank" rel="noopener noreferrer"
@@ -233,16 +234,26 @@ function MaterialCard({ material, onEdit, onDelete }: {
         <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${tipo.badge}`}>
           {tipo.label}
         </span>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
-          <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); onEdit() }}
-            className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition" title="Editar">
-            <Pencil size={12} />
-          </button>
-          <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); onDelete() }}
-            className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition" title="Eliminar">
-            <Trash2 size={12} />
-          </button>
-        </div>
+        {confirmando ? (
+          <div className="flex items-center gap-1.5" onClick={e => { e.preventDefault(); e.stopPropagation() }}>
+            <span className="text-[10px] text-slate-500">¿Eliminar?</span>
+            <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmando(false); onDelete() }}
+              className="text-[10px] text-red-400 font-medium">Sí</button>
+            <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmando(false) }}
+              className="text-[10px] text-slate-500">No</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
+            <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); onEdit() }}
+              className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition" title="Editar">
+              <Pencil size={12} />
+            </button>
+            <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmando(true) }}
+              className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition" title="Eliminar">
+              <Trash2 size={12} />
+            </button>
+          </div>
+        )}
       </div>
     </a>
   )
@@ -398,7 +409,6 @@ export function MaterialDigitalView() {
   }
 
   const borrar = async (m: MaterialDigitalType) => {
-    if (!confirm(`¿Eliminar "${m.nombre}"?`)) return
     try {
       await deleteMaterialDigital(m.documentId)
       setMateriales(prev => prev.filter(x => x.documentId !== m.documentId))

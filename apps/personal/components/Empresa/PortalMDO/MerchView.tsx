@@ -195,6 +195,7 @@ export function MerchView() {
   const [soloStockBajo, setSoloStockBajo] = useState(false)
   const [busqueda, setBusqueda] = useState("")
   const [showFiltros, setShowFiltros] = useState(false)
+  const [delId, setDelId] = useState<string | null>(null)
   const filtrosRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -233,6 +234,7 @@ export function MerchView() {
   async function handleDelete(m: MaterialTrabajoType) {
     await deleteMaterialTrabajo(m.documentId)
     setMateriales(prev => prev.filter(x => x.documentId !== m.documentId))
+    setDelId(null)
   }
   function handleSave(saved: MaterialTrabajoType) {
     if (formMode?.type === "edit") setMateriales(prev => prev.map(x => x.documentId === saved.documentId ? saved : x))
@@ -362,9 +364,17 @@ export function MerchView() {
                           </td>
                           <td className="px-4 py-3 text-xs text-slate-500 hidden md:table-cell max-w-[160px] truncate">{m.notas ?? "—"}</td>
                           <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button type="button" onClick={() => handleDelete(m)} aria-label="Eliminar" className="text-slate-400 hover:text-red-500 transition-colors"><X className="h-3.5 w-3.5" /></button>
-                            </div>
+                            {delId === m.documentId ? (
+                              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">¿Eliminar?</span>
+                                <button type="button" onClick={() => handleDelete(m)} className="text-[10px] text-red-500 dark:text-red-400 font-medium">Sí</button>
+                                <button type="button" onClick={() => setDelId(null)} className="text-[10px] text-slate-400 dark:text-slate-500">No</button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button type="button" onClick={() => setDelId(m.documentId)} aria-label="Eliminar" className="text-slate-400 hover:text-red-500 transition-colors"><X className="h-3.5 w-3.5" /></button>
+                              </div>
+                            )}
                           </td>
                         </motion.tr>
                       )

@@ -269,6 +269,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
   const [form,    setForm]      = useState(emptyForm())
   const [saving,  setSaving]    = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [errors,  setErrors]    = useState<Record<string, string>>({})
   const [archivosExistentes, setArchivosExistentes] = useState<{ id: number; name: string; size: number }[]>([])
   const [archivosNuevos, setArchivosNuevos] = useState<File[]>([])
@@ -370,7 +371,6 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
 
   async function handleEliminar() {
     if (!editando) return
-    if (!window.confirm(`¿Eliminar "${editando.nombre}"?`)) return
     setDeleting(true)
     try {
       await deleteDocumentoLegal(editando.documentId)
@@ -379,7 +379,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
       await cargar()
       setView("list")
     } catch (err) { toast.error(`Error · ${(err as Error).message}`) }
-    finally { setDeleting(false) }
+    finally { setDeleting(false); setConfirmandoEliminar(false) }
   }
 
   const labelCls = "text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block"
@@ -537,11 +537,23 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
               {editando ? (
-                <button type="button" onClick={handleEliminar} disabled={deleting}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 rounded-lg transition-colors">
-                  <Trash2 size={14} />
-                  {deleting ? "Eliminando..." : "Eliminar"}
-                </button>
+                confirmandoEliminar ? (
+                  <div className="flex items-center gap-2 px-1">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">¿Eliminar?</span>
+                    <button type="button" onClick={handleEliminar} disabled={deleting}
+                      className="text-[11px] text-red-500 dark:text-red-400 font-medium disabled:opacity-50">
+                      {deleting ? "Eliminando..." : "Sí"}
+                    </button>
+                    <button type="button" onClick={() => setConfirmandoEliminar(false)} disabled={deleting}
+                      className="text-[11px] text-slate-500 dark:text-slate-400">No</button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setConfirmandoEliminar(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
+                    <Trash2 size={14} />
+                    Eliminar
+                  </button>
+                )
               ) : <span />}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setView("list")}

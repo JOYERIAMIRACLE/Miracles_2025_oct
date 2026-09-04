@@ -179,8 +179,9 @@ export function useClientesPipeline() {
     setTodasCotizaciones(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
   }
 
+  // La confirmación vive en quien llama (misma fila/tarjeta que el usuario
+  // acaba de clicar) — este helper ya no pregunta, solo ejecuta el borrado.
   const borrar = async (c: ClienteEmpresa) => {
-    if (!confirm(`¿Eliminar "${c.nombre}"?`)) return false
     try {
       await deleteCliente(c.documentId)
       setClientes(prev => prev.filter(x => x.documentId !== c.documentId))

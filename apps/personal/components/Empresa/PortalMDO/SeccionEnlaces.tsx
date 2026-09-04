@@ -129,6 +129,7 @@ function EnlaceCard({ m, onEdit, onDelete }: {
   onEdit: () => void
   onDelete: () => void
 }) {
+  const [confirmando, setConfirmando] = useState(false)
   return (
     <div
       onClick={() => window.open(m.url, "_blank", "noopener,noreferrer")}
@@ -141,16 +142,24 @@ function EnlaceCard({ m, onEdit, onDelete }: {
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{m.nombre}</p>
         <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{m.descripcion || dominio(m.url)}</p>
       </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onEdit} aria-label="Editar"
-          className="p-1 text-slate-400 hover:text-violet-500 transition-colors">
-          <Pencil size={13} />
-        </button>
-        <button type="button" onClick={onDelete} aria-label="Eliminar"
-          className="p-1 text-slate-400 hover:text-red-400 transition-colors">
-          <Trash2 size={13} />
-        </button>
-      </div>
+      {confirmando ? (
+        <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">¿Eliminar?</span>
+          <button type="button" onClick={() => { setConfirmando(false); onDelete() }} className="text-[11px] text-red-500 dark:text-red-400 font-medium">Sí</button>
+          <button type="button" onClick={() => setConfirmando(false)} className="text-[11px] text-slate-500 dark:text-slate-400">No</button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+          <button type="button" onClick={onEdit} aria-label="Editar"
+            className="p-1 text-slate-400 hover:text-violet-500 transition-colors">
+            <Pencil size={13} />
+          </button>
+          <button type="button" onClick={() => setConfirmando(true)} aria-label="Eliminar"
+            className="p-1 text-slate-400 hover:text-red-400 transition-colors">
+            <Trash2 size={13} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -204,7 +213,6 @@ export function SeccionEnlaces() {
   }
 
   async function handleDelete(m: MaterialDigitalType) {
-    if (!confirm(`¿Eliminar "${m.nombre}"?`)) return
     await deleteMaterialDigital(m.documentId)
     setTodosLosMateriales(prev => prev.filter(x => x.documentId !== m.documentId))
   }

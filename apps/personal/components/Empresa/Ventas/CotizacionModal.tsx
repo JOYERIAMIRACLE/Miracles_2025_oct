@@ -97,35 +97,35 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
     }
   }
 
-  const inp = "px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 w-full"
+  const inp = "px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full"
 
   const cardCls = fullPage
-    ? "bg-slate-900 border border-slate-700 rounded-xl flex flex-col"
-    : "bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
+    ? "bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl flex flex-col"
+    : "bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
 
   const contenido = (
       <div className={cardCls}
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-start justify-between gap-3 shrink-0">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <FileText size={15} className="text-violet-400" />
-              <h2 className="text-base font-semibold text-slate-100">
+              <FileText size={15} className="text-violet-600 dark:text-violet-400" />
+              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {cotizacion ? `Cotización ${cotizacion.numero}` : "Nueva cotización"}
               </h2>
             </div>
             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
-              <span className="text-slate-200 font-medium">{cliente.nombre}</span>
-              {cliente.telefono  && <span className="text-slate-500">{cliente.telefono}</span>}
-              {cliente.email     && <span className="text-slate-500">{cliente.email}</span>}
-              {cliente.direccion && <span className="text-slate-500">{cliente.direccion}</span>}
+              <span className="text-slate-800 dark:text-slate-200 font-medium">{cliente.nombre}</span>
+              {cliente.telefono  && <span className="text-slate-500 dark:text-slate-500">{cliente.telefono}</span>}
+              {cliente.email     && <span className="text-slate-500 dark:text-slate-500">{cliente.email}</span>}
+              {cliente.direccion && <span className="text-slate-500 dark:text-slate-500">{cliente.direccion}</span>}
             </div>
           </div>
           {!fullPage && (
             <button type="button" title="Cerrar" onClick={onClose}
-              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition shrink-0">
+              className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0">
               <X size={16} />
             </button>
           )}
@@ -137,17 +137,17 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
           {/* Items */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Productos / Servicios</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">Productos / Servicios</p>
               <button type="button"
                 onClick={() => setItems(prev => [...prev, emptyItem()])}
-                className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
                 <Plus size={11} /> Agregar línea
               </button>
             </div>
 
             <div className="grid grid-cols-[72px_1fr_56px_90px_90px_28px] gap-1.5 px-1 mb-1.5">
               {["SKU", "Descripción", "Cant.", "Precio", "Subtotal", ""].map(h => (
-                <span key={h} className="text-[9px] font-semibold uppercase text-slate-600">{h}</span>
+                <span key={h} className="text-[9px] font-semibold uppercase text-slate-400 dark:text-slate-600">{h}</span>
               ))}
             </div>
 
@@ -177,12 +177,12 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
                     value={item.precio === 0 ? "" : item.precio}
                     onChange={e => updateItem(idx, "precio", Number(e.target.value) || 0)}
                     placeholder="0.00" className={`${inp} text-right`} />
-                  <span className="text-[11px] text-right text-slate-300 font-medium pr-1">
+                  <span className="text-[11px] text-right text-slate-700 dark:text-slate-300 font-medium pr-1">
                     {fmt(item.cantidad * item.precio)}
                   </span>
                   <button type="button" title="Eliminar línea"
                     onClick={() => setItems(prev => prev.filter((_, i) => i !== idx))}
-                    className="p-1 text-slate-700 hover:text-red-400 rounded transition flex items-center justify-center">
+                    className="p-1 text-slate-300 dark:text-slate-700 hover:text-red-600 dark:hover:text-red-400 rounded transition flex items-center justify-center">
                     <Trash2 size={11} />
                   </button>
                 </div>
@@ -191,23 +191,23 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
           </div>
 
           {/* Totals */}
-          <div className="border-t border-slate-800 pt-4 flex justify-end">
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-4 flex justify-end">
             <div className="w-60 space-y-2">
               <div className="flex justify-between text-[11px]">
-                <span className="text-slate-500">Subtotal</span>
-                <span className="text-slate-300">{fmt(subtotal)}</span>
+                <span className="text-slate-500 dark:text-slate-500">Subtotal</span>
+                <span className="text-slate-700 dark:text-slate-300">{fmt(subtotal)}</span>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <label className="text-[11px] text-slate-500 shrink-0">Envío</label>
+                <label className="text-[11px] text-slate-500 dark:text-slate-500 shrink-0">Envío</label>
                 <input type="number" min="0" step="0.01" title="Precio de envío"
                   value={precioEnvio === 0 ? "" : precioEnvio}
                   onChange={e => setPrecioEnvio(Number(e.target.value) || 0)}
                   placeholder="0.00"
-                  className="w-28 px-2 py-1 text-[11px] text-right rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-slate-500" />
+                  className="w-28 px-2 py-1 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
               </div>
-              <div className="flex justify-between text-sm font-bold border-t border-slate-700 pt-2">
-                <span className="text-slate-200">Total</span>
-                <span className="text-violet-400">{fmt(total)}</span>
+              <div className="flex justify-between text-sm font-bold border-t border-slate-300 dark:border-slate-700 pt-2">
+                <span className="text-slate-800 dark:text-slate-200">Total</span>
+                <span className="text-violet-600 dark:text-violet-400">{fmt(total)}</span>
               </div>
             </div>
           </div>
@@ -215,12 +215,12 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
           {/* Estado + Válido hasta + Notas */}
           <div className="grid grid-cols-2 gap-5">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Estado</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Estado</p>
               <div className="flex flex-wrap gap-1.5">
                 {ESTADOS_COT.map(e => (
                   <button key={e} type="button" onClick={() => setEstado(e)}
                     className={`px-2.5 py-1 text-[10px] font-semibold rounded-lg border transition ${
-                      estado === e ? ESTADO_COT_COLOR[e] : "border-slate-700 text-slate-600 hover:text-slate-400"
+                      estado === e ? ESTADO_COT_COLOR[e] : "border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400"
                     }`}>
                     {e}
                   </button>
@@ -228,25 +228,25 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Válido hasta</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Válido hasta</p>
               <input type="date" value={validoHasta ?? ""} onChange={e => setValidoHasta(e.target.value)}
-                className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-slate-500" />
+                className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
             </div>
           </div>
 
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Notas</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Notas</p>
             <textarea value={notas} onChange={e => setNotas(e.target.value)}
               placeholder="Términos, condiciones, observaciones…"
               rows={3}
-              className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 resize-none" />
+              className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 resize-none" />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 flex justify-end gap-2 shrink-0">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2 shrink-0">
           <button type="button" onClick={onClose}
-            className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">
+            className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg transition">
             Cancelar
           </button>
           <button type="button" onClick={guardar} disabled={guardando}
@@ -261,7 +261,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
     return (
       <div className="space-y-4">
         <button type="button" onClick={onClose}
-          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">
           <ArrowLeft size={14} /> Volver a Cotizaciones
         </button>
         {contenido}

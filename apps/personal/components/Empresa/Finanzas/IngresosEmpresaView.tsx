@@ -183,6 +183,7 @@ export function IngresosEmpresaView() {
   const [modalOpen,  setModalOpen]  = useState(false)
   const [periodo,    setPeriodo]    = useState<"mes" | "anio" | "todo">("mes")
   const [metodoFiltro, setMetodoFiltro] = useState<MetodoPagoTransaccion | "">("")
+  const [delId,      setDelId]      = useState<string | null>(null)
 
   const { desde, hasta } = getRango(periodo)
 
@@ -198,12 +199,12 @@ export function IngresosEmpresaView() {
   const countClientes    = new Set(filtrados.map(i => i.referencia ?? i.clienteDocumentId ?? "—").filter(Boolean)).size
 
   const eliminar = async (ing: TransaccionType) => {
-    if (!confirm(`¿Eliminar ingreso "${ing.descripcion}"?`)) return
     try {
       await deleteTransaccion(ing.documentId)
       setTransacciones(prev => prev.filter(i => i.documentId !== ing.documentId))
       toast.success("Eliminado")
     } catch { toast.error("Error al eliminar") }
+    finally { setDelId(null) }
   }
 
   return (
@@ -295,11 +296,19 @@ export function IngresosEmpresaView() {
                       <span className="text-slate-900 dark:text-slate-100 font-bold font-mono">{fmt(ing.monto ?? 0)}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button type="button" title="Eliminar ingreso"
-                        onClick={() => eliminar(ing)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 rounded transition">
-                        <Trash2 size={13} />
-                      </button>
+                      {delId === ing.documentId ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">¿Eliminar?</span>
+                          <button type="button" onClick={() => eliminar(ing)} className="text-[11px] text-red-500 dark:text-red-400 font-medium">Sí</button>
+                          <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500 dark:text-slate-400">No</button>
+                        </div>
+                      ) : (
+                        <button type="button" title="Eliminar ingreso"
+                          onClick={() => setDelId(ing.documentId)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 rounded transition">
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

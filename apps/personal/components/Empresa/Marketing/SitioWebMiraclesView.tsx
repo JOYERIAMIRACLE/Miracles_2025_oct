@@ -239,6 +239,7 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
   onMoveUp?: () => void; onMoveDown?: () => void
 }) {
   const s = ST[node.status]
+  const [confirmando, setConfirmando] = useState(false)
   return (
     <div
       onClick={onEdit}
@@ -271,34 +272,42 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
             </button>
           )}
         </div>
-        <div className="flex opacity-0 group-hover:opacity-100 transition">
-          {onMoveUp && (
-            <button type="button" title="Subir"
-              onClick={e => { e.stopPropagation(); onMoveUp() }}
-              className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
-              <ChevronUp size={12} />
+        {confirmando ? (
+          <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+            <span className="text-[9px] text-slate-500 whitespace-nowrap">{hasChildren ? "¿Eliminar con sub-páginas?" : "¿Eliminar?"}</span>
+            <button type="button" onClick={() => { setConfirmando(false); onDel() }} className="text-[9px] text-red-400 font-medium">Sí</button>
+            <button type="button" onClick={() => setConfirmando(false)} className="text-[9px] text-slate-500">No</button>
+          </div>
+        ) : (
+          <div className="flex opacity-0 group-hover:opacity-100 transition">
+            {onMoveUp && (
+              <button type="button" title="Subir"
+                onClick={e => { e.stopPropagation(); onMoveUp() }}
+                className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
+                <ChevronUp size={12} />
+              </button>
+            )}
+            {onMoveDown && (
+              <button type="button" title="Bajar"
+                onClick={e => { e.stopPropagation(); onMoveDown() }}
+                className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
+                <ChevronDown size={12} />
+              </button>
+            )}
+            <button type="button" title="Agregar sub-página"
+              onClick={e => { e.stopPropagation(); onAddChild() }}
+              className="p-1 text-slate-600 hover:text-violet-400 rounded transition">
+              <Plus size={12} />
             </button>
-          )}
-          {onMoveDown && (
-            <button type="button" title="Bajar"
-              onClick={e => { e.stopPropagation(); onMoveDown() }}
-              className="p-1 text-slate-600 hover:text-slate-300 rounded transition">
-              <ChevronDown size={12} />
-            </button>
-          )}
-          <button type="button" title="Agregar sub-página"
-            onClick={e => { e.stopPropagation(); onAddChild() }}
-            className="p-1 text-slate-600 hover:text-violet-400 rounded transition">
-            <Plus size={12} />
-          </button>
-          {node.id !== "root" && (
-            <button type="button" title="Eliminar"
-              onClick={e => { e.stopPropagation(); onDel() }}
-              className="p-1 text-slate-600 hover:text-red-400 rounded transition">
-              <Trash2 size={12} />
-            </button>
-          )}
-        </div>
+            {node.id !== "root" && (
+              <button type="button" title="Eliminar"
+                onClick={e => { e.stopPropagation(); setConfirmando(true) }}
+                className="p-1 text-slate-600 hover:text-red-400 rounded transition">
+                <Trash2 size={12} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -686,7 +695,6 @@ export function SitioWebMiraclesView() {
     setModal({ id: c.id })
   }
   const handleDel  = (id: string) => {
-    if (!confirm("¿Eliminar esta página y todas sus sub-páginas?")) return
     setTree(t => del(t, id))
     if (modal?.id === id) setModal(null)
   }

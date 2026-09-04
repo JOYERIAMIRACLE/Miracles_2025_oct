@@ -1,17 +1,19 @@
 "use client"
 
-import { Users, UserSearch, FileText, ShoppingBag } from "lucide-react"
+import { Users, UserSearch, FileText, ShoppingBag, TrendingUp } from "lucide-react"
 import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
 import { LeadsView } from "@/components/Empresa/Ventas/LeadsView"
 import { CotizacionesView } from "@/components/Empresa/Ventas/CotizacionesView"
 import { PedidosView } from "@/components/Empresa/Ventas/PedidosView"
+import { HistorialPipelineView } from "@/components/Empresa/Ventas/HistorialPipelineView"
 
 const TABS = [
   { id: "pipeline",     label: "Pipeline",     icon: Users },
   { id: "leads",        label: "Leads",        icon: UserSearch },
   { id: "cotizaciones", label: "Cotizaciones", icon: FileText },
   { id: "pedidos",      label: "Pedidos",      icon: ShoppingBag },
+  { id: "metricas",     label: "Métricas",     icon: TrendingUp },
 ]
 
 export function SeccionVentas() {
@@ -31,6 +33,7 @@ export function SeccionVentas() {
       {tab === "leads"        && <LeadsView />}
       {tab === "cotizaciones" && <CotizacionesView />}
       {tab === "pedidos"      && <PedidosView />}
+      {tab === "metricas"     && <HistorialPipelineView />}
     </div>
   )
 }

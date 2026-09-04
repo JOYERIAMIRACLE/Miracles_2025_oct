@@ -27,6 +27,7 @@ export function ClientesView() {
   const [selectedCliente, setSelectedCliente] = useState<ClienteEmpresa | null>(null)
   const [filtroEtapa,     setFiltroEtapa]     = useState<FunnelEtapa | "todos">("todos")
   const [search,          setSearch]          = useState("")
+  const [delId,           setDelId]           = useState<string | null>(null)
 
   // Directorio completo — todo contacto que alguna vez entró al embudo,
   // desde Lead hasta Entrega (o Rechazada). Antes se excluían Lead/Rechazada.
@@ -98,6 +99,7 @@ export function ClientesView() {
   const handleBorrar = async (c: ClienteEmpresa) => {
     const ok = await borrar(c)
     if (ok && selectedCliente?.documentId === c.documentId) setSelectedCliente(null)
+    setDelId(null)
   }
   const handleAvanzar = async (c: ClienteEmpresa) => {
     const u = await avanzar(c)
@@ -163,10 +165,10 @@ export function ClientesView() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <UserCheck size={18} className="text-violet-400" />
-            <h1 className="text-2xl font-bold text-slate-100">Contactos</h1>
+            <UserCheck size={18} className="text-violet-600 dark:text-violet-400" />
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Contactos</h1>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-500">
             Directorio completo — todo el que entró al embudo, desde el primer contacto hasta la entrega.
           </p>
         </div>
@@ -186,28 +188,28 @@ export function ClientesView() {
         metricas={[
           { label: "Total",      value: stats.total },
           { label: "Leads",      value: stats.leads },
-          { label: "En proceso", value: stats.enProceso, colorClass: "text-violet-400" },
-          { label: "Entregado",  value: stats.entrega,   colorClass: "text-violet-400" },
+          { label: "En proceso", value: stats.enProceso, colorClass: "text-violet-600 dark:text-violet-400" },
+          { label: "Entregado",  value: stats.entrega,   colorClass: "text-violet-600 dark:text-violet-400" },
         ]}
       />
 
       {/* Tabla */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
               <tr>
                 {["Contacto", "Etapa", "Valor", "Cotizaciones", "Datos de contacto", ""].map(h => (
-                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {loading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" />
+                      <div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" />
                     </td>
                   ))}
                 </tr>
@@ -218,16 +220,16 @@ export function ClientesView() {
                 const valor  = valorPorCliente.get(c.documentId) ?? null
                 return (
                   <tr key={c.documentId}
-                    className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
                     onClick={() => setSelectedCliente(c)}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                          <User size={12} className="text-slate-500" />
+                        <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                          <User size={12} className="text-slate-500 dark:text-slate-500" />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-200">{c.nombre}</p>
-                          {c.segmento && <p className="text-[10px] text-slate-600">{c.segmento}</p>}
+                          <p className="font-medium text-slate-800 dark:text-slate-200">{c.nombre}</p>
+                          {c.segmento && <p className="text-[10px] text-slate-400 dark:text-slate-600">{c.segmento}</p>}
                         </div>
                       </div>
                     </td>
@@ -238,35 +240,43 @@ export function ClientesView() {
                     </td>
                     <td className="px-4 py-3">
                       {valor != null ? (
-                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-violet-400 font-mono">
+                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-400 font-mono">
                           <DollarSign size={10} />{fmtMoney(valor)}
                         </span>
                       ) : (
-                        <span className="text-slate-700 text-xs">—</span>
+                        <span className="text-slate-300 dark:text-slate-700 text-xs">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       {numCot > 0 ? (
-                        <span className="flex items-center gap-1 text-[11px] text-violet-400">
+                        <span className="flex items-center gap-1 text-[11px] text-violet-600 dark:text-violet-400">
                           <FileText size={11} />{numCot}
                         </span>
                       ) : (
-                        <span className="text-slate-700 text-xs">—</span>
+                        <span className="text-slate-300 dark:text-slate-700 text-xs">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="space-y-0.5">
-                        {c.telefono && <p className="text-xs text-slate-400 flex items-center gap-1"><Phone size={10} className="text-slate-600" />{c.telefono}</p>}
-                        {c.email    && <p className="text-xs text-slate-400 flex items-center gap-1"><Mail size={10} className="text-slate-600" />{c.email}</p>}
+                        {c.telefono && <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1"><Phone size={10} className="text-slate-400 dark:text-slate-600" />{c.telefono}</p>}
+                        {c.email    && <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1"><Mail size={10} className="text-slate-400 dark:text-slate-600" />{c.email}</p>}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                        <button type="button" onClick={() => abrirEditar(c)}
-                          className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
-                        <button type="button" onClick={() => handleBorrar(c)}
-                          className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
-                      </div>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      {delId === c.documentId ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-500">¿Eliminar?</span>
+                          <button type="button" onClick={() => handleBorrar(c)} className="text-[11px] text-red-600 dark:text-red-400 font-medium">Sí</button>
+                          <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500 dark:text-slate-500">No</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button type="button" onClick={() => abrirEditar(c)}
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
+                          <button type="button" onClick={() => setDelId(c.documentId)}
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )
@@ -275,8 +285,8 @@ export function ClientesView() {
           </table>
           {!loading && clientesFiltrados.length === 0 && (
             <div className="py-14 text-center">
-              <UserCheck size={32} className="mx-auto mb-3 text-slate-700" />
-              <p className="text-slate-600 text-sm">
+              <UserCheck size={32} className="mx-auto mb-3 text-slate-300 dark:text-slate-700" />
+              <p className="text-slate-400 dark:text-slate-600 text-sm">
                 {search || filtroEtapa !== "todos" ? "Sin resultados para este filtro." : "No hay contactos registrados."}
               </p>
             </div>

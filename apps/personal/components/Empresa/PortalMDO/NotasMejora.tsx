@@ -66,6 +66,7 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
   const [panelOpen, setPanelOpen] = useState(false)
   const [pinDestino, setPinDestino] = useState<string | null>(null)
   const [pinResaltado, setPinResaltado] = useState<string | null>(null)
+  const [delConfirmId, setDelConfirmId] = useState<string | null>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -180,13 +181,13 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
   }
 
   async function eliminar(n: NotaMejoraType) {
-    if (!confirm("¿Eliminar esta nota de mejora?")) return
     try {
       await deleteNotaMejora(n.documentId)
       toast.success("Eliminada")
       setAbierta(null)
       reload()
     } catch (e) { toast.error(`Error · ${(e as Error).message}`) }
+    finally { setDelConfirmId(null) }
   }
 
   function abrirNota(n: NotaMejoraType) {
@@ -293,16 +294,26 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button type="button" title={n.estado === "pendiente" ? "Marcar resuelta" : "Reabrir"}
-                      onClick={e => { e.stopPropagation(); alternarResuelta(n) }}
-                      className="p-1 text-slate-300 dark:text-slate-600 hover:text-orange-500 rounded transition">
-                      <Check size={13} />
-                    </button>
-                    <button type="button" title="Eliminar"
-                      onClick={e => { e.stopPropagation(); eliminar(n) }}
-                      className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-500 rounded transition">
-                      <Trash2 size={13} />
-                    </button>
+                    {delConfirmId === n.documentId ? (
+                      <span className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">¿Eliminar?</span>
+                        <button type="button" onClick={() => eliminar(n)} className="text-[10px] text-red-500 dark:text-red-400 font-medium">Sí</button>
+                        <button type="button" onClick={() => setDelConfirmId(null)} className="text-[10px] text-slate-400 dark:text-slate-500">No</button>
+                      </span>
+                    ) : (
+                      <>
+                        <button type="button" title={n.estado === "pendiente" ? "Marcar resuelta" : "Reabrir"}
+                          onClick={e => { e.stopPropagation(); alternarResuelta(n) }}
+                          className="p-1 text-slate-300 dark:text-slate-600 hover:text-orange-500 rounded transition">
+                          <Check size={13} />
+                        </button>
+                        <button type="button" title="Eliminar"
+                          onClick={e => { e.stopPropagation(); setDelConfirmId(n.documentId) }}
+                          className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-500 rounded transition">
+                          <Trash2 size={13} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -421,10 +432,18 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
               </div>
 
               <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                <button type="button" onClick={() => eliminar(abierta)}
-                  className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition">
-                  <Trash2 size={12} /> Eliminar
-                </button>
+                {delConfirmId === abierta.documentId ? (
+                  <span className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 dark:text-slate-500">¿Eliminar?</span>
+                    <button type="button" onClick={() => eliminar(abierta)} className="text-xs text-red-500 dark:text-red-400 font-medium">Sí</button>
+                    <button type="button" onClick={() => setDelConfirmId(null)} className="text-xs text-slate-400 dark:text-slate-500">No</button>
+                  </span>
+                ) : (
+                  <button type="button" onClick={() => setDelConfirmId(abierta.documentId)}
+                    className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition">
+                    <Trash2 size={12} /> Eliminar
+                  </button>
+                )}
                 <button type="button" onClick={() => alternarResuelta(abierta)}
                   className="flex items-center gap-1 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition">
                   <Check size={12} /> {abierta.estado === "pendiente" ? "Marcar resuelta" : "Reabrir"}

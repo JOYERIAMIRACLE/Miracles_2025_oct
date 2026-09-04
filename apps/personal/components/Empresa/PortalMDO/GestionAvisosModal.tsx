@@ -15,7 +15,11 @@ export const AVISO_COLOR_HEX: Record<AvisoColor, string> = {
   violet: "#8b5cf6", emerald: "#10b981", blue: "#3b82f6",
   orange: "#f97316", red: "#ef4444", amber: "#f59e0b",
 }
-export const AVISO_COLORS: AvisoColor[] = ["violet", "emerald", "blue", "orange", "red", "amber"]
+// El carrusel público (HeroCarusel) solo distingue violeta (default) de rojo
+// (alerta real) — el resto de AvisoColor sigue existiendo por avisos viejos
+// ya guardados con ese valor, pero el picker solo ofrece las dos opciones
+// que de verdad cambian algo, para no prometer un color que no se va a ver.
+export const AVISO_COLORS: AvisoColor[] = ["violet", "red"]
 
 function colorAleatorio(): AvisoColor {
   return AVISO_COLORS[Math.floor(Math.random() * AVISO_COLORS.length)]
@@ -32,6 +36,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
   const [form,     setForm]     = useState<AvisoPayload>(emptyAvisoForm())
   const [saving,   setSaving]   = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [errors,   setErrors]   = useState<Record<string, string>>({})
   const [imagenFile,    setImagenFile]    = useState<File | null>(null)
   const [imagenPreview, setImagenPreview] = useState<string>("")
@@ -86,11 +91,10 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
   }
 
   async function handleEliminar(a: AvisoType) {
-    if (!window.confirm(`¿Eliminar "${a.titulo}"?`)) return
     setDeleting(true)
     try { await deleteAviso(a.documentId); toast.success("Eliminado"); reload(); onUpdated(); setView("list") }
     catch (e) { toast.error(`Error al eliminar · ${(e as Error).message}`) }
-    finally { setDeleting(false) }
+    finally { setDeleting(false); setConfirmandoEliminar(false) }
   }
 
   return (
@@ -229,10 +233,22 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                   {editando ? (
-                    <button type="button" onClick={() => handleEliminar(editando)} disabled={deleting}
-                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50 rounded-lg transition-colors">
-                      <Trash2 size={14} />{deleting ? "Eliminando..." : "Eliminar"}
-                    </button>
+                    confirmandoEliminar ? (
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">¿Eliminar?</span>
+                        <button type="button" onClick={() => handleEliminar(editando)} disabled={deleting}
+                          className="text-[11px] text-red-500 dark:text-red-400 font-medium disabled:opacity-50">
+                          {deleting ? "Eliminando..." : "Sí"}
+                        </button>
+                        <button type="button" onClick={() => setConfirmandoEliminar(false)} disabled={deleting}
+                          className="text-[11px] text-slate-500 dark:text-slate-400">No</button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => setConfirmandoEliminar(true)}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors">
+                        <Trash2 size={14} />Eliminar
+                      </button>
+                    )
                   ) : <span />}
                   <div className="flex gap-2">
                     <button type="button" onClick={() => setView("list")}

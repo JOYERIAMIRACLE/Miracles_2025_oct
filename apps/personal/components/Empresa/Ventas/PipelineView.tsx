@@ -33,12 +33,13 @@ import {
 } from "@/types/ventaEmpresa"
 import { uploadMedia } from "@/lib/upload"
 import { useClientesPipeline } from "./useClientesPipeline"
+import { confirmDialog } from "../ConfirmDialog"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
-  "Efectivo":      "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  "Transferencia": "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  "Tarjeta":       "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  "Otro":          "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  "Efectivo":      "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20",
+  "Transferencia": "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20",
+  "Tarjeta":       "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20",
+  "Otro":          "bg-slate-100 dark:bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-500/20",
 }
 
 export const fmtMoney = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN" })
@@ -58,11 +59,11 @@ export const STAGE_META: Record<FunnelEtapa, {
   prefix: string; desc: string; numColor: string; dot: string
   fechaKey: keyof ClienteEmpresa; nextLabel?: string
 }> = {
-  Lead:      { prefix: "L",   desc: "Contacto que llegó por algún medio",      fechaKey: "fechaLead",      nextLabel: "Enviar oferta",      numColor: "text-slate-400 bg-slate-800 border-slate-700",              dot: "bg-slate-400" },
-  Oferta:    { prefix: "OF",  desc: "Oferta de venta enviada al cliente",       fechaKey: "fechaOferta",    nextLabel: "Confirmar pedido",   numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",        dot: "bg-violet-400" },
-  Pedido:    { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",  fechaKey: "fechaPedido",    nextLabel: "Registrar entrega",  numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",  dot: "bg-violet-400" },
-  Entrega:   { prefix: "ENT", desc: "Pedido entregado al cliente",              fechaKey: "fechaEntrega",                                    numColor: "text-violet-400 bg-violet-950/40 border-violet-800/50",    dot: "bg-violet-400" },
-  Rechazada: { prefix: "REJ", desc: "Oportunidad perdida o rechazada",          fechaKey: "fechaRechazada",                                  numColor: "text-red-400 bg-red-950/40 border-red-800/50",             dot: "bg-red-400" },
+  Lead:      { prefix: "L",   desc: "Contacto que llegó por algún medio",      fechaKey: "fechaLead",      nextLabel: "Enviar oferta",      numColor: "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700",              dot: "bg-slate-400" },
+  Oferta:    { prefix: "OF",  desc: "Oferta de venta enviada al cliente",       fechaKey: "fechaOferta",    nextLabel: "Confirmar pedido",   numColor: "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/40 border-violet-300 dark:border-violet-800/50",        dot: "bg-violet-400" },
+  Pedido:    { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",  fechaKey: "fechaPedido",    nextLabel: "Registrar entrega",  numColor: "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/40 border-violet-300 dark:border-violet-800/50",  dot: "bg-violet-400" },
+  Entrega:   { prefix: "ENT", desc: "Pedido entregado al cliente",              fechaKey: "fechaEntrega",                                    numColor: "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/40 border-violet-300 dark:border-violet-800/50",    dot: "bg-violet-400" },
+  Rechazada: { prefix: "REJ", desc: "Oportunidad perdida o rechazada",          fechaKey: "fechaRechazada",                                  numColor: "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/40 border-red-300 dark:border-red-800/50",             dot: "bg-red-400" },
 }
 
 export const CANALES = ["WhatsApp", "Instagram", "Facebook", "Llamada", "Email", "Referido", "Visita", "Otro"]
@@ -106,12 +107,12 @@ function duracionEtapaDias(cliente: ClienteEmpresa, etapa: FunnelEtapa): number 
 export function CanalIcon({ canal }: { canal: string | null }) {
   if (!canal) return null
   const c = canal.toLowerCase()
-  if (c.includes("whatsapp"))  return <MessageCircle size={11} className="text-violet-400 shrink-0" />
-  if (c.includes("instagram")) return <span className="text-[9px] font-bold text-violet-400 shrink-0">IG</span>
-  if (c.includes("facebook"))  return <span className="text-[9px] font-bold text-violet-400 shrink-0">FB</span>
-  if (c.includes("email"))     return <Mail size={11} className="text-violet-400 shrink-0" />
-  if (c.includes("llamada"))   return <Phone size={11} className="text-violet-400 shrink-0" />
-  return <span className="text-[9px] text-slate-500 shrink-0">{canal.slice(0, 2).toUpperCase()}</span>
+  if (c.includes("whatsapp"))  return <MessageCircle size={11} className="text-violet-600 dark:text-violet-400 shrink-0" />
+  if (c.includes("instagram")) return <span className="text-[9px] font-bold text-violet-600 dark:text-violet-400 shrink-0">IG</span>
+  if (c.includes("facebook"))  return <span className="text-[9px] font-bold text-violet-600 dark:text-violet-400 shrink-0">FB</span>
+  if (c.includes("email"))     return <Mail size={11} className="text-violet-600 dark:text-violet-400 shrink-0" />
+  if (c.includes("llamada"))   return <Phone size={11} className="text-violet-600 dark:text-violet-400 shrink-0" />
+  return <span className="text-[9px] text-slate-500 dark:text-slate-500 shrink-0">{canal.slice(0, 2).toUpperCase()}</span>
 }
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
@@ -126,7 +127,7 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
     if (dias == null) return null
     const esActual = etapa === etapaActual
     return (
-      <span className={`text-[9px] ${esActual ? "text-violet-500" : "text-slate-600"}`}>
+      <span className={`text-[9px] ${esActual ? "text-violet-600 dark:text-violet-500" : "text-slate-400 dark:text-slate-600"}`}>
         {esActual ? `lleva ${dias}d aquí` : `${dias}d en esta etapa`}
       </span>
     )
@@ -134,7 +135,7 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
 
   return (
     <div className="px-4 py-3">
-      <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-600 mb-3">Recorrido</p>
+      <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-3">Recorrido</p>
       <div className="space-y-2">
         {/* Lead + calificado como sub-paso */}
         {(() => {
@@ -148,29 +149,29 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
                 <div className={`h-2.5 w-2.5 rounded-full border-2 mt-0.5 ${
                   pasada ? `${meta.dot} border-transparent` :
                   actual ? `bg-transparent ${meta.dot.replace("bg-", "border-")}` :
-                           "bg-transparent border-slate-700"
+                           "bg-transparent border-slate-300 dark:border-slate-700"
                 }`} />
-                <div className={`w-px min-h-[28px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-800"}`} />
+                <div className={`w-px min-h-[28px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-100 dark:bg-slate-800"}`} />
               </div>
               <div className="pb-1 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className={`text-[11px] font-semibold ${actual ? "text-slate-300" : pasada ? "text-slate-400" : "text-slate-700"}`}>
+                  <span className={`text-[11px] font-semibold ${actual ? "text-slate-700 dark:text-slate-300" : pasada ? "text-slate-500 dark:text-slate-400" : "text-slate-300 dark:text-slate-700"}`}>
                     Lead
                   </span>
                   {actual && <span className={`text-[9px] px-1 py-0.5 rounded border font-semibold ${FUNNEL_COLOR.Lead}`}>actual</span>}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {cliente.fechaLead && <p className="text-[10px] text-slate-500">{fmtDt(cliente.fechaLead)}</p>}
+                  {cliente.fechaLead && <p className="text-[10px] text-slate-500 dark:text-slate-500">{fmtDt(cliente.fechaLead)}</p>}
                   <DuracionTag etapa={etapa} />
                 </div>
                 {/* Sub-paso: calificado */}
                 <div className="flex items-center gap-1.5 mt-1">
-                  <div className={`h-1.5 w-1.5 rounded-full ${cliente.calificado ? "bg-violet-400" : "bg-slate-700"}`} />
-                  <span className={`text-[10px] ${cliente.calificado ? "text-violet-400" : "text-slate-700"}`}>
+                  <div className={`h-1.5 w-1.5 rounded-full ${cliente.calificado ? "bg-violet-400" : "bg-slate-200 dark:bg-slate-700"}`} />
+                  <span className={`text-[10px] ${cliente.calificado ? "text-violet-600 dark:text-violet-400" : "text-slate-300 dark:text-slate-700"}`}>
                     {cliente.calificado ? "Calificado" : "Sin calificar"}
                   </span>
                   {cliente.calificado && cliente.fechaCalificado && (
-                    <span className="text-[10px] text-slate-600">{fmtDt(cliente.fechaCalificado)}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-600">{fmtDt(cliente.fechaCalificado)}</span>
                   )}
                 </div>
               </div>
@@ -193,23 +194,23 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
                 <div className={`h-2.5 w-2.5 rounded-full border-2 mt-0.5 ${
                   pasada   ? `${meta.dot} border-transparent` :
                   actual   ? `bg-transparent ${meta.dot.replace("bg-", "border-")}` :
-                             "bg-transparent border-slate-700"
+                             "bg-transparent border-slate-300 dark:border-slate-700"
                 }`} />
                 {!isLast && (
-                  <div className={`w-px flex-1 min-h-[16px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-800"}`} />
+                  <div className={`w-px flex-1 min-h-[16px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-100 dark:bg-slate-800"}`} />
                 )}
               </div>
               <div className="pb-2 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className={`text-[11px] font-semibold ${
-                    actual ? FUNNEL_COLOR[etapa].split(" ")[1] : pasada ? "text-slate-400" : "text-slate-700"
+                    actual ? FUNNEL_COLOR[etapa].split(" ")[1] : pasada ? "text-slate-500 dark:text-slate-400" : "text-slate-300 dark:text-slate-700"
                   }`}>{FUNNEL_LABEL[etapa]}</span>
                   {actual && <span className={`text-[9px] px-1 py-0.5 rounded border font-semibold ${FUNNEL_COLOR[etapa]}`}>actual</span>}
                 </div>
                 <div className="flex items-center gap-1.5">
                   {fecha
-                    ? <p className="text-[10px] text-slate-500">{fmtDt(fecha)}</p>
-                    : pendiente && <p className="text-[10px] text-slate-700">—</p>
+                    ? <p className="text-[10px] text-slate-500 dark:text-slate-500">{fmtDt(fecha)}</p>
+                    : pendiente && <p className="text-[10px] text-slate-300 dark:text-slate-700">—</p>
                   }
                   <DuracionTag etapa={etapa} />
                 </div>
@@ -231,27 +232,36 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
   onRechazar?: () => void; onRecuperar?: () => void
 }) {
   const meta = STAGE_META[etapa]
+  const [confirmando, setConfirmando] = useState(false)
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 group hover:border-slate-600 transition-colors cursor-pointer"
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col gap-2 group hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer"
       onClick={onSelect}>
 
       <div className="flex items-center justify-between gap-1">
         <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${meta.numColor}`}>
           #{num}
         </span>
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
-          <button type="button" onClick={onEdit} title="Editar"
-            className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition"><Pencil size={11} /></button>
-          <button type="button" onClick={onDelete} title="Eliminar"
-            className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition"><Trash2 size={11} /></button>
-        </div>
+        {confirmando ? (
+          <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+            <span className="text-[10px] text-slate-500 dark:text-slate-500">¿Eliminar?</span>
+            <button type="button" onClick={() => { setConfirmando(false); onDelete() }} className="text-[10px] text-red-600 dark:text-red-400 font-medium">Sí</button>
+            <button type="button" onClick={() => setConfirmando(false)} className="text-[10px] text-slate-500 dark:text-slate-500">No</button>
+          </div>
+        ) : (
+          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+            <button type="button" onClick={onEdit} title="Editar"
+              className="p-1 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><Pencil size={11} /></button>
+            <button type="button" onClick={() => setConfirmando(true)} title="Eliminar"
+              className="p-1 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><Trash2 size={11} /></button>
+          </div>
+        )}
       </div>
 
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-100 leading-snug">{c.nombre}</p>
+        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-snug">{c.nombre}</p>
         {valor != null && (
-          <span className="flex items-center gap-0.5 text-[11px] font-bold text-violet-400 font-mono shrink-0">
+          <span className="flex items-center gap-0.5 text-[11px] font-bold text-violet-600 dark:text-violet-400 font-mono shrink-0">
             <DollarSign size={10} />{valor.toLocaleString("es-MX")}
           </span>
         )}
@@ -263,14 +273,14 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
           {dias != null && dias >= DIAS_ESTANCADO_AVISO && (
             <span className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border font-medium ${
               dias >= DIAS_ESTANCADO_ALERTA
-                ? "bg-red-500/10 text-red-400 border-red-500/30"
-                : "bg-violet-500/10 text-violet-400 border-violet-500/30"
+                ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30"
+                : "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30"
             }`}>
               <Clock size={9} /> {dias}d sin movimiento
             </span>
           )}
           {sinPedidoReal && (
-            <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 font-medium"
+            <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-medium"
               title="Está en esta etapa pero no tiene ningún pedido real conectado">
               <AlertTriangle size={9} /> sin pedido real
             </span>
@@ -281,20 +291,20 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       <div className="space-y-1">
         {etapa === "Lead" && <>
           {c.canalContacto && (
-            <span className="flex items-center gap-1 text-[10px] text-slate-400">
+            <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
               <CanalIcon canal={c.canalContacto} />{c.canalContacto}
             </span>
           )}
-          {c.origenContacto && <p className="text-[10px] text-slate-600">Origen: {c.origenContacto}</p>}
-          {c.telefono && <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
-          {c.notas && <p className="text-[10px] text-slate-500 line-clamp-2 italic">"{c.notas}"</p>}
+          {c.origenContacto && <p className="text-[10px] text-slate-400 dark:text-slate-600">Origen: {c.origenContacto}</p>}
+          {c.telefono && <p className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
+          {c.notas && <p className="text-[10px] text-slate-500 dark:text-slate-500 line-clamp-2 italic">"{c.notas}"</p>}
         </>}
         {etapa !== "Lead" && <>
-          {c.notas && <p className="text-[10px] text-slate-400 line-clamp-2">{c.notas}</p>}
-          {c.telefono && <p className="text-[10px] text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
+          {c.notas && <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">{c.notas}</p>}
+          {c.telefono && <p className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
         </>}
         {(c[meta.fechaKey] as string | null) && (
-          <p className="text-[9px] text-slate-700">{fmtDt(c[meta.fechaKey] as string)}</p>
+          <p className="text-[9px] text-slate-300 dark:text-slate-700">{fmtDt(c[meta.fechaKey] as string)}</p>
         )}
       </div>
 
@@ -304,10 +314,10 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
           onClick={e => { e.stopPropagation(); onCalificar?.() }} onPointerDown={e => e.stopPropagation()}
           className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
             c.calificado
-              ? "bg-violet-500/10 text-violet-400 border-violet-500/30 hover:bg-violet-500/20"
-              : "bg-slate-800/60 text-slate-500 border-slate-700 hover:text-slate-300 hover:border-slate-600"
+              ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30 hover:bg-violet-100 dark:hover:bg-violet-500/20"
+              : "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
           }`}>
-          <CheckCircle2 size={11} className={c.calificado ? "text-violet-400" : "text-slate-600"} />
+          <CheckCircle2 size={11} className={c.calificado ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-600"} />
           {c.calificado ? "Calificado" : "Calificar"}
         </button>
       )}
@@ -316,7 +326,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {onRecuperar && (
         <button type="button"
           onClick={e => { e.stopPropagation(); onRecuperar() }} onPointerDown={e => e.stopPropagation()}
-          className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-violet-500 hover:text-violet-300 border border-dashed border-violet-900/50 hover:border-violet-700 rounded-lg transition">
+          className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-violet-600 dark:text-violet-500 hover:text-violet-700 dark:hover:text-violet-300 border border-dashed border-violet-300 dark:border-violet-900/50 hover:border-violet-700 rounded-lg transition">
           <RotateCcw size={10} /> Recuperar
         </button>
       )}
@@ -325,7 +335,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {onAvanzar && meta.nextLabel && (
         <button type="button"
           onClick={e => { e.stopPropagation(); onAvanzar() }} onPointerDown={e => e.stopPropagation()}
-          className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-slate-600 hover:text-slate-300 border border-dashed border-slate-800 hover:border-slate-600 rounded-lg transition">
+          className="flex items-center justify-center gap-1 w-full mt-0.5 py-1 text-[10px] text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 border border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 rounded-lg transition">
           <ArrowRight size={10} /> {meta.nextLabel}
         </button>
       )}
@@ -334,7 +344,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       {onRechazar && (
         <button type="button"
           onClick={e => { e.stopPropagation(); onRechazar() }} onPointerDown={e => e.stopPropagation()}
-          className="flex items-center justify-center gap-1 w-full py-1 text-[10px] text-red-700 hover:text-red-400 border border-dashed border-red-900/30 hover:border-red-800/50 rounded-lg transition">
+          className="flex items-center justify-center gap-1 w-full py-1 text-[10px] text-red-500 dark:text-red-700 hover:text-red-600 dark:hover:text-red-400 border border-dashed border-red-300 dark:border-red-900/30 hover:border-red-300 dark:hover:border-red-800/50 rounded-lg transition">
           <XCircle size={10} /> Rechazar
         </button>
       )}
@@ -361,7 +371,7 @@ function DraggableClienteCard(props: Parameters<typeof ClienteCard>[0]) {
 function DroppableColumn({ etapa, children }: { etapa: FunnelEtapa; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa })
   return (
-    <div ref={setNodeRef} className={`flex flex-col gap-2 min-h-[40px] rounded-xl transition-colors ${isOver ? "bg-violet-500/5 ring-2 ring-violet-500/30" : ""}`}>
+    <div ref={setNodeRef} className={`flex flex-col gap-2 min-h-[40px] rounded-xl transition-colors ${isOver ? "bg-violet-50 dark:bg-violet-500/5 ring-2 ring-violet-500/30" : ""}`}>
       {children}
     </div>
   )
@@ -404,8 +414,8 @@ function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClos
     ventaId:    pedidosDelCliente.length === 1 ? pedidosDelCliente[0].documentId : "",
   })
   const [guardando, setGuardando] = useState(false)
-  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
-  const lbl = "block text-[11px] text-slate-500 mb-1"
+  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
+  const lbl = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
 
   const guardar = async () => {
     const monto = parseFloat(form.monto)
@@ -438,14 +448,14 @@ function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClos
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Registrar pago</h3>
-            <p className="text-[11px] text-slate-500">{clienteNombre}</p>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Registrar pago</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-500">{clienteNombre}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={15} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={15} /></button>
         </div>
 
         <div>
@@ -468,7 +478,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClos
               ))}
             </select>
           ) : (
-            <p className="text-[11px] text-slate-600 px-1">Este cliente todavía no tiene pedidos reales — el pago quedará sin ligar a uno.</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-600 px-1">Este cliente todavía no tiene pedidos reales — el pago quedará sin ligar a uno.</p>
           )}
         </div>
 
@@ -494,7 +504,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClos
               <button key={m} type="button"
                 onClick={() => setForm(f => ({ ...f, metodoPago: m }))}
                 className={`px-2.5 py-1 text-[11px] font-medium rounded-lg border transition ${
-                  form.metodoPago === m ? METODO_COLOR[m] : "border-slate-700 text-slate-500 hover:text-slate-300"
+                  form.metodoPago === m ? METODO_COLOR[m] : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}>{m}</button>
             ))}
           </div>
@@ -527,7 +537,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClos
 
         <div className="flex gap-2 justify-end pt-1">
           <button type="button" onClick={onClose}
-            className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">Cancelar</button>
+            className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg transition">Cancelar</button>
           <button type="button" onClick={guardar} disabled={guardando}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} />{guardando ? "Guardando..." : "Registrar"}
@@ -557,23 +567,24 @@ export function PedidoModal({ venta, onClose, onSaved }: {
   const [comprobante, setComprobante] = useState<File | null>(null)
   const comprobanteRef = useRef<HTMLInputElement>(null)
   const [guardando, setGuardando] = useState(false)
-  const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
-  const lbl = "text-[11px] font-medium text-slate-400 mb-1.5 block"
+  const inp = "w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+  const lbl = "text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block"
 
   // Pagos — viven aquí (dentro del pedido), no en la ficha del cliente, ya
   // que un pedido puede recibir varios (anticipo, liquidación).
   const { transacciones: pagos, setTransacciones: setPagos, loading: pagosLoading } = useGetTransaccionesByVenta(venta.documentId)
   const [pagoModalOpen, setPagoModalOpen] = useState(false)
+  const [delPagoId, setDelPagoId] = useState<string | null>(null)
   const totalPagado = pagos.reduce((s, p) => s + (p.monto ?? 0), 0)
   const saldo = venta.monto - totalPagado
 
   const eliminarPago = async (documentId: string) => {
-    if (!confirm("¿Eliminar este pago?")) return
     try {
       await deleteTransaccion(documentId)
       setPagos(prev => prev.filter(p => p.documentId !== documentId))
       toast.success("Pago eliminado")
     } catch { toast.error("Error al eliminar") }
+    finally { setDelPagoId(null) }
   }
 
   const guardar = async () => {
@@ -596,25 +607,25 @@ export function PedidoModal({ venta, onClose, onSaved }: {
     <>
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
+      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">{venta.numero ?? "Pedido"}</h2>
-            <p className="text-[11px] text-slate-500 mt-0.5">{venta.cliente?.nombre ?? "Sin cliente"}</p>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{venta.numero ?? "Pedido"}</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">{venta.cliente?.nombre ?? "Sin cliente"}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={16} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
         </div>
 
         <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
           {venta.lineas?.length > 0 && (
             <div>
               <label className={lbl}>Productos del pedido</label>
-              <div className="border border-slate-700 rounded-lg divide-y divide-slate-800 overflow-hidden">
+              <div className="border border-slate-300 dark:border-slate-700 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden">
                 {venta.lineas.map(l => (
                   <div key={l.documentId} className="flex items-center justify-between px-3 py-2 text-[12px]">
-                    <span className="text-slate-300">{l.descripcion} ×{l.cantidad}</span>
-                    <span className="text-slate-400 font-mono">{fmtMoney(l.subtotal ?? 0)}</span>
+                    <span className="text-slate-700 dark:text-slate-300">{l.descripcion} ×{l.cantidad}</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-mono">{fmtMoney(l.subtotal ?? 0)}</span>
                   </div>
                 ))}
               </div>
@@ -662,7 +673,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
             <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
               onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
             <button type="button" onClick={() => comprobanteRef.current?.click()}
-              className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 px-3 text-sm text-slate-400 hover:border-violet-500/50 hover:text-slate-200 transition-all">
+              className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
               <Paperclip size={13} className="shrink-0" />
               <span className="truncate">
                 {comprobante ? comprobante.name : venta.comprobantePago ? `Ya adjunto: ${venta.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
@@ -682,39 +693,47 @@ export function PedidoModal({ venta, onClose, onSaved }: {
               <label className={lbl + " mb-0"}>Pagos</label>
               {venta.cliente && (
                 <button type="button" onClick={() => setPagoModalOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                  className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
                   <Plus size={10} /> Registrar
                 </button>
               )}
             </div>
-            <div className="border border-slate-700 rounded-lg overflow-hidden">
-              <div className="flex gap-3 px-3 py-2 bg-slate-950/50 text-[11px]">
-                <span className="text-slate-500">Pagado: <span className="text-violet-400 font-mono font-semibold">{fmtMoney(totalPagado)}</span></span>
-                <span className={saldo > 0 ? "text-violet-400" : "text-slate-500"}>
+            <div className="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden">
+              <div className="flex gap-3 px-3 py-2 bg-slate-50 dark:bg-slate-950/50 text-[11px]">
+                <span className="text-slate-500 dark:text-slate-500">Pagado: <span className="text-violet-600 dark:text-violet-400 font-mono font-semibold">{fmtMoney(totalPagado)}</span></span>
+                <span className={saldo > 0 ? "text-violet-600 dark:text-violet-400" : "text-slate-500 dark:text-slate-500"}>
                   Saldo: <span className="font-mono font-semibold">{fmtMoney(Math.max(saldo, 0))}</span>
                 </span>
               </div>
-              <div className="divide-y divide-slate-800">
+              <div className="divide-y divide-slate-200 dark:divide-slate-800">
                 {pagosLoading ? (
-                  <p className="text-[11px] text-slate-600 px-3 py-3">Cargando...</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-600 px-3 py-3">Cargando...</p>
                 ) : pagos.length === 0 ? (
-                  <p className="text-[11px] text-slate-600 px-3 py-3">Sin pagos registrados todavía.</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-600 px-3 py-3">Sin pagos registrados todavía.</p>
                 ) : (
                   pagos.map(p => (
                     <div key={p.documentId} className="flex items-center justify-between px-3 py-2 group">
                       <div className="min-w-0">
-                        <p className="text-[12px] text-slate-200 truncate">{p.descripcion}</p>
+                        <p className="text-[12px] text-slate-800 dark:text-slate-200 truncate">{p.descripcion}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[10px] text-slate-600">{fmtDt(p.fecha)}</span>
-                          {p.metodoPago && <span className="text-[9px] text-slate-500">{p.metodoPago}</span>}
+                          <span className="text-[10px] text-slate-400 dark:text-slate-600">{fmtDt(p.fecha)}</span>
+                          {p.metodoPago && <span className="text-[9px] text-slate-500 dark:text-slate-500">{p.metodoPago}</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[12px] font-semibold text-violet-400 font-mono">{fmtMoney(p.monto)}</span>
-                        <button type="button" onClick={() => eliminarPago(p.documentId)} title="Eliminar pago"
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-red-400 rounded transition">
-                          <Trash2 size={11} />
-                        </button>
+                        <span className="text-[12px] font-semibold text-violet-600 dark:text-violet-400 font-mono">{fmtMoney(p.monto)}</span>
+                        {delPagoId === p.documentId ? (
+                          <span className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-500 dark:text-slate-500 whitespace-nowrap">¿Eliminar?</span>
+                            <button type="button" onClick={() => eliminarPago(p.documentId)} className="text-[10px] text-red-600 dark:text-red-400 font-medium">Sí</button>
+                            <button type="button" onClick={() => setDelPagoId(null)} className="text-[10px] text-slate-500 dark:text-slate-500">No</button>
+                          </span>
+                        ) : (
+                          <button type="button" onClick={() => setDelPagoId(p.documentId)} title="Eliminar pago"
+                            className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 rounded transition">
+                            <Trash2 size={11} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))
@@ -724,9 +743,9 @@ export function PedidoModal({ venta, onClose, onSaved }: {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
           <button type="button" onClick={onClose} disabled={guardando}
-            className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+            className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
           <button type="button" onClick={guardar} disabled={guardando}
             className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
             {guardando ? "Guardando..." : "Guardar cambios"}
@@ -790,14 +809,20 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
     metodoPago: "Transferencia" as MetodoPagoTransaccion,
   })
   const [guardando, setGuardando] = useState(false)
-  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
-  const lbl = "block text-[11px] text-slate-500 mb-1"
+  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
+  const lbl = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
 
   async function convertirCotizacion(cot: Cotizacion) {
     const faltantes = calcularFaltantes(cot.items ?? [], productos)
     if (faltantes.length > 0) {
-      const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`).join("\n")
-      if (!confirm(`Stock insuficiente para:\n\n${detalle}\n\n¿Continuar de todas formas?`)) return
+      const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`)
+      const ok = await confirmDialog({
+        title: "Stock insuficiente",
+        message: detalle,
+        confirmLabel: "Continuar de todas formas",
+        variant: "action",
+      })
+      if (!ok) return
     }
     setConvirtiendo(cot.documentId)
     try {
@@ -849,30 +874,30 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
-              <ShoppingBag size={14} className="text-violet-400" /> Vincular pedido real
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <ShoppingBag size={14} className="text-violet-600 dark:text-violet-400" /> Vincular pedido real
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">{cliente.nombre}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">{cliente.nombre}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={15} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={15} /></button>
         </div>
 
-        <p className="text-[11px] text-slate-500 leading-relaxed">
+        <p className="text-[11px] text-slate-500 dark:text-slate-500 leading-relaxed">
           Para pasar a "Pedido" necesita un pedido real conectado — así el stock y las finanzas se actualizan solos.
         </p>
 
         {cotizacionesAceptadas.length > 0 && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">Cotizaciones aceptadas</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-2">Cotizaciones aceptadas</p>
 
             <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
               onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
             <button type="button" onClick={() => comprobanteRef.current?.click()}
-              className="w-full flex items-center gap-2 h-8 mb-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 px-3 text-[11px] text-slate-400 hover:border-violet-500/50 hover:text-slate-200 transition-all">
+              className="w-full flex items-center gap-2 h-8 mb-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-[11px] text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
               <Paperclip size={12} className="shrink-0" />
               <span className="truncate">{comprobante ? comprobante.name : "Adjuntar evidencia de pago (opcional)"}</span>
             </button>
@@ -881,26 +906,26 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
               {cotizacionesAceptadas.map(cot => (
                 <button key={cot.documentId} type="button" disabled={convirtiendo === cot.documentId}
                   onClick={() => convertirCotizacion(cot)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-700 hover:border-violet-600 bg-slate-800/60 hover:bg-violet-500/5 transition text-left disabled:opacity-50">
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:border-violet-600 bg-slate-100 dark:bg-slate-800/60 hover:bg-violet-50 dark:hover:bg-violet-500/5 transition text-left disabled:opacity-50">
                   <div>
-                    <p className="text-[11px] font-bold font-mono text-slate-300">{cot.numero}</p>
-                    <p className="text-[11px] font-semibold text-violet-400">{fmtMoney(cot.total)}</p>
+                    <p className="text-[11px] font-bold font-mono text-slate-700 dark:text-slate-300">{cot.numero}</p>
+                    <p className="text-[11px] font-semibold text-violet-600 dark:text-violet-400">{fmtMoney(cot.total)}</p>
                   </div>
-                  <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1">
                     {convirtiendo === cot.documentId ? "Creando..." : <>Convertir <ArrowRightCircle size={12} /></>}
                   </span>
                 </button>
               ))}
             </div>
             <button type="button" onClick={() => setModoRapido(m => !m)}
-              className="text-[10px] text-slate-600 hover:text-slate-400 mt-2 transition">
+              className="text-[10px] text-slate-400 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 mt-2 transition">
               {modoRapido ? "Ocultar" : "O crear un pedido nuevo sin cotización"}
             </button>
           </div>
         )}
 
         {modoRapido && (
-          <div className="space-y-3 pt-1 border-t border-slate-800">
+          <div className="space-y-3 pt-1 border-t border-slate-200 dark:border-slate-800">
             <div>
               <label className={lbl}>Concepto</label>
               <input value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} className={inp} />
@@ -926,7 +951,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
         )}
 
         <button type="button" onClick={onClose}
-          className="w-full text-center text-[11px] text-slate-600 hover:text-slate-400 transition pt-1">
+          className="w-full text-center text-[11px] text-slate-400 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition pt-1">
           Cancelar
         </button>
       </div>
@@ -1071,19 +1096,19 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
 
   const iniciales = cliente.nombre.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() ?? "").join("")
 
-  const cardCls = "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden"
-  const cardHeadCls = "flex items-center justify-between px-4 py-3 border-b border-slate-800"
-  const cardTitleCls = "text-xs font-bold text-slate-200"
-  const editLblCls = "text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1 block"
-  const editInpCls = "w-full px-2.5 py-1.5 text-[13px] rounded-lg border border-slate-700 bg-slate-800 text-slate-100 outline-none focus:border-violet-500"
-  const editCancelCls = "px-3 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-200 border border-slate-700 hover:border-slate-600 rounded-lg transition"
+  const cardCls = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
+  const cardHeadCls = "flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800"
+  const cardTitleCls = "text-xs font-bold text-slate-800 dark:text-slate-200"
+  const editLblCls = "text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1 block"
+  const editInpCls = "w-full px-2.5 py-1.5 text-[13px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-violet-500"
+  const editCancelCls = "px-3 py-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-lg transition"
   const editSaveCls = "flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition disabled:opacity-50"
-  const cardEditBtnCls = "flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition"
+  const cardEditBtnCls = "flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition"
 
   return (
     <div className="space-y-5">
       <button type="button" onClick={onClose}
-        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition">
+        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">
         <ArrowLeft size={14} /> {backLabel}
       </button>
 
@@ -1095,8 +1120,8 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
               {iniciales || <User size={18} />}
             </div>
             <div>
-              <p className="text-xl font-bold text-slate-100">{cliente.nombre}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{cliente.nombre}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">
                 Cliente desde {clienteDesdeTexto}
                 {diasUltimaCompra != null ? ` · Última compra hace ${diasUltimaCompra}d` : " · Sin compras todavía"}
               </p>
@@ -1104,9 +1129,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border ${STAGE_META[etapa].numColor}`}>#{num}</span>
                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${FUNNEL_COLOR[etapa]}`}>{FUNNEL_LABEL[etapa]}</span>
                 {etapa === "Lead" && cliente.calificado && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-500/15 text-violet-300 border-violet-500/30">Calificado</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30">Calificado</span>
                 )}
-                <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-500/10 text-violet-400 border-violet-500/20">
+                <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20">
                   <Tag size={9} />{clasificacion}
                 </span>
               </div>
@@ -1114,82 +1139,82 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button type="button" onClick={onEdit}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-400">
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-slate-300 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg transition text-slate-500 dark:text-slate-400">
               <Pencil size={12} /> Editar
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-800">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Teléfono</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Teléfono</p>
             {cliente.telefono ? (
-              <a href={`tel:${cliente.telefono}`} className="text-xs font-medium text-slate-300 hover:text-violet-400 transition flex items-center gap-1.5">
-                <Phone size={11} className="text-slate-600 shrink-0" />{cliente.telefono}
+              <a href={`tel:${cliente.telefono}`} className="text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition flex items-center gap-1.5">
+                <Phone size={11} className="text-slate-400 dark:text-slate-600 shrink-0" />{cliente.telefono}
               </a>
-            ) : <p className="text-xs text-slate-700">—</p>}
+            ) : <p className="text-xs text-slate-300 dark:text-slate-700">—</p>}
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Correo</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Correo</p>
             {cliente.email ? (
-              <a href={`mailto:${cliente.email}`} className="text-xs font-medium text-slate-300 hover:text-violet-400 transition flex items-center gap-1.5 truncate">
-                <Mail size={11} className="text-slate-600 shrink-0" />{cliente.email}
+              <a href={`mailto:${cliente.email}`} className="text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition flex items-center gap-1.5 truncate">
+                <Mail size={11} className="text-slate-400 dark:text-slate-600 shrink-0" />{cliente.email}
               </a>
-            ) : <p className="text-xs text-slate-700">—</p>}
+            ) : <p className="text-xs text-slate-300 dark:text-slate-700">—</p>}
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Canal de origen</p>
-            <p className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Canal de origen</p>
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               {cliente.canalContacto ? <CanalIcon canal={cliente.canalContacto} /> : null}
               {cliente.origenContacto || cliente.canalContacto || "—"}
             </p>
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Clasificación</p>
-            <p className="text-xs font-medium text-slate-300">
-              {clasificacion} <span className="text-slate-600 font-normal">— {CLASIFICACION_CAPTION[clasificacion]}</span>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Clasificación</p>
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+              {clasificacion} <span className="text-slate-400 dark:text-slate-600 font-normal">— {CLASIFICACION_CAPTION[clasificacion]}</span>
             </p>
           </div>
         </div>
       </div>
 
       {/* Resumen de valor de vida del cliente */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-800 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="px-5 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Total histórico</p>
-          <p className="text-2xl font-bold text-violet-400 font-mono tracking-tight">{fmtMoney(totalGastado)}</p>
-          <p className="text-[11px] text-slate-500 mt-1">{ventasReales.length} pedido{ventasReales.length === 1 ? "" : "s"} registrado{ventasReales.length === 1 ? "" : "s"}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1.5">Total histórico</p>
+          <p className="text-2xl font-bold text-violet-600 dark:text-violet-400 font-mono tracking-tight">{fmtMoney(totalGastado)}</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1">{ventasReales.length} pedido{ventasReales.length === 1 ? "" : "s"} registrado{ventasReales.length === 1 ? "" : "s"}</p>
         </div>
         <div className="px-5 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Ticket promedio</p>
-          <p className="text-2xl font-bold text-slate-200 font-mono tracking-tight">{ventasReales.length > 0 ? fmtMoney(ticketPromedio) : "—"}</p>
-          <p className="text-[11px] text-slate-500 mt-1">por pedido</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1.5">Ticket promedio</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 font-mono tracking-tight">{ventasReales.length > 0 ? fmtMoney(ticketPromedio) : "—"}</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1">por pedido</p>
         </div>
         <div className="px-5 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Cotiz. aceptadas</p>
-          <p className="text-2xl font-bold text-slate-200 font-mono tracking-tight">{cotAceptadas}<span className="text-slate-600 font-normal text-base"> / {cotizaciones.length}</span></p>
-          <p className="text-[11px] text-slate-500 mt-1">{pctConversion != null ? `${pctConversion}% de conversión` : "sin cotizaciones"}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1.5">Cotiz. aceptadas</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 font-mono tracking-tight">{cotAceptadas}<span className="text-slate-400 dark:text-slate-600 font-normal text-base"> / {cotizaciones.length}</span></p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1">{pctConversion != null ? `${pctConversion}% de conversión` : "sin cotizaciones"}</p>
         </div>
         <div className="px-5 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1.5">Antigüedad</p>
-          <p className="text-2xl font-bold text-slate-200 font-mono tracking-tight">{antiguedadTexto}</p>
-          <p className="text-[11px] text-slate-500 mt-1">como cliente</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1.5">Antigüedad</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 font-mono tracking-tight">{antiguedadTexto}</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1">como cliente</p>
         </div>
       </div>
 
       {/* Pestañas */}
-      <div className="flex items-center gap-1 border-b border-slate-800">
+      <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: "general" as const, label: "General", count: null as number | null },
           { id: "ventas" as const,  label: "Ventas",  count: cotizaciones.length + ventasDelCliente.length },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
             className={`px-3 pb-2.5 text-xs font-semibold border-b-2 transition-colors ${
-              tab === t.id ? "text-slate-100 border-violet-500" : "text-slate-500 border-transparent hover:text-slate-300"
+              tab === t.id ? "text-slate-900 dark:text-slate-100 border-violet-500" : "text-slate-500 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300"
             }`}>
             {t.label}
             {t.count != null && (
-              <span className={`ml-1.5 text-[10px] font-mono ${tab === t.id ? "text-violet-400" : "text-slate-600"}`}>{t.count}</span>
+              <span className={`ml-1.5 text-[10px] font-mono ${tab === t.id ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-600"}`}>{t.count}</span>
             )}
           </button>
         ))}
@@ -1275,39 +1300,39 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
             ) : (
               <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Dirección</p>
-                  <p className="text-[13px] font-medium text-slate-200">{cliente.direccion || "—"}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Dirección</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.direccion || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Canal preferido</p>
-                  <p className="text-[13px] font-medium text-slate-200 flex items-center gap-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Canal preferido</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     {cliente.canalContacto && <CanalIcon canal={cliente.canalContacto} />}
                     {cliente.canalContacto || "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Talla de anillo</p>
-                  <p className="text-[13px] font-medium text-slate-200">{cliente.tallaAnillo || "—"}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Talla de anillo</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.tallaAnillo || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Ocasión frecuente</p>
-                  <p className="text-[13px] font-medium text-slate-200">{cliente.ocasionFrecuente || "—"}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Ocasión frecuente</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.ocasionFrecuente || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Estado civil</p>
-                  <p className="text-[13px] font-medium text-slate-200">{cliente.estadoCivil || "—"}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Estado civil</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.estadoCivil || "—"}</p>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Redes sociales</p>
-                  <p className="text-[13px] font-medium text-slate-200 truncate">{cliente.redesSociales || "—"}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Redes sociales</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{cliente.redesSociales || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Origen del contacto</p>
-                  <p className="text-[13px] font-medium text-slate-200">{cliente.origenContacto || "—"}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Origen del contacto</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.origenContacto || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1">Segmento</p>
-                  <p className="text-[13px] font-medium text-slate-200">{cliente.segmento || "—"}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1">Segmento</p>
+                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.segmento || "—"}</p>
                 </div>
               </div>
             )}
@@ -1326,7 +1351,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 <div className="space-y-2">
                   <textarea value={notasForm} onChange={e => setNotasForm(e.target.value)} rows={4}
                     placeholder="Preferencias, ocasiones, detalles a recordar…"
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-700 bg-slate-800 text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500 resize-none" />
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-violet-500 resize-none" />
                   <div className="flex justify-end gap-2">
                     <button type="button" onClick={() => setEditandoNotas(false)} className={editCancelCls}>Cancelar</button>
                     <button type="button" onClick={guardarNotas} disabled={guardandoNotas} className={editSaveCls}>
@@ -1335,9 +1360,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   </div>
                 </div>
               ) : cliente.notas ? (
-                <p className="text-xs text-slate-400 leading-relaxed bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed bg-slate-100 dark:bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
               ) : (
-                <p className="text-[11px] text-slate-700">Sin notas todavía.</p>
+                <p className="text-[11px] text-slate-300 dark:text-slate-700">Sin notas todavía.</p>
               )}
             </div>
           </div>
@@ -1354,17 +1379,17 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 <h3 className={cardTitleCls}>Cotizaciones</h3>
                 <button type="button"
                   onClick={() => setCotModalState("nueva")}
-                  className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                  className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
                   <Plus size={10} /> Nueva
                 </button>
               </div>
               <div className="p-2">
                 {cotLoading ? (
-                  <p className="text-[11px] text-slate-700 py-3 px-2">Cargando...</p>
+                  <p className="text-[11px] text-slate-300 dark:text-slate-700 py-3 px-2">Cargando...</p>
                 ) : cotizaciones.length === 0 ? (
                   <button type="button"
                     onClick={() => setCotModalState("nueva")}
-                    className="w-full flex items-center justify-center gap-1.5 py-6 text-[11px] text-slate-700 hover:text-violet-400 transition">
+                    className="w-full flex items-center justify-center gap-1.5 py-6 text-[11px] text-slate-300 dark:text-slate-700 hover:text-violet-600 dark:hover:text-violet-400 transition">
                     <FileText size={11} /> Crear primera cotización
                   </button>
                 ) : (
@@ -1372,11 +1397,11 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                     {cotizaciones.map(c => (
                       <button key={c.documentId} type="button"
                         onClick={() => setCotModalState(c)}
-                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-800/60 transition text-left">
-                        <span className="text-[11px] font-bold font-mono text-violet-400 w-16 shrink-0">{c.numero}</span>
+                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition text-left">
+                        <span className="text-[11px] font-bold font-mono text-violet-600 dark:text-violet-400 w-16 shrink-0">{c.numero}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-medium text-slate-200 truncate">{tituloCotizacion(c.items)}</p>
-                          <p className="text-[10px] text-slate-600 mt-0.5">
+                          <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{tituloCotizacion(c.items)}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-0.5">
                             {c.validoHasta ? `Válida hasta ${fmtDt(c.validoHasta)}` : `${c.estado} · ${fmtDt(c.fecha ?? c.createdAt)}`}
                           </p>
                         </div>
@@ -1384,7 +1409,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                           <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_COT_COLOR[c.estado]}`}>
                             {c.estado}
                           </span>
-                          <span className="text-[13px] font-semibold text-slate-200 font-mono">{fmtMoney(c.total)}</span>
+                          <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 font-mono">{fmtMoney(c.total)}</span>
                         </div>
                       </button>
                     ))}
@@ -1399,29 +1424,29 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 <h3 className={cardTitleCls}>Pedidos</h3>
                 <button type="button"
                   onClick={() => onNuevoPedido(cliente)}
-                  className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition">
+                  className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
                   <Plus size={10} /> Nuevo
                 </button>
               </div>
               <div className="p-2">
                 {ventasDelCliente.length === 0 ? (
-                  <p className="text-[11px] text-slate-700 py-6 px-2 text-center">Sin pedidos reales conectados todavía.</p>
+                  <p className="text-[11px] text-slate-300 dark:text-slate-700 py-6 px-2 text-center">Sin pedidos reales conectados todavía.</p>
                 ) : (
                   <div className="space-y-0.5">
                     {ventasDelCliente.map(v => (
                       <button key={v.documentId} type="button"
                         onClick={() => setPedidoAbierto(v)}
-                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-800/60 transition text-left">
-                        <span className="text-[11px] font-bold font-mono text-violet-400 w-16 shrink-0">{v.numero ?? "—"}</span>
+                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition text-left">
+                        <span className="text-[11px] font-bold font-mono text-violet-600 dark:text-violet-400 w-16 shrink-0">{v.numero ?? "—"}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-medium text-slate-200 truncate">{v.concepto}</p>
-                          <p className="text-[10px] text-slate-600 mt-0.5">{v.estado ?? "Sin estado"} · {v.fecha ? fmtDt(v.fecha) : "—"}</p>
+                          <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{v.concepto}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-0.5">{v.estado ?? "Sin estado"} · {v.fecha ? fmtDt(v.fecha) : "—"}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {v.estado && (
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ESTADO_VENTA_COLOR[v.estado as EstadoVenta]}`}>{v.estado}</span>
                           )}
-                          <span className="text-[13px] font-semibold text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
+                          <span className="text-[13px] font-semibold text-violet-600 dark:text-violet-400 font-mono">{fmtMoney(v.monto)}</span>
                         </div>
                       </button>
                     ))}
@@ -1438,7 +1463,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
         <div className={cardHeadCls}><h3 className={cardTitleCls}>Actividad por mes</h3></div>
         <div className="p-4">
           {actividadPorMes.length === 0 ? (
-            <p className="text-[11px] text-slate-700 py-6 text-center">Todavía no hay cotizaciones ni pedidos para graficar.</p>
+            <p className="text-[11px] text-slate-300 dark:text-slate-700 py-6 text-center">Todavía no hay cotizaciones ni pedidos para graficar.</p>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={actividadPorMes} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
@@ -1461,7 +1486,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
         {etapa === "Rechazada" ? (
           <button type="button"
             onClick={async () => { const u = await onRecuperar(cliente); if (u) onUpdate(u) }}
-            className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-violet-800/50 hover:border-violet-600 text-violet-500 hover:text-violet-300 rounded-lg transition">
+            className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-violet-300 dark:border-violet-800/50 hover:border-violet-600 text-violet-600 dark:text-violet-500 hover:text-violet-700 dark:hover:text-violet-300 rounded-lg transition">
             <RotateCcw size={12} /> Recuperar (volver a Lead)
           </button>
         ) : (
@@ -1469,20 +1494,20 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
             {etapa !== "Entrega" && (
               <button type="button"
                 onClick={async () => { const u = await onRechazar(cliente); if (u) onUpdate(u) }}
-                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-red-900/40 hover:border-red-700 text-red-700 hover:text-red-400 rounded-lg transition">
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-red-300 dark:border-red-900/40 hover:border-red-700 text-red-500 dark:text-red-700 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition">
                 <XCircle size={12} /> Rechazar
               </button>
             )}
             {etapa !== "Lead" && (
               <button type="button"
                 onClick={async () => { const u = await onRetroceder(cliente); if (u) onUpdate(u) }}
-                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-slate-700 hover:border-slate-600 hover:text-slate-200 rounded-lg transition text-slate-500">
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium border border-slate-300 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg transition text-slate-500 dark:text-slate-500">
                 <ChevronLeft size={12} />{FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) - 1]]}
               </button>
             )}
             {etapa !== "Entrega" && (
               <button type="button" onClick={() => onAvanzar(cliente)}
-                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border border-violet-600/60 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500 text-violet-300 rounded-lg transition">
+                className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold border border-violet-400 dark:border-violet-600/60 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:border-violet-500 text-violet-700 dark:text-violet-300 rounded-lg transition">
                 {FUNNEL_LABEL[FUNNEL_ETAPAS[FUNNEL_ETAPAS.indexOf(etapa) + 1]]}<ChevronRight size={12} />
               </button>
             )}
@@ -1522,19 +1547,19 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
   onGuardar: () => void; onCerrar: () => void; guardando: boolean
 }) {
   const etapa = form.Funnel ?? "Lead"
-  const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
-  const lbl   = "block text-[11px] text-slate-500 mb-1"
+  const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
+  const lbl   = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold text-slate-100">{editando ? "Editar" : "Nuevo"} {FUNNEL_LABEL[etapa]}</h2>
-            <p className="text-[11px] text-slate-500 mt-0.5">{STAGE_META[etapa].desc}</p>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar" : "Nuevo"} {FUNNEL_LABEL[etapa]}</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">{STAGE_META[etapa].desc}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onCerrar}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition"><X size={16} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
         </div>
 
         <div>
@@ -1544,7 +1569,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
               {FUNNEL_LABEL[etapa]}
             </span>
             {editando && (
-              <span className="text-[10px] text-slate-600">
+              <span className="text-[10px] text-slate-400 dark:text-slate-600">
                 Para cambiar de etapa usa los botones de avanzar/rechazar del pipeline — así siempre queda un pedido real conectado antes de pasar a "Pedido".
               </span>
             )}
@@ -1635,10 +1660,10 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
                 onClick={() => setForm(f => ({ ...f, calificado: !f.calificado }))}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition ${
                   form.calificado
-                    ? "bg-violet-500/10 text-violet-400 border-violet-500/30"
-                    : "border-slate-700 text-slate-500 hover:text-slate-300"
+                    ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30"
+                    : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}>
-                <CheckCircle2 size={15} className={form.calificado ? "text-violet-400" : "text-slate-600"} />
+                <CheckCircle2 size={15} className={form.calificado ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-600"} />
                 {form.calificado ? "Calificado" : "Marcar como calificado"}
               </button>
             </div>
@@ -1677,7 +1702,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
 
         <div className="flex gap-2 justify-end pt-1">
           <button type="button" onClick={onCerrar}
-            className="px-3 py-2 text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg transition">Cancelar</button>
+            className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg transition">Cancelar</button>
           <button type="button" onClick={onGuardar} disabled={guardando}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition">
             <Check size={14} /> {guardando ? "Guardando..." : "Guardar"}
@@ -1883,8 +1908,8 @@ export function PipelineView() {
     <div className="p-6 max-w-full mx-auto">
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Pipeline de ventas</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Pipeline de ventas</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-500">
             {clientes.filter(c => c.Funnel !== "Entrega" && c.Funnel !== "Rechazada").length} en proceso ·{" "}
             {leadsCalificados} calificados ·{" "}
             {clientes.filter(c => c.Funnel === "Entrega").length} entregas ·{" "}
@@ -1898,7 +1923,7 @@ export function PipelineView() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-500 text-center py-16">Cargando...</p>
+        <p className="text-sm text-slate-500 dark:text-slate-500 text-center py-16">Cargando...</p>
       ) : (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="overflow-x-auto pb-4">
@@ -1914,7 +1939,7 @@ export function PipelineView() {
                       <span className="text-xs font-bold">{FUNNEL_LABEL[etapa]}</span>
                       <div className="flex items-center gap-1">
                         {calificadosEnCol !== null && calificadosEnCol > 0 && (
-                          <span className="text-[9px] font-semibold bg-violet-500/20 text-violet-300 px-1 py-0.5 rounded-full">
+                          <span className="text-[9px] font-semibold bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 px-1 py-0.5 rounded-full">
                             {calificadosEnCol} cal.
                           </span>
                         )}
@@ -1946,7 +1971,7 @@ export function PipelineView() {
                       solo se alcanzan avanzando con un pedido real conectado (poka-yoke) */}
                   {(etapa === "Lead" || etapa === "Oferta") && (
                     <button type="button" onClick={() => abrirCrear(etapa)}
-                      className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-700 hover:text-slate-500 border border-dashed border-slate-800 hover:border-slate-700 rounded-xl transition mt-1">
+                      className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-300 dark:text-slate-700 hover:text-slate-500 dark:hover:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-xl transition mt-1">
                       <Plus size={10} /> Agregar
                     </button>
                   )}

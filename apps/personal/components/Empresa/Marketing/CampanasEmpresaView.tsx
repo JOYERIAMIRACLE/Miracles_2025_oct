@@ -185,6 +185,21 @@ function CampanaChip({ titulo, categoria, fullWidth, archivos, onClick, onDelete
 }) {
   const cfg = (categoria && CAT_CHIP[categoria]) ?? { letter: "·", bg: "bg-slate-700", text: "text-slate-400" }
   const primerArchivo = archivos?.[0]
+  const [confirmando, setConfirmando] = useState(false)
+
+  if (confirmando) {
+    return (
+      <div onClick={e => e.stopPropagation()}
+        className={`flex items-center h-8 rounded-lg bg-slate-800 border border-red-800/40 overflow-hidden shrink-0 ${fullWidth ? "w-full" : "w-[156px]"}`}>
+        <span className="text-[10px] text-slate-400 truncate px-2 flex-1 text-left leading-none">¿Eliminar?</span>
+        <button type="button" onClick={() => { setConfirmando(false); onDelete?.() }}
+          className="px-1.5 h-full text-[10px] text-red-400 font-medium shrink-0">Sí</button>
+        <button type="button" onClick={() => setConfirmando(false)}
+          className="px-1.5 h-full text-[10px] text-slate-500 shrink-0">No</button>
+      </div>
+    )
+  }
+
   return (
     <div
       onClick={onClick}
@@ -202,7 +217,7 @@ function CampanaChip({ titulo, categoria, fullWidth, archivos, onClick, onDelete
         </a>
       )}
       {onDelete && (
-        <span role="button" onClick={e => { e.stopPropagation(); onDelete() }}
+        <span role="button" onClick={e => { e.stopPropagation(); setConfirmando(true) }}
           title="Eliminar campaña"
           className="flex items-center justify-center h-full w-6 shrink-0 text-slate-600 hover:text-red-400 opacity-0 group-hover/chip:opacity-100 transition">
           <Trash2 size={10} />
@@ -236,6 +251,7 @@ function CampanaCard({ c, onEdit, onDelete }: {
   const semanas = SEMANAS
     .map(n => ({ n, titulo: getSemana(c, n, "Titulo"), fecha: getSemana(c, n, "Fecha") }))
     .filter(s => !!s.titulo)
+  const [confirmando, setConfirmando] = useState(false)
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden group hover:border-slate-700 transition-colors">
@@ -245,16 +261,24 @@ function CampanaCard({ c, onEdit, onDelete }: {
           <h3 className="text-sm font-semibold text-slate-100 truncate">{c.unidadNegocio || "Sin título"}</h3>
           {c.notas && <span className="text-[10px] text-slate-500 truncate">{c.notas}</span>}
         </div>
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0">
-          <button type="button" onClick={onEdit} title="Editar"
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
-            <Pencil size={13} />
-          </button>
-          <button type="button" onClick={onDelete} title="Eliminar"
-            className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition">
-            <Trash2 size={13} />
-          </button>
-        </div>
+        {confirmando ? (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] text-slate-500">¿Eliminar?</span>
+            <button type="button" onClick={() => { setConfirmando(false); onDelete() }} className="text-[10px] text-red-400 font-medium">Sí</button>
+            <button type="button" onClick={() => setConfirmando(false)} className="text-[10px] text-slate-500">No</button>
+          </div>
+        ) : (
+          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0">
+            <button type="button" onClick={onEdit} title="Editar"
+              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+              <Pencil size={13} />
+            </button>
+            <button type="button" onClick={() => setConfirmando(true)} title="Eliminar"
+              className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition">
+              <Trash2 size={13} />
+            </button>
+          </div>
+        )}
       </div>
 
       {semanas.length > 0 && (
@@ -842,7 +866,6 @@ export function CampanasEmpresaView() {
   }
 
   const eliminar = async (c: CampanaType) => {
-    if (!confirm(`¿Eliminar "${c.unidadNegocio}"?`)) return
     try {
       await deleteCampana(c.documentId)
       setCampanas(prev => prev.filter(x => x.documentId !== c.documentId))
