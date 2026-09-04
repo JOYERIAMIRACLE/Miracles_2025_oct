@@ -1,4 +1,7 @@
 "use client"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Gem } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import FiltersControlsCategory from "./components/filters-controls-category"
 import ProductCard1 from "./components/product-card1"
@@ -10,10 +13,20 @@ interface Props {
   categoryName: string
 }
 
+function tituloDesdeSlug(slug: string) {
+  return slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+}
+
 export default function CategoryClient({ categorySlug, categoryName }: Props) {
+  const pathname = usePathname()
+  // El shell "loading" (ver generateStaticParams) no trae el slug real —
+  // se lee de la URL, igual que ya hace /producto/[productoSlug].
+  const realSlug = categorySlug !== "loading" ? categorySlug : (pathname.split("/").filter(Boolean).pop() ?? "")
+  const displayName = categorySlug !== "loading" ? categoryName : tituloDesdeSlug(realSlug)
+
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo, setFilterEstilo] = useState("")
-  const { result: products, loading } = useGetCategoryProduct(categorySlug)
+  const { result: products, loading } = useGetCategoryProduct(realSlug)
 
   const filteredProducts = (products ?? []).filter((product) => {
     const matchesMaterial = filterMaterial === "" || product.materialProducto === filterMaterial
@@ -30,7 +43,7 @@ export default function CategoryClient({ categorySlug, categoryName }: Props) {
           <div className="flex flex-col gap-4">
             <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest">Joyería Miracles</p>
             <h1 className="max-w-2xl text-white text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-lg">
-              {categoryName}
+              {displayName}
             </h1>
             <p className="max-w-lg text-white/80 text-base md:text-lg">
               Piezas en Oro 10k y Plata 925 para cada ocasión.
@@ -57,8 +70,17 @@ export default function CategoryClient({ categorySlug, categoryName }: Props) {
                 <ProductCard1 key={product.id} product={product} />
               ))}
               {!loading && filteredProducts.length === 0 && (
-                <div className="col-span-full py-20 text-center">
-                  <p className="text-xl text-gray-400">No se encontraron productos en esta categoría.</p>
+                <div className="col-span-full py-20 flex flex-col items-center gap-4 text-center">
+                  <div className="h-12 w-12 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                    <Gem size={22} className="text-amber-500" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <p className="text-lg font-semibold">Estamos preparando esta colección</p>
+                    <p className="text-sm text-gray-400">Pronto subiremos piezas de {displayName.toLowerCase()}. Mientras tanto, explora nuestras otras colecciones.</p>
+                  </div>
+                  <Link href="/" className="text-sm font-semibold text-amber-500 hover:text-amber-400 transition-colors">
+                    Ver todos los productos
+                  </Link>
                 </div>
               )}
             </div>

@@ -31,24 +31,42 @@ async function fetchCategoryProducts(slug: string): Promise<ProductType[]> {
   } catch { return [] }
 }
 
+// Slugs que el menú de navegación siempre enlaza (menu-list.tsx) — se
+// incluyen siempre, aunque el fetch al backend falle o esté incompleto en
+// el momento del build, para que un hipo de Strapi nunca deje sin generar
+// una página que el navbar sí va a enlazar (esto es justo lo que pasó:
+// "esclavas" faltaba por un slug mal escrito en Strapi, no por el fetch).
+const CATEGORIAS_NAV = ["anillos", "cadenas", "esclavas", "aretes", "broqueles", "dijes", "pulsos", "rosarios", "argollas"]
+
 export async function generateStaticParams() {
+  // "loading" siempre se genera — mismo patrón que ya usa /producto: es el
+  // shell al que el _redirects de Cloudflare manda cualquier categoría no
+  // pre-generada (slug nuevo o fetch fallido en build); CategoryClient lee
+  // el slug real desde la URL y hace el fetch de verdad del lado cliente.
+  const base = [{ categorySlug: "loading" }, ...CATEGORIAS_NAV.map((categorySlug) => ({ categorySlug }))]
   try {
     const res = await fetch(
       `${BACKEND}/api/product-categories?fields[0]=slug&pagination[pageSize]=100`,
       { signal: AbortSignal.timeout(8000) }
     )
-    if (!res.ok) return [{ categorySlug: "loading" }]
+    if (!res.ok) return base
     const json = await res.json()
-    const params = (json.data || []).map((c: { slug?: string; attributes?: { slug?: string } }) => ({
-      categorySlug: c.slug ?? c.attributes?.slug ?? "",
-    }))
-    return params.length > 0 ? params : [{ categorySlug: "loading" }]
+    const fromBackend = (json.data || [])
+      .map((c: { slug?: string; attributes?: { slug?: string } }) => c.slug ?? c.attributes?.slug ?? "")
+      .filter(Boolean)
+    const slugs = new Set(["loading", ...CATEGORIAS_NAV, ...fromBackend])
+    return [...slugs].map((categorySlug) => ({ categorySlug }))
   } catch {
-    return [{ categorySlug: "loading" }]
+    return base
   }
 }
 
-export const dynamicParams = false
+// dynamicParams se deja en su default (true): con output:"export" no hay
+// servidor que renderice bajo demanda un param faltante en producción (esa
+// página simplemente no existe como archivo estático), así que ponerlo en
+// false no aporta nada ahí — y en dev SÍ causaba que cualquier categoría
+// tronara o cayera al not-found genérico por un desfase entre el slug real
+// y lo que generateStaticParams alcanzó a traer en ese momento.
 
 export async function generateMetadata({
   params,
