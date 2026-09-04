@@ -1,10 +1,8 @@
-export function formatPrice(costo: number) {
+export function formatPrice(costo: number | null | undefined) {
     const priceFormated = new Intl.NumberFormat('es-MX', {
         style: "currency",
         currency: "MXN"
     })
 
-    const finalPrice = priceFormated.format(costo)
-
-    return finalPrice   
+    return priceFormated.format(costo ?? 0)
 }

@@ -19,13 +19,19 @@ const CartItem = (props: CartItemProps) => {
         <li className="flex py-6 px-4 mb-4 items-center gap-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-zinc-950 shadow-sm hover:shadow-md hover:border-gray-300 dark:hover:border-zinc-700 transition-all duration-200 cursor-pointer group"
             onClick={() => router.push(`/producto/${producto.slug}`)}>
 
-            {/* Imagen con contenedor para mantener aspecto */}
-            <div className="overflow-hidden rounded-lg bg-gray-50 dark:bg-zinc-900 flex-shrink-0">
-                <img 
-                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${producto.imagenes[0].url}`}
-                    alt={producto.nombreProducto} 
-                    className="w-24 h-24 object-cover group-hover:scale-105 transition-transform duration-300" 
-                />
+            {/* Imagen con contenedor para mantener aspecto — un producto sin
+                fotos no debe tronar el carrito, el único camino hacia pagar */}
+            <div className="overflow-hidden rounded-lg bg-gray-50 dark:bg-zinc-900 flex-shrink-0 w-24 h-24 flex items-center justify-center">
+                {producto.imagenes?.length > 0 ? (
+                    <img
+                        src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${producto.imagenes[0].url}`}
+                        alt={producto.nombreProducto}
+                        loading="lazy"
+                        className="w-24 h-24 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                ) : (
+                    <span className="text-3xl opacity-30">💍</span>
+                )}
             </div>
 
             {/* Información del Producto */}

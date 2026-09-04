@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-04T00:00:00.000Z",
+  "title": "Design System: Tienda Medalla de oro",
+  "extensions": {
+    "colorMeta": {
+      "gold-signal": {
+        "role": "primary",
+        "displayName": "Dorado señal",
+        "canonical": "oklch(66.6% 0.179 58.318)",
+        "tonalRamp": [
+          "oklch(27.9% 0.077 45.635)",
+          "oklch(41.4% 0.112 45.904)",
+          "oklch(47.3% 0.137 46.201)",
+          "oklch(55.5% 0.163 48.998)",
+          "oklch(66.6% 0.179 58.318)",
+          "oklch(76.9% 0.188 70.08)",
+          "oklch(87.9% 0.169 91.605)",
+          "oklch(96.2% 0.059 95.617)"
+        ]
+      },
+      "gold-signal-hover": {
+        "role": "primary-hover",
+        "displayName": "Dorado señal (hover)",
+        "canonical": "oklch(55.5% 0.163 48.998)"
+      },
+      "gold-accent": {
+        "role": "secondary-accent",
+        "displayName": "Dorado acento",
+        "canonical": "oklch(76.9% 0.188 70.08)"
+      },
+      "gold-deep": {
+        "role": "semantic-material",
+        "displayName": "Dorado profundo",
+        "canonical": "oklch(47.3% 0.137 46.201)"
+      },
+      "gold-wash": {
+        "role": "surface-wash",
+        "displayName": "Dorado lavado",
+        "canonical": "oklch(96.2% 0.059 95.617)"
+      },
+      "neutral-canvas": {
+        "role": "background",
+        "displayName": "Lienzo",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.269 0 0)",
+          "oklch(0.4 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.708 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "neutral-ink": {
+        "role": "text",
+        "displayName": "Tinta",
+        "canonical": "oklch(0.145 0 0)"
+      },
+      "neutral-text-muted": {
+        "role": "text-secondary",
+        "displayName": "Texto tenue",
+        "canonical": "oklch(0.556 0 0)"
+      },
+      "neutral-border": {
+        "role": "border",
+        "displayName": "Borde",
+        "canonical": "oklch(0.922 0 0)"
+      },
+      "alert": {
+        "role": "destructive",
+        "displayName": "Alerta",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "tonalRamp": [
+          "oklch(0.258 0.092 27.325)",
+          "oklch(0.332 0.14 27.325)",
+          "oklch(0.444 0.177 27.325)",
+          "oklch(0.577 0.245 27.325)",
+          "oklch(0.65 0.22 27.325)",
+          "oklch(0.75 0.16 27.325)",
+          "oklch(0.85 0.1 27.325)",
+          "oklch(0.94 0.04 27.325)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "H1 del hero de home y de categoría." },
+      "title": { "displayName": "Title", "purpose": "Nombre de producto, títulos de sección." },
+      "body": { "displayName": "Body", "purpose": "Descripciones, párrafos de blog." },
+      "label": { "displayName": "Label", "purpose": "Texto de insignias y filtros." },
+      "kicker": { "displayName": "Kicker", "purpose": "El momento tipográfico de firma — anuncios de sección en mayúsculas con tracking amplio." },
+      "mono": { "displayName": "Mono", "purpose": "SKU y contador de fotos del visor." }
+    },
+    "shadows": [
+      { "name": "card-hover", "value": "0 4px 12px rgba(0,0,0,0.08)", "purpose": "Única señal de elevación — aparece solo al hacer hover sobre una tarjeta." },
+      { "name": "card-hover-lg", "value": "0 10px 24px rgba(0,0,0,0.12)", "purpose": "Hover de tarjeta de blog, un paso más de elevación." },
+      { "name": "overlay-scrim", "value": "inset 0 0 0 9999px rgba(0,0,0,0.9)", "purpose": "Scrim del visor de imagen a pantalla completa." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Transición estándar de color/sombra en hover." },
+      { "name": "duration-hover", "value": "200ms", "purpose": "Duración de transición de hover en tarjetas y botones." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario (acción de compra)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Agregar al carrito, Comprar, Proceder al pago — cualquier acción que mueve hacia la compra.",
+      "html": "<button class=\"ds-btn-primary\">Agregar al carrito</button>",
+      "css": ".ds-btn-primary { background: oklch(66.6% 0.179 58.318); color: #ffffff; font-weight: 600; font-size: 0.875rem; height: 40px; padding: 0 20px; border: none; border-radius: 8px; cursor: pointer; transition: background 200ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: oklch(55.5% 0.163 48.998); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(66.6% 0.179 58.318); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón outline (acción secundaria)",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Más información, filtros, acciones que no comprometen la compra.",
+      "html": "<button class=\"ds-btn-outline\">Más información</button>",
+      "css": ".ds-btn-outline { background: transparent; color: oklch(0.145 0 0); font-weight: 500; font-size: 0.875rem; height: 40px; padding: 0 20px; border: 1px solid oklch(0.922 0 0); border-radius: 8px; cursor: pointer; transition: background 200ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-outline:hover { background: oklch(0.97 0 0); }"
+    },
+    {
+      "name": "Insignia de material",
+      "kind": "chip",
+      "refersTo": "badge-material",
+      "description": "Etiqueta translúcida esmerilada sobre la foto de producto — 'Plata 925', 'Oro 10k'.",
+      "html": "<span class=\"ds-badge-material\">Plata 925</span>",
+      "css": ".ds-badge-material { display: inline-flex; align-items: center; background: oklch(47.3% 0.137 46.201 / 0.85); backdrop-filter: blur(6px); color: #ffffff; font-size: 0.75rem; font-weight: 500; padding: 2px 10px; border-radius: 9999px; }"
+    },
+    {
+      "name": "Tarjeta de producto",
+      "kind": "card",
+      "refersTo": "card-product",
+      "description": "Componente de firma de la tienda: insignias esmeriladas sobre la imagen, fila de acciones revelada al hover, SKU en mono, precio centrado.",
+      "html": "<div class=\"ds-product-card\"><div class=\"ds-product-card-image\"><span class=\"ds-badge-material\" style=\"position:absolute;top:8px;left:8px\">Plata 925</span></div><p class=\"ds-product-card-name\">Cadena Cubana</p><p class=\"ds-product-card-sku\">P92-CAD-CUB-45</p><p class=\"ds-product-card-price\">$5,750.00 MXN</p></div>",
+      "css": ".ds-product-card { display: flex; flex-direction: column; gap: 4px; border-radius: 12px; overflow: hidden; transition: box-shadow 200ms cubic-bezier(0.4,0,0.2,1); } .ds-product-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); } .ds-product-card-image { position: relative; aspect-ratio: 1; background: oklch(0.97 0 0); border-radius: 12px; overflow: hidden; } .ds-product-card-name { font-weight: 600; font-size: 1rem; color: oklch(0.145 0 0); text-align: center; margin-top: 8px; } .ds-product-card-sku { font-family: ui-monospace, monospace; font-size: 0.6875rem; font-weight: 700; color: oklch(0.556 0 0); text-align: center; } .ds-product-card-price { font-weight: 700; font-size: 1rem; color: oklch(0.145 0 0); text-align: center; }"
+    },
+    {
+      "name": "Kicker (momento tipográfico de firma)",
+      "kind": "custom",
+      "description": "Texto en mayúsculas con tracking muy amplio — anuncia una sección o la marca sobre el hero.",
+      "html": "<p class=\"ds-kicker\">Joyería Miracles</p>",
+      "css": ".ds-kicker { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: oklch(66.6% 0.179 58.318); }"
+    },
+    {
+      "name": "Barra de navegación (modo sólido)",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Estado sticky/sólido de la navegación — fuera del hero de home.",
+      "html": "<nav class=\"ds-navbar\"><span class=\"ds-navbar-logo\">Medalla de oro</span><div class=\"ds-navbar-links\"><a href=\"#\" class=\"ds-navbar-link\">Tienda</a><a href=\"#\" class=\"ds-navbar-link\">Blog</a><a href=\"#\" class=\"ds-navbar-link\">Nosotros</a></div></nav>",
+      "css": ".ds-navbar { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 16px 40px; background: rgba(255,255,255,0.95); backdrop-filter: blur(6px); border-bottom: 1px solid oklch(0.922 0 0); } .ds-navbar-logo { font-weight: 700; font-size: 1.25rem; color: oklch(0.145 0 0); } .ds-navbar-links { display: flex; gap: 24px; } .ds-navbar-link { font-size: 0.875rem; color: oklch(0.145 0 0); text-decoration: none; transition: color 200ms cubic-bezier(0.4,0,0.2,1); } .ds-navbar-link:hover { color: oklch(66.6% 0.179 58.318); }"
+    },
+    {
+      "name": "Control del visor de imagen",
+      "kind": "button",
+      "description": "Botón circular translúcido de cerrar/navegar dentro del visor de imagen a pantalla completa.",
+      "html": "<button class=\"ds-lightbox-control\" aria-label=\"Cerrar\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M18 6 6 18M6 6l12 12\"/></svg></button>",
+      "css": ".ds-lightbox-control { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9999px; background: rgba(255,255,255,0.1); color: #ffffff; border: none; cursor: pointer; transition: background 200ms cubic-bezier(0.4,0,0.2,1); } .ds-lightbox-control:hover { background: rgba(255,255,255,0.2); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Escaparate Cálido",
+    "overview": "Esta es la vitrina pública de Joyería Miracles — el único lugar de todo el proyecto donde el visitante no opera ni administra nada, solo mira, se enamora de una pieza y compra. El sistema es claro y luminoso por default (al revés del Portal Medalla de oro, que es oscuro y funcional), con un solo acento dorado que corre por toda la experiencia: insignias de material, textos de marca, y — a partir de esta revisión — los propios botones de compra, unificando lo que hoy está roto en dos idiomas visuales distintos. El idioma visual más distintivo ya existente es el overlay esmerilado sobre las fotos de producto y categoría, junto con la tipografía en mayúsculas de trazo amplio del hero — confirmado explícitamente que el tono buscado es cálido y confiable, no minimalismo de lujo distante.",
+    "keyCharacteristics": [
+      "Claro por default, con soporte real de modo oscuro.",
+      "Un acento dorado único (familia amber, nunca yellow) que cubre lo decorativo y la acción de compra.",
+      "Overlay esmerilado sobre fotografía como patrón de firma.",
+      "Sombra como señal de hover, nunca decoración ambiental."
+    ],
+    "rules": [
+      { "name": "The Amber-Only Rule", "body": "El dorado del sistema es siempre la escala amber de Tailwind — nunca yellow.", "section": "colors" },
+      { "name": "The Gold-Buys Rule", "body": "El dorado es el color de cualquier acción que mueve al visitante hacia la compra.", "section": "colors" },
+      { "name": "The Frosted Label Rule", "body": "Cualquier etiqueta sobre una fotografía usa fondo translúcido con backdrop-blur, nunca sólido opaco.", "section": "colors" },
+      { "name": "The One Loud Moment Rule", "body": "El tracking amplio en mayúsculas se usa solo para kickers/anuncios de sección, nunca para párrafos.", "section": "typography" },
+      { "name": "The Two-Breakpoint Rule", "body": "El layout de contenido pivota en sm:; la visibilidad de navegación pivota en md:.", "section": "layout" },
+      { "name": "The Hover-Elevates Rule", "body": "Ninguna tarjeta tiene sombra en reposo — solo al interactuar.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar dorado (amber) tanto para lo decorativo como para cualquier botón que mueva hacia la compra.",
+      "Do usar el overlay esmerilado para cualquier etiqueta sobre fotografía.",
+      "Do dejar las tarjetas planas en reposo, con sombra solo al hover.",
+      "Do usar el tracking amplio en mayúsculas únicamente para kickers/anuncios de sección."
+    ],
+    "donts": [
+      "Don't usar yellow-* para nada relacionado con la marca — siempre amber-*.",
+      "Don't usar negro/blanco neutro para botones de acción de compra.",
+      "Don't repartir el dorado entre insignias que no son material.",
+      "Don't dejar un placeholder (bg-slate-800 sin variante clara, href=\"#\", texto de depuración) como si fuera contenido terminado."
+    ]
+  }
+}

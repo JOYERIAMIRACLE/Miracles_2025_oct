@@ -9,21 +9,21 @@ import Autoplay from 'embla-carousel-autoplay'
 export const dataCarouselTop = [
   {
     id:1,
-    title: "envio en 24/48 hrs ",
-    description: " Entregas de 5 a 7 dias a todas partes de México ",
-    link: "#"
+    title: "Envío en 24/48 hrs",
+    description: "Recíbelo en 5 a 7 días hábiles en todo México",
+    link: "/envios"
   },
   {
     id:2,
-    title: "Precios especiales ",
-    description: "como cliente MIRACLES OBTIENES PRODUCTOS GRASTIS ",
-    link: "#"
+    title: "Precios especiales",
+    description: "Como cliente Miracles accedes a precios preferenciales",
+    link: "/tienda"
   },
   {
     id:3,
-    title: "Asesoria personalizada",
-    description: "consulta con nuestros asesores la pieza perfecta para la ocacion especial  ",
-    link: "#"
+    title: "Asesoría personalizada",
+    description: "Consulta con nuestros asesores la pieza perfecta para tu ocasión especial",
+    link: "/nosotros"
   },
 ]
 

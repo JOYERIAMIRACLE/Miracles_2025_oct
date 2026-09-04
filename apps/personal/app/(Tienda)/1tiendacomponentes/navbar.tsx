@@ -1,6 +1,6 @@
 "use client"
 
-import { BaggageClaim, Heart, ShoppingCart, User } from "lucide-react";
+import { BaggageClaim, Heart, ShoppingCart } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import MenuList from "./menu-list";
 import ItemsMenuMobile from "./items-mobile";
@@ -88,7 +88,6 @@ const Navbar = () => {
                     )
                 }
 
-                <User strokeWidth={1} className="cursor-pointer" onClick={() => router.push("/Sesion")} />
                 <ModeToggle />
             </div>
         </div>

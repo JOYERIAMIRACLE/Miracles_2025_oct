@@ -1,86 +1,95 @@
-import React from 'react'
 import Link from 'next/link'
+import { Instagram, Facebook, Mail, MessageCircle } from 'lucide-react'
 import { Separator } from '../../../components/ui/separator'
 
-// MANUAL DE DATOS FOOTER
-const datafooter = [
-    {
-        id:1,
-        name:"sobrenomberw ",
-        link: "#",
-
-    },
-    {
-        id:2,
-        name:"productos ",
-        link: "#",
-
-    },
-    {
-        id:3,
-        name:"blog ",
-        link: "#",
-
-    },
-    {
-        id:4,
-        name:"mas ",
-        link: "#",
-
-    },
+// Enlaces reales del sitio — antes estos 4 eran placeholders (href="#",
+// incluido un typo "sobrenomberw") que no llevaban a ningún lado.
+const enlacesTienda = [
+    { name: "Catálogo", href: "/tienda" },
+    { name: "Blog", href: "/blog" },
+    { name: "Nosotros", href: "/nosotros" },
+]
+const enlacesLegal = [
+    { name: "Términos y condiciones", href: "/terminos" },
+    { name: "Política de privacidad", href: "/privacidad" },
+    { name: "Envíos", href: "/envios" },
+    { name: "Devoluciones", href: "/devoluciones" },
 ]
 
-// COMPONENTE
+// Contacto: aún no existen cuentas/número reales del negocio — se deja un
+// correo de marcador de posición (seguro, un mailto mal dirigido no molesta
+// a nadie) y los íconos de redes van a las páginas genéricas de cada
+// plataforma en vez de inventar un número de WhatsApp o @usuario que podría
+// coincidir con una cuenta real de otra persona. Reemplazar en cuanto existan
+// las cuentas reales del negocio.
+const CONTACTO_EMAIL = "contacto@medalladeoro.com.mx"
+
+const linkCls = "text-sm text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+const iconLinkCls = "flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:text-amber-600 hover:border-amber-300 dark:hover:text-amber-400 dark:hover:border-amber-800 transition-colors"
+
 const Footer = () => {
   return (
+    <footer className="mt-4 bg-white dark:bg-zinc-950 border-t border-gray-100 dark:border-gray-900">
+      <div className="w-full max-w-6xl mx-auto p-6 px-6 sm:px-14 md:py-12">
 
-    // CAJON FOOTER
-    <footer className='mt-4'>
-
-        {/* CAMPO DE ELEMENTOS */}
-      <div className='w-full max-w-screen mx-auto p-4 px-14 md:py-8'>
-
-
-        {/* ACOMODO DE ELEMENTOS PARTE ALTA */}
-        <div className='sm:flex sm:items-cener sm:justify-between'>
-
-
-            {/* LOGO MARCA */}
-            <p>
-                <span className='font-bold mr-2 text-4xl'>
-                    Miracles 
-                     
-                </span>
-                <span className='text-4xl'>
-                    jewerly
-                </span>
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {/* LOGO Y TAGLINE */}
+          <div className="lg:col-span-1">
+            <p className="text-3xl">
+              <span className="font-bold mr-1">Miracles</span>
+              <span>jewelry</span>
             </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">
+              Joyería fina en oro 10k y plata 925, hecha con calidad · Envíos a todo México.
+            </p>
+          </div>
 
-            {/* MENU FOOTER */}
-            <ul className='flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400'>
-                {datafooter.map((data) => (
-                    <li key={data.id}>
-                        <Link href={data.link} className='hover:underline me-4 md:me-6 '>{data.name}</Link>
-
-                    </li>
-                ))}
+          {/* TIENDA */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Tienda</h3>
+            <ul className="flex flex-col gap-2.5">
+              {enlacesTienda.map(item => (
+                <li key={item.href}><Link href={item.href} className={linkCls}>{item.name}</Link></li>
+              ))}
             </ul>
-            
+          </div>
+
+          {/* LEGAL */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Legal</h3>
+            <ul className="flex flex-col gap-2.5">
+              {enlacesLegal.map(item => (
+                <li key={item.href}><Link href={item.href} className={linkCls}>{item.name}</Link></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* CONTACTO */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Contacto</h3>
+            <a href={`mailto:${CONTACTO_EMAIL}`} className={`${linkCls} flex items-center gap-2`}>
+              <Mail size={14} /> {CONTACTO_EMAIL}
+            </a>
+            <div className="flex items-center gap-2 mt-4">
+              <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className={iconLinkCls}>
+                <MessageCircle size={16} />
+              </a>
+              <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={iconLinkCls}>
+                <Instagram size={16} />
+              </a>
+              <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={iconLinkCls}>
+                <Facebook size={16} />
+              </a>
+            </div>
+          </div>
         </div>
 
-        {/* ACOMODO DE ELEMENTOS PARTE BAJA */}
-        
-        {/* SEPARADOR */}
-        <Separator className='my-6 border-gray-200 sm:mx-auto dark:border-gray-500 lg:my-8'/>
-        
-        {/* DATOS DEEMPRESA (DISCLAIMER) */}
-        <span className='font-bold block text-sm text-gray-500 sm:text-center dark:text-gray-400 '>
-            &copy; 2025 
-            <Link className='ml-3' href="#">Miracles | Todos los derechos reservados</Link> 
-        </span>
-        
+        <Separator className="my-6 border-gray-200 dark:border-gray-800 lg:my-8" />
+
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
+          &copy; {new Date().getFullYear()} Miracles jewelry — Todos los derechos reservados.
+        </p>
       </div>
-    
     </footer>
   )
 }
