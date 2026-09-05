@@ -6,7 +6,8 @@ import {
   ChevronUp, Loader2, Search, X, SlidersHorizontal,
   Tag, Gem, Layers, CheckCircle, WifiOff, ImagePlus, Package, Wand2,
 } from "lucide-react"
-import { uploadFoto } from "@/api/inventarioEmpresa/getInventario"
+import { uploadFoto, useGetInventario } from "@/api/inventarioEmpresa/getInventario"
+import { ProductType } from "@/types/product"
 import {
   CatalogoNodo, TipoNodo, Caracteristica, Modelo,
   TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia, arbolInicial,
@@ -111,6 +112,13 @@ const MAT_STYLE = {
 function matKindFromName(name: string): "gold" | "silv" {
   return name.toLowerCase().includes("oro") ? "gold" : "silv"
 }
+
+function matKindFromProduct(p: ProductType): "gold" | "silv" {
+  return p.materialProducto?.includes("Oro") ? "gold" : "silv"
+}
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+function prodImgUrl(url: string) { return url.startsWith("http") ? url : `${BACKEND_URL}${url}` }
 
 /** Devuelve el nodo material padre de una categoría (árbol de 2 niveles: material → categoría) */
 function findParentMat(tree: CatalogoNodo[], catId: string): CatalogoNodo | null {
@@ -488,12 +496,14 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
 
 function SkuBrowserPanel({
   skus,
+  products,
   categoryFilter,
   materialFilter,
   onSkuDeleted,
   onSkuAdded,
 }: {
   skus: SkuEntry[]
+  products: ProductType[]
   categoryFilter: string | null
   /** "gold" | "silv" cuando se seleccionó una categoría de un material específico */
   materialFilter: "gold" | "silv" | null
@@ -523,6 +533,12 @@ function SkuBrowserPanel({
     if (materialFilter) list = list.filter(s => s.matKind === materialFilter)
     return list
   }, [skus, categoryFilter, materialFilter])
+
+  const scopeProducts = useMemo(() => {
+    let list = categoryFilter ? products.filter(p => p.categoriaJoya === categoryFilter) : products
+    if (materialFilter) list = list.filter(p => matKindFromProduct(p) === materialFilter)
+    return list
+  }, [products, categoryFilter, materialFilter])
 
   const availMat    = useMemo(() => [...new Set(scopeSkus.map(s => s.mat))],    [scopeSkus])
   const availEstilo = useMemo(() => [...new Set(scopeSkus.map(s => s.estilo))], [scopeSkus])
@@ -561,6 +577,15 @@ function SkuBrowserPanel({
     return list
   }, [scopeSkus, filterMat, filterEstilo, filterTalla, filterExtras, filterPiedra, q])
 
+  const visibleProducts = useMemo(() => {
+    if (!q.trim()) return scopeProducts
+    const lq = q.toLowerCase()
+    return scopeProducts.filter(p =>
+      p.nombreProducto.toLowerCase().includes(lq) ||
+      (p.sku ?? "").toLowerCase().includes(lq)
+    )
+  }, [scopeProducts, q])
+
   function toggle(arr: string[], set: (v: string[]) => void, val: string) {
     set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
   }
@@ -589,9 +614,13 @@ function SkuBrowserPanel({
             )}
           </div>
           <p className="text-[10px] text-slate-500 mt-0.5 tabular-nums">
-            {visible.length !== scopeSkus.length
-              ? `${visible.length} de ${scopeSkus.length} SKUs`
-              : `${scopeSkus.length} SKU${scopeSkus.length !== 1 ? "s" : ""}`}
+            {(() => {
+              const total = scopeSkus.length + scopeProducts.length
+              const shown = visible.length + visibleProducts.length
+              return shown !== total
+                ? `${shown} de ${total} piezas`
+                : `${scopeSkus.length > 0 ? `${scopeSkus.length} SKU${scopeSkus.length !== 1 ? "s" : ""}` : ""}${scopeSkus.length > 0 && scopeProducts.length > 0 ? " · " : ""}${scopeProducts.length > 0 ? `${scopeProducts.length} en inventario` : ""}` || "Sin piezas"
+            })()}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -720,22 +749,22 @@ function SkuBrowserPanel({
 
       {/* Grid de SKUs — ocupa todo el ancho */}
       <div className="flex-1 overflow-y-auto p-5">
-        {visible.length === 0 ? (
+        {visible.length === 0 && visibleProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-12">
             <div className="w-14 h-14 rounded-full bg-slate-800/80 border border-slate-700/50 flex items-center justify-center">
               <Gem size={22} className="text-slate-600" />
             </div>
             <div>
               <p className="text-slate-300 text-sm font-semibold">
-                {scopeSkus.length === 0 ? "Sin piezas registradas" : "Sin resultados"}
+                {scopeSkus.length === 0 && scopeProducts.length === 0 ? "Sin piezas registradas" : "Sin resultados"}
               </p>
               <p className="text-slate-600 text-xs mt-1">
-                {scopeSkus.length === 0
-                  ? "Crea tu primer SKU con el constructor"
+                {scopeSkus.length === 0 && scopeProducts.length === 0
+                  ? "Crea tu primer SKU con el constructor o agrega un producto en Inventario"
                   : "Prueba ajustando los filtros"}
               </p>
             </div>
-            {scopeSkus.length === 0 && (
+            {scopeSkus.length === 0 && scopeProducts.length === 0 && (
               <button type="button" onClick={() => setShowBuilder(true)}
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-violet-600/15 border border-violet-500/25 text-violet-300 hover:bg-violet-600/25 hover:text-violet-200 rounded-lg transition">
                 <Wand2 size={12} /> Nueva pieza
@@ -744,6 +773,7 @@ function SkuBrowserPanel({
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+            {/* Tarjetas de SKU del catálogo (plantillas) */}
             {visible.map(s => {
               const ms = MAT_STYLE[s.matKind]
               return (
@@ -780,6 +810,47 @@ function SkuBrowserPanel({
                 </div>
               )
             })}
+
+            {/* Tarjetas de productos del inventario */}
+            {visibleProducts.map(p => {
+              const ms = MAT_STYLE[matKindFromProduct(p)]
+              const coverImg = p.imagenes?.[0]
+              return (
+                <div key={p.documentId}
+                  className="relative flex flex-col rounded-xl bg-slate-800/25 border border-slate-700/40 hover:border-slate-600/60 hover:bg-slate-800/50 transition-all overflow-hidden">
+
+                  {/* Stripe de material */}
+                  <div className={`absolute left-0 inset-y-0 w-0.75 rounded-l-xl ${ms.dot}`} aria-hidden />
+
+                  {/* Cuerpo */}
+                  <div className="flex items-start gap-2.5 pl-5 pr-4 pt-3 pb-2">
+                    {coverImg ? (
+                      <img src={prodImgUrl(coverImg.url)} alt={p.nombreProducto}
+                        className="w-10 h-10 rounded-lg object-cover border border-slate-700/50 shrink-0 mt-0.5" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-slate-800 border border-dashed border-slate-700/50 flex items-center justify-center shrink-0 mt-0.5">
+                        <Package size={14} className="text-slate-600" />
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-1 min-w-0 flex-1">
+                      <p className="text-[12px] font-bold text-slate-100 leading-snug line-clamp-2">{p.nombreProducto}</p>
+                      {p.sku && <p className={`text-[10px] font-mono tracking-wider ${ms.skuColor}`}>{p.sku}</p>}
+                    </div>
+                  </div>
+
+                  {/* Footer con tags */}
+                  <div className="flex flex-wrap gap-1 pl-5 pr-3 py-2 border-t border-slate-800/70 bg-slate-900/30">
+                    {p.materialProducto && (
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ms.matBadge}`}>{p.materialProducto}</span>
+                    )}
+                    {p.stock !== null && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-slate-700/50 bg-slate-800/50 text-slate-400 font-medium">×{p.stock}</span>
+                    )}
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-emerald-700/30 bg-emerald-900/20 text-emerald-400 font-medium">Inventario</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -799,6 +870,7 @@ export function CatalogoJoyeriaView() {
   const [showDetail, setShowDetail] = useState(false)
   const [busqueda,   setBusqueda]   = useState("")
   const [skus,       setSkus]       = useState<SkuEntry[]>([])
+  const { items: inventoryProducts } = useGetInventario()
 
   function handleSelect(id: string) { setSelected(id); setShowDetail(true) }
 
@@ -879,15 +951,21 @@ export function CatalogoJoyeriaView() {
     return parentMat ? matKindFromName(parentMat.nombre) : null
   }, [selectedNode, tree])
 
-  // Mapa "matKind:categoría" → cantidad de SKUs (badge correcto por material)
+  // Mapa "matKind:categoría" → cantidad total (SKUs catálogo + productos inventario)
   const skuCountByCat = useMemo(() => {
     const map: Record<string, number> = {}
     for (const s of skus) {
       const key = `${s.matKind}:${s.tipoCategoria}`
       map[key] = (map[key] ?? 0) + 1
     }
+    for (const p of inventoryProducts) {
+      if (!p.categoriaJoya) continue
+      const kind = matKindFromProduct(p)
+      const key  = `${kind}:${p.categoriaJoya}`
+      map[key] = (map[key] ?? 0) + 1
+    }
     return map
-  }, [skus])
+  }, [skus, inventoryProducts])
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -907,7 +985,7 @@ export function CatalogoJoyeriaView() {
             <h1 className="text-sm font-bold text-slate-100 leading-none">Catálogo</h1>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               <span className="text-[10px] text-slate-500 tabular-nums">{stats.materiales}M · {stats.categorias}C · {stats.productos}P</span>
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 tabular-nums">{skus.length} SKUs</span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 tabular-nums">{skus.length} SKUs · {inventoryProducts.length} inv.</span>
               {saving && <Loader2 size={10} className="animate-spin text-slate-500" />}
               {saved && !saving && <CheckCircle size={10} className="text-violet-400" />}
               {offline && !saving && <WifiOff size={10} className="text-red-400" />}
@@ -1023,6 +1101,7 @@ export function CatalogoJoyeriaView() {
             /* Categoría seleccionada → SKU Browser */
             <SkuBrowserPanel
               skus={skus}
+              products={inventoryProducts}
               categoryFilter={selectedNode?.tipo === "categoria" ? selectedNode.nombre : null}
               materialFilter={selectedMatKind}
               onSkuDeleted={id => setSkus(prev => prev.filter(s => s.id !== id))}
