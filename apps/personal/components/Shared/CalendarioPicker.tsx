@@ -1,7 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { requestOpen, notifyClosed } from "./dropdownCoordinator"
+import { useFloatingPanel } from "./useFloatingPanel"
 
 export const MESES_CORTOS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
 
@@ -10,21 +13,25 @@ export function CalendarioPicker({ value, onChange, onClear, label, min, max, cl
   min?: Date; max?: Date; className?: string
 }) {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [cursor, setCursor] = useState(() => value ?? new Date())
   const ref = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const id = useRef(Symbol()).current
+  const floating = useFloatingPanel(ref, open)
+
+  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (ref.current && !ref.current.contains(t) && (!panelRef.current || !panelRef.current.contains(t))) {
+        setOpen(false); notifyClosed(id)
+      }
     }
     document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [])
-
-  useEffect(() => {
-    if (open) panelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
-  }, [open])
+    return () => { document.removeEventListener("mousedown", handler); notifyClosed(id) }
+  }, [id])
 
   const year = cursor.getUTCFullYear()
   const month = cursor.getUTCMonth()
@@ -49,7 +56,12 @@ export function CalendarioPicker({ value, onChange, onClear, label, min, max, cl
   return (
     <div ref={ref} className="relative">
       <button type="button" aria-label={label}
-        onClick={() => setOpen(v => { if (!v) setCursor(value ?? new Date()); return !v })}
+        onClick={() => setOpen(v => {
+          const next = !v
+          if (next) { setCursor(value ?? new Date()); requestOpen(id, () => setOpen(false)) }
+          else notifyClosed(id)
+          return next
+        })}
         className={`h-9 flex items-center gap-2 pl-3 pr-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition-colors shadow-sm min-w-[130px] justify-between ${className ?? ""}`}>
         <span className="truncate">{value ? `${value.getUTCDate()} ${MESES_CORTOS[value.getUTCMonth()]} ${value.getUTCFullYear()}` : "—"}</span>
         {value && onClear ? (
@@ -61,8 +73,9 @@ export function CalendarioPicker({ value, onChange, onClear, label, min, max, cl
           <CalendarDays size={13} className="text-slate-400 shrink-0" />
         )}
       </button>
-      {open && (
-        <div ref={panelRef} className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-64 p-3">
+      {open && mounted && floating && createPortal(
+        <div ref={panelRef} style={{ position: "fixed", top: floating.top, left: floating.left }}
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-100 w-64 p-3">
           <div className="flex items-center justify-between mb-2">
             <button type="button" title="Mes anterior" onClick={() => setCursor(new Date(Date.UTC(year, month - 1, 1)))}
               className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition"><ChevronLeft size={14} /></button>
@@ -76,7 +89,7 @@ export function CalendarioPicker({ value, onChange, onClear, label, min, max, cl
           <div className="grid grid-cols-7 gap-0.5">
             {celdas.map((d, i) => d === null ? <div key={i} /> : (
               <button key={i} type="button" disabled={fueraDeRango(d)}
-                onClick={() => { onChange(new Date(Date.UTC(year, month, d))); setOpen(false) }}
+                onClick={() => { onChange(new Date(Date.UTC(year, month, d))); setOpen(false); notifyClosed(id) }}
                 className={`h-7 w-7 text-xs rounded-lg transition-colors flex items-center justify-center mx-auto ${
                   esSeleccionado(d) ? "bg-violet-500 text-white font-semibold"
                     : esHoy(d) ? "text-violet-500 font-semibold border border-violet-300 dark:border-violet-500/40"
@@ -87,7 +100,8 @@ export function CalendarioPicker({ value, onChange, onClear, label, min, max, cl
               </button>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

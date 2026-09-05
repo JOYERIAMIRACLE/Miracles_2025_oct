@@ -29,6 +29,15 @@
         ],
         "createdAt": "2026-09-05T23:23:40.875Z",
         "reason": "Violeta es el unico color de acento sancionado en todo portal-medallitadeoro (regla de diseno del proyecto); el gradiente de AvatarCircle es preexistente, no se toco en el cambio de logo"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "apps/personal/components/Shared/DropdownPicker.tsx"
+        ],
+        "createdAt": "2026-09-05T23:40:12.889Z",
+        "reason": "Texto slate-700/slate-200 sobre fondo hover slate-50/slate-800 (oscuro-sobre-claro y claro-sobre-oscuro), contraste adecuado; codigo preexistente no tocado en este cambio, mismo patron ya sancionado en SkuBuilder.tsx e InventarioEmpresaView.tsx"
       }
     ]
   }
