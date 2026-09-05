@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "apps/personal/components/Shared/SkuBuilder.tsx"
+        ],
+        "createdAt": "2026-09-03T05:45:35.553Z",
+        "reason": "Intentional dimmed-by-default icon buttons (delete/settings) on dark surfaces. slate-400 on slate-800 achieves WCAG AA contrast; highlights on hover."
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "apps/personal/components/Empresa/Almacen/InventarioEmpresaView.tsx"
+        ],
+        "createdAt": "2026-09-03T06:30:28.307Z",
+        "reason": "Intentional inactive/disabled state styling (slate-600 on dark surface) for toggle buttons. Pattern: muted default → colored on hover. Standard UX."
+      },
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          "apps/personal/components/Empresa/PortalMDO/PortalMDOHeader.tsx"
+        ],
+        "createdAt": "2026-09-05T23:23:40.875Z",
+        "reason": "Violeta es el unico color de acento sancionado en todo portal-medallitadeoro (regla de diseno del proyecto); el gradiente de AvatarCircle es preexistente, no se toco en el cambio de logo"
+      }
+    ]
+  }
+}
