@@ -135,7 +135,7 @@ function TreeRow({
   /** matKind del material padre — lo pasa el material a sus categorías hijas */
   parentMatKind?: "gold" | "silv"
 }) {
-  const [open, setOpen] = useState(depth === 0)
+  const [open, setOpen] = useState(true)
   const cfg   = TIPO_CONFIG[node.tipo]
   const childTipo = cfg.childTipo
   const hasChildren = node.children.length > 0
@@ -210,7 +210,7 @@ function TreeRow({
           <span className="text-[9px] text-slate-600 shrink-0">{node.modelos.length} mod.</span>
         )}
 
-        {/* Actions */}
+        {/* Actions — sin eliminar (evitar borrado accidental; eliminar desde el panel de detalle) */}
         <div className={`flex items-center gap-0.5 shrink-0 transition-opacity ${isActive ? "opacity-100" : "opacity-100 md:opacity-0 md:group-hover:opacity-100"}`}>
           {childTipo && !isCat && (
             <button type="button" title={`Agregar ${TIPO_CONFIG[childTipo].label}`}
@@ -226,10 +226,6 @@ function TreeRow({
           <button type="button" title="Bajar" onClick={e => { e.stopPropagation(); onMov(node.id, 1) }}
             className="p-0.5 text-slate-600 hover:text-slate-400 rounded">
             <ChevronDown size={11} />
-          </button>
-          <button type="button" title="Eliminar" onClick={e => { e.stopPropagation(); onDel(node.id) }}
-            className="p-0.5 text-slate-600 hover:text-red-400 rounded">
-            <Trash2 size={11} />
           </button>
         </div>
       </div>
@@ -261,10 +257,11 @@ function TreeRow({
 // ─── Detail Panel ─────────────────────────────────────────────────────────────
 
 function DetailPanel({
-  node, onUpdate,
+  node, onUpdate, onDel,
 }: {
   node: CatalogoNodo
   onUpdate: (patch: Partial<CatalogoNodo>) => void
+  onDel: () => void
 }) {
   const cfg = TIPO_CONFIG[node.tipo]
 
@@ -300,20 +297,20 @@ function DetailPanel({
   return (
     <div className="flex flex-col gap-5 p-5">
 
-      {/* Tipo badge */}
-      <div className="flex items-center gap-2">
-        <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${
-          node.tipo === "material"
-            ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
-            : node.tipo === "categoria"
-              ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
-              : "bg-violet-500/10 text-violet-400 border-violet-500/20"
-        }`}>
-          {cfg.label}
-        </span>
-        {node.tipo === "producto" && (
-          <span className="text-[10px] text-slate-600">{node.modelos.length} modelos · {node.caracteristicas.length} características</span>
-        )}
+      {/* Tipo badge + eliminar */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-violet-500/10 text-violet-400 border-violet-500/20">
+            {cfg.label}
+          </span>
+          {node.tipo === "producto" && (
+            <span className="text-[10px] text-slate-600">{node.modelos.length} modelos · {node.caracteristicas.length} características</span>
+          )}
+        </div>
+        <button type="button" onClick={onDel}
+          className="flex items-center gap-1 text-[11px] text-slate-600 hover:text-red-400 border border-slate-700/60 hover:border-red-500/30 rounded-lg px-2.5 py-1 transition-colors shrink-0">
+          <Trash2 size={11} /> Eliminar
+        </button>
       </div>
 
       {/* Nombre */}
@@ -716,13 +713,13 @@ function SkuBrowserPanel({
                   {/* Stripe de material */}
                   <div className={`absolute left-0 inset-y-0 w-0.75 rounded-l-xl ${ms.dot}`} aria-hidden />
 
-                  {/* Botón eliminar */}
+                  {/* Botón eliminar — siempre visible */}
                   <button type="button" title="Eliminar"
                     onClick={async () => {
                       onSkuDeleted(s.id)
                       await saveSkus(skus.filter(x => x.id !== s.id))
                     }}
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition p-0.5 rounded z-10">
+                    className="absolute top-2 right-2 text-slate-600 hover:text-red-400 transition p-0.5 rounded z-10">
                     <X size={10} />
                   </button>
 
@@ -979,6 +976,7 @@ export function CatalogoJoyeriaView() {
               <DetailPanel
                 node={selectedNode}
                 onUpdate={patch => handleUpdate(selectedNode.id, patch)}
+                onDel={() => handleDel(selectedNode.id)}
               />
             </div>
           ) : (
