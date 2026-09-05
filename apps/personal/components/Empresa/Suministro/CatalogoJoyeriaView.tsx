@@ -135,7 +135,9 @@ function TreeRow({
   /** matKind del material padre — lo pasa el material a sus categorías hijas */
   parentMatKind?: "gold" | "silv"
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  )
   const cfg   = TIPO_CONFIG[node.tipo]
   const childTipo = cfg.childTipo
   const hasChildren = node.children.length > 0
@@ -473,11 +475,12 @@ function DetailPanel({
 function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all whitespace-nowrap ${
         active
-          ? "bg-violet-500/20 border-violet-400/50 text-violet-200 shadow-sm shadow-violet-500/10"
-          : "bg-slate-800/50 border-slate-700/40 text-slate-400 hover:border-slate-600/70 hover:text-slate-200 hover:bg-slate-800"
+          ? "bg-violet-500/20 border-violet-500/40 text-violet-200"
+          : "bg-slate-900 border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-200 hover:bg-slate-800/60"
       }`}>
+      {active && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />}
       {label}
     </button>
   )
@@ -504,13 +507,14 @@ function SkuBrowserPanel({
   const [filterExtras, setFilterExtras] = useState<string[]>([])
   const [filterPiedra, setFilterPiedra] = useState<"con" | "sin" | null>(null)
   const [showBuilder,  setShowBuilder]  = useState(false)
+  const [showFilters,  setShowFilters]  = useState(false)
 
   function clearFilters() {
     setFilterMat([]); setFilterEstilo([]); setFilterTalla([])
     setFilterExtras([]); setFilterPiedra(null)
   }
 
-  useEffect(() => { clearFilters(); setQ(""); setShowBuilder(false) }, [categoryFilter, materialFilter])
+  useEffect(() => { clearFilters(); setQ(""); setShowBuilder(false); setShowFilters(false) }, [categoryFilter, materialFilter])
 
   const tipoCat = categoryFilter ? TIPOS_SKU.find(t => t.catJoya === categoryFilter) : null
 
@@ -561,8 +565,12 @@ function SkuBrowserPanel({
     set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val])
   }
 
-  const hasFilters = filterMat.length + filterEstilo.length + filterTalla.length + filterExtras.length > 0 || filterPiedra !== null
-  const showFilterBar = scopeSkus.length > 0
+  const activeFilterCount = filterMat.length + filterEstilo.length + filterTalla.length + filterExtras.length + (filterPiedra ? 1 : 0)
+  const hasFilters    = activeFilterCount > 0
+  const showFilterBar = scopeSkus.length > 0 && (
+    availMat.length > 1 || availEstilo.length > 0 || availTalla.length > 0 ||
+    availExtrasNoPiedra.length > 0 || showPiedraFilter
+  )
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -593,6 +601,22 @@ function SkuBrowserPanel({
               placeholder="Buscar SKU…"
               className="pl-7 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700/50 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-28 sm:w-36 transition" />
           </div>
+          {showFilterBar && (
+            <button type="button" onClick={() => setShowFilters(v => !v)}
+              className={`relative flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                showFilters || hasFilters
+                  ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
+                  : "bg-slate-800 border-slate-700/60 text-slate-400 hover:text-slate-200"
+              }`}>
+              <SlidersHorizontal size={12} />
+              <span className="hidden sm:inline">Filtros</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-violet-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          )}
           <button type="button" onClick={() => setShowBuilder(v => !v)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition ${
               showBuilder
@@ -605,65 +629,81 @@ function SkuBrowserPanel({
         </div>
       </div>
 
-      {/* Barra de filtros horizontal — solo si hay variedad */}
-      {showFilterBar && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-5 py-2.5 border-b border-slate-800/60 bg-slate-950/30 shrink-0">
-          {availMat.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Mat.</span>
-              {MATERIALES_SKU.filter(m => availMat.includes(m.code)).map(m => (
-                <FilterChip key={m.code} label={m.label} active={filterMat.includes(m.code)}
-                  onClick={() => toggle(filterMat, setFilterMat, m.code)} />
-              ))}
-            </div>
-          )}
-          {availEstilo.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Estilo</span>
-              {availEstilo.map(code => {
-                const label = Object.values(ESTILOS_SKU).flat().find(e => e.code === code)?.label ?? code
-                return <FilterChip key={code} label={label} active={filterEstilo.includes(code)}
-                  onClick={() => toggle(filterEstilo, setFilterEstilo, code)} />
-              })}
-            </div>
-          )}
-          {availTalla.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Talla</span>
-              {availTalla.map(t => (
-                <FilterChip key={t} label={t} active={filterTalla.includes(t)}
-                  onClick={() => toggle(filterTalla, setFilterTalla, t)} />
-              ))}
-            </div>
-          )}
-          {/* Extras (Diamantada, Con placa…) */}
-          {availExtrasNoPiedra.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Acabado</span>
-              {EXTRAS_SKU.filter(ex => availExtrasNoPiedra.includes(ex.code)).map(ex => (
-                <FilterChip key={ex.code} label={ex.label} active={filterExtras.includes(ex.code)}
-                  onClick={() => toggle(filterExtras, setFilterExtras, ex.code)} />
-              ))}
-            </div>
-          )}
+      {/* Panel de filtros — colapsable */}
+      {showFilterBar && showFilters && (
+        <div className="border-b border-slate-800 bg-slate-950/50 shrink-0">
+          <div className="px-4 py-3 space-y-2">
 
-          {/* Con/Sin piedras */}
-          {showPiedraFilter && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 shrink-0">Piedras</span>
-              <FilterChip label="Con piedras" active={filterPiedra === "con"}
-                onClick={() => setFilterPiedra(prev => prev === "con" ? null : "con")} />
-              <FilterChip label="Sin piedras" active={filterPiedra === "sin"}
-                onClick={() => setFilterPiedra(prev => prev === "sin" ? null : "sin")} />
-            </div>
-          )}
+            {availMat.length > 1 && (
+              <div className="flex items-start gap-3">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 w-14 shrink-0 pt-1.5">Material</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {MATERIALES_SKU.filter(m => availMat.includes(m.code)).map(m => (
+                    <FilterChip key={m.code} label={m.label} active={filterMat.includes(m.code)}
+                      onClick={() => toggle(filterMat, setFilterMat, m.code)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {availEstilo.length > 0 && (
+              <div className="flex items-start gap-3">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 w-14 shrink-0 pt-1.5">Estilo</span>
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+                  {availEstilo.map(code => {
+                    const label = Object.values(ESTILOS_SKU).flat().find(e => e.code === code)?.label ?? code
+                    return <FilterChip key={code} label={label} active={filterEstilo.includes(code)}
+                      onClick={() => toggle(filterEstilo, setFilterEstilo, code)} />
+                  })}
+                </div>
+              </div>
+            )}
+
+            {availTalla.length > 0 && (
+              <div className="flex items-start gap-3">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 w-14 shrink-0 pt-1.5">Talla</span>
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+                  {availTalla.map(t => (
+                    <FilterChip key={t} label={t} active={filterTalla.includes(t)}
+                      onClick={() => toggle(filterTalla, setFilterTalla, t)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {availExtrasNoPiedra.length > 0 && (
+              <div className="flex items-start gap-3">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 w-14 shrink-0 pt-1.5">Acabado</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {EXTRAS_SKU.filter(ex => availExtrasNoPiedra.includes(ex.code)).map(ex => (
+                    <FilterChip key={ex.code} label={ex.label} active={filterExtras.includes(ex.code)}
+                      onClick={() => toggle(filterExtras, setFilterExtras, ex.code)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showPiedraFilter && (
+              <div className="flex items-start gap-3">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 w-14 shrink-0 pt-1.5">Piedras</span>
+                <div className="flex gap-1.5">
+                  <FilterChip label="Con piedras" active={filterPiedra === "con"}
+                    onClick={() => setFilterPiedra(prev => prev === "con" ? null : "con")} />
+                  <FilterChip label="Sin piedras" active={filterPiedra === "sin"}
+                    onClick={() => setFilterPiedra(prev => prev === "sin" ? null : "sin")} />
+                </div>
+              </div>
+            )}
+          </div>
 
           {hasFilters && (
-            <button type="button"
-              onClick={clearFilters}
-              className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-700/40 text-slate-500 hover:border-violet-500/30 hover:text-violet-400 transition ml-auto shrink-0 bg-slate-900/60">
-              <X size={9} /> Limpiar
-            </button>
+            <div className="px-4 pb-3 flex items-center gap-2">
+              <div className="flex-1 h-px bg-slate-800/80" />
+              <button type="button" onClick={clearFilters}
+                className="flex items-center gap-1 text-[10px] font-medium text-violet-400 hover:text-violet-300 transition">
+                <X size={9} /> Limpiar filtros
+              </button>
+            </div>
           )}
         </div>
       )}
