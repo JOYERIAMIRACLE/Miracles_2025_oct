@@ -6,8 +6,9 @@ import {
   ChevronUp, Loader2, Search, X, SlidersHorizontal,
   Tag, Gem, Layers, CheckCircle, WifiOff, ImagePlus, Package, Wand2,
 } from "lucide-react"
-import { uploadFoto, useGetInventario } from "@/api/inventarioEmpresa/getInventario"
-import { ProductType } from "@/types/product"
+import { uploadFoto, useGetInventario, createProducto } from "@/api/inventarioEmpresa/getInventario"
+import { ProductType, CategoriaJoya, MaterialProducto } from "@/types/product"
+import { toast } from "sonner"
 import {
   CatalogoNodo, TipoNodo, Caracteristica, Modelo,
   TIPO_CONFIG, nodoVacio, modeloVacio, caracteristicaVacia, arbolInicial,
@@ -822,7 +823,7 @@ export function CatalogoJoyeriaView() {
   const [showDetail, setShowDetail] = useState(false)
   const [busqueda,   setBusqueda]   = useState("")
   const [skus,       setSkus]       = useState<SkuEntry[]>([])
-  const { items: inventoryProducts } = useGetInventario()
+  const { items: inventoryProducts, setItems: setInventoryProducts } = useGetInventario()
 
   function handleSelect(id: string) { setSelected(id); setShowDetail(true) }
 
@@ -1053,7 +1054,25 @@ export function CatalogoJoyeriaView() {
               categoryFilter={selectedNode?.tipo === "categoria" ? selectedNode.nombre : null}
               materialFilter={selectedMatKind}
               onSkuDeleted={id => setSkus(prev => prev.filter(s => s.id !== id))}
-              onSkuAdded={entry => setSkus(prev => [...prev.filter(s => s.id !== entry.id), entry])}
+              onSkuAdded={async entry => {
+                try {
+                  const nuevo = await createProducto({
+                    nombreProducto: entry.nombre,
+                    sku:            entry.sku,
+                    categoriaJoya:  (entry.tipoCategoria as CategoriaJoya) || null,
+                    materialProducto: (entry.matLabel as MaterialProducto) || null,
+                    talla:          entry.talla || null,
+                    stock:          0,
+                    material:       "producto",
+                  } as any)
+                  setInventoryProducts(prev =>
+                    [...prev, nuevo].sort((a, b) => a.nombreProducto.localeCompare(b.nombreProducto))
+                  )
+                  toast.success(`"${entry.nombre}" agregado al inventario con stock 0`)
+                } catch {
+                  toast.error("No se pudo crear el producto")
+                }
+              }}
             />
           )}
         </div>
