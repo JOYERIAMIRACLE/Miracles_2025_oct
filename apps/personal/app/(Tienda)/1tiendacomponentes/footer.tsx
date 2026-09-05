@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Instagram, Facebook, Mail, MessageCircle } from 'lucide-react'
 import { Separator } from '../../../components/ui/separator'
 
@@ -35,11 +36,21 @@ const Footer = () => {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* LOGO Y TAGLINE */}
           <div className="lg:col-span-1">
-            <p className="text-3xl">
-              <span className="font-bold mr-1">Miracles</span>
-              <span>jewelry</span>
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">
+            <Image
+              src="/logo medallita de oro fondo blanco.png"
+              alt="Medalla de Oro"
+              width={170}
+              height={54}
+              className="object-contain object-left block dark:hidden"
+            />
+            <Image
+              src="/logo oficial oficial.png"
+              alt="Medalla de Oro"
+              width={170}
+              height={54}
+              className="object-contain object-left hidden dark:block"
+            />
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 max-w-xs">
               Joyería fina en oro 10k y plata 925, hecha con calidad · Envíos a todo México.
             </p>
           </div>
@@ -87,7 +98,7 @@ const Footer = () => {
         <Separator className="my-6 border-gray-200 dark:border-gray-800 lg:my-8" />
 
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
-          &copy; {new Date().getFullYear()} Miracles jewelry — Todos los derechos reservados.
+          &copy; {new Date().getFullYear()} Medalla de Oro — Todos los derechos reservados.
         </p>
       </div>
     </footer>

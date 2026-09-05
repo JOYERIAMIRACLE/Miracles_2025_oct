@@ -18,7 +18,7 @@ function redirectForRole(role: string | null): string | null {
 // subido, cae al ícono genérico en su caja violeta de siempre.
 function LoginBrandMark({ logoUrl }: { logoUrl?: string | null }) {
   if (logoUrl) {
-    return <img src={logoUrl} alt="Medalla de oro" className="h-14 w-14 object-contain shrink-0" />
+    return <img src={logoUrl} alt="Medalla de oro" className="h-12 w-auto max-w-45 object-contain object-left shrink-0" />
   }
   return (
     <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-violet-600 shadow-lg shadow-violet-500/20 shrink-0">
