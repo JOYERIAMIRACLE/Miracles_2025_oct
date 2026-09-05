@@ -622,8 +622,8 @@ export function InventarioEmpresaView() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[180px]">
+      <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center md:gap-2">
+        <div className="relative col-span-2 md:flex-1 md:min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
           <input type="text" placeholder="Buscar nombre, SKU, categoría…" value={search}
             onChange={e => setSearch(e.target.value)}
@@ -634,11 +634,11 @@ export function InventarioEmpresaView() {
             </button>
           )}
         </div>
-        <div className="w-44">
+        <div className="md:w-44">
           <DropdownPicker label="Categoría" value={filtroCat} onChange={v => setFiltroCat(v as CategoriaJoya | "")} placeholder="Todas las categorías"
             options={[{ value: "", label: "Todas las categorías" }, ...CATEGORIAS_JOYA.map(c => ({ value: c, label: c }))]} />
         </div>
-        <div className="w-40">
+        <div className="md:w-40">
           <DropdownPicker label="Material" value={filtroMat} onChange={setFiltroMat} placeholder="Todos los materiales"
             options={[{ value: "", label: "Todos los materiales" }, ...MATERIALES.map(m => ({ value: m, label: m }))]} />
         </div>
@@ -674,8 +674,116 @@ export function InventarioEmpresaView() {
         </div>
       )}
 
-      {/* Tabla */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      {/* Cards — mobile */}
+      <div className="md:hidden space-y-2">
+        {loading && Array.from({length:3}).map((_,i) => (
+          <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2 animate-pulse">
+            <div className="flex gap-3">
+              <div className="w-14 h-14 rounded-lg bg-slate-800 shrink-0"/>
+              <div className="flex-1 space-y-1.5 pt-1">
+                <div className="h-4 bg-slate-800 rounded w-3/4"/>
+                <div className="h-3 bg-slate-800 rounded w-1/3"/>
+              </div>
+            </div>
+          </div>
+        ))}
+        {!loading && filtrados.map(it => {
+          const m    = margen(it.costoProduccion, it.costo)
+          const bajo = (it.stock??0)<=2 && it.material==="producto"
+          const thumb = it.imagenes?.[0]
+          const isPublishing = publishing===it.documentId
+          const isFeaturing  = featuring===it.documentId
+          return (
+            <div key={it.documentId} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              {/* Fila superior: thumb + nombre + badges */}
+              <div className="flex items-start gap-3 p-3 cursor-pointer" onClick={() => openEditar(it)}>
+                {thumb?.url ? (
+                  <img src={imgUrl(thumb.url)} alt={it.nombreProducto}
+                    className="w-14 h-14 rounded-lg object-cover border border-slate-700 shrink-0"/>
+                ) : (
+                  <div className="w-14 h-14 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                    <Package size={18} className="text-slate-600"/>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {bajo && <AlertTriangle size={11} className="text-red-400 shrink-0"/>}
+                    <p className="font-medium text-slate-100 text-sm leading-snug">{it.nombreProducto}</p>
+                  </div>
+                  {it.sku && (
+                    <span className="text-[10px] font-mono text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded mt-0.5 inline-block">{it.sku}</span>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                    {it.categoriaJoya && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${CAT_COLOR[it.categoriaJoya]}`}>{it.categoriaJoya}</span>
+                    )}
+                    {it.materialProducto && (
+                      <span className="text-[10px] text-slate-500">{it.materialProducto}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Fila inferior: precios + stock + acciones */}
+              <div className="flex items-center gap-2 px-3 pb-3 pt-2 border-t border-slate-800/60 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-slate-600 tabular-nums">{fmt(it.costoProduccion)}</span>
+                  <span className="text-slate-700 text-xs">·</span>
+                  <span className="text-sm font-bold text-violet-400 tabular-nums">{fmt(it.costo)}</span>
+                  {m!=null && (
+                    <span className={`text-[10px] font-medium ${m>=30?"text-violet-500":"text-red-400"}`}>{m}%</span>
+                  )}
+                </div>
+                <div className="flex-1"/>
+                {/* Stock */}
+                <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                  <button type="button" onClick={() => handleStock(it,-1)}
+                    className="h-6 w-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">−</button>
+                  <span className={`w-6 text-center font-bold tabular-nums text-sm ${bajo?"text-red-400":"text-slate-200"}`}>{it.stock??0}</span>
+                  <button type="button" onClick={() => handleStock(it,+1)}
+                    className="h-6 w-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">+</button>
+                </div>
+                {/* Acciones rápidas */}
+                <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+                  <button type="button" onClick={() => it.activo ? handleToggleActivo(it) : handlePublish(it)}
+                    disabled={isPublishing} title={it.activo ? "Visible en tienda" : "Oculto"}
+                    className={`p-2 rounded-lg transition-colors ${it.activo ? "text-violet-400 hover:text-red-400" : "text-slate-600 hover:text-violet-400"}`}>
+                    {isPublishing ? <Loader2 size={14} className="animate-spin"/> : it.activo ? <Eye size={14}/> : <EyeOff size={14}/>}
+                  </button>
+                  <button type="button" onClick={() => handleToggleFeatured(it)} disabled={isFeaturing}
+                    className={`p-2 rounded-lg transition-colors ${it.isFeatured ? "text-violet-400" : "text-slate-600 hover:text-violet-400"}`}>
+                    {isFeaturing ? <Loader2 size={14} className="animate-spin"/> : <Star size={14} fill={it.isFeatured ? "currentColor" : "none"}/>}
+                  </button>
+                  <button type="button" onClick={() => openEditar(it)}
+                    className="p-2 rounded-lg text-slate-600 hover:text-slate-300 transition-colors">
+                    <Pencil size={14}/>
+                  </button>
+                  {delId===it.documentId ? (
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => handleDelete(it.documentId)} className="text-[10px] text-red-400 font-medium px-1.5 py-1">Sí</button>
+                      <button type="button" onClick={() => setDelId(null)} className="text-[10px] text-slate-500 px-1.5 py-1">No</button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => setDelId(it.documentId)}
+                      className="p-2 rounded-lg text-slate-600 hover:text-red-400 transition-colors">
+                      <X size={14}/>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+        {!loading && filtrados.length===0 && (
+          <div className="py-12 text-center text-slate-600">
+            <Package size={28} className="mx-auto mb-2 opacity-30"/>
+            <p className="text-sm">{search||filtroCat?"Sin resultados.":"Sin productos registrados."}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Tabla — desktop */}
+      <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-800 bg-slate-950/50">
@@ -715,7 +823,7 @@ export function InventarioEmpresaView() {
                     {/* Nombre / SKU */}
                     <td className="px-3 py-3">
                       <div className="flex items-start gap-1.5">
-                        {bajo && <AlertTriangle size={11} className="text-red-400 shrink-0 mt-0.5" title="Stock bajo"/>}
+                        {bajo && <AlertTriangle size={11} className="text-red-400 shrink-0 mt-0.5" aria-label="Stock bajo"/>}
                         <div>
                           <p className="font-medium text-slate-200 leading-snug">{it.nombreProducto}</p>
                           {it.sku && (
@@ -828,7 +936,7 @@ export function InventarioEmpresaView() {
           {!loading && filtrados.length===0 && (
             <div className="py-14 text-center text-slate-600">
               <Package size={32} className="mx-auto mb-3 opacity-30"/>
-              <p className="text-sm">{search||filtroCat!=="todas"?"Sin resultados.":"Sin productos registrados."}</p>
+              <p className="text-sm">{search||filtroCat?"Sin resultados.":"Sin productos registrados."}</p>
             </div>
           )}
         </div>
@@ -836,10 +944,10 @@ export function InventarioEmpresaView() {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4"
           onClick={e => { if (e.target===e.currentTarget) setModalOpen(false) }}>
-          <div className={`w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden ${
-            !editing && !catalogCard && showSkuBuilder ? "max-w-2xl" : !editing && !catalogCard ? "max-w-xl" : "max-w-lg"
+          <div className={`w-full bg-slate-900 border border-slate-700 sm:rounded-xl rounded-t-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden ${
+            !editing && !catalogCard && showSkuBuilder ? "sm:max-w-2xl" : !editing && !catalogCard ? "sm:max-w-xl" : "sm:max-w-lg"
           }`}>
             {/* Franja de material */}
             <div className={`h-0.5 shrink-0 ${
