@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink, Settings2 } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink, Settings2, Archive } from "lucide-react"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
@@ -207,6 +207,9 @@ export function InventarioEmpresaView() {
   const [marProgress,  setMarProgress]  = useState({ done: 0, total: 0 })
   const [collapse,     setCollapse]     = useState({ foto:false, identificacion:false, atributos:false, peso:false, precios:false, ubicacion:false })
   function toggleSection(k: keyof typeof collapse) { setCollapse(c => ({ ...c, [k]: !c[k] })) }
+  const [loteOrigenId,    setLoteOrigenId]    = useState("")
+  const [lotesDisponibles, setLotesDisponibles] = useState<Array<{documentId:string; gramos:number; fecha:string; notas:string|null}>>([])
+  const [loadingLotes,    setLoadingLotes]    = useState(false)
   const [showCatPick,    setShowCatPick]    = useState(false)
   const [catSearch,      setCatSearch]      = useState("")
   const [showSkuBuilder, setShowSkuBuilder] = useState(false)
@@ -273,6 +276,7 @@ export function InventarioEmpresaView() {
     setFotos(prev => { revokeNewPreviews(prev); return [] })
     setCatalogCard(null); setCatSearch(""); resetCascada(); setShowSkuBuilder(false)
     setLocalMargen(globalMargen)
+    setLoteOrigenId(""); setLotesDisponibles([])
     setModalOpen(true); openModal()
   }
 
@@ -385,13 +389,39 @@ export function InventarioEmpresaView() {
       puntoVenta: (it as Record<string, unknown>).puntoVenta as boolean ?? false,
     })
     setCollapse({ foto:false, identificacion:false, atributos:false, peso:false, precios:false, ubicacion:false })
+    setLoteOrigenId(""); setLotesDisponibles([])
     setModalOpen(true)
+  }
+
+  async function fetchLotesForMaterial(materialDocumentId: string) {
+    if (!materialDocumentId) { setLotesDisponibles([]); return }
+    setLoadingLotes(true)
+    try {
+      const params = new URLSearchParams({
+        "filters[material][documentId][$eq]": materialDocumentId,
+        "filters[tipo][$eq]": "entrada",
+        "sort": "fecha:desc",
+        "pagination[pageSize]": "20",
+        "fields[0]": "gramos",
+        "fields[1]": "fecha",
+        "fields[2]": "notas",
+        "fields[3]": "documentId",
+      })
+      const res  = await fetch(`${BACKEND}/api/movimientos-material?${params}`)
+      const json = await res.json()
+      setLotesDisponibles(json.data ?? [])
+    } catch { setLotesDisponibles([]) }
+    finally  { setLoadingLotes(false) }
   }
 
   // Costo de material = peso (g) × precio/gramo del material elegido + mano de obra manual.
   // Solo se auto-calcula cuando hay material + peso capturados; si no, el costo sigue siendo editable a mano
   // (compatibilidad con productos que no llevan seguimiento de peso).
   function recalcularCosto(next: Partial<Pick<FormData, "materialInsumo" | "pesoGramos" | "costoManoObra">>) {
+    if (next.materialInsumo !== undefined) {
+      fetchLotesForMaterial(next.materialInsumo)
+      setLoteOrigenId("")
+    }
     setForm(f => {
       const merged = { ...f, ...next }
       const mat = materiales.find(m => m.documentId === merged.materialInsumo)
@@ -479,10 +509,11 @@ export function InventarioEmpresaView() {
       // es la "individualización" de un lote a granel en piezas vendibles reales.
       if (!editing && form.materialInsumo && form.pesoGramos) {
         const unidades = Math.max(1, Number(form.stock) || 1)
+        const lotaNota = loteOrigenId ? ` | Lote: ${loteOrigenId}` : ""
         for (let i = 0; i < unidades; i++) {
           await createMovimientoMaterial({
             tipo: "salida", material: form.materialInsumo, gramos: Number(form.pesoGramos),
-            fecha: new Date().toISOString(), notas: `Alta de producto: ${form.nombreProducto.trim()}`,
+            fecha: new Date().toISOString(), notas: `Alta de producto: ${form.nombreProducto.trim()}${lotaNota}`,
           })
         }
       }
@@ -1121,12 +1152,13 @@ export function InventarioEmpresaView() {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
-                        <select title="Material real" value={form.materialInsumo}
-                          onChange={e => recalcularCosto({ materialInsumo: e.target.value })}
-                          className={selCls}>
-                          <option value="">Sin especificar</option>
-                          {materiales.map(m => <option key={m.documentId} value={m.documentId}>{m.nombre} {m.precioReferenciaGramo ? `· $${m.precioReferenciaGramo}/g` : ""}</option>)}
-                        </select>
+                        <DropdownPicker label="Material real" value={form.materialInsumo}
+                          onChange={v => recalcularCosto({ materialInsumo: v })}
+                          placeholder="Sin especificar"
+                          options={[
+                            { value: "", label: "Sin especificar" },
+                            ...materiales.map(m => ({ value: m.documentId, label: `${m.nombre}${m.precioReferenciaGramo ? ` · $${m.precioReferenciaGramo}/g` : ""}` }))
+                          ]} />
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Peso (g)</label>
@@ -1134,6 +1166,28 @@ export function InventarioEmpresaView() {
                           onChange={e => recalcularCosto({ pesoGramos: e.target.value })} className={inp}/>
                       </div>
                     </div>
+
+                    {/* Lote de compra origen */}
+                    {form.materialInsumo && (
+                      <div className="mt-3">
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
+                          <Archive size={10} className="text-violet-500" /> Lote de compra origen
+                          <span className="text-slate-600 normal-case font-normal">— opcional, para trazabilidad</span>
+                          {loadingLotes && <Loader2 size={9} className="animate-spin text-slate-600 ml-1" />}
+                        </label>
+                        <DropdownPicker label="Lote de compra" value={loteOrigenId}
+                          onChange={setLoteOrigenId}
+                          placeholder={lotesDisponibles.length === 0 ? (loadingLotes ? "Cargando…" : "Sin compras registradas para este material") : "Seleccionar lote…"}
+                          options={[
+                            { value: "", label: "Sin especificar" },
+                            ...lotesDisponibles.map(l => ({
+                              value: l.documentId,
+                              label: `${l.gramos}g · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
+                            }))
+                          ]} />
+                      </div>
+                    )}
+
                     {costeoAutomatico && (
                       <p className="text-[11px] text-violet-500 mt-2">
                         Costo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
@@ -1267,12 +1321,10 @@ export function InventarioEmpresaView() {
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
-                        <select title="Tipo" value={form.material}
-                          onChange={e => setForm(f => ({...f, material:e.target.value as MaterialItem}))}
-                          className={selCls}>
-                          <option value="producto">Producto</option>
-                          <option value="servicio">Servicio</option>
-                        </select>
+                        <DropdownPicker label="Tipo" value={form.material}
+                          onChange={v => setForm(f => ({...f, material: v as MaterialItem}))}
+                          placeholder="Tipo"
+                          options={[{ value: "producto", label: "Producto" }, { value: "servicio", label: "Servicio" }]} />
                       </div>
                       {showSkuBuilder && (
                         <div className="col-span-2">
@@ -1311,21 +1363,17 @@ export function InventarioEmpresaView() {
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
-                        <select title="Categoría" value={form.categoriaJoya}
-                          onChange={e => { const cat=e.target.value as CategoriaJoya|""; setForm(f => ({...f,categoriaJoya:cat,sku:skuAuto?buildSku(cat,f.materialProducto,f.figura,f.talla):f.sku})) }}
-                          className={selCls}>
-                          <option value="">— —</option>
-                          {CATEGORIAS_JOYA.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                        <DropdownPicker label="Categoría" value={form.categoriaJoya}
+                          onChange={v => { const cat = v as CategoriaJoya|""; setForm(f => ({...f, categoriaJoya: cat, sku: skuAuto ? buildSku(cat, f.materialProducto, f.figura, f.talla) : f.sku })) }}
+                          placeholder="Sin categoría"
+                          options={[{ value: "", label: "Sin categoría" }, ...CATEGORIAS_JOYA.map(c => ({ value: c, label: c }))]} />
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
-                        <select title="Material" value={form.materialProducto}
-                          onChange={e => { const mat=e.target.value as MaterialProducto|""; setForm(f => ({...f,materialProducto:mat,sku:skuAuto?buildSku(f.categoriaJoya,mat,f.figura,f.talla):f.sku})) }}
-                          className={selCls}>
-                          <option value="">— —</option>
-                          {MATERIALES.map(m => <option key={m} value={m}>{m}</option>)}
-                        </select>
+                        <DropdownPicker label="Material" value={form.materialProducto}
+                          onChange={v => { const mat = v as MaterialProducto|""; setForm(f => ({...f, materialProducto: mat, sku: skuAuto ? buildSku(f.categoriaJoya, mat, f.figura, f.talla) : f.sku })) }}
+                          placeholder="Sin material"
+                          options={[{ value: "", label: "Sin material" }, ...MATERIALES.map(m => ({ value: m, label: m }))]} />
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Talla / Medida</label>
@@ -1343,14 +1391,15 @@ export function InventarioEmpresaView() {
                   {/* Peso / insumo */}
                   <SectCollapse title="Peso e insumo (costeo automático)" open={collapse.peso} onToggle={() => toggleSection("peso")}>
                     <div className="grid grid-cols-3 gap-3">
-                      <div>
+                      <div className="col-span-3 sm:col-span-1">
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
-                        <select title="Material real" value={form.materialInsumo}
-                          onChange={e => recalcularCosto({ materialInsumo: e.target.value })}
-                          className={selCls}>
-                          <option value="">Sin especificar</option>
-                          {materiales.map(m => <option key={m.documentId} value={m.documentId}>{m.nombre} {m.precioReferenciaGramo ? `· $${m.precioReferenciaGramo}/g` : ""}</option>)}
-                        </select>
+                        <DropdownPicker label="Material real" value={form.materialInsumo}
+                          onChange={v => recalcularCosto({ materialInsumo: v })}
+                          placeholder="Sin especificar"
+                          options={[
+                            { value: "", label: "Sin especificar" },
+                            ...materiales.map(m => ({ value: m.documentId, label: `${m.nombre}${m.precioReferenciaGramo ? ` · $${m.precioReferenciaGramo}/g` : ""}` }))
+                          ]} />
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Peso (g)</label>
@@ -1363,6 +1412,24 @@ export function InventarioEmpresaView() {
                           onChange={e => recalcularCosto({ costoManoObra: e.target.value })} className={inp}/>
                       </div>
                     </div>
+                    {form.materialInsumo && (
+                      <div className="mt-3">
+                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
+                          <Archive size={10} className="text-violet-500" /> Lote de compra origen
+                          {loadingLotes && <Loader2 size={9} className="animate-spin text-slate-600 ml-1" />}
+                        </label>
+                        <DropdownPicker label="Lote de compra" value={loteOrigenId}
+                          onChange={setLoteOrigenId}
+                          placeholder={loadingLotes ? "Cargando…" : lotesDisponibles.length === 0 ? "Sin compras para este material" : "Seleccionar lote…"}
+                          options={[
+                            { value: "", label: "Sin especificar" },
+                            ...lotesDisponibles.map(l => ({
+                              value: l.documentId,
+                              label: `${l.gramos}g · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
+                            }))
+                          ]} />
+                      </div>
+                    )}
                     {costeoAutomatico && (
                       <p className="text-[11px] text-slate-600 mt-2">El costo se recalculó con el peso/material actuales — editar aquí no vuelve a descontar material (solo pasa al crear la pieza o al sumar stock).</p>
                     )}
