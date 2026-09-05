@@ -916,7 +916,7 @@ export function InventarioEmpresaView() {
                             className="text-[10px] text-slate-500 px-1">No</button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1">
                           <button type="button" onClick={() => openEditar(it)} title="Editar"
                             className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
                             <Pencil size={12}/>
