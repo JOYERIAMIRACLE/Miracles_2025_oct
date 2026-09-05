@@ -211,7 +211,7 @@ function TreeRow({
         )}
 
         {/* Actions */}
-        <div className={`flex items-center gap-0.5 shrink-0 ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}>
+        <div className={`flex items-center gap-0.5 shrink-0 transition-opacity ${isActive ? "opacity-100" : "opacity-100 md:opacity-0 md:group-hover:opacity-100"}`}>
           {childTipo && !isCat && (
             <button type="button" title={`Agregar ${TIPO_CONFIG[childTipo].label}`}
               onClick={e => { e.stopPropagation(); onAdd(node.id, childTipo) }}
@@ -571,41 +571,39 @@ function SkuBrowserPanel({
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-800 shrink-0">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-100 leading-none">
-                {categoryFilter ?? "Catálogo completo"}
-              </h2>
-              {tipoCat && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-violet-500/25 bg-violet-500/10 text-violet-400 tracking-widest uppercase">
-                  {tipoCat.code}
-                </span>
-              )}
-            </div>
-            <p className="text-[10px] text-slate-500 mt-1 tabular-nums">
-              {visible.length !== scopeSkus.length
-                ? `${visible.length} de ${scopeSkus.length} SKUs`
-                : `${scopeSkus.length} SKU${scopeSkus.length !== 1 ? "s" : ""}`}
-            </p>
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-800 shrink-0 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold text-slate-100 leading-none">
+              {categoryFilter ?? "Catálogo completo"}
+            </h2>
+            {tipoCat && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-violet-500/25 bg-violet-500/10 text-violet-400 tracking-widest uppercase">
+                {tipoCat.code}
+              </span>
+            )}
           </div>
+          <p className="text-[10px] text-slate-500 mt-0.5 tabular-nums">
+            {visible.length !== scopeSkus.length
+              ? `${visible.length} de ${scopeSkus.length} SKUs`
+              : `${scopeSkus.length} SKU${scopeSkus.length !== 1 ? "s" : ""}`}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" />
             <input value={q} onChange={e => setQ(e.target.value)}
               placeholder="Buscar SKU…"
-              className="pl-7 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700/50 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-36 transition" />
+              className="pl-7 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700/50 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-28 sm:w-36 transition" />
           </div>
           <button type="button" onClick={() => setShowBuilder(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition ${
               showBuilder
                 ? "bg-violet-600 text-white shadow-sm shadow-violet-500/20"
                 : "bg-slate-800 border border-slate-700/60 text-slate-300 hover:border-violet-500/40 hover:text-violet-300"
             }`}>
             <Wand2 size={12} />
-            {showBuilder ? "Cerrar constructor" : "Nueva pieza"}
+            <span className="hidden sm:inline">{showBuilder ? "Cerrar" : "Nueva pieza"}</span>
           </button>
         </div>
       </div>
@@ -755,14 +753,17 @@ function SkuBrowserPanel({
 // ─── Main View ────────────────────────────────────────────────────────────────
 
 export function CatalogoJoyeriaView() {
-  const [tree,      setTree]      = useState<CatalogoNodo[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [saving,    setSaving]    = useState(false)
-  const [saved,     setSaved]     = useState(false)
-  const [offline,   setOffline]   = useState(false)
-  const [selected,  setSelected]  = useState<string | null>(null)
-  const [busqueda,  setBusqueda]  = useState("")
-  const [skus,      setSkus]      = useState<SkuEntry[]>([])
+  const [tree,       setTree]       = useState<CatalogoNodo[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [saving,     setSaving]     = useState(false)
+  const [saved,      setSaved]      = useState(false)
+  const [offline,    setOffline]    = useState(false)
+  const [selected,   setSelected]   = useState<string | null>(null)
+  const [showDetail, setShowDetail] = useState(false)
+  const [busqueda,   setBusqueda]   = useState("")
+  const [skus,       setSkus]       = useState<SkuEntry[]>([])
+
+  function handleSelect(id: string) { setSelected(id); setShowDetail(true) }
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialized = useRef(false)
@@ -810,7 +811,7 @@ export function CatalogoJoyeriaView() {
     setTreeAndSave(t => upd(t, id, patch))
 
   const handleDel = (id: string) => {
-    if (selected === id) setSelected(null)
+    if (selected === id) { setSelected(null); setShowDetail(false) }
     setTreeAndSave(t => del(t, id))
   }
 
@@ -818,12 +819,14 @@ export function CatalogoJoyeriaView() {
     const child = nodoVacio(tipo)
     setTreeAndSave(t => ins(t, parentId, child))
     setSelected(child.id)
+    setShowDetail(true)
   }
 
   const handleAddMaterial = () => {
     const node = nodoVacio("material")
     setTreeAndSave(t => [...t, node])
     setSelected(node.id)
+    setShowDetail(true)
   }
 
   const handleMov = (id: string, dir: 1 | -1) =>
@@ -860,43 +863,28 @@ export function CatalogoJoyeriaView() {
     <div className="flex flex-col h-full">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-slate-800 shrink-0 flex-wrap">
-        <div className="flex items-center gap-2.5">
-          <BookOpen size={16} className="text-violet-400" />
-          <div>
-            <h1 className="text-lg font-bold text-slate-100 leading-none">Catálogo de Joyería</h1>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60">{stats.materiales} materiales</span>
-              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60">{stats.categorias} categorías</span>
-              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 tabular-nums">{skus.length} SKUs</span>
+      <div className="flex items-start justify-between gap-3 px-4 py-3 border-b border-slate-800 shrink-0 flex-wrap">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <BookOpen size={15} className="text-violet-400 shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold text-slate-100 leading-none">Catálogo</h1>
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+              <span className="text-[10px] text-slate-500 tabular-nums">{stats.materiales}M · {stats.categorias}C · {stats.productos}P</span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 tabular-nums">{skus.length} SKUs</span>
+              {saving && <Loader2 size={10} className="animate-spin text-slate-500" />}
+              {saved && !saving && <CheckCircle size={10} className="text-violet-400" />}
+              {offline && !saving && <WifiOff size={10} className="text-red-400" />}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Estado de guardado */}
-          {saving && (
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-              <Loader2 size={11} className="animate-spin" /> Guardando…
-            </div>
-          )}
-          {saved && !saving && (
-            <div className="flex items-center gap-1.5 text-[11px] text-violet-400">
-              <CheckCircle size={11} /> Guardado
-            </div>
-          )}
-          {offline && !saving && (
-            <div className="flex items-center gap-1.5 text-[11px] text-red-400">
-              <WifiOff size={11} /> Sin conexión
-            </div>
-          )}
-
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Búsqueda árbol */}
           <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+            <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar en árbol…"
-              className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-40 transition" />
+              placeholder="Buscar…"
+              className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-32 transition" />
             {busqueda && (
               <button type="button" title="Limpiar" onClick={() => setBusqueda("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
@@ -909,22 +897,22 @@ export function CatalogoJoyeriaView() {
             <button type="button"
               onClick={() => { const t = arbolInicial(); setTree(t); scheduleSave(t) }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
-              <Layers size={13} /> Inicializar plantilla
+              <Layers size={12} /> Plantilla
             </button>
           )}
 
           <button type="button" onClick={handleAddMaterial}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600/90 hover:bg-violet-500 text-white rounded-lg transition">
-            <Plus size={13} /> Material
+            <Plus size={12} /> Material
           </button>
         </div>
       </div>
 
-      {/* Body */}
+      {/* Body — master-detail: mobile alterna árbol/detalle, desktop los muestra juntos */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Árbol — panel izquierdo, siempre visible */}
-        <div className="w-64 shrink-0 border-r border-slate-800 overflow-y-auto p-3 space-y-0.5">
+        {/* Árbol — oculto en mobile cuando hay detalle visible */}
+        <div className={`${showDetail ? "hidden" : "flex flex-col"} md:flex md:flex-col w-full md:w-64 shrink-0 md:border-r border-slate-800 overflow-y-auto p-3 space-y-0.5`}>
           {tree.length === 0 ? (
             <div className="py-12 text-center">
               <Gem size={28} className="mx-auto mb-3 text-slate-700" />
@@ -945,7 +933,7 @@ export function CatalogoJoyeriaView() {
                   node={node}
                   depth={0}
                   selected={selected}
-                  onSelect={setSelected}
+                  onSelect={handleSelect}
                   onAdd={handleAdd}
                   onDel={handleDel}
                   onMov={handleMov}
@@ -957,8 +945,16 @@ export function CatalogoJoyeriaView() {
           )}
         </div>
 
-        {/* Panel derecho — cambia según selección */}
-        <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+        {/* Panel derecho — oculto en mobile cuando se muestra el árbol */}
+        <div className={`${!showDetail ? "hidden" : "flex flex-col"} md:flex md:flex-col flex-1 overflow-hidden min-w-0`}>
+
+          {/* Botón volver al árbol — solo mobile */}
+          <button type="button"
+            onClick={() => { setShowDetail(false); setSelected(null) }}
+            className="md:hidden flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium text-violet-400 border-b border-slate-800 hover:bg-slate-800/40 transition-colors shrink-0">
+            <ChevronRight size={13} className="rotate-180" /> Árbol
+          </button>
+
           {selectedNode?.tipo === "producto" || selectedNode?.tipo === "material" ? (
             /* Material o Producto seleccionado → editor de detalles */
             <div className="flex-1 overflow-y-auto">
@@ -986,7 +982,7 @@ export function CatalogoJoyeriaView() {
               />
             </div>
           ) : (
-            /* Categoría seleccionada o nada → SKU Browser */
+            /* Categoría seleccionada → SKU Browser */
             <SkuBrowserPanel
               skus={skus}
               categoryFilter={selectedNode?.tipo === "categoria" ? selectedNode.nombre : null}
