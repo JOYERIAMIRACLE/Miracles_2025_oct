@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef } from "react"
 import {
   FileText, X, ArrowRight, ArrowLeft, Loader2,
-  User, Trash2, Paperclip, ChevronRight,
+  User, Trash2, Paperclip, ChevronRight, Plus, Search,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetAllCotizaciones, deleteCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
@@ -17,7 +17,7 @@ import { ProductType } from "@/types/product"
 import {
   Cotizacion, ItemCotizacion, EstadoCotizacion, ESTADOS_COT, ESTADO_COT_COLOR,
 } from "@/types/cotizacion"
-import { ClienteEmpresa } from "@/types/clienteEmpresa"
+import { ClienteEmpresa, FUNNEL_COLOR, FUNNEL_LABEL } from "@/types/clienteEmpresa"
 import { CotizacionModal } from "./CotizacionModal"
 import { ListToolbar } from "./ListToolbar"
 import { confirmDialog } from "../ConfirmDialog"
@@ -227,6 +227,55 @@ function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }:
   )
 }
 
+// ─── Elegir cliente para una cotización nueva ─────────────────────────────────
+// CotizacionModal necesita un cliente ya elegido (no trae su propio buscador)
+// — este paso es lo que faltaba para poder crear una cotización desde este
+// panel sin tener que ir primero a Leads/Contactos a buscar al cliente ahí.
+function SeleccionarClienteModal({ clientes, onClose, onSelect }: {
+  clientes: ClienteEmpresa[]; onClose: () => void; onSelect: (c: ClienteEmpresa) => void
+}) {
+  const [q, setQ] = useState("")
+  const filtrados = useMemo(() => {
+    const query = q.trim().toLowerCase()
+    const base = !query ? clientes : clientes.filter(c =>
+      c.nombre.toLowerCase().includes(query) || (c.telefono ?? "").includes(query)
+    )
+    return base.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).slice(0, 50)
+  }, [clientes, q])
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-3 max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">¿Para qué cliente?</h3>
+          <button type="button" title="Cerrar" onClick={onClose}
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+        </div>
+        <div className="relative shrink-0">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600" />
+          <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar por nombre o teléfono…"
+            className="w-full h-9 pl-8 pr-3 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
+        </div>
+        <div className="flex-1 overflow-y-auto -mx-1 px-1 space-y-0.5">
+          {filtrados.length === 0 && (
+            <p className="text-[11px] text-slate-400 dark:text-slate-600 text-center py-6">Sin clientes que coincidan.</p>
+          )}
+          {filtrados.map(c => (
+            <button key={c.documentId} type="button" onClick={() => onSelect(c)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition text-left">
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{c.nombre}</p>
+                {c.telefono && <p className="text-[10px] text-slate-400 dark:text-slate-600">{c.telefono}</p>}
+              </div>
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold shrink-0 ${FUNNEL_COLOR[c.Funnel ?? "Lead"]}`}>{FUNNEL_LABEL[c.Funnel ?? "Lead"]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── CotizacionesView ─────────────────────────────────────────────────────────
 export function CotizacionesView() {
   const { cotizaciones, setCotizaciones, loading } = useGetAllCotizaciones()
@@ -240,6 +289,8 @@ export function CotizacionesView() {
   const [clienteParaEdit, setClienteParaEdit]  = useState<ClienteEmpresa | null>(null)
   const [delId,           setDelId]            = useState<string | null>(null)
   const [clienteView,     setClienteView]      = useState<string | null>(null)
+  const [pickingCliente,  setPickingCliente]   = useState(false)
+  const [creandoPara,     setCreandoPara]      = useState<ClienteEmpresa | null>(null)
 
   type GrupoCot = { key: string; nombre: string; cotizaciones: Cotizacion[]; totalAceptado: number; ultimaFecha: string; estadoPrincipal: EstadoCotizacion }
 
@@ -304,6 +355,7 @@ export function CotizacionesView() {
     })
     setEditando(null)
     setClienteParaEdit(null)
+    setCreandoPara(null)
   }
 
   const handleDelete = async (documentId: string) => {
@@ -330,9 +382,25 @@ export function CotizacionesView() {
     )
   }
 
+  if (creandoPara) {
+    return (
+      <div className="p-4 md:p-6">
+        <CotizacionModal
+          fullPage
+          cliente={creandoPara}
+          cotizacion={null}
+          totalCotizaciones={cotizaciones.filter(c => c.cliente?.documentId === creandoPara.documentId).length}
+          onClose={() => setCreandoPara(null)}
+          onSaved={handleCotizacionSaved}
+        />
+      </div>
+    )
+  }
+
   // ── Vista drill-down: cotizaciones de un cliente específico ────────────────
   if (clienteView) {
     const nombreCliente = grupos.find(g => g.key === clienteView)?.nombre ?? "Cliente"
+    const clienteActual = clientes.find(c => c.documentId === clienteView) ?? null
     return (
       <div className="p-4 md:p-6 space-y-5">
         <button type="button" onClick={() => { setClienteView(null); setFiltroEstado("") }}
@@ -346,13 +414,19 @@ export function CotizacionesView() {
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{nombreCliente}</h1>
             <span className="text-sm text-slate-500 dark:text-slate-500">· {cotizacionesDeCliente.length} cotizacion{cotizacionesDeCliente.length !== 1 ? "es" : ""}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {ESTADOS_COT.map(e => (
               <button key={e} type="button" onClick={() => setFiltroEstado(filtroEstado === e ? "" : e)}
                 className={`text-[11px] px-2.5 py-1 rounded-full border font-medium transition ${filtroEstado === e ? ESTADO_COT_COLOR[e] : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
                 {e}
               </button>
             ))}
+            {clienteActual && (
+              <button type="button" onClick={() => setCreandoPara(clienteActual)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
+                <Plus size={13} /> Nueva
+              </button>
+            )}
           </div>
         </div>
 
@@ -442,6 +516,10 @@ export function CotizacionesView() {
             {stats.aceptada} aceptadas · {fmt(stats.totalValor)} en valor aceptado
           </p>
         </div>
+        <button type="button" onClick={() => setPickingCliente(true)}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
+          <Plus size={15} /> Nueva cotización
+        </button>
       </div>
 
       <ListToolbar
@@ -511,11 +589,24 @@ export function CotizacionesView() {
             <div className="py-14 text-center">
               <FileText size={32} className="mx-auto mb-3 text-slate-300 dark:text-slate-700" />
               <p className="text-slate-400 dark:text-slate-600 text-sm">{search ? "Sin clientes para esa búsqueda." : "No hay cotizaciones registradas."}</p>
-              <p className="text-[11px] text-slate-300 dark:text-slate-700 mt-1">Crea cotizaciones desde el módulo de Clientes o Leads.</p>
+              {!search && (
+                <button type="button" onClick={() => setPickingCliente(true)}
+                  className="mt-3 flex items-center gap-1.5 px-3 py-2 text-sm text-violet-600 dark:text-violet-400 border border-violet-300 dark:border-violet-800/50 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-500/10 transition mx-auto">
+                  <Plus size={14} /> Crear primera cotización
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {pickingCliente && (
+        <SeleccionarClienteModal
+          clientes={clientes}
+          onClose={() => setPickingCliente(false)}
+          onSelect={c => { setCreandoPara(c); setPickingCliente(false) }}
+        />
+      )}
     </div>
   )
 }
