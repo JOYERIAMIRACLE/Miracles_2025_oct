@@ -393,6 +393,11 @@ export function InventarioEmpresaView() {
     })
     setOpenSection(null)
     setLoteOrigenId(""); setLotesDisponibles([])
+    // Si la pieza ya tiene material asignado, trae sus lotes de compra reales
+    // de una vez — antes solo se cargaban al volver a tocar el selector de
+    // material, así que al editar una pieza existente el dropdown de "Lote de
+    // compra origen" se quedaba vacío aunque sí hubiera compras registradas.
+    if (it.materialInsumo?.documentId) fetchLotesForMaterial(it.materialInsumo.documentId)
     setModalOpen(true)
   }
 
