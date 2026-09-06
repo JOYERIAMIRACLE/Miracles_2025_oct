@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Plus, Pencil, Trash2, Phone, CheckCircle2, UserSearch } from "lucide-react"
+import { useState, useMemo, useRef } from "react"
+import { Plus, Pencil, Trash2, Phone, CheckCircle2, UserSearch, CornerDownLeft } from "lucide-react"
 import { toast } from "sonner"
 import { ClienteEmpresa, ClientePayload } from "@/types/clienteEmpresa"
 import { useClientesPipeline } from "./useClientesPipeline"
@@ -25,6 +25,26 @@ export function LeadsView() {
   const [filtro,       setFiltro]       = useState<"todos" | "calificado" | "sin_calificar">("todos")
   const [search,        setSearch]      = useState("")
   const [delId,         setDelId]       = useState<string | null>(null)
+
+  // Alta rápida: solo nombre + teléfono, sin abrir el modal completo — para
+  // cuando solo se quiere anotar un contacto al vuelo (ej. alguien llamó).
+  // El modal grande sigue disponible (botón "Editar" o "Nuevo lead" arriba)
+  // para capturar el resto de los datos cuando sí hace falta.
+  const [qNombre,   setQNombre]   = useState("")
+  const [qTelefono, setQTelefono] = useState("")
+  const [qSaving,   setQSaving]   = useState(false)
+  const qNombreRef = useRef<HTMLInputElement>(null)
+
+  const altaRapida = async () => {
+    if (!qNombre.trim() || qSaving) return
+    setQSaving(true)
+    try {
+      const nuevo = await guardarCliente(null, { ...emptyCliente("Lead"), nombre: qNombre.trim(), telefono: qTelefono.trim() || null })
+      setQNombre(""); setQTelefono("")
+      toast.success(`${nuevo.nombre} agregado`)
+      qNombreRef.current?.focus()
+    } catch { toast.error("Error al agregar") } finally { setQSaving(false) }
+  }
 
   const leads = useMemo(() => {
     let all = clientes
@@ -164,6 +184,24 @@ export function LeadsView() {
         <button type="button" onClick={abrirCrear}
           className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
           <Plus size={15} /> Nuevo lead
+        </button>
+      </div>
+
+      {/* Alta rápida — nombre + teléfono y Enter, sin modal. El botón "Nuevo
+          lead" de arriba sigue abriendo el formulario completo por grupos. */}
+      <div className="flex items-center gap-2 p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+        <Plus size={14} className="text-slate-400 dark:text-slate-600 shrink-0 ml-1" />
+        <input ref={qNombreRef} value={qNombre} onChange={e => setQNombre(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") altaRapida() }}
+          placeholder="Nombre del contacto…" disabled={qSaving}
+          className="flex-1 min-w-0 h-9 px-2 text-sm bg-transparent text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none" />
+        <input value={qTelefono} onChange={e => setQTelefono(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") altaRapida() }}
+          placeholder="Teléfono (opcional)" disabled={qSaving}
+          className="w-44 shrink-0 h-9 px-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-300 dark:focus:border-slate-600" />
+        <button type="button" onClick={altaRapida} disabled={!qNombre.trim() || qSaving}
+          className="flex items-center gap-1 h-9 px-3 text-xs font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 disabled:opacity-40 disabled:hover:bg-transparent rounded-lg transition shrink-0">
+          <CornerDownLeft size={12} /> {qSaving ? "Agregando…" : "Agregar"}
         </button>
       </div>
 
