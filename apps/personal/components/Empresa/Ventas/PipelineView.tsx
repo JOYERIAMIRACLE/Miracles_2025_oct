@@ -1068,6 +1068,41 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
     items.length === 1 ? items[0].descripcion :
     `${items[0].descripcion} +${items.length - 1} más`
 
+  // Historial de SKUs del cliente: junta lo cotizado (cotizacion.items,
+  // JSON suelto pero ya trae sku) con lo realmente comprado (venta.lineas,
+  // relación real a product) — así se ve en un solo lugar qué piezas
+  // concretas le han interesado o comprado, no solo el monto total.
+  const historialSkus = useMemo(() => {
+    type Entrada = { sku: string; descripcion: string; vecesCotizado: number; vecesComprado: number; cantidadComprada: number; ultimaFecha: string | null }
+    const map = new Map<string, Entrada>()
+    const obtener = (sku: string, descripcion: string) => {
+      let e = map.get(sku)
+      if (!e) { e = { sku, descripcion, vecesCotizado: 0, vecesComprado: 0, cantidadComprada: 0, ultimaFecha: null }; map.set(sku, e) }
+      return e
+    }
+    for (const c of cotizaciones) {
+      const fecha = c.fecha ?? c.createdAt ?? null
+      for (const item of c.items ?? []) {
+        if (!item.sku) continue
+        const e = obtener(item.sku, item.descripcion)
+        e.vecesCotizado += 1
+        if (fecha && (!e.ultimaFecha || fecha > e.ultimaFecha)) e.ultimaFecha = fecha
+      }
+    }
+    for (const v of ventasDelCliente) {
+      if (v.estado === "Cancelado") continue
+      for (const l of v.lineas ?? []) {
+        const sku = l.producto?.sku
+        if (!sku) continue
+        const e = obtener(sku, l.producto?.nombreProducto ?? l.descripcion)
+        e.vecesComprado += 1
+        e.cantidadComprada += l.cantidad
+        if (v.fecha && (!e.ultimaFecha || v.fecha > e.ultimaFecha)) e.ultimaFecha = v.fecha
+      }
+    }
+    return [...map.values()].sort((a, b) => (b.ultimaFecha ?? "").localeCompare(a.ultimaFecha ?? ""))
+  }, [cotizaciones, ventasDelCliente])
+
   // Actividad de cotizaciones/pedidos agrupada por mes, para la gráfica
   const actividadPorMes = useMemo(() => {
     const map = new Map<string, { cotizaciones: number; pedidos: number }>()
@@ -1454,6 +1489,42 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Historial de SKUs: qué piezas concretas ha cotizado o comprado
+              este cliente, no solo el monto — junta cotizacion.items (sku
+              suelto) con venta.lineas (relación real a product). */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}><h3 className={cardTitleCls}>Historial de SKUs</h3></div>
+            <div className="p-2">
+              {historialSkus.length === 0 ? (
+                <p className="text-[11px] text-slate-300 dark:text-slate-700 py-6 px-2 text-center">Todavía no hay piezas cotizadas ni compradas para este cliente.</p>
+              ) : (
+                <div className="space-y-0.5">
+                  {historialSkus.map(h => (
+                    <div key={h.sku} className="flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition">
+                      <Tag size={12} className="text-violet-500 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{h.descripcion}</p>
+                        <p className="text-[10px] font-mono text-slate-400 dark:text-slate-600 mt-0.5">{h.sku}{h.ultimaFecha ? ` · última vez ${fmtDt(h.ultimaFecha)}` : ""}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {h.vecesCotizado > 0 && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-slate-500/15 text-slate-500 dark:text-slate-400 border-slate-500/30">
+                            Cotizado ×{h.vecesCotizado}
+                          </span>
+                        )}
+                        {h.vecesComprado > 0 && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-semibold bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30">
+                            Comprado ×{h.cantidadComprada}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
