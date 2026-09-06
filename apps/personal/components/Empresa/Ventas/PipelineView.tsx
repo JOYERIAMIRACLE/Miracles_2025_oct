@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef } from "react"
 import {
   Plus, X, Check, Phone, Mail, MessageCircle, ArrowLeft,
-  ChevronRight, ChevronLeft, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
+  ChevronRight, ChevronLeft, ChevronDown, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
   DollarSign, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -34,6 +34,7 @@ import {
 import { uploadMedia } from "@/lib/upload"
 import { useClientesPipeline } from "./useClientesPipeline"
 import { confirmDialog } from "../ConfirmDialog"
+import { DropdownPicker } from "../../Shared/DropdownPicker"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Efectivo":      "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20",
@@ -1541,6 +1542,22 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
 }
 
 // ─── Modal alta/edición de cliente (compartido) ───────────────────────────────
+function ClienteModalSection({ title, open, onToggle, children }: {
+  title: string; open: boolean; onToggle: () => void; children: React.ReactNode
+}) {
+  return (
+    <div className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-violet-300 dark:border-violet-500/30 bg-violet-50/30 dark:bg-slate-800/50" : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30"}`}>
+      <button type="button" onClick={onToggle}
+        className="flex items-center gap-3 w-full px-3.5 py-3 group hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
+        <div className={`w-1 h-4 rounded-full shrink-0 transition-colors ${open ? "bg-violet-500" : "bg-violet-400/40 group-hover:bg-violet-400/70"}`} />
+        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 flex-1 text-left group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">{title}</p>
+        <ChevronDown size={14} className={`text-slate-400 dark:text-slate-500 transition-transform shrink-0 ${open ? "" : "-rotate-90"}`} />
+      </button>
+      {open && <div className="px-3.5 pb-4 pt-1 border-t border-slate-200 dark:border-slate-800/80 space-y-3">{children}</div>}
+    </div>
+  )
+}
+
 export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando }: {
   editando: ClienteEmpresa | null; form: ClientePayload
   setForm: React.Dispatch<React.SetStateAction<ClientePayload>>
@@ -1549,6 +1566,8 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
   const etapa = form.Funnel ?? "Lead"
   const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
   const lbl   = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
+  const [sec, setSec] = useState({ contacto: false, detalles: false, clasificacion: false })
+  const toggle = (k: keyof typeof sec) => setSec(s => ({ ...s, [k]: !s[k] }))
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1583,72 +1602,68 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
             placeholder="Nombre completo" className={inp} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={lbl}>Teléfono</label>
-            <input value={form.telefono ?? ""}
-              onChange={e => setForm(f => ({ ...f, telefono: e.target.value || null }))}
-              placeholder="55 0000 0000" className={inp} />
+        <ClienteModalSection title="Contacto" open={sec.contacto} onToggle={() => toggle("contacto")}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={lbl}>Teléfono</label>
+              <input value={form.telefono ?? ""}
+                onChange={e => setForm(f => ({ ...f, telefono: e.target.value || null }))}
+                placeholder="55 0000 0000" className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>Canal de contacto</label>
+              <DropdownPicker label="Canal de contacto" value={form.canalContacto ?? ""}
+                onChange={v => setForm(f => ({ ...f, canalContacto: v || null }))}
+                placeholder="— Seleccionar —"
+                options={[{ value: "", label: "— Seleccionar —" }, ...CANALES.map(c => ({ value: c, label: c }))]} />
+            </div>
           </div>
           <div>
-            <label className={lbl}>Canal de contacto</label>
-            <select value={form.canalContacto ?? ""} title="Canal"
-              onChange={e => setForm(f => ({ ...f, canalContacto: e.target.value || null }))}
-              className={inp}>
-              <option value="">— Seleccionar —</option>
-              {CANALES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className={lbl}>Email</label>
-          <input type="email" value={form.email ?? ""}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value || null }))}
-            placeholder="correo@email.com" className={inp} />
-        </div>
-
-        <div>
-          <label className={lbl}>Dirección</label>
-          <input value={form.direccion ?? ""}
-            onChange={e => setForm(f => ({ ...f, direccion: e.target.value || null }))}
-            placeholder="Calle, número, colonia, ciudad…" className={inp} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={lbl}>Talla de anillo</label>
-            <input value={form.tallaAnillo ?? ""}
-              onChange={e => setForm(f => ({ ...f, tallaAnillo: e.target.value || null }))}
-              placeholder="6.5 MX" className={inp} />
+            <label className={lbl}>Email</label>
+            <input type="email" value={form.email ?? ""}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value || null }))}
+              placeholder="correo@email.com" className={inp} />
           </div>
           <div>
-            <label className={lbl}>Estado civil</label>
-            <select value={form.estadoCivil ?? ""} title="Estado civil"
-              onChange={e => setForm(f => ({ ...f, estadoCivil: (e.target.value || null) as typeof f.estadoCivil }))}
-              className={inp}>
-              <option value="">— Sin especificar —</option>
-              {ESTADOS_CIVILES.map(e => <option key={e} value={e}>{e}</option>)}
-            </select>
+            <label className={lbl}>Dirección</label>
+            <input value={form.direccion ?? ""}
+              onChange={e => setForm(f => ({ ...f, direccion: e.target.value || null }))}
+              placeholder="Calle, número, colonia, ciudad…" className={inp} />
           </div>
-        </div>
+        </ClienteModalSection>
 
-        <div>
-          <label className={lbl}>Ocasión frecuente</label>
-          <input value={form.ocasionFrecuente ?? ""}
-            onChange={e => setForm(f => ({ ...f, ocasionFrecuente: e.target.value || null }))}
-            placeholder="Regalos de aniversario, cumpleaños…" className={inp} />
-        </div>
-
-        <div>
-          <label className={lbl}>Redes sociales</label>
-          <input value={form.redesSociales ?? ""}
-            onChange={e => setForm(f => ({ ...f, redesSociales: e.target.value || null }))}
-            placeholder="@usuario_instagram" className={inp} />
-        </div>
+        <ClienteModalSection title="Detalles personales" open={sec.detalles} onToggle={() => toggle("detalles")}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={lbl}>Talla de anillo</label>
+              <input value={form.tallaAnillo ?? ""}
+                onChange={e => setForm(f => ({ ...f, tallaAnillo: e.target.value || null }))}
+                placeholder="6.5 MX" className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>Estado civil</label>
+              <DropdownPicker label="Estado civil" value={form.estadoCivil ?? ""}
+                onChange={v => setForm(f => ({ ...f, estadoCivil: (v || null) as typeof f.estadoCivil }))}
+                placeholder="— Sin especificar —"
+                options={[{ value: "", label: "— Sin especificar —" }, ...ESTADOS_CIVILES.map(e => ({ value: e, label: e }))]} />
+            </div>
+          </div>
+          <div>
+            <label className={lbl}>Ocasión frecuente</label>
+            <input value={form.ocasionFrecuente ?? ""}
+              onChange={e => setForm(f => ({ ...f, ocasionFrecuente: e.target.value || null }))}
+              placeholder="Regalos de aniversario, cumpleaños…" className={inp} />
+          </div>
+          <div>
+            <label className={lbl}>Redes sociales</label>
+            <input value={form.redesSociales ?? ""}
+              onChange={e => setForm(f => ({ ...f, redesSociales: e.target.value || null }))}
+              placeholder="@usuario_instagram" className={inp} />
+          </div>
+        </ClienteModalSection>
 
         {etapa === "Lead" && (
-          <>
+          <ClienteModalSection title="Origen y calificación" open={sec.clasificacion} onToggle={() => toggle("clasificacion")}>
             <div>
               <label className={lbl}>Origen del contacto</label>
               <input value={form.origenContacto ?? ""}
@@ -1667,19 +1682,19 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
                 {form.calificado ? "Calificado" : "Marcar como calificado"}
               </button>
             </div>
-          </>
+          </ClienteModalSection>
         )}
 
         {(etapa === "Oferta" || etapa === "Pedido" || etapa === "Entrega") && (
-          <div>
-            <label className={lbl}>Segmento</label>
-            <select value={form.segmento ?? ""} title="Segmento"
-              onChange={e => setForm(f => ({ ...f, segmento: (e.target.value || null) as typeof f.segmento }))}
-              className={inp}>
-              <option value="">— Sin segmento —</option>
-              {SEGMENTOS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
+          <ClienteModalSection title="Clasificación" open={sec.clasificacion} onToggle={() => toggle("clasificacion")}>
+            <div>
+              <label className={lbl}>Segmento</label>
+              <DropdownPicker label="Segmento" value={form.segmento ?? ""}
+                onChange={v => setForm(f => ({ ...f, segmento: (v || null) as typeof f.segmento }))}
+                placeholder="— Sin segmento —"
+                options={[{ value: "", label: "— Sin segmento —" }, ...SEGMENTOS.map(s => ({ value: s, label: s }))]} />
+            </div>
+          </ClienteModalSection>
         )}
 
         <div>
