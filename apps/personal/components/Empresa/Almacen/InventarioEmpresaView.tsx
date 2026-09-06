@@ -205,8 +205,11 @@ export function InventarioEmpresaView() {
   const [localMargen,  setLocalMargen]  = useState(70)
   const [applyingMar,  setApplyingMar]  = useState(false)
   const [marProgress,  setMarProgress]  = useState({ done: 0, total: 0 })
-  const [collapse,     setCollapse]     = useState({ foto:false, identificacion:false, atributos:false, peso:false, precios:false, ubicacion:false })
-  function toggleSection(k: keyof typeof collapse) { setCollapse(c => ({ ...c, [k]: !c[k] })) }
+  // Un solo grupo abierto a la vez (acordeón) — antes cada sección tenía su
+  // propio booleano y podían quedar varias abiertas al mismo tiempo.
+  type SeccionProducto = "foto" | "identificacion" | "atributos" | "peso" | "precios" | "ubicacion"
+  const [openSection, setOpenSection] = useState<SeccionProducto | null>(null)
+  function toggleSection(k: SeccionProducto) { setOpenSection(s => s === k ? null : k) }
   const [loteOrigenId,    setLoteOrigenId]    = useState("")
   const [lotesDisponibles, setLotesDisponibles] = useState<Array<{documentId:string; gramos:number; fecha:string; notas:string|null}>>([])
   const [loadingLotes,    setLoadingLotes]    = useState(false)
@@ -388,7 +391,7 @@ export function InventarioEmpresaView() {
       esFavorito: it.isFeatured ?? false,
       puntoVenta: (it as Record<string, unknown>).puntoVenta as boolean ?? false,
     })
-    setCollapse({ foto:false, identificacion:false, atributos:false, peso:false, precios:false, ubicacion:false })
+    setOpenSection(null)
     setLoteOrigenId(""); setLotesDisponibles([])
     setModalOpen(true)
   }
@@ -1284,12 +1287,12 @@ export function InventarioEmpresaView() {
                 <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
 
                   {/* Foto */}
-                  <SectCollapse title="Fotos" open={collapse.foto} onToggle={() => toggleSection("foto")}>
+                  <SectCollapse title="Fotos" open={openSection === "foto"} onToggle={() => toggleSection("foto")}>
                     <FotoManager fotos={fotos} onAdd={handleFotosAdd} onRemove={handleFotoRemove} />
                   </SectCollapse>
 
                   {/* Identificación */}
-                  <SectCollapse title="Identificación" open={collapse.identificacion} onToggle={() => toggleSection("identificacion")}>
+                  <SectCollapse title="Identificación" open={openSection === "identificacion"} onToggle={() => toggleSection("identificacion")}>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="col-span-2">
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Nombre <span className="text-red-400">*</span></label>
@@ -1359,7 +1362,7 @@ export function InventarioEmpresaView() {
                   </SectCollapse>
 
                   {/* Atributos */}
-                  <SectCollapse title="Atributos" open={collapse.atributos} onToggle={() => toggleSection("atributos")}>
+                  <SectCollapse title="Atributos" open={openSection === "atributos"} onToggle={() => toggleSection("atributos")}>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
@@ -1389,7 +1392,7 @@ export function InventarioEmpresaView() {
                   </SectCollapse>
 
                   {/* Peso / insumo */}
-                  <SectCollapse title="Peso e insumo (costeo automático)" open={collapse.peso} onToggle={() => toggleSection("peso")}>
+                  <SectCollapse title="Peso e insumo (costeo automático)" open={openSection === "peso"} onToggle={() => toggleSection("peso")}>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="col-span-3 sm:col-span-1">
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
@@ -1436,7 +1439,7 @@ export function InventarioEmpresaView() {
                   </SectCollapse>
 
                   {/* Precios y stock */}
-                  <SectCollapse title="Precios y Stock" open={collapse.precios} onToggle={() => toggleSection("precios")}>
+                  <SectCollapse title="Precios y Stock" open={openSection === "precios"} onToggle={() => toggleSection("precios")}>
                     {Number(form.costoProduccion) > 0 && (
                       <div className="mb-3 flex items-center gap-2 bg-slate-800/50 border border-slate-700/60 rounded-lg px-3 py-2 flex-wrap">
                         <span className="text-[11px] text-slate-400 shrink-0">Margen</span>
@@ -1492,7 +1495,7 @@ export function InventarioEmpresaView() {
                   </SectCollapse>
 
                   {/* Ubicación */}
-                  <SectCollapse title="Ubicación" open={collapse.ubicacion} onToggle={() => toggleSection("ubicacion")}>
+                  <SectCollapse title="Ubicación" open={openSection === "ubicacion"} onToggle={() => toggleSection("ubicacion")}>
                     <div className="rounded-xl border border-slate-800 overflow-hidden">
                       <UbicToggle checked={form.tiendaActivo} onChange={v => setForm(f => ({...f, tiendaActivo:v}))}
                         label="Tienda online" desc="Visible en el catálogo de la tienda" icon={Store} />

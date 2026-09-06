@@ -1637,8 +1637,10 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
   const etapa = form.Funnel ?? "Lead"
   const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
   const lbl   = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
-  const [sec, setSec] = useState({ contacto: false, detalles: false, clasificacion: false })
-  const toggle = (k: keyof typeof sec) => setSec(s => ({ ...s, [k]: !s[k] }))
+  // Un solo grupo abierto a la vez (acordeón) — antes cada sección tenía su
+  // propio booleano y podían quedar varias abiertas al mismo tiempo.
+  const [openSec, setOpenSec] = useState<"contacto" | "detalles" | "clasificacion" | null>(null)
+  const toggle = (k: "contacto" | "detalles" | "clasificacion") => setOpenSec(s => s === k ? null : k)
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1673,7 +1675,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
             placeholder="Nombre completo" className={inp} />
         </div>
 
-        <ClienteModalSection title="Contacto" open={sec.contacto} onToggle={() => toggle("contacto")}>
+        <ClienteModalSection title="Contacto" open={openSec === "contacto"} onToggle={() => toggle("contacto")}>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={lbl}>Teléfono</label>
@@ -1703,7 +1705,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
           </div>
         </ClienteModalSection>
 
-        <ClienteModalSection title="Detalles personales" open={sec.detalles} onToggle={() => toggle("detalles")}>
+        <ClienteModalSection title="Detalles personales" open={openSec === "detalles"} onToggle={() => toggle("detalles")}>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={lbl}>Talla de anillo</label>
@@ -1734,7 +1736,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
         </ClienteModalSection>
 
         {etapa === "Lead" && (
-          <ClienteModalSection title="Origen y calificación" open={sec.clasificacion} onToggle={() => toggle("clasificacion")}>
+          <ClienteModalSection title="Origen y calificación" open={openSec === "clasificacion"} onToggle={() => toggle("clasificacion")}>
             <div>
               <label className={lbl}>Origen del contacto</label>
               <input value={form.origenContacto ?? ""}
@@ -1757,7 +1759,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
         )}
 
         {(etapa === "Oferta" || etapa === "Pedido" || etapa === "Entrega") && (
-          <ClienteModalSection title="Clasificación" open={sec.clasificacion} onToggle={() => toggle("clasificacion")}>
+          <ClienteModalSection title="Clasificación" open={openSec === "clasificacion"} onToggle={() => toggle("clasificacion")}>
             <div>
               <label className={lbl}>Segmento</label>
               <DropdownPicker label="Segmento" value={form.segmento ?? ""}
