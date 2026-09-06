@@ -38,6 +38,15 @@
         ],
         "createdAt": "2026-09-05T23:40:12.889Z",
         "reason": "Texto slate-700/slate-200 sobre fondo hover slate-50/slate-800 (oscuro-sobre-claro y claro-sobre-oscuro), contraste adecuado; codigo preexistente no tocado en este cambio, mismo patron ya sancionado en SkuBuilder.tsx e InventarioEmpresaView.tsx"
+      },
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          "apps/personal/components/Empresa/Ventas/PipelineView.tsx"
+        ],
+        "createdAt": "2026-09-06T00:56:39.399Z",
+        "reason": "Violeta es el unico color de acento sancionado en todo portal-medallitadeoro; gradiente de avatar de iniciales y cifra de Total historico son codigo preexistente no tocado en mis commits recientes (confirmado con git log -p)"
       }
     ]
   }
