@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, AlertTriangle, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink, Settings2, Archive } from "lucide-react"
+import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink, Settings2, Archive } from "lucide-react"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
@@ -781,7 +781,6 @@ export function InventarioEmpresaView() {
         ))}
         {!loading && filtrados.map(it => {
           const m    = margen(it.costoProduccion, it.costo)
-          const bajo = (it.stock??0)<=2 && it.material==="producto"
           const thumb = it.imagenes?.[0]
           const isPublishing = publishing===it.documentId
           const isFeaturing  = featuring===it.documentId
@@ -799,7 +798,6 @@ export function InventarioEmpresaView() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {bajo && <AlertTriangle size={11} className="text-red-400 shrink-0"/>}
                     <p className="font-medium text-slate-100 text-sm leading-snug">{it.nombreProducto}</p>
                   </div>
                   {it.sku && (
@@ -831,7 +829,7 @@ export function InventarioEmpresaView() {
                 <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                   <button type="button" onClick={() => handleStock(it,-1)}
                     className="h-6 w-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">−</button>
-                  <span className={`w-6 text-center font-bold tabular-nums text-sm ${bajo?"text-red-400":"text-slate-200"}`}>{it.stock??0}</span>
+                  <span className="w-6 text-center font-bold tabular-nums text-sm text-slate-200">{it.stock??0}</span>
                   <button type="button" onClick={() => handleStock(it,+1)}
                     className="h-6 w-6 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">+</button>
                 </div>
@@ -893,7 +891,6 @@ export function InventarioEmpresaView() {
               ))}
               {!loading && filtrados.map(it => {
                 const m    = margen(it.costoProduccion, it.costo)
-                const bajo = (it.stock??0)<=2 && it.material==="producto"
                 const thumb = it.imagenes?.[0]
                 const isPublishing = publishing===it.documentId
                 const isFeaturing  = featuring===it.documentId
@@ -915,7 +912,6 @@ export function InventarioEmpresaView() {
                     {/* Nombre / SKU */}
                     <td className="px-3 py-3">
                       <div className="flex items-start gap-1.5">
-                        {bajo && <AlertTriangle size={11} className="text-red-400 shrink-0 mt-0.5" aria-label="Stock bajo"/>}
                         <div>
                           <p className="font-medium text-slate-200 leading-snug">{it.nombreProducto}</p>
                           {it.sku && (
@@ -965,7 +961,7 @@ export function InventarioEmpresaView() {
                       <div className="flex items-center gap-1.5">
                         <button type="button" onClick={() => handleStock(it,-1)}
                           className="h-5 w-5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">−</button>
-                        <span className={`w-6 text-center font-bold tabular-nums text-sm ${bajo?"text-red-400":"text-slate-200"}`}>{it.stock??0}</span>
+                        <span className="w-6 text-center font-bold tabular-nums text-sm text-slate-200">{it.stock??0}</span>
                         <button type="button" onClick={() => handleStock(it,+1)}
                           className="h-5 w-5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">+</button>
                       </div>
