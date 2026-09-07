@@ -480,6 +480,23 @@ export function InventarioEmpresaView() {
     setLoteOrigenId(loteId)
     setForm(f => calcularCostoConPrecio(f, precioVigente(f.materialInsumo, loteId)))
   }
+
+  // El "Material" de Atributos (para el SKU) y el "material real" de Compras
+  // (para el costeo) son el mismo metal, así que ya no se eligen por
+  // separado — antes eran dos selectores idénticos en apariencia que se
+  // podían dejar apuntando a metales distintos sin darse cuenta.
+  function normalizarNombreMaterial(s: string) { return s.toLowerCase().replace(/\s+/g, "") }
+  function elegirMaterialProducto(mat: MaterialProducto | "") {
+    const matched = materiales.find(m => normalizarNombreMaterial(m.nombre) === normalizarNombreMaterial(mat))
+    const materialInsumoId = matched?.documentId ?? ""
+    fetchLotesForMaterial(materialInsumoId)
+    setLoteOrigenId("")
+    setForm(f => {
+      const sku = skuAuto ? buildSku(f.categoriaJoya, mat, f.figura, f.talla) : f.sku
+      const merged = { ...f, materialProducto: mat, materialInsumo: materialInsumoId, sku }
+      return calcularCostoConPrecio(merged, materialInsumoId ? (matched?.precioReferenciaGramo ?? null) : null)
+    })
+  }
   const costeoAutomatico = !!(form.materialInsumo && form.pesoGramos)
 
   function handleFotosAdd(files: FileList) {
@@ -1415,7 +1432,7 @@ export function InventarioEmpresaView() {
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material</label>
                         <DropdownPicker label="Material" value={form.materialProducto}
-                          onChange={v => { const mat = v as MaterialProducto|""; setForm(f => ({...f, materialProducto: mat, sku: skuAuto ? buildSku(f.categoriaJoya, mat, f.figura, f.talla) : f.sku })) }}
+                          onChange={v => elegirMaterialProducto(v as MaterialProducto | "")}
                           placeholder="Sin material"
                           options={[{ value: "", label: "Sin material" }, ...MATERIALES.map(m => ({ value: m, label: m }))]} />
                       </div>
@@ -1432,19 +1449,19 @@ export function InventarioEmpresaView() {
                     </div>
                   </SectCollapse>
 
-                  {/* Peso / insumo */}
+                  {/* Peso / insumo — el material ya se elige una sola vez, en
+                      Atributos; aquí solo se ve a cuál quedó ligado (antes había
+                      un segundo selector de material independiente, que se podía
+                      dejar en un metal distinto al de Atributos sin darse cuenta). */}
                   <SectCollapse title="Peso e insumo (costeo automático)" open={openSection === "peso"} onToggle={() => toggleSection("peso")}>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="col-span-3 sm:col-span-1">
-                        <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Material real</label>
-                        <DropdownPicker label="Material real" value={form.materialInsumo}
-                          onChange={v => recalcularCosto({ materialInsumo: v })}
-                          placeholder="Sin especificar"
-                          options={[
-                            { value: "", label: "Sin especificar" },
-                            ...materiales.map(m => ({ value: m.documentId, label: m.nombre }))
-                          ]} />
-                      </div>
+                    {!form.materialProducto ? (
+                      <p className="text-[11px] text-slate-600">Elige el Material en Atributos para activar el costeo automático.</p>
+                    ) : !form.materialInsumo ? (
+                      <p className="text-[11px] text-amber-500">"{form.materialProducto}" no tiene un material real equivalente dado de alta en Compras → Materia Prima — el costeo no se puede calcular.</p>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 mb-2">Material: <span className="text-slate-200 font-medium">{materiales.find(m => m.documentId === form.materialInsumo)?.nombre}</span></p>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Peso (g)</label>
                         <input type="number" min="0" step="0.01" placeholder="0.00" value={form.pesoGramos}
