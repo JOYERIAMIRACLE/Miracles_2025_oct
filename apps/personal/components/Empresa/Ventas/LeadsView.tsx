@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, Phone, CheckCircle2, UserSearch, CornerDownLeft }
 import { toast } from "sonner"
 import { ClienteEmpresa, ClientePayload } from "@/types/clienteEmpresa"
 import { useClientesPipeline } from "./useClientesPipeline"
-import { ClientePanel, ClienteModal, NuevoPedidoGateModal, CanalIcon, fmtDt, numDisplay, emptyCliente } from "./PipelineView"
+import { ClientePanel, ClienteModal, CanalIcon, fmtDt, numDisplay, emptyCliente } from "./PipelineView"
 import { NuevoLeadWizard } from "./NuevoLeadWizard"
 import { ListToolbar } from "./ListToolbar"
 
@@ -15,7 +15,6 @@ export function LeadsView() {
     totalVentas,
     ventasPorCliente, cotizacionesPorCliente, actualizarVenta,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
-    pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
 
   const [wizardOpen,   setWizardOpen]   = useState(false)
@@ -129,11 +128,6 @@ export function LeadsView() {
     if (u && selectedLead?.documentId === u.documentId) setSelectedLead(u)
     return u
   }
-  const onPedidoCreado = async (v: Parameters<typeof handlePedidoCreado>[0]) => {
-    const u = await handlePedidoCreado(v)
-    if (u && selectedLead?.documentId === u.documentId) setSelectedLead(null)
-  }
-
   if (selectedLead) {
     return (
       <div className="p-4 md:p-6">
@@ -148,7 +142,7 @@ export function LeadsView() {
           onRetroceder={retroceder}
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
-          onNuevoPedido={setPedidoGateFor}
+          onNuevoPedido={() => {}}
           onVentaActualizada={actualizarVenta}
           backLabel="Volver a Leads"
         />
@@ -167,15 +161,6 @@ export function LeadsView() {
             onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
         )}
 
-        {pedidoGateFor && (
-          <NuevoPedidoGateModal
-            cliente={pedidoGateFor}
-            cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
-            totalVentas={totalVentas}
-            onClose={() => setPedidoGateFor(null)}
-            onCreated={onPedidoCreado}
-          />
-        )}
       </div>
     )
   }
@@ -344,9 +329,7 @@ export function LeadsView() {
         <NuevoLeadWizard
           clientes={clientes}
           guardarCliente={guardarCliente}
-          onCreado={c => {
-            if ((c.Funnel ?? "Lead") === "Lead") setSelectedLead(c)
-          }}
+          onCreado={(_lead, cliente) => setSelectedLead(cliente)}
           onCerrar={() => setWizardOpen(false)}
         />
       )}
@@ -356,15 +339,6 @@ export function LeadsView() {
           onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
       )}
 
-      {pedidoGateFor && (
-        <NuevoPedidoGateModal
-          cliente={pedidoGateFor}
-          cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
-          totalVentas={totalVentas}
-          onClose={() => setPedidoGateFor(null)}
-          onCreated={onPedidoCreado}
-        />
-      )}
     </div>
   )
 }

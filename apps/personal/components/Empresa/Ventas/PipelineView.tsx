@@ -90,6 +90,16 @@ export function diasSinMovimiento(c: ClienteEmpresa, etapa: FunnelEtapa): number
   if (!fecha) return null
   return Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000)
 }
+export function diasSinMovimientoLead(lead: Lead, etapa: FunnelEtapa): number | null {
+  if (etapa === "Entrega" || etapa === "Rechazada") return null
+  const CAMPO: Record<FunnelEtapa, keyof Lead> = {
+    Lead: "fechaLead", Oferta: "fechaOferta", Pedido: "fechaPedido",
+    Entrega: "fechaEntrega", Rechazada: "fechaRechazada",
+  }
+  const fecha = lead[CAMPO[etapa]] as string | null
+  if (!fecha) return null
+  return Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000)
+}
 
 // Cuántos días pasó el cliente EN una etapa ya superada (diferencia contra la
 // fecha de la siguiente etapa), o cuántos lleva ahí si es la etapa actual.
@@ -230,8 +240,8 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
-function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDelete, onSelect, onAvanzar, onCalificar, onRechazar, onRecuperar }: {
-  c: ClienteEmpresa; num: string; etapa: FunnelEtapa
+function ClienteCard({ lead, num, etapa, valor, dias, sinPedidoReal, onEdit, onDelete, onSelect, onAvanzar, onCalificar, onRechazar, onRecuperar }: {
+  lead: Lead; num: string; etapa: FunnelEtapa
   valor: number | null; dias: number | null; sinPedidoReal: boolean
   onEdit: () => void; onDelete: () => void; onSelect: () => void
   onAvanzar?: () => void; onCalificar?: () => void
@@ -265,7 +275,14 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
       </div>
 
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-snug">{c.nombre}</p>
+        <div>
+          <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+            {lead.cliente?.nombre ?? "Sin contacto"}
+          </p>
+          {lead.cliente?.nombre && lead.campanaOrigen && (
+            <p className="text-[9px] text-slate-400 dark:text-slate-600">{lead.campanaOrigen}</p>
+          )}
+        </div>
         {valor != null && (
           <span className="flex items-center gap-0.5 text-[11px] font-bold text-violet-600 dark:text-violet-400 font-mono shrink-0">
             <DollarSign size={10} />{valor.toLocaleString("es-MX")}
@@ -296,21 +313,21 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
 
       <div className="space-y-1">
         {etapa === "Lead" && <>
-          {c.canalContacto && (
+          {lead.canalContacto && (
             <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
-              <CanalIcon canal={c.canalContacto} />{c.canalContacto}
+              <CanalIcon canal={lead.canalContacto} />{lead.canalContacto}
             </span>
           )}
-          {c.origenContacto && <p className="text-[10px] text-slate-400 dark:text-slate-600">Origen: {c.origenContacto}</p>}
-          {c.telefono && <p className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
-          {c.notas && <p className="text-[10px] text-slate-500 dark:text-slate-500 line-clamp-2 italic">"{c.notas}"</p>}
+          {lead.origenContacto && <p className="text-[10px] text-slate-400 dark:text-slate-600">Origen: {lead.origenContacto}</p>}
+          {lead.cliente?.telefono && <p className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1"><Phone size={9} />{lead.cliente.telefono}</p>}
+          {lead.notas && <p className="text-[10px] text-slate-500 dark:text-slate-500 line-clamp-2 italic">"{lead.notas}"</p>}
         </>}
         {etapa !== "Lead" && <>
-          {c.notas && <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">{c.notas}</p>}
-          {c.telefono && <p className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1"><Phone size={9} />{c.telefono}</p>}
+          {lead.notas && <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">{lead.notas}</p>}
+          {lead.cliente?.telefono && <p className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1"><Phone size={9} />{lead.cliente.telefono}</p>}
         </>}
-        {(c[meta.fechaKey] as string | null) && (
-          <p className="text-[9px] text-slate-300 dark:text-slate-700">{fmtDt(c[meta.fechaKey] as string)}</p>
+        {(lead[{ Lead: "fechaLead", Oferta: "fechaOferta", Pedido: "fechaPedido", Entrega: "fechaEntrega", Rechazada: "fechaRechazada" }[etapa] as keyof Lead] as string | null) && (
+          <p className="text-[9px] text-slate-300 dark:text-slate-700">{fmtDt(lead[{ Lead: "fechaLead", Oferta: "fechaOferta", Pedido: "fechaPedido", Entrega: "fechaEntrega", Rechazada: "fechaRechazada" }[etapa] as keyof Lead] as string)}</p>
         )}
       </div>
 
@@ -319,12 +336,12 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
         <button type="button"
           onClick={e => { e.stopPropagation(); onCalificar?.() }} onPointerDown={e => e.stopPropagation()}
           className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
-            c.calificado
+            lead.calificado
               ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30 hover:bg-violet-100 dark:hover:bg-violet-500/20"
               : "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
           }`}>
-          <CheckCircle2 size={11} className={c.calificado ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-600"} />
-          {c.calificado ? "Calificado" : "Calificar"}
+          <CheckCircle2 size={11} className={lead.calificado ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-600"} />
+          {lead.calificado ? "Calificado" : "Calificar"}
         </button>
       )}
 
@@ -362,7 +379,7 @@ function ClienteCard({ c, num, etapa, valor, dias, sinPedidoReal, onEdit, onDele
 // La distancia mínima de activación (ver useSensor en el tablero) evita que
 // un clic normal se interprete como arrastre.
 function DraggableClienteCard(props: Parameters<typeof ClienteCard>[0]) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: props.c.documentId })
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: props.lead.documentId })
   const style = transform
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 10, opacity: isDragging ? 0.6 : 1 }
     : undefined
@@ -1951,11 +1968,12 @@ export function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
 
 export function PipelineView() {
   const {
-    clientes, loading,
+    clientes, leads, loading,
     totalVentas,
     ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
     actualizarVenta, actualizarCotizacion,
-    avanzar, avanzarA, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
+    avanzarLead, rechazarLead, recuperarLead, toggleCalificadoLead, borrarLead, agregarLead,
+    guardarCliente, borrarCliente,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
 
@@ -1972,19 +1990,21 @@ export function PipelineView() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const porFunnel = useMemo(() => {
-    const map = new Map<FunnelEtapa, ClienteEmpresa[]>()
+    const map = new Map<FunnelEtapa, Lead[]>()
     FUNNEL_ALL.forEach(e => map.set(e, []))
-    clientes
+    leads
       .slice()
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-      .forEach(c => map.get(c.Funnel ?? "Lead")?.push(c))
+      .forEach(l => map.get(l.Funnel ?? "Lead")?.push(l))
     return map
-  }, [clientes])
+  }, [leads])
 
   const numMap = useMemo(() => {
     const m = new Map<string, string>()
     FUNNEL_ALL.forEach(etapa => {
-      porFunnel.get(etapa)?.forEach((c, i) => m.set(c.documentId, numDisplay(etapa, i)))
+      porFunnel.get(etapa)?.forEach((l, i) => {
+        m.set(l.documentId, l.numero ?? numDisplay(etapa, i))
+      })
     })
     return m
   }, [porFunnel])
@@ -2016,53 +2036,34 @@ export function PipelineView() {
     } catch { toast.error("Error al guardar") } finally { setGuardando(false) }
   }
 
-  const handleAvanzar = async (c: ClienteEmpresa) => {
-    const u = await avanzar(c)
-    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
-  }
-  const handleRechazar = async (c: ClienteEmpresa) => {
-    const u = await rechazar(c)
-    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
-    return u
-  }
-  const handleRecuperar = async (c: ClienteEmpresa) => {
-    const u = await recuperar(c)
-    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
-    return u
-  }
-  const handleCalificar = async (c: ClienteEmpresa) => {
-    const u = await toggleCalificado(c)
-    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
-  }
-  const handleBorrar = async (c: ClienteEmpresa) => {
-    const ok = await borrar(c)
-    if (ok && selectedCliente?.documentId === c.documentId) setSelectedCliente(null)
-  }
-  const onPedidoCreado = async (v: VentaEmpresa) => {
-    const u = await handlePedidoCreado(v)
-    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
-  }
+  const handleAvanzar = (lead: Lead) => avanzarLead(lead)
+  const handleRechazar = (lead: Lead) => rechazarLead(lead)
+  const handleRecuperar = (lead: Lead) => recuperarLead(lead)
+  const handleCalificar = (lead: Lead) => toggleCalificadoLead(lead)
+  const handleBorrar = (lead: Lead) => borrarLead(lead)
+  const onPedidoCreado = (v: VentaEmpresa) => handlePedidoCreado(v)
 
-  // Al abrir una tarjeta, se va directo a lo que representa esa etapa —
-  // Oferta abre su cotización real, Pedido/Entrega abren su pedido real; si
-  // todavía no hay nada conectado, cae a la ficha completa del contacto.
-  const abrirTarjeta = (c: ClienteEmpresa) => {
-    const etapa = c.Funnel ?? "Lead"
-    if (etapa === "Oferta") {
+  // Abrir una tarjeta de Lead: resuelve el ClienteEmpresa asociado y abre
+  // la vista de Oferta/Pedido si ya hay una, o la ficha del cliente.
+  const abrirTarjeta = (lead: Lead) => {
+    const clienteId = lead.cliente?.documentId
+    const c = clienteId ? clientes.find(x => x.documentId === clienteId) ?? null : null
+    const etapa = lead.Funnel ?? "Lead"
+    if (c && etapa === "Oferta") {
       const cots = (cotizacionesPorCliente.get(c.documentId) ?? [])
         .slice()
         .sort((a, b) => new Date(b.fecha ?? b.createdAt).getTime() - new Date(a.fecha ?? a.createdAt).getTime())
       const activa = cots.find(ct => ct.estado !== "Rechazada") ?? cots[0]
       if (activa) { setCotizacionAbierta({ cliente: c, cotizacion: activa }); return }
     }
-    if (etapa === "Pedido" || etapa === "Entrega") {
+    if (c && (etapa === "Pedido" || etapa === "Entrega")) {
       const ventas = (ventasPorCliente.get(c.documentId) ?? [])
         .filter(v => v.estado !== "Cancelado")
         .slice()
         .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
       if (ventas[0]) { setPedidoAbiertoBoard(ventas[0]); return }
     }
-    setSelectedCliente(c)
+    if (c) setSelectedCliente(c)
   }
 
   // Arrastrar una tarjeta reusa exactamente las mismas funciones que ya usan
@@ -2073,28 +2074,28 @@ export function PipelineView() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over) return
-    const cliente = clientes.find(c => c.documentId === active.id)
-    if (!cliente) return
-    const etapaOrigen  = cliente.Funnel ?? "Lead"
+    const lead = leads.find(l => l.documentId === active.id)
+    if (!lead) return
+    const etapaOrigen  = lead.Funnel ?? "Lead"
     const etapaDestino = over.id as FunnelEtapa
     if (etapaOrigen === etapaDestino) return
 
-    if (etapaDestino === "Rechazada") { handleRechazar(cliente); return }
+    if (etapaDestino === "Rechazada") { handleRechazar(lead); return }
     if (etapaOrigen === "Rechazada") {
-      if (etapaDestino === "Lead") handleRecuperar(cliente)
+      if (etapaDestino === "Lead") handleRecuperar(lead)
       else toast.error("Primero recupérala a Lead antes de moverla a otra etapa")
       return
     }
 
     const idxOrigen  = FUNNEL_ETAPAS.indexOf(etapaOrigen)
     const idxDestino = FUNNEL_ETAPAS.indexOf(etapaDestino)
-    if (idxDestino === idxOrigen + 1) { handleAvanzar(cliente); return }
-    if (idxDestino === idxOrigen - 1) { retroceder(cliente); return }
+    if (idxDestino === idxOrigen + 1) { handleAvanzar(lead); return }
+    if (idxDestino === idxOrigen - 1) { avanzarLead(lead, etapaDestino); return }
     toast.error("Solo puedes mover una etapa a la vez")
   }
 
-  const leadsCalificados = clientes.filter(c => c.Funnel === "Lead" && c.calificado).length
-  const rechazados       = clientes.filter(c => c.Funnel === "Rechazada").length
+  const leadsCalificados = leads.filter(l => l.Funnel === "Lead" && l.calificado).length
+  const rechazados       = leads.filter(l => l.Funnel === "Rechazada").length
 
   if (selectedCliente) {
     return (
@@ -2106,11 +2107,12 @@ export function PipelineView() {
           onClose={() => setSelectedCliente(null)}
           onUpdate={setSelectedCliente}
           onEdit={() => { abrirEditar(selectedCliente); setSelectedCliente(null) }}
-          onAvanzar={handleAvanzar}
-          onRetroceder={retroceder}
-          onRechazar={handleRechazar}
-          onRecuperar={handleRecuperar}
-          onNuevoPedido={setPedidoGateFor}
+          onAvanzar={() => {}}
+          onRetroceder={async () => null}
+          onRechazar={async () => null}
+          onRecuperar={async () => null}
+          onNuevoPedido={() => {}}
+          mostrarAccionesEtapa={false}
           onVentaActualizada={actualizarVenta}
           backLabel="Volver al Pipeline"
         />
@@ -2120,15 +2122,19 @@ export function PipelineView() {
             onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
         )}
 
-        {pedidoGateFor && (
-          <NuevoPedidoGateModal
-            cliente={pedidoGateFor}
-            cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
-            totalVentas={totalVentas}
-            onClose={() => setPedidoGateFor(null)}
-            onCreated={onPedidoCreado}
-          />
-        )}
+        {pedidoGateFor && (() => {
+          const clienteEmpresa = clientes.find(c => c.documentId === pedidoGateFor.cliente?.documentId)
+          if (!clienteEmpresa) return null
+          return (
+            <NuevoPedidoGateModal
+              cliente={clienteEmpresa}
+              cotizacionesAceptadas={(cotizacionesPorCliente.get(clienteEmpresa.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+              totalVentas={totalVentas}
+              onClose={() => setPedidoGateFor(null)}
+              onCreated={onPedidoCreado}
+            />
+          )
+        })()}
       </div>
     )
   }
@@ -2139,9 +2145,9 @@ export function PipelineView() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Pipeline de ventas</h1>
           <p className="text-sm text-slate-500 dark:text-slate-500">
-            {clientes.filter(c => c.Funnel !== "Entrega" && c.Funnel !== "Rechazada").length} en proceso ·{" "}
+            {leads.filter(l => l.Funnel !== "Entrega" && l.Funnel !== "Rechazada").length} en proceso ·{" "}
             {leadsCalificados} calificados ·{" "}
-            {clientes.filter(c => c.Funnel === "Entrega").length} entregas ·{" "}
+            {leads.filter(l => l.Funnel === "Entrega").length} entregas ·{" "}
             <span className="text-red-600">{rechazados} rechazadas</span>
           </p>
         </div>
@@ -2159,7 +2165,7 @@ export function PipelineView() {
           <div className="flex gap-3 min-w-[1100px]">
             {FUNNEL_ALL.map(etapa => {
               const items = porFunnel.get(etapa) ?? []
-              const calificadosEnCol = etapa === "Lead" ? items.filter(c => c.calificado).length : null
+              const calificadosEnCol = etapa === "Lead" ? items.filter(l => l.calificado).length : null
               const esRechazada = etapa === "Rechazada"
               return (
                 <div key={etapa} className={`flex flex-col gap-2 ${esRechazada ? "min-w-[180px] w-[180px]" : "flex-1 min-w-[190px]"}`}>
@@ -2179,21 +2185,29 @@ export function PipelineView() {
                   </div>
 
                   <DroppableColumn etapa={etapa}>
-                    {items.map((c, i) => (
-                      <DraggableClienteCard key={c.documentId} c={c}
-                        num={numDisplay(etapa, i)} etapa={etapa}
-                        valor={valorPorCliente.get(c.documentId) ?? null}
-                        dias={diasSinMovimiento(c, etapa)}
-                        sinPedidoReal={(etapa === "Pedido" || etapa === "Entrega") && (ventasActivasPorCliente.get(c.documentId)?.length ?? 0) === 0}
-                        onEdit={() => abrirEditar(c)}
-                        onDelete={() => handleBorrar(c)}
-                        onSelect={() => abrirTarjeta(c)}
-                        onAvanzar={!esRechazada && etapa !== "Entrega" ? () => handleAvanzar(c) : undefined}
-                        onCalificar={etapa === "Lead" ? () => handleCalificar(c) : undefined}
-                        onRechazar={!esRechazada && etapa !== "Entrega" ? () => handleRechazar(c) : undefined}
-                        onRecuperar={esRechazada ? () => handleRecuperar(c) : undefined}
-                      />
-                    ))}
+                    {items.map((lead) => {
+                      const clienteId = lead.cliente?.documentId
+                      return (
+                        <DraggableClienteCard key={lead.documentId} lead={lead}
+                          num={numMap.get(lead.documentId) ?? lead.numero ?? "—"} etapa={etapa}
+                          valor={clienteId ? valorPorCliente.get(clienteId) ?? null : null}
+                          dias={diasSinMovimientoLead(lead, etapa)}
+                          sinPedidoReal={(etapa === "Pedido" || etapa === "Entrega") && clienteId
+                            ? (ventasActivasPorCliente.get(clienteId)?.length ?? 0) === 0
+                            : false}
+                          onEdit={() => {
+                            const c = clienteId ? clientes.find(x => x.documentId === clienteId) : undefined
+                            if (c) abrirEditar(c)
+                          }}
+                          onDelete={() => handleBorrar(lead)}
+                          onSelect={() => abrirTarjeta(lead)}
+                          onAvanzar={!esRechazada && etapa !== "Entrega" ? () => handleAvanzar(lead) : undefined}
+                          onCalificar={etapa === "Lead" ? () => handleCalificar(lead) : undefined}
+                          onRechazar={!esRechazada && etapa !== "Entrega" ? () => handleRechazar(lead) : undefined}
+                          onRecuperar={esRechazada ? () => handleRecuperar(lead) : undefined}
+                        />
+                      )
+                    })}
                   </DroppableColumn>
 
                   {/* Lead → wizard con búsqueda; Oferta → elegir cliente + nueva cotización */}
@@ -2216,7 +2230,10 @@ export function PipelineView() {
         <NuevoLeadWizard
           clientes={clientes}
           guardarCliente={guardarCliente}
-          onCreado={(_lead, cliente) => setSelectedCliente(cliente)}
+          onCreado={(lead, cliente) => {
+            agregarLead(lead)
+            if (cliente) setSelectedCliente(cliente)
+          }}
           onCerrar={() => setWizardOpen(false)}
         />
       )}
@@ -2226,15 +2243,19 @@ export function PipelineView() {
           onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
       )}
 
-      {pedidoGateFor && (
-        <NuevoPedidoGateModal
-          cliente={pedidoGateFor}
-          cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
-          totalVentas={totalVentas}
-          onClose={() => setPedidoGateFor(null)}
-          onCreated={onPedidoCreado}
-        />
-      )}
+      {pedidoGateFor && (() => {
+        const clienteEmpresa = clientes.find(c => c.documentId === pedidoGateFor.cliente?.documentId)
+        if (!clienteEmpresa) return null
+        return (
+          <NuevoPedidoGateModal
+            cliente={clienteEmpresa}
+            cotizacionesAceptadas={(cotizacionesPorCliente.get(clienteEmpresa.documentId) ?? []).filter(c => c.estado === "Aceptada")}
+            totalVentas={totalVentas}
+            onClose={() => setPedidoGateFor(null)}
+            onCreated={onPedidoCreado}
+          />
+        )
+      })()}
 
       {cotizacionAbierta && (
         <CotizacionModal
@@ -2260,12 +2281,8 @@ export function PipelineView() {
           cotizacion={null}
           totalCotizaciones={cotizacionesPorCliente.get(creandoCotPara.documentId)?.length ?? 0}
           onClose={() => setCreandoCotPara(null)}
-          onSaved={async saved => {
+          onSaved={saved => {
             actualizarCotizacion(saved)
-            // Si el cliente todavía está en Lead (o antes de Oferta), avanzarlo
-            const ofertaIdx = FUNNEL_ETAPAS.indexOf("Oferta")
-            const clienteIdx = FUNNEL_ETAPAS.indexOf(creandoCotPara.Funnel ?? "Lead")
-            if (clienteIdx < ofertaIdx) await avanzarA(creandoCotPara, "Oferta")
             setCreandoCotPara(null)
           }}
         />

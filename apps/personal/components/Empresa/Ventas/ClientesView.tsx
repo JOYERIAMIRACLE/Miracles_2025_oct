@@ -8,7 +8,7 @@ import {
   FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa,
 } from "@/types/clienteEmpresa"
 import { useClientesPipeline } from "./useClientesPipeline"
-import { ClientePanel, ClienteModal, NuevoPedidoGateModal, numDisplay, emptyCliente, fmtMoney } from "./PipelineView"
+import { ClientePanel, ClienteModal, numDisplay, emptyCliente, fmtMoney } from "./PipelineView"
 import { ListToolbar } from "./ListToolbar"
 
 export function ClientesView() {
@@ -17,7 +17,6 @@ export function ClientesView() {
     totalVentas,
     ventasPorCliente, cotizacionesPorCliente, valorPorCliente, actualizarVenta,
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
-    pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
 
   const [modalOpen,       setModalOpen]       = useState(false)
@@ -116,11 +115,6 @@ export function ClientesView() {
     if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
     return u
   }
-  const onPedidoCreado = async (v: Parameters<typeof handlePedidoCreado>[0]) => {
-    const u = await handlePedidoCreado(v)
-    if (u && selectedCliente?.documentId === u.documentId) setSelectedCliente(u)
-  }
-
   if (selectedCliente) {
     return (
       <div className="p-4 md:p-6">
@@ -135,7 +129,7 @@ export function ClientesView() {
           onRetroceder={retroceder}
           onRechazar={handleRechazar}
           onRecuperar={handleRecuperar}
-          onNuevoPedido={setPedidoGateFor}
+          onNuevoPedido={() => {}}
           onVentaActualizada={actualizarVenta}
           backLabel="Volver a Contactos"
           mostrarAccionesEtapa={false}
@@ -146,15 +140,6 @@ export function ClientesView() {
             onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
         )}
 
-        {pedidoGateFor && (
-          <NuevoPedidoGateModal
-            cliente={pedidoGateFor}
-            cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
-            totalVentas={totalVentas}
-            onClose={() => setPedidoGateFor(null)}
-            onCreated={onPedidoCreado}
-          />
-        )}
       </div>
     )
   }
@@ -300,15 +285,6 @@ export function ClientesView() {
           onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
       )}
 
-      {pedidoGateFor && (
-        <NuevoPedidoGateModal
-          cliente={pedidoGateFor}
-          cotizacionesAceptadas={(cotizacionesPorCliente.get(pedidoGateFor.documentId) ?? []).filter(c => c.estado === "Aceptada")}
-          totalVentas={totalVentas}
-          onClose={() => setPedidoGateFor(null)}
-          onCreated={onPedidoCreado}
-        />
-      )}
     </div>
   )
 }
