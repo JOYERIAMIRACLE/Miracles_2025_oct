@@ -175,8 +175,14 @@ export function useClientesPipeline() {
 
   // Igual, pero para una cotización puntual (ej. editada desde su tarjeta
   // en el Pipeline sin pasar por la lista global de Cotizaciones).
+  // Upsert: si no existe en la lista (cotización nueva), la agrega al inicio.
   const actualizarCotizacion = (updated: Cotizacion) => {
-    setTodasCotizaciones(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
+    setTodasCotizaciones(prev => {
+      const existe = prev.some(c => c.documentId === updated.documentId)
+      return existe
+        ? prev.map(c => c.documentId === updated.documentId ? updated : c)
+        : [updated, ...prev]
+    })
   }
 
   // La confirmación vive en quien llama (misma fila/tarjeta que el usuario
