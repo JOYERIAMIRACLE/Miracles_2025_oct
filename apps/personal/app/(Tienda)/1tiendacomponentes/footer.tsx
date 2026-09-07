@@ -9,6 +9,7 @@ const enlacesTienda = [
     { name: "Catálogo", href: "/tienda" },
     { name: "Blog", href: "/blog" },
     { name: "Nosotros", href: "/nosotros" },
+    { name: "Contacto", href: "/contacto" },
 ]
 const enlacesLegal = [
     { name: "Términos y condiciones", href: "/terminos" },
