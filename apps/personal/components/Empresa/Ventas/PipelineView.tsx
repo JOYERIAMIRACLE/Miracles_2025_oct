@@ -1973,6 +1973,7 @@ export function PipelineView() {
     ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
     actualizarVenta, actualizarCotizacion,
     avanzarLead, rechazarLead, recuperarLead, toggleCalificadoLead, borrarLead, agregarLead,
+    ofertaGateFor, setOfertaGateFor,
     guardarCliente, borrarCliente,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
@@ -2135,6 +2136,24 @@ export function PipelineView() {
             />
           )
         })()}
+
+        {ofertaGateFor && (() => {
+          const clienteEmpresa = clientes.find(c => c.documentId === ofertaGateFor.cliente?.documentId)
+          if (!clienteEmpresa) return null
+          return (
+            <CotizacionModal
+              cliente={clienteEmpresa}
+              cotizacion={null}
+              totalCotizaciones={cotizacionesPorCliente.get(clienteEmpresa.documentId)?.length ?? 0}
+              onClose={() => setOfertaGateFor(null)}
+              onSaved={async saved => {
+                actualizarCotizacion(saved)
+                await avanzarLead(ofertaGateFor, "Oferta")
+                setOfertaGateFor(null)
+              }}
+            />
+          )
+        })()}
       </div>
     )
   }
@@ -2253,6 +2272,24 @@ export function PipelineView() {
             totalVentas={totalVentas}
             onClose={() => setPedidoGateFor(null)}
             onCreated={onPedidoCreado}
+          />
+        )
+      })()}
+
+      {ofertaGateFor && (() => {
+        const clienteEmpresa = clientes.find(c => c.documentId === ofertaGateFor.cliente?.documentId)
+        if (!clienteEmpresa) return null
+        return (
+          <CotizacionModal
+            cliente={clienteEmpresa}
+            cotizacion={null}
+            totalCotizaciones={cotizacionesPorCliente.get(clienteEmpresa.documentId)?.length ?? 0}
+            onClose={() => setOfertaGateFor(null)}
+            onSaved={async saved => {
+              actualizarCotizacion(saved)
+              await avanzarLead(ofertaGateFor, "Oferta")
+              setOfertaGateFor(null)
+            }}
           />
         )
       })()}

@@ -30,7 +30,8 @@ export function useClientesPipeline() {
   const { leads, setLeads, loading: leadsLoading } = useGetLeads()
   const { ventas: todasVentas, setVentas: setTodasVentas } = useGetVentas()
   const { cotizaciones: todasCotizaciones, setCotizaciones: setTodasCotizaciones } = useGetAllCotizaciones()
-  const [pedidoGateFor, setPedidoGateFor] = useState<Lead | null>(null)
+  const [pedidoGateFor,  setPedidoGateFor]  = useState<Lead | null>(null)
+  const [ofertaGateFor,  setOfertaGateFor]  = useState<Lead | null>(null)
 
   const ventasPorCliente = useMemo(() => {
     const m = new Map<string, VentaEmpresa[]>()
@@ -81,6 +82,14 @@ export function useClientesPipeline() {
     const fechaField = FECHA_FIELD_LEAD[etapa]
     const extra = !(lead[fechaField] as string | null) ? { [fechaField]: new Date().toISOString() } : {}
 
+    if (etapa === "Oferta") {
+      const clienteId = lead.cliente?.documentId
+      const cots = clienteId ? (cotizacionesPorCliente.get(clienteId) ?? []) : []
+      if (cots.length === 0) {
+        setOfertaGateFor(lead)
+        return null
+      }
+    }
     if (etapa === "Pedido") {
       const clienteId = lead.cliente?.documentId
       if (clienteId && (ventasActivasPorCliente.get(clienteId)?.length ?? 0) === 0) {
@@ -257,6 +266,7 @@ export function useClientesPipeline() {
     actualizarVenta, actualizarCotizacion,
     // Lead operations (pipeline board)
     avanzarLead, rechazarLead, recuperarLead, toggleCalificadoLead, borrarLead, agregarLead,
+    ofertaGateFor, setOfertaGateFor,
     // ClienteEmpresa operations (contact directory / legacy views)
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, borrar,
     guardarCliente, borrarCliente,
