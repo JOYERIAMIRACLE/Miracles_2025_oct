@@ -39,11 +39,12 @@ export function ClientesView() {
   const clientesFiltrados = useMemo(() => {
     const base = filtroEtapa === "todos" ? todos : todos.filter(c => (c.Funnel ?? "Lead") === filtroEtapa)
     if (!search.trim()) return base
-    const q = search.toLowerCase()
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    const q = norm(search)
     return base.filter(c =>
-      c.nombre.toLowerCase().includes(q) ||
+      norm(c.nombre).includes(q) ||
       (c.telefono ?? "").includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q)
+      norm(c.email ?? "").includes(q)
     )
   }, [todos, filtroEtapa, search])
 
