@@ -18,7 +18,7 @@ import {
   ESTADOS_VENTA, EstadoVenta, ESTADO_VENTA_COLOR,
   METODOS_PAGO, MetodoPago,
 } from "@/types/ventaEmpresa"
-import { Cotizacion } from "@/types/cotizacion"
+import { Cotizacion, DireccionEnvio } from "@/types/cotizacion"
 import { ProductType } from "@/types/product"
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
@@ -53,6 +53,10 @@ function calcularFaltantesLineas(lineas: LineaForm[], productos: ProductType[]) 
     if (cantidad > disponible) faltantes.push({ nombre: producto.nombreProducto, pedido: cantidad, disponible })
   }
   return faltantes
+}
+
+function emptyDireccion(): DireccionEnvio {
+  return { calle: "", colonia: "", ciudad: "", estado: "", cp: "", referencias: "" }
 }
 
 function emptyForm(): VentaPayload {
@@ -103,6 +107,8 @@ export function PedidosView() {
   const cotRef = useRef<HTMLDivElement>(null)
   const [comprobante,    setComprobante]    = useState<File | null>(null)
   const comprobanteRef = useRef<HTMLInputElement>(null)
+  const [direccion,      setDireccion]      = useState<DireccionEnvio>(emptyDireccion())
+  const [showDirec,      setShowDirec]      = useState(false)
 
   useEffect(() => {
     function handler(e: MouseEvent) { if (cotRef.current && !cotRef.current.contains(e.target as Node)) setCotOpen(false) }
@@ -219,6 +225,8 @@ export function PedidosView() {
     setMontoAuto(true)
     setCotizacionOrigen(null)
     setComprobante(null)
+    setDireccion(emptyDireccion())
+    setShowDirec(false)
     setModalOpen(true)
   }
 
@@ -247,6 +255,9 @@ export function PedidosView() {
     setMontoAuto(false)
     setCotizacionOrigen(null)
     setComprobante(null)
+    const dir = v.direccionEnvio ?? emptyDireccion()
+    setDireccion(dir)
+    setShowDirec(!!v.direccionEnvio?.calle)
     setModalOpen(true)
   }
 
@@ -316,6 +327,9 @@ export function PedidosView() {
       }
     }
 
+    const tieneDir = direccion.calle.trim() || direccion.ciudad.trim()
+    const direccionPayload = tieneDir ? direccion : null
+
     setSaving(true)
     try {
       const comprobanteId = comprobante ? (await uploadMedia(comprobante)).id : undefined
@@ -334,7 +348,9 @@ export function PedidosView() {
           }
         }
         const updated = await updateVenta(editing.documentId, {
-          ...form, ...(comprobanteId !== undefined ? { comprobantePago: comprobanteId } : {}),
+          ...form,
+          direccionEnvio: direccionPayload,
+          ...(comprobanteId !== undefined ? { comprobantePago: comprobanteId } : {}),
         })
         setVentas(prev => prev.map(v => v.documentId === updated.documentId ? updated : v))
         toast.success("Pedido actualizado")
@@ -343,7 +359,7 @@ export function PedidosView() {
         // antes de aplicar el estado real elegido — evita descontar stock con
         // líneas que todavía no existen.
         const estadoFinal = form.estado ?? "Cotizado"
-        const creada = await createVenta({ ...form, numero: `PED-${String(raw.length + 1).padStart(3, "0")}`, estado: "Cotizado" })
+        const creada = await createVenta({ ...form, direccionEnvio: direccionPayload, numero: `PED-${String(raw.length + 1).padStart(3, "0")}`, estado: "Cotizado" })
         for (const l of lineasValidas) {
           await createVentaLinea({
             venta: creada.documentId, producto: l.productoId || null,
@@ -806,6 +822,36 @@ export function PedidosView() {
                     {comprobante ? comprobante.name : editing?.comprobantePago ? `Ya adjunto: ${editing.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
                   </span>
                 </button>
+              </div>
+
+              {/* Dirección de envío */}
+              <div>
+                <button type="button" onClick={() => setShowDirec(v => !v)}
+                  className="flex items-center gap-1.5 w-full text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                  <span>Dirección de envío (opcional)</span>
+                  {direccion.calle.trim() && (
+                    <span className="px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 text-[9px] font-bold">Con dirección</span>
+                  )}
+                  <span className="ml-auto text-slate-400 dark:text-slate-600">{showDirec ? "▲" : "▼"}</span>
+                </button>
+                {showDirec && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      ["calle",       "Calle y número",    "col-span-2"],
+                      ["colonia",     "Colonia",            ""],
+                      ["ciudad",      "Ciudad",             ""],
+                      ["estado",      "Estado",             ""],
+                      ["cp",          "C.P.",               ""],
+                      ["referencias", "Referencias",        "col-span-2"],
+                    ] as [keyof DireccionEnvio, string, string][]).map(([key, label, extra]) => (
+                      <div key={key} className={extra}>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-600 mb-0.5">{label}</p>
+                        <input value={direccion[key]} onChange={e => setDireccion(d => ({ ...d, [key]: e.target.value }))}
+                          placeholder={label} className={inp} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>

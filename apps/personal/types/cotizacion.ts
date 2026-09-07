@@ -1,5 +1,14 @@
 export type EstadoCotizacion = "Borrador" | "Enviada" | "Aceptada" | "Rechazada" | "Convertida"
 
+export type DireccionEnvio = {
+  calle:       string
+  colonia:     string
+  ciudad:      string
+  estado:      string
+  cp:          string
+  referencias: string
+}
+
 export const ESTADOS_COT: EstadoCotizacion[] = ["Borrador", "Enviada", "Aceptada", "Rechazada", "Convertida"]
 
 // Un solo acento (violeta), sin colores decorativos por estado — el rojo
@@ -36,6 +45,7 @@ export type Cotizacion = {
   createdAt:   string
   cliente?:    { documentId: string; nombre: string; telefono: string | null; email: string | null } | null
   ventaGenerada?: { id: number; documentId: string; numero: string | null; concepto: string; estado: string } | null
+  direccionEnvio?: DireccionEnvio | null
 }
 
 export type CotizacionPayload = {
@@ -49,4 +59,5 @@ export type CotizacionPayload = {
   fecha?:       string | null
   validoHasta?: string | null
   ventaGenerada?: { connect: [{ id: number }] } | null
+  direccionEnvio?: DireccionEnvio | null
 }

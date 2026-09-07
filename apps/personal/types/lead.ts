@@ -1,5 +1,7 @@
 import { FunnelEtapa, SegmentoCliente } from "./clienteEmpresa"
 
+export type OrigenApp = "manual" | "tienda"
+
 export interface Lead {
   id:              number
   documentId:      string
@@ -17,6 +19,7 @@ export interface Lead {
   fechaEntrega:    string | null
   fechaRechazada:  string | null
   fechaCalificado: string | null
+  origenApp:       OrigenApp | null
   createdAt:       string
   cliente: {
     documentId: string
@@ -41,6 +44,7 @@ export interface LeadPayload {
   fechaEntrega?:   string | null
   fechaRechazada?: string | null
   fechaCalificado?:string | null
+  origenApp?:       OrigenApp | null
 }
 
 export const LEAD_COLOR: Record<FunnelEtapa, string> = {

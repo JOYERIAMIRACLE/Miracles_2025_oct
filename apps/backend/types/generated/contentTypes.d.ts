@@ -1033,6 +1033,7 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
     Funnel: Schema.Attribute.Enumeration<
       ['Lead', 'Oferta', 'Pedido', 'Entrega', 'Rechazada']
     >;
+    leads: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1157,6 +1158,7 @@ export interface ApiCotizacionCotizacion extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    direccionEnvio: Schema.Attribute.JSON;
     estado: Schema.Attribute.Enumeration<
       ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Convertida']
     > &
@@ -1701,6 +1703,52 @@ export interface ApiItemCompraItemCompra extends Struct.CollectionTypeSchema {
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     unidad: Schema.Attribute.String & Schema.Attribute.DefaultTo<'pz'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiLeadLead extends Struct.CollectionTypeSchema {
+  collectionName: 'leads';
+  info: {
+    displayName: 'Lead';
+    pluralName: 'leads';
+    singularName: 'lead';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    calificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    campanaOrigen: Schema.Attribute.String;
+    canalContacto: Schema.Attribute.String;
+    cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fechaCalificado: Schema.Attribute.DateTime;
+    fechaEntrega: Schema.Attribute.DateTime;
+    fechaLead: Schema.Attribute.DateTime;
+    fechaOferta: Schema.Attribute.DateTime;
+    fechaPedido: Schema.Attribute.DateTime;
+    fechaRechazada: Schema.Attribute.DateTime;
+    Funnel: Schema.Attribute.Enumeration<
+      ['Lead', 'Oferta', 'Pedido', 'Entrega', 'Rechazada']
+    > &
+      Schema.Attribute.DefaultTo<'Lead'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'> &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    numero: Schema.Attribute.String;
+    origenApp: Schema.Attribute.Enumeration<['manual', 'tienda']> &
+      Schema.Attribute.DefaultTo<'manual'>;
+    origenContacto: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    segmento: Schema.Attribute.Enumeration<
+      ['Pareja', 'Matrimonio', 'Familiar', 'Personalizado']
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -4051,6 +4099,7 @@ declare module '@strapi/strapi' {
       'api::identidad-empresa.identidad-empresa': ApiIdentidadEmpresaIdentidadEmpresa;
       'api::ingrediente-despensa.ingrediente-despensa': ApiIngredienteDespensaIngredienteDespensa;
       'api::item-compra.item-compra': ApiItemCompraItemCompra;
+      'api::lead.lead': ApiLeadLead;
       'api::mapa-identidad.mapa-identidad': ApiMapaIdentidadMapaIdentidad;
       'api::material-digital.material-digital': ApiMaterialDigitalMaterialDigital;
       'api::material-trabajo.material-trabajo': ApiMaterialTrabajoMaterialTrabajo;

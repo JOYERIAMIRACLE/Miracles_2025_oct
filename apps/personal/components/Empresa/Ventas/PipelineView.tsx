@@ -255,9 +255,16 @@ function ClienteCard({ lead, num, etapa, valor, dias, sinPedidoReal, onEdit, onD
       onClick={onSelect}>
 
       <div className="flex items-center justify-between gap-1">
-        <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${meta.numColor}`}>
-          #{num}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${meta.numColor}`}>
+            #{num}
+          </span>
+          {lead.origenApp === "tienda" && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600">
+              Web
+            </span>
+          )}
+        </div>
         {confirmando ? (
           <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
             <span className="text-[10px] text-slate-500 dark:text-slate-500">¿Eliminar?</span>

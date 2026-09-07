@@ -50,6 +50,9 @@
       "relation": "oneToOne",
       "target": "api::venta.venta",
       "inversedBy": "cotizacionOrigen"
+    },
+    "direccionEnvio": {
+      "type": "json"
     }
   }
 }

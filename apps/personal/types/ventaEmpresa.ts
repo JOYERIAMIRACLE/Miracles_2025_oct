@@ -1,5 +1,6 @@
 import { ClienteEmpresa } from "./clienteEmpresa"
 import { VentaLinea } from "./venta-linea"
+import { DireccionEnvio } from "./cotizacion"
 
 export type EstadoVenta   = "Cotizado" | "Pagado" | "Preparando" | "Enviado" | "Entregado" | "Cancelado"
 export type MetodoPago    = "Efectivo" | "Transferencia" | "Tarjeta" | "Otro"
@@ -39,6 +40,7 @@ export type VentaEmpresa = {
   cotizacionOrigen?:    { id: number; documentId: string; numero: string | null } | null
   envios?:              { id: number; documentId: string; estado: string }[]
   comprobantePago?:     { id: number; url: string; name: string } | null
+  direccionEnvio?:      DireccionEnvio | null
 }
 
 export type VentaPayload = {
@@ -54,4 +56,5 @@ export type VentaPayload = {
   producto?:   string | null
   centro_venta?: string | null
   comprobantePago?: number | null
+  direccionEnvio?:  DireccionEnvio | null
 }

@@ -62,6 +62,11 @@
     "segmento": {
       "type": "enumeration",
       "enum": ["Pareja", "Matrimonio", "Familiar", "Personalizado"]
+    },
+    "origenApp": {
+      "type": "enumeration",
+      "enum": ["manual", "tienda"],
+      "default": "manual"
     }
   }
 }

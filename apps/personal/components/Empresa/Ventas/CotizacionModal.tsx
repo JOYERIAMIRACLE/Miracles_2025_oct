@@ -5,7 +5,7 @@ import { X, Plus, Trash2, Check, FileText, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import {
   Cotizacion, CotizacionPayload, ItemCotizacion,
-  EstadoCotizacion, ESTADO_COT_COLOR, ESTADOS_COT,
+  EstadoCotizacion, ESTADO_COT_COLOR, ESTADOS_COT, DireccionEnvio,
 } from "@/types/cotizacion"
 import { createCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { ClienteEmpresa } from "@/types/clienteEmpresa"
@@ -14,6 +14,10 @@ import { ProductType } from "@/types/product"
 import { ProductoSearch } from "./ProductoSearch"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+function emptyDireccion(): DireccionEnvio {
+  return { calle: "", colonia: "", ciudad: "", estado: "", cp: "", referencias: "" }
+}
+
 function emptyItem(): ItemCotizacion {
   return { sku: "", descripcion: "", cantidad: 1, precio: 0, subtotal: 0, productoId: null }
 }
@@ -43,6 +47,10 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
   const [notas,       setNotas]       = useState(cotizacion?.notas ?? "")
   const [validoHasta, setValidoHasta] = useState(cotizacion?.validoHasta ?? "")
   const [guardando,   setGuardando]   = useState(false)
+  const [direccion,   setDireccion]   = useState<DireccionEnvio>(
+    cotizacion?.direccionEnvio ?? emptyDireccion()
+  )
+  const [showDirec,   setShowDirec]   = useState(!!cotizacion?.direccionEnvio?.calle)
 
   const { items: productos } = useGetInventario()
 
@@ -74,6 +82,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
     setGuardando(true)
     try {
       const numero  = cotizacion?.numero ?? `COT-${String(totalCotizaciones + 1).padStart(3, "0")}`
+      const tieneDir = direccion.calle.trim() || direccion.ciudad.trim()
       const payload: CotizacionPayload = {
         numero,
         cliente:     cliente.documentId,
@@ -84,6 +93,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
         notas:  notas.trim() || null,
         fecha:  cotizacion?.fecha ?? new Date().toISOString(),
         validoHasta: validoHasta || null,
+        direccionEnvio: tieneDir ? direccion : null,
       }
       const saved = cotizacion
         ? await updateCotizacion(cotizacion.documentId, payload)
@@ -232,6 +242,36 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
               <input type="date" value={validoHasta ?? ""} onChange={e => setValidoHasta(e.target.value)}
                 className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
             </div>
+          </div>
+
+          {/* Dirección de envío */}
+          <div>
+            <button type="button" onClick={() => setShowDirec(v => !v)}
+              className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition mb-2">
+              <span>Dirección de envío</span>
+              {direccion.calle.trim() && (
+                <span className="px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 text-[9px] font-bold normal-case tracking-normal">Con dirección</span>
+              )}
+              <span className="ml-auto text-slate-400 dark:text-slate-600">{showDirec ? "▲" : "▼"}</span>
+            </button>
+            {showDirec && (
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  ["calle",       "Calle y número",    "col-span-2"],
+                  ["colonia",     "Colonia",            ""],
+                  ["ciudad",      "Ciudad",             ""],
+                  ["estado",      "Estado",             ""],
+                  ["cp",          "C.P.",               ""],
+                  ["referencias", "Referencias",        "col-span-2"],
+                ] as [keyof DireccionEnvio, string, string][]).map(([key, label, extra]) => (
+                  <div key={key} className={extra}>
+                    <p className="text-[9px] text-slate-400 dark:text-slate-600 mb-0.5">{label}</p>
+                    <input value={direccion[key]} onChange={e => setDireccion(d => ({ ...d, [key]: e.target.value }))}
+                      placeholder={label} className={inp} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
