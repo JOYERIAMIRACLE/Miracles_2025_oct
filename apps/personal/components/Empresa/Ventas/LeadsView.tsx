@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { ClienteEmpresa, ClientePayload } from "@/types/clienteEmpresa"
 import { useClientesPipeline } from "./useClientesPipeline"
 import { ClientePanel, ClienteModal, NuevoPedidoGateModal, CanalIcon, fmtDt, numDisplay, emptyCliente } from "./PipelineView"
+import { NuevoLeadWizard } from "./NuevoLeadWizard"
 import { ListToolbar } from "./ListToolbar"
 
 export function LeadsView() {
@@ -17,6 +18,7 @@ export function LeadsView() {
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
 
+  const [wizardOpen,   setWizardOpen]   = useState(false)
   const [modalOpen,    setModalOpen]    = useState(false)
   const [editando,     setEditando]     = useState<ClienteEmpresa | null>(null)
   const [form,         setForm]         = useState<ClientePayload>(emptyCliente("Lead"))
@@ -77,14 +79,16 @@ export function LeadsView() {
     calificados: clientes.filter(c => (c.Funnel ?? "Lead") === "Lead" && c.calificado).length,
   }), [clientes])
 
-  const abrirCrear  = () => { setEditando(null); setForm(emptyCliente("Lead")); setModalOpen(true) }
+  const abrirCrear  = () => setWizardOpen(true)
   const abrirEditar = (c: ClienteEmpresa) => {
     setEditando(c)
     setForm({
       nombre: c.nombre, email: c.email, telefono: c.telefono, direccion: c.direccion,
       segmento: c.segmento, Funnel: "Lead", calificado: c.calificado,
-      canalContacto: c.canalContacto, origenContacto: c.origenContacto, Estado: c.Estado, notas: c.notas,
-      tallaAnillo: c.tallaAnillo, ocasionFrecuente: c.ocasionFrecuente, estadoCivil: c.estadoCivil, redesSociales: c.redesSociales,
+      canalContacto: c.canalContacto, origenContacto: c.origenContacto, campanaOrigen: c.campanaOrigen,
+      Estado: c.Estado, notas: c.notas,
+      tallaAnillo: c.tallaAnillo, ocasionFrecuente: c.ocasionFrecuente, estadoCivil: c.estadoCivil,
+      sexo: c.sexo, fechaNacimiento: c.fechaNacimiento, redesSociales: c.redesSociales,
       fechaLead: c.fechaLead, fechaCalificado: c.fechaCalificado,
       fechaOferta: c.fechaOferta, fechaPedido: c.fechaPedido, fechaEntrega: c.fechaEntrega,
     })
@@ -148,6 +152,15 @@ export function LeadsView() {
           onVentaActualizada={actualizarVenta}
           backLabel="Volver a Leads"
         />
+
+        {wizardOpen && (
+          <NuevoLeadWizard
+            clientes={clientes}
+            guardarCliente={guardarCliente}
+            onCreado={c => { if ((c.Funnel ?? "Lead") === "Lead") setSelectedLead(c) }}
+            onCerrar={() => setWizardOpen(false)}
+          />
+        )}
 
         {modalOpen && (
           <ClienteModal editando={editando} form={form} setForm={setForm}
@@ -326,6 +339,17 @@ export function LeadsView() {
           )}
         </div>
       </div>
+
+      {wizardOpen && (
+        <NuevoLeadWizard
+          clientes={clientes}
+          guardarCliente={guardarCliente}
+          onCreado={c => {
+            if ((c.Funnel ?? "Lead") === "Lead") setSelectedLead(c)
+          }}
+          onCerrar={() => setWizardOpen(false)}
+        />
+      )}
 
       {modalOpen && (
         <ClienteModal editando={editando} form={form} setForm={setForm}

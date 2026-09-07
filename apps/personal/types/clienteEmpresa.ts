@@ -2,6 +2,7 @@ export type FunnelEtapa     = "Lead" | "Oferta" | "Pedido" | "Entrega" | "Rechaz
 export type SegmentoCliente = "Pareja" | "Matrimonio" | "Familiar" | "Personalizado"
 export type EstadoCliente   = "Activo" | "Inactivo"
 export type EstadoCivil     = "Soltero(a)" | "En una relación" | "Comprometido(a)" | "Casado(a)" | "Otro"
+export type Sexo            = "Masculino" | "Femenino" | "Otro" | "Sin especificar"
 
 // Progresión lineal (sin Rechazada — es un estado terminal lateral)
 export const FUNNEL_ETAPAS: FunnelEtapa[] = ["Lead", "Oferta", "Pedido", "Entrega"]
@@ -30,6 +31,7 @@ export const FUNNEL_COLOR: Record<FunnelEtapa, string> = {
 
 export const SEGMENTOS:      SegmentoCliente[] = ["Pareja", "Matrimonio", "Familiar", "Personalizado"]
 export const ESTADOS_CIVILES: EstadoCivil[]    = ["Soltero(a)", "En una relación", "Comprometido(a)", "Casado(a)", "Otro"]
+export const SEXOS:           Sexo[]           = ["Masculino", "Femenino", "Otro", "Sin especificar"]
 
 export type ClienteEmpresa = {
   id:               number
@@ -49,6 +51,9 @@ export type ClienteEmpresa = {
   ocasionFrecuente: string | null
   estadoCivil:      EstadoCivil | null
   redesSociales:    string | null
+  sexo:             Sexo | null
+  fechaNacimiento:  string | null
+  campanaOrigen:    string | null
   fechaLead:        string | null
   fechaCalificado:  string | null
   fechaOferta:      string | null
@@ -74,6 +79,9 @@ export type ClientePayload = {
   ocasionFrecuente?: string | null
   estadoCivil?:      EstadoCivil | null
   redesSociales?:    string | null
+  sexo?:             Sexo | null
+  fechaNacimiento?:  string | null
+  campanaOrigen?:    string | null
   fechaLead?:        string | null
   fechaCalificado?:  string | null
   fechaOferta?:      string | null

@@ -484,6 +484,43 @@ export interface ApiAnuncioAnuncio extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAvisoAviso extends Struct.CollectionTypeSchema {
+  collectionName: 'avisos';
+  info: {
+    displayName: 'Portal - Aviso';
+    pluralName: 'avisos';
+    singularName: 'aviso';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    area: Schema.Attribute.String & Schema.Attribute.Required;
+    autor: Schema.Attribute.String;
+    color: Schema.Attribute.Enumeration<
+      ['violet', 'emerald', 'blue', 'orange', 'red', 'amber']
+    > &
+      Schema.Attribute.DefaultTo<'violet'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    desc: Schema.Attribute.Text & Schema.Attribute.Required;
+    emoji: Schema.Attribute.String & Schema.Attribute.DefaultTo<'\uD83D\uDCCB'>;
+    imagen: Schema.Attribute.Media<'images'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::aviso.aviso'> &
+      Schema.Attribute.Private;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vigencia: Schema.Attribute.Date;
+  };
+}
+
 export interface ApiBlogPostBlogPost extends Struct.CollectionTypeSchema {
   collectionName: 'blog_posts';
   info: {
@@ -586,6 +623,41 @@ export interface ApiBoxscoreSemanaBoxscoreSemana
   };
 }
 
+export interface ApiCampanaMetaCampanaMeta extends Struct.SingleTypeSchema {
+  collectionName: 'campana_meta';
+  info: {
+    displayName: 'Campa\u00F1a Meta 110';
+    pluralName: 'campana-metas';
+    singularName: 'campana-meta';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    avance: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<82687>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    etiqueta: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'\u00A1Jugemos al 110!'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::campana-meta.campana-meta'
+    > &
+      Schema.Attribute.Private;
+    meta: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<110000>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCampanaCampana extends Struct.CollectionTypeSchema {
   collectionName: 'campanas';
   info: {
@@ -605,6 +677,8 @@ export interface ApiCampanaCampana extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    etapas: Schema.Attribute.String;
+    keyword: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -628,8 +702,10 @@ export interface ApiCampanaCampana extends Struct.CollectionTypeSchema {
       ]
     > &
       Schema.Attribute.Required;
+    multimedia: Schema.Attribute.Media<'images' | 'videos' | 'files'>;
     notas: Schema.Attribute.Text;
     orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publicacion: Schema.Attribute.Text;
     publishedAt: Schema.Attribute.DateTime;
     semana1Archivo: Schema.Attribute.String;
     semana1Fecha: Schema.Attribute.Date;
@@ -647,9 +723,44 @@ export interface ApiCampanaCampana extends Struct.CollectionTypeSchema {
     semana4Fecha: Schema.Attribute.Date;
     semana4Partes: Schema.Attribute.Text;
     semana4Titulo: Schema.Attribute.String;
+    semana5Archivo: Schema.Attribute.String;
+    semana5Fecha: Schema.Attribute.Date;
+    semana5Partes: Schema.Attribute.Text;
+    semana5Titulo: Schema.Attribute.String;
     tipo: Schema.Attribute.Enumeration<['completa', 'titulos_extra']> &
       Schema.Attribute.DefaultTo<'completa'>;
     unidadNegocio: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCatalogoJoyeriaCatalogoJoyeria
+  extends Struct.SingleTypeSchema {
+  collectionName: 'catalogo_joyeria';
+  info: {
+    description: '\u00C1rbol jer\u00E1rquico del cat\u00E1logo de joyer\u00EDa: Material \u2192 Categor\u00EDa \u2192 Producto';
+    displayName: 'Cat\u00E1logo Joyer\u00EDa';
+    pluralName: 'catalogo-joyerias';
+    singularName: 'catalogo-joyeria';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    arbol: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::catalogo-joyeria.catalogo-joyeria'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    skus: Schema.Attribute.JSON;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -697,6 +808,8 @@ export interface ApiCategoriaCategoria extends Struct.CollectionTypeSchema {
   };
   attributes: {
     activa: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     color: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -786,10 +899,6 @@ export interface ApiCentroCostoCentroCosto extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.String;
-    gastoycentrodecostos: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::gasto.gasto'
-    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -798,6 +907,10 @@ export interface ApiCentroCostoCentroCosto extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    transacciones: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaccion.transaccion'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -889,6 +1002,7 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
   };
   attributes: {
     calificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    campanaOrigen: Schema.Attribute.String;
     canalContacto: Schema.Attribute.String;
     cotizaciones: Schema.Attribute.Relation<
       'oneToMany',
@@ -900,13 +1014,24 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
     direccion: Schema.Attribute.String;
     email: Schema.Attribute.Email;
     Estado: Schema.Attribute.Enumeration<['Activo', 'Inactivo']>;
+    estadoCivil: Schema.Attribute.Enumeration<
+      [
+        'Soltero(a)',
+        'En una relaci\u00F3n',
+        'Comprometido(a)',
+        'Casado(a)',
+        'Otro',
+      ]
+    >;
     fechaCalificado: Schema.Attribute.DateTime;
     fechaEntrega: Schema.Attribute.DateTime;
     fechaLead: Schema.Attribute.DateTime;
+    fechaNacimiento: Schema.Attribute.Date;
     fechaOferta: Schema.Attribute.DateTime;
     fechaPedido: Schema.Attribute.DateTime;
+    fechaRechazada: Schema.Attribute.DateTime;
     Funnel: Schema.Attribute.Enumeration<
-      ['Lead', 'Oferta', 'Pedido', 'Entrega']
+      ['Lead', 'Oferta', 'Pedido', 'Entrega', 'Rechazada']
     >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -916,16 +1041,104 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
     notas: Schema.Attribute.Text;
+    ocasionFrecuente: Schema.Attribute.String;
     origenContacto: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    redesSociales: Schema.Attribute.String;
     segmento: Schema.Attribute.Enumeration<
       ['Pareja', 'Matrimonio', 'Familiar', 'Personalizado']
     >;
+    sexo: Schema.Attribute.Enumeration<
+      ['Masculino', 'Femenino', 'Otro', 'Sin especificar']
+    >;
+    tallaAnillo: Schema.Attribute.String;
     telefono: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     ventas: Schema.Attribute.Relation<'oneToMany', 'api::venta.venta'>;
+  };
+}
+
+export interface ApiCompraMaterialLineaCompraMaterialLinea
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'compra_material_lineas';
+  info: {
+    displayName: 'L\u00EDnea de Compra de Material';
+    pluralName: 'compra-material-lineas';
+    singularName: 'compra-material-linea';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    compra: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::compra-material.compra-material'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String & Schema.Attribute.Required;
+    gramos: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::compra-material-linea.compra-material-linea'
+    > &
+      Schema.Attribute.Private;
+    material: Schema.Attribute.Relation<'manyToOne', 'api::material.material'>;
+    precioPorGramo: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    total: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCompraMaterialCompraMaterial
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'compras_material';
+  info: {
+    displayName: 'Compra de Materia Prima';
+    pluralName: 'compras-material';
+    singularName: 'compra-material';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<['borrador', 'recibida']> &
+      Schema.Attribute.DefaultTo<'borrador'>;
+    fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    lineas: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::compra-material-linea.compra-material-linea'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::compra-material.compra-material'
+    > &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    numero: Schema.Attribute.String;
+    proveedor: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::proveedor.proveedor'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    transaccion: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::transaccion.transaccion'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -945,7 +1158,7 @@ export interface ApiCotizacionCotizacion extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     estado: Schema.Attribute.Enumeration<
-      ['Borrador', 'Enviada', 'Aceptada', 'Rechazada']
+      ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Convertida']
     > &
       Schema.Attribute.DefaultTo<'Borrador'>;
     fecha: Schema.Attribute.DateTime;
@@ -964,6 +1177,8 @@ export interface ApiCotizacionCotizacion extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    validoHasta: Schema.Attribute.Date;
+    ventaGenerada: Schema.Attribute.Relation<'oneToOne', 'api::venta.venta'>;
   };
 }
 
@@ -988,7 +1203,6 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::evento-calendario.evento-calendario'
     >;
-    gastos: Schema.Attribute.Relation<'oneToMany', 'api::gasto.gasto'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1008,6 +1222,40 @@ export interface ApiCuentaCuenta extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     ventaCuenta: Schema.Attribute.Relation<'oneToMany', 'api::venta.venta'>;
+  };
+}
+
+export interface ApiDocumentoLegalDocumentoLegal
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'documentos_legales';
+  info: {
+    displayName: 'Portal - Documento Legal';
+    pluralName: 'documentos-legales';
+    singularName: 'documento-legal';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    archivos: Schema.Attribute.Media<'files' | 'images', true>;
+    caracteristicas: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::documento-legal.documento-legal'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    subtitulo: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1132,6 +1380,7 @@ export interface ApiEnvioEnvio extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    venta: Schema.Attribute.Relation<'manyToOne', 'api::venta.venta'>;
   };
 }
 
@@ -1175,38 +1424,39 @@ export interface ApiEventoCalendarioEventoCalendario
   };
 }
 
-export interface ApiGastoGasto extends Struct.CollectionTypeSchema {
-  collectionName: 'gastos';
+export interface ApiEventoSocialEventoSocial
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'evento_socials';
   info: {
-    displayName: 'gasto';
-    pluralName: 'gastos';
-    singularName: 'gasto';
+    displayName: 'Evento Social';
+    pluralName: 'evento-socials';
+    singularName: 'evento-social';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
-    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
-      Schema.Attribute.DefaultTo<'trabajo'>;
-    centro_costo: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::centro-costo.centro-costo'
-    >;
-    comprobante: Schema.Attribute.Media<
-      'images' | 'files' | 'videos' | 'audios'
-    >;
-    concepto: Schema.Attribute.String & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    cuenta: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
+    descripcion: Schema.Attribute.Text;
+    estado: Schema.Attribute.Enumeration<['pendiente', 'realizado']> &
+      Schema.Attribute.DefaultTo<'realizado'>;
     fecha: Schema.Attribute.Date & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'api::gasto.gasto'> &
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::evento-social.evento-social'
+    > &
       Schema.Attribute.Private;
-    monto: Schema.Attribute.Decimal;
-    notas: Schema.Attribute.String;
+    lugar: Schema.Attribute.String;
+    notas: Schema.Attribute.Text;
+    personas: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      ['familiar', 'amigos', 'pareja', 'trabajo', 'otro']
+    > &
+      Schema.Attribute.DefaultTo<'amigos'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1245,6 +1495,39 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiHistorialTareaHistorialTarea
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'historial_tareas';
+  info: {
+    displayName: 'Historial Tarea';
+    pluralName: 'historial-tareas';
+    singularName: 'historial-tarea';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    ambito: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estadoAnterior: Schema.Attribute.String;
+    estadoNuevo: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::historial-tarea.historial-tarea'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    tareaDocumentId: Schema.Attribute.String & Schema.Attribute.Required;
+    timestamp: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiIdentidadEmpresaIdentidadEmpresa
   extends Struct.CollectionTypeSchema {
   collectionName: 'identidad_empresas';
@@ -1258,22 +1541,75 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
   };
   attributes: {
     colores: Schema.Attribute.Text;
+    correo: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    descripcion_campanas: Schema.Attribute.Text;
+    descripcion_conoce: Schema.Attribute.Text;
+    descripcion_contactos: Schema.Attribute.Text;
+    descripcion_depto_administracion: Schema.Attribute.Text;
+    descripcion_depto_cadena: Schema.Attribute.Text;
+    descripcion_depto_comercial: Schema.Attribute.Text;
+    descripcion_depto_marketing: Schema.Attribute.Text;
+    descripcion_depto_mision: Schema.Attribute.Text;
+    descripcion_depto_rh: Schema.Attribute.Text;
+    descripcion_tareas: Schema.Attribute.Text;
+    direccion: Schema.Attribute.Text;
+    foto_equipo: Schema.Attribute.Media<'images'>;
+    icono_principio_1: Schema.Attribute.Media<'images'>;
+    icono_principio_2: Schema.Attribute.Media<'images'>;
+    icono_principio_3: Schema.Attribute.Media<'images'>;
+    icono_principio_4: Schema.Attribute.Media<'images'>;
+    icono_principio_5: Schema.Attribute.Media<'images'>;
+    icono_valor_1: Schema.Attribute.Media<'images'>;
+    icono_valor_2: Schema.Attribute.Media<'images'>;
+    icono_valor_3: Schema.Attribute.Media<'images'>;
+    icono_valor_4: Schema.Attribute.Media<'images'>;
+    icono_valor_5: Schema.Attribute.Media<'images'>;
+    imagen_mision: Schema.Attribute.Media<'images'>;
+    imagen_vision: Schema.Attribute.Media<'images'>;
+    img_orientador_1: Schema.Attribute.Media<'images'>;
+    img_orientador_2: Schema.Attribute.Media<'images'>;
+    img_orientador_3: Schema.Attribute.Media<'images'>;
+    img_orientador_4: Schema.Attribute.Media<'images'>;
+    img_valores_logo: Schema.Attribute.Media<'images'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::identidad-empresa.identidad-empresa'
     > &
       Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images'>;
     mision: Schema.Attribute.Text;
     nombre: Schema.Attribute.String;
     notas: Schema.Attribute.Text;
+    portada_campanas: Schema.Attribute.Media<'images'>;
+    portada_campanas_original: Schema.Attribute.Media<'images'>;
+    portada_conoce: Schema.Attribute.Media<'images'>;
+    portada_conoce_original: Schema.Attribute.Media<'images'>;
+    portada_contactos: Schema.Attribute.Media<'images'>;
+    portada_contactos_original: Schema.Attribute.Media<'images'>;
+    portada_depto_administracion: Schema.Attribute.Media<'images'>;
+    portada_depto_administracion_original: Schema.Attribute.Media<'images'>;
+    portada_depto_cadena: Schema.Attribute.Media<'images'>;
+    portada_depto_cadena_original: Schema.Attribute.Media<'images'>;
+    portada_depto_comercial: Schema.Attribute.Media<'images'>;
+    portada_depto_comercial_original: Schema.Attribute.Media<'images'>;
+    portada_depto_marketing: Schema.Attribute.Media<'images'>;
+    portada_depto_marketing_original: Schema.Attribute.Media<'images'>;
+    portada_depto_mision: Schema.Attribute.Media<'images'>;
+    portada_depto_mision_original: Schema.Attribute.Media<'images'>;
+    portada_depto_rh: Schema.Attribute.Media<'images'>;
+    portada_depto_rh_original: Schema.Attribute.Media<'images'>;
+    portada_principios: Schema.Attribute.Media<'images'>;
+    portada_tareas: Schema.Attribute.Media<'images'>;
+    portada_tareas_original: Schema.Attribute.Media<'images'>;
     publishedAt: Schema.Attribute.DateTime;
     redesSociales: Schema.Attribute.Text;
     sitioWeb: Schema.Attribute.String;
     slogan: Schema.Attribute.String;
+    telefono: Schema.Attribute.String;
     tipografia: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1316,6 +1652,7 @@ export interface ApiIngredienteDespensaIngredienteDespensa
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    enProceso: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1370,6 +1707,45 @@ export interface ApiItemCompraItemCompra extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiMapaIdentidadMapaIdentidad
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'mapa_identidades';
+  info: {
+    displayName: 'Mapa Identidad';
+    pluralName: 'mapa-identidades';
+    singularName: 'mapa-identidad';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    color: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    enlace: Schema.Attribute.String;
+    icono: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::mapa-identidad.mapa-identidad'
+    > &
+      Schema.Attribute.Private;
+    moduleId: Schema.Attribute.String;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    placeholder: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    sector: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    x: Schema.Attribute.Integer & Schema.Attribute.Required;
+    y: Schema.Attribute.Integer & Schema.Attribute.Required;
+  };
+}
+
 export interface ApiMaterialDigitalMaterialDigital
   extends Struct.CollectionTypeSchema {
   collectionName: 'material_digitals';
@@ -1382,10 +1758,28 @@ export interface ApiMaterialDigitalMaterialDigital
     draftAndPublish: false;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa', 'personal']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
+    categoria: Schema.Attribute.Enumeration<
+      [
+        'BRANDING',
+        'HERRAMIENTAS_VENTAS',
+        'FORMATOS_INTERNOS',
+        'INSTALACIONES_VEHICULOS',
+        'COLABORADOR',
+        'DOCUMENTOS_COLABORADOR',
+        'EVENTOS_PROYECTOS',
+        'ASSETS',
+        'LINKS_UTILIDAD',
+        'BASES_DATOS',
+      ]
+    > &
+      Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.Text;
+    evento: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1393,24 +1787,17 @@ export interface ApiMaterialDigitalMaterialDigital
     > &
       Schema.Attribute.Private;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
-    notas: Schema.Attribute.Text;
     publishedAt: Schema.Attribute.DateTime;
+    subcategoria: Schema.Attribute.String & Schema.Attribute.Required;
     tipo: Schema.Attribute.Enumeration<
-      [
-        'logo',
-        'manual',
-        'presentacion',
-        'fotografia',
-        'video',
-        'plantilla',
-        'otro',
-      ]
+      ['pdf', 'imagen', 'presentacion', 'video', 'documento', 'link']
     > &
-      Schema.Attribute.DefaultTo<'otro'>;
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'link'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    url: Schema.Attribute.String;
+    url: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -1461,6 +1848,42 @@ export interface ApiMaterialTrabajoMaterialTrabajo
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
     notas: Schema.Attribute.Text;
     publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiMaterialMaterial extends Struct.CollectionTypeSchema {
+  collectionName: 'materiales';
+  info: {
+    displayName: 'Material';
+    pluralName: 'materiales';
+    singularName: 'material';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::material.material'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    notas: Schema.Attribute.Text;
+    precioReferenciaGramo: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    stockGramos: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
+    unidadMedida: Schema.Attribute.Enumeration<['gramo']> &
+      Schema.Attribute.DefaultTo<'gramo'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1537,6 +1960,121 @@ export interface ApiMetricaCorporalMetricaCorporal
   };
 }
 
+export interface ApiMovimientoMaterialMovimientoMaterial
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'movimientos_material';
+  info: {
+    displayName: 'Movimiento de Material';
+    pluralName: 'movimientos-material';
+    singularName: 'movimiento-material';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    compraLinea: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::compra-material-linea.compra-material-linea'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fecha: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    gramos: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::movimiento-material.movimiento-material'
+    > &
+      Schema.Attribute.Private;
+    material: Schema.Attribute.Relation<'manyToOne', 'api::material.material'>;
+    notas: Schema.Attribute.Text;
+    producto: Schema.Attribute.Relation<'manyToOne', 'api::product.product'>;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<['entrada', 'salida']> &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiNotaMejoraNotaMejora extends Struct.CollectionTypeSchema {
+  collectionName: 'notas_mejora';
+  info: {
+    displayName: 'Nota de Mejora';
+    pluralName: 'notas-mejora';
+    singularName: 'nota-mejora';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    autor_nombre: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<['pendiente', 'resuelta']> &
+      Schema.Attribute.DefaultTo<'pendiente'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::nota-mejora.nota-mejora'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    respuesta: Schema.Attribute.Text;
+    ruta: Schema.Attribute.String & Schema.Attribute.Required;
+    texto: Schema.Attribute.Text & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    x: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    y: Schema.Attribute.Decimal & Schema.Attribute.Required;
+  };
+}
+
+export interface ApiOrdenCompraOrdenCompra extends Struct.CollectionTypeSchema {
+  collectionName: 'ordenes_compra';
+  info: {
+    displayName: 'Orden de Compra';
+    pluralName: 'ordenes-compra';
+    singularName: 'orden-compra';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<
+      ['borrador', 'enviada', 'recibida_parcial', 'recibida', 'cancelada']
+    > &
+      Schema.Attribute.DefaultTo<'borrador'>;
+    fecha: Schema.Attribute.Date;
+    fechaEntregaEstimada: Schema.Attribute.Date;
+    lineas: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::orden-compra.orden-compra'
+    > &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
+    numero: Schema.Attribute.String;
+    proveedor: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::proveedor.proveedor'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    totalEstimado: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPagoProgramadoPagoProgramado
   extends Struct.CollectionTypeSchema {
   collectionName: 'pago_programados';
@@ -1549,11 +2087,14 @@ export interface ApiPagoProgramadoPagoProgramado
     draftAndPublish: false;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'empresa'>;
     categoria: Schema.Attribute.String;
     concepto: Schema.Attribute.String & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    cuenta: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
     estado: Schema.Attribute.Enumeration<['pendiente', 'pagado', 'cancelado']> &
       Schema.Attribute.DefaultTo<'pendiente'>;
     fecha: Schema.Attribute.Date;
@@ -1573,6 +2114,10 @@ export interface ApiPagoProgramadoPagoProgramado
     recurrente: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     tipo: Schema.Attribute.Enumeration<['pago', 'cobro']> &
       Schema.Attribute.DefaultTo<'pago'>;
+    transaccion: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::transaccion.transaccion'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1707,6 +2252,43 @@ export interface ApiPasivoPasivo extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiPersonaSocialPersonaSocial
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'persona_socials';
+  info: {
+    displayName: 'Persona Social';
+    pluralName: 'persona-socials';
+    singularName: 'persona-social';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    cumpleaños: Schema.Attribute.Date;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::persona-social.persona-social'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    relacion: Schema.Attribute.Enumeration<
+      ['familia', 'amigo', 'pareja', 'compa\u00F1ero', 'conocido', 'otro']
+    > &
+      Schema.Attribute.DefaultTo<'amigo'>;
+    telefono: Schema.Attribute.String;
+    ultimaVez: Schema.Attribute.Date;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiPlanComidaPlanComida extends Struct.CollectionTypeSchema {
   collectionName: 'plan_comidas';
   info: {
@@ -1816,6 +2398,42 @@ export interface ApiPrestamoOtorgadoPrestamoOtorgado
   };
 }
 
+export interface ApiProcesoTareaProcesoTarea
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'proceso_tareas';
+  info: {
+    displayName: 'Tarea - Proceso';
+    pluralName: 'proceso-tareas';
+    singularName: 'proceso-tarea';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    ambito: Schema.Attribute.Enumeration<['personal', 'trabajo', 'empresa']> &
+      Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::proceso-tarea.proceso-tarea'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiProductCategoryProductCategory
   extends Struct.CollectionTypeSchema {
   collectionName: 'product_categories';
@@ -1860,6 +2478,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
   };
   attributes: {
     activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    atributos: Schema.Attribute.Component<'joyeria.atributos-joya', false>;
     categoria: Schema.Attribute.Relation<
       'manyToOne',
       'api::product-category.product-category'
@@ -1879,6 +2498,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
     >;
     contenidoo: Schema.Attribute.RichText;
     costo: Schema.Attribute.Decimal;
+    costoManoObra: Schema.Attribute.Decimal;
     costoProduccion: Schema.Attribute.Decimal;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1895,13 +2515,90 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     material: Schema.Attribute.Enumeration<['producto', 'servicio']> &
       Schema.Attribute.DefaultTo<'producto'>;
+    materialInsumo: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::material.material'
+    >;
     materialProducto: Schema.Attribute.Enumeration<['Oro 10k', 'Plata 925']>;
     nombreProducto: Schema.Attribute.String & Schema.Attribute.Required;
+    pesoGramos: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
+    puntoVenta: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     sku: Schema.Attribute.String;
     slug: Schema.Attribute.UID<'nombreProducto'>;
     stock: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     talla: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPropuestaConcursoPropuestaConcurso
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'propuesta_concursos';
+  info: {
+    displayName: 'Propuesta Concurso';
+    pluralName: 'propuesta-concursos';
+    singularName: 'propuesta-concurso';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    integrantes: Schema.Attribute.Text & Schema.Attribute.Required;
+    link_archivo: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::propuesta-concurso.propuesta-concurso'
+    > &
+      Schema.Attribute.Private;
+    nombre_equipo: Schema.Attribute.String & Schema.Attribute.Required;
+    objetivo: Schema.Attribute.Text & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiProveedorProveedor extends Struct.CollectionTypeSchema {
+  collectionName: 'proveedores';
+  info: {
+    displayName: 'Proveedor';
+    pluralName: 'proveedores';
+    singularName: 'proveedor';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    contacto: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    direccion: Schema.Attribute.String;
+    email: Schema.Attribute.Email;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::proveedor.proveedor'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    ordenes: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::orden-compra.orden-compra'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    rfc: Schema.Attribute.String;
+    telefono: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2003,6 +2700,99 @@ export interface ApiRecetaReceta extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiRecursoCategoriaRecursoCategoria
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'recurso_categorias';
+  info: {
+    displayName: 'Portal - Recurso Categoria';
+    pluralName: 'recurso-categorias';
+    singularName: 'recurso-categoria';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::recurso-categoria.recurso-categoria'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    seccion: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRecursoRecurso extends Struct.CollectionTypeSchema {
+  collectionName: 'recursos';
+  info: {
+    displayName: 'Portal - Recurso Descargable';
+    pluralName: 'recursos';
+    singularName: 'recurso';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    archivo: Schema.Attribute.Media<'files' | 'images'> &
+      Schema.Attribute.Required;
+    categoria: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 300;
+      }>;
+    fecha_lanzamiento: Schema.Attribute.Date;
+    grupo: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::recurso.recurso'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    rol_autor: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 40;
+      }>;
+    seccion: Schema.Attribute.String & Schema.Attribute.Required;
+    tipo: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    variante: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 60;
+      }>;
+  };
+}
+
 export interface ApiRegistroMensualRegistroMensual
   extends Struct.CollectionTypeSchema {
   collectionName: 'registro_mensuals';
@@ -2099,6 +2889,43 @@ export interface ApiReunionReunion extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiRhItemRhItem extends Struct.CollectionTypeSchema {
+  collectionName: 'rh_items';
+  info: {
+    displayName: 'Portal RH - Prestacion/Politica/Emergencia';
+    pluralName: 'rh-items';
+    singularName: 'rh-item';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    archivos: Schema.Attribute.Media<'files' | 'images', true>;
+    caracteristicas: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::rh-item.rh-item'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    subtitulo: Schema.Attribute.String;
+    tipo: Schema.Attribute.Enumeration<
+      ['prestacion', 'politica', 'emergencia']
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiRutinaRutina extends Struct.CollectionTypeSchema {
   collectionName: 'rutinas';
   info: {
@@ -2135,6 +2962,55 @@ export interface ApiRutinaRutina extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiServicioVehiculoServicioVehiculo
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'servicio_vehiculos';
+  info: {
+    displayName: 'Servicio Veh\u00EDculo';
+    pluralName: 'servicio-vehiculos';
+    singularName: 'servicio-vehiculo';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    costo: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    km: Schema.Attribute.Integer;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::servicio-vehiculo.servicio-vehiculo'
+    > &
+      Schema.Attribute.Private;
+    notas: Schema.Attribute.String;
+    proximaFecha: Schema.Attribute.Date;
+    proximoKm: Schema.Attribute.Integer;
+    publishedAt: Schema.Attribute.DateTime;
+    tipo: Schema.Attribute.Enumeration<
+      [
+        'lavado',
+        'aceite',
+        'afinaci\u00F3n',
+        'llantas',
+        'frenos',
+        'verificaci\u00F3n',
+        'gasolina',
+        'seguro',
+        'otro',
+      ]
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vehiculoDocumentId: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface ApiSesionGymSesionGym extends Struct.CollectionTypeSchema {
   collectionName: 'sesion_gyms';
   info: {
@@ -2161,6 +3037,101 @@ export interface ApiSesionGymSesionGym extends Struct.CollectionTypeSchema {
     notas: Schema.Attribute.Text;
     publishedAt: Schema.Attribute.DateTime;
     rutina: Schema.Attribute.Relation<'manyToOne', 'api::rutina.rutina'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSitioWebMiraclesSitioWebMiracles
+  extends Struct.SingleTypeSchema {
+  collectionName: 'sitio_web_miracles';
+  info: {
+    description: '\u00C1rbol de arquitectura del sitio web de Joyer\u00EDa Miracles';
+    displayName: 'Sitio Web Miracles';
+    pluralName: 'sitio-webs-miracles';
+    singularName: 'sitio-web-miracles';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    arbol: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::sitio-web-miracles.sitio-web-miracles'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSitioWebSitioWeb extends Struct.SingleTypeSchema {
+  collectionName: 'sitio_webs';
+  info: {
+    description: '\u00C1rbol de arquitectura del sitio web';
+    displayName: 'Sitio Web';
+    pluralName: 'sitio-webs';
+    singularName: 'sitio-web';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    arbol: Schema.Attribute.JSON;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::sitio-web.sitio-web'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSkuOpcionSkuOpcion extends Struct.CollectionTypeSchema {
+  collectionName: 'sku_opciones';
+  info: {
+    displayName: 'SKU Opci\u00F3n';
+    pluralName: 'sku-opciones';
+    singularName: 'sku-opcion';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    categoria: Schema.Attribute.Enumeration<
+      ['material', 'tipo', 'estilo', 'talla', 'extra', 'piedra']
+    > &
+      Schema.Attribute.Required;
+    code: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    label: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::sku-opcion.sku-opcion'
+    > &
+      Schema.Attribute.Private;
+    meta: Schema.Attribute.JSON;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    parentCode: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2267,14 +3238,15 @@ export interface ApiTareaTarea extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.Text;
     estado: Schema.Attribute.Enumeration<
-      ['pendiente', 'en_progreso', 'en_pausa', 'completada']
+      ['sin_iniciar', 'en_progreso', 'en_pausa', 'completada']
     > &
-      Schema.Attribute.DefaultTo<'pendiente'>;
+      Schema.Attribute.DefaultTo<'sin_iniciar'>;
     esTicket: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     etiqueta: Schema.Attribute.String;
     fechaCompletada: Schema.Attribute.DateTime;
     fechaInicio: Schema.Attribute.Date;
     fechaVencimiento: Schema.Attribute.Date;
+    links: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::tarea.tarea'> &
       Schema.Attribute.Private;
@@ -2362,13 +3334,25 @@ export interface ApiTransaccionTransaccion extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    ambito: Schema.Attribute.Enumeration<['trabajo', 'empresa']> &
+      Schema.Attribute.DefaultTo<'trabajo'>;
     categoria: Schema.Attribute.String;
+    centro_costo: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::centro-costo.centro-costo'
+    >;
+    cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
+    clienteDocumentId: Schema.Attribute.String;
+    comprobante: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     cuentaDestino: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
     cuentaOrigen: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
     descripcion: Schema.Attribute.String & Schema.Attribute.Required;
+    factura: Schema.Attribute.String;
     fecha: Schema.Attribute.DateTime & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -2376,14 +3360,91 @@ export interface ApiTransaccionTransaccion extends Struct.CollectionTypeSchema {
       'api::transaccion.transaccion'
     > &
       Schema.Attribute.Private;
+    metodoPago: Schema.Attribute.Enumeration<
+      ['Efectivo', 'Transferencia', 'Tarjeta', 'Otro']
+    >;
     monto: Schema.Attribute.Decimal & Schema.Attribute.Required;
     notas: Schema.Attribute.Text;
+    proveedor: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    referencia: Schema.Attribute.String;
     tipo: Schema.Attribute.Enumeration<['ingreso', 'gasto', 'transferencia']> &
       Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    ventaOrigen: Schema.Attribute.Relation<'manyToOne', 'api::venta.venta'>;
+    ventaQueLoGenero: Schema.Attribute.Relation<'oneToOne', 'api::venta.venta'>;
+  };
+}
+
+export interface ApiVehiculoVehiculo extends Struct.CollectionTypeSchema {
+  collectionName: 'vehiculos';
+  info: {
+    displayName: 'Veh\u00EDculo';
+    pluralName: 'vehiculos';
+    singularName: 'vehiculo';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    año: Schema.Attribute.Integer;
+    color: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    kmActuales: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::vehiculo.vehiculo'
+    > &
+      Schema.Attribute.Private;
+    marca: Schema.Attribute.String;
+    modelo: Schema.Attribute.String;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    notas: Schema.Attribute.Text;
+    placas: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiVentaLineaVentaLinea extends Struct.CollectionTypeSchema {
+  collectionName: 'venta_lineas';
+  info: {
+    displayName: 'L\u00EDnea de Venta';
+    pluralName: 'venta-lineas';
+    singularName: 'venta-linea';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    cantidad: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<1>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::venta-linea.venta-linea'
+    > &
+      Schema.Attribute.Private;
+    precioUnitario: Schema.Attribute.Decimal & Schema.Attribute.Required;
+    producto: Schema.Attribute.Relation<'manyToOne', 'api::product.product'>;
+    publishedAt: Schema.Attribute.DateTime;
+    subtotal: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    venta: Schema.Attribute.Relation<'manyToOne', 'api::venta.venta'>;
   };
 }
 
@@ -2404,16 +3465,26 @@ export interface ApiVentaVenta extends Struct.CollectionTypeSchema {
       'api::centro-venta.centro-venta'
     >;
     cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
+    comprobantePago: Schema.Attribute.Media<'images' | 'files'>;
     concepto: Schema.Attribute.String & Schema.Attribute.Required;
+    cotizacionOrigen: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::cotizacion.cotizacion'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     cuenta: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
+    envios: Schema.Attribute.Relation<'oneToMany', 'api::envio.envio'>;
     estado: Schema.Attribute.Enumeration<
       ['Cotizado', 'Pagado', 'Preparando', 'Enviado', 'Entregado', 'Cancelado']
     > &
       Schema.Attribute.DefaultTo<'Cotizado'>;
     fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    lineas: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::venta-linea.venta-linea'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::venta.venta'> &
       Schema.Attribute.Private;
@@ -2422,8 +3493,17 @@ export interface ApiVentaVenta extends Struct.CollectionTypeSchema {
     >;
     monto: Schema.Attribute.Decimal & Schema.Attribute.Required;
     notas: Schema.Attribute.String;
+    numero: Schema.Attribute.String;
+    pagos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transaccion.transaccion'
+    >;
     producto: Schema.Attribute.Relation<'manyToOne', 'api::product.product'>;
     publishedAt: Schema.Attribute.DateTime;
+    transaccionGenerada: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::transaccion.transaccion'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -2899,6 +3979,7 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
+    foto: Schema.Attribute.Media<'images'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -2942,9 +4023,12 @@ declare module '@strapi/strapi' {
       'api::about.about': ApiAboutAbout;
       'api::activo.activo': ApiActivoActivo;
       'api::anuncio.anuncio': ApiAnuncioAnuncio;
+      'api::aviso.aviso': ApiAvisoAviso;
       'api::blog-post.blog-post': ApiBlogPostBlogPost;
       'api::boxscore-semana.boxscore-semana': ApiBoxscoreSemanaBoxscoreSemana;
+      'api::campana-meta.campana-meta': ApiCampanaMetaCampanaMeta;
       'api::campana.campana': ApiCampanaCampana;
+      'api::catalogo-joyeria.catalogo-joyeria': ApiCatalogoJoyeriaCatalogoJoyeria;
       'api::categoria-pago.categoria-pago': ApiCategoriaPagoCategoriaPago;
       'api::categoria.categoria': ApiCategoriaCategoria;
       'api::cdl-metrica.cdl-metrica': ApiCdlMetricaCdlMetrica;
@@ -2952,41 +4036,63 @@ declare module '@strapi/strapi' {
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
       'api::cliente-trabajo.cliente-trabajo': ApiClienteTrabajoClienteTrabajo;
       'api::cliente.cliente': ApiClienteCliente;
+      'api::compra-material-linea.compra-material-linea': ApiCompraMaterialLineaCompraMaterialLinea;
+      'api::compra-material.compra-material': ApiCompraMaterialCompraMaterial;
       'api::cotizacion.cotizacion': ApiCotizacionCotizacion;
       'api::cuenta.cuenta': ApiCuentaCuenta;
+      'api::documento-legal.documento-legal': ApiDocumentoLegalDocumentoLegal;
       'api::ecosistema-mkt.ecosistema-mkt': ApiEcosistemaMktEcosistemaMkt;
       'api::ejercicio.ejercicio': ApiEjercicioEjercicio;
       'api::envio.envio': ApiEnvioEnvio;
       'api::evento-calendario.evento-calendario': ApiEventoCalendarioEventoCalendario;
-      'api::gasto.gasto': ApiGastoGasto;
+      'api::evento-social.evento-social': ApiEventoSocialEventoSocial;
       'api::global.global': ApiGlobalGlobal;
+      'api::historial-tarea.historial-tarea': ApiHistorialTareaHistorialTarea;
       'api::identidad-empresa.identidad-empresa': ApiIdentidadEmpresaIdentidadEmpresa;
       'api::ingrediente-despensa.ingrediente-despensa': ApiIngredienteDespensaIngredienteDespensa;
       'api::item-compra.item-compra': ApiItemCompraItemCompra;
+      'api::mapa-identidad.mapa-identidad': ApiMapaIdentidadMapaIdentidad;
       'api::material-digital.material-digital': ApiMaterialDigitalMaterialDigital;
       'api::material-trabajo.material-trabajo': ApiMaterialTrabajoMaterialTrabajo;
+      'api::material.material': ApiMaterialMaterial;
       'api::meta-ahorro.meta-ahorro': ApiMetaAhorroMetaAhorro;
       'api::metrica-corporal.metrica-corporal': ApiMetricaCorporalMetricaCorporal;
+      'api::movimiento-material.movimiento-material': ApiMovimientoMaterialMovimientoMaterial;
+      'api::nota-mejora.nota-mejora': ApiNotaMejoraNotaMejora;
+      'api::orden-compra.orden-compra': ApiOrdenCompraOrdenCompra;
       'api::pago-programado.pago-programado': ApiPagoProgramadoPagoProgramado;
       'api::pago-trabajo.pago-trabajo': ApiPagoTrabajoPagoTrabajo;
       'api::partida-presupuesto.partida-presupuesto': ApiPartidaPresupuestoPartidaPresupuesto;
       'api::pasivo.pasivo': ApiPasivoPasivo;
+      'api::persona-social.persona-social': ApiPersonaSocialPersonaSocial;
       'api::plan-comida.plan-comida': ApiPlanComidaPlanComida;
       'api::plan-ejercicio.plan-ejercicio': ApiPlanEjercicioPlanEjercicio;
       'api::prestamo-otorgado.prestamo-otorgado': ApiPrestamoOtorgadoPrestamoOtorgado;
+      'api::proceso-tarea.proceso-tarea': ApiProcesoTareaProcesoTarea;
       'api::product-category.product-category': ApiProductCategoryProductCategory;
       'api::product.product': ApiProductProduct;
+      'api::propuesta-concurso.propuesta-concurso': ApiPropuestaConcursoPropuestaConcurso;
+      'api::proveedor.proveedor': ApiProveedorProveedor;
       'api::proyecto.proyecto': ApiProyectoProyecto;
       'api::receta.receta': ApiRecetaReceta;
+      'api::recurso-categoria.recurso-categoria': ApiRecursoCategoriaRecursoCategoria;
+      'api::recurso.recurso': ApiRecursoRecurso;
       'api::registro-mensual.registro-mensual': ApiRegistroMensualRegistroMensual;
       'api::reunion.reunion': ApiReunionReunion;
+      'api::rh-item.rh-item': ApiRhItemRhItem;
       'api::rutina.rutina': ApiRutinaRutina;
+      'api::servicio-vehiculo.servicio-vehiculo': ApiServicioVehiculoServicioVehiculo;
       'api::sesion-gym.sesion-gym': ApiSesionGymSesionGym;
+      'api::sitio-web-miracles.sitio-web-miracles': ApiSitioWebMiraclesSitioWebMiracles;
+      'api::sitio-web.sitio-web': ApiSitioWebSitioWeb;
+      'api::sku-opcion.sku-opcion': ApiSkuOpcionSkuOpcion;
       'api::snapshot-cuenta.snapshot-cuenta': ApiSnapshotCuentaSnapshotCuenta;
       'api::snapshot-mes.snapshot-mes': ApiSnapshotMesSnapshotMes;
       'api::tarea.tarea': ApiTareaTarea;
       'api::ticket.ticket': ApiTicketTicket;
       'api::transaccion.transaccion': ApiTransaccionTransaccion;
+      'api::vehiculo.vehiculo': ApiVehiculoVehiculo;
+      'api::venta-linea.venta-linea': ApiVentaLineaVentaLinea;
       'api::venta.venta': ApiVentaVenta;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

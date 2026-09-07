@@ -11,7 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { DndContext, useDraggable, useDroppable, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
 import {
   ClienteEmpresa, ClientePayload,
-  FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS, ESTADOS_CIVILES,
+  FUNNEL_ETAPAS, FUNNEL_ALL, FUNNEL_LABEL, FUNNEL_COLOR, FunnelEtapa, SEGMENTOS, ESTADOS_CIVILES, SEXOS, Sexo,
 } from "@/types/clienteEmpresa"
 import { updateCliente } from "@/api/clienteEmpresa/getClientes"
 import { Cotizacion, ItemCotizacion, ESTADO_COT_COLOR } from "@/types/cotizacion"
@@ -35,6 +35,8 @@ import { uploadMedia } from "@/lib/upload"
 import { useClientesPipeline } from "./useClientesPipeline"
 import { confirmDialog } from "../ConfirmDialog"
 import { DropdownPicker } from "../../Shared/DropdownPicker"
+import { CalendarioPicker } from "../../Shared/CalendarioPicker"
+import { NuevoLeadWizard } from "./NuevoLeadWizard"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Efectivo":      "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20",
@@ -978,7 +980,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
-  const [tab, setTab] = useState<"general" | "ventas">("ventas")
+  const [tab, setTab] = useState<"general" | "lead" | "ventas">("ventas")
   const [pedidoAbierto, setPedidoAbierto] = useState<VentaEmpresa | null>(null)
 
   // Edición rápida en línea por tarjeta — evita meter todos los campos en
@@ -996,8 +998,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       nombre: cliente.nombre,
       direccion: cliente.direccion, canalContacto: cliente.canalContacto,
       tallaAnillo: cliente.tallaAnillo, ocasionFrecuente: cliente.ocasionFrecuente,
-      estadoCivil: cliente.estadoCivil, redesSociales: cliente.redesSociales,
-      origenContacto: cliente.origenContacto, segmento: cliente.segmento,
+      estadoCivil: cliente.estadoCivil, sexo: cliente.sexo,
+      fechaNacimiento: cliente.fechaNacimiento, redesSociales: cliente.redesSociales,
+      origenContacto: cliente.origenContacto, campanaOrigen: cliente.campanaOrigen, segmento: cliente.segmento,
     })
     setEditandoContacto(true)
   }
@@ -1242,7 +1245,8 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: "general" as const, label: "General", count: null as number | null },
-          { id: "ventas" as const,  label: "Ventas",  count: cotizaciones.length + ventasDelCliente.length },
+          { id: "lead"    as const, label: "Lead",    count: null },
+          { id: "ventas"  as const, label: "Ventas",  count: cotizaciones.length + ventasDelCliente.length },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
             className={`px-3 pb-2.5 text-xs font-semibold border-b-2 transition-colors ${
@@ -1400,6 +1404,111 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
               ) : (
                 <p className="text-[11px] text-slate-300 dark:text-slate-700">Sin notas todavía.</p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "lead" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+
+          {/* Atribución */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <h3 className={cardTitleCls}>Atribución</h3>
+            </div>
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              <div>
+                <p className={editLblCls}>Origen</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.origenContacto || "—"}</p>
+              </div>
+              <div>
+                <p className={editLblCls}>Canal / Medio</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  {cliente.canalContacto && <CanalIcon canal={cliente.canalContacto} />}
+                  {cliente.canalContacto || "—"}
+                </p>
+              </div>
+              <div>
+                <p className={editLblCls}>Campaña</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.campanaOrigen || "—"}</p>
+              </div>
+              <div>
+                <p className={editLblCls}>Fecha de contacto</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.fechaLead ? fmtDt(cliente.fechaLead) : "—"}</p>
+              </div>
+              <div>
+                <p className={editLblCls}>Calificación</p>
+                <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
+                  cliente.calificado
+                    ? "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700"
+                }`}>
+                  <CheckCircle2 size={10} />{cliente.calificado ? "Calificado" : "Sin calificar"}
+                </span>
+              </div>
+              <div>
+                <p className={editLblCls}>Segmento</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.segmento || "—"}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className={editLblCls}>Ocasión especial</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.ocasionFrecuente || "—"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Datos personales */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <h3 className={cardTitleCls}>Datos personales</h3>
+            </div>
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              <div>
+                <p className={editLblCls}>Estado civil</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.estadoCivil || "—"}</p>
+              </div>
+              <div>
+                <p className={editLblCls}>Sexo</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.sexo || "—"}</p>
+              </div>
+              <div>
+                <p className={editLblCls}>Fecha de nacimiento</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">
+                  {cliente.fechaNacimiento
+                    ? new Date(cliente.fechaNacimiento + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <p className={editLblCls}>Talla de anillo</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.tallaAnillo || "—"}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className={editLblCls}>Redes sociales</p>
+                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.redesSociales || "—"}</p>
+              </div>
+            </div>
+
+            {/* Mini-línea de tiempo del funnel */}
+            <div className="px-4 pb-4 pt-0 border-t border-slate-200 dark:border-slate-800 mt-0">
+              <p className={`${editLblCls} mt-3`}>Progresión en el funnel</p>
+              <div className="flex flex-col gap-1.5 mt-1">
+                {([
+                  { label: "Lead",      fecha: cliente.fechaLead },
+                  { label: "Calificado",fecha: cliente.fechaCalificado },
+                  { label: "Oferta",    fecha: cliente.fechaOferta },
+                  { label: "Pedido",    fecha: cliente.fechaPedido },
+                  { label: "Entrega",   fecha: cliente.fechaEntrega },
+                  { label: "Rechazada", fecha: cliente.fechaRechazada },
+                ] as const).filter(s => s.fecha).map(s => (
+                  <div key={s.label} className="flex items-center gap-2 text-[11px]">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.label === "Rechazada" ? "bg-red-400" : "bg-violet-400"}`} />
+                    <span className="text-slate-500 dark:text-slate-500 w-20 shrink-0">{s.label}</span>
+                    <span className="text-slate-700 dark:text-slate-300">{fmtDt(s.fecha!)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1637,10 +1746,9 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
   const etapa = form.Funnel ?? "Lead"
   const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
   const lbl   = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
-  // Un solo grupo abierto a la vez (acordeón) — antes cada sección tenía su
-  // propio booleano y podían quedar varias abiertas al mismo tiempo.
   const [openSec, setOpenSec] = useState<"contacto" | "detalles" | "clasificacion" | null>(null)
   const toggle = (k: "contacto" | "detalles" | "clasificacion") => setOpenSec(s => s === k ? null : k)
+  const fnbDate = form.fechaNacimiento ? new Date(form.fechaNacimiento + "T12:00:00") : null
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1708,24 +1816,43 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
         <ClienteModalSection title="Detalles personales" open={openSec === "detalles"} onToggle={() => toggle("detalles")}>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={lbl}>Talla de anillo</label>
-              <input value={form.tallaAnillo ?? ""}
-                onChange={e => setForm(f => ({ ...f, tallaAnillo: e.target.value || null }))}
-                placeholder="6.5 MX" className={inp} />
-            </div>
-            <div>
               <label className={lbl}>Estado civil</label>
               <DropdownPicker label="Estado civil" value={form.estadoCivil ?? ""}
                 onChange={v => setForm(f => ({ ...f, estadoCivil: (v || null) as typeof f.estadoCivil }))}
                 placeholder="— Sin especificar —"
                 options={[{ value: "", label: "— Sin especificar —" }, ...ESTADOS_CIVILES.map(e => ({ value: e, label: e }))]} />
             </div>
+            <div>
+              <label className={lbl}>Sexo</label>
+              <DropdownPicker label="Sexo" value={form.sexo ?? ""}
+                onChange={v => setForm(f => ({ ...f, sexo: (v || null) as Sexo | null }))}
+                placeholder="— Sin especificar —"
+                options={[{ value: "", label: "— Sin especificar —" }, ...SEXOS.map(s => ({ value: s, label: s }))]} />
+            </div>
           </div>
           <div>
-            <label className={lbl}>Ocasión frecuente</label>
-            <input value={form.ocasionFrecuente ?? ""}
-              onChange={e => setForm(f => ({ ...f, ocasionFrecuente: e.target.value || null }))}
-              placeholder="Regalos de aniversario, cumpleaños…" className={inp} />
+            <label className={lbl}>Fecha de nacimiento</label>
+            <CalendarioPicker
+              label="Fecha de nacimiento"
+              value={fnbDate}
+              max={new Date()}
+              onChange={d => setForm(f => ({ ...f, fechaNacimiento: d.toISOString().slice(0, 10) }))}
+              onClear={() => setForm(f => ({ ...f, fechaNacimiento: null }))}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={lbl}>Talla de anillo</label>
+              <input value={form.tallaAnillo ?? ""}
+                onChange={e => setForm(f => ({ ...f, tallaAnillo: e.target.value || null }))}
+                placeholder="6.5 MX" className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>Ocasión frecuente</label>
+              <input value={form.ocasionFrecuente ?? ""}
+                onChange={e => setForm(f => ({ ...f, ocasionFrecuente: e.target.value || null }))}
+                placeholder="Aniversario, cumpleaños…" className={inp} />
+            </div>
           </div>
           <div>
             <label className={lbl}>Redes sociales</label>
@@ -1737,11 +1864,19 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
 
         {etapa === "Lead" && (
           <ClienteModalSection title="Origen y calificación" open={openSec === "clasificacion"} onToggle={() => toggle("clasificacion")}>
-            <div>
-              <label className={lbl}>Origen del contacto</label>
-              <input value={form.origenContacto ?? ""}
-                onChange={e => setForm(f => ({ ...f, origenContacto: e.target.value || null }))}
-                placeholder="Campaña, referido, visita espontánea…" className={inp} />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={lbl}>Origen</label>
+                <input value={form.origenContacto ?? ""}
+                  onChange={e => setForm(f => ({ ...f, origenContacto: e.target.value || null }))}
+                  placeholder="Referido, Google, feria…" className={inp} />
+              </div>
+              <div>
+                <label className={lbl}>Campaña</label>
+                <input value={form.campanaOrigen ?? ""}
+                  onChange={e => setForm(f => ({ ...f, campanaOrigen: e.target.value || null }))}
+                  placeholder="San Valentín 2026…" className={inp} />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <button type="button"
@@ -1806,8 +1941,9 @@ export function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
   return {
     nombre: "", email: null, telefono: null, direccion: null,
     segmento: null, Funnel: etapa, calificado: false,
-    canalContacto: null, origenContacto: null, Estado: "Activo", notas: null,
-    tallaAnillo: null, ocasionFrecuente: null, estadoCivil: null, redesSociales: null,
+    canalContacto: null, origenContacto: null, campanaOrigen: null, Estado: "Activo", notas: null,
+    tallaAnillo: null, ocasionFrecuente: null, estadoCivil: null, sexo: null,
+    fechaNacimiento: null, redesSociales: null,
     fechaLead: etapa === "Lead" ? new Date().toISOString() : null,
     fechaCalificado: null, fechaOferta: null, fechaPedido: null, fechaEntrega: null,
   }
@@ -1823,6 +1959,7 @@ export function PipelineView() {
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
 
+  const [wizardOpen,      setWizardOpen]      = useState(false)
   const [modalOpen,       setModalOpen]       = useState(false)
   const [editando,        setEditando]        = useState<ClienteEmpresa | null>(null)
   const [form,            setForm]            = useState<ClientePayload>(emptyCliente())
@@ -1856,8 +1993,10 @@ export function PipelineView() {
     setForm({
       nombre: c.nombre, email: c.email, telefono: c.telefono, direccion: c.direccion,
       segmento: c.segmento, Funnel: c.Funnel ?? "Lead", calificado: c.calificado,
-      canalContacto: c.canalContacto, origenContacto: c.origenContacto, Estado: c.Estado, notas: c.notas,
-      tallaAnillo: c.tallaAnillo, ocasionFrecuente: c.ocasionFrecuente, estadoCivil: c.estadoCivil, redesSociales: c.redesSociales,
+      canalContacto: c.canalContacto, origenContacto: c.origenContacto, campanaOrigen: c.campanaOrigen,
+      Estado: c.Estado, notas: c.notas,
+      tallaAnillo: c.tallaAnillo, ocasionFrecuente: c.ocasionFrecuente, estadoCivil: c.estadoCivil,
+      sexo: c.sexo, fechaNacimiento: c.fechaNacimiento, redesSociales: c.redesSociales,
       fechaLead: c.fechaLead, fechaCalificado: c.fechaCalificado,
       fechaOferta: c.fechaOferta, fechaPedido: c.fechaPedido, fechaEntrega: c.fechaEntrega,
     })
@@ -2004,7 +2143,7 @@ export function PipelineView() {
             <span className="text-red-600">{rechazados} rechazadas</span>
           </p>
         </div>
-        <button type="button" onClick={() => abrirCrear("Lead")}
+        <button type="button" onClick={() => setWizardOpen(true)}
           className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
           <Plus size={15} /> Nuevo lead
         </button>
@@ -2055,10 +2194,10 @@ export function PipelineView() {
                     ))}
                   </DroppableColumn>
 
-                  {/* Solo se puede dar de alta directo en Lead/Oferta — Pedido/Entrega
-                      solo se alcanzan avanzando con un pedido real conectado (poka-yoke) */}
+                  {/* Lead → wizard con búsqueda; Oferta → modal directo */}
                   {(etapa === "Lead" || etapa === "Oferta") && (
-                    <button type="button" onClick={() => abrirCrear(etapa)}
+                    <button type="button"
+                      onClick={() => etapa === "Lead" ? setWizardOpen(true) : abrirCrear(etapa)}
                       className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-300 dark:text-slate-700 hover:text-slate-500 dark:hover:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-xl transition mt-1">
                       <Plus size={10} /> Agregar
                     </button>
@@ -2069,6 +2208,15 @@ export function PipelineView() {
           </div>
         </div>
         </DndContext>
+      )}
+
+      {wizardOpen && (
+        <NuevoLeadWizard
+          clientes={clientes}
+          guardarCliente={guardarCliente}
+          onCreado={c => setSelectedCliente(c)}
+          onCerrar={() => setWizardOpen(false)}
+        />
       )}
 
       {modalOpen && (
