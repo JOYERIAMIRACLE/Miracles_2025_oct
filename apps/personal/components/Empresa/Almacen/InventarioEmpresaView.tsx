@@ -1201,7 +1201,7 @@ export function InventarioEmpresaView() {
                           placeholder="Sin especificar"
                           options={[
                             { value: "", label: "Sin especificar" },
-                            ...materiales.map(m => ({ value: m.documentId, label: `${m.nombre}${m.precioReferenciaGramo ? ` · $${m.precioReferenciaGramo}/g` : ""}` }))
+                            ...materiales.map(m => ({ value: m.documentId, label: m.nombre }))
                           ]} />
                       </div>
                       <div>
@@ -1442,7 +1442,7 @@ export function InventarioEmpresaView() {
                           placeholder="Sin especificar"
                           options={[
                             { value: "", label: "Sin especificar" },
-                            ...materiales.map(m => ({ value: m.documentId, label: `${m.nombre}${m.precioReferenciaGramo ? ` · $${m.precioReferenciaGramo}/g` : ""}` }))
+                            ...materiales.map(m => ({ value: m.documentId, label: m.nombre }))
                           ]} />
                       </div>
                       <div>
