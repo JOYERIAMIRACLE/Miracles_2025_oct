@@ -51,6 +51,11 @@ const PUBLIC_ACTIONS_TAREA = [
   'api::lead.lead.create',
   'api::lead.lead.update',
   'api::lead.lead.delete',
+  'api::cliente.cliente.find',
+  'api::cliente.cliente.findOne',
+  'api::cliente.cliente.create',
+  'api::cliente.cliente.update',
+  'api::cliente.cliente.delete',
 ];
 
 const PUBLIC_ACTIONS_SNAPSHOT = [
