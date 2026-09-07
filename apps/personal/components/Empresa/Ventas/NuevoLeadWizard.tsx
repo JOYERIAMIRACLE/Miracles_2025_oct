@@ -70,10 +70,11 @@ export function NuevoLeadWizard({
 
   const resultados = useMemo(() => {
     if (!q.trim()) return []
-    const low = q.toLowerCase()
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    const low = norm(q)
     return clientes
       .filter(c =>
-        c.nombre.toLowerCase().includes(low) ||
+        norm(c.nombre).includes(low) ||
         (c.telefono ?? "").includes(low)
       )
       .slice(0, 7)
