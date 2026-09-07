@@ -623,111 +623,153 @@ export function PedidoModal({ venta, onClose, onSaved }: {
             className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
         </div>
 
-        <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
+        <div className="px-5 py-5 space-y-6 overflow-y-auto flex-1">
+
+          {/* — Productos (solo lectura) — */}
           {venta.lineas?.length > 0 && (
             <div>
-              <label className={lbl}>Productos del pedido</label>
-              <div className="border border-slate-300 dark:border-slate-700 rounded-lg divide-y divide-slate-200 dark:divide-slate-800 overflow-hidden">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Productos</span>
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+              </div>
+              <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden bg-slate-50 dark:bg-slate-950/40">
                 {venta.lineas.map(l => (
                   <div key={l.documentId} className="flex items-center justify-between px-3 py-2 text-[12px]">
-                    <span className="text-slate-700 dark:text-slate-300">{l.descripcion} ×{l.cantidad}</span>
-                    <span className="text-slate-500 dark:text-slate-400 font-mono">{fmtMoney(l.subtotal ?? 0)}</span>
+                    <span className="text-slate-700 dark:text-slate-300">{l.descripcion} <span className="text-slate-400 dark:text-slate-600">×{l.cantidad}</span></span>
+                    <span className="text-slate-600 dark:text-slate-400 font-mono tabular-nums">{fmtMoney(l.subtotal ?? 0)}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
+          {/* — Detalles del pedido — */}
           <div>
-            <label className={lbl}>Concepto *</label>
-            <input value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} className={inp} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={lbl}>Monto *</label>
-              <input type="number" min="0" step="0.01" value={form.monto || ""}
-                onChange={e => setForm(f => ({ ...f, monto: Number(e.target.value) || 0 }))} className={inp} />
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Detalles</span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
             </div>
-            <div>
-              <label className={lbl}>Fecha</label>
-              <input type="date" value={form.fecha ?? ""}
-                onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className={inp} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={lbl}>Estado</label>
-              <select title="Estado" value={form.estado}
-                onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoVenta }))} className={inp + " cursor-pointer"}>
-                {ESTADOS_VENTA.map(e => <option key={e} value={e}>{e}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={lbl}>Método de pago</label>
-              <select title="Método de pago" value={form.metodoPago ?? ""}
-                onChange={e => setForm(f => ({ ...f, metodoPago: (e.target.value || null) as MetodoPagoVenta | null }))} className={inp + " cursor-pointer"}>
-                <option value="">— Sin especificar —</option>
-                {METODOS_PAGO_VENTA.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+            <div className="space-y-3">
+              <div>
+                <label className={lbl}>Concepto *</label>
+                <input value={form.concepto} onChange={e => setForm(f => ({ ...f, concepto: e.target.value }))} className={inp} placeholder="Descripción breve del pedido" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={lbl}>Monto *</label>
+                  <input type="number" min="0" step="0.01" value={form.monto || ""}
+                    onChange={e => setForm(f => ({ ...f, monto: Number(e.target.value) || 0 }))} className={inp} placeholder="0.00" />
+                </div>
+                <div>
+                  <label className={lbl}>Fecha</label>
+                  <input type="date" value={form.fecha ?? ""}
+                    onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className={inp} />
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* — Estado y cobro — */}
           <div>
-            <label className={lbl}>Evidencia de pago (opcional)</label>
-            <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
-              onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
-            <button type="button" onClick={() => comprobanteRef.current?.click()}
-              className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
-              <Paperclip size={13} className="shrink-0" />
-              <span className="truncate">
-                {comprobante ? comprobante.name : venta.comprobantePago ? `Ya adjunto: ${venta.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
-              </span>
-            </button>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Estado y cobro</span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={lbl}>Estado</label>
+                  <select title="Estado" value={form.estado}
+                    onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoVenta }))} className={inp + " cursor-pointer"}>
+                    {ESTADOS_VENTA.map(e => <option key={e} value={e}>{e}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={lbl}>Método de pago</label>
+                  <select title="Método de pago" value={form.metodoPago ?? ""}
+                    onChange={e => setForm(f => ({ ...f, metodoPago: (e.target.value || null) as MetodoPagoVenta | null }))} className={inp + " cursor-pointer"}>
+                    <option value="">— Sin especificar —</option>
+                    {METODOS_PAGO_VENTA.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className={lbl}>Comprobante de pago</label>
+                <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
+                  onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
+                <button type="button" onClick={() => comprobanteRef.current?.click()}
+                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                  <Paperclip size={13} className="shrink-0" />
+                  <span className="truncate text-[12px]">
+                    {comprobante ? comprobante.name : venta.comprobantePago ? `Adjunto: ${venta.comprobantePago.name} — reemplazar` : "Adjuntar foto o PDF del comprobante…"}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
 
+          {/* — Notas — */}
           <div>
-            <label className={lbl}>Notas</label>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Notas</span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+            </div>
             <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
-              rows={2} className={inp + " resize-none h-auto py-2"} />
+              rows={2} placeholder="Observaciones, acuerdos, instrucciones especiales…"
+              className={inp + " resize-none h-auto py-2"} />
           </div>
 
-          {/* Pagos de este pedido — anticipo, liquidación, etc. */}
+          {/* — Pagos registrados — */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className={lbl + " mb-0"}>Pagos</label>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Pagos registrados</span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
               {venta.cliente && (
                 <button type="button" onClick={() => setPagoModalOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
+                  className="flex items-center gap-1 text-[10px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition shrink-0">
                   <Plus size={10} /> Registrar
                 </button>
               )}
             </div>
-            <div className="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden">
-              <div className="flex gap-3 px-3 py-2 bg-slate-50 dark:bg-slate-950/50 text-[11px]">
-                <span className="text-slate-500 dark:text-slate-500">Pagado: <span className="text-violet-600 dark:text-violet-400 font-mono font-semibold">{fmtMoney(totalPagado)}</span></span>
-                <span className={saldo > 0 ? "text-violet-600 dark:text-violet-400" : "text-slate-500 dark:text-slate-500"}>
-                  Saldo: <span className="font-mono font-semibold">{fmtMoney(Math.max(saldo, 0))}</span>
-                </span>
+
+            {/* Resumen de saldo */}
+            <div className="flex items-center gap-4 px-3 py-2 mb-2 rounded-lg bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-[11px]">
+              <div className="flex flex-col">
+                <span className="text-slate-400 dark:text-slate-600 uppercase tracking-wide text-[9px] font-medium">Total pedido</span>
+                <span className="font-mono font-semibold text-slate-700 dark:text-slate-300 tabular-nums">{fmtMoney(venta.monto)}</span>
               </div>
-              <div className="divide-y divide-slate-200 dark:divide-slate-800">
+              <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
+              <div className="flex flex-col">
+                <span className="text-slate-400 dark:text-slate-600 uppercase tracking-wide text-[9px] font-medium">Pagado</span>
+                <span className="font-mono font-semibold text-violet-600 dark:text-violet-400 tabular-nums">{fmtMoney(totalPagado)}</span>
+              </div>
+              <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
+              <div className="flex flex-col">
+                <span className="text-slate-400 dark:text-slate-600 uppercase tracking-wide text-[9px] font-medium">Saldo</span>
+                <span className={`font-mono font-semibold tabular-nums ${saldo > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-600"}`}>{fmtMoney(Math.max(saldo, 0))}</span>
+              </div>
+            </div>
+
+            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/70">
                 {pagosLoading ? (
-                  <p className="text-[11px] text-slate-400 dark:text-slate-600 px-3 py-3">Cargando...</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-600 px-3 py-3">Cargando pagos…</p>
                 ) : pagos.length === 0 ? (
-                  <p className="text-[11px] text-slate-400 dark:text-slate-600 px-3 py-3">Sin pagos registrados todavía.</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-600 px-3 py-4 text-center">Sin pagos registrados aún.</p>
                 ) : (
                   pagos.map(p => (
-                    <div key={p.documentId} className="flex items-center justify-between px-3 py-2 group">
+                    <div key={p.documentId} className="flex items-center justify-between px-3 py-2.5 group">
                       <div className="min-w-0">
                         <p className="text-[12px] text-slate-800 dark:text-slate-200 truncate">{p.descripcion}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] text-slate-400 dark:text-slate-600">{fmtDt(p.fecha)}</span>
-                          {p.metodoPago && <span className="text-[9px] text-slate-500 dark:text-slate-500">{p.metodoPago}</span>}
+                          {p.metodoPago && (
+                            <span className="text-[9px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-600 bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5">{p.metodoPago}</span>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[12px] font-semibold text-violet-600 dark:text-violet-400 font-mono">{fmtMoney(p.monto)}</span>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <span className="text-[12px] font-semibold text-violet-600 dark:text-violet-400 font-mono tabular-nums">{fmtMoney(p.monto)}</span>
                         {delPagoId === p.documentId ? (
                           <span className="flex items-center gap-1">
                             <span className="text-[10px] text-slate-500 dark:text-slate-500 whitespace-nowrap">¿Eliminar?</span>
@@ -1913,7 +1955,7 @@ export function PipelineView() {
     totalVentas,
     ventasPorCliente, ventasActivasPorCliente, cotizacionesPorCliente, valorPorCliente,
     actualizarVenta, actualizarCotizacion,
-    avanzar, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
+    avanzar, avanzarA, retroceder, rechazar, recuperar, toggleCalificado, guardarCliente, borrar,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
 
@@ -2218,7 +2260,14 @@ export function PipelineView() {
           cotizacion={null}
           totalCotizaciones={cotizacionesPorCliente.get(creandoCotPara.documentId)?.length ?? 0}
           onClose={() => setCreandoCotPara(null)}
-          onSaved={saved => { actualizarCotizacion(saved); setCreandoCotPara(null) }}
+          onSaved={async saved => {
+            actualizarCotizacion(saved)
+            // Si el cliente todavía está en Lead (o antes de Oferta), avanzarlo
+            const ofertaIdx = FUNNEL_ETAPAS.indexOf("Oferta")
+            const clienteIdx = FUNNEL_ETAPAS.indexOf(creandoCotPara.Funnel ?? "Lead")
+            if (clienteIdx < ofertaIdx) await avanzarA(creandoCotPara, "Oferta")
+            setCreandoCotPara(null)
+          }}
         />
       )}
 
