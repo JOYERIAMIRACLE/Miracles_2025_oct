@@ -13,7 +13,7 @@ const ETIQUETA = "empresa-mkt"
 const BASE     = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 const ESTADOS: { key: EstadoTarea; label: string; color: string }[] = [
-  { key: "pendiente",   label: "Pendiente",   color: "bg-slate-500/10 text-slate-400 border-slate-500/20" },
+  { key: "sin_iniciar",   label: "Sin iniciar",  color: "bg-slate-500/10 text-slate-400 border-slate-500/20" },
   { key: "en_progreso", label: "En progreso", color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
   { key: "en_pausa",    label: "En pausa",    color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
   { key: "completada",  label: "Completada",  color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
@@ -51,7 +51,7 @@ type FormData = {
 }
 
 function emptyForm(): FormData {
-  return { titulo: "", descripcion: "", estado: "pendiente", prioridad: "media", fechaVencimiento: "", progreso: 0, categoria: "" }
+  return { titulo: "", descripcion: "", estado: "sin_iniciar", prioridad: "media", fechaVencimiento: "", progreso: 0, categoria: "" }
 }
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
@@ -97,7 +97,7 @@ export function TareasEmpresaView() {
 
   const stats = useMemo(() => ({
     total:       tareas.length,
-    pendientes:  tareas.filter(t => t.estado === "pendiente").length,
+    pendientes:  tareas.filter(t => t.estado === "sin_iniciar").length,
     progreso:    tareas.filter(t => t.estado === "en_progreso").length,
     completadas: tareas.filter(t => t.estado === "completada").length,
   }), [tareas])
@@ -268,7 +268,7 @@ export function TareasEmpresaView() {
                 <div key={t.documentId} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors group">
                   {/* Toggle completada */}
                   <button type="button"
-                    onClick={() => cambiarEstado(t, t.estado === "completada" ? "pendiente" : "completada")}
+                    onClick={() => cambiarEstado(t, t.estado === "completada" ? "sin_iniciar" : "completada")}
                     className={`mt-0.5 h-4 w-4 rounded border flex items-center justify-center shrink-0 transition-all ${
                       t.estado === "completada"
                         ? "bg-violet-500 border-violet-500"
