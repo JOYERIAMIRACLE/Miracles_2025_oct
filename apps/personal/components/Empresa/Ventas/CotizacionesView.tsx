@@ -236,9 +236,10 @@ function SeleccionarClienteModal({ clientes, onClose, onSelect }: {
 }) {
   const [q, setQ] = useState("")
   const filtrados = useMemo(() => {
-    const query = q.trim().toLowerCase()
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    const query = norm(q.trim())
     const base = !query ? clientes : clientes.filter(c =>
-      c.nombre.toLowerCase().includes(query) || (c.telefono ?? "").includes(query)
+      norm(c.nombre).includes(query) || (c.telefono ?? "").includes(query)
     )
     return base.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).slice(0, 50)
   }, [clientes, q])
@@ -312,10 +313,11 @@ export function CotizacionesView() {
   }, [cotizaciones])
 
   const gruposFiltrados = useMemo(() => {
-    const q = search.toLowerCase()
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    const q = norm(search)
     return grupos.filter(g =>
       !search ||
-      g.nombre.toLowerCase().includes(q) ||
+      norm(g.nombre).includes(q) ||
       g.cotizaciones.some(c => (c.numero ?? "").toLowerCase().includes(q))
     )
   }, [grupos, search])
