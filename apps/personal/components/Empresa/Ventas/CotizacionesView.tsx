@@ -231,7 +231,7 @@ function ConvertirPedidoModal({ cotizacion, totalVentas, onClose, onConverted }:
 // CotizacionModal necesita un cliente ya elegido (no trae su propio buscador)
 // — este paso es lo que faltaba para poder crear una cotización desde este
 // panel sin tener que ir primero a Leads/Contactos a buscar al cliente ahí.
-function SeleccionarClienteModal({ clientes, onClose, onSelect }: {
+export function SeleccionarClienteModal({ clientes, onClose, onSelect }: {
   clientes: ClienteEmpresa[]; onClose: () => void; onSelect: (c: ClienteEmpresa) => void
 }) {
   const [q, setQ] = useState("")

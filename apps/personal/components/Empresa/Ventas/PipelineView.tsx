@@ -37,6 +37,7 @@ import { confirmDialog } from "../ConfirmDialog"
 import { DropdownPicker } from "../../Shared/DropdownPicker"
 import { CalendarioPicker } from "../../Shared/CalendarioPicker"
 import { NuevoLeadWizard } from "./NuevoLeadWizard"
+import { SeleccionarClienteModal } from "./CotizacionesView"
 import { useGetLeadsByCliente } from "@/api/lead/getLead"
 import { Lead, LEAD_COLOR } from "@/types/lead"
 
@@ -1924,6 +1925,8 @@ export function PipelineView() {
   const [selectedCliente, setSelectedCliente] = useState<ClienteEmpresa | null>(null)
   const [cotizacionAbierta, setCotizacionAbierta] = useState<{ cliente: ClienteEmpresa; cotizacion: Cotizacion } | null>(null)
   const [pedidoAbiertoBoard, setPedidoAbiertoBoard] = useState<VentaEmpresa | null>(null)
+  const [pickingClienteCot,  setPickingClienteCot]  = useState(false)
+  const [creandoCotPara,     setCreandoCotPara]     = useState<ClienteEmpresa | null>(null)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const porFunnel = useMemo(() => {
@@ -2151,10 +2154,10 @@ export function PipelineView() {
                     ))}
                   </DroppableColumn>
 
-                  {/* Lead → wizard con búsqueda; Oferta → modal directo */}
+                  {/* Lead → wizard con búsqueda; Oferta → elegir cliente + nueva cotización */}
                   {(etapa === "Lead" || etapa === "Oferta") && (
                     <button type="button"
-                      onClick={() => etapa === "Lead" ? setWizardOpen(true) : abrirCrear(etapa)}
+                      onClick={() => etapa === "Lead" ? setWizardOpen(true) : setPickingClienteCot(true)}
                       className="flex items-center justify-center gap-1 w-full py-1.5 text-[10px] text-slate-300 dark:text-slate-700 hover:text-slate-500 dark:hover:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-xl transition mt-1">
                       <Plus size={10} /> Agregar
                     </button>
@@ -2198,6 +2201,24 @@ export function PipelineView() {
           totalCotizaciones={cotizacionesPorCliente.get(cotizacionAbierta.cliente.documentId)?.length ?? 0}
           onClose={() => setCotizacionAbierta(null)}
           onSaved={saved => { actualizarCotizacion(saved); setCotizacionAbierta(null) }}
+        />
+      )}
+
+      {pickingClienteCot && (
+        <SeleccionarClienteModal
+          clientes={clientes}
+          onClose={() => setPickingClienteCot(false)}
+          onSelect={c => { setCreandoCotPara(c); setPickingClienteCot(false) }}
+        />
+      )}
+
+      {creandoCotPara && (
+        <CotizacionModal
+          cliente={creandoCotPara}
+          cotizacion={null}
+          totalCotizaciones={cotizacionesPorCliente.get(creandoCotPara.documentId)?.length ?? 0}
+          onClose={() => setCreandoCotPara(null)}
+          onSaved={saved => { actualizarCotizacion(saved); setCreandoCotPara(null) }}
         />
       )}
 
