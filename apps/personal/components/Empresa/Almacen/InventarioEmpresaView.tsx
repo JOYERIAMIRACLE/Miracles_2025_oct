@@ -211,7 +211,7 @@ export function InventarioEmpresaView() {
   const [openSection, setOpenSection] = useState<SeccionProducto | null>(null)
   function toggleSection(k: SeccionProducto) { setOpenSection(s => s === k ? null : k) }
   const [loteOrigenId,    setLoteOrigenId]    = useState("")
-  const [lotesDisponibles, setLotesDisponibles] = useState<Array<{documentId:string; gramos:number; fecha:string; notas:string|null}>>([])
+  const [lotesDisponibles, setLotesDisponibles] = useState<Array<{documentId:string; gramos:number; fecha:string; notas:string|null; precioPorGramo:number|null}>>([])
   const [loadingLotes,    setLoadingLotes]    = useState(false)
   const [showCatPick,    setShowCatPick]    = useState(false)
   const [catSearch,      setCatSearch]      = useState("")
@@ -414,35 +414,65 @@ export function InventarioEmpresaView() {
         "fields[1]": "fecha",
         "fields[2]": "notas",
         "fields[3]": "documentId",
+        // El precio real se negocia por compra y cambia de una a otra — se
+        // trae el de la línea de compra específica de este lote en vez de
+        // solo el precio de referencia genérico del material.
+        "populate[compraLinea][fields][0]": "precioPorGramo",
       })
       const res  = await fetch(`${BACKEND}/api/movimientos-material?${params}`)
       const json = await res.json()
-      setLotesDisponibles(json.data ?? [])
+      setLotesDisponibles((json.data ?? []).map((l: Record<string, unknown>) => ({
+        ...l,
+        precioPorGramo: (l.compraLinea as { precioPorGramo?: number } | null)?.precioPorGramo ?? null,
+      })))
     } catch { setLotesDisponibles([]) }
     finally  { setLoadingLotes(false) }
   }
 
-  // Costo de material = peso (g) × precio/gramo del material elegido + mano de obra manual.
-  // Solo se auto-calcula cuando hay material + peso capturados; si no, el costo sigue siendo editable a mano
-  // (compatibilidad con productos que no llevan seguimiento de peso).
+  // El precio por gramo real depende del lote de compra elegido (se negocia
+  // por compra y cambia de una a otra) — el precio de referencia del material
+  // es solo el respaldo cuando no se eligió un lote específico.
+  function precioVigente(materialInsumo: string, loteId: string): number | null {
+    if (loteId) {
+      const lote = lotesDisponibles.find(l => l.documentId === loteId)
+      if (lote?.precioPorGramo) return lote.precioPorGramo
+    }
+    return materiales.find(m => m.documentId === materialInsumo)?.precioReferenciaGramo ?? null
+  }
+
+  function calcularCostoConPrecio(f: FormData, precio: number | null): FormData {
+    if (!precio || !f.pesoGramos) return f
+    const costoCalc = Math.round(Number(f.pesoGramos) * precio * 100) / 100 + (Number(f.costoManoObra) || 0)
+    const costoRedondeado = Math.round(costoCalc * 100) / 100
+    // Precio de venta = costo × (1 + margen objetivo) — mismo margen global que "Aplicar margen a todos".
+    // Se recalcula solo si el usuario no lo tocó a mano (precioAuto).
+    const costo = precioAuto ? String(Math.round(costoRedondeado * (1 + globalMargen / 100) * 100) / 100) : f.costo
+    return { ...f, costoProduccion: String(costoRedondeado), costo }
+  }
+
+  // Costo de material = peso (g) × precio/gramo vigente (del lote elegido, o
+  // el de referencia del material) + mano de obra manual. Solo se auto-calcula
+  // cuando hay material + peso capturados; si no, el costo sigue siendo
+  // editable a mano (compatibilidad con productos que no llevan seguimiento de peso).
   function recalcularCosto(next: Partial<Pick<FormData, "materialInsumo" | "pesoGramos" | "costoManoObra">>) {
-    if (next.materialInsumo !== undefined) {
-      fetchLotesForMaterial(next.materialInsumo)
+    const cambiaMaterial = next.materialInsumo !== undefined
+    if (cambiaMaterial) {
+      fetchLotesForMaterial(next.materialInsumo!)
       setLoteOrigenId("")
     }
     setForm(f => {
       const merged = { ...f, ...next }
-      const mat = materiales.find(m => m.documentId === merged.materialInsumo)
-      if (mat?.precioReferenciaGramo && merged.pesoGramos) {
-        const costoCalc = Math.round(Number(merged.pesoGramos) * mat.precioReferenciaGramo * 100) / 100 + (Number(merged.costoManoObra) || 0)
-        const costoRedondeado = Math.round(costoCalc * 100) / 100
-        // Precio de venta = costo × (1 + margen objetivo) — mismo margen global que "Aplicar margen a todos".
-        // Se recalcula solo si el usuario no lo tocó a mano (precioAuto).
-        const costo = precioAuto ? String(Math.round(costoRedondeado * (1 + globalMargen / 100) * 100) / 100) : merged.costo
-        return { ...merged, costoProduccion: String(costoRedondeado), costo }
-      }
-      return merged
+      const precio = precioVigente(merged.materialInsumo, cambiaMaterial ? "" : loteOrigenId)
+      return calcularCostoConPrecio(merged, precio)
     })
+  }
+
+  // Elegir un lote específico recalcula el costo con SU precio negociado en
+  // vez del precio de referencia genérico del material — antes cambiar de
+  // lote no hacía nada, aunque el precio real de esa compra fuera distinto.
+  function elegirLote(loteId: string) {
+    setLoteOrigenId(loteId)
+    setForm(f => calcularCostoConPrecio(f, precioVigente(f.materialInsumo, loteId)))
   }
   const costeoAutomatico = !!(form.materialInsumo && form.pesoGramos)
 
@@ -1184,13 +1214,13 @@ export function InventarioEmpresaView() {
                           {loadingLotes && <Loader2 size={9} className="animate-spin text-slate-600 ml-1" />}
                         </label>
                         <DropdownPicker label="Lote de compra" value={loteOrigenId}
-                          onChange={setLoteOrigenId}
+                          onChange={elegirLote}
                           placeholder={lotesDisponibles.length === 0 ? (loadingLotes ? "Cargando…" : "Sin compras registradas para este material") : "Seleccionar lote…"}
                           options={[
                             { value: "", label: "Sin especificar" },
                             ...lotesDisponibles.map(l => ({
                               value: l.documentId,
-                              label: `${l.gramos}g · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
+                              label: `${l.gramos}g${l.precioPorGramo ? ` · $${l.precioPorGramo}/g` : ""} · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
                             }))
                           ]} />
                       </div>
@@ -1198,7 +1228,7 @@ export function InventarioEmpresaView() {
 
                     {costeoAutomatico && (
                       <p className="text-[11px] text-violet-500 mt-2">
-                        Costo: {Number(form.pesoGramos)}g × ${materiales.find(m => m.documentId === form.materialInsumo)?.precioReferenciaGramo ?? 0}/g
+                        Costo: {Number(form.pesoGramos)}g × ${precioVigente(form.materialInsumo, loteOrigenId) ?? 0}/g
                         {Number(form.costoManoObra) > 0 ? ` + $${form.costoManoObra} mano de obra` : ""} = ${form.costoProduccion}
                         {precioAuto ? ` · precio venta sugerido $${form.costo} (margen ${globalMargen}%)` : ""}
                         {Number(form.stock) > 1 ? ` · se descontarán ${(Number(form.pesoGramos) * Number(form.stock)).toFixed(2)}g en total (${form.stock} piezas)` : ""}
@@ -1427,19 +1457,22 @@ export function InventarioEmpresaView() {
                           {loadingLotes && <Loader2 size={9} className="animate-spin text-slate-600 ml-1" />}
                         </label>
                         <DropdownPicker label="Lote de compra" value={loteOrigenId}
-                          onChange={setLoteOrigenId}
+                          onChange={elegirLote}
                           placeholder={loadingLotes ? "Cargando…" : lotesDisponibles.length === 0 ? "Sin compras para este material" : "Seleccionar lote…"}
                           options={[
                             { value: "", label: "Sin especificar" },
                             ...lotesDisponibles.map(l => ({
                               value: l.documentId,
-                              label: `${l.gramos}g · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
+                              label: `${l.gramos}g${l.precioPorGramo ? ` · $${l.precioPorGramo}/g` : ""} · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
                             }))
                           ]} />
                       </div>
                     )}
                     {costeoAutomatico && (
-                      <p className="text-[11px] text-slate-600 mt-2">El costo se recalculó con el peso/material actuales — editar aquí no vuelve a descontar material (solo pasa al crear la pieza o al sumar stock).</p>
+                      <p className="text-[11px] text-slate-600 mt-2">
+                        Costo: {Number(form.pesoGramos)}g × ${precioVigente(form.materialInsumo, loteOrigenId) ?? 0}/g
+                        {loteOrigenId ? " (precio del lote elegido)" : " (precio de referencia del material)"} — editar aquí no vuelve a descontar material (solo pasa al crear la pieza o al sumar stock).
+                      </p>
                     )}
                   </SectCollapse>
 
