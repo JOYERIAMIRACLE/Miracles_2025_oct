@@ -82,19 +82,25 @@ export function useClientesPipeline() {
     const fechaField = FECHA_FIELD_LEAD[etapa]
     const extra = !(lead[fechaField] as string | null) ? { [fechaField]: new Date().toISOString() } : {}
 
-    if (etapa === "Oferta") {
-      const clienteId = lead.cliente?.documentId
-      const cots = clienteId ? (cotizacionesPorCliente.get(clienteId) ?? []) : []
-      if (cots.length === 0) {
-        setOfertaGateFor(lead)
-        return null
+    // Solo aplicar gates cuando el usuario avanza manualmente (sin destino explícito).
+    // Si destino viene explícito, significa que la propia gate ya se ejecutó y
+    // creó el artefacto requerido — no volver a bloquear aunque el estado local
+    // todavía no se haya propagado.
+    if (!destino) {
+      if (etapa === "Oferta") {
+        const clienteId = lead.cliente?.documentId
+        const cots = clienteId ? (cotizacionesPorCliente.get(clienteId) ?? []) : []
+        if (cots.length === 0) {
+          setOfertaGateFor(lead)
+          return null
+        }
       }
-    }
-    if (etapa === "Pedido") {
-      const clienteId = lead.cliente?.documentId
-      if (clienteId && (ventasActivasPorCliente.get(clienteId)?.length ?? 0) === 0) {
-        setPedidoGateFor(lead)
-        return null
+      if (etapa === "Pedido") {
+        const clienteId = lead.cliente?.documentId
+        if (clienteId && (ventasActivasPorCliente.get(clienteId)?.length ?? 0) === 0) {
+          setPedidoGateFor(lead)
+          return null
+        }
       }
     }
     try {
