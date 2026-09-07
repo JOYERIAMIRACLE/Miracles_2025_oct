@@ -1361,9 +1361,6 @@ export function InventarioEmpresaView() {
                         <div className="flex items-center justify-between mb-1.5">
                           <label className="text-[11px] font-medium text-slate-400">SKU</label>
                           <div className="flex items-center gap-2">
-                            {skuAuto && form.categoriaJoya && (
-                              <span className="text-[10px] font-medium text-violet-600 flex items-center gap-0.5"><RefreshCw size={9}/> Auto</span>
-                            )}
                             {!skuAuto && form.categoriaJoya && (
                               <button type="button" onClick={() => { setSkuAuto(true); setForm(f => ({...f, sku:buildSku(f.categoriaJoya,f.materialProducto,f.figura,f.talla)})) }}
                                 className="text-[10px] text-slate-500 hover:text-violet-400 flex items-center gap-0.5 transition-colors">
@@ -1376,9 +1373,11 @@ export function InventarioEmpresaView() {
                             </button>
                           </div>
                         </div>
-                        <input type="text" placeholder="Auto" value={form.sku}
-                          onChange={e => { setSkuAuto(false); setForm(f => ({...f, sku:e.target.value})) }}
-                          className={inp+" font-mono"}/>
+                        {/* Fijo a propósito — se arma solo desde Categoría/Material/
+                            Talla/Estilo (o desde el constructor). Escribirlo a mano
+                            lo desincronizaba de esos campos sin darse cuenta. */}
+                        <input type="text" placeholder="Auto" value={form.sku} readOnly title="Se genera automáticamente — usa el constructor para elegir uno distinto"
+                          className={inp+" font-mono bg-slate-800/40 dark:bg-slate-800/40 text-slate-400 cursor-not-allowed"}/>
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
