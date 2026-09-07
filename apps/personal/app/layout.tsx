@@ -9,11 +9,13 @@ import { ThemeProvider } from "@/app/(Tienda)/1tiendacomponentes/theme-provider"
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  preload: false,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"

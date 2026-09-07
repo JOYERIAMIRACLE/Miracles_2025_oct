@@ -1,5 +1,20 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface JoyeriaAtributosJoya extends Struct.ComponentSchema {
+  collectionName: 'components_joyeria_atributos_joyas';
+  info: {
+    displayName: 'Atributos de joya';
+    icon: 'gem';
+  };
+  attributes: {
+    cierre: Schema.Attribute.String;
+    conPiedra: Schema.Attribute.Boolean;
+    kilates: Schema.Attribute.String;
+    largoCm: Schema.Attribute.Decimal;
+    tipoPiedra: Schema.Attribute.String;
+  };
+}
+
 export interface NuevoComponentesGestion extends Struct.ComponentSchema {
   collectionName: 'components_nuevo_componentes_gestion_s';
   info: {
@@ -123,6 +138,7 @@ export interface SharedWerfewr extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'joyeria.atributos-joya': JoyeriaAtributosJoya;
       'nuevo.componentes-gestion': NuevoComponentesGestion;
       'shared.anilloss': SharedAnilloss;
       'shared.cadenasss': SharedCadenasss;

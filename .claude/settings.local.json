@@ -31,11 +31,45 @@
       "Bash(gh workflow *)",
       "PowerShell(Rename-Item \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\app\\\\\\(Trabajo\\)\\\\trabajo\" \"marketing\")",
       "PowerShell(Rename-Item \"c:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\app\\\\\\(Portal\\)\\\\trabajo\" \"marketing\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "PowerShell(Rename-Item \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\public\\\\logo SDI.png.png\" \"logo-sdi.png\")",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\api\" \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\sdi-portal\\\\api\" -Recurse -Force)",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\components\\\\Personal\" \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\sdi-portal\\\\components\\\\Personal\" -Recurse -Force)",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\components\\\\Shared\" \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\sdi-portal\\\\components\\\\Shared\" -Recurse -Force)",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\Miracles\\\\apps\\\\personal\\\\components\\\\ui\" \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\sdi-portal\\\\components\\\\ui\" -Recurse -Force)",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\sdi-portal\\\\public\\\\logo-sdi.png\" \"C:\\\\Users\\\\RicardoRodriguezAvil\\\\Desktop\\\\sdi-portal\\\\app\\\\favicon.ico\" -Force)"
     ],
     "additionalDirectories": [
       "c:\\Users\\RicardoRodriguezAvil\\Desktop\\Miracles\\apps\\personal\\app\\(AdminEmpresaMiracles)\\gestion-empresa\\finanzas",
       "c:\\Users\\RicardoRodriguezAvil\\Desktop\\Miracles\\apps\\personal\\app\\(Tienda)\\1tiendacomponentes\\Home"
     ]
-  }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const p=process.argv[1];const f=require('fs');if(f.existsSync(p)){const r=require('child_process').spawnSync(process.execPath,[p],{stdio:'inherit'});process.exit(r.status===null?1:r.status);}\" \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking UI changes"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const p=process.argv[1];const f=require('fs');if(f.existsSync(p)){const r=require('child_process').spawnSync(process.execPath,[p],{stdio:'inherit'});process.exit(r.status===null?1:r.status);}\" \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\"",
+            "timeout": 30,
+            "statusMessage": "Design deep pass"
+          }
+        ]
+      }
+    ]
+  },
+  "description": "Impeccable design detector: immediate-tier checks after Edit/Write on UI files, full-rule deep pass on Stop."
 }

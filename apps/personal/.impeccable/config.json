@@ -1,0 +1,37 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "app/(GameEmpresa)/**",
+          "components/GameEmpresa/**"
+        ],
+        "createdAt": "2026-09-03T01:06:45.769Z",
+        "reason": "Segundo Cerebro tiene su propio DESIGN.md separado (components/GameEmpresa/DESIGN.md) que el detector no descubre; usuario confirmó que es entretenimiento, prioridad es el portal"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "app/(GameEmpresa)/**",
+          "components/GameEmpresa/**"
+        ],
+        "createdAt": "2026-09-03T01:06:54.737Z",
+        "reason": "Segundo Cerebro tiene su propio DESIGN.md separado (components/GameEmpresa/DESIGN.md) que el detector no descubre; usuario confirmó que es entretenimiento, prioridad es el portal"
+      },
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          "components/Empresa/Ventas/PipelineView.tsx"
+        ],
+        "createdAt": "2026-09-03T05:10:18.982Z",
+        "reason": "Agent: L1119 is a within-palette avatar gradient (from-violet-500 to-violet-800, same shade family as PortalMDOHeader/RecursosDescargables already reviewed and cleared in this session's critique); L1185 is plain text-violet-400 on a stat number, the app's standard single-accent-on-metric convention documented in DESIGN.md, not a gradient or multi-hue palette at all"
+      }
+    ]
+  }
+}

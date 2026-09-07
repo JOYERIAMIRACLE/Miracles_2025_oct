@@ -126,6 +126,12 @@
       "relation": "oneToMany",
       "target": "api::cotizacion.cotizacion",
       "mappedBy": "cliente"
+    },
+    "leads": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::lead.lead",
+      "mappedBy": "cliente"
     }
   }
 }

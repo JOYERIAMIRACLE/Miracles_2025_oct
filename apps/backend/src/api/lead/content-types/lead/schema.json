@@ -1,0 +1,67 @@
+{
+  "kind": "collectionType",
+  "collectionName": "leads",
+  "info": {
+    "singularName": "lead",
+    "pluralName": "leads",
+    "displayName": "Lead"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "numero": {
+      "type": "string"
+    },
+    "cliente": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente.cliente",
+      "inversedBy": "leads"
+    },
+    "Funnel": {
+      "type": "enumeration",
+      "enum": ["Lead", "Oferta", "Pedido", "Entrega", "Rechazada"],
+      "default": "Lead"
+    },
+    "calificado": {
+      "type": "boolean",
+      "default": false
+    },
+    "origenContacto": {
+      "type": "string"
+    },
+    "canalContacto": {
+      "type": "string"
+    },
+    "campanaOrigen": {
+      "type": "string"
+    },
+    "notas": {
+      "type": "text"
+    },
+    "fechaLead": {
+      "type": "datetime"
+    },
+    "fechaOferta": {
+      "type": "datetime"
+    },
+    "fechaPedido": {
+      "type": "datetime"
+    },
+    "fechaEntrega": {
+      "type": "datetime"
+    },
+    "fechaRechazada": {
+      "type": "datetime"
+    },
+    "fechaCalificado": {
+      "type": "datetime"
+    },
+    "segmento": {
+      "type": "enumeration",
+      "enum": ["Pareja", "Matrimonio", "Familiar", "Personalizado"]
+    }
+  }
+}

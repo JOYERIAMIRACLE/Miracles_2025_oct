@@ -10,6 +10,8 @@ import {
   SEXOS, Sexo,
   FUNNEL_COLOR,
 } from "@/types/clienteEmpresa"
+import { Lead, LeadPayload } from "@/types/lead"
+import { createLead, countLeads } from "@/api/lead/getLead"
 import { DropdownPicker } from "../../Shared/DropdownPicker"
 import { CalendarioPicker } from "../../Shared/CalendarioPicker"
 import { CANALES, CanalIcon } from "./PipelineView"
@@ -33,6 +35,7 @@ type LeadForm = {
   canalContacto:  string | null
   campanaOrigen:  string | null
   notas:          string | null
+  segmento:       SegmentoCliente | null
 }
 
 const emptyContacto = (): ContactoForm => ({
@@ -42,7 +45,7 @@ const emptyContacto = (): ContactoForm => ({
 })
 
 const emptyLead = (): LeadForm => ({
-  origenContacto: null, canalContacto: null, campanaOrigen: null, notas: null,
+  origenContacto: null, canalContacto: null, campanaOrigen: null, notas: null, segmento: null,
 })
 
 const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
@@ -56,34 +59,32 @@ export function NuevoLeadWizard({
 }: {
   clientes:       ClienteEmpresa[]
   guardarCliente: (editando: ClienteEmpresa | null, form: ClientePayload) => Promise<ClienteEmpresa>
-  onCreado:       (c: ClienteEmpresa) => void
+  onCreado:       (lead: Lead, cliente: ClienteEmpresa) => void
   onCerrar:       () => void
 }) {
-  const [paso,       setPaso]       = useState<Paso>("buscar")
-  const [esNuevo,    setEsNuevo]    = useState(false)
+  const [paso,         setPaso]         = useState<Paso>("buscar")
+  const [esNuevo,      setEsNuevo]      = useState(false)
   const [seleccionado, setSeleccionado] = useState<ClienteEmpresa | null>(null)
-  const [q,          setQ]          = useState("")
-  const [guardando,  setGuardando]  = useState(false)
+  const [q,            setQ]            = useState("")
+  const [guardando,    setGuardando]    = useState(false)
 
   const [cf, setCf] = useState<ContactoForm>(emptyContacto())
   const [lf, setLf] = useState<LeadForm>(emptyLead())
 
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+
   const resultados = useMemo(() => {
     if (!q.trim()) return []
-    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     const low = norm(q)
     return clientes
-      .filter(c =>
-        norm(c.nombre).includes(low) ||
-        (c.telefono ?? "").includes(low)
-      )
+      .filter(c => norm(c.nombre).includes(low) || (c.telefono ?? "").includes(low))
       .slice(0, 7)
   }, [q, clientes])
 
   const nombreDisplay = esNuevo ? cf.nombre : (seleccionado?.nombre ?? "")
 
-  const irAContacto = () => { setEsNuevo(true); setSeleccionado(null); setPaso("contacto") }
-  const irALead     = (c: ClienteEmpresa) => { setEsNuevo(false); setSeleccionado(c); setPaso("lead") }
+  const irAContacto  = () => { setEsNuevo(true); setSeleccionado(null); setPaso("contacto") }
+  const irALead      = (c: ClienteEmpresa) => { setEsNuevo(false); setSeleccionado(c); setPaso("lead") }
   const irALeadNuevo = () => {
     if (!cf.nombre.trim()) { toast.error("El nombre es obligatorio"); return }
     setPaso("lead")
@@ -95,31 +96,41 @@ export function NuevoLeadWizard({
     if (guardando) return
     setGuardando(true)
     try {
-      const now   = new Date().toISOString()
-      const payload: ClientePayload = esNuevo
-        ? {
-            nombre: cf.nombre.trim(),
-            telefono: cf.telefono, email: cf.email, direccion: cf.direccion,
-            estadoCivil: cf.estadoCivil, sexo: cf.sexo,
-            fechaNacimiento: cf.fechaNacimiento,
-            segmento: cf.segmento, ocasionFrecuente: cf.ocasionFrecuente,
-            origenContacto: lf.origenContacto, canalContacto: lf.canalContacto,
-            campanaOrigen: lf.campanaOrigen, notas: lf.notas,
-            Funnel: "Lead", Estado: "Activo", calificado: false, fechaLead: now,
-          }
-        : {
-            nombre: seleccionado!.nombre,
-            origenContacto: lf.origenContacto, canalContacto: lf.canalContacto,
-            campanaOrigen: lf.campanaOrigen, notas: lf.notas,
-            Funnel: "Lead", calificado: false, fechaLead: now,
-          }
+      // 1. Si es nuevo contacto, crearlo primero
+      let cliente: ClienteEmpresa = seleccionado!
+      if (esNuevo) {
+        cliente = await guardarCliente(null, {
+          nombre: cf.nombre.trim(),
+          telefono: cf.telefono, email: cf.email, direccion: cf.direccion,
+          estadoCivil: cf.estadoCivil, sexo: cf.sexo,
+          fechaNacimiento: cf.fechaNacimiento,
+          segmento: cf.segmento, ocasionFrecuente: cf.ocasionFrecuente,
+          Estado: "Activo",
+        })
+      }
 
-      const creado = await guardarCliente(esNuevo ? null : seleccionado, payload)
-      toast.success(`Lead "${creado.nombre}" creado`)
-      onCreado(creado)
+      // 2. Crear el lead independiente
+      const total = await countLeads()
+      const numero = `LEAD-${String(total + 1).padStart(3, "0")}`
+      const payload: LeadPayload = {
+        numero,
+        cliente:        cliente.documentId,
+        Funnel:         "Lead",
+        fechaLead:      new Date().toISOString(),
+        origenContacto: lf.origenContacto,
+        canalContacto:  lf.canalContacto,
+        campanaOrigen:  lf.campanaOrigen,
+        notas:          lf.notas,
+        segmento:       lf.segmento,
+        calificado:     false,
+      }
+
+      const lead = await createLead(payload)
+      toast.success(`${numero} creado para "${cliente.nombre}"`)
+      onCreado(lead, cliente)
       onCerrar()
-    } catch {
-      toast.error("Error al crear el lead")
+    } catch (e: unknown) {
+      toast.error((e as Error)?.message ?? "Error al crear el lead")
     } finally {
       setGuardando(false)
     }
@@ -140,14 +151,14 @@ export function NuevoLeadWizard({
             )}
             <div>
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {paso === "buscar"  ? "Agregar lead" :
-                 paso === "contacto"? "Nuevo contacto" :
-                                     `Lead — ${nombreDisplay || "contacto"}`}
+                {paso === "buscar"   ? "Nuevo lead" :
+                 paso === "contacto" ? "Nuevo contacto" :
+                                      `Lead — ${nombreDisplay || "contacto"}`}
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-500">
-                {paso === "buscar"  ? "¿Existe este contacto?" :
-                 paso === "contacto"? "Paso 1 de 2 — datos del contacto" :
-                                     esNuevo ? "Paso 2 de 2 — datos del lead" : "Datos del lead"}
+                {paso === "buscar"   ? "¿Para qué contacto?" :
+                 paso === "contacto" ? "Paso 1 de 2 — datos del contacto" :
+                                      esNuevo ? "Paso 2 de 2 — datos del lead" : "Datos del lead"}
               </p>
             </div>
           </div>
@@ -168,7 +179,7 @@ export function NuevoLeadWizard({
                   autoFocus
                   value={q}
                   onChange={e => setQ(e.target.value)}
-                  placeholder="Buscar por nombre o teléfono…"
+                  placeholder="Buscar contacto por nombre o teléfono…"
                   className={`${inp} pl-8`}
                 />
               </div>
@@ -209,7 +220,7 @@ export function NuevoLeadWizard({
 
               {!q.trim() && (
                 <p className="text-[11px] text-slate-400 dark:text-slate-600 text-center">
-                  Busca primero para evitar duplicados
+                  Busca el contacto o crea uno nuevo
                 </p>
               )}
             </>
@@ -244,7 +255,7 @@ export function NuevoLeadWizard({
                 <label className={lbl}>Dirección</label>
                 <input value={cf.direccion ?? ""}
                   onChange={e => setCf(f => ({ ...f, direccion: e.target.value || null }))}
-                  placeholder="Calle, número, colonia, ciudad…" className={inp} />
+                  placeholder="Calle, número, colonia…" className={inp} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -275,22 +286,6 @@ export function NuevoLeadWizard({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={lbl}>Tipo de cliente</label>
-                  <DropdownPicker label="Tipo de cliente" value={cf.segmento ?? ""}
-                    onChange={v => setCf(f => ({ ...f, segmento: (v || null) as SegmentoCliente | null }))}
-                    placeholder="— Sin segmento —"
-                    options={[{ value: "", label: "— Sin segmento —" }, ...SEGMENTOS.map(s => ({ value: s, label: s }))]} />
-                </div>
-                <div>
-                  <label className={lbl}>Ocasión especial</label>
-                  <input value={cf.ocasionFrecuente ?? ""}
-                    onChange={e => setCf(f => ({ ...f, ocasionFrecuente: e.target.value || null }))}
-                    placeholder="Aniversario, cumpleaños…" className={inp} />
-                </div>
-              </div>
-
               <div className="flex justify-end gap-2 pt-1">
                 <button type="button" onClick={() => setPaso("buscar")}
                   className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-lg hover:text-slate-800 dark:hover:text-slate-200 transition">
@@ -307,7 +302,7 @@ export function NuevoLeadWizard({
           {/* ── Paso 3: Lead ── */}
           {paso === "lead" && (
             <>
-              {!esNuevo && seleccionado && (
+              {seleccionado && (
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
                   <UserCheck size={14} className="text-violet-500 shrink-0" />
                   <div className="min-w-0">
@@ -343,10 +338,18 @@ export function NuevoLeadWizard({
               </div>
 
               <div>
+                <label className={lbl}>Tipo de cliente</label>
+                <DropdownPicker label="Tipo de cliente" value={lf.segmento ?? ""}
+                  onChange={v => setLf(f => ({ ...f, segmento: (v || null) as SegmentoCliente | null }))}
+                  placeholder="— Sin segmento —"
+                  options={[{ value: "", label: "— Sin segmento —" }, ...SEGMENTOS.map(s => ({ value: s, label: s }))]} />
+              </div>
+
+              <div>
                 <label className={lbl}>Notas</label>
                 <textarea value={lf.notas ?? ""}
                   onChange={e => setLf(f => ({ ...f, notas: e.target.value || null }))}
-                  placeholder="Lo que comentó, qué producto le interesa…"
+                  placeholder="Qué preguntó, qué producto le interesa…"
                   rows={3} className={`${inp} resize-none h-auto py-2`} />
               </div>
 

@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-02T00:00:00.000Z",
+  "title": "Design System: Segundo Cerebro",
+  "extensions": {
+    "colorMeta": {
+      "player-cyan": { "role": "primary", "displayName": "Cian jugador", "canonical": "#00d4ff", "tonalRamp": [] },
+      "building-accent-default": { "role": "secondary", "displayName": "Acento de edificio (default)", "canonical": "#a78bfa", "tonalRamp": [] },
+      "void": { "role": "neutral", "displayName": "Vacío", "canonical": "#0a0714", "tonalRamp": [] },
+      "grid-line": { "role": "neutral", "displayName": "Cuadrícula", "canonical": "#150f24", "tonalRamp": [] },
+      "path-thick": { "role": "neutral", "displayName": "Camino (grueso)", "canonical": "#120c1f", "tonalRamp": [] },
+      "path-line": { "role": "neutral", "displayName": "Camino (línea)", "canonical": "#1a1330", "tonalRamp": [] },
+      "plaza-fill": { "role": "neutral", "displayName": "Plaza", "canonical": "#0d0818", "tonalRamp": [] },
+      "ambient-dot": { "role": "neutral", "displayName": "Punta ambiental", "canonical": "#3d2a63", "tonalRamp": [] },
+      "panel-glass": { "role": "neutral", "displayName": "Vidrio del panel", "canonical": "rgba(14,9,24,0.98)", "tonalRamp": [] },
+      "panel-border": { "role": "neutral", "displayName": "Borde del panel", "canonical": "rgba(167,139,250,0.16)", "tonalRamp": [] }
+    },
+    "typographyMeta": {
+      "hud-label": { "displayName": "HUD Label", "purpose": "Eyebrows y etiquetas de sistema sobre el mapa/HUD." },
+      "building-label": { "displayName": "Building Label", "purpose": "Nombre del edificio bajo su ícono." },
+      "sector-label": { "displayName": "Sector Label", "purpose": "Nombre de sector sobre su zona agrupada." },
+      "panel-title": { "displayName": "Panel Title", "purpose": "Título del panel de detalle al entrar a un edificio." },
+      "panel-body": { "displayName": "Panel Body", "purpose": "Contenido real dentro del panel — prosa normal, no monospace." }
+    },
+    "shadows": [
+      { "name": "building-shadow", "value": "fillStyle(0x000000, 0.6) offset +5/+5", "purpose": "Base de cada caja-edificio, siempre presente." },
+      { "name": "building-halo", "value": "2 anillos del acento @ 5% y 9%, 6px y 3px", "purpose": "Brillo alrededor de cada edificio, en su propio color." },
+      { "name": "panel-elevation", "value": "0 30px 80px -20px rgba(0,0,0,0.7), 0 0 60px -10px rgba(167,139,250,0.15)", "purpose": "Sombra dura + resplandor violeta ambiental, exclusiva del panel de detalle." }
+    ],
+    "motion": [
+      { "name": "prompt-pulse", "value": "alpha 0.4→1, 550ms, yoyo, infinito", "purpose": "Parpadeo del prompt '[ E ] ENTRAR' cuando el jugador está cerca de un edificio." },
+      { "name": "panel-fade", "value": "opacity 0→1 (framer-motion default)", "purpose": "Entrada/salida del panel de detalle y su backdrop." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Building Box",
+      "kind": "custom",
+      "refersTo": "building-box",
+      "description": "Caja arrastrable que representa una identidad/acceso real — cada una define su propio color de acento.",
+      "html": "<div class=\"ds-building\"><div class=\"ds-building-icon\">🏢</div><div class=\"ds-building-label\">EJEMPLO</div></div>",
+      "css": ".ds-building { position: relative; width: 150px; height: 95px; border-radius: 8px; background: color-mix(in srgb, #a78bfa 10%, #0a0714); border: 1.5px solid rgba(167,139,250,0.65); box-shadow: 5px 5px 0 rgba(0,0,0,0.6), 0 0 0 6px rgba(167,139,250,0.05), 0 0 0 3px rgba(167,139,250,0.09); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; } .ds-building-icon { font-size: 20px; } .ds-building-label { font-family: monospace; font-size: 9px; letter-spacing: 1px; color: #a78bfa; }"
+    },
+    {
+      "name": "Sector Container",
+      "kind": "custom",
+      "refersTo": "sector-container",
+      "description": "Rectángulo invisible-hasta-que-se-nota que agrupa edificios por sector, arrastrable como grupo.",
+      "html": "<div class=\"ds-sector\"><span class=\"ds-sector-label\">SECTOR</span></div>",
+      "css": ".ds-sector { position: relative; border-radius: 20px; background: rgba(167,139,250,0.035); border: 1px solid rgba(167,139,250,0.22); padding: 18px; } .ds-sector-label { font-family: monospace; font-size: 10px; letter-spacing: 3px; color: rgba(167,139,250,0.55); text-transform: uppercase; }"
+    },
+    {
+      "name": "Player Marker",
+      "kind": "custom",
+      "refersTo": "player-marker",
+      "description": "Punto cian que representa al jugador — único color del sistema que nunca se reutiliza.",
+      "html": "<div class=\"ds-player-glow\"><div class=\"ds-player\"></div></div>",
+      "css": ".ds-player-glow { width: 22px; height: 26px; background: rgba(0,212,255,0.08); display: flex; align-items: center; justify-content: center; } .ds-player { width: 10px; height: 14px; background: #00d4ff; }"
+    },
+    {
+      "name": "Detail Panel",
+      "kind": "custom",
+      "refersTo": "detail-panel",
+      "description": "Modal de vidrio esmerilado que se abre al entrar a un edificio — contenido real de la app dentro de un marco de juego.",
+      "html": "<div class=\"ds-panel\"><div class=\"ds-panel-header\"><div><p class=\"ds-panel-eyebrow\">ZONA ACTIVA</p><h2 class=\"ds-panel-title\">Oficina — Ejemplo</h2></div><button class=\"ds-panel-close\" aria-label=\"Cerrar\">✕</button></div><div class=\"ds-panel-body\">Contenido del panel.</div></div>",
+      "css": ".ds-panel { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; max-width: 880px; background: rgba(14,9,24,0.98); border: 1px solid rgba(167,139,250,0.16); box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7), 0 0 60px -10px rgba(167,139,250,0.15); backdrop-filter: blur(24px); } .ds-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid rgba(167,139,250,0.1); } .ds-panel-eyebrow { font-family: monospace; font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(167,139,250,0.5); margin-bottom: 2px; } .ds-panel-title { font-family: 'Geist Sans', ui-sans-serif, system-ui; font-size: 13px; font-weight: 700; color: #e2e8f0; } .ds-panel-close { padding: 6px; color: #475569; background: transparent; border: none; border-radius: 8px; transition: background 150ms ease, color 150ms ease; } .ds-panel-close:hover { color: #cbd5e1; background: rgba(30,41,59,0.6); } .ds-panel-body { padding: 20px; font-family: 'Geist Sans', ui-sans-serif, system-ui; font-size: 0.875rem; color: #cbd5e1; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La Ciudad Nocturna",
+    "overview": "Un mapa urbano visto de madrugada: calles apenas visibles bajo una cuadrícula tenue, una plaza central con luz propia, y edificios que brillan cada uno con su propio color — como ventanas encendidas a distintas horas de la noche. El jugador es un punto cian que camina entre ellos. No es un tablero de control ni una app de productividad: es un lugar que se recorre, no una lista que se completa. Esto es exclusivamente de Ricardo — un mapa reflexivo de sus tres mundos (personal, Medalla de oro, SDI Portal), no una herramienta de trabajo compartida.\n\nA diferencia de Portal Medalla de oro (un solo acento, todo plano, cero decoración), aquí la profundidad, el resplandor y el color por edificio son el punto — es la superficie donde el sistema tiene permiso de ser expresivo.",
+    "keyCharacteristics": [
+      "Oscuro, casi negro-violeta, con puntos de luz ambiental dispersos como estrellas.",
+      "Cada edificio elige su propio color — no hay una paleta fija por categoría.",
+      "Profundidad real: sombra, halo y vidrio esmerilado, donde el portal de negocio es deliberadamente plano.",
+      "Monospace para el 'mundo del juego'; tipografía normal solo dentro de los paneles."
+    ],
+    "rules": [
+      { "name": "The Player-Is-Cyan Rule", "body": "El cian (#00d4ff) pertenece exclusivamente al jugador — ningún edificio, sector ni elemento de UI lo reutiliza.", "section": "colors" },
+      { "name": "The Building-Owns-Its-Color Rule", "body": "Cada edificio recibe un hex elegido por el usuario, y todo su render (sombra, halo, relleno, borde, insignia, franja) se deriva matemáticamente de ese único valor.", "section": "colors" },
+      { "name": "The Ambient Glow Rule", "body": "A diferencia del portal (plano por default), aquí la profundidad y el resplandor son la norma — todo objeto interactivo lleva su propio halo.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do dejar que cada edificio defina su propio color.",
+      "Do derivar sombra/halo/relleno/borde matemáticamente del acento del edificio.",
+      "Do usar monospace para todo lo del mapa, Geist Sans para contenido real dentro de un panel.",
+      "Do dar profundidad real — sombra, halo, vidrio esmerilado."
+    ],
+    "donts": [
+      "Don't reutilizar el cian del jugador en nada más.",
+      "Don't copiar la regla de un-solo-acento del portal aquí — son mundos hermanos, no el mismo sistema.",
+      "Don't fijar el color de un sector aparte del edificio que lo origina.",
+      "Don't aplanar el panel de detalle quitándole el vidrio esmerilado o el resplandor."
+    ]
+  }
+}

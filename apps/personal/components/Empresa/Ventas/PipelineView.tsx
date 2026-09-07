@@ -37,6 +37,8 @@ import { confirmDialog } from "../ConfirmDialog"
 import { DropdownPicker } from "../../Shared/DropdownPicker"
 import { CalendarioPicker } from "../../Shared/CalendarioPicker"
 import { NuevoLeadWizard } from "./NuevoLeadWizard"
+import { useGetLeadsByCliente } from "@/api/lead/getLead"
+import { Lead, LEAD_COLOR } from "@/types/lead"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Efectivo":      "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20",
@@ -981,6 +983,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
   const [tab, setTab] = useState<"general" | "lead" | "ventas">("ventas")
+  const { leads: leadsCliente, loading: leadsLoading } = useGetLeadsByCliente(cliente.documentId)
   const [pedidoAbierto, setPedidoAbierto] = useState<VentaEmpresa | null>(null)
 
   // Edición rápida en línea por tarjeta — evita meter todos los campos en
@@ -1245,7 +1248,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: "general" as const, label: "General", count: null as number | null },
-          { id: "lead"    as const, label: "Lead",    count: null },
+          { id: "lead"    as const, label: "Lead",    count: leadsCliente.length || null },
           { id: "ventas"  as const, label: "Ventas",  count: cotizaciones.length + ventasDelCliente.length },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
@@ -1410,107 +1413,61 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       )}
 
       {tab === "lead" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-
-          {/* Atribución */}
-          <div className={cardCls}>
-            <div className={cardHeadCls}>
-              <h3 className={cardTitleCls}>Atribución</h3>
-            </div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-              <div>
-                <p className={editLblCls}>Origen</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.origenContacto || "—"}</p>
-              </div>
-              <div>
-                <p className={editLblCls}>Canal / Medio</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  {cliente.canalContacto && <CanalIcon canal={cliente.canalContacto} />}
-                  {cliente.canalContacto || "—"}
-                </p>
-              </div>
-              <div>
-                <p className={editLblCls}>Campaña</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.campanaOrigen || "—"}</p>
-              </div>
-              <div>
-                <p className={editLblCls}>Fecha de contacto</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.fechaLead ? fmtDt(cliente.fechaLead) : "—"}</p>
-              </div>
-              <div>
-                <p className={editLblCls}>Calificación</p>
-                <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-                  cliente.calificado
-                    ? "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700"
-                }`}>
-                  <CheckCircle2 size={10} />{cliente.calificado ? "Calificado" : "Sin calificar"}
-                </span>
-              </div>
-              <div>
-                <p className={editLblCls}>Segmento</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.segmento || "—"}</p>
-              </div>
-              <div className="sm:col-span-2">
-                <p className={editLblCls}>Ocasión especial</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.ocasionFrecuente || "—"}</p>
-              </div>
-            </div>
+        <div className={cardCls}>
+          <div className={`${cardHeadCls} flex items-center justify-between`}>
+            <h3 className={cardTitleCls}>
+              Leads{leadsCliente.length > 0 && <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300">{leadsCliente.length}</span>}
+            </h3>
           </div>
 
-          {/* Datos personales */}
-          <div className={cardCls}>
-            <div className={cardHeadCls}>
-              <h3 className={cardTitleCls}>Datos personales</h3>
-            </div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-              <div>
-                <p className={editLblCls}>Estado civil</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.estadoCivil || "—"}</p>
-              </div>
-              <div>
-                <p className={editLblCls}>Sexo</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.sexo || "—"}</p>
-              </div>
-              <div>
-                <p className={editLblCls}>Fecha de nacimiento</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">
-                  {cliente.fechaNacimiento
-                    ? new Date(cliente.fechaNacimiento + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })
-                    : "—"}
-                </p>
-              </div>
-              <div>
-                <p className={editLblCls}>Talla de anillo</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.tallaAnillo || "—"}</p>
-              </div>
-              <div className="sm:col-span-2">
-                <p className={editLblCls}>Redes sociales</p>
-                <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{cliente.redesSociales || "—"}</p>
-              </div>
-            </div>
+          {leadsLoading && (
+            <p className="text-[12px] text-slate-400 dark:text-slate-600 text-center py-8">Cargando leads…</p>
+          )}
 
-            {/* Mini-línea de tiempo del funnel */}
-            <div className="px-4 pb-4 pt-0 border-t border-slate-200 dark:border-slate-800 mt-0">
-              <p className={`${editLblCls} mt-3`}>Progresión en el funnel</p>
-              <div className="flex flex-col gap-1.5 mt-1">
-                {([
-                  { label: "Lead",      fecha: cliente.fechaLead },
-                  { label: "Calificado",fecha: cliente.fechaCalificado },
-                  { label: "Oferta",    fecha: cliente.fechaOferta },
-                  { label: "Pedido",    fecha: cliente.fechaPedido },
-                  { label: "Entrega",   fecha: cliente.fechaEntrega },
-                  { label: "Rechazada", fecha: cliente.fechaRechazada },
-                ] as const).filter(s => s.fecha).map(s => (
-                  <div key={s.label} className="flex items-center gap-2 text-[11px]">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.label === "Rechazada" ? "bg-red-400" : "bg-violet-400"}`} />
-                    <span className="text-slate-500 dark:text-slate-500 w-20 shrink-0">{s.label}</span>
-                    <span className="text-slate-700 dark:text-slate-300">{fmtDt(s.fecha!)}</span>
+          {!leadsLoading && leadsCliente.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 gap-2">
+              <p className="text-[13px] text-slate-400 dark:text-slate-600">Sin leads registrados</p>
+              <p className="text-[11px] text-slate-300 dark:text-slate-700">Usa "Nuevo lead" para registrar el primer contacto</p>
+            </div>
+          )}
+
+          {!leadsLoading && leadsCliente.length > 0 && (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {leadsCliente.map(lead => (
+                <div key={lead.documentId} className="px-4 py-3 flex items-start gap-3">
+                  <div className="shrink-0 mt-0.5">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 font-mono">{lead.numero ?? "—"}</span>
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${LEAD_COLOR[lead.Funnel ?? "Lead"]}`}>
+                        {lead.Funnel ?? "Lead"}
+                      </span>
+                      {lead.calificado && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 flex items-center gap-1">
+                          <CheckCircle2 size={9} /> Calificado
+                        </span>
+                      )}
+                      {lead.canalContacto && (
+                        <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-500">
+                          <CanalIcon canal={lead.canalContacto} /> {lead.canalContacto}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-500">
+                      {lead.origenContacto && <span>Origen: {lead.origenContacto}</span>}
+                      {lead.campanaOrigen  && <span>Campaña: {lead.campanaOrigen}</span>}
+                      {lead.segmento       && <span>Segmento: {lead.segmento}</span>}
+                      <span>{fmtDt(lead.fechaLead ?? lead.createdAt)}</span>
+                    </div>
+                    {lead.notas && (
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 italic">{lead.notas}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -2214,7 +2171,7 @@ export function PipelineView() {
         <NuevoLeadWizard
           clientes={clientes}
           guardarCliente={guardarCliente}
-          onCreado={c => setSelectedCliente(c)}
+          onCreado={(_lead, cliente) => setSelectedCliente(cliente)}
           onCerrar={() => setWizardOpen(false)}
         />
       )}

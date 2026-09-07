@@ -157,7 +157,7 @@ export function LeadsView() {
           <NuevoLeadWizard
             clientes={clientes}
             guardarCliente={guardarCliente}
-            onCreado={c => { if ((c.Funnel ?? "Lead") === "Lead") setSelectedLead(c) }}
+            onCreado={(_lead, cliente) => setSelectedLead(cliente)}
             onCerrar={() => setWizardOpen(false)}
           />
         )}
