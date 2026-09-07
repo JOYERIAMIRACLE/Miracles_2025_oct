@@ -1062,9 +1062,9 @@ export function InventarioEmpresaView() {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-100 truncate leading-snug">{editing.nombreProducto}</p>
-                    {editing.sku && (
-                      <span className="text-[10px] font-mono text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded">{editing.sku}</span>
+                    <p className="text-sm font-semibold text-slate-100 truncate leading-snug">{form.nombreProducto || editing.nombreProducto}</p>
+                    {(form.sku || editing.sku) && (
+                      <span className="text-[10px] font-mono text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded">{form.sku || editing.sku}</span>
                     )}
                   </div>
                 </div>
