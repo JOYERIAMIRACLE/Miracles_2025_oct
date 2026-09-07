@@ -211,7 +211,7 @@ export function InventarioEmpresaView() {
   const [openSection, setOpenSection] = useState<SeccionProducto | null>(null)
   function toggleSection(k: SeccionProducto) { setOpenSection(s => s === k ? null : k) }
   const [loteOrigenId,    setLoteOrigenId]    = useState("")
-  const [lotesDisponibles, setLotesDisponibles] = useState<Array<{documentId:string; gramos:number; fecha:string; notas:string|null; precioPorGramo:number|null}>>([])
+  const [lotesDisponibles, setLotesDisponibles] = useState<Array<{documentId:string; gramos:number; fecha:string; precioPorGramo:number|null; numeroCompra:string|null; descripcion:string|null}>>([])
   const [loadingLotes,    setLoadingLotes]    = useState(false)
   const [showCatPick,    setShowCatPick]    = useState(false)
   const [catSearch,      setCatSearch]      = useState("")
@@ -412,18 +412,24 @@ export function InventarioEmpresaView() {
         "pagination[pageSize]": "20",
         "fields[0]": "gramos",
         "fields[1]": "fecha",
-        "fields[2]": "notas",
-        "fields[3]": "documentId",
+        "fields[2]": "documentId",
         // El precio real se negocia por compra y cambia de una a otra — se
         // trae el de la línea de compra específica de este lote en vez de
-        // solo el precio de referencia genérico del material.
+        // solo el precio de referencia genérico del material. El número de
+        // compra (no su documentId crudo de Strapi) es lo que se muestra.
         "populate[compraLinea][fields][0]": "precioPorGramo",
+        "populate[compraLinea][fields][1]": "descripcion",
+        "populate[compraLinea][populate][compra][fields][0]": "numero",
       })
       const res  = await fetch(`${BACKEND}/api/movimientos-material?${params}`)
       const json = await res.json()
-      setLotesDisponibles((json.data ?? []).map((l: Record<string, unknown>) => ({
-        ...l,
-        precioPorGramo: (l.compraLinea as { precioPorGramo?: number } | null)?.precioPorGramo ?? null,
+      type LineaPop = { precioPorGramo?: number; descripcion?: string; compra?: { numero?: string | null } } | null
+      type MovRaw = { documentId: string; gramos: number; fecha: string; compraLinea?: LineaPop }
+      setLotesDisponibles((json.data as MovRaw[] ?? []).map(l => ({
+        documentId: l.documentId, gramos: l.gramos, fecha: l.fecha,
+        precioPorGramo: l.compraLinea?.precioPorGramo ?? null,
+        descripcion: l.compraLinea?.descripcion ?? null,
+        numeroCompra: l.compraLinea?.compra?.numero ?? null,
       })))
     } catch { setLotesDisponibles([]) }
     finally  { setLoadingLotes(false) }
@@ -1220,7 +1226,7 @@ export function InventarioEmpresaView() {
                             { value: "", label: "Sin especificar" },
                             ...lotesDisponibles.map(l => ({
                               value: l.documentId,
-                              label: `${l.gramos}g${l.precioPorGramo ? ` · $${l.precioPorGramo}/g` : ""} · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
+                              label: `${l.gramos}g${l.precioPorGramo ? ` · $${l.precioPorGramo}/g` : ""} · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.numeroCompra || l.descripcion ? ` — Compra ${l.numeroCompra ?? "s/n"}${l.descripcion ? ` · ${l.descripcion}` : ""}` : ""}`,
                             }))
                           ]} />
                       </div>
@@ -1463,7 +1469,7 @@ export function InventarioEmpresaView() {
                             { value: "", label: "Sin especificar" },
                             ...lotesDisponibles.map(l => ({
                               value: l.documentId,
-                              label: `${l.gramos}g${l.precioPorGramo ? ` · $${l.precioPorGramo}/g` : ""} · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.notas ? ` — ${l.notas.slice(0, 40)}` : ""}`,
+                              label: `${l.gramos}g${l.precioPorGramo ? ` · $${l.precioPorGramo}/g` : ""} · ${new Date(l.fecha).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" })}${l.numeroCompra || l.descripcion ? ` — Compra ${l.numeroCompra ?? "s/n"}${l.descripcion ? ` · ${l.descripcion}` : ""}` : ""}`,
                             }))
                           ]} />
                       </div>

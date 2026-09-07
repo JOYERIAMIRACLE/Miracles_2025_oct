@@ -307,10 +307,17 @@ const lineaFormDe = (l: CompraMaterialLinea): LineaForm => ({
   documentId: l.documentId, material: l.material?.documentId ?? "", descripcion: l.descripcion,
   gramos: String(l.gramos), precioPorGramo: String(l.precioPorGramo),
 })
+// Mismo esquema que las Órdenes de Compra (OC-año-###) — antes las compras de
+// materia prima no tenían número y se identificaban por su documentId crudo
+// de Strapi en cualquier texto que las mencionara (ilegible para el usuario).
+function buildNumeroCompra(totalCompras: number) {
+  return `MP-${new Date().getFullYear()}-${String(totalCompras + 1).padStart(3, "0")}`
+}
 
-function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved }: {
+function NuevaCompraModal({ editando, materiales, proveedores, totalCompras, onClose, onSaved }: {
   editando: CompraMaterial | null
   materiales: Material[]; proveedores: { documentId: string; nombre: string }[]
+  totalCompras: number
   onClose: () => void; onSaved: (c: CompraMaterial) => void
 }) {
   const [proveedor, setProveedor] = useState(editando?.proveedor?.documentId ?? "")
@@ -350,7 +357,7 @@ function NuevaCompraModal({ editando, materiales, proveedores, onClose, onSaved 
     try {
       const compra = editando
         ? await updateCompraMaterial(editando.documentId, { fecha, proveedor: proveedor || null, notas: notas || null })
-        : await createCompraMaterial({ fecha, proveedor: proveedor || null, notas: notas || null, estado: "borrador" })
+        : await createCompraMaterial({ numero: buildNumeroCompra(totalCompras), fecha, proveedor: proveedor || null, notas: notas || null, estado: "borrador" })
 
       // Si la compra ya fue recibida, cada línea ya generó su movimiento de
       // entrada (stock ya sumado) — hay que corregir/revertir esos
@@ -1303,7 +1310,7 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
       </div>
 
       {modalOpen && (
-        <NuevaCompraModal editando={editando} materiales={materiales} proveedores={proveedores} onClose={() => setModalOpen(false)}
+        <NuevaCompraModal editando={editando} materiales={materiales} proveedores={proveedores} totalCompras={compras.length} onClose={() => setModalOpen(false)}
           onSaved={c => {
             setCompras(prev => editando ? prev.map(x => x.documentId === c.documentId ? c : x) : [c, ...prev])
             setModalOpen(false); setEditando(null)
