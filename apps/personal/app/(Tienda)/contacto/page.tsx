@@ -29,22 +29,57 @@ export default function ContactoPage() {
     setEstado("enviando")
     setErrMsg("")
 
+    const STRAPI = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:1337"
+
     try {
-      const res = await fetch("/api/contacto", {
+      // 1. Crear cliente
+      const clienteRes = await fetch(`${STRAPI}/api/clientes`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, telefono, email, interes, mensaje }),
+        body: JSON.stringify({
+          data: {
+            nombre:         nombre.trim(),
+            telefono:       telefono.trim(),
+            email:          email.trim() || null,
+            origenContacto: "Web",
+            canalContacto:  "Formulario",
+          },
+        }),
       })
-      const json = await res.json()
-
-      if (!res.ok || !json.ok) {
-        setErrMsg(json.error ?? "Ocurrió un error. Intenta de nuevo.")
+      const clienteJson = await clienteRes.json()
+      if (!clienteRes.ok || !clienteJson?.data) {
+        setErrMsg(clienteJson?.error?.message ?? "Error al registrar contacto.")
         setEstado("error")
-      } else {
-        setEstado("exito")
-        setNombre(""); setTelefono(""); setEmail("")
-        setInteres(""); setMensaje("")
+        return
       }
+
+      // 2. Crear lead vinculado
+      const leadRes = await fetch(`${STRAPI}/api/leads`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data: {
+            cliente:        { connect: [{ id: clienteJson.data.id }] },
+            Funnel:         "Lead",
+            origenApp:      "tienda",
+            origenContacto: "Web",
+            canalContacto:  "Formulario de contacto",
+            campanaOrigen:  interes ? `Interés: ${interes}` : undefined,
+            notas:          mensaje.trim() || null,
+            fechaLead:      new Date().toISOString(),
+          },
+        }),
+      })
+      const leadJson = await leadRes.json()
+      if (!leadRes.ok || !leadJson?.data) {
+        setErrMsg(leadJson?.error?.message ?? "Error al procesar solicitud.")
+        setEstado("error")
+        return
+      }
+
+      setEstado("exito")
+      setNombre(""); setTelefono(""); setEmail("")
+      setInteres(""); setMensaje("")
     } catch {
       setErrMsg("No se pudo conectar con el servidor.")
       setEstado("error")
