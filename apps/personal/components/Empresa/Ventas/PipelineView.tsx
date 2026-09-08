@@ -40,6 +40,7 @@ import { NuevoLeadWizard } from "./NuevoLeadWizard"
 import { SeleccionarClienteModal } from "./CotizacionesView"
 import { useGetLeadsByCliente } from "@/api/lead/getLead"
 import { Lead, LEAD_COLOR } from "@/types/lead"
+import { LeadDetalleModal } from "./LeadDetalleModal"
 
 const METODO_COLOR: Record<MetodoPagoTransaccion, string> = {
   "Efectivo":      "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/20",
@@ -1050,8 +1051,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
   const [tab, setTab] = useState<"general" | "lead" | "ventas">("ventas")
-  const { leads: leadsCliente, loading: leadsLoading } = useGetLeadsByCliente(cliente.documentId)
+  const { leads: leadsCliente, setLeads: setLeadsCliente, loading: leadsLoading } = useGetLeadsByCliente(cliente.documentId)
   const [pedidoAbierto, setPedidoAbierto] = useState<VentaEmpresa | null>(null)
+  const [leadVer, setLeadVer] = useState<Lead | null>(null)
 
   // Edición rápida en línea por tarjeta — evita meter todos los campos en
   // el modal grande de alta/edición (ese se queda corto y enfocado al
@@ -1501,7 +1503,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
           {!leadsLoading && leadsCliente.length > 0 && (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {leadsCliente.map(lead => (
-                <div key={lead.documentId} className="px-4 py-3 flex items-start gap-3">
+                <button key={lead.documentId} type="button"
+                  onClick={() => setLeadVer(lead)}
+                  className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                   <div className="shrink-0 mt-0.5">
                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 font-mono">{lead.numero ?? "—"}</span>
                   </div>
@@ -1510,6 +1514,11 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${LEAD_COLOR[lead.Funnel ?? "Lead"]}`}>
                         {lead.Funnel ?? "Lead"}
                       </span>
+                      {lead.origenApp === "tienda" && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600">
+                          Web
+                        </span>
+                      )}
                       {lead.calificado && (
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 flex items-center gap-1">
                           <CheckCircle2 size={9} /> Calificado
@@ -1531,7 +1540,8 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 italic">{lead.notas}</p>
                     )}
                   </div>
-                </div>
+                  <ChevronRight size={14} className="text-slate-300 dark:text-slate-700 shrink-0 mt-1" />
+                </button>
               ))}
             </div>
           )}
@@ -1738,6 +1748,18 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
           onSaved={updated => {
             onVentaActualizada(updated)
             setPedidoAbierto(null)
+          }}
+        />
+      )}
+
+      {leadVer && (
+        <LeadDetalleModal
+          lead={leadVer}
+          onClose={() => setLeadVer(null)}
+          onEdit={() => { setLeadVer(null); onEdit() }}
+          onSaved={updated => {
+            setLeadVer(updated)
+            setLeadsCliente(prev => prev.map(l => l.documentId === updated.documentId ? updated : l))
           }}
         />
       )}
