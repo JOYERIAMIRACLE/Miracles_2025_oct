@@ -6,12 +6,14 @@ import { toast } from "sonner"
 import {
   Cotizacion, CotizacionPayload, ItemCotizacion,
   EstadoCotizacion, ESTADO_COT_COLOR, ESTADOS_COT, DireccionEnvio,
+  OrigenCotizacion, ORIGENES_COT,
 } from "@/types/cotizacion"
 import { createCotizacion, updateCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { ClienteEmpresa } from "@/types/clienteEmpresa"
 import { useGetInventario } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType } from "@/types/product"
 import { ProductoSearch } from "./ProductoSearch"
+import { DropdownPicker } from "../../Shared/DropdownPicker"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function emptyDireccion(): DireccionEnvio {
@@ -46,11 +48,13 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
   const [estado,      setEstado]      = useState<EstadoCotizacion>(cotizacion?.estado ?? "Borrador")
   const [notas,       setNotas]       = useState(cotizacion?.notas ?? "")
   const [validoHasta, setValidoHasta] = useState(cotizacion?.validoHasta ?? "")
-  const [guardando,   setGuardando]   = useState(false)
-  const [direccion,   setDireccion]   = useState<DireccionEnvio>(
+  const [guardando,        setGuardando]        = useState(false)
+  const [origenCotizacion, setOrigenCotizacion] = useState<OrigenCotizacion>(cotizacion?.origenCotizacion ?? "COT")
+  const [atendidoPor,      setAtendidoPor]      = useState(cotizacion?.atendidoPor ?? "")
+  const [direccion,        setDireccion]        = useState<DireccionEnvio>(
     cotizacion?.direccionEnvio ?? emptyDireccion()
   )
-  const [showDirec,   setShowDirec]   = useState(!!cotizacion?.direccionEnvio?.calle)
+  const [showDirec,        setShowDirec]        = useState(!!cotizacion?.direccionEnvio?.calle)
 
   const { items: productos } = useGetInventario()
 
@@ -81,19 +85,21 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
     if (!itemsValidos.length) { toast.error("Agrega al menos un producto"); return }
     setGuardando(true)
     try {
-      const numero  = cotizacion?.numero ?? `COT-${String(totalCotizaciones + 1).padStart(3, "0")}`
+      const numero   = cotizacion?.numero ?? `${origenCotizacion}-${String(totalCotizaciones + 1).padStart(3, "0")}`
       const tieneDir = direccion.calle.trim() || direccion.ciudad.trim()
       const payload: CotizacionPayload = {
         numero,
-        cliente:     cliente.documentId,
-        items:       itemsValidos,
-        precioEnvio: Number(precioEnvio),
+        cliente:          cliente.documentId,
+        items:            itemsValidos,
+        precioEnvio:      Number(precioEnvio),
         total,
         estado,
-        notas:  notas.trim() || null,
-        fecha:  cotizacion?.fecha ?? new Date().toISOString(),
-        validoHasta: validoHasta || null,
-        direccionEnvio: tieneDir ? direccion : null,
+        notas:            notas.trim() || null,
+        fecha:            cotizacion?.fecha ?? new Date().toISOString(),
+        validoHasta:      validoHasta || null,
+        origenCotizacion,
+        atendidoPor:      atendidoPor.trim() || null,
+        direccionEnvio:   tieneDir ? direccion : null,
       }
       const saved = cotizacion
         ? await updateCotizacion(cotizacion.documentId, payload)
@@ -222,7 +228,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
             </div>
           </div>
 
-          {/* Estado + Válido hasta + Notas */}
+          {/* Estado + Válido hasta */}
           <div className="grid grid-cols-2 gap-5">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Estado</p>
@@ -241,6 +247,34 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Válido hasta</p>
               <input type="date" value={validoHasta ?? ""} onChange={e => setValidoHasta(e.target.value)}
                 className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
+            </div>
+          </div>
+
+          {/* Origen + Atendido por */}
+          <div className="grid grid-cols-2 gap-5">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">
+                Origen
+                {!cotizacion && (
+                  <span className="ml-2 normal-case tracking-normal font-normal text-slate-400 dark:text-slate-600">
+                    — define el prefijo ({origenCotizacion}-{String(totalCotizaciones + 1).padStart(3, "0")})
+                  </span>
+                )}
+              </p>
+              <DropdownPicker
+                label="Origen de cotización"
+                value={origenCotizacion}
+                onChange={v => setOrigenCotizacion((v || "COT") as OrigenCotizacion)}
+                placeholder="— Seleccionar —"
+                options={ORIGENES_COT.map(o => ({ value: o.value, label: o.label }))}
+                disabled={!!cotizacion}
+              />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Atendido por</p>
+              <input value={atendidoPor} onChange={e => setAtendidoPor(e.target.value)}
+                placeholder="Nombre del vendedor…"
+                className={inp} />
             </div>
           </div>
 
