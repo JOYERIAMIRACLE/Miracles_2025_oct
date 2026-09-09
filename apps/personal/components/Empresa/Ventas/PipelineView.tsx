@@ -1051,7 +1051,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
 }) {
   const etapa = cliente.Funnel ?? "Lead"
   const [cotModalState, setCotModalState] = useState<null | "nueva" | Cotizacion>(null)
-  const [tab, setTab] = useState<"general" | "lead" | "ventas">("ventas")
+  const [tab, setTab] = useState<"general" | "ventas">("ventas")
   const { leads: leadsCliente, setLeads: setLeadsCliente, loading: leadsLoading } = useGetLeadsByCliente(cliente.documentId)
   const [pedidoAbierto, setPedidoAbierto] = useState<VentaEmpresa | null>(null)
   const [leadVer, setLeadVer] = useState<Lead | null>(null)
@@ -1318,7 +1318,6 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: "general" as const, label: "General", count: null as number | null },
-          { id: "lead"    as const, label: "Lead",    count: leadsCliente.length || null },
           { id: "ventas"  as const, label: "Ventas",  count: cotizaciones.length + ventasDelCliente.length },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
@@ -1482,75 +1481,79 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
         </div>
       )}
 
-      {tab === "lead" && (
-        <div className={cardCls}>
-          <div className={`${cardHeadCls} flex items-center justify-between`}>
-            <h3 className={cardTitleCls}>
-              Leads{leadsCliente.length > 0 && <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300">{leadsCliente.length}</span>}
-            </h3>
-          </div>
-
-          {leadsLoading && (
-            <p className="text-[12px] text-slate-400 dark:text-slate-600 text-center py-8">Cargando leads…</p>
-          )}
-
-          {!leadsLoading && leadsCliente.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 gap-2">
-              <p className="text-[13px] text-slate-400 dark:text-slate-600">Sin leads registrados</p>
-              <p className="text-[11px] text-slate-300 dark:text-slate-700">Usa "Nuevo lead" para registrar el primer contacto</p>
-            </div>
-          )}
-
-          {!leadsLoading && leadsCliente.length > 0 && (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {leadsCliente.map(lead => (
-                <button key={lead.documentId} type="button"
-                  onClick={() => setLeadVer(lead)}
-                  className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                  <div className="shrink-0 mt-0.5">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 font-mono">{lead.numero ?? "—"}</span>
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${LEAD_COLOR[lead.Funnel ?? "Lead"]}`}>
-                        {lead.Funnel ?? "Lead"}
-                      </span>
-                      {lead.origenApp === "tienda" && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600">
-                          Web
-                        </span>
-                      )}
-                      {lead.calificado && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 flex items-center gap-1">
-                          <CheckCircle2 size={9} /> Calificado
-                        </span>
-                      )}
-                      {lead.canalContacto && (
-                        <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-500">
-                          <CanalIcon canal={lead.canalContacto} /> {lead.canalContacto}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-500">
-                      {lead.origenContacto && <span>Origen: {lead.origenContacto}</span>}
-                      {lead.campanaOrigen  && <span>Campaña: {lead.campanaOrigen}</span>}
-                      {lead.segmento       && <span>Segmento: {lead.segmento}</span>}
-                      <span>{fmtDt(lead.fechaLead ?? lead.createdAt)}</span>
-                    </div>
-                    {lead.notas && (
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 italic">{lead.notas}</p>
-                    )}
-                  </div>
-                  <ChevronRight size={14} className="text-slate-300 dark:text-slate-700 shrink-0 mt-1" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {tab === "ventas" && (
         <div className="space-y-4">
+
+          {/* Card de Leads — dentro de Ventas */}
+          <div className={cardCls}>
+            <div className={`${cardHeadCls} flex items-center justify-between`}>
+              <h3 className={cardTitleCls}>
+                Leads
+                {leadsCliente.length > 0 && (
+                  <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300">
+                    {leadsCliente.length}
+                  </span>
+                )}
+              </h3>
+            </div>
+            {leadsLoading ? (
+              <p className="text-[12px] text-slate-400 dark:text-slate-600 text-center py-6">Cargando leads…</p>
+            ) : leadsCliente.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-1">
+                <p className="text-[13px] text-slate-400 dark:text-slate-600">Sin leads registrados</p>
+                <p className="text-[11px] text-slate-300 dark:text-slate-700">Usa "Nuevo lead" para registrar el primer contacto</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {leadsCliente.map((lead, idx) => {
+                  const numDisplay = lead.numero
+                    ?? (lead.origenApp === "tienda" ? `WEB-${String(idx + 1).padStart(3, "0")}` : `LEAD-???`)
+                  return (
+                    <button key={lead.documentId} type="button"
+                      onClick={() => setLeadVer(lead)}
+                      className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                      <div className="shrink-0 mt-0.5">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 font-mono">{numDisplay}</span>
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${LEAD_COLOR[lead.Funnel ?? "Lead"]}`}>
+                            {lead.Funnel ?? "Lead"}
+                          </span>
+                          {lead.origenApp === "tienda" && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600">
+                              Web
+                            </span>
+                          )}
+                          {lead.calificado && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 flex items-center gap-1">
+                              <CheckCircle2 size={9} /> Calificado
+                            </span>
+                          )}
+                          {lead.canalContacto && (
+                            <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-500">
+                              <CanalIcon canal={lead.canalContacto} /> {lead.canalContacto}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-500">
+                          {lead.origenContacto && <span>Origen: {lead.origenContacto}</span>}
+                          {lead.campanaOrigen  && <span>Campaña: {lead.campanaOrigen}</span>}
+                          {lead.segmento       && <span>Segmento: {lead.segmento}</span>}
+                          <span>{fmtDt(lead.fechaLead ?? lead.createdAt)}</span>
+                        </div>
+                        {lead.notas && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 italic">{lead.notas}</p>
+                        )}
+                      </div>
+                      <ChevronRight size={14} className="text-slate-300 dark:text-slate-700 shrink-0 mt-1" />
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
 
             {/* Cotizaciones */}
