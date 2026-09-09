@@ -1,19 +1,21 @@
 "use client"
 
-import { Users, UserSearch, FileText, ShoppingBag, TrendingUp } from "lucide-react"
+import { Users, UserSearch, FileText, ShoppingBag, TrendingUp, Bell } from "lucide-react"
 import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
 import { LeadsView } from "@/components/Empresa/Ventas/LeadsView"
 import { CotizacionesView } from "@/components/Empresa/Ventas/CotizacionesView"
 import { PedidosView } from "@/components/Empresa/Ventas/PedidosView"
 import { HistorialPipelineView } from "@/components/Empresa/Ventas/HistorialPipelineView"
+import { DisparadoresView } from "@/components/Empresa/Ventas/DisparadoresView"
 
 const TABS = [
-  { id: "pipeline",     label: "Pipeline",     icon: Users },
-  { id: "leads",        label: "Leads",        icon: UserSearch },
-  { id: "cotizaciones", label: "Cotizaciones", icon: FileText },
-  { id: "pedidos",      label: "Pedidos",      icon: ShoppingBag },
-  { id: "metricas",     label: "Métricas",     icon: TrendingUp },
+  { id: "pipeline",      label: "Pipeline",      icon: Users },
+  { id: "leads",         label: "Leads",         icon: UserSearch },
+  { id: "cotizaciones",  label: "Cotizaciones",  icon: FileText },
+  { id: "pedidos",       label: "Pedidos",        icon: ShoppingBag },
+  { id: "metricas",      label: "Métricas",      icon: TrendingUp },
+  { id: "disparadores",  label: "Disparadores",  icon: Bell },
 ]
 
 export function SeccionVentas() {
@@ -34,6 +36,7 @@ export function SeccionVentas() {
       {tab === "cotizaciones" && <CotizacionesView />}
       {tab === "pedidos"      && <PedidosView />}
       {tab === "metricas"     && <HistorialPipelineView />}
+      {tab === "disparadores" && <DisparadoresView />}
     </div>
   )
 }
