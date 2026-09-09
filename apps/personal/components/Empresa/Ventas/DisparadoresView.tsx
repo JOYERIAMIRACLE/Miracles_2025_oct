@@ -357,6 +357,15 @@ export function DisparadoresView() {
   const totalVisible = secciones.reduce(
     (acc, s) => acc + s.tarjetas.filter(t => !atendidos.has(t.id)).length, 0
   )
+  const totalAtendidos = atendidos.size
+
+  const limpiarAtendidos = () => {
+    try {
+      const hoy = new Date().toISOString().slice(0, 10)
+      localStorage.removeItem(`disparadores_atendidos_${hoy}`)
+      setAtendidos(new Set())
+    } catch {}
+  }
 
   // ── render ─────────────────────────────────────────────────────────────────
 
@@ -369,35 +378,43 @@ export function DisparadoresView() {
           <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Bell size={15} className="text-violet-500 dark:text-violet-400" />
             Acciones Pendientes
+            {totalVisible > 0 && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-50 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/30">
+                {totalVisible}
+              </span>
+            )}
           </h2>
           <p className="text-[11px] text-slate-400 dark:text-slate-600 mt-0.5">
             {loading
               ? "Calculando…"
+              : totalVisible === 0 && totalAtendidos > 0
+              ? `${totalAtendidos} atendida${totalAtendidos !== 1 ? "s" : ""} hoy`
               : totalVisible === 0
-              ? "Sin acciones pendientes hoy"
+              ? "Sin disparadores activos en este momento"
               : `${totalVisible} acción${totalVisible !== 1 ? "es" : ""} por atender`}
           </p>
         </div>
-        <button type="button" onClick={cargar} disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 rounded-lg transition disabled:opacity-40">
-          <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
-          Actualizar
-        </button>
+        <div className="flex items-center gap-2">
+          {totalAtendidos > 0 && (
+            <button type="button" onClick={limpiarAtendidos}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400 transition" title="Restablecer atendidos de hoy">
+              <RefreshCw size={11} />
+              Restablecer
+            </button>
+          )}
+          <button type="button" onClick={cargar} disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 rounded-lg transition disabled:opacity-40">
+            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+            Actualizar
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
+      {/* Content — siempre muestra las secciones */}
       {loading ? (
         <div className="flex items-center justify-center h-40 gap-2 text-slate-400 dark:text-slate-600">
           <Loader2 size={18} className="animate-spin" />
           <span className="text-sm">Calculando disparadores…</span>
-        </div>
-      ) : totalVisible === 0 ? (
-        <div className="flex flex-col items-center justify-center h-52 gap-3">
-          <Inbox size={34} strokeWidth={1.2} className="text-slate-300 dark:text-slate-700" />
-          <div className="text-center">
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-500">Todo atendido</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-600 mt-0.5">Sin acciones pendientes en este momento</p>
-          </div>
         </div>
       ) : (
         <div className="p-5 space-y-7">
