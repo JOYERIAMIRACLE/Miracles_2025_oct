@@ -10,7 +10,7 @@ import {
   Users, ShoppingBag, UserSearch, UserCheck, FileText, History,
   Package, Truck, LayoutList, ShoppingCart, Store,
   PieChart, CreditCard, CalendarDays, TrendingUp,
-  UserCog, ShieldCheck, Bell,
+  UserCog, ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -52,7 +52,6 @@ const sections: { title: string | null; color: string; items: NavItem[] }[] = [
       { name: "Cotizaciones",  href: "/gestion-empresa/ventas/cotizaciones",   icon: FileText,    color: "emerald" },
       { name: "Pedidos",       href: "/gestion-empresa/ventas/pedidos",        icon: ShoppingBag, color: "emerald" },
       { name: "Historial",     href: "/gestion-empresa/ventas/historial",      icon: History,     color: "emerald" },
-      { name: "Disparadores",  href: "/gestion-empresa/ventas/disparadores",   icon: Bell,        color: "emerald" },
     ],
   },
   {
