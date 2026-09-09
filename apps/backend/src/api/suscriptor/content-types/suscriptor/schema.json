@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "suscriptores",
+  "info": {
+    "singularName": "suscriptor",
+    "pluralName": "suscriptores",
+    "displayName": "Suscriptor Newsletter"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "activo": {
+      "type": "boolean",
+      "default": true
+    },
+    "origen": {
+      "type": "enumeration",
+      "enum": ["tienda", "blog", "manual"],
+      "default": "tienda"
+    },
+    "bienvenidaEnviada": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

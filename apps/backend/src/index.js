@@ -56,6 +56,16 @@ const PUBLIC_ACTIONS_TAREA = [
   'api::cliente.cliente.create',
   'api::cliente.cliente.update',
   'api::cliente.cliente.delete',
+  'api::venta.venta.find',
+  'api::venta.venta.findOne',
+  'api::venta.venta.create',
+  'api::venta.venta.update',
+  'api::venta.venta.delete',
+  'api::suscriptor.suscriptor.find',
+  'api::suscriptor.suscriptor.findOne',
+  'api::suscriptor.suscriptor.create',
+  'api::suscriptor.suscriptor.update',
+  'api::suscriptor.suscriptor.delete',
 ];
 
 const PUBLIC_ACTIONS_SNAPSHOT = [
