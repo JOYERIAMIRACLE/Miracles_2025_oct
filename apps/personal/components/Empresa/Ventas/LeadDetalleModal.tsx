@@ -17,8 +17,8 @@ interface Props {
   onSaved: (updated: Lead) => void
 }
 
-function CanalIcon({ canal }: { canal: string }) {
-  const c = canal.toLowerCase()
+function CanalIcon({ canal }: { canal: string | null }) {
+  const c = (canal ?? "").toLowerCase()
   if (c.includes("whatsapp"))  return <MessageCircle size={11} className="text-green-500 shrink-0" />
   if (c.includes("instagram")) return <ArrowRight size={11} className="text-pink-500 shrink-0" />
   if (c.includes("facebook"))  return <ArrowRight size={11} className="text-blue-500 shrink-0" />
@@ -73,9 +73,9 @@ export function LeadDetalleModal({ lead: inicial, onClose, onEdit, onSaved }: Pr
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${LEAD_COLOR[lead.Funnel ?? "Lead"]}`}>
               {lead.Funnel ?? "Lead"}
             </span>
-            {lead.origenApp === "tienda" && (
+            {(lead.origen === "Formulario web" || lead.origen === "Carrito" || lead.origenApp === "tienda") && (
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600 flex items-center gap-1">
-                <Globe size={8} /> Web
+                <Globe size={8} /> {lead.origen === "Carrito" ? "Carrito" : "Web"}
               </span>
             )}
             {lead.calificado && (
@@ -121,14 +121,20 @@ export function LeadDetalleModal({ lead: inicial, onClose, onEdit, onSaved }: Pr
             <div>
               <p className={lbl}>Canal</p>
               <p className={`${val} flex items-center gap-1.5`}>
-                {lead.canalContacto && <CanalIcon canal={lead.canalContacto} />}
-                {lead.canalContacto || "—"}
+                {(lead.canal ?? lead.canalContacto) && <CanalIcon canal={lead.canal ?? lead.canalContacto ?? null} />}
+                {lead.canal ?? lead.canalContacto ?? "—"}
               </p>
             </div>
             <div>
               <p className={lbl}>Origen</p>
-              <p className={val}>{lead.origenContacto || "—"}</p>
+              <p className={val}>{lead.origen ?? lead.origenContacto ?? "—"}</p>
             </div>
+            {lead.referidorNombre && (
+              <div>
+                <p className={lbl}>Referido por</p>
+                <p className={val}>{lead.referidorNombre}{lead.referidorTipo === "vendedor_externo" ? " (afiliado)" : ""}</p>
+              </div>
+            )}
             <div>
               <p className={lbl}>Campaña / Interés</p>
               <p className={val}>{lead.campanaOrigen || "—"}</p>

@@ -2,14 +2,50 @@ import { FunnelEtapa, SegmentoCliente } from "./clienteEmpresa"
 
 export type OrigenApp = "manual" | "tienda"
 
+export type CanalLead =
+  | "WhatsApp" | "Teléfono" | "Correo"
+  | "Instagram" | "Facebook" | "Mostrador" | "Web"
+
+export type OrigenLead =
+  | "Prospección" | "Mostrador" | "Referido"
+  | "Formulario web" | "Carrito"
+  | "Anuncio Meta" | "Anuncio Google" | "Campaña email"
+
+export type ReferidorTipo = "cliente" | "vendedor_externo"
+
+export const CANALES_LEAD: CanalLead[] = [
+  "WhatsApp", "Teléfono", "Correo", "Instagram", "Facebook", "Mostrador", "Web",
+]
+
+export const ORIGENES_LEAD: OrigenLead[] = [
+  "Prospección", "Mostrador", "Referido",
+  "Formulario web", "Carrito",
+  "Anuncio Meta", "Anuncio Google", "Campaña email",
+]
+
+export function prefijoLead(origen: OrigenLead | null | undefined): string {
+  switch (origen) {
+    case "Formulario web": return "WEB"
+    case "Carrito":        return "CART"
+    case "Anuncio Meta":
+    case "Anuncio Google": return "ANU"
+    case "Campaña email":  return "EML"
+    default:               return "LEAD"
+  }
+}
+
 export interface Lead {
   id:              number
   documentId:      string
   numero:          string | null
   Funnel:          FunnelEtapa
   calificado:      boolean
-  origenContacto:  string | null
-  canalContacto:   string | null
+  // campos nuevos estructurados
+  canal:           CanalLead | null
+  origen:          OrigenLead | null
+  referidorTipo:   ReferidorTipo | null
+  referidorNombre: string | null
+  referidorCliente: { documentId: string; nombre: string } | null
   campanaOrigen:   string | null
   notas:           string | null
   segmento:        SegmentoCliente | null
@@ -19,7 +55,10 @@ export interface Lead {
   fechaEntrega:    string | null
   fechaRechazada:  string | null
   fechaCalificado: string | null
+  // campos legacy (mantener para datos existentes)
   origenApp:       OrigenApp | null
+  canalContacto:   string | null
+  origenContacto:  string | null
   createdAt:       string
   cliente: {
     documentId: string
@@ -29,21 +68,24 @@ export interface Lead {
 }
 
 export interface LeadPayload {
-  numero?:         string | null
-  cliente:         string
-  Funnel?:         FunnelEtapa
-  calificado?:     boolean
-  origenContacto?: string | null
-  canalContacto?:  string | null
-  campanaOrigen?:  string | null
-  notas?:          string | null
-  segmento?:       SegmentoCliente | null
-  fechaLead?:      string | null
-  fechaOferta?:    string | null
-  fechaPedido?:    string | null
-  fechaEntrega?:   string | null
-  fechaRechazada?: string | null
-  fechaCalificado?:string | null
+  numero?:          string | null
+  cliente:          string
+  Funnel?:          FunnelEtapa
+  calificado?:      boolean
+  canal?:           CanalLead | null
+  origen?:          OrigenLead | null
+  referidorTipo?:   ReferidorTipo | null
+  referidorNombre?: string | null
+  referidorCliente?: string | null
+  campanaOrigen?:   string | null
+  notas?:           string | null
+  segmento?:        SegmentoCliente | null
+  fechaLead?:       string | null
+  fechaOferta?:     string | null
+  fechaPedido?:     string | null
+  fechaEntrega?:    string | null
+  fechaRechazada?:  string | null
+  fechaCalificado?: string | null
   origenApp?:       OrigenApp | null
 }
 

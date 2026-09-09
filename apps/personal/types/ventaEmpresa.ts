@@ -38,7 +38,7 @@ export type VentaEmpresa = {
   lineas:      VentaLinea[]
   createdAt:   string
   cotizacionOrigen?:    { id: number; documentId: string; numero: string | null } | null
-  envios?:              { id: number; documentId: string; estado: string }[]
+  envios?:              { id: number; documentId: string; estado: string; numero_guia?: string | null; paqueteria?: string | null }[]
   comprobantePago?:     { id: number; url: string; name: string } | null
   direccionEnvio?:      DireccionEnvio | null
 }

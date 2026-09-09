@@ -10,11 +10,10 @@ import {
   SEXOS, Sexo,
   FUNNEL_COLOR,
 } from "@/types/clienteEmpresa"
-import { Lead, LeadPayload } from "@/types/lead"
+import { Lead, LeadPayload, CanalLead, OrigenLead, ReferidorTipo, CANALES_LEAD, ORIGENES_LEAD, prefijoLead } from "@/types/lead"
 import { createLead, countLeads } from "@/api/lead/getLead"
 import { DropdownPicker } from "../../Shared/DropdownPicker"
 import { CalendarioPicker } from "../../Shared/CalendarioPicker"
-import { CANALES, CanalIcon } from "./PipelineView"
 
 type Paso = "buscar" | "contacto" | "lead"
 
@@ -31,11 +30,13 @@ type ContactoForm = {
 }
 
 type LeadForm = {
-  origenContacto: string | null
-  canalContacto:  string | null
-  campanaOrigen:  string | null
-  notas:          string | null
-  segmento:       SegmentoCliente | null
+  canal:           CanalLead | null
+  origen:          OrigenLead | null
+  referidorTipo:   ReferidorTipo | null
+  referidorNombre: string | null
+  campanaOrigen:   string | null
+  notas:           string | null
+  segmento:        SegmentoCliente | null
 }
 
 const emptyContacto = (): ContactoForm => ({
@@ -45,7 +46,8 @@ const emptyContacto = (): ContactoForm => ({
 })
 
 const emptyLead = (): LeadForm => ({
-  origenContacto: null, canalContacto: null, campanaOrigen: null, notas: null, segmento: null,
+  canal: null, origen: null, referidorTipo: null, referidorNombre: null,
+  campanaOrigen: null, notas: null, segmento: null,
 })
 
 const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
@@ -110,19 +112,23 @@ export function NuevoLeadWizard({
       }
 
       // 2. Crear el lead independiente
-      const total = await countLeads()
-      const numero = `LEAD-${String(total + 1).padStart(3, "0")}`
+      const total  = await countLeads()
+      const prefijo = prefijoLead(lf.origen)
+      const numero  = `${prefijo}-${String(total + 1).padStart(3, "0")}`
       const payload: LeadPayload = {
         numero,
-        cliente:        cliente.documentId,
-        Funnel:         "Lead",
-        fechaLead:      new Date().toISOString(),
-        origenContacto: lf.origenContacto,
-        canalContacto:  lf.canalContacto,
-        campanaOrigen:  lf.campanaOrigen,
-        notas:          lf.notas,
-        segmento:       lf.segmento,
-        calificado:     false,
+        cliente:         cliente.documentId,
+        Funnel:          "Lead",
+        fechaLead:       new Date().toISOString(),
+        canal:           lf.canal,
+        origen:          lf.origen,
+        referidorTipo:   lf.referidorTipo,
+        referidorNombre: lf.referidorNombre,
+        campanaOrigen:   lf.campanaOrigen,
+        notas:           lf.notas,
+        segmento:        lf.segmento,
+        calificado:      false,
+        origenApp:       "manual",
       }
 
       const lead = await createLead(payload)
@@ -312,30 +318,61 @@ export function NuevoLeadWizard({
                 </div>
               )}
 
-              <div>
-                <label className={lbl}>Origen</label>
-                <input value={lf.origenContacto ?? ""}
-                  onChange={e => setLf(f => ({ ...f, origenContacto: e.target.value || null }))}
-                  placeholder="Referido, Google, feria, visita espontánea…"
-                  className={inp} />
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={lbl}>Medio / Canal</label>
-                  <DropdownPicker label="Canal de contacto" value={lf.canalContacto ?? ""}
-                    onChange={v => setLf(f => ({ ...f, canalContacto: v || null }))}
-                    placeholder="— Seleccionar —"
-                    options={[{ value: "", label: "— Seleccionar —" }, ...CANALES.map(c => ({ value: c, label: c }))]} />
+                  <label className={lbl}>Origen *</label>
+                  <DropdownPicker label="Origen" value={lf.origen ?? ""}
+                    onChange={v => setLf(f => ({ ...f, origen: (v || null) as OrigenLead | null, referidorTipo: null, referidorNombre: null }))}
+                    placeholder="— ¿Cómo llegó? —"
+                    options={[{ value: "", label: "— ¿Cómo llegó? —" }, ...ORIGENES_LEAD.map(o => ({ value: o, label: o }))]} />
                 </div>
                 <div>
-                  <label className={lbl}>Campaña</label>
-                  <input value={lf.campanaOrigen ?? ""}
-                    onChange={e => setLf(f => ({ ...f, campanaOrigen: e.target.value || null }))}
-                    placeholder="San Valentín 2026…"
-                    className={inp} />
+                  <label className={lbl}>Canal</label>
+                  <DropdownPicker label="Canal" value={lf.canal ?? ""}
+                    onChange={v => setLf(f => ({ ...f, canal: (v || null) as CanalLead | null }))}
+                    placeholder="— ¿Por dónde? —"
+                    options={[{ value: "", label: "— ¿Por dónde? —" }, ...CANALES_LEAD.map(c => ({ value: c, label: c }))]} />
                 </div>
               </div>
+
+              {/* Referidor — visible solo cuando origen es Referido */}
+              {lf.origen === "Referido" && (
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 p-3 space-y-3">
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-wide">¿Quién refirió?</p>
+                  <div>
+                    <DropdownPicker label="Tipo de referidor" value={lf.referidorTipo ?? ""}
+                      onChange={v => setLf(f => ({ ...f, referidorTipo: (v || null) as ReferidorTipo | null }))}
+                      placeholder="— Seleccionar —"
+                      options={[
+                        { value: "", label: "— Seleccionar —" },
+                        { value: "cliente", label: "Cliente existente" },
+                        { value: "vendedor_externo", label: "Vendedor / Afiliado externo" },
+                      ]} />
+                  </div>
+                  {lf.referidorTipo && (
+                    <div>
+                      <label className={lbl}>
+                        {lf.referidorTipo === "cliente" ? "Nombre del cliente que refirió" : "Nombre del vendedor / afiliado"}
+                      </label>
+                      <input value={lf.referidorNombre ?? ""}
+                        onChange={e => setLf(f => ({ ...f, referidorNombre: e.target.value || null }))}
+                        placeholder={lf.referidorTipo === "cliente" ? "María García…" : "Nombre o código de afiliado…"}
+                        className={inp} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Campaña — visible para orígenes digitales */}
+              {(lf.origen === "Anuncio Meta" || lf.origen === "Anuncio Google" || lf.origen === "Campaña email" || lf.origen === "Formulario web") && (
+                <div>
+                  <label className={lbl}>Campaña específica</label>
+                  <input value={lf.campanaOrigen ?? ""}
+                    onChange={e => setLf(f => ({ ...f, campanaOrigen: e.target.value || null }))}
+                    placeholder="Black Friday 2026, San Valentín…"
+                    className={inp} />
+                </div>
+              )}
 
               <div>
                 <label className={lbl}>Tipo de cliente</label>

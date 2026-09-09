@@ -29,11 +29,25 @@
       "type": "boolean",
       "default": false
     },
-    "origenContacto": {
+    "canal": {
+      "type": "enumeration",
+      "enum": ["WhatsApp", "Teléfono", "Correo", "Instagram", "Facebook", "Mostrador", "Web"]
+    },
+    "origen": {
+      "type": "enumeration",
+      "enum": ["Prospección", "Mostrador", "Referido", "Formulario web", "Carrito", "Anuncio Meta", "Anuncio Google", "Campaña email"]
+    },
+    "referidorTipo": {
+      "type": "enumeration",
+      "enum": ["cliente", "vendedor_externo"]
+    },
+    "referidorNombre": {
       "type": "string"
     },
-    "canalContacto": {
-      "type": "string"
+    "referidorCliente": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cliente.cliente"
     },
     "campanaOrigen": {
       "type": "string"
@@ -67,6 +81,12 @@
       "type": "enumeration",
       "enum": ["manual", "tienda"],
       "default": "manual"
+    },
+    "canalContacto": {
+      "type": "string"
+    },
+    "origenContacto": {
+      "type": "string"
     }
   }
 }

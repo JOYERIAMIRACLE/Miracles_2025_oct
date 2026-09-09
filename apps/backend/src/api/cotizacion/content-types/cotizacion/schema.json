@@ -53,6 +53,14 @@
     },
     "direccionEnvio": {
       "type": "json"
+    },
+    "origenCotizacion": {
+      "type": "enumeration",
+      "enum": ["COT", "WEB", "CART", "ANU", "EML"],
+      "default": "COT"
+    },
+    "atendidoPor": {
+      "type": "string"
     }
   }
 }

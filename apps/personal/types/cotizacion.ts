@@ -1,4 +1,13 @@
 export type EstadoCotizacion = "Borrador" | "Enviada" | "Aceptada" | "Rechazada" | "Convertida"
+export type OrigenCotizacion = "COT" | "WEB" | "CART" | "ANU" | "EML"
+
+export const ORIGENES_COT: { value: OrigenCotizacion; label: string }[] = [
+  { value: "COT", label: "Manual / Mostrador" },
+  { value: "WEB", label: "Formulario web" },
+  { value: "CART", label: "Carrito" },
+  { value: "ANU", label: "Anuncio (Meta / Google)" },
+  { value: "EML", label: "Campaña email" },
+]
 
 export type DireccionEnvio = {
   calle:       string
@@ -32,32 +41,36 @@ export type ItemCotizacion = {
 }
 
 export type Cotizacion = {
-  id:          number
-  documentId:  string
-  numero:      string | null
-  items:       ItemCotizacion[]
-  precioEnvio: number
-  total:       number
-  estado:      EstadoCotizacion
-  notas:       string | null
-  fecha:       string | null
-  validoHasta: string | null
-  createdAt:   string
-  cliente?:    { documentId: string; nombre: string; telefono: string | null; email: string | null } | null
-  ventaGenerada?: { id: number; documentId: string; numero: string | null; concepto: string; estado: string } | null
-  direccionEnvio?: DireccionEnvio | null
+  id:               number
+  documentId:       string
+  numero:           string | null
+  items:            ItemCotizacion[]
+  precioEnvio:      number
+  total:            number
+  estado:           EstadoCotizacion
+  notas:            string | null
+  fecha:            string | null
+  validoHasta:      string | null
+  createdAt:        string
+  origenCotizacion: OrigenCotizacion | null
+  atendidoPor:      string | null
+  cliente?:         { documentId: string; nombre: string; telefono: string | null; email: string | null } | null
+  ventaGenerada?:   { id: number; documentId: string; numero: string | null; concepto: string; estado: string } | null
+  direccionEnvio?:  DireccionEnvio | null
 }
 
 export type CotizacionPayload = {
-  numero?:      string | null
-  cliente?:     string
-  items?:       ItemCotizacion[]
-  precioEnvio?: number
-  total?:       number
-  estado?:      EstadoCotizacion
-  notas?:       string | null
-  fecha?:       string | null
-  validoHasta?: string | null
-  ventaGenerada?: { connect: [{ id: number }] } | null
-  direccionEnvio?: DireccionEnvio | null
+  numero?:          string | null
+  cliente?:         string
+  items?:           ItemCotizacion[]
+  precioEnvio?:     number
+  total?:           number
+  estado?:          EstadoCotizacion
+  notas?:           string | null
+  fecha?:           string | null
+  validoHasta?:     string | null
+  origenCotizacion?: OrigenCotizacion | null
+  atendidoPor?:     string | null
+  ventaGenerada?:   { connect: [{ id: number }] } | null
+  direccionEnvio?:  DireccionEnvio | null
 }

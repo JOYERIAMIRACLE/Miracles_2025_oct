@@ -52,7 +52,7 @@ export async function registrarCliente(payload: RegistroPayload): Promise<LoginR
         })).documentId
     await createLead({
       cliente: clienteDocId, Funnel: "Lead", origenApp: "tienda",
-      canalContacto: "Web", origenContacto: "Registro en tienda",
+      canal: "Web", origen: "Formulario web",
       fechaLead: new Date().toISOString(),
     })
   } catch {

@@ -221,7 +221,7 @@ export function DisparadoresView() {
     }))
 
   const tarjetasLeadWeb: Tarjeta[] = leads
-    .filter(l => l.origenApp === "tienda" && daysSince(l.createdAt) <= 3)
+    .filter(l => (l.origen === "Formulario web" || l.origenApp === "tienda") && daysSince(l.createdAt) <= 3)
     .map(l => ({
       id:          `lead_web_${l.documentId}`,
       urgencia:    "alta" as Urgencia,

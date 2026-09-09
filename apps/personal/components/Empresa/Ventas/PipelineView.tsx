@@ -261,9 +261,9 @@ function ClienteCard({ lead, num, etapa, valor, dias, sinPedidoReal, onEdit, onD
           <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${meta.numColor}`}>
             #{num}
           </span>
-          {lead.origenApp === "tienda" && (
+          {(lead.origen === "Formulario web" || lead.origen === "Carrito" || lead.origenApp === "tienda") && (
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600">
-              Web
+              {lead.origen === "Carrito" ? "Carrito" : "Web"}
             </span>
           )}
         </div>
@@ -322,12 +322,13 @@ function ClienteCard({ lead, num, etapa, valor, dias, sinPedidoReal, onEdit, onD
 
       <div className="space-y-1">
         {etapa === "Lead" && <>
-          {lead.canalContacto && (
+          {(lead.canal ?? lead.canalContacto) && (
             <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
-              <CanalIcon canal={lead.canalContacto} />{lead.canalContacto}
+              <CanalIcon canal={lead.canal ?? lead.canalContacto} />{lead.canal ?? lead.canalContacto}
             </span>
           )}
-          {lead.origenContacto && <p className="text-[10px] text-slate-400 dark:text-slate-600">Origen: {lead.origenContacto}</p>}
+          {(lead.origen ?? lead.origenContacto) && <p className="text-[10px] text-slate-400 dark:text-slate-600">Origen: {lead.origen ?? lead.origenContacto}</p>}
+          {lead.referidorNombre && <p className="text-[10px] text-slate-400 dark:text-slate-600">Ref: {lead.referidorNombre}</p>}
           {lead.cliente?.telefono && <p className="text-[10px] text-slate-500 dark:text-slate-500 flex items-center gap-1"><Phone size={9} />{lead.cliente.telefono}</p>}
           {lead.notas && <p className="text-[10px] text-slate-500 dark:text-slate-500 line-clamp-2 italic">"{lead.notas}"</p>}
         </>}
@@ -1520,9 +1521,9 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${LEAD_COLOR[lead.Funnel ?? "Lead"]}`}>
                             {lead.Funnel ?? "Lead"}
                           </span>
-                          {lead.origenApp === "tienda" && (
+                          {(lead.origen === "Formulario web" || lead.origen === "Carrito" || lead.origenApp === "tienda") && (
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600">
-                              Web
+                              {lead.origen === "Carrito" ? "Carrito" : "Web"}
                             </span>
                           )}
                           {lead.calificado && (
@@ -1530,15 +1531,16 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                               <CheckCircle2 size={9} /> Calificado
                             </span>
                           )}
-                          {lead.canalContacto && (
+                          {(lead.canal ?? lead.canalContacto) && (
                             <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-500">
-                              <CanalIcon canal={lead.canalContacto} /> {lead.canalContacto}
+                              <CanalIcon canal={lead.canal ?? lead.canalContacto} /> {lead.canal ?? lead.canalContacto}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-500">
-                          {lead.origenContacto && <span>Origen: {lead.origenContacto}</span>}
-                          {lead.campanaOrigen  && <span>Campaña: {lead.campanaOrigen}</span>}
+                          {(lead.origen ?? lead.origenContacto) && <span>Origen: {lead.origen ?? lead.origenContacto}</span>}
+                          {lead.referidorNombre && <span>Ref: {lead.referidorNombre}</span>}
+                          {lead.campanaOrigen   && <span>Campaña: {lead.campanaOrigen}</span>}
                           {lead.segmento       && <span>Segmento: {lead.segmento}</span>}
                           <span>{fmtDt(lead.fechaLead ?? lead.createdAt)}</span>
                         </div>
