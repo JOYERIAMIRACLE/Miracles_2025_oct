@@ -1,12 +1,13 @@
 "use client"
 
-import { BaggageClaim, Heart, ShoppingCart } from "lucide-react";
+import { BaggageClaim, Heart, ShoppingCart, User } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import MenuList from "./menu-list";
 import ItemsMenuMobile from "./items-mobile";
 import ModeToggle from "./toggle";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavirites";
+import { useClienteAuth } from "@/hooks/useClienteAuth";
 import Image from "next/image";
 
 const Navbar = () => {
@@ -14,6 +15,7 @@ const Navbar = () => {
     const pathname = usePathname()
     const cart     = useCart()
     const favorites = useFavorites()
+    const { cliente } = useClienteAuth()
 
     const isHero = pathname === "/"
 
@@ -87,6 +89,10 @@ const Navbar = () => {
                         </div>
                     )
                 }
+
+                <User strokeWidth={1} className="cursor-pointer"
+                    onClick={() => router.push(cliente ? "/cuenta" : "/cuenta/login")}
+                    aria-label={cliente ? "Mi cuenta" : "Iniciar sesión"} />
 
                 <ModeToggle />
             </div>

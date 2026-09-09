@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef } from "react"
 import {
-  Plus, X, Check, Phone, Mail, MessageCircle, ArrowLeft,
+  Plus, X, Check, Phone, Mail, MessageCircle, ArrowLeft, Globe,
   ChevronRight, ChevronLeft, ChevronDown, Pencil, Trash2, User, ArrowRight, CheckCircle2, FileText, XCircle, RotateCcw,
   DollarSign, ShoppingBag, Clock, AlertTriangle, ArrowRightCircle, Paperclip, Tag,
 } from "lucide-react"
@@ -73,7 +73,7 @@ export const STAGE_META: Record<FunnelEtapa, {
   Rechazada: { prefix: "REJ", desc: "Oportunidad perdida o rechazada",          fechaKey: "fechaRechazada",                                  numColor: "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/40 border-red-300 dark:border-red-800/50",             dot: "bg-red-400" },
 }
 
-export const CANALES = ["WhatsApp", "Instagram", "Facebook", "Llamada", "Email", "Referido", "Visita", "Otro"]
+export const CANALES = ["Web", "WhatsApp", "Instagram", "Facebook", "Llamada", "Email", "Referido", "Visita", "Otro"]
 
 export function numDisplay(etapa: FunnelEtapa, idx: number) {
   return `${STAGE_META[etapa].prefix}-${String(idx + 1).padStart(3, "0")}`
@@ -124,6 +124,7 @@ function duracionEtapaDias(cliente: ClienteEmpresa, etapa: FunnelEtapa): number 
 export function CanalIcon({ canal }: { canal: string | null }) {
   if (!canal) return null
   const c = canal.toLowerCase()
+  if (c.includes("web"))       return <Globe size={11} className="text-violet-600 dark:text-violet-400 shrink-0" />
   if (c.includes("whatsapp"))  return <MessageCircle size={11} className="text-violet-600 dark:text-violet-400 shrink-0" />
   if (c.includes("instagram")) return <span className="text-[9px] font-bold text-violet-600 dark:text-violet-400 shrink-0">IG</span>
   if (c.includes("facebook"))  return <span className="text-[9px] font-bold text-violet-600 dark:text-violet-400 shrink-0">FB</span>

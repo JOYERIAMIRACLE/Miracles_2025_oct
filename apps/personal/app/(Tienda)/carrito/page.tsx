@@ -1,15 +1,30 @@
 "use client"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/hooks/useCart"
+import { useClienteAuth } from "@/hooks/useClienteAuth"
 import { formatPrice } from "@/lib/formatprice"
 import CartItem from "./components/cart-item"
 
 
 export default function page() {
+    const router = useRouter()
     const {items, removeAll} = useCart()
+    const { cliente, loading: cargandoCliente } = useClienteAuth()
     const prices = items.map((producto => producto.costo ?? 0))
     const totalPrice = prices.reduce((total,price)=> total + price, 0)
+
+    function procederCompra() {
+        if (!cliente) {
+            router.push("/cuenta/registro?next=/carrito")
+            return
+        }
+        // El pago todavía no está armado — por ahora solo se confirma la
+        // cuenta antes de avanzar, como se pidió explícitamente.
+        toast.info("¡Gracias! Estamos afinando el proceso de pago — pronto podrás terminar tu compra aquí mismo.")
+    }
 
 
 
@@ -38,10 +53,10 @@ export default function page() {
                         <div className="flex items-center justify-center w-full mt-3">
                             <Button
                                 className="w-full cursor-pointer bg-amber-600 hover:bg-amber-700 text-white"
-                                disabled={items.length === 0}
-                                onClick={() => console.log("add pusrh")}
+                                disabled={items.length === 0 || cargandoCliente}
+                                onClick={procederCompra}
                             >
-                                Proceder con la compra
+                                {cliente ? "Proceder con la compra" : "Crear cuenta para continuar"}
                             </Button>
                         </div>
                     </div>

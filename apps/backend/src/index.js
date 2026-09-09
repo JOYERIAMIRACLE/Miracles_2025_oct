@@ -424,6 +424,29 @@ async function aplicarPermisosPublic(strapi) {
   strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo + Portal MDO) + Authenticated (Portal MDO + Notas de mejora)');
 }
 
+// Rol separado para clientes que se registran en la Tienda pública — a
+// propósito NO es "authenticated", porque el login del Portal interno
+// (app/login/page.tsx) da acceso a cualquier cuenta con ese rol exacto. Si
+// los clientes de la Tienda usaran "authenticated" (el default de Strapi al
+// auto-registrarse), cualquier cliente podría entrar al Portal de staff con
+// su misma cuenta. La ruta /api/tienda/registro (abajo) asigna este rol a
+// mano en vez de dejar que Strapi ponga el default.
+async function crearRolClienteTienda(strapi) {
+  let role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'cliente_tienda' } });
+  if (!role) {
+    role = await strapi.db.query('plugin::users-permissions.role').create({
+      data: {
+        name: 'Cliente Tienda',
+        description: 'Clientes registrados desde la Tienda pública — sin acceso al Portal interno',
+        type: 'cliente_tienda',
+      },
+    });
+    strapi.log.info('[bootstrap] Rol "Cliente Tienda" creado');
+  }
+  // Necesita poder leer su propio perfil (/api/users/me), igual que "authenticated".
+  await otorgarPermisos(strapi, 'cliente_tienda', ['plugin::users-permissions.user.me']);
+}
+
 async function sembrarCategoriasSiVacio(strapi) {
   if (!strapi.db.metadata.get('api::categoria.categoria')) {
     strapi.log.warn('[bootstrap] Modelo api::categoria.categoria no registrado — skip seed');
@@ -521,6 +544,43 @@ module.exports = {
         config: { auth: false },
       },
       {
+        method: 'POST',
+        path: '/api/tienda/registro',
+        handler: async (ctx) => {
+          try {
+            const { username, email, password } = ctx.request.body || {};
+            if (!username || !email || !password) {
+              ctx.status = 400; ctx.body = { error: { message: 'Nombre, email y contraseña son requeridos' } }; return;
+            }
+            if (String(password).length < 6) {
+              ctx.status = 400; ctx.body = { error: { message: 'La contraseña debe tener al menos 6 caracteres' } }; return;
+            }
+            const emailNorm = String(email).toLowerCase().trim();
+            const existente = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: emailNorm } });
+            if (existente) {
+              ctx.status = 400; ctx.body = { error: { message: 'Ya existe una cuenta con este correo — inicia sesión en vez de registrarte.' } }; return;
+            }
+            const rolCliente = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'cliente_tienda' } });
+            if (!rolCliente) {
+              ctx.status = 500; ctx.body = { error: { message: 'Rol de cliente no configurado — contacta a soporte' } }; return;
+            }
+            // El servicio .add() de users-permissions hashea la contraseña
+            // correctamente — una escritura directa a la tabla la guardaría
+            // en texto plano, así que nunca se usa strapi.db.query aquí.
+            const user = await strapi.plugins['users-permissions'].services.user.add({
+              username, email: emailNorm, password, provider: 'local',
+              confirmed: true, blocked: false, role: rolCliente.id,
+            });
+            const jwt = strapi.plugins['users-permissions'].services.jwt.issue({ id: user.id });
+            ctx.body = { jwt, user: { id: user.id, username: user.username, email: user.email } };
+          } catch (e) {
+            strapi.log.error('[tienda-registro] ' + e.message);
+            ctx.status = 500; ctx.body = { error: { message: 'No se pudo crear la cuenta' } };
+          }
+        },
+        config: { auth: false },
+      },
+      {
         method: 'GET',
         path: '/api/my-role',
         handler: async (ctx) => {
@@ -555,5 +615,6 @@ module.exports = {
     await run('sembrarCategoriasPago',      () => sembrarCategoriasPagoSiVacio(strapi));
     await run('sembrarCategoriasEmpresa',   () => sembrarCategoriasEmpresaSiVacio(strapi));
     await run('sembrarMapaIdentidades',     () => sembrarMapaIdentidadesSiVacio(strapi));
+    await run('crearRolClienteTienda',      () => crearRolClienteTienda(strapi));
   },
 };
