@@ -1,5 +1,80 @@
 'use strict';
 
+// ─── Protección anti-fuerza-bruta en login ───────────────────────────────────
+// Mapa en memoria: clave = IP, valor = { intentos, bloqueadoHasta }
+// Se reinicia al reiniciar el proceso — suficiente para bloqueos temporales.
+// No usar para seguridad crítica de estado permanente (p.e. cuentas bloqueadas
+// en DB), pero sí para frenar bots y ataques automáticos de contraseña.
+const loginFails = new Map();
+const LOGIN_MAX_INTENTOS = 5;       // intentos fallidos antes de bloquear
+const LOGIN_VENTANA_MS   = 15 * 60 * 1000; // ventana de 15 minutos
+const LOGIN_BLOQUEO_MS   = 15 * 60 * 1000; // tiempo de bloqueo
+
+function getIP(ctx) {
+  return (
+    ctx.request.headers['x-forwarded-for']?.split(',')[0].trim() ||
+    ctx.request.ip ||
+    'unknown'
+  );
+}
+
+function loginRateLimitMiddleware() {
+  return async (ctx, next) => {
+    if (ctx.path !== '/api/auth/local' || ctx.method !== 'POST') {
+      return next();
+    }
+    const ip  = getIP(ctx);
+    const now = Date.now();
+    const rec = loginFails.get(ip);
+
+    // IP bloqueada — rechazar sin procesar
+    if (rec?.bloqueadoHasta && now < rec.bloqueadoHasta) {
+      const restanMin = Math.ceil((rec.bloqueadoHasta - now) / 60000);
+      ctx.status = 429;
+      ctx.body   = {
+        error: {
+          status:  429,
+          name:    'TooManyRequests',
+          message: `Demasiados intentos fallidos. Intenta de nuevo en ${restanMin} minuto${restanMin > 1 ? 's' : ''}.`,
+        },
+      };
+      return;
+    }
+
+    // Ejecutar el handler real de Strapi
+    await next();
+
+    // Si Strapi devolvió 400 (credenciales incorrectas), sumar intento fallido
+    if (ctx.status === 400) {
+      const prev = loginFails.get(ip) || { intentos: 0, bloqueadoHasta: null };
+      // Reiniciar contador si la última falla fue hace más de LOGIN_VENTANA_MS
+      const intentos = (prev.ultimaFalla && now - prev.ultimaFalla > LOGIN_VENTANA_MS)
+        ? 1
+        : prev.intentos + 1;
+      const bloqueadoHasta = intentos >= LOGIN_MAX_INTENTOS ? now + LOGIN_BLOQUEO_MS : null;
+      loginFails.set(ip, { intentos, ultimaFalla: now, bloqueadoHasta });
+
+      if (bloqueadoHasta) {
+        strapi?.log?.warn(`[login-ratelimit] IP ${ip} bloqueada por ${LOGIN_BLOQUEO_MS / 60000} min tras ${intentos} intentos`);
+      }
+    } else if (ctx.status === 200) {
+      // Login exitoso — limpiar registro de fallos
+      loginFails.delete(ip);
+    }
+  };
+}
+
+// Limpiar el mapa cada hora para no acumular IPs antiguas indefinidamente
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, rec] of loginFails.entries()) {
+    const caducado = !rec.bloqueadoHasta
+      ? now - (rec.ultimaFalla || 0) > LOGIN_VENTANA_MS
+      : now > rec.bloqueadoHasta;
+    if (caducado) loginFails.delete(ip);
+  }
+}, 60 * 60 * 1000);
+
 const CHAT_SYSTEM_PROMPT = `Eres el asistente personal de Ricardo para la app de gestión interna Miracles.
 
 Contexto de la app:
@@ -543,6 +618,10 @@ async function normalizarCategorias(strapi) {
 
 module.exports = {
   register({ strapi }) {
+    // Middleware anti-fuerza-bruta para /api/auth/local — se registra antes
+    // de las rutas para interceptar todas las peticiones de login.
+    strapi.server.use(loginRateLimitMiddleware());
+
     strapi.server.routes([
       {
         method: 'POST',
