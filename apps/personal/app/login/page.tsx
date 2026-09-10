@@ -86,8 +86,8 @@ export default function LoginPage() {
         <div className="flex items-center gap-3 w-fit mb-10">
           <LoginBrandMark logoUrl={identidad?.logo?.url} />
           <div className="text-left min-w-0">
-            <div className="text-xl xl:text-2xl font-bold text-white leading-tight">Portal Medalla de oro</div>
-            <div className="text-sm text-white/50 leading-tight mt-0.5">Joyería Miracles</div>
+            <div className="text-xl xl:text-2xl font-bold text-white leading-tight">Portal Medalla de Oro</div>
+            <div className="text-sm text-white/50 leading-tight mt-0.5">Joyería Medalla de Oro</div>
           </div>
         </div>
 
@@ -116,8 +116,8 @@ export default function LoginPage() {
           <div className="flex lg:hidden items-center justify-center gap-3 mb-8">
             <LoginBrandMark logoUrl={identidad?.logo?.url} />
             <div className="text-left">
-              <div className="text-lg font-bold text-zinc-100 leading-tight">Portal Medalla de oro</div>
-              <div className="text-xs text-zinc-400 leading-tight mt-0.5">Joyería Miracles</div>
+              <div className="text-lg font-bold text-zinc-100 leading-tight">Portal Medalla de Oro</div>
+              <div className="text-xs text-zinc-400 leading-tight mt-0.5">Joyería Medalla de Oro</div>
             </div>
           </div>
 
@@ -173,7 +173,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-[11px] text-white/25 mt-6">
-            © {new Date().getFullYear()} Joyería Miracles
+            © {new Date().getFullYear()} Joyería Medalla de Oro
           </p>
         </div>
       </div>
