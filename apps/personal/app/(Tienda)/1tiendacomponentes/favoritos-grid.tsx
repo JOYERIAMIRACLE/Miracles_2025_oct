@@ -4,6 +4,13 @@ import { Heart, X } from "lucide-react"
 import { useFavorites } from "@/hooks/useFavirites"
 import { formatPrice } from "@/lib/formatprice"
 
+// Las imágenes ya viven en Cloudinary (URL absoluta) — anteponerles el
+// backend a fuerzas armaba una URL rota tipo "https://backend...https://
+// res.cloudinary.com/...". Mismo guard que ya usa carrusel-producto.tsx.
+function imgSrc(url: string) {
+  return url.startsWith("http") ? url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${url}`
+}
+
 // Compartido entre /productos-favoritos (página suelta) y /cuenta/favoritos
 // (dentro del portal de cliente) — mismo grid, para no mantener dos copias.
 export function FavoritosGrid() {
@@ -36,7 +43,7 @@ export function FavoritosGrid() {
             <div className="aspect-square bg-gray-50 dark:bg-zinc-900 flex items-center justify-center overflow-hidden">
               {item.imagenes?.length > 0 ? (
                 <img
-                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${item.imagenes[0].url}`}
+                  src={imgSrc(item.imagenes[0].url)}
                   alt={item.nombreProducto}
                   loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

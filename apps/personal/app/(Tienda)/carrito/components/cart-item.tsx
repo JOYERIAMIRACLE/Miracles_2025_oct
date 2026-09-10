@@ -24,7 +24,7 @@ const CartItem = (props: CartItemProps) => {
             <div className="overflow-hidden rounded-lg bg-gray-50 dark:bg-zinc-900 flex-shrink-0 w-24 h-24 flex items-center justify-center">
                 {producto.imagenes?.length > 0 ? (
                     <img
-                        src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${producto.imagenes[0].url}`}
+                        src={producto.imagenes[0].url.startsWith("http") ? producto.imagenes[0].url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${producto.imagenes[0].url}`}
                         alt={producto.nombreProducto}
                         loading="lazy"
                         className="w-24 h-24 object-cover group-hover:scale-105 transition-transform duration-300"
