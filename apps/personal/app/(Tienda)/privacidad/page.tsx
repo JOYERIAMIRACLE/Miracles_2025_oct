@@ -8,9 +8,9 @@ const SITE_URL = "https://miracles-frontend.pages.dev"
 const CONTACTO_EMAIL = "contacto@medalladeoro.com.mx"
 
 export const metadata: Metadata = {
-  title: "Política de privacidad | Joyería Miracles",
+  title: "Política de privacidad | Medalla de Oro",
   description:
-    "Cómo Joyería Miracles recopila, usa y protege tus datos personales al comprar en el sitio: qué información pedimos, con quién la compartimos y tus derechos.",
+    "Cómo Medalla de Oro recopila, usa y protege tus datos personales al comprar en el sitio: qué información pedimos, con quién la compartimos y tus derechos.",
   alternates: { canonical: `${SITE_URL}/privacidad` },
 }
 

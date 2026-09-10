@@ -39,7 +39,7 @@ const MenuList = () => {
                 <NavigationMenuLink asChild>
                   <Link href="/tienda"
                     className="flex flex-col justify-end rounded-md bg-linear-to-br from-amber-900/40 to-amber-700/20 p-4 no-underline outline-none focus:shadow-md">
-                    <p className="text-lg font-bold text-amber-200">Joyería Miracles</p>
+                    <p className="text-lg font-bold text-amber-200">Medalla de Oro</p>
                     <p className="text-sm text-amber-300/70">Oro 10k y Plata 925 · Hecho con calidad</p>
                   </Link>
                 </NavigationMenuLink>

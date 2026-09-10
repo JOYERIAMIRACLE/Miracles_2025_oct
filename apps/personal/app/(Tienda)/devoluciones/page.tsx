@@ -7,9 +7,9 @@ const SITE_URL = "https://miracles-frontend.pages.dev"
 const CONTACTO_EMAIL = "contacto@medalladeoro.com.mx"
 
 export const metadata: Metadata = {
-  title: "Devoluciones y garantía | Joyería Miracles",
+  title: "Devoluciones y garantía | Medalla de Oro",
   description:
-    "Política de devoluciones y garantía de Joyería Miracles: ventana de devolución, piezas no elegibles, cómo solicitar una devolución y garantía por defectos de fabricación.",
+    "Política de devoluciones y garantía de Medalla de Oro: ventana de devolución, piezas no elegibles, cómo solicitar una devolución y garantía por defectos de fabricación.",
   alternates: { canonical: `${SITE_URL}/devoluciones` },
 }
 

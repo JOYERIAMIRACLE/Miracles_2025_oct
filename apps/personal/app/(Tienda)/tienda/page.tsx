@@ -6,8 +6,8 @@ import ChoseCategory      from "@/app/(Tienda)/1tiendacomponentes/chose-category
 import BannerProduct      from "@/app/(Tienda)/1tiendacomponentes/bannerproduct"
 
 const SITE_URL = "https://miracles-frontend.pages.dev"
-const TITLE = "Tienda | Joyería Miracles"
-const DESCRIPTION = "Explora todo el catálogo de Joyería Miracles: anillos, cadenas, aretes, dijes, pulsos y más en oro 10k y plata 925. Envíos a todo México."
+const TITLE = "Tienda | Medalla de Oro"
+const DESCRIPTION = "Explora todo el catálogo de Medalla de Oro: anillos, cadenas, aretes, dijes, pulsos y más en oro 10k y plata 925. Envíos a todo México."
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: `${SITE_URL}/tienda`,
-    siteName: "Joyería Miracles",
+    siteName: "Medalla de Oro",
     type: "website",
   },
   twitter: {

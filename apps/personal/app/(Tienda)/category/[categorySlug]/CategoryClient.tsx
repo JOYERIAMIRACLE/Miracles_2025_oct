@@ -54,7 +54,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
         <div className="absolute inset-0 bg-black/70" />
         <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-24">
           <div className="flex flex-col gap-4">
-            <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest">Joyería Miracles</p>
+            <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest">Medalla de Oro</p>
             <h1 className="max-w-2xl text-white text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-lg">
               {displayName}
             </h1>

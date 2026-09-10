@@ -6,16 +6,16 @@ import { buttonVariants } from "@/components/ui/button"
 const SITE_URL = "https://miracles-frontend.pages.dev"
 
 export const metadata: Metadata = {
-  title: "Nosotros | Joyería Miracles",
+  title: "Nosotros | Medalla de Oro",
   description:
-    "Conoce Joyería Miracles: un negocio familiar dedicado a la joyería fina en oro 10k y plata 925, hecha con cuidado y enviada a todo México.",
+    "Conoce Medalla de Oro: un negocio familiar dedicado a la joyería fina en oro 10k y plata 925, hecha con cuidado y enviada a todo México.",
   alternates: { canonical: `${SITE_URL}/nosotros` },
   openGraph: {
-    title: "Nosotros | Joyería Miracles",
+    title: "Nosotros | Medalla de Oro",
     description:
-      "Conoce Joyería Miracles: un negocio familiar dedicado a la joyería fina en oro 10k y plata 925, hecha con cuidado y enviada a todo México.",
+      "Conoce Medalla de Oro: un negocio familiar dedicado a la joyería fina en oro 10k y plata 925, hecha con cuidado y enviada a todo México.",
     url: `${SITE_URL}/nosotros`,
-    siteName: "Joyería Miracles",
+    siteName: "Medalla de Oro",
     type: "website",
   },
 }

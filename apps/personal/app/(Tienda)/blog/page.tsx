@@ -24,15 +24,15 @@ export const metadata: Metadata = {
   description: "Tips de joyería, tendencias, guías de regalo y cuidado de tus joyas. Todo lo que necesitas saber sobre joyería en Miracles.",
   alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
-    title: "Blog | Joyería Miracles",
+    title: "Blog | Medalla de Oro",
     description: "Tips de joyería, tendencias y guías de regalo.",
     url: `${SITE_URL}/blog`,
-    siteName: "Joyería Miracles",
+    siteName: "Medalla de Oro",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blog | Joyería Miracles",
+    title: "Blog | Medalla de Oro",
     description: "Tips de joyería, tendencias y guías de regalo.",
   },
 }
@@ -43,11 +43,11 @@ export default async function BlogPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "Blog | Joyería Miracles",
+    name: "Blog | Medalla de Oro",
     description: "Tips de joyería, tendencias, guías de regalo y cuidado de tus joyas.",
     publisher: {
       "@type": "Organization",
-      name: "Joyería Miracles",
+      name: "Medalla de Oro",
     },
   }
 
@@ -61,7 +61,7 @@ export default async function BlogPage() {
       {/* Hero */}
       <section className="bg-gradient-to-b from-amber-50 to-white dark:from-gray-900 dark:to-gray-950 py-16 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-gray-100 mb-4">
-          Blog Joyería Miracles
+          Blog Medalla de Oro
         </h1>
         <p className="max-w-xl mx-auto text-lg text-gray-600 dark:text-gray-400">
           Tips, tendencias y todo lo que debes saber sobre tus joyas de oro y plata.

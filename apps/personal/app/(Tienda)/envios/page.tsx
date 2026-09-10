@@ -7,9 +7,9 @@ const SITE_URL = "https://miracles-frontend.pages.dev"
 const CONTACTO_EMAIL = "contacto@medalladeoro.com.mx"
 
 export const metadata: Metadata = {
-  title: "Envíos | Joyería Miracles",
+  title: "Envíos | Medalla de Oro",
   description:
-    "Tiempos de despacho y entrega, costo de envío y seguimiento de pedidos de Joyería Miracles — envíos a todo México.",
+    "Tiempos de despacho y entrega, costo de envío y seguimiento de pedidos de Medalla de Oro — envíos a todo México.",
   alternates: { canonical: `${SITE_URL}/envios` },
 }
 

@@ -4,9 +4,9 @@ import Link from "next/link"
 const SITE_URL = "https://miracles-frontend.pages.dev"
 
 export const metadata: Metadata = {
-  title: "Términos y condiciones | Joyería Miracles",
+  title: "Términos y condiciones | Medalla de Oro",
   description:
-    "Términos y condiciones de compra en Joyería Miracles: precios, disponibilidad, métodos de pago, propiedad intelectual y responsabilidades del sitio.",
+    "Términos y condiciones de compra en Medalla de Oro: precios, disponibilidad, métodos de pago, propiedad intelectual y responsabilidades del sitio.",
   alternates: { canonical: `${SITE_URL}/terminos` },
 }
 

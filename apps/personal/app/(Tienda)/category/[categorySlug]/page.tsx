@@ -84,7 +84,7 @@ export async function generateMetadata({
     products[0]?.categoria?.NombreCategoria ??
     categorySlug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
 
-  const descripcion = `Colección de ${categoryName} en Joyería Miracles · Oro 10k y Plata 925 · ${products.length > 0 ? `${products.length} piezas disponibles · ` : ""}Envíos a todo México.`
+  const descripcion = `Colección de ${categoryName} en Medalla de Oro · Oro 10k y Plata 925 · ${products.length > 0 ? `${products.length} piezas disponibles · ` : ""}Envíos a todo México.`
 
   const mainImg = category?.MainImage?.url
   const firstProductImg = products[0]?.imagenes?.[0]?.url
@@ -94,20 +94,20 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: `${categoryName} | Joyería Miracles`,
+    title: `${categoryName} | Medalla de Oro`,
     description: descripcion,
     alternates: { canonical: `${SITE_URL}/category/${categorySlug}` },
     openGraph: {
-      title: `${categoryName} | Joyería Miracles`,
+      title: `${categoryName} | Medalla de Oro`,
       description: descripcion,
       url: `${SITE_URL}/category/${categorySlug}`,
-      siteName: "Joyería Miracles",
+      siteName: "Medalla de Oro",
       type: "website",
       ...(imageUrl && { images: [{ url: imageUrl, width: 1200, height: 630, alt: categoryName }] }),
     },
     twitter: {
       card: "summary_large_image",
-      title: `${categoryName} | Joyería Miracles`,
+      title: `${categoryName} | Medalla de Oro`,
       description: descripcion,
       ...(imageUrl && { images: [imageUrl] }),
     },
@@ -133,8 +133,8 @@ export default async function Page({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${categoryName} | Joyería Miracles`,
-    description: `Colección de ${categoryName} en Joyería Miracles`,
+    name: `${categoryName} | Medalla de Oro`,
+    description: `Colección de ${categoryName} en Medalla de Oro`,
     url: `${SITE_URL}/category/${categorySlug}`,
     numberOfItems: products.length,
     hasPart: products.slice(0, 10).map(p => ({

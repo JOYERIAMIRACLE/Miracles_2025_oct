@@ -7,7 +7,7 @@ const BannerProduct = () => {
   return (
     <>
     <div className='mt-4 text-center'>
-        <p className='text-xs font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400'>Joyería Miracles</p>
+        <p className='text-xs font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400'>Medalla de Oro</p>
         <h4 className='mt-2 text-5xl font-extrabold uppercase'>Joyas premium</h4>
         <p className='my-2 text-lg'>Despierta tu expresión</p>
 

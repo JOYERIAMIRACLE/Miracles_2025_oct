@@ -49,7 +49,7 @@ export async function generateMetadata({
   if (!post) return { title: "Artículo no encontrado" }
 
   const metaTitulo    = post.seo_titulo ?? post.titulo
-  const descripcion   = post.seo_descripcion ?? post.resumen?.slice(0, 160) ?? `${post.titulo} — Blog Joyería Miracles`
+  const descripcion   = post.seo_descripcion ?? post.resumen?.slice(0, 160) ?? `${post.titulo} — Blog Medalla de Oro`
 
   const imgUrl = post.imagen_portada
     ? post.imagen_portada.url.startsWith("http")
@@ -63,7 +63,7 @@ export async function generateMetadata({
     alternates: { canonical: `${SITE}/blog/${post.slug}` },
     ...(post.seo_keywords && { keywords: post.seo_keywords }),
     openGraph: {
-      title: `${metaTitulo} | Joyería Miracles`,
+      title: `${metaTitulo} | Medalla de Oro`,
       description: descripcion,
       type: "article",
       publishedTime: post.fecha_publicacion ?? undefined,
@@ -100,7 +100,7 @@ export default async function BlogPostPage({
   const descripcion =
     post.seo_descripcion ??
     post.resumen?.slice(0, 160) ??
-    `${post.titulo} — Blog Joyería Miracles`
+    `${post.titulo} — Blog Medalla de Oro`
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -111,7 +111,7 @@ export default async function BlogPostPage({
     ...(post.fecha_publicacion && { datePublished: post.fecha_publicacion }),
     publisher: {
       "@type": "Organization",
-      name: "Joyería Miracles",
+      name: "Medalla de Oro",
       url: SITE,
     },
     mainEntityOfPage: {

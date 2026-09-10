@@ -60,7 +60,7 @@ export async function generateMetadata({
 
   const descripcion = product.descripcion
     ? product.descripcion.slice(0, 160)
-    : `${nombre}${detalles ? ` · ${detalles}` : ""} · Joyería Miracles. Envíos a todo México.`
+    : `${nombre}${detalles ? ` · ${detalles}` : ""} · Medalla de Oro. Envíos a todo México.`
 
   const imagen = product.imagenes?.[0]
   const imageUrl = imagen?.url
@@ -68,20 +68,20 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: `${nombre} | Joyería Miracles`,
+    title: `${nombre} | Medalla de Oro`,
     description: descripcion,
     alternates: { canonical: `${SITE_URL}/producto/${product.slug}` },
     openGraph: {
-      title: `${nombre} | Joyería Miracles`,
+      title: `${nombre} | Medalla de Oro`,
       description: descripcion,
       url: `${SITE_URL}/producto/${product.slug}`,
-      siteName: "Joyería Miracles",
+      siteName: "Medalla de Oro",
       type: "website",
       ...(imageUrl && { images: [{ url: imageUrl, width: 800, height: 800, alt: nombre }] }),
     },
     twitter: {
       card: "summary_large_image",
-      title: `${nombre} | Joyería Miracles`,
+      title: `${nombre} | Medalla de Oro`,
       description: descripcion,
       ...(imageUrl && { images: [imageUrl] }),
     },
@@ -112,16 +112,16 @@ export default async function Page({
     description: product.descripcion ?? "",
     sku: product.sku ?? product.documentId,
     ...(imageUrl && { image: [imageUrl] }),
-    brand: { "@type": "Brand", name: "Joyería Miracles" },
+    brand: { "@type": "Brand", name: "Medalla de Oro" },
     material: product.materialProducto ?? undefined,
     offers: {
       "@type": "Offer",
       url: `${SITE_URL}/producto/${product.slug}`,
       priceCurrency: "MXN",
       price: product.costo ?? 0,
-      availability: "https://schema.org/InStock",
+      availability: (product.stock ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
-      seller: { "@type": "Organization", name: "Joyería Miracles" },
+      seller: { "@type": "Organization", name: "Medalla de Oro" },
     },
   }
 
