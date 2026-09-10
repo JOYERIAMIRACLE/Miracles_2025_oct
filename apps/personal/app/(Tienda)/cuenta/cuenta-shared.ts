@@ -25,3 +25,10 @@ export function fmtDtCorta(iso: string | null | undefined): string {
   if (!iso) return "—"
   return new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })
 }
+
+// Superficie de tarjeta compartida por todo /cuenta — un anillo de 1px en
+// vez de border+shadow genérico, y sin borde duro en claro (ya contrasta
+// contra el fondo blanco de la página). Un solo lugar para que las 6
+// páginas no diverjan una de otra con el tiempo.
+export const cardCls = "bg-white dark:bg-zinc-900 ring-1 ring-gray-200 dark:ring-white/10 rounded-2xl"
+

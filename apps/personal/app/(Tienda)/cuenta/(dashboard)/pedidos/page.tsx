@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Package, ChevronDown, Truck, Receipt } from "lucide-react"
 import { useClientePortal } from "@/hooks/useClientePortal"
 import { formatPrice } from "@/lib/formatprice"
-import { ESTADO_TIENDA, fmtDtCorta } from "../../cuenta-shared"
+import { ESTADO_TIENDA, fmtDtCorta, cardCls } from "../../cuenta-shared"
 import { ESTADO_ENVIO_LABELS, ESTADO_ENVIO_COLORS, PAQUETERIA_LABELS, EstadoEnvio, PaqueteriaEnvio } from "@/types/envio"
 
 export default function PedidosPage() {
@@ -20,7 +20,7 @@ export default function PedidosPage() {
       {loading ? (
         <p className="text-sm text-gray-400 dark:text-gray-600 text-center py-16">Cargando…</p>
       ) : ventas.length === 0 ? (
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl text-center py-16 px-5">
+        <div className={`${cardCls} text-center py-16 px-5`}>
           <Package size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
           <p className="text-sm text-gray-500 dark:text-gray-400">Todavía no tienes pedidos.</p>
         </div>
@@ -30,22 +30,22 @@ export default function PedidosPage() {
             const open = abierto === v.documentId
             const envio = v.envios?.[0]
             return (
-              <div key={v.documentId} className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
+              <div key={v.documentId} className={`${cardCls} overflow-hidden`}>
                 <button type="button" onClick={() => setAbierto(open ? null : v.documentId)}
-                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors">
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{v.numero ?? v.concepto}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{fmtDtCorta(v.fecha)} · {v.lineas?.length ?? 0} artículo{(v.lineas?.length ?? 0) === 1 ? "" : "s"}</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${ESTADO_TIENDA[v.estado ?? "Cotizado"]}`}>{v.estado ?? "—"}</span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatPrice(v.monto)}</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">{formatPrice(v.monto)}</span>
                     <ChevronDown size={16} className={`text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
                   </div>
                 </button>
 
                 {open && (
-                  <div className="border-t border-gray-100 dark:border-zinc-800 px-5 py-4 space-y-4">
+                  <div className="border-t border-gray-100 dark:border-white/10 px-5 py-4 space-y-4">
                     {/* Artículos */}
                     {v.lineas && v.lineas.length > 0 && (
                       <div className="space-y-2">
@@ -55,7 +55,7 @@ export default function PedidosPage() {
                               <p className="text-gray-800 dark:text-gray-200 truncate">{l.producto?.nombreProducto ?? l.descripcion}</p>
                               {l.producto?.sku && <p className="text-xs text-gray-400 dark:text-gray-600 font-mono">{l.producto.sku}</p>}
                             </div>
-                            <p className="text-gray-500 dark:text-gray-400 shrink-0">×{l.cantidad} · {formatPrice(l.subtotal ?? l.cantidad * l.precioUnitario)}</p>
+                            <p className="text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">×{l.cantidad} · {formatPrice(l.subtotal ?? l.cantidad * l.precioUnitario)}</p>
                           </div>
                         ))}
                       </div>

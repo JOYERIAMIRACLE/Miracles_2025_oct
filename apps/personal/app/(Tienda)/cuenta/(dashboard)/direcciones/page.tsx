@@ -4,6 +4,7 @@ import { MapPin, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useClientePortal } from "@/hooks/useClientePortal"
 import { actualizarMiCliente } from "@/api/clientePortal/getMisDatos"
+import { cardCls } from "../../cuenta-shared"
 
 export default function DireccionesPage() {
   const { contacto, loading, reload } = useClientePortal()
@@ -33,7 +34,7 @@ export default function DireccionesPage() {
       {loading ? (
         <p className="text-sm text-gray-400 dark:text-gray-600 text-center py-16">Cargando…</p>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 space-y-4">
+        <div className={`${cardCls} p-5 sm:p-6 space-y-4`}>
           <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
             <MapPin size={16} className="text-amber-600 dark:text-amber-400" />
             <p className="text-sm font-semibold">Dirección de envío</p>

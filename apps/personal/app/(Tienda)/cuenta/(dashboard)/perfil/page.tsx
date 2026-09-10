@@ -4,6 +4,7 @@ import { Loader2, Mail } from "lucide-react"
 import { toast } from "sonner"
 import { useClientePortal } from "@/hooks/useClientePortal"
 import { actualizarMiCliente } from "@/api/clientePortal/getMisDatos"
+import { cardCls } from "../../cuenta-shared"
 
 export default function PerfilPage() {
   const { usuario, contacto, loading, reload } = useClientePortal()
@@ -37,7 +38,7 @@ export default function PerfilPage() {
       {loading ? (
         <p className="text-sm text-gray-400 dark:text-gray-600 text-center py-16">Cargando…</p>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 space-y-4 max-w-md">
+        <div className={`${cardCls} p-5 sm:p-6 space-y-4 max-w-md`}>
           <div>
             <label htmlFor="nombre" className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">Nombre completo</label>
             <input id="nombre" type="text" value={nombre} onChange={e => setNombre(e.target.value)}

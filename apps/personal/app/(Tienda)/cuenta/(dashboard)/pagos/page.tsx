@@ -1,5 +1,6 @@
 "use client"
 import { CreditCard, ShieldCheck } from "lucide-react"
+import { cardCls } from "../../cuenta-shared"
 
 export default function PagosPage() {
   return (
@@ -9,9 +10,9 @@ export default function PagosPage() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Tarjetas guardadas para pagar más rápido.</p>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl text-center py-16 px-6">
-        <div className="h-12 w-12 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-          <CreditCard size={20} className="text-amber-600 dark:text-amber-400" />
+      <div className={`${cardCls} text-center py-16 px-6`}>
+        <div className="h-12 w-12 rounded-xl bg-linear-to-br from-amber-100 to-amber-200/60 dark:from-amber-500/20 dark:to-amber-600/10 flex items-center justify-center mx-auto mb-4">
+          <CreditCard size={20} className="text-amber-700 dark:text-amber-400" />
         </div>
         <p className="font-semibold text-gray-900 dark:text-gray-100">Estamos preparando esta sección</p>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
