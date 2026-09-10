@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Cotizacion, CotizacionPayload } from "@/types/cotizacion"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL  = `${BASE}/api/cotizaciones`
@@ -12,7 +13,7 @@ export function useGetAllCotizaciones() {
     setLoading(true)
     ;(async () => {
       try {
-        const res  = await fetch(`${URL}?populate=*&sort=createdAt:desc&pagination[pageSize]=500`)
+        const res  = await authFetch(`${URL}?populate=*&sort=createdAt:desc&pagination[pageSize]=500`)
         const json = await res.json()
         setCotizaciones(json.data ?? [])
       } finally { setLoading(false) }
@@ -31,7 +32,7 @@ export function useGetCotizaciones(clienteDocumentId: string | null) {
     setLoading(true)
     ;(async () => {
       try {
-        const res  = await fetch(`${URL}?filters[cliente][documentId][$eq]=${clienteDocumentId}&sort=createdAt:asc&pagination[pageSize]=100`)
+        const res  = await authFetch(`${URL}?filters[cliente][documentId][$eq]=${clienteDocumentId}&sort=createdAt:asc&pagination[pageSize]=100`)
         const json = await res.json()
         setCotizaciones(json.data ?? [])
       } finally { setLoading(false) }
@@ -45,7 +46,7 @@ export function useGetCotizaciones(clienteDocumentId: string | null) {
 // "ventaGenerada" vuelven sin poblar y se pierden del estado local al
 // fusionar la respuesta (aunque en la base de datos siguen intactos).
 export async function createCotizacion(payload: CotizacionPayload): Promise<Cotizacion> {
-  const res = await fetch(`${URL}?populate=*`, {
+  const res = await authFetch(`${URL}?populate=*`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -57,7 +58,7 @@ export async function createCotizacion(payload: CotizacionPayload): Promise<Coti
 }
 
 export async function updateCotizacion(documentId: string, payload: Partial<CotizacionPayload>): Promise<Cotizacion> {
-  const res = await fetch(`${URL}/${documentId}?populate=*`, {
+  const res = await authFetch(`${URL}/${documentId}?populate=*`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -69,5 +70,5 @@ export async function updateCotizacion(documentId: string, payload: Partial<Coti
 }
 
 export async function deleteCotizacion(documentId: string): Promise<void> {
-  await fetch(`${URL}/${documentId}`, { method: "DELETE" })
+  await authFetch(`${URL}/${documentId}`, { method: "DELETE" })
 }

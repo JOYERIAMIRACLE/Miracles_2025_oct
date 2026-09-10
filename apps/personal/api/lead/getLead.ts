@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Lead, LeadPayload } from "@/types/lead"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL  = `${BASE}/api/leads`
@@ -12,7 +13,7 @@ export function useGetLeads() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${URL}?${POP}&pagination[pageSize]=500&sort=createdAt:desc`)
+        const res  = await authFetch(`${URL}?${POP}&pagination[pageSize]=500&sort=createdAt:desc`)
         const json = await res.json()
         setLeads(json.data ?? [])
       } finally { setLoading(false) }
@@ -30,7 +31,7 @@ export function useGetLeadsByCliente(clienteDocumentId: string | null) {
     if (!clienteDocumentId) { setLoading(false); return }
     ;(async () => {
       try {
-        const res  = await fetch(
+        const res  = await authFetch(
           `${URL}?${POP}&filters[cliente][documentId][$eq]=${clienteDocumentId}&pagination[pageSize]=200&sort=createdAt:desc`
         )
         const json = await res.json()
@@ -43,36 +44,36 @@ export function useGetLeadsByCliente(clienteDocumentId: string | null) {
 }
 
 export async function createLead(payload: LeadPayload): Promise<Lead> {
-  const res  = await fetch(URL, {
+  const res  = await authFetch(URL, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
   if (!res.ok || !json?.data) throw new Error(json?.error?.message ?? "Error al crear el lead")
   // Recargar con populate
-  const res2  = await fetch(`${URL}/${json.data.documentId}?${POP}`)
+  const res2  = await authFetch(`${URL}/${json.data.documentId}?${POP}`)
   const json2 = await res2.json()
   return json2.data ?? json.data
 }
 
 export async function updateLead(documentId: string, payload: Partial<LeadPayload>): Promise<Lead> {
-  const res  = await fetch(`${URL}/${documentId}`, {
+  const res  = await authFetch(`${URL}/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()
   if (!res.ok || !json?.data) throw new Error(json?.error?.message ?? "Error al actualizar el lead")
-  const res2  = await fetch(`${URL}/${json.data.documentId}?${POP}`)
+  const res2  = await authFetch(`${URL}/${json.data.documentId}?${POP}`)
   const json2 = await res2.json()
   return json2.data ?? json.data
 }
 
 export async function deleteLead(documentId: string) {
-  await fetch(`${URL}/${documentId}`, { method: "DELETE" })
+  await authFetch(`${URL}/${documentId}`, { method: "DELETE" })
 }
 
 export async function countLeads(): Promise<number> {
-  const res  = await fetch(`${URL}?pagination[pageSize]=1`)
+  const res  = await authFetch(`${URL}?pagination[pageSize]=1`)
   const json = await res.json()
   return json.meta?.pagination?.total ?? 0
 }

@@ -1,8 +1,9 @@
 import { VentaPayload, VentaType } from "@/types/venta"
+import { authFetch } from "@/lib/auth"
 
 export async function updateVenta(documentId: string, payload: Partial<VentaPayload>): Promise<VentaType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ventas/${documentId}`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),

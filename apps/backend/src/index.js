@@ -46,6 +46,13 @@ const PUBLIC_ACTIONS_TAREA = [
   'api::proceso-tarea.proceso-tarea.create',
   'api::proceso-tarea.proceso-tarea.update',
   'api::proceso-tarea.proceso-tarea.delete',
+  // lead, cliente, venta, cotizacion y suscriptor fueron movidos a
+  // AUTHENTICATED_ACTIONS_CRM — ya no son accesibles sin JWT.
+];
+
+// Colecciones CRM sensibles — solo usuarios con JWT válido (rol authenticated).
+// El frontend usa authFetch() para adjuntar el token en cada petición.
+const AUTHENTICATED_ACTIONS_CRM = [
   'api::lead.lead.find',
   'api::lead.lead.findOne',
   'api::lead.lead.create',
@@ -61,6 +68,11 @@ const PUBLIC_ACTIONS_TAREA = [
   'api::venta.venta.create',
   'api::venta.venta.update',
   'api::venta.venta.delete',
+  'api::cotizacion.cotizacion.find',
+  'api::cotizacion.cotizacion.findOne',
+  'api::cotizacion.cotizacion.create',
+  'api::cotizacion.cotizacion.update',
+  'api::cotizacion.cotizacion.delete',
   'api::suscriptor.suscriptor.find',
   'api::suscriptor.suscriptor.findOne',
   'api::suscriptor.suscriptor.create',
@@ -392,6 +404,18 @@ const MAPA_IDENTIDAD_SEED = [
   { nombre: 'TALLER SDI',        icono: '🧩', color: '#d946ef', sector: 'sdi-portal',     x: 1380, y: 520, moduleId: 'taller-sdi' },
 ];
 
+async function revocarPermisos(strapi, roleType, actions) {
+  const role = await strapi.db
+    .query('plugin::users-permissions.role')
+    .findOne({ where: { type: roleType } });
+  if (!role) return;
+  for (const action of actions) {
+    await strapi.db
+      .query('plugin::users-permissions.permission')
+      .deleteMany({ where: { action, role: role.id } });
+  }
+}
+
 async function otorgarPermisos(strapi, roleType, actions) {
   const role = await strapi.db
     .query('plugin::users-permissions.role')
@@ -412,16 +436,18 @@ async function otorgarPermisos(strapi, roleType, actions) {
 async function aplicarPermisosPublic(strapi) {
   const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO, ...PUBLIC_ACTIONS_MAPA_IDENTIDAD];
   await otorgarPermisos(strapi, 'public', todas);
-  // El front de Portal Medallitadeoro manda el JWT del usuario logueado en
-  // los guardados (crear/editar/eliminar) — esas peticiones las evalúa
-  // Strapi bajo el rol "authenticated", no "public", así que ese rol
-  // también necesita estos permisos o el guardado falla con 403 aunque el
-  // GET (sin token) sí funcione.
+  // Revocar del rol public las colecciones CRM sensibles que antes estaban
+  // abiertas — idempotente (deleteMany no falla si ya no existen).
+  await revocarPermisos(strapi, 'public', AUTHENTICATED_ACTIONS_CRM);
+  // CRM: solo authenticated puede leer/escribir leads, clientes, ventas,
+  // cotizaciones y suscriptores. El frontend adjunta el JWT con authFetch().
+  await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_CRM);
+  // Portal MDO general: authenticated también necesita estos permisos porque
+  // las mutaciones se hacen con el JWT del usuario logueado.
   await otorgarPermisos(strapi, 'authenticated', PUBLIC_ACTIONS_PORTAL_MDO);
-  // Notas de mejora: solo Authenticated, nunca Public (ver comentario en la
-  // constante) -- por eso va aparte, no dentro de "todas".
+  // Notas de mejora: solo Authenticated, nunca Public.
   await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_NOTA_MEJORA);
-  strapi.log.info('[bootstrap] Permisos Public aplicados (Categoria + Tarea + Snapshots + Trabajo + Portal MDO) + Authenticated (Portal MDO + Notas de mejora)');
+  strapi.log.info('[bootstrap] Permisos aplicados — CRM movido a Authenticated, Public reducido a contenido no sensible');
 }
 
 // Rol separado para clientes que se registran en la Tienda pública — a

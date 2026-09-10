@@ -1,4 +1,5 @@
 import { ClientePayload, ClienteType } from "@/types/cliente"
+import { authFetch } from "@/lib/auth"
 
 // ─── Función: crear un cliente en Strapi ──────────────────────────────────────
 // Strapi v5 espera: POST /api/clientes  con body { data: {...} }
@@ -7,7 +8,7 @@ import { ClientePayload, ClienteType } from "@/types/cliente"
 export async function createCliente(payload: ClientePayload): Promise<ClienteType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/clientes`
 
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ data: payload }),

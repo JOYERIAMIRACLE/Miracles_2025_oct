@@ -1,4 +1,5 @@
 import { ClientePayload, ClienteType } from "@/types/cliente"
+import { authFetch } from "@/lib/auth"
 
 // ─── Función: actualizar un cliente en Strapi ─────────────────────────────────
 // Strapi v5 usa documentId (string) en lugar del id numérico para mutaciones
@@ -7,7 +8,7 @@ import { ClientePayload, ClienteType } from "@/types/cliente"
 export async function updateCliente(documentId: string, payload: Partial<ClientePayload>): Promise<ClienteType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/clientes/${documentId}`
 
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method:  "PUT",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ data: payload }),

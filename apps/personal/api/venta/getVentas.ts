@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { VentaType } from "@/types/venta"
+import { authFetch } from "@/lib/auth"
 
 export function useGetVentas() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ventas?populate=*`
@@ -10,7 +11,7 @@ export function useGetVentas() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res = await fetch(url)
+        const res = await authFetch(url)
         const json = await res.json()
         setVentas(json.data ?? [])
       } catch (err: any) {

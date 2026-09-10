@@ -57,6 +57,18 @@ export function logout() {
   clearSessionCookie()
 }
 
+// Fetch que auto-adjunta el JWT del usuario logueado. Úsalo en lugar de
+// fetch() directo para cualquier endpoint de Strapi que requiera auth.
+export function authFetch(url: string, init?: RequestInit): Promise<Response> {
+  const token = getToken()
+  const base  = (init?.headers instanceof Headers)
+    ? init.headers
+    : new Headers(init?.headers as HeadersInit | undefined)
+  if (token) base.set("Authorization", `Bearer ${token}`)
+  base.set("Content-Type", base.get("Content-Type") ?? "application/json")
+  return fetch(url, { ...init, headers: base })
+}
+
 export async function fetchUserRole(token: string, baseUrl: string): Promise<string | null> {
   const headers = { Authorization: `Bearer ${token}` }
   const normalize = (raw: string) => raw.toLowerCase().replace(/[\s-]/g, "_")

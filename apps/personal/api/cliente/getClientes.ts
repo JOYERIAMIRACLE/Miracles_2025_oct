@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { ClienteType } from "@/types/cliente"
+import { authFetch } from "@/lib/auth"
 
 // ─── Hook: obtener lista de clientes desde Strapi ─────────────────────────────
 // Uso: const { clientes, loading, error } = useGetClientes()
@@ -14,7 +15,7 @@ export function useGetClientes() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setClientes(json.data)
       } catch (err: any) {
