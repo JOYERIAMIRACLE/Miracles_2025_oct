@@ -1,27 +1,39 @@
 "use client"
-import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+
+const ESTILOS = ["Cartier", "Figaro", "Cubana", "Corazón", "Cruz", "Solitario", "Otro"]
 
 type FilterEstiloProps = {
-  setFilterEstilo: (figura: string) => void
+  value: string
+  onChange: (v: string) => void
 }
 
-const FilterEstilo = ({ setFilterEstilo }: FilterEstiloProps) => {
+const FilterEstilo = ({ value, onChange }: FilterEstiloProps) => {
   return (
-    <div className='my-5'>
-      <p className='mb-3 font-bold'>Estilo / Figura</p>
-      <RadioGroup defaultValue="" onValueChange={(value) => setFilterEstilo(value)}>
-        <div className='flex items-center space-x-2'>
-          <RadioGroupItem value="" id="all-estilos" />
-          <Label htmlFor="all-estilos">Todos</Label>
-        </div>
-        {["Cartier", "Figaro", "Cubana", "Corazón", "Cruz", "Solitario", "Otro"].map((estilo) => (
-          <div key={estilo} className='flex items-center space-x-2'>
-            <RadioGroupItem value={estilo} id={estilo} />
-            <Label htmlFor={estilo}>{estilo}</Label>
-          </div>
-        ))}
-      </RadioGroup>
+    <div className="flex flex-wrap gap-2">
+      <button
+        onClick={() => onChange("")}
+        className={`px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide border transition-all ${
+          value === ""
+            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white"
+            : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-slate-500 dark:hover:border-slate-400"
+        }`}
+      >
+        Todos
+      </button>
+
+      {ESTILOS.map((estilo) => (
+        <button
+          key={estilo}
+          onClick={() => onChange(estilo === value ? "" : estilo)}
+          className={`px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide border transition-all ${
+            value === estilo
+              ? "bg-amber-500 text-white border-amber-500"
+              : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-500"
+          }`}
+        >
+          {estilo}
+        </button>
+      ))}
     </div>
   )
 }

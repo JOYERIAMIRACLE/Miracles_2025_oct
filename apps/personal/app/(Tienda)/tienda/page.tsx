@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
-import CarouselTextBanner from "@/app/(Tienda)/1tiendacomponentes/carrousel-text-banner"
-import FeatureProducts    from "@/app/(Tienda)/1tiendacomponentes/feature-products"
-import BannerDiscount     from "@/app/(Tienda)/1tiendacomponentes/banner-discount"
-import ChoseCategory      from "@/app/(Tienda)/1tiendacomponentes/chose-category"
-import BannerProduct      from "@/app/(Tienda)/1tiendacomponentes/bannerproduct"
+import HeroTienda          from "@/app/(Tienda)/1tiendacomponentes/hero-tienda"
+import CertificadosStrip   from "@/app/(Tienda)/1tiendacomponentes/certificados-strip"
+import CategoriaGrid       from "@/app/(Tienda)/1tiendacomponentes/categoria-grid"
+import ComprarPorMaterial  from "@/app/(Tienda)/1tiendacomponentes/compra-por-material"
+import TopVentas           from "@/app/(Tienda)/1tiendacomponentes/top-ventas"
+import ComprarPorOcasion   from "@/app/(Tienda)/1tiendacomponentes/compra-por-ocasion"
 
 const SITE_URL = "https://miracles-frontend.pages.dev"
 const TITLE = "Tienda | Medalla de Oro"
@@ -30,11 +31,12 @@ export const metadata: Metadata = {
 export default function TiendaPage() {
   return (
     <div>
-      <CarouselTextBanner />
-      <FeatureProducts />
-      <BannerDiscount />
-      <ChoseCategory />
-      <BannerProduct />
+      <HeroTienda />
+      <CertificadosStrip />
+      <CategoriaGrid />
+      <ComprarPorMaterial />
+      <TopVentas />
+      <ComprarPorOcasion />
     </div>
   )
 }

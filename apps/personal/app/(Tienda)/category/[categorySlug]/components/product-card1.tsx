@@ -1,94 +1,106 @@
-import { Expand, ShoppingCart } from 'lucide-react'
+"use client"
+import { Heart, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { formatPrice } from '@/lib/formatprice'
 import { ProductType } from '@/types/product'
-import IconButton from '@/app/(Tienda)/1tiendacomponentes/icon-buttons'
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel'
 import { useCart } from '@/hooks/useCart'
 
 type ProductCardProps = { product: ProductType }
 
 const ProductCard1 = ({ product }: ProductCardProps) => {
-  const router = useRouter()
   const { addItem } = useCart()
+  const [fav, setFav] = useState(false)
 
   if (!product.slug) return null
 
-  // stock null = sin control de inventario para esta pieza (se asume disponible);
-  // solo un 0 o negativo explícito cuenta como agotado.
   const outOfStock = typeof product.stock === 'number' && product.stock <= 0
+  const img = product.imagenes?.[0]
+  const imgUrl = img?.url
+    ? (img.url.startsWith('http') ? img.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${img.url}`)
+    : null
 
   return (
-    <Link href={`/producto/${product.slug}`}
-      className='relative p-2 transition-all duration-100 rounded-lg hover:shadow-md group/card'>
+    <div className="group flex flex-col">
 
-      {/* Badges */}
-      <div className='absolute flex items-center gap-2 px-2 z-1 top-4'>
-        {outOfStock && (
-          <span className='px-2 py-1 text-xs font-semibold text-white bg-red-600/90 rounded-full backdrop-blur-sm'>
-            Agotado
-          </span>
+      {/* Contenedor de imagen */}
+      <Link
+        href={`/producto/${product.slug}`}
+        className="relative block overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 aspect-square"
+      >
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={img?.alternativeText ?? product.nombreProducto}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-5xl opacity-20">💍</span>
+          </div>
         )}
+
+        {/* Badges top-left */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          {outOfStock && (
+            <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 bg-red-600 text-white rounded-full">
+              Agotado
+            </span>
+          )}
+          {product.materialProducto && (
+            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 bg-amber-500 text-white rounded-full">
+              {product.materialProducto}
+            </span>
+          )}
+        </div>
+
+        {/* Favorito top-right */}
+        <button
+          onClick={(e) => { e.preventDefault(); setFav(f => !f) }}
+          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          aria-label="Favorito"
+        >
+          <Heart
+            size={14}
+            className={fav ? 'fill-red-500 text-red-500' : 'text-slate-500'}
+          />
+        </button>
+
+        {/* CTA slide-up desde abajo */}
+        <div className="absolute bottom-0 left-0 right-0 bg-black/75 py-2.5 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <span className="text-white text-[11px] font-semibold uppercase tracking-widest">
+            Ver producto
+          </span>
+        </div>
+      </Link>
+
+      {/* Info debajo */}
+      <div className="mt-3 px-0.5 flex flex-col gap-0.5">
         {product.figura && (
-          <span className='px-2 py-1 text-xs text-white bg-black/70 rounded-full backdrop-blur-sm'>
+          <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 font-medium">
             {product.figura}
-          </span>
+          </p>
         )}
-        {product.materialProducto && (
-          <span className='px-2 py-1 text-xs text-white bg-amber-800/80 rounded-full backdrop-blur-sm'>
-            {product.materialProducto}
-          </span>
-        )}
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">
+          {product.nombreProducto}
+        </p>
+        <div className="flex items-center justify-between mt-1.5">
+          <p className="text-base font-bold text-slate-900 dark:text-white">
+            {product.costo ? `${formatPrice(product.costo)} MXN` : '—'}
+          </p>
+          {!outOfStock && (
+            <button
+              onClick={() => addItem(product)}
+              className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
+            >
+              <ShoppingCart size={11} />
+              Carrito
+            </button>
+          )}
+        </div>
       </div>
-
-      {/* Talla badge */}
-      {product.talla && (
-        <div className='absolute right-4 top-4 z-1'>
-          <span className='px-2 py-1 text-xs text-white bg-slate-700/80 rounded-full backdrop-blur-sm'>
-            T: {product.talla}
-          </span>
-        </div>
-      )}
-
-      {/* Imágenes */}
-      {product.imagenes?.length > 0 ? (
-        <Carousel opts={{ align: "start" }} className='w-full max-w-sm'>
-          <CarouselContent>
-            {product.imagenes.map((img) => (
-              <CarouselItem key={img.id} className='group'>
-                <img
-                  src={img.url?.startsWith('http') ? img.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${img.url}`}
-                  alt={img.alternativeText ?? product.nombreProducto}
-                  className='rounded-xl w-full aspect-square object-cover'
-                  loading='lazy'
-                />
-                <div className='absolute w-full px-6 transition duration-200 opacity-0 group-hover:opacity-100 bottom-16'>
-                  <div className='flex justify-center gap-x-6'>
-                    <IconButton onClick={() => router.push(`/producto/${product.slug}`)}
-                      icon={<Expand size={20} className='text-gray-600' />} />
-                    {!outOfStock && (
-                      <IconButton onClick={() => addItem(product)}
-                        icon={<ShoppingCart size={20} className='text-gray-600' />} />
-                    )}
-                  </div>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
-      ) : (
-        <div className='w-full aspect-square rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center'>
-          <span className='text-5xl opacity-40'>💍</span>
-        </div>
-      )}
-
-      <p className='text-lg font-semibold text-center mt-2 leading-snug'>{product.nombreProducto}</p>
-      {product.sku && (
-        <p className='text-xs text-center text-muted-foreground font-mono'>{product.sku}</p>
-      )}
-      <p className='font-bold text-center mt-1'>{product.costo ? formatPrice(product.costo) + ' MXN' : '—'}</p>
-    </Link>
+    </div>
   )
 }
 

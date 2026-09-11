@@ -1,13 +1,12 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Gem } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
-import FiltersControlsCategory from "./components/filters-controls-category"
-import ProductCard1 from "./components/product-card1"
+import { Gem, SlidersHorizontal } from "lucide-react"
 import { useState } from "react"
 import { useGetCategoryProduct } from "@/api/getCategoryProduct"
 import { ProductType } from "@/types/product"
+import FiltersControlsCategory from "./components/filters-controls-category"
+import ProductCard1 from "./components/product-card1"
 
 interface Props {
   categorySlug: string
@@ -15,91 +14,171 @@ interface Props {
   initialProducts?: ProductType[]
 }
 
+type SortOption = "default" | "price-asc" | "price-desc" | "name-az"
+
+const SORT_LABELS: Record<SortOption, string> = {
+  "default":    "Relevancia",
+  "price-asc":  "Precio: menor a mayor",
+  "price-desc": "Precio: mayor a menor",
+  "name-az":    "Nombre A–Z",
+}
+
 function tituloDesdeSlug(slug: string) {
   return slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
 }
 
+function sortProducts(products: ProductType[], order: SortOption): ProductType[] {
+  const copy = [...products]
+  if (order === "price-asc")  return copy.sort((a, b) => (a.costo ?? 0) - (b.costo ?? 0))
+  if (order === "price-desc") return copy.sort((a, b) => (b.costo ?? 0) - (a.costo ?? 0))
+  if (order === "name-az")    return copy.sort((a, b) => a.nombreProducto.localeCompare(b.nombreProducto))
+  return copy
+}
+
 export default function CategoryClient({ categorySlug, categoryName, initialProducts }: Props) {
   const pathname = usePathname()
-  // El shell "loading" (ver generateStaticParams) no trae el slug real —
-  // se lee de la URL, igual que ya hace /producto/[productoSlug]. Los
-  // productos que trajo el server para ese shell son de un slug ficticio
-  // ("loading"), así que ahí no se pueden usar como dato inicial real.
-  const realSlug = categorySlug !== "loading" ? categorySlug : (pathname.split("/").filter(Boolean).pop() ?? "")
-  const displayName = categorySlug !== "loading" ? categoryName : tituloDesdeSlug(realSlug)
-  const usableInitialProducts = categorySlug !== "loading" ? initialProducts : undefined
+
+  const realSlug     = categorySlug !== "loading" ? categorySlug : (pathname.split("/").filter(Boolean).pop() ?? "")
+  const displayName  = categorySlug !== "loading" ? categoryName : tituloDesdeSlug(realSlug)
+  const usableInit   = categorySlug !== "loading" ? initialProducts : undefined
 
   const [filterMaterial, setFilterMaterial] = useState("")
-  const [filterEstilo, setFilterEstilo] = useState("")
+  const [filterEstilo,   setFilterEstilo]   = useState("")
+  const [sortOrder,      setSortOrder]      = useState<SortOption>("default")
+  const [sortOpen,       setSortOpen]       = useState(false)
+  const [filtersOpen,    setFiltersOpen]    = useState(false)
+
   const { result: fetchedProducts, loading: fetching } = useGetCategoryProduct(realSlug)
 
-  // El fetch server-side (page.tsx) ya trajo los productos para el primer
-  // render — se usan de inmediato en vez de mostrar el skeleton mientras
-  // useGetCategoryProduct hace su propio fetch client-side (que sigue
-  // corriendo de fondo y termina reemplazando este dato si cambia algo,
-  // por ejemplo un slug obsoleto en un build viejo).
-  const products: ProductType[] | null = fetchedProducts ?? usableInitialProducts ?? null
+  const products: ProductType[] | null = fetchedProducts ?? usableInit ?? null
   const loading = products === null && fetching
 
-  const filteredProducts = (products ?? []).filter((product) => {
-    const matchesMaterial = filterMaterial === "" || product.materialProducto === filterMaterial
-    const matchesEstilo = filterEstilo === "" || product.figura === filterEstilo
-    return matchesMaterial && matchesEstilo
-  })
+  const filtered = sortProducts(
+    (products ?? []).filter((p) => {
+      const okMaterial = filterMaterial === "" || p.materialProducto === filterMaterial
+      const okEstilo   = filterEstilo   === "" || p.figura           === filterEstilo
+      return okMaterial && okEstilo
+    }),
+    sortOrder
+  )
 
   return (
     <main>
-      <div className="relative w-full min-h-[300px] md:h-[420px] flex items-center overflow-hidden bg-slate-900">
+
+      {/* Hero de categoría */}
+      <div className="relative w-full min-h-[260px] md:h-[380px] flex items-center overflow-hidden bg-slate-900">
         <div className="absolute inset-0 bg-[url('/cmv1.jpg')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-black/70" />
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-24">
-          <div className="flex flex-col gap-4">
-            <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest">Medalla de Oro</p>
-            <h1 className="max-w-2xl text-white text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-lg">
-              {displayName}
-            </h1>
-            <p className="max-w-lg text-white/80 text-base md:text-lg">
-              Piezas en Oro 10k y Plata 925 para cada ocasión.
-            </p>
-          </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-8">
+          <p className="text-amber-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
+            Medalla de Oro
+          </p>
+          <h1 className="text-white text-3xl md:text-5xl font-extrabold leading-tight drop-shadow-lg max-w-xl">
+            {displayName}
+          </h1>
+          <p className="text-white/60 mt-2 text-sm max-w-xs">
+            Oro 10k y Plata 925 para cada ocasión.
+          </p>
         </div>
       </div>
 
-      <div className="max-w-6xl py-8 mx-auto sm:py-16 px-6 sm:px-24">
+      <div className="max-w-6xl py-8 mx-auto px-6 md:px-8 sm:py-12">
+
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-          <Link href="/" className="hover:text-amber-600">Inicio</Link>
+        <nav className="text-xs text-slate-400 mb-6 flex items-center gap-1.5">
+          <Link href="/" className="hover:text-amber-600 transition-colors">Inicio</Link>
           <span>/</span>
-          <span className="text-gray-700 dark:text-gray-300">{displayName}</span>
+          <Link href="/tienda" className="hover:text-amber-600 transition-colors">Tienda</Link>
+          <span>/</span>
+          <span className="text-slate-700 dark:text-slate-200">{displayName}</span>
         </nav>
 
-        <div className="flex flex-col gap-4">
-          <h2 className="text-2xl font-semibold italic text-gray-500">Catálogo de Productos</h2>
-          <Separator />
+        {/* Barra de sort + conteo (estilo Kuroda) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-5 border-b border-slate-200 dark:border-slate-700 mb-8">
+          <div className="flex items-center gap-3">
+            {/* Botón filtros mobile */}
+            <button
+              onClick={() => setFiltersOpen(o => !o)}
+              className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 hover:border-amber-400 transition-colors sm:hidden"
+            >
+              <SlidersHorizontal size={12} />
+              Filtros
+            </button>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-slate-800 dark:text-white">{filtered.length}</span>
+              {" "}producto{filtered.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+
+          {/* Sort dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setSortOpen(o => !o)}
+              className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:border-amber-400 transition-colors"
+            >
+              Ordenar: <span className="text-slate-900 dark:text-white">{SORT_LABELS[sortOrder]}</span>
+              <span className="text-slate-400">▾</span>
+            </button>
+            {sortOpen && (
+              <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[200px]">
+                {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => { setSortOrder(key); setSortOpen(false) }}
+                    className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
+                      sortOrder === key ? "font-bold text-amber-600 dark:text-amber-400" : "text-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    {SORT_LABELS[key]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="sm:flex sm:justify-between mt-8 gap-10">
-          <aside className="sm:w-[250px] shrink-0">
-            <FiltersControlsCategory setFilterMaterial={setFilterMaterial} setFilterEstilo={setFilterEstilo} />
+
+        <div className="flex gap-8">
+
+          {/* Sidebar filtros — desktop siempre visible, mobile condicional */}
+          <aside className={`w-56 shrink-0 ${filtersOpen ? "block" : "hidden"} sm:block`}>
+            <FiltersControlsCategory
+              filterMaterial={filterMaterial}
+              filterEstilo={filterEstilo}
+              setFilterMaterial={setFilterMaterial}
+              setFilterEstilo={setFilterEstilo}
+            />
           </aside>
-          <div className="flex-1">
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+          {/* Grid de productos */}
+          <div className="flex-1 min-w-0">
+            <div className="grid gap-5 grid-cols-2 lg:grid-cols-3">
+
               {loading && Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-xl bg-slate-800 animate-pulse aspect-square" />
+                <div key={i} className="rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse aspect-square" />
               ))}
-              {!loading && filteredProducts.map((product) => (
+
+              {!loading && filtered.map((product) => (
                 <ProductCard1 key={product.id} product={product} />
               ))}
-              {!loading && filteredProducts.length === 0 && (
+
+              {!loading && filtered.length === 0 && (
                 <div className="col-span-full py-20 flex flex-col items-center gap-4 text-center">
                   <div className="h-12 w-12 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
                     <Gem size={22} className="text-amber-500" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <p className="text-lg font-semibold">Estamos preparando esta colección</p>
-                    <p className="text-sm text-gray-400">Pronto subiremos piezas de {displayName.toLowerCase()}. Mientras tanto, explora nuestras otras colecciones.</p>
+                    <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
+                      Sin resultados para estos filtros
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      Prueba quitando algún filtro o explora otras categorías.
+                    </p>
                   </div>
-                  <Link href="/" className="text-sm font-semibold text-amber-500 hover:text-amber-400 transition-colors">
-                    Ver todos los productos
+                  <Link
+                    href="/tienda"
+                    className="text-sm font-semibold text-amber-500 hover:text-amber-400 transition-colors"
+                  >
+                    Ver todo el catálogo →
                   </Link>
                 </div>
               )}
