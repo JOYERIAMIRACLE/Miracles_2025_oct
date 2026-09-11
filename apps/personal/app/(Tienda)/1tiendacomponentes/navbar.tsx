@@ -56,21 +56,35 @@ const Navbar = () => {
                     )}
                 </div>
 
-                {/* Links desktop: Blog + Nosotros */}
-                <nav className={`hidden md:flex items-center gap-7 text-[11px] font-semibold uppercase tracking-widest ${
-                    isHero ? "text-white/70" : "text-slate-500 dark:text-slate-400"
-                }`}>
-                    <Link href="/blog"     className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors">Blog</Link>
-                    <Link href="/nosotros" className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors">Nosotros</Link>
-                </nav>
-
-                {/* Iconos + mobile hamburger */}
+                {/* Iconos + Blog/Nosotros + mobile hamburger */}
                 <div className={`flex items-center gap-4 ${isHero ? "text-white" : ""}`}>
 
                     {/* Hamburger solo mobile */}
                     <div className="md:hidden">
                         <ItemsMenuMobile />
                     </div>
+
+                    {/* Blog + Nosotros — desktop, misma alineación que los iconos */}
+                    <Link
+                        href="/blog"
+                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                            isHero
+                                ? "text-white/70 hover:text-white"
+                                : "text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400"
+                        }`}
+                    >
+                        Blog
+                    </Link>
+                    <Link
+                        href="/nosotros"
+                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                            isHero
+                                ? "text-white/70 hover:text-white"
+                                : "text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400"
+                        }`}
+                    >
+                        Nosotros
+                    </Link>
 
                     {/* Carrito */}
                     {cart.items.length === 0
