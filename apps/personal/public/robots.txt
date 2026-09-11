@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# No indexar rutas del portal CRM (requieren login)
+Disallow: /empresa/
+Disallow: /login
+
+# No indexar páginas de cuenta del cliente
+Disallow: /mi-cuenta/
+
+Sitemap: https://medalladeoro.com/sitemap.xml

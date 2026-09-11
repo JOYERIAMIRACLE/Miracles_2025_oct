@@ -19,18 +19,9 @@ module.exports = [
       keepHeaderOnError: true,
     },
   },
-  // Límite global: 300 requests/minuto por IP en toda la API.
-  // Protege contra scraping masivo y ataques de fuerza bruta simples.
-  {
-    name: 'strapi::rateLimit',
-    config: {
-      enabled:  true,
-      interval: 60000,  // ventana de 1 minuto
-      max:      300,    // máx requests por IP en esa ventana
-      // Respuesta que recibe quien supera el límite
-      message: 'Demasiadas solicitudes — espera un momento antes de volver a intentarlo.',
-    },
-  },
+  // strapi::rateLimit no existe en Strapi 5 — fue removido en v5.
+  // El rate limit de login está cubierto por loginRateLimitMiddleware en src/index.js.
+  // Para rate limit global en Strapi 5 se necesitaría koa-ratelimit directo.
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',
