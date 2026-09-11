@@ -67,8 +67,13 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
 
       {/* Hero de categoría */}
       <div className="relative w-full min-h-[260px] md:h-[380px] flex items-center overflow-hidden bg-slate-900">
-        <div className="absolute inset-0 bg-[url('/cmv1.jpg')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
+        <img
+          src="/portada%20home.jpg.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-right"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20" />
         <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-8">
           <p className="text-amber-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
             Medalla de Oro

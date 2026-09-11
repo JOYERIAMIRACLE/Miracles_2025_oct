@@ -6,9 +6,9 @@ const HeroTienda = () => {
 
       {/* Imagen de fondo */}
       <img
-        src="/cmv1.jpg"
+        src="/portada%20home.jpg.jpg"
         alt="Medalla de Oro — Joyería fina"
-        className="absolute inset-0 w-full h-full object-cover object-center"
+        className="absolute inset-0 w-full h-full object-cover object-right"
       />
 
       {/* Overlay degradado izquierda + oscuro */}

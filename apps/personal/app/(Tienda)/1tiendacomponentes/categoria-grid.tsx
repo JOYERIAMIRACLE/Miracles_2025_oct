@@ -1,7 +1,24 @@
 "use client"
 import Link from 'next/link'
 import { useGetCategories } from '@/api/GetProduct'
-import { CategoryType } from '@/types/product'
+import { CategoryType } from '@/types/category'
+
+const FALLBACK_GRADIENTS: Record<string, string> = {
+  anillos:   "from-rose-900 via-rose-800 to-amber-900",
+  cadenas:   "from-amber-900 via-yellow-800 to-amber-700",
+  esclavas:  "from-amber-800 via-amber-700 to-yellow-600",
+  dijes:     "from-emerald-900 via-teal-800 to-slate-800",
+  broqueles: "from-slate-700 via-slate-600 to-slate-500",
+  aretes:    "from-violet-900 via-purple-800 to-slate-800",
+  pulsos:    "from-amber-900 via-orange-800 to-amber-800",
+  rosarios:  "from-slate-800 via-indigo-900 to-slate-900",
+  argollas:  "from-yellow-900 via-amber-800 to-orange-800",
+}
+const FALLBACK_ICONS: Record<string, string> = {
+  anillos: "💍", cadenas: "📿", esclavas: "⛓️", dijes: "✨",
+  broqueles: "💎", aretes: "💛", pulsos: "⌚", rosarios: "🙏", argollas: "🔗",
+}
+const DEFAULT_GRADIENT = "from-slate-800 via-slate-700 to-slate-600"
 
 const CategoriaGrid = () => {
   const { loading, result } = useGetCategories()
@@ -13,7 +30,6 @@ const CategoriaGrid = () => {
   return (
     <section className="max-w-6xl mx-auto px-6 md:px-8 py-14 md:py-20">
 
-      {/* Encabezado */}
       <div className="mb-8 md:mb-10">
         <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500 mb-2">
           Medalla de Oro
@@ -26,7 +42,6 @@ const CategoriaGrid = () => {
         </p>
       </div>
 
-      {/* Skeletons durante carga */}
       {loading && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -35,7 +50,6 @@ const CategoriaGrid = () => {
         </div>
       )}
 
-      {/* Grid de categorías */}
       {!loading && categorias.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {categorias.map((cat) => {
@@ -44,30 +58,31 @@ const CategoriaGrid = () => {
               ? (raw.startsWith('http') ? raw : `${process.env.NEXT_PUBLIC_BACKEND_URL}${raw}`)
               : null
 
+            const slugKey = (cat.slug ?? "").toLowerCase()
+            const fallbackGrad = FALLBACK_GRADIENTS[slugKey] ?? DEFAULT_GRADIENT
+            const fallbackIcon = FALLBACK_ICONS[slugKey] ?? "💍"
+
             return (
               <Link
                 key={cat.id ?? cat.slug}
                 href={`/category/${cat.slug}`}
-                className="group relative overflow-hidden rounded-2xl aspect-[4/5] bg-slate-800 block"
+                className="group relative overflow-hidden rounded-2xl aspect-[4/5] block"
               >
-                {/* Imagen */}
                 {imgUrl ? (
                   <img
                     src={imgUrl}
                     alt={cat.NombreCategoria}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-6xl opacity-20">💍</span>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${fallbackGrad} flex items-center justify-center transition-transform duration-500 group-hover:scale-105`}>
+                    <span className="text-5xl opacity-30 select-none">{fallbackIcon}</span>
                   </div>
                 )}
 
-                {/* Overlay degradado desde abajo */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                {/* Nombre de categoría */}
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <p className="text-white text-base md:text-lg font-bold leading-tight drop-shadow">
                     {cat.NombreCategoria}
@@ -82,7 +97,6 @@ const CategoriaGrid = () => {
         </div>
       )}
 
-      {/* Sin categorías */}
       {!loading && categorias.length === 0 && (
         <div className="text-center py-16 text-slate-400 dark:text-slate-600">
           <span className="text-5xl">💍</span>
