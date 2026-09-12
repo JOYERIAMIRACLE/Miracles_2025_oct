@@ -125,6 +125,12 @@ const PUBLIC_ACTIONS_TAREA = [
   // AUTHENTICATED_ACTIONS_CRM — ya no son accesibles sin JWT.
 ];
 
+// Crear un lead desde un formulario público (visitante sin JWT) — solo create.
+// find/findOne/update/delete siguen siendo exclusivos del rol authenticated.
+const PUBLIC_ACTIONS_LEAD_CREATE = [
+  'api::lead.lead.create',
+];
+
 // Colecciones CRM sensibles — solo usuarios con JWT válido (rol authenticated).
 // El frontend usa authFetch() para adjuntar el token en cada petición.
 const AUTHENTICATED_ACTIONS_CRM = [
@@ -509,11 +515,13 @@ async function otorgarPermisos(strapi, roleType, actions) {
 }
 
 async function aplicarPermisosPublic(strapi) {
-  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO, ...PUBLIC_ACTIONS_MAPA_IDENTIDAD];
+  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO, ...PUBLIC_ACTIONS_MAPA_IDENTIDAD, ...PUBLIC_ACTIONS_LEAD_CREATE];
   await otorgarPermisos(strapi, 'public', todas);
-  // Revocar del rol public las colecciones CRM sensibles que antes estaban
-  // abiertas — idempotente (deleteMany no falla si ya no existen).
-  await revocarPermisos(strapi, 'public', AUTHENTICATED_ACTIONS_CRM);
+  // Revocar del rol public las acciones CRM sensibles (find/update/delete de leads,
+  // y todo de clientes/ventas/cotizaciones/suscriptores).
+  // lead.create NO se revoca — está en PUBLIC_ACTIONS_LEAD_CREATE para formularios públicos.
+  const crmSinCreate = AUTHENTICATED_ACTIONS_CRM.filter(a => a !== 'api::lead.lead.create');
+  await revocarPermisos(strapi, 'public', crmSinCreate);
   // CRM: solo authenticated puede leer/escribir leads, clientes, ventas,
   // cotizaciones y suscriptores. El frontend adjunta el JWT con authFetch().
   await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_CRM);
