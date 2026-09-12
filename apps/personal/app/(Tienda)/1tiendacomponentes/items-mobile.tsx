@@ -55,7 +55,7 @@ const ItemsMenuMobile = () => {
               Blog
             </Link>
             <Link href="/nosotros" className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-amber-600 dark:hover:text-amber-400 p-2 rounded-md hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors">
-              Nosotros
+              Empresa
             </Link>
           </div>
         </div>

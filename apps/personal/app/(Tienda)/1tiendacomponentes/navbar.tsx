@@ -64,7 +64,7 @@ const Navbar = () => {
                         <ItemsMenuMobile />
                     </div>
 
-                    {/* Blog + Nosotros — desktop, misma alineación que los iconos */}
+                    {/* Blog + Empresa — desktop, misma alineación que los iconos */}
                     <Link
                         href="/blog"
                         className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
@@ -83,7 +83,7 @@ const Navbar = () => {
                                 : "text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400"
                         }`}
                     >
-                        Nosotros
+                        Empresa
                     </Link>
 
                     {/* Carrito */}
