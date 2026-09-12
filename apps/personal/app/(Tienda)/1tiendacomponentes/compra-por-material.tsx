@@ -18,7 +18,7 @@ const ComprarPorMaterial = () => {
 
           {/* Oro 10k */}
           <Link
-            href="/tienda"
+            href="/category"
             className="group relative overflow-hidden rounded-2xl h-64 md:h-80 block"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-amber-700 to-yellow-500" />
@@ -41,7 +41,7 @@ const ComprarPorMaterial = () => {
 
           {/* Plata 925 */}
           <Link
-            href="/tienda"
+            href="/category"
             className="group relative overflow-hidden rounded-2xl h-64 md:h-80 block"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-500 to-slate-300" />

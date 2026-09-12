@@ -21,7 +21,7 @@ export function FavoritosGrid() {
       <div className="flex flex-col items-center gap-3 py-20 text-center">
         <Heart size={32} className="text-zinc-300 dark:text-zinc-700" />
         <p className="text-zinc-500 dark:text-zinc-400">Todavía no tienes productos en favoritos.</p>
-        <Link href="/tienda" className="text-sm font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
+        <Link href="/category" className="text-sm font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
           Ver catálogo
         </Link>
       </div>
