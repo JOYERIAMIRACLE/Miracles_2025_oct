@@ -658,6 +658,49 @@ module.exports = {
       },
       {
         method: 'POST',
+        path: '/api/tienda/contacto',
+        handler: async (ctx) => {
+          try {
+            const { nombre, telefono, email, interes, mensaje } = ctx.request.body || {};
+            if (!nombre || !telefono) {
+              ctx.status = 400;
+              ctx.body = { error: { message: 'Nombre y teléfono son requeridos' } };
+              return;
+            }
+            // Crear cliente (sin JWT — corre server-side)
+            const cliente = await strapi.db.query('api::cliente.cliente').create({
+              data: {
+                nombre:         String(nombre).trim(),
+                telefono:       String(telefono).trim(),
+                email:          email ? String(email).trim() : null,
+                origenContacto: 'Web',
+                canalContacto:  'Formulario',
+              },
+            });
+            // Crear lead vinculado al cliente
+            await strapi.db.query('api::lead.lead').create({
+              data: {
+                cliente:       cliente.id,
+                Funnel:        'Lead',
+                origenApp:     'tienda',
+                canal:         'Formulario',
+                origen:        'Formulario web',
+                campanaOrigen: interes ? `Interés: ${interes}` : null,
+                notas:         mensaje ? String(mensaje).trim() : null,
+                fechaLead:     new Date().toISOString(),
+              },
+            });
+            ctx.body = { ok: true };
+          } catch (e) {
+            strapi.log.error('[tienda-contacto] ' + e.message);
+            ctx.status = 500;
+            ctx.body = { error: { message: 'No se pudo registrar el mensaje' } };
+          }
+        },
+        config: { auth: false },
+      },
+      {
+        method: 'POST',
         path: '/api/tienda/registro',
         handler: async (ctx) => {
           try {

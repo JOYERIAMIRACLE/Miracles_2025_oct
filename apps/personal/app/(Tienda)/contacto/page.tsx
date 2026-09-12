@@ -32,47 +32,20 @@ export default function ContactoPage() {
     const STRAPI = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:1337"
 
     try {
-      // 1. Crear cliente
-      const clienteRes = await fetch(`${STRAPI}/api/clientes`, {
+      const res = await fetch(`${STRAPI}/api/tienda/contacto`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          data: {
-            nombre:         nombre.trim(),
-            telefono:       telefono.trim(),
-            email:          email.trim() || null,
-            origenContacto: "Web",
-            canalContacto:  "Formulario",
-          },
+          nombre:   nombre.trim(),
+          telefono: telefono.trim(),
+          email:    email.trim() || null,
+          interes:  interes || null,
+          mensaje:  mensaje.trim() || null,
         }),
       })
-      const clienteJson = await clienteRes.json()
-      if (!clienteRes.ok || !clienteJson?.data) {
-        setErrMsg(clienteJson?.error?.message ?? "Error al registrar contacto.")
-        setEstado("error")
-        return
-      }
-
-      // 2. Crear lead vinculado
-      const leadRes = await fetch(`${STRAPI}/api/leads`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: {
-            cliente:        { connect: [{ id: clienteJson.data.id }] },
-            Funnel:         "Lead",
-            origenApp:      "tienda",
-            origenContacto: "Web",
-            canalContacto:  "Formulario de contacto",
-            campanaOrigen:  interes ? `Interés: ${interes}` : undefined,
-            notas:          mensaje.trim() || null,
-            fechaLead:      new Date().toISOString(),
-          },
-        }),
-      })
-      const leadJson = await leadRes.json()
-      if (!leadRes.ok || !leadJson?.data) {
-        setErrMsg(leadJson?.error?.message ?? "Error al procesar solicitud.")
+      const json = await res.json()
+      if (!res.ok) {
+        setErrMsg(json?.error?.message ?? "Error al enviar el mensaje.")
         setEstado("error")
         return
       }
