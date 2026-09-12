@@ -34,7 +34,7 @@ const ComprarPorMaterial = () => {
                 Cadenas, aretes, anillos y dijes en oro de alta pureza con durabilidad excepcional.
               </p>
               <span className="inline-flex items-center text-white text-[11px] font-bold uppercase tracking-widest group-hover:text-amber-300 transition-colors">
-                Ver colección →
+                Ver catálogo →
               </span>
             </div>
           </Link>
@@ -57,7 +57,7 @@ const ComprarPorMaterial = () => {
                 Diseños elegantes en plata esterlina .925 con acabados que duran años.
               </p>
               <span className="inline-flex items-center text-white text-[11px] font-bold uppercase tracking-widest group-hover:text-slate-200 transition-colors">
-                Ver colección →
+                Ver catálogo →
               </span>
             </div>
           </Link>

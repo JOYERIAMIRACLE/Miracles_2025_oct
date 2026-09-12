@@ -88,7 +88,7 @@ const CategoriaGrid = () => {
                     {cat.NombreCategoria}
                   </p>
                   <p className="text-white/60 text-[11px] mt-0.5 font-medium uppercase tracking-widest group-hover:text-amber-400 transition-colors duration-300">
-                    Ver colección →
+                    Ver catálogo →
                   </p>
                 </div>
               </Link>

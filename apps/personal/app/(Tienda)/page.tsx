@@ -68,7 +68,7 @@ export default function HeroPage() {
             href="/tienda"
             className="px-10 py-3 border border-white/80 text-white text-xs tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
           >
-            Ver colección
+            Ver catálogo
           </Link>
           <Link
             href="/tienda"
