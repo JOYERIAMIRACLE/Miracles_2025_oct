@@ -31,7 +31,7 @@
     },
     "canal": {
       "type": "enumeration",
-      "enum": ["WhatsApp", "Teléfono", "Correo", "Instagram", "Facebook", "Mostrador", "Formulario", "Vendedor", "Web"]
+      "enum": ["WhatsApp", "Teléfono", "Correo", "Instagram", "Facebook", "Mostrador", "Formulario", "Vendedor", "Web", "Distribuidor"]
     },
     "origen": {
       "type": "enumeration",
