@@ -661,12 +661,17 @@ module.exports = {
         path: '/api/tienda/contacto',
         handler: async (ctx) => {
           try {
-            const { nombre, telefono, email, interes, mensaje } = ctx.request.body || {};
+            const { nombre, telefono, email, interes, mensaje, canal, vendedor } = ctx.request.body || {};
             if (!nombre || !telefono) {
               ctx.status = 400;
               ctx.body = { error: { message: 'Nombre y teléfono son requeridos' } };
               return;
             }
+            // canal puede ser: 'Formulario' (default), 'Vendedor', 'Mostrador'
+            const canalLead = canal || 'Formulario';
+            const origenLead = (canalLead === 'Vendedor' || canalLead === 'Mostrador')
+              ? 'Mostrador'
+              : 'Formulario web';
             // Crear cliente (sin JWT — corre server-side)
             const cliente = await strapi.db.query('api::cliente.cliente').create({
               data: {
@@ -674,20 +679,28 @@ module.exports = {
                 telefono:       String(telefono).trim(),
                 email:          email ? String(email).trim() : null,
                 origenContacto: 'Web',
-                canalContacto:  'Formulario',
+                canalContacto:  canalLead,
               },
             });
+            // notas: combinar mensaje + info de vendedor si aplica
+            let notas = mensaje ? String(mensaje).trim() : null;
+            if (vendedor) {
+              const vendedorNota = `Vendedor: ${String(vendedor).trim()}`;
+              notas = notas ? `${vendedorNota} — ${notas}` : vendedorNota;
+            }
             // Crear lead vinculado al cliente
             await strapi.db.query('api::lead.lead').create({
               data: {
-                cliente:       cliente.id,
-                Funnel:        'Lead',
-                origenApp:     'tienda',
-                canal:         'Formulario',
-                origen:        'Formulario web',
-                campanaOrigen: interes ? `Interés: ${interes}` : null,
-                notas:         mensaje ? String(mensaje).trim() : null,
-                fechaLead:     new Date().toISOString(),
+                cliente:         cliente.id,
+                Funnel:          'Lead',
+                origenApp:       'tienda',
+                canal:           canalLead,
+                origen:          origenLead,
+                referidorTipo:   canalLead === 'Vendedor' ? 'vendedor_externo' : null,
+                referidorNombre: canalLead === 'Vendedor' && vendedor ? String(vendedor).trim() : null,
+                campanaOrigen:   interes ? `Interés: ${interes}` : null,
+                notas:           notas,
+                fechaLead:       new Date().toISOString(),
               },
             });
             ctx.body = { ok: true };

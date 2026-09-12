@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link  from "next/link"
 import type { Metadata } from "next"
+import ContactoRapido from "./1tiendacomponentes/contacto-rapido"
 
 const SITE_URL = "https://miracles-frontend.pages.dev"
 
@@ -77,33 +78,8 @@ export default function HeroPage() {
           </Link>
         </div>
 
-        {/* Redes sociales */}
-        <div className="flex gap-8 mt-4">
-          <a
-            href="https://wa.me/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 hover:text-white text-[10px] tracking-widest uppercase transition-colors"
-          >
-            WhatsApp
-          </a>
-          <a
-            href="https://instagram.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 hover:text-white text-[10px] tracking-widest uppercase transition-colors"
-          >
-            Instagram
-          </a>
-          <a
-            href="https://facebook.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 hover:text-white text-[10px] tracking-widest uppercase transition-colors"
-          >
-            Facebook
-          </a>
-        </div>
+        {/* Canales de contacto */}
+        <ContactoRapido />
       </div>
 
     </div>
