@@ -363,6 +363,19 @@ export function NuevoLeadWizard({
                 </div>
               )}
 
+              {/* Vendedor — visible cuando canal es Vendedor */}
+              {lf.canal === "Vendedor" && (
+                <div className="rounded-lg border border-violet-200 dark:border-violet-800/50 bg-violet-50 dark:bg-violet-500/5 p-3 space-y-2">
+                  <p className="text-[11px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wide">¿Qué vendedor registró este lead?</p>
+                  <input
+                    value={lf.referidorNombre ?? ""}
+                    onChange={e => setLf(f => ({ ...f, referidorNombre: e.target.value || null }))}
+                    placeholder="Nombre del vendedor…"
+                    className={inp}
+                  />
+                </div>
+              )}
+
               {/* Campaña — visible para orígenes digitales */}
               {(lf.origen === "Anuncio Meta" || lf.origen === "Anuncio Google" || lf.origen === "Campaña email" || lf.origen === "Formulario web") && (
                 <div>

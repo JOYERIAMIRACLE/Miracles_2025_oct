@@ -4,7 +4,7 @@ export type OrigenApp = "manual" | "tienda"
 
 export type CanalLead =
   | "WhatsApp" | "Teléfono" | "Correo"
-  | "Instagram" | "Facebook" | "Mostrador" | "Web"
+  | "Instagram" | "Facebook" | "Mostrador" | "Formulario" | "Vendedor"
 
 export type OrigenLead =
   | "Prospección" | "Mostrador" | "Referido"
@@ -14,7 +14,7 @@ export type OrigenLead =
 export type ReferidorTipo = "cliente" | "vendedor_externo"
 
 export const CANALES_LEAD: CanalLead[] = [
-  "WhatsApp", "Teléfono", "Correo", "Instagram", "Facebook", "Mostrador", "Web",
+  "WhatsApp", "Teléfono", "Correo", "Instagram", "Facebook", "Mostrador", "Formulario", "Vendedor",
 ]
 
 export const ORIGENES_LEAD: OrigenLead[] = [
