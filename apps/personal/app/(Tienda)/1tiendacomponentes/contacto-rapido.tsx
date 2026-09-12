@@ -16,10 +16,14 @@ const MAPS_HREF     = `https://www.google.com/maps/search/?api=1&query=${MAPS_QU
 const MAPS_EMBED    = `https://www.google.com/maps?q=${MAPS_QUERY}&output=embed`
 
 // Reset de botón explícito: los <button> (Teléfono/Correo/Ver ubicación)
-// traen padding/borde por default del navegador que los <a> no tienen —
-// sin esto, el gap-x-6 del contenedor se ve descuadrado entre ambos tipos.
-const triggerCls = "bg-transparent border-0 p-0 m-0 leading-none align-middle cursor-pointer text-white/50 hover:text-white text-[10px] tracking-widest uppercase transition-colors"
-const panelCls   = "absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 w-56 bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl p-4 backdrop-blur-sm"
+// traen padding/borde por default del navegador que los <a> no tienen.
+const triggerCls = "bg-transparent border-0 appearance-none p-0 m-0 cursor-pointer text-white/50 hover:text-white text-[10px] tracking-widest uppercase transition-colors"
+// Cada item (sea <a> o <button>) va envuelto en un contenedor idéntico de
+// alto fijo — sin esto, un <a> (inline) y un <button> (con sus propias
+// métricas de fuente/line-height por default del navegador) no miden
+// exactamente lo mismo y el renglón se ve descuadrado entre ambos tipos.
+const itemWrapCls = "relative flex items-center h-4"
+const panelCls     = "absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 w-56 bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl p-4 backdrop-blur-sm"
 
 export default function ContactoRapido() {
   const [open, setOpen] = useState<Panel>(null)
@@ -37,30 +41,36 @@ export default function ContactoRapido() {
 
   return (
     <div ref={ref} className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
-      <a
-        href="https://instagram.com/"
-        target="_blank" rel="noopener noreferrer"
-        className={triggerCls}
-      >
-        Instagram
-      </a>
-      <a
-        href="https://facebook.com/"
-        target="_blank" rel="noopener noreferrer"
-        className={triggerCls}
-      >
-        Facebook
-      </a>
-      <a
-        href="https://wa.me/"
-        target="_blank" rel="noopener noreferrer"
-        className={triggerCls}
-      >
-        WhatsApp
-      </a>
+      <div className={itemWrapCls}>
+        <a
+          href="https://instagram.com/"
+          target="_blank" rel="noopener noreferrer"
+          className={triggerCls}
+        >
+          Instagram
+        </a>
+      </div>
+      <div className={itemWrapCls}>
+        <a
+          href="https://facebook.com/"
+          target="_blank" rel="noopener noreferrer"
+          className={triggerCls}
+        >
+          Facebook
+        </a>
+      </div>
+      <div className={itemWrapCls}>
+        <a
+          href="https://wa.me/"
+          target="_blank" rel="noopener noreferrer"
+          className={triggerCls}
+        >
+          WhatsApp
+        </a>
+      </div>
 
       {/* Teléfono */}
-      <div className="relative">
+      <div className={itemWrapCls}>
         <button type="button" onClick={() => toggle("telefono")} className={triggerCls}>
           Teléfono
         </button>
@@ -79,7 +89,7 @@ export default function ContactoRapido() {
       </div>
 
       {/* Correo */}
-      <div className="relative">
+      <div className={itemWrapCls}>
         <button type="button" onClick={() => toggle("correo")} className={triggerCls}>
           Correo
         </button>
@@ -98,7 +108,7 @@ export default function ContactoRapido() {
       </div>
 
       {/* Ver ubicación */}
-      <div className="relative">
+      <div className={itemWrapCls}>
         <button type="button" onClick={() => toggle("ubicacion")} className={triggerCls}>
           Ver ubicación
         </button>
@@ -134,9 +144,11 @@ export default function ContactoRapido() {
         )}
       </div>
 
-      <Link href="/distribuidor" className={triggerCls}>
-        Soy distribuidor
-      </Link>
+      <div className={itemWrapCls}>
+        <Link href="/distribuidor" className={triggerCls}>
+          Soy distribuidor
+        </Link>
+      </div>
     </div>
   )
 }
