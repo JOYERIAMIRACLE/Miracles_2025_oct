@@ -4,6 +4,8 @@ import { ChevronDown, X } from 'lucide-react'
 import FilterMaterial from './filter-material'
 import FilterEstilo   from './filter-estilo'
 import FilterPrecio, { PrecioOption, PRECIO_BRACKETS } from './filter-precio'
+import FilterCategoria from './filter-categoria'
+import { CategoryType } from '@/types/category'
 
 type FiltersProps = {
   filterMaterial: string
@@ -12,6 +14,11 @@ type FiltersProps = {
   setFilterMaterial: (v: string) => void
   setFilterEstilo:   (v: string) => void
   setFilterPrecio:   (v: PrecioOption) => void
+  // Solo se pasan desde el catálogo completo (/category) — ahí la sección
+  // "Categoría" navega a la página de cada una; en una categoría puntual
+  // no aplica y esta sección simplemente no se renderiza.
+  categorias?:      CategoryType[]
+  categoriaActual?: string
 }
 
 function SeccionFiltro({
@@ -51,6 +58,8 @@ const FiltersControlsCategory = ({
   setFilterMaterial,
   setFilterEstilo,
   setFilterPrecio,
+  categorias,
+  categoriaActual,
 }: FiltersProps) => {
   const hayFiltros = filterMaterial !== "" || filterEstilo !== "" || filterPrecio !== ""
 
@@ -106,6 +115,12 @@ const FiltersControlsCategory = ({
       )}
 
       {/* Secciones */}
+      {categorias && categorias.length > 0 && (
+        <SeccionFiltro titulo="Categoría">
+          <FilterCategoria categorias={categorias} activa={categoriaActual ?? ""} />
+        </SeccionFiltro>
+      )}
+
       <SeccionFiltro titulo="Precio">
         <FilterPrecio value={filterPrecio} onChange={setFilterPrecio} />
       </SeccionFiltro>

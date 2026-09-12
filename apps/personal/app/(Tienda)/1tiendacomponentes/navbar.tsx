@@ -11,7 +11,7 @@ import { useFavorites } from "@/hooks/useFavirites"
 import { useClienteAuth } from "@/hooks/useClienteAuth"
 
 const CATEGORIAS_NAV = [
-  { nombre: "Ver todo",  href: "/tienda" },
+  { nombre: "Ver todo",  href: "/category" },
   { nombre: "Anillos",   href: "/category/anillos" },
   { nombre: "Cadenas",   href: "/category/cadenas" },
   { nombre: "Esclavas",  href: "/category/esclavas" },

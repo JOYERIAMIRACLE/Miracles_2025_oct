@@ -1,20 +1,17 @@
 "use client"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { Gem, SlidersHorizontal } from "lucide-react"
 import { useState } from "react"
-import { useGetCategoryProduct } from "@/api/getCategoryProduct"
-import { useGetCategories } from "@/api/GetProduct"
+import { useGetAllProducts } from "@/api/useGetAllProducts"
 import { ProductType } from "@/types/product"
 import { CategoryType } from "@/types/category"
-import FiltersControlsCategory from "./components/filters-controls-category"
-import ProductCard1 from "./components/product-card1"
-import { PrecioOption, PRECIO_BRACKETS } from "./components/filter-precio"
+import FiltersControlsCategory from "../category/[categorySlug]/components/filters-controls-category"
+import ProductCard1 from "../category/[categorySlug]/components/product-card1"
+import { PrecioOption, PRECIO_BRACKETS } from "../category/[categorySlug]/components/filter-precio"
 
 interface Props {
-  categorySlug: string
-  categoryName: string
   initialProducts?: ProductType[]
+  categorias?:      CategoryType[]
 }
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name-az"
@@ -26,10 +23,6 @@ const SORT_LABELS: Record<SortOption, string> = {
   "name-az":    "Nombre A–Z",
 }
 
-function tituloDesdeSlug(slug: string) {
-  return slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
-}
-
 function sortProducts(products: ProductType[], order: SortOption): ProductType[] {
   const copy = [...products]
   if (order === "price-asc")  return copy.sort((a, b) => (a.costo ?? 0) - (b.costo ?? 0))
@@ -38,13 +31,7 @@ function sortProducts(products: ProductType[], order: SortOption): ProductType[]
   return copy
 }
 
-export default function CategoryClient({ categorySlug, categoryName, initialProducts }: Props) {
-  const pathname = usePathname()
-
-  const realSlug     = categorySlug !== "loading" ? categorySlug : (pathname.split("/").filter(Boolean).pop() ?? "")
-  const displayName  = categorySlug !== "loading" ? categoryName : tituloDesdeSlug(realSlug)
-  const usableInit   = categorySlug !== "loading" ? initialProducts : undefined
-
+export default function AllCategoriesClient({ initialProducts, categorias }: Props) {
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo,   setFilterEstilo]   = useState("")
   const [filterPrecio,   setFilterPrecio]   = useState<PrecioOption>("")
@@ -52,10 +39,9 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
   const [sortOpen,       setSortOpen]       = useState(false)
   const [filtersOpen,    setFiltersOpen]    = useState(false)
 
-  const { result: fetchedProducts, loading: fetching } = useGetCategoryProduct(realSlug)
-  const { result: categorias } = useGetCategories()
+  const { result: fetchedProducts, loading: fetching } = useGetAllProducts()
 
-  const products: ProductType[] | null = fetchedProducts ?? usableInit ?? null
+  const products: ProductType[] | null = fetchedProducts ?? initialProducts ?? null
   const loading = products === null && fetching
 
   const filtered = sortProducts(
@@ -75,7 +61,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
   return (
     <main>
 
-      {/* Hero de categoría */}
+      {/* Hero del catálogo */}
       <div className="relative w-full min-h-[260px] md:h-[380px] flex items-center overflow-hidden bg-slate-900">
         <img
           src="/portada%20home.jpg.jpg"
@@ -89,7 +75,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
             Medalla de Oro
           </p>
           <h1 className="text-white text-3xl md:text-5xl font-extrabold leading-tight drop-shadow-lg max-w-xl">
-            {displayName}
+            Catálogo completo
           </h1>
           <p className="text-white/60 mt-2 text-sm max-w-xs">
             Oro 10k y Plata 925 para cada ocasión.
@@ -105,7 +91,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
           <span>/</span>
           <Link href="/tienda" className="hover:text-amber-600 transition-colors">Tienda</Link>
           <span>/</span>
-          <span className="text-slate-700 dark:text-slate-200">{displayName}</span>
+          <span className="text-slate-700 dark:text-slate-200">Catálogo</span>
         </nav>
 
         {/* Barra de sort + conteo (estilo Kuroda) */}
@@ -163,8 +149,8 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
               setFilterMaterial={setFilterMaterial}
               setFilterEstilo={setFilterEstilo}
               setFilterPrecio={setFilterPrecio}
-              categorias={categorias ?? undefined}
-              categoriaActual={realSlug}
+              categorias={categorias}
+              categoriaActual=""
             />
           </aside>
 
@@ -190,15 +176,9 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
                       Sin resultados para estos filtros
                     </p>
                     <p className="text-sm text-slate-400">
-                      Prueba quitando algún filtro o explora otras categorías.
+                      Prueba quitando algún filtro.
                     </p>
                   </div>
-                  <Link
-                    href="/category"
-                    className="text-sm font-semibold text-amber-500 hover:text-amber-400 transition-colors"
-                  >
-                    Ver todo el catálogo →
-                  </Link>
                 </div>
               )}
             </div>
