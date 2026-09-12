@@ -7,6 +7,7 @@ import { useGetCategoryProduct } from "@/api/getCategoryProduct"
 import { ProductType } from "@/types/product"
 import FiltersControlsCategory from "./components/filters-controls-category"
 import ProductCard1 from "./components/product-card1"
+import { PrecioOption, PRECIO_BRACKETS } from "./components/filter-precio"
 
 interface Props {
   categorySlug: string
@@ -44,6 +45,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
 
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo,   setFilterEstilo]   = useState("")
+  const [filterPrecio,   setFilterPrecio]   = useState<PrecioOption>("")
   const [sortOrder,      setSortOrder]      = useState<SortOption>("default")
   const [sortOpen,       setSortOpen]       = useState(false)
   const [filtersOpen,    setFiltersOpen]    = useState(false)
@@ -57,7 +59,12 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
     (products ?? []).filter((p) => {
       const okMaterial = filterMaterial === "" || p.materialProducto === filterMaterial
       const okEstilo   = filterEstilo   === "" || p.figura           === filterEstilo
-      return okMaterial && okEstilo
+      const okPrecio   = filterPrecio   === "" || (() => {
+        const { min, max } = PRECIO_BRACKETS[filterPrecio]
+        const precio = p.costo ?? 0
+        return precio >= min && precio <= max
+      })()
+      return okMaterial && okEstilo && okPrecio
     }),
     sortOrder
   )
@@ -149,8 +156,10 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
             <FiltersControlsCategory
               filterMaterial={filterMaterial}
               filterEstilo={filterEstilo}
+              filterPrecio={filterPrecio}
               setFilterMaterial={setFilterMaterial}
               setFilterEstilo={setFilterEstilo}
+              setFilterPrecio={setFilterPrecio}
             />
           </aside>
 

@@ -3,12 +3,15 @@ import { useState } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import FilterMaterial from './filter-material'
 import FilterEstilo   from './filter-estilo'
+import FilterPrecio, { PrecioOption, PRECIO_BRACKETS } from './filter-precio'
 
 type FiltersProps = {
   filterMaterial: string
   filterEstilo:   string
+  filterPrecio:   PrecioOption
   setFilterMaterial: (v: string) => void
   setFilterEstilo:   (v: string) => void
+  setFilterPrecio:   (v: PrecioOption) => void
 }
 
 function SeccionFiltro({
@@ -44,10 +47,12 @@ function SeccionFiltro({
 const FiltersControlsCategory = ({
   filterMaterial,
   filterEstilo,
+  filterPrecio,
   setFilterMaterial,
   setFilterEstilo,
+  setFilterPrecio,
 }: FiltersProps) => {
-  const hayFiltros = filterMaterial !== "" || filterEstilo !== ""
+  const hayFiltros = filterMaterial !== "" || filterEstilo !== "" || filterPrecio !== ""
 
   return (
     <aside>
@@ -58,7 +63,7 @@ const FiltersControlsCategory = ({
         </h3>
         {hayFiltros && (
           <button
-            onClick={() => { setFilterMaterial(""); setFilterEstilo("") }}
+            onClick={() => { setFilterMaterial(""); setFilterEstilo(""); setFilterPrecio("") }}
             className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-red-500 dark:hover:text-red-400 uppercase tracking-wide transition-colors"
           >
             <X size={11} />
@@ -88,10 +93,23 @@ const FiltersControlsCategory = ({
               <X size={10} />
             </button>
           )}
+          {filterPrecio && (
+            <button
+              onClick={() => setFilterPrecio("")}
+              className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-semibold"
+            >
+              {PRECIO_BRACKETS[filterPrecio].label}
+              <X size={10} />
+            </button>
+          )}
         </div>
       )}
 
       {/* Secciones */}
+      <SeccionFiltro titulo="Precio">
+        <FilterPrecio value={filterPrecio} onChange={setFilterPrecio} />
+      </SeccionFiltro>
+
       <SeccionFiltro titulo="Material">
         <FilterMaterial value={filterMaterial} onChange={setFilterMaterial} />
       </SeccionFiltro>
