@@ -15,7 +15,10 @@ const MAPS_QUERY    = "Medalla+de+Oro+Joyer%C3%ADa"
 const MAPS_HREF     = `https://www.google.com/maps/search/?api=1&query=${MAPS_QUERY}`
 const MAPS_EMBED    = `https://www.google.com/maps?q=${MAPS_QUERY}&output=embed`
 
-const triggerCls = "text-white/50 hover:text-white text-[10px] tracking-widest uppercase transition-colors"
+// Reset de botón explícito: los <button> (Teléfono/Correo/Ver ubicación)
+// traen padding/borde por default del navegador que los <a> no tienen —
+// sin esto, el gap-x-6 del contenedor se ve descuadrado entre ambos tipos.
+const triggerCls = "bg-transparent border-0 p-0 m-0 leading-none align-middle cursor-pointer text-white/50 hover:text-white text-[10px] tracking-widest uppercase transition-colors"
 const panelCls   = "absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 w-56 bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl p-4 backdrop-blur-sm"
 
 export default function ContactoRapido() {
@@ -33,7 +36,7 @@ export default function ContactoRapido() {
   const toggle = (p: Exclude<Panel, null>) => setOpen(o => (o === p ? null : p))
 
   return (
-    <div ref={ref} className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4">
+    <div ref={ref} className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
       <a
         href="https://instagram.com/"
         target="_blank" rel="noopener noreferrer"
