@@ -1,18 +1,16 @@
 "use client"
 
-// Antes era una lista fija de estilos (Cartier, Figaro, Solitario...)
-// mostrada igual en TODAS las categorías, aunque "Solitario" no aplica
-// a Cadenas ni "Cartier" a Dijes. Ahora las opciones se calculan afuera
-// (ver useOpcionesFiltro en CategoryClient/AllCategoriesClient) a partir
-// de los valores reales de "figura" que existen en esa categoría — el
-// filtro se ajusta solo, sin mantener listas por categoría a mano.
-type FilterEstiloProps = {
+// Mismo criterio que filter-estilo.tsx: "talla" significa algo distinto
+// por categoría (T7 en Anillos, 45cm en Cadenas, 6mm en Broqueles) — no
+// hay una lista universal posible, así que las opciones vienen de los
+// valores reales presentes en la categoría actual.
+type FilterTallaProps = {
   value: string
   onChange: (v: string) => void
   opciones: string[]
 }
 
-const FilterEstilo = ({ value, onChange, opciones }: FilterEstiloProps) => {
+const FilterTalla = ({ value, onChange, opciones }: FilterTallaProps) => {
   return (
     <div className="flex flex-wrap gap-2">
       <button
@@ -23,24 +21,24 @@ const FilterEstilo = ({ value, onChange, opciones }: FilterEstiloProps) => {
             : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-slate-500 dark:hover:border-slate-400"
         }`}
       >
-        Todos
+        Todas
       </button>
 
-      {opciones.map((estilo) => (
+      {opciones.map((talla) => (
         <button
-          key={estilo}
-          onClick={() => onChange(estilo === value ? "" : estilo)}
+          key={talla}
+          onClick={() => onChange(talla === value ? "" : talla)}
           className={`px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide border transition-all ${
-            value === estilo
+            value === talla
               ? "bg-amber-500 text-white border-amber-500"
               : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-500"
           }`}
         >
-          {estilo}
+          {talla}
         </button>
       ))}
     </div>
   )
 }
 
-export default FilterEstilo
+export default FilterTalla

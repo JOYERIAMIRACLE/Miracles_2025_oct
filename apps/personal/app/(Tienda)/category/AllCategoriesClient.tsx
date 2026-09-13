@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { Gem, SlidersHorizontal, X } from "lucide-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useGetAllProducts } from "@/api/useGetAllProducts"
 import { ProductType } from "@/types/product"
@@ -9,6 +9,7 @@ import { CategoryType } from "@/types/category"
 import FiltersControlsCategory from "../category/[categorySlug]/components/filters-controls-category"
 import ProductCard1 from "../category/[categorySlug]/components/product-card1"
 import { PrecioOption, PRECIO_BRACKETS } from "../category/[categorySlug]/components/filter-precio"
+import { opcionesDe } from "../category/[categorySlug]/components/opciones-filtro"
 
 interface Props {
   initialProducts?: ProductType[]
@@ -38,6 +39,7 @@ export default function AllCategoriesClient({ initialProducts, categorias }: Pro
 
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo,   setFilterEstilo]   = useState("")
+  const [filterTalla,    setFilterTalla]    = useState("")
   const [filterPrecio,   setFilterPrecio]   = useState<PrecioOption>("")
   const [sortOrder,      setSortOrder]      = useState<SortOption>("default")
   const [sortOpen,       setSortOpen]       = useState(false)
@@ -48,17 +50,21 @@ export default function AllCategoriesClient({ initialProducts, categorias }: Pro
   const products: ProductType[] | null = fetchedProducts ?? initialProducts ?? null
   const loading = products === null && fetching
 
+  const opcionesEstilo = useMemo(() => opcionesDe(products ?? [], "figura"), [products])
+  const opcionesTalla  = useMemo(() => opcionesDe(products ?? [], "talla"),  [products])
+
   const filtered = sortProducts(
     (products ?? []).filter((p) => {
       const okQuery     = query === "" || p.nombreProducto.toLowerCase().includes(query.toLowerCase())
       const okMaterial = filterMaterial === "" || p.materialProducto === filterMaterial
       const okEstilo   = filterEstilo   === "" || p.figura           === filterEstilo
+      const okTalla    = filterTalla    === "" || p.talla            === filterTalla
       const okPrecio   = filterPrecio   === "" || (() => {
         const { min, max } = PRECIO_BRACKETS[filterPrecio]
         const precio = p.costo ?? 0
         return precio >= min && precio <= max
       })()
-      return okQuery && okMaterial && okEstilo && okPrecio
+      return okQuery && okMaterial && okEstilo && okTalla && okPrecio
     }),
     sortOrder
   )
@@ -156,10 +162,14 @@ export default function AllCategoriesClient({ initialProducts, categorias }: Pro
             <FiltersControlsCategory
               filterMaterial={filterMaterial}
               filterEstilo={filterEstilo}
+              filterTalla={filterTalla}
               filterPrecio={filterPrecio}
               setFilterMaterial={setFilterMaterial}
               setFilterEstilo={setFilterEstilo}
+              setFilterTalla={setFilterTalla}
               setFilterPrecio={setFilterPrecio}
+              opcionesEstilo={opcionesEstilo}
+              opcionesTalla={opcionesTalla}
               categorias={categorias}
               categoriaActual=""
             />

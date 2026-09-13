@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import FilterMaterial from './filter-material'
 import FilterEstilo   from './filter-estilo'
+import FilterTalla    from './filter-talla'
 import FilterPrecio, { PrecioOption, PRECIO_BRACKETS } from './filter-precio'
 import FilterCategoria from './filter-categoria'
 import { CategoryType } from '@/types/category'
@@ -10,10 +11,19 @@ import { CategoryType } from '@/types/category'
 type FiltersProps = {
   filterMaterial: string
   filterEstilo:   string
+  filterTalla:    string
   filterPrecio:   PrecioOption
   setFilterMaterial: (v: string) => void
   setFilterEstilo:   (v: string) => void
+  setFilterTalla:    (v: string) => void
   setFilterPrecio:   (v: PrecioOption) => void
+  // Estilo y Talla significan cosas distintas por categoría (Cartier no
+  // aplica a Dijes, T7 no aplica a Cadenas) — las opciones se calculan en
+  // el padre a partir de los productos reales de esta categoría, así que
+  // aquí solo se reciben ya armadas. Si una categoría no tiene valores
+  // reales para alguna, esa sección ni se muestra.
+  opcionesEstilo: string[]
+  opcionesTalla:  string[]
   // Solo se pasan desde el catálogo completo (/category) — ahí la sección
   // "Categoría" navega a la página de cada una; en una categoría puntual
   // no aplica y esta sección simplemente no se renderiza.
@@ -54,14 +64,18 @@ function SeccionFiltro({
 const FiltersControlsCategory = ({
   filterMaterial,
   filterEstilo,
+  filterTalla,
   filterPrecio,
   setFilterMaterial,
   setFilterEstilo,
+  setFilterTalla,
   setFilterPrecio,
+  opcionesEstilo,
+  opcionesTalla,
   categorias,
   categoriaActual,
 }: FiltersProps) => {
-  const hayFiltros = filterMaterial !== "" || filterEstilo !== "" || filterPrecio !== ""
+  const hayFiltros = filterMaterial !== "" || filterEstilo !== "" || filterTalla !== "" || filterPrecio !== ""
 
   return (
     <aside>
@@ -72,7 +86,7 @@ const FiltersControlsCategory = ({
         </h3>
         {hayFiltros && (
           <button
-            onClick={() => { setFilterMaterial(""); setFilterEstilo(""); setFilterPrecio("") }}
+            onClick={() => { setFilterMaterial(""); setFilterEstilo(""); setFilterTalla(""); setFilterPrecio("") }}
             className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-red-500 dark:hover:text-red-400 uppercase tracking-wide transition-colors"
           >
             <X size={11} />
@@ -99,6 +113,15 @@ const FiltersControlsCategory = ({
               className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-semibold"
             >
               {filterEstilo}
+              <X size={10} />
+            </button>
+          )}
+          {filterTalla && (
+            <button
+              onClick={() => setFilterTalla("")}
+              className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-semibold"
+            >
+              {filterTalla}
               <X size={10} />
             </button>
           )}
@@ -129,9 +152,20 @@ const FiltersControlsCategory = ({
         <FilterMaterial value={filterMaterial} onChange={setFilterMaterial} />
       </SeccionFiltro>
 
-      <SeccionFiltro titulo="Estilo / Figura">
-        <FilterEstilo value={filterEstilo} onChange={setFilterEstilo} />
-      </SeccionFiltro>
+      {/* Talla/tamaño y Estilo/figura solo aparecen si esta categoría en
+          concreto tiene valores reales — así "Talla" no sale en Dijes y
+          "Estilo" no sale en categorías sin variedad real de figura. */}
+      {opcionesTalla.length > 0 && (
+        <SeccionFiltro titulo="Talla">
+          <FilterTalla value={filterTalla} onChange={setFilterTalla} opciones={opcionesTalla} />
+        </SeccionFiltro>
+      )}
+
+      {opcionesEstilo.length > 0 && (
+        <SeccionFiltro titulo="Estilo / Figura">
+          <FilterEstilo value={filterEstilo} onChange={setFilterEstilo} opciones={opcionesEstilo} />
+        </SeccionFiltro>
+      )}
     </aside>
   )
 }
