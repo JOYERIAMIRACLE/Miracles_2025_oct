@@ -741,10 +741,194 @@ module.exports = {
               confirmed: true, blocked: false, role: rolCliente.id,
             });
             const jwt = strapi.plugins['users-permissions'].services.jwt.issue({ id: user.id });
+
+            // Crear registro CRM (cliente + lead) server-side — sin JWT necesario.
+            // Si falla, la cuenta ya existe; no se bloquea el registro.
+            try {
+              let clienteId = null;
+              const clienteExistente = await strapi.db.query('api::cliente.cliente').findOne({ where: { email: emailNorm } });
+              if (clienteExistente) {
+                clienteId = clienteExistente.id;
+              } else {
+                const nuevoCliente = await strapi.db.query('api::cliente.cliente').create({
+                  data: {
+                    nombre:         String(username).trim(),
+                    email:          emailNorm,
+                    canalContacto:  'Formulario',
+                    origenContacto: 'Registro en tienda',
+                    Estado:         'Activo',
+                  },
+                });
+                clienteId = nuevoCliente.id;
+              }
+              await strapi.db.query('api::lead.lead').create({
+                data: {
+                  cliente:   clienteId,
+                  Funnel:    'Lead',
+                  origenApp: 'tienda',
+                  canal:     'Formulario',
+                  origen:    'Formulario web',
+                  fechaLead: new Date().toISOString(),
+                },
+              });
+            } catch (crmErr) {
+              strapi.log.warn('[tienda-registro] CRM no actualizado: ' + crmErr.message);
+            }
+
             ctx.body = { jwt, user: { id: user.id, username: user.username, email: user.email } };
           } catch (e) {
             strapi.log.error('[tienda-registro] ' + e.message);
             ctx.status = 500; ctx.body = { error: { message: 'No se pudo crear la cuenta' } };
+          }
+        },
+        config: { auth: false },
+      },
+      // ─── Endpoints autenticados para el portal del cliente (tienda) ─────────
+      // Verifican el JWT del cliente (role: cliente_tienda) y devuelven solo
+      // los datos de ese cliente — sin exponer permisos de find/findOne global.
+      {
+        method: 'GET',
+        path: '/api/tienda/mis-datos',
+        handler: async (ctx) => {
+          try {
+            const token = (ctx.request.headers.authorization || '').replace('Bearer ', '').trim();
+            if (!token) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const { id } = await strapi.plugins['users-permissions'].services.jwt.verify(token);
+            const user = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { id } });
+            if (!user) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const cliente = await strapi.db.query('api::cliente.cliente').findOne({ where: { email: user.email } });
+            ctx.body = { data: cliente ?? null };
+          } catch (e) {
+            ctx.status = 401; ctx.body = { error: 'Token inválido' };
+          }
+        },
+        config: { auth: false },
+      },
+      {
+        method: 'GET',
+        path: '/api/tienda/mis-pedidos',
+        handler: async (ctx) => {
+          try {
+            const token = (ctx.request.headers.authorization || '').replace('Bearer ', '').trim();
+            if (!token) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const { id } = await strapi.plugins['users-permissions'].services.jwt.verify(token);
+            const user = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { id } });
+            if (!user) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const cliente = await strapi.db.query('api::cliente.cliente').findOne({ where: { email: user.email } });
+            if (!cliente) { ctx.body = { data: [] }; return; }
+            const ventas = await strapi.db.query('api::venta.venta').findMany({
+              where: { cliente: cliente.id },
+              populate: { lineas: { populate: { producto: true } }, envios: true, comprobantePago: true },
+              orderBy: { fecha: 'desc' },
+              limit: 100,
+            });
+            ctx.body = { data: ventas };
+          } catch (e) {
+            ctx.status = 401; ctx.body = { error: 'Token inválido' };
+          }
+        },
+        config: { auth: false },
+      },
+      {
+        method: 'GET',
+        path: '/api/tienda/mis-cotizaciones',
+        handler: async (ctx) => {
+          try {
+            const token = (ctx.request.headers.authorization || '').replace('Bearer ', '').trim();
+            if (!token) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const { id } = await strapi.plugins['users-permissions'].services.jwt.verify(token);
+            const user = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { id } });
+            if (!user) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const cliente = await strapi.db.query('api::cliente.cliente').findOne({ where: { email: user.email } });
+            if (!cliente) { ctx.body = { data: [] }; return; }
+            const cotizaciones = await strapi.db.query('api::cotizacion.cotizacion').findMany({
+              where: { cliente: cliente.id },
+              populate: { ventaGenerada: true },
+              orderBy: { createdAt: 'desc' },
+              limit: 100,
+            });
+            ctx.body = { data: cotizaciones };
+          } catch (e) {
+            ctx.status = 401; ctx.body = { error: 'Token inválido' };
+          }
+        },
+        config: { auth: false },
+      },
+      {
+        method: 'POST',
+        path: '/api/tienda/checkout-intento',
+        handler: async (ctx) => {
+          try {
+            const token = (ctx.request.headers.authorization || '').replace('Bearer ', '').trim();
+            if (!token) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const { id } = await strapi.plugins['users-permissions'].services.jwt.verify(token);
+            const user = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { id } });
+            if (!user) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+
+            const { items } = ctx.request.body || {};
+            if (!Array.isArray(items) || items.length === 0) {
+              ctx.status = 400; ctx.body = { error: { message: 'El carrito está vacío' } }; return;
+            }
+
+            // Buscar o crear cliente CRM
+            let clienteId = null;
+            const clienteExistente = await strapi.db.query('api::cliente.cliente').findOne({ where: { email: user.email } });
+            if (clienteExistente) {
+              clienteId = clienteExistente.id;
+            } else {
+              const nuevo = await strapi.db.query('api::cliente.cliente').create({
+                data: {
+                  nombre:         user.username || user.email,
+                  email:          user.email,
+                  canalContacto:  'Formulario',
+                  origenContacto: 'Tienda online',
+                  Estado:         'Activo',
+                },
+              });
+              clienteId = nuevo.id;
+            }
+
+            // Calcular total
+            const total = items.reduce((sum, it) => sum + (it.precio ?? 0) * (it.cantidad ?? 1), 0);
+
+            // Crear cotización con los artículos del carrito
+            const cotizacion = await strapi.db.query('api::cotizacion.cotizacion').create({
+              data: {
+                cliente:          clienteId,
+                estado:           'Borrador',
+                origenCotizacion: 'CART',
+                fecha:            new Date().toISOString(),
+                total,
+                items: items.map(it => ({
+                  productoId:    it.productoId ?? null,
+                  nombre:        it.nombre,
+                  sku:           it.sku ?? null,
+                  precio:        it.precio ?? 0,
+                  cantidad:      it.cantidad ?? 1,
+                  subtotal:      (it.precio ?? 0) * (it.cantidad ?? 1),
+                })),
+                notas: 'Generado automáticamente desde carrito de la Tienda',
+              },
+            });
+
+            // Crear lead vinculado — trazabilidad marketing
+            await strapi.db.query('api::lead.lead').create({
+              data: {
+                cliente:       clienteId,
+                Funnel:        'Lead',
+                origenApp:     'tienda',
+                canal:         'Formulario',
+                origen:        'Carrito',
+                campanaOrigen: `Carrito: ${items.map(it => it.nombre).join(', ')}`,
+                fechaLead:     new Date().toISOString(),
+                notas:         `Cotización automática #${cotizacion.id} — Total: $${total.toFixed(2)}`,
+              },
+            });
+
+            ctx.body = { ok: true, cotizacionId: cotizacion.id };
+          } catch (e) {
+            strapi.log.error('[tienda-checkout-intento] ' + e.message);
+            ctx.status = 500; ctx.body = { error: { message: 'No se pudo procesar el intento de compra' } };
           }
         },
         config: { auth: false },

@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -6,24 +7,55 @@ import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/hooks/useCart"
 import { useClienteAuth } from "@/hooks/useClienteAuth"
 import { formatPrice } from "@/lib/formatprice"
+import { getClienteToken } from "@/lib/tiendaAuth"
 import CartItem from "./components/cart-item"
 
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 export default function page() {
     const router = useRouter()
-    const {items, removeAll} = useCart()
+    const { items, removeAll } = useCart()
     const { cliente, loading: cargandoCliente } = useClienteAuth()
+    const [enviando, setEnviando] = useState(false)
     const prices = items.map((producto => producto.costo ?? 0))
-    const totalPrice = prices.reduce((total,price)=> total + price, 0)
+    const totalPrice = prices.reduce((total, price) => total + price, 0)
 
-    function procederCompra() {
+    async function procederCompra() {
         if (!cliente) {
             router.push("/cuenta/registro?next=/carrito")
             return
         }
-        // El pago todavía no está armado — por ahora solo se confirma la
-        // cuenta antes de avanzar, como se pidió explícitamente.
-        toast.info("¡Gracias! Estamos afinando el proceso de pago — pronto podrás terminar tu compra aquí mismo.")
+        setEnviando(true)
+        try {
+            const payload = items.map(p => ({
+                productoId: p.documentId ?? null,
+                nombre:     p.nombreProducto,
+                sku:        p.sku ?? null,
+                precio:     p.costo ?? 0,
+                cantidad:   1,
+            }))
+            const res = await fetch(`${BASE}/api/tienda/checkout-intento`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${getClienteToken()}`,
+                },
+                body: JSON.stringify({ items: payload }),
+            })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json?.error?.message ?? "Error al procesar")
+            removeAll()
+            toast.success("¡Solicitud enviada!", {
+                description: "Tu pedido fue registrado. Te contactamos pronto por WhatsApp para confirmar.",
+            })
+            router.push("/cuenta/cotizaciones")
+        } catch (err) {
+            toast.error("No se pudo procesar", {
+                description: (err as Error).message,
+            })
+        } finally {
+            setEnviando(false)
+        }
     }
 
 
@@ -53,10 +85,10 @@ export default function page() {
                         <div className="flex items-center justify-center w-full mt-3">
                             <Button
                                 className="w-full cursor-pointer bg-amber-600 hover:bg-amber-700 text-white"
-                                disabled={items.length === 0 || cargandoCliente}
+                                disabled={items.length === 0 || cargandoCliente || enviando}
                                 onClick={procederCompra}
                             >
-                                {cliente ? "Proceder con la compra" : "Crear cuenta para continuar"}
+                                {enviando ? "Enviando…" : cliente ? "Solicitar cotización" : "Crear cuenta para continuar"}
                             </Button>
                         </div>
                     </div>
