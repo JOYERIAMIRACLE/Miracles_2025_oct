@@ -1,4 +1,4 @@
-import { Truck, BadgeCheck, ShieldCheck, Headphones, RotateCcw, Gem } from "lucide-react"
+import { Truck, BadgeCheck, ShieldCheck, Headphones } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 type Beneficio = {
@@ -14,15 +14,13 @@ const BENEFICIOS: Beneficio[] = [
   { Icon: BadgeCheck,   color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/40", titulo: "Calidad certificada",   sub: "Oro 10k y Plata .925"  },
   { Icon: ShieldCheck,  color: "text-sky-500",     bg: "bg-sky-50 dark:bg-sky-950/40",       titulo: "Compra segura",          sub: "Pago protegido"        },
   { Icon: Headphones,   color: "text-teal-500",    bg: "bg-teal-50 dark:bg-teal-950/40",     titulo: "Asesoría personalizada", sub: "Vía WhatsApp"          },
-  { Icon: RotateCcw,    color: "text-violet-500",  bg: "bg-violet-50 dark:bg-violet-950/40", titulo: "Devoluciones fáciles",   sub: "Hasta 30 días"         },
-  { Icon: Gem,          color: "text-amber-600",   bg: "bg-amber-50 dark:bg-amber-950/40",   titulo: "Garantía 6 meses",      sub: "En todas las piezas"  },
 ]
 
 const CertificadosStrip = () => {
   return (
     <div className="bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
       <div className="max-w-6xl mx-auto px-6 py-5">
-        <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-1 md:grid md:grid-cols-6">
+        <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-1 md:grid md:grid-cols-4">
           {BENEFICIOS.map((b) => (
             <div
               key={b.titulo}
