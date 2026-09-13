@@ -143,6 +143,23 @@ const Navbar = () => {
                 </div>
             </div>
 
+            {/* ── Buscador — fila propia solo en mobile, ahí sí cabe completo ── */}
+            <form onSubmit={handleBuscar} className={`sm:hidden flex items-center relative px-6 pb-3 ${!isHero ? "border-b border-border/40" : ""}`}>
+                <Search size={14} className={`absolute left-9 pointer-events-none ${isHero ? "text-white/50" : "text-slate-400"}`} />
+                <input
+                    type="search"
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    placeholder="Buscar…"
+                    aria-label="Buscar productos"
+                    className={`w-full h-9 pl-8 pr-3 rounded-full text-sm outline-none transition-colors ${
+                        isHero
+                            ? "bg-white/10 text-white placeholder-white/50 border border-white/20 focus:bg-white/20 focus:border-white/40"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-amber-400"
+                    }`}
+                />
+            </form>
+
             {/* ── Strip de categorías (Kuroda style) ── */}
             <div className={`border-b ${isHero ? "border-white/10" : "border-border/30"}`}>
                 <div className="overflow-x-auto scrollbar-hide">
