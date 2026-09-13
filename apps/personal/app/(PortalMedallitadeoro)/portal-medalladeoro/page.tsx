@@ -17,9 +17,11 @@ import { SeccionGestionMarca } from "@/components/Empresa/PortalMDO/SeccionGesti
 import { SeccionEnlaces } from "@/components/Empresa/PortalMDO/SeccionEnlaces"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
 import { NotasMejora } from "@/components/Empresa/PortalMDO/NotasMejora"
+import { SeccionPanel } from "@/components/Empresa/PortalMDO/SeccionPanel"
 
 const SECCIONES_VALIDAS = [
   "portal", "conoce", "mision",
+  "panel",
   "tareas", "campanas", "contactos", "ventas", "inventario", "finanzas", "sitio-web",
   "documentos", "marca", "enlaces",
 ]
@@ -57,6 +59,7 @@ export default function PortalMedalladeoroPage() {
 
   function renderContent() {
     switch (seccion) {
+      case "panel":        return <SeccionPanel />
       case "portal":      return <SeccionPortalHome onNavigate={navigate} />
       case "conoce":       return <SeccionConoceMDO />
       case "mision":       return <SeccionMision />
