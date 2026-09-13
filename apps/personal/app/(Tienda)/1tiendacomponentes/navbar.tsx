@@ -1,9 +1,10 @@
 "use client"
 
-import { BaggageClaim, Heart, ShoppingCart, User } from "lucide-react"
+import { BaggageClaim, Heart, Search, ShoppingCart, User } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
+import { useState, type FormEvent } from "react"
 import ItemsMenuMobile from "./items-mobile"
 import ModeToggle from "./toggle"
 import { useCart } from "@/hooks/useCart"
@@ -29,8 +30,16 @@ const Navbar = () => {
     const cart        = useCart()
     const favorites   = useFavorites()
     const { cliente } = useClienteAuth()
+    const [busqueda, setBusqueda] = useState("")
 
     const isHero = pathname === "/"
+
+    function handleBuscar(e: FormEvent) {
+        e.preventDefault()
+        const q = busqueda.trim()
+        if (!q) return
+        router.push(`/category?q=${encodeURIComponent(q)}`)
+    }
 
     return (
         <div className={`z-50 transition-all ${
@@ -56,13 +65,30 @@ const Navbar = () => {
                     )}
                 </div>
 
-                {/* Iconos + Blog/Nosotros + mobile hamburger */}
+                {/* Buscador + Blog/Empresa + iconos + mobile hamburger */}
                 <div className={`flex items-center gap-4 ${isHero ? "text-white" : ""}`}>
 
                     {/* Hamburger solo mobile */}
                     <div className="md:hidden">
                         <ItemsMenuMobile />
                     </div>
+
+                    {/* Buscador — a lado de Blog, misma alineación que los iconos */}
+                    <form onSubmit={handleBuscar} className="hidden sm:flex items-center relative">
+                        <Search size={14} className={`absolute left-2.5 pointer-events-none ${isHero ? "text-white/50" : "text-slate-400"}`} />
+                        <input
+                            type="search"
+                            value={busqueda}
+                            onChange={e => setBusqueda(e.target.value)}
+                            placeholder="Buscar…"
+                            aria-label="Buscar productos"
+                            className={`w-28 lg:w-36 focus:w-48 h-8 pl-8 pr-3 rounded-full text-xs outline-none transition-all duration-200 ${
+                                isHero
+                                    ? "bg-white/10 text-white placeholder-white/50 border border-white/20 focus:bg-white/20 focus:border-white/40"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-amber-400"
+                            }`}
+                        />
+                    </form>
 
                     {/* Blog + Empresa — desktop, misma alineación que los iconos */}
                     <Link

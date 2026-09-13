@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { ProductType } from "@/types/product"
 import { CategoryType } from "@/types/category"
 import AllCategoriesClient from "./AllCategoriesClient"
@@ -64,7 +65,9 @@ export default async function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <AllCategoriesClient initialProducts={products} categorias={categorias} />
+      <Suspense fallback={null}>
+        <AllCategoriesClient initialProducts={products} categorias={categorias} />
+      </Suspense>
     </>
   )
 }

@@ -1,7 +1,8 @@
 "use client"
 import Link from "next/link"
-import { Gem, SlidersHorizontal } from "lucide-react"
+import { Gem, SlidersHorizontal, X } from "lucide-react"
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useGetAllProducts } from "@/api/useGetAllProducts"
 import { ProductType } from "@/types/product"
 import { CategoryType } from "@/types/category"
@@ -32,6 +33,9 @@ function sortProducts(products: ProductType[], order: SortOption): ProductType[]
 }
 
 export default function AllCategoriesClient({ initialProducts, categorias }: Props) {
+  const searchParams = useSearchParams()
+  const query = (searchParams.get("q") ?? "").trim()
+
   const [filterMaterial, setFilterMaterial] = useState("")
   const [filterEstilo,   setFilterEstilo]   = useState("")
   const [filterPrecio,   setFilterPrecio]   = useState<PrecioOption>("")
@@ -46,6 +50,7 @@ export default function AllCategoriesClient({ initialProducts, categorias }: Pro
 
   const filtered = sortProducts(
     (products ?? []).filter((p) => {
+      const okQuery     = query === "" || p.nombreProducto.toLowerCase().includes(query.toLowerCase())
       const okMaterial = filterMaterial === "" || p.materialProducto === filterMaterial
       const okEstilo   = filterEstilo   === "" || p.figura           === filterEstilo
       const okPrecio   = filterPrecio   === "" || (() => {
@@ -53,7 +58,7 @@ export default function AllCategoriesClient({ initialProducts, categorias }: Pro
         const precio = p.costo ?? 0
         return precio >= min && precio <= max
       })()
-      return okMaterial && okEstilo && okPrecio
+      return okQuery && okMaterial && okEstilo && okPrecio
     }),
     sortOrder
   )
@@ -75,11 +80,17 @@ export default function AllCategoriesClient({ initialProducts, categorias }: Pro
             Medalla de Oro
           </p>
           <h1 className="text-white text-3xl md:text-5xl font-extrabold leading-tight drop-shadow-lg max-w-xl">
-            Catálogo completo
+            {query ? `Resultados para "${query}"` : "Catálogo completo"}
           </h1>
-          <p className="text-white/60 mt-2 text-sm max-w-xs">
-            Oro 10k y Plata 925 para cada ocasión.
-          </p>
+          {query ? (
+            <Link href="/category" className="inline-flex items-center gap-1 text-white/60 hover:text-white mt-2 text-sm transition-colors">
+              <X size={12} /> Quitar búsqueda
+            </Link>
+          ) : (
+            <p className="text-white/60 mt-2 text-sm max-w-xs">
+              Oro 10k y Plata 925 para cada ocasión.
+            </p>
+          )}
         </div>
       </div>
 
