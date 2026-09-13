@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useCallback, useLayoutEffect, useEffect } from "react"
 import {
   Plus, X, ShoppingCart, Package, Pencil, Trash2,
   AlertTriangle, CheckCircle2, Loader2, Check, ShoppingBag,
@@ -144,6 +144,17 @@ export function DespensaView() {
     }
   }
 
+  // Arrastre de la barra de stock (0-100%) -- se dispara solo al soltar, no
+  // en cada pixel de arrastre, igual que ProgresoBar en Tareas.
+  async function actualizarCantidadArrastrada(ing: IngredienteDespensa, cantidad: number) {
+    try {
+      const updated = await updateIngrediente(ing.documentId, { cantidad })
+      setIngredientes(prev => prev.map(i => i.documentId === ing.documentId ? updated : i))
+    } catch {
+      toast.error("Error al actualizar cantidad")
+    }
+  }
+
   async function toggleEnProceso(ing: IngredienteDespensa) {
     const nuevo = !ing.enProceso
     setProcesando(prev => new Set(prev).add(ing.documentId))
@@ -221,7 +232,6 @@ export function DespensaView() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {filtrados.map(ing => {
-                const pct = stockPct(ing)
                 const bajo = ing.cantidad < ing.cantidadMinima
                 return (
                   <div key={ing.documentId}
@@ -261,11 +271,8 @@ export function DespensaView() {
                         </span>
                         <span className="text-slate-600">mín {ing.cantidadMinima} {ing.unidad}</span>
                       </div>
-                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${pct < 50 ? "bg-amber-500" : "bg-emerald-500"}`}
-                          style={{ width: `${pct}%` }}
-                        />
+                      <div onClick={e => e.stopPropagation()}>
+                        <StockBar ing={ing} onSave={cantidad => actualizarCantidadArrastrada(ing, cantidad)} />
                       </div>
                       {bajo && (
                         <p className="flex items-center gap-1 text-[10px] text-amber-400">
@@ -529,5 +536,74 @@ function CatBtn({ active, onClick, children, color }: { active: boolean; onClick
       }`}>
       {children}
     </button>
+  )
+}
+
+// Barra de stock arrastrable (0-100%, relativo a cantidadMinima) -- mismo
+// mecanismo de arrastre que ProgresoBar (components/Shared/TareasWidgets.tsx):
+// estado local para feedback inmediato mientras se arrastra, y solo se
+// persiste al soltar (mouseup/touchend), nunca en cada pixel de movimiento.
+function StockBar({ ing, onSave }: { ing: IngredienteDespensa; onSave: (cantidad: number) => void }) {
+  const interactivo = ing.cantidadMinima > 0
+  const pctActual = stockPct(ing)
+
+  const [local, setLocal] = useState(pctActual)
+  const dragging  = useRef(false)
+  const barRef    = useRef<HTMLDivElement>(null)
+  const fillRef   = useRef<HTMLDivElement>(null)
+  const onSaveRef = useRef(onSave)
+  const minRef    = useRef(ing.cantidadMinima)
+  useEffect(() => { onSaveRef.current = onSave }, [onSave])
+  useEffect(() => { minRef.current = ing.cantidadMinima }, [ing.cantidadMinima])
+  useEffect(() => { if (!dragging.current) setLocal(pctActual) }, [pctActual])
+
+  useLayoutEffect(() => {
+    if (fillRef.current) fillRef.current.style.width = `${local}%`
+  }, [local])
+
+  const calcPct = useCallback((clientX: number) => {
+    if (!barRef.current) return 0
+    const { left, width } = barRef.current.getBoundingClientRect()
+    return Math.min(Math.max(Math.round((clientX - left) / width * 100), 0), 100)
+  }, [])
+
+  // % arrastrado -> cantidad real, redondeada a pasos de 0.5 (mismo step que
+  // el input manual de "Cantidad actual" en el modal de editar).
+  const pctACantidad = useCallback((pct: number) => Math.round((pct / 100) * minRef.current * 2) / 2, [])
+
+  useEffect(() => {
+    if (!interactivo) return
+    const onMove  = (e: MouseEvent) => { if (dragging.current) setLocal(calcPct(e.clientX)) }
+    const onUp    = (e: MouseEvent) => {
+      if (!dragging.current) return
+      const pct = calcPct(e.clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pctACantidad(pct))
+    }
+    const onTMove = (e: TouchEvent) => { if (dragging.current) { e.preventDefault(); setLocal(calcPct(e.touches[0].clientX)) } }
+    const onTEnd  = (e: TouchEvent) => {
+      if (!dragging.current) return
+      const pct = calcPct(e.changedTouches[0].clientX); setLocal(pct); dragging.current = false; onSaveRef.current(pctACantidad(pct))
+    }
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup",   onUp)
+    window.addEventListener("touchmove", onTMove, { passive: false })
+    window.addEventListener("touchend",  onTEnd)
+    return () => {
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("mouseup",   onUp)
+      window.removeEventListener("touchmove", onTMove)
+      window.removeEventListener("touchend",  onTEnd)
+    }
+  }, [calcPct, pctACantidad, interactivo])
+
+  return (
+    <div
+      ref={barRef}
+      onMouseDown={interactivo ? e => { e.preventDefault(); dragging.current = true; setLocal(calcPct(e.clientX)) } : undefined}
+      onTouchStart={interactivo ? e => { dragging.current = true; setLocal(calcPct(e.touches[0].clientX)) } : undefined}
+      aria-label={`Stock ${local}%`}
+      className={`h-1.5 bg-slate-800 rounded-full overflow-hidden select-none ${interactivo ? "cursor-grab active:cursor-grabbing" : ""}`}
+    >
+      <div ref={fillRef} className={`h-full rounded-full ${local < 50 ? "bg-amber-500" : "bg-emerald-500"}`} />
+    </div>
   )
 }
