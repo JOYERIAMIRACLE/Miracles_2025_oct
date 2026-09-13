@@ -34,9 +34,9 @@ export default function TiendaPage() {
       <HeroTienda />
       <CertificadosStrip />
       <CategoriaGrid />
-      <ComprarPorMaterial />
-      <TopVentas />
       <ComprarPorOcasion />
+      <TopVentas />
+      <ComprarPorMaterial />
     </div>
   )
 }
