@@ -360,6 +360,23 @@ function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>vo
 function Card({children,className=""}:{children:React.ReactNode;className?:string}){
   return <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 ${className}`}>{children}</div>
 }
+function KpiCard({title,value,subBadge,subLabel,color,onClick}:{title:string;value:string|number;subBadge:string|number;subLabel:string;color:string;onClick?:()=>void}){
+  return(
+    <div onClick={onClick}
+      className="rounded-xl p-5 flex flex-col gap-3 cursor-pointer transition-all duration-150 hover:scale-[1.01]"
+      style={{background:T.surface,border:`1px solid ${T.border}`}}
+      onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=color+"55";(e.currentTarget as HTMLDivElement).style.boxShadow=`0 0 22px ${color}10`}}
+      onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=T.border;(e.currentTarget as HTMLDivElement).style.boxShadow="none"}}>
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{title}</div>
+      <div className="font-mono text-4xl font-bold leading-none" style={{color}}>{value}</div>
+      <div className="flex items-center gap-2 pt-2.5 border-t border-slate-800">
+        <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full shrink-0"
+          style={{background:`${color}18`,color,border:`1px solid ${color}30`}}>{subBadge}</span>
+        <span className="text-[11px] text-slate-400 leading-tight">{subLabel}</span>
+      </div>
+    </div>
+  )
+}
 function FilterRow({label,options,active,onToggle}:{label:string;options:string[];active:string;onToggle:(v:string)=>void}){
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -557,22 +574,14 @@ export function SeccionPanel() {
   ,[clientesMap,cliQ])
 
   /* ── Dashboard stats ── */
-  const entregados  = allVentas.filter(v=>v.estado==="Entregado")
-  const ingresos    = entregados.reduce((s,v)=>s+v.monto,0)
-  const tick        = entregados.length?Math.round(ingresos/entregados.length):0
-  const cotsConv    = allCots.filter(c=>c.estado==="Convertida")
-  const kpis = [
-    {v:allLeads.length,                                        l:"Leads capturados",    c:T.violet, go:()=>goView("leads")},
-    {v:allCots.length,                                         l:"Cotizaciones",        c:T.amber,  go:()=>goView("cotizaciones")},
-    {v:cotsConv.length,                                        l:"Cotiz. convertidas",  c:T.em,     go:()=>goView("cotizaciones",{cEstado:"Convertida"})},
-    {v:allVentas.filter(v=>v.estado==="Cotizado").length,      l:"Ofertas abiertas",    c:T.sky,    go:()=>goView("pedidos",{vEstado:"Cotizado"})},
-    {v:allVentas.filter(v=>v.estado==="Preparando").length,    l:"En preparación",      c:T.amber,  go:()=>goView("pedidos",{vEstado:"Preparando"})},
-    {v:allVentas.filter(v=>v.estado==="Enviado").length,       l:"Enviados",            c:T.sky,    go:()=>goView("pedidos",{vEstado:"Enviado"})},
-    {v:entregados.length,                                      l:"Entregados",          c:T.em,     go:()=>goView("pedidos",{vEstado:"Entregado"})},
-    {v:$m(ingresos),                                           l:"Ingresos MXN",        c:T.gold,   go:()=>goView("pedidos")},
-    {v:$m(tick),                                               l:"Ticket promedio",     c:T.gold,   go:()=>goView("pedidos")},
-    {v:clientesDash.length,                                    l:"Clientes registrados",c:T.sky,    go:()=>goView("clientes")},
-  ]
+  const entregados    = allVentas.filter(v=>v.estado==="Entregado")
+  const ingresos      = entregados.reduce((s,v)=>s+v.monto,0)
+  const tick          = entregados.length?Math.round(ingresos/entregados.length):0
+  const cotsConv      = allCots.filter(c=>c.estado==="Convertida")
+  const leadsConvPct  = allLeads.length?Math.round(allLeads.filter(l=>allCots.some(c=>c.cliente?.documentId===l.cliente?.documentId)).length/allLeads.length*100):0
+  const cotConvPct    = allCots.length?Math.round(cotsConv.length/allCots.length*100):0
+  const pedEntPct     = allVentas.length?Math.round(entregados.length/allVentas.length*100):0
+  const leadsWeb      = allLeads.filter(l=>l.canal==="Formulario").length
 
   /* ── Leads analysis ── */
   const ALL_CANALES=["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]
@@ -683,18 +692,13 @@ export function SeccionPanel() {
   /* ═══ DASHBOARD ═══════════════════════════════════════════════════ */
   if(view==="dashboard") return shell(
     <>
-      {/* KPI grid */}
+      {/* KPI — 5 cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {kpis.map((k,i)=>(
-          <div key={i} onClick={k.go}
-            className="rounded-xl p-4 cursor-pointer transition-all duration-150 hover:scale-[1.02]"
-            style={{background:T.surface,border:`1px solid ${T.border}`}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=k.c+"55";(e.currentTarget as HTMLDivElement).style.boxShadow=`0 0 18px ${k.c}12`}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=T.border;(e.currentTarget as HTMLDivElement).style.boxShadow="none"}}>
-            <div className="font-mono text-2xl font-semibold leading-none mb-2" style={{color:k.c}}>{k.v}</div>
-            <div className="text-[11px] text-slate-400 leading-tight">{k.l}</div>
-          </div>
-        ))}
+        <KpiCard title="Leads capturados" value={allLeads.length} subBadge={`${leadsConvPct}%`} subLabel="conv. a cotización" color={T.violet} onClick={()=>goView("leads")}/>
+        <KpiCard title="Cotizaciones" value={allCots.length} subBadge={`${cotConvPct}%`} subLabel="convertidas" color={T.amber} onClick={()=>goView("cotizaciones")}/>
+        <KpiCard title="Pedidos" value={allVentas.length} subBadge={`${pedEntPct}%`} subLabel="entregados" color={T.sky} onClick={()=>goView("pedidos")}/>
+        <KpiCard title="Ingresos MXN" value={$m(ingresos)} subBadge={$m(tick)} subLabel="ticket promedio" color={T.gold} onClick={()=>goView("pedidos")}/>
+        <KpiCard title="Clientes" value={clientesDash.length} subBadge={leadsWeb} subLabel="llegaron vía formulario" color={T.em} onClick={()=>goView("clientes")}/>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
