@@ -460,7 +460,9 @@ export function SeccionPanel() {
   const nowFirst = ()=>{const d=new Date();d.setDate(1);return d.toISOString().slice(0,10)}
   const nowLast  = ()=>new Date().toISOString().slice(0,10)
 
-  const [view,setView]       = useState<View>("dashboard")
+  const [view,setView]       = useState<View>(()=>{
+    try{const v=localStorage.getItem("panel_view");return(["dashboard","leads","cotizaciones","pedidos","clientes"].includes(v??"")?v as View:"dashboard")}catch{return"dashboard"}
+  })
   const [df,setDf]           = useState(demo?"2026-01-01":nowFirst)
   const [dt,setDt]           = useState(demo?"2026-09-30":nowLast)
   const [cliFilter,setCliFilter] = useState<CliFilter>(null)
@@ -553,6 +555,7 @@ export function SeccionPanel() {
 
   function goView(v:View,extra?:{lCanal?:string;lFunnel?:string;cEstado?:string;cTipo?:string;vEstado?:string}){
     setView(v)
+    try{localStorage.setItem("panel_view",v)}catch{}
     setLCanal(extra?.lCanal??""); setLFunnel(extra?.lFunnel??"")
     setCEstado(extra?.cEstado??""); setCOrigen(""); setCTipo(extra?.cTipo??"")
     setVEstado(extra?.vEstado??""); setVCanal("")
