@@ -1213,7 +1213,15 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
               const puedeReordenar = seccion.proceso !== SIN_PROCESO
               const renombrandoEsteProceso = renombrandoProceso === seccion.proceso
               return (
-                <div key={`proceso-${seccion.proceso}`} className="space-y-2">
+                <div key={`proceso-${seccion.proceso}`} className="space-y-2"
+                  // El área de drop vive en TODA la tarjeta de la sección, no solo en
+                  // el encabezado angosto (~28px de alto) — con el hit-area tan chico,
+                  // era fácil soltar un par de píxeles arriba/abajo, caer en el hueco
+                  // entre secciones (el gap de space-y-3 de la lista) y que el drop no
+                  // se registrara en ningún lado, sin ningún aviso de que había fallado.
+                  onDragOver={e => { if (puedeReordenar && dragProceso && dragProceso !== seccion.proceso) { e.preventDefault(); setDragOverProceso(seccion.proceso) } }}
+                  onDragLeave={() => setDragOverProceso(prev => prev === seccion.proceso ? null : prev)}
+                  onDrop={e => { e.preventDefault(); handleDropProceso(seccion.proceso) }}>
                   {renombrandoEsteProceso ? (
                     <div className="flex items-center gap-1.5 px-1 py-1" onClick={e => e.stopPropagation()}>
                       <input autoFocus value={nombreProcesoRenombrado} onChange={e => setNombreProcesoRenombrado(e.target.value)}
@@ -1230,9 +1238,6 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                     </div>
                   ) : (
                     <div
-                      onDragOver={e => { if (puedeReordenar && dragProceso && dragProceso !== seccion.proceso) { e.preventDefault(); setDragOverProceso(seccion.proceso) } }}
-                      onDragLeave={() => setDragOverProceso(prev => prev === seccion.proceso ? null : prev)}
-                      onDrop={e => { e.preventDefault(); handleDropProceso(seccion.proceso) }}
                       className={`w-full flex items-center gap-1 px-1 py-1 group/proceso rounded-lg transition-colors ${
                         dragOverProceso === seccion.proceso ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-400/50" : ""
                       } ${dragProceso === seccion.proceso ? "opacity-40" : ""}`}>
