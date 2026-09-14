@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react"
 import { IdentidadEmpresa } from "@/types/identidad-empresa"
+import { getToken } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const URL  = `${BASE}/api/identidad-empresas?pagination[pageSize]=1&populate=*`
+const API_URL = `${BASE}/api/identidad-empresas?pagination[pageSize]=1&populate=*`
+
+function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const token = getToken()
+  return { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extra }
+}
 
 export function useGetIdentidad() {
   const [identidad, setIdentidad] = useState<IdentidadEmpresa | null>(null)
@@ -12,7 +18,7 @@ export function useGetIdentidad() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(URL)
+        const res  = await fetch(API_URL, { headers: authHeaders() })
         const json = await res.json()
         setIdentidad(json.data?.[0] ?? null)
       } finally { setLoading(false) }
@@ -30,7 +36,7 @@ export async function saveIdentidad(
   const method = documentId ? "PUT" : "POST"
   const res    = await fetch(url, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ data: payload }),
   })
   if (!res.ok) {
