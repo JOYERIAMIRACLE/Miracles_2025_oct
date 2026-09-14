@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 import { SeccionHero, HeroTabs } from "./shared"
 import type { TabItem } from "./shared"
 import { useGetLeads } from "@/api/lead/getLead"
@@ -119,42 +119,83 @@ const CANAL_COLOR:Record<string,string> = { WhatsApp:"#25d366",Instagram:"#e1306
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
 const MI:Record<string,number> = {"01":0,"02":1,"03":2,"04":3,"05":4,"06":5,"07":6,"08":7,"09":8,"10":9,"11":10,"12":11}
 
+/* ─── Tooltip compartido ────────────────────────────────────────────── */
+type TipState = {x:number;y:number;title:string;sub?:string}|null
+function ChartTip({t}:{t:TipState}){
+  if(!t) return null
+  return(
+    <div className="pointer-events-none absolute z-30 rounded-lg shadow-xl text-[11px] whitespace-nowrap"
+      style={{left:t.x,top:t.y-10,transform:"translate(-50%,-100%)",background:"#0f172a",border:"1px solid #334155",color:"#f8fafc",padding:"6px 10px",lineHeight:1.45}}>
+      <div className="font-semibold">{t.title}</div>
+      {t.sub&&<div style={{color:"#94a3b8",fontSize:10,marginTop:2}}>{t.sub}</div>}
+    </div>
+  )
+}
+function useChartTip(ref:React.RefObject<HTMLDivElement|null>){
+  const [tip,setTip]=useState<TipState>(null)
+  const pos=(e:React.MouseEvent)=>{
+    const r=ref.current?.getBoundingClientRect()
+    if(!r) return {x:0,y:0}
+    return {x:e.clientX-r.left,y:e.clientY-r.top}
+  }
+  const show=(e:React.MouseEvent,title:string,sub?:string)=>setTip({...pos(e),title,sub})
+  const move=(e:React.MouseEvent,title:string,sub?:string)=>setTip({...pos(e),title,sub})
+  const hide=()=>setTip(null)
+  return {tip,show,move,hide}
+}
+
 /* ─── SVG Charts ────────────────────────────────────────────────────── */
-function SvgStackedBars({ months, data, colors, onBarClick, activeBar }:{
-  months:string[]; data:[number,number][]; colors:[string,string]; onBarClick?:(i:number)=>void; activeBar?:number
+function SvgStackedBars({ months, data, colors, labels, onBarClick, activeBar }:{
+  months:string[]; data:[number,number][]; colors:[string,string]; labels?:[string,string]; onBarClick?:(i:number)=>void; activeBar?:number
 }) {
+  const ref=useRef<HTMLDivElement>(null)
+  const {tip,show,move,hide}=useChartTip(ref)
   const W=520,H=120,PB=22,PT=14,PL=2,PR=4,cH=H-PB-PT,cW=W-PL-PR
   const totals=data.map(d=>d[0]+d[1])
   const maxV=Math.max(...totals,1)*1.15
   const bW=cW/months.length, bi=bW*0.65
   const ys=(v:number)=>PT+cH*(1-v/maxV)
   const bh=(v:number)=>cH*(v/maxV)
+  const lbl=labels??["A","B"]
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",overflow:"visible"}}>
-      {months.map((m,i)=>{
-        const x=+(PL+i*bW+(bW-bi)/2).toFixed(1)
-        const tot=totals[i]; let cy=ys(tot)
-        return (
-          <g key={m} style={{cursor:onBarClick?"pointer":undefined}} onClick={()=>onBarClick?.(i)}>
-            {data[i].map((v,j)=>{
-              if(!v) return null
-              const h=bh(v)
-              const op=activeBar===undefined||activeBar<0||activeBar===i?0.82:0.35
-              const el=<rect key={j} x={x} y={+cy.toFixed(1)} width={+bi.toFixed(1)} height={+h.toFixed(1)} fill={colors[j]} opacity={op}/>
-              cy+=h; return el
-            })}
-            {tot>0&&<text x={+(x+bi/2).toFixed(1)} y={+(ys(tot)-3).toFixed(1)} textAnchor="middle" fill={T.text} fontFamily="monospace" fontSize={7}>{tot}</text>}
-            <text x={+(x+bi/2).toFixed(1)} y={H-5} textAnchor="middle" fill={T.muted} fontFamily="monospace" fontSize={7.5}>{m}</text>
-          </g>
-        )
-      })}
-    </svg>
+    <div ref={ref} style={{position:"relative"}}>
+      <ChartTip t={tip}/>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",overflow:"visible"}}>
+        {months.map((m,i)=>{
+          const x=+(PL+i*bW+(bW-bi)/2).toFixed(1)
+          const tot=totals[i]; let cy=ys(tot)
+          const tipTitle=`${m} · ${tot} total`
+          const tipSub=data[i].map((v,j)=>v?`${v} ${lbl[j]}`:"").filter(Boolean).join(" · ")
+          return (
+            <g key={m} style={{cursor:onBarClick?"pointer":undefined}}
+              onClick={()=>onBarClick?.(i)}
+              onMouseEnter={e=>show(e,tipTitle,tipSub||undefined)}
+              onMouseMove={e=>move(e,tipTitle,tipSub||undefined)}
+              onMouseLeave={hide}>
+              {/* hit area invisible */}
+              <rect x={x} y={PT} width={+bi.toFixed(1)} height={cH} fill="transparent"/>
+              {data[i].map((v,j)=>{
+                if(!v) return null
+                const h=bh(v)
+                const op=activeBar===undefined||activeBar<0||activeBar===i?0.82:0.35
+                const el=<rect key={j} x={x} y={+cy.toFixed(1)} width={+bi.toFixed(1)} height={+h.toFixed(1)} fill={colors[j]} opacity={op} style={{transition:"opacity .15s"}}/>
+                cy+=h; return el
+              })}
+              {tot>0&&<text x={+(x+bi/2).toFixed(1)} y={+(ys(tot)-3).toFixed(1)} textAnchor="middle" fill={T.text} fontFamily="monospace" fontSize={7}>{tot}</text>}
+              <text x={+(x+bi/2).toFixed(1)} y={H-5} textAnchor="middle" fill={T.muted} fontFamily="monospace" fontSize={7.5}>{m}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
   )
 }
 
 function SvgDonut({ segs, onSegmentClick }:{
   segs:{l:string;v:number;c:string}[]; onSegmentClick?:(label:string)=>void
 }) {
+  const ref=useRef<HTMLDivElement>(null)
+  const {tip,show,move,hide}=useChartTip(ref)
   const cx=80,cy=80,ro=58,ri=30
   const total=segs.reduce((s,x)=>s+x.v,0)||1
   let a=-Math.PI/2
@@ -169,50 +210,69 @@ function SvgDonut({ segs, onSegmentClick }:{
     const lx=+(cx+(ro+14)*Math.cos(mid)).toFixed(1),ly=+(cy+(ro+14)*Math.sin(mid)).toFixed(1)
     const pct=Math.round(x.v/total*100)
     a+=da
-    return {d:`M ${x1} ${y1} A ${ro} ${ro} 0 ${laf} 1 ${x2} ${y2} L ${xi1} ${yi1} A ${ri} ${ri} 0 ${laf} 0 ${xi2} ${yi2} Z`,c:x.c,pct,lx,ly,l:x.l}
+    return {d:`M ${x1} ${y1} A ${ro} ${ro} 0 ${laf} 1 ${x2} ${y2} L ${xi1} ${yi1} A ${ri} ${ri} 0 ${laf} 0 ${xi2} ${yi2} Z`,c:x.c,pct,lx,ly,l:x.l,v:x.v}
   })
   return (
-    <svg viewBox="0 0 160 160" style={{width:150,maxWidth:"100%",flexShrink:0}}>
-      {slices.map((s,i)=>(
-        <path key={i} d={s.d} fill={s.c} opacity={0.82}
-          style={{cursor:onSegmentClick?"pointer":"default",transition:"opacity .15s"}}
-          onClick={()=>onSegmentClick?.(s.l)}
-          onMouseEnter={e=>(e.currentTarget.style.opacity="1")}
-          onMouseLeave={e=>(e.currentTarget.style.opacity="0.82")}/>
-      ))}
-      {slices.filter(s=>s.pct>=9).map((s,i)=>(
-        <text key={i} x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="middle" fill={T.text} fontFamily="monospace" fontSize={7.5}>{s.pct}%</text>
-      ))}
-    </svg>
+    <div ref={ref} style={{position:"relative",display:"inline-block"}}>
+      <ChartTip t={tip}/>
+      <svg viewBox="0 0 160 160" style={{width:150,maxWidth:"100%",flexShrink:0,display:"block"}}>
+        {slices.map((s,i)=>(
+          <path key={i} d={s.d} fill={s.c} opacity={0.82}
+            style={{cursor:onSegmentClick?"pointer":"default",transition:"opacity .15s"}}
+            onClick={()=>onSegmentClick?.(s.l)}
+            onMouseEnter={e=>{(e.currentTarget as SVGPathElement).style.opacity="1";show(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}}
+            onMouseMove={e=>move(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}
+            onMouseLeave={e=>{(e.currentTarget as SVGPathElement).style.opacity="0.82";hide()}}/>
+        ))}
+        {slices.filter(s=>s.pct>=9).map((s,i)=>(
+          <text key={i} x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="middle" fill={T.text} fontFamily="monospace" fontSize={7.5}>{s.pct}%</text>
+        ))}
+      </svg>
+    </div>
   )
 }
 
 function SvgHBars({ items, onBarClick }:{
   items:{l:string;v:number;c:string}[]; onBarClick?:(label:string)=>void
 }) {
+  const ref=useRef<HTMLDivElement>(null)
+  const {tip,show,move,hide}=useChartTip(ref)
   const H=items.length*20+6,W=260,PL=74,PR=32,PT=2
   const max=Math.max(...items.map(x=>x.v),1)
   const bw=W-PL-PR
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:W}}>
-      {items.map((x,i)=>{
-        const y=PT+i*20,w=+(x.v/max*bw).toFixed(1)
-        return (
-          <g key={i} style={{cursor:onBarClick?"pointer":undefined}} onClick={()=>onBarClick?.(x.l)}>
-            <text x={PL-5} y={y+11} textAnchor="end" fill={T.muted} fontFamily="sans-serif" fontSize={9}>{x.l}</text>
-            <rect x={PL} y={y+2} width={w} height={12} fill={x.c} opacity={0.75}/>
-            <text x={PL+parseFloat(w)+4} y={y+11} fill={T.text} fontFamily="monospace" fontSize={8}>{x.v}</text>
-          </g>
-        )
-      })}
-    </svg>
+    <div ref={ref} style={{position:"relative"}}>
+      <ChartTip t={tip}/>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:W}}>
+        {items.map((x,i)=>{
+          const y=PT+i*20,w=+(x.v/max*bw).toFixed(1)
+          const pct=max>0?Math.round(x.v/max*100):0
+          return (
+            <g key={i} style={{cursor:onBarClick?"pointer":undefined}}
+              onClick={()=>onBarClick?.(x.l)}
+              onMouseEnter={e=>show(e,`${x.l} · ${x.v}`,`${pct}% del máximo`)}
+              onMouseMove={e=>move(e,`${x.l} · ${x.v}`,`${pct}% del máximo`)}
+              onMouseLeave={hide}>
+              <rect x={PL} y={y} width={bw} height={16} fill="transparent"/>
+              <text x={PL-5} y={y+11} textAnchor="end" fill={T.muted} fontFamily="sans-serif" fontSize={9}>{x.l}</text>
+              <rect x={PL} y={y+2} width={w} height={12} fill={x.c} opacity={0.75} style={{transition:"opacity .15s"}}
+                onMouseEnter={e=>(e.currentTarget.style.opacity="1")}
+                onMouseLeave={e=>(e.currentTarget.style.opacity="0.75")}/>
+              <text x={PL+parseFloat(w)+4} y={y+11} fill={T.text} fontFamily="monospace" fontSize={8}>{x.v}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
   )
 }
 
 /* Ingresos por mes con línea de meta ───────────────────────────────── */
-function SvgRevBars({ data, target, months }:{
-  data: number[]; target: number; months: string[]
+function SvgRevBars({ data, target, months, onBarClick, activeBar }:{
+  data: number[]; target: number; months: string[]; onBarClick?:(i:number)=>void; activeBar?:number
 }) {
+  const ref=useRef<HTMLDivElement>(null)
+  const {tip,show,move,hide}=useChartTip(ref)
   const W=520,H=130,PB=22,PT=18,PL=2,PR=4
   const cH=H-PB-PT, cW=W-PL-PR
   const maxV=Math.max(...data,target)*1.1
@@ -221,25 +281,34 @@ function SvgRevBars({ data, target, months }:{
   const bh=(v:number)=>cH*(v/maxV)
   const ty=+ys(target).toFixed(1)
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",overflow:"visible"}}>
-      {/* Línea de meta */}
-      <line x1={PL} y1={ty} x2={W-PR} y2={ty} stroke={T.gold} strokeWidth={1} strokeDasharray="4 3" opacity={0.7}/>
-      <text x={W-PR-2} y={ty-3} textAnchor="end" fill={T.gold} fontFamily="monospace" fontSize={7.5}>Meta ${(target/1000).toFixed(0)}k</text>
-      {months.map((m,i)=>{
-        const v=data[i]
-        const x=+(PL+i*bW+(bW-bi)/2).toFixed(1)
-        const h=+bh(v).toFixed(1)
-        const y=+ys(v).toFixed(1)
-        const hit=v>=target
-        return (
-          <g key={m}>
-            <rect x={x} y={y} width={+bi.toFixed(1)} height={h} fill={hit?T.em:T.sky} opacity={0.75}/>
-            {v>0&&<text x={+(x+bi/2).toFixed(1)} y={y-3} textAnchor="middle" fill={hit?T.em:T.text} fontFamily="monospace" fontSize={6.5}>${(v/1000).toFixed(1)}k</text>}
-            <text x={+(x+bi/2).toFixed(1)} y={H-5} textAnchor="middle" fill={T.muted} fontFamily="monospace" fontSize={7.5}>{m}</text>
-          </g>
-        )
-      })}
-    </svg>
+    <div ref={ref} style={{position:"relative"}}>
+      <ChartTip t={tip}/>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",overflow:"visible"}}>
+        <line x1={PL} y1={ty} x2={W-PR} y2={ty} stroke={T.gold} strokeWidth={1} strokeDasharray="4 3" opacity={0.7}/>
+        <text x={W-PR-2} y={ty-3} textAnchor="end" fill={T.gold} fontFamily="monospace" fontSize={7.5}>Meta ${(target/1000).toFixed(0)}k</text>
+        {months.map((m,i)=>{
+          const v=data[i]
+          const x=+(PL+i*bW+(bW-bi)/2).toFixed(1)
+          const h=+bh(v).toFixed(1)
+          const y=+ys(v).toFixed(1)
+          const hit=v>=target
+          const op=activeBar===undefined||activeBar<0||activeBar===i?0.78:0.35
+          const tipSub=hit?`✓ Meta superada ($${(target/1000).toFixed(0)}k)`:`✗ Bajo la meta · falta $${((target-v)/1000).toFixed(1)}k`
+          return (
+            <g key={m} style={{cursor:onBarClick?"pointer":undefined}}
+              onClick={()=>onBarClick?.(i)}
+              onMouseEnter={e=>v>0?show(e,`${m} · $${(v/1000).toFixed(1)}k`,tipSub):undefined}
+              onMouseMove={e=>v>0?move(e,`${m} · $${(v/1000).toFixed(1)}k`,tipSub):undefined}
+              onMouseLeave={hide}>
+              <rect x={x} y={PT} width={+bi.toFixed(1)} height={cH} fill="transparent"/>
+              {v>0&&<rect x={x} y={y} width={+bi.toFixed(1)} height={h} fill={hit?T.em:T.sky} opacity={op} style={{transition:"opacity .15s"}}/>}
+              {v>0&&<text x={+(x+bi/2).toFixed(1)} y={y-3} textAnchor="middle" fill={hit?T.em:T.text} fontFamily="monospace" fontSize={6.5}>${(v/1000).toFixed(1)}k</text>}
+              <text x={+(x+bi/2).toFixed(1)} y={H-5} textAnchor="middle" fill={T.muted} fontFamily="monospace" fontSize={7.5}>{m}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
   )
 }
 
@@ -668,7 +737,7 @@ export function SeccionPanel() {
       <Card>
         <SecLabel>Ingresos mensuales vs meta</SecLabel>
         <ChartLabel>Verde = mes que superó la meta de $45,000 MXN</ChartLabel>
-        <SvgRevBars months={MESES} data={revMes} target={META_MES}/>
+        <SvgRevBars months={MESES} data={revMes} target={META_MES} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
       </Card>
 
       {/* Top clientes en dashboard */}
@@ -748,7 +817,7 @@ export function SeccionPanel() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
           <div>
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
-            <SvgStackedBars months={MESES} data={leadsStk} colors={[T.em,T.rose]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
+            <SvgStackedBars months={MESES} data={leadsStk} colors={[T.em,T.rose]} labels={["Entregados","Rechazados"]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
             <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Entregado" val={fLeads.filter(l=>l.Funnel==="Entrega").length} active={lFunnel==="Entrega"} onClick={()=>setLFunnel(lFunnel==="Entrega"?"":"Entrega")}/>
               <LegendDot color={T.rose} label="Rechazada" val={fLeads.filter(l=>l.Funnel==="Rechazada").length} active={lFunnel==="Rechazada"} onClick={()=>setLFunnel(lFunnel==="Rechazada"?"":"Rechazada")}/>
@@ -812,7 +881,7 @@ export function SeccionPanel() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
           <div className="md:col-span-2">
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
-            <SvgStackedBars months={MESES} data={cotsStk} colors={[T.em,T.rose]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
+            <SvgStackedBars months={MESES} data={cotsStk} colors={[T.em,T.rose]} labels={["Convertidas","Rechazadas"]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
             <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Convertida" val={fCots.filter(c=>c.estado==="Convertida").length} active={cEstado==="Convertida"} onClick={()=>setCEstado(cEstado==="Convertida"?"":"Convertida")}/>
               <LegendDot color={T.rose} label="Rechazada" val={fCots.filter(c=>c.estado==="Rechazada").length} active={cEstado==="Rechazada"} onClick={()=>setCEstado(cEstado==="Rechazada"?"":"Rechazada")}/>
@@ -855,7 +924,7 @@ export function SeccionPanel() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
           <div className="md:col-span-2">
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
-            <SvgStackedBars months={MESES} data={vStk} colors={[T.em,T.rose]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
+            <SvgStackedBars months={MESES} data={vStk} colors={[T.em,T.rose]} labels={["Entregados","Cancelados"]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
             <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Entregado" val={fVentas.filter(v=>v.estado==="Entregado").length} active={vEstado==="Entregado"} onClick={()=>setVEstado(vEstado==="Entregado"?"":"Entregado")}/>
               <LegendDot color={T.rose} label="Cancelado" val={fVentas.filter(v=>v.estado==="Cancelado").length} active={vEstado==="Cancelado"} onClick={()=>setVEstado(vEstado==="Cancelado"?"":"Cancelado")}/>
