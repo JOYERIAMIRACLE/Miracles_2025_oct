@@ -803,11 +803,18 @@ export function SeccionPanel() {
         <Card>
           <SecLabel>Pipeline de ventas</SecLabel>
           <div className="space-y-2.5">
-            {(["Cotizado","Pagado","Preparando","Enviado","Entregado","Cancelado"] as const).map(e=>{
-              const n=allVentas.filter(v=>v.estado===e).length; const max=allVentas.length||1; const pct=Math.round(n/max*100)
-              const c=e==="Entregado"?T.em:e==="Cancelado"?T.rose:e==="Enviado"?T.sky:e==="Preparando"?T.amber:e==="Pagado"?T.violet:T.muted
+            {([
+              {e:"Lead",       n:allLeads.length,                                      c:T.violet, go:()=>goView("leads")},
+              {e:"Cotizado",   n:allVentas.filter(v=>v.estado==="Cotizado").length,    c:T.muted,  go:()=>{goView("pedidos");setVEstado("Cotizado")}},
+              {e:"Pagado",     n:allVentas.filter(v=>v.estado==="Pagado").length,      c:T.violet, go:()=>{goView("pedidos");setVEstado("Pagado")}},
+              {e:"Preparando", n:allVentas.filter(v=>v.estado==="Preparando").length,  c:T.amber,  go:()=>{goView("pedidos");setVEstado("Preparando")}},
+              {e:"Enviado",    n:allVentas.filter(v=>v.estado==="Enviado").length,     c:T.sky,    go:()=>{goView("pedidos");setVEstado("Enviado")}},
+              {e:"Entregado",  n:allVentas.filter(v=>v.estado==="Entregado").length,   c:T.em,     go:()=>{goView("pedidos");setVEstado("Entregado")}},
+              {e:"Cancelado",  n:allVentas.filter(v=>v.estado==="Cancelado").length,   c:T.rose,   go:()=>{goView("pedidos");setVEstado("Cancelado")}},
+            ] as {e:string;n:number;c:string;go:()=>void}[]).map(({e,n,c,go})=>{
+              const max=allLeads.length||1; const pct=Math.round(n/max*100)
               return(
-                <div key={e} onClick={()=>{goView("pedidos");setVEstado(e)}} className="grid items-center gap-3 cursor-pointer group" style={{gridTemplateColumns:"80px 1fr 28px"}}>
+                <div key={e} onClick={go} className="grid items-center gap-3 cursor-pointer group" style={{gridTemplateColumns:"80px 1fr 28px"}}>
                   <div className="text-[11px] text-slate-400 group-hover:text-slate-200 transition-colors">{e}</div>
                   <div className="h-1.5 rounded-full overflow-hidden" style={{background:"#0f1a2e"}}>
                     <div className="h-full rounded-full transition-all" style={{width:`${pct}%`,background:`${c}99`}}/>
