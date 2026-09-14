@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
-import { SeccionHero, HeroTabs } from "./shared"
+import { SeccionHero, HeroTabs, useHeroImagen } from "./shared"
 import type { TabItem } from "./shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { useGetLeads } from "@/api/lead/getLead"
 import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
@@ -425,6 +426,10 @@ type View = "dashboard"|"leads"|"cotizaciones"|"pedidos"|"clientes"
 type CliFilter = { docId:string; nombre:string } | null
 
 export function SeccionPanel() {
+  const { identidad, loading: loadingId, reload } = useGetIdentidad()
+  const documentId = identidad?.documentId ?? null
+  const heroImg = useHeroImagen("portada_panel", documentId, reload)
+
   const {leads:_rL,loading:lL}    = useGetLeads()
   const {cotizaciones:_rC,loading:lC} = useGetAllCotizaciones()
   const {ventas:_rV,loading:lV}   = useGetVentas()
@@ -617,46 +622,57 @@ export function SeccionPanel() {
         breadcrumb={["Empresa", "Panel de control"]}
         titulo="Actividad comercial"
         descripcion="Leads, cotizaciones y ventas en un solo vistazo — filtra por período o cliente."
+        imagenUrl={identidad?.portada_panel?.url}
+        imagenOriginalUrl={identidad?.portada_panel_original?.url}
+        documentId={documentId}
+        puedeEditar={!loadingId}
+        uploading={heroImg.uploading}
+        inputRef={heroImg.inputRef}
+        onTrigger={heroImg.trigger}
+        onFileChange={heroImg.handleFile}
+        onSaveCrop={heroImg.saveCrop}
       >
-        {/* Tabs */}
         <HeroTabs tabs={TABS} active={view} onChange={v=>goView(v as View)}/>
-
-        {/* Controles de rango y demo */}
-        <div className="flex items-center gap-3 flex-wrap mt-3 pt-2 border-t border-white/10">
-          <button onClick={toggleDemo}
-            className="px-3 py-1 rounded-lg text-[11px] font-mono uppercase tracking-wider cursor-pointer transition-all"
-            style={demo?{background:"rgba(200,146,46,.18)",color:T.gold,border:"1px solid rgba(200,146,46,.35)"}:{background:"rgba(255,255,255,.06)",color:"rgba(255,255,255,.45)",border:"1px solid rgba(255,255,255,.12)"}}>
-            {demo?"▶ DEMO":"REAL"}
-          </button>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] text-white/40">desde</span>
-            <input type="date" value={df} onChange={e=>setDf(e.target.value)}
-              className="rounded-lg px-2 py-1 font-mono text-[11px] text-white/80 outline-none border border-white/10 bg-white/5"
-              style={{colorScheme:"dark"}}/>
-            <span className="text-[11px] text-white/40">hasta</span>
-            <input type="date" value={dt} onChange={e=>setDt(e.target.value)}
-              className="rounded-lg px-2 py-1 font-mono text-[11px] text-white/80 outline-none border border-white/10 bg-white/5"
-              style={{colorScheme:"dark"}}/>
-          </div>
-          {cliFilter&&(
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-white/10 text-white/80 border border-white/15">
-              {cliFilter.nombre}
-              <button onClick={clearCli} className="cursor-pointer bg-transparent border-none p-0 leading-none text-white/50 hover:text-white">×</button>
-            </span>
-          )}
-        </div>
       </SeccionHero>
 
-      {/* Chip de mes filtrado */}
-      {mFilter>=0&&(
-        <div className="flex items-center gap-2 px-1">
-          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-mono"
-            style={{background:`${T.sky}15`,border:`1px solid ${T.sky}44`,color:T.sky}}>
-            MES: {MESES[mFilter]}
-            <button onClick={()=>setMFilter(-1)} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-70 hover:opacity-100" style={{color:T.sky}}>×</button>
-          </span>
+      {/* Barra de filtros — siempre visible debajo del hero */}
+      <div className="flex items-center gap-2 flex-wrap bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl px-4 py-2.5">
+        <button onClick={toggleDemo}
+          className="px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all shrink-0"
+          style={demo?{background:`${T.gold}18`,color:T.gold,border:`1px solid ${T.gold}35`}:{background:"transparent",color:"#94a3b8",border:"1px solid #e2e8f0"}}>
+          {demo?"▶ DEMO":"REAL"}
+        </button>
+        <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">desde</span>
+          <input type="date" value={df} onChange={e=>setDf(e.target.value)}
+            className="rounded-md px-2 py-0.5 font-mono text-[11px] text-slate-700 dark:text-slate-200 outline-none border border-slate-200 dark:border-slate-700 bg-transparent focus:border-violet-400 dark:focus:border-violet-500 transition-colors"
+            style={{colorScheme:"dark"}}/>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">hasta</span>
+          <input type="date" value={dt} onChange={e=>setDt(e.target.value)}
+            className="rounded-md px-2 py-0.5 font-mono text-[11px] text-slate-700 dark:text-slate-200 outline-none border border-slate-200 dark:border-slate-700 bg-transparent focus:border-violet-400 dark:focus:border-violet-500 transition-colors"
+            style={{colorScheme:"dark"}}/>
         </div>
-      )}
+        {cliFilter&&(
+          <>
+            <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
+            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/25 shrink-0">
+              {cliFilter.nombre}
+              <button onClick={clearCli} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5">×</button>
+            </span>
+          </>
+        )}
+        {mFilter>=0&&(
+          <>
+            <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
+            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono shrink-0"
+              style={{background:`${T.sky}15`,border:`1px solid ${T.sky}44`,color:T.sky}}>
+              MES: {MESES[mFilter]}
+              <button onClick={()=>setMFilter(-1)} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5" style={{color:T.sky}}>×</button>
+            </span>
+          </>
+        )}
+      </div>
 
       {loading?(
         <div className="flex items-center justify-center py-20 text-slate-500 font-mono text-sm">Cargando datos…</div>
@@ -891,7 +907,7 @@ export function SeccionPanel() {
             <ChartLabel>Por estado · clic para filtrar</ChartLabel>
             <div className="flex items-start gap-2 flex-wrap">
               <SvgDonut segs={cotEstadoSegs} onSegmentClick={v=>setCEstado(cEstado===v?"":v)}/>
-              <div className="flex-1 min-w-[80px] pt-1">{cotEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={cEstado===s.l} onClick={()=>setCEstado(cEstado===s.l?"":s.l)}/>)}</div>
+              <div className="flex-1 min-w-20 pt-1">{cotEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={cEstado===s.l} onClick={()=>setCEstado(cEstado===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
         </div>

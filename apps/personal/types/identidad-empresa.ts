@@ -71,6 +71,8 @@ export type IdentidadEmpresa = {
   descripcion_contactos:      string | null
   portada_contactos:          IdentidadImagen
   portada_contactos_original: IdentidadImagen
+  portada_panel:              IdentidadImagen
+  portada_panel_original:     IdentidadImagen
   createdAt?:     string
   updatedAt?:     string
 }
