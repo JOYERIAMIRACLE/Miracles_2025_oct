@@ -664,6 +664,13 @@ export function SeccionPanel() {
         </Card>
       </div>
 
+      {/* Ingresos vs meta */}
+      <Card>
+        <SecLabel>Ingresos mensuales vs meta</SecLabel>
+        <ChartLabel>Verde = mes que superó la meta de $45,000 MXN</ChartLabel>
+        <SvgRevBars months={MESES} data={revMes} target={META_MES}/>
+      </Card>
+
       {/* Top clientes en dashboard */}
       <Card>
         <div className="flex items-center justify-between mb-2">
@@ -861,10 +868,6 @@ export function SeccionPanel() {
               <div className="flex-1 min-w-20 pt-1">{ventaEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={vEstado===s.l} onClick={()=>setVEstado(vEstado===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
-        </div>
-        <div className="mb-5">
-          <ChartLabel>Ingresos mensuales vs meta $45,000 MXN · verde = mes cumplido</ChartLabel>
-          <SvgRevBars months={MESES} data={revMes} target={META_MES}/>
         </div>
         <div className="grid gap-6 items-start" style={{gridTemplateColumns:"1fr 160px"}}>
           <div>
