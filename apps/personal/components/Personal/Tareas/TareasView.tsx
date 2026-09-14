@@ -151,7 +151,7 @@ const VISTA_TABS = [
   { id: "metricas",   label: "Métricas",   icon: BarChart2 },
 ]
 
-export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea; titulo: string; breadcrumb?: string[] }) {
+export function TareasView({ ambito, titulo, breadcrumb, vistaInicial }: { ambito: AmbitoTarea; titulo: string; breadcrumb?: string[]; vistaInicial?: Vista }) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const { user } = useCurrentUser()
@@ -167,7 +167,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const { identidad, loading: identidadLoading, reload: reloadIdentidad } = useGetIdentidad()
   const documentIdIdentidad = identidad?.documentId ?? null
   const hero = useHeroImagen("portada_tareas", documentIdIdentidad, reloadIdentidad)
-  const [vista, setVista] = useState<Vista>("lista")
+  const [vista, setVista] = useState<Vista>(vistaInicial ?? "lista")
   const [filtro, setFiltro] = useState<EstadoTarea | "todas">("en_progreso")
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>("")
   const [filtroPrioridad, setFiltroPrioridad] = useState<PrioridadTarea | "">("")
@@ -236,11 +236,11 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   // que SÍ está abierto, no al revés, para que el default "nada aquí"
   // signifique "todo cerrado").
   const [proyectosAbiertos, setProyectosAbiertos] = useState<Set<string>>(new Set())
-  // Capa de proceso (etiqueta) que envuelve los grupos por proyecto — al
-  // revés que proyectosAbiertos: acá se guardan los que el usuario cerró a
-  // mano, así que vacío por default = todos los procesos aparecen
-  // desplegados de entrada.
-  const [procesosCerrados, setProcesosCerrados] = useState<Set<string>>(new Set())
+  // Capa de proceso (etiqueta) que envuelve los grupos por proyecto — mismo
+  // criterio que proyectosAbiertos: se guardan los que el usuario SÍ abrió a
+  // mano, así que vacío por default = todos los procesos arrancan cerrados
+  // al cargar o recargar la página.
+  const [procesosAbiertos, setProcesosAbiertos] = useState<Set<string>>(new Set())
   const [nombrandoProyecto, setNombrandoProyecto] = useState<{ origenId: string; destinoId: string } | null>(null)
   const [nombreProyectoInput, setNombreProyectoInput] = useState("")
   const [renombrandoProyecto, setRenombrandoProyecto] = useState<string | null>(null) // documentId del proyecto
@@ -376,6 +376,10 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
       if (!porEtiqueta.has(key)) porEtiqueta.set(key, [])
       porEtiqueta.get(key)!.push(t)
     })
+    // Todo proceso ya dado de alta (ver useGetProcesosTarea) aparece siempre,
+    // aunque el filtro actual lo deje sin ninguna tarea — antes el grupo
+    // completo desaparecía en vez de mostrarse vacío.
+    procesos.forEach(p => { if (!porEtiqueta.has(p.nombre)) porEtiqueta.set(p.nombre, []) })
     // Orden: los procesos ya reordenados a mano (ver handleReordenarProcesos)
     // van primero, respetando su "orden" guardado; cualquier etiqueta nueva
     // que todavía no se ha arrastrado nunca cae alfabética al final, y "Sin
@@ -642,7 +646,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   }
 
   function toggleProcesoColapsado(proceso: string) {
-    setProcesosCerrados(prev => {
+    setProcesosAbiertos(prev => {
       const next = new Set(prev)
       next.has(proceso) ? next.delete(proceso) : next.add(proceso)
       return next
@@ -1154,7 +1158,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
         ) : (
           <div className="space-y-3">
             {seccionesPorProceso.map(seccion => {
-              const procesoColapsado = procesosCerrados.has(seccion.proceso)
+              const procesoColapsado = !procesosAbiertos.has(seccion.proceso)
               const etiquetaSeccion = seccion.proceso === SIN_PROCESO ? null : seccion.proceso
               const puedeReordenar = seccion.proceso !== SIN_PROCESO
               const renombrandoEsteProceso = renombrandoProceso === seccion.proceso
