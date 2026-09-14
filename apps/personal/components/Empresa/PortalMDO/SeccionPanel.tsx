@@ -668,7 +668,7 @@ export function SeccionPanel() {
     {id:"leads",        label:"Leads"},
     {id:"cotizaciones", label:"Cotizaciones"},
     {id:"pedidos",      label:"Pedidos"},
-    {id:"clientes",     label:"Clientes"},
+    {id:"clientes",     label:"Contactos"},
   ]
 
   const shell=(content:React.ReactNode)=>(
