@@ -252,6 +252,21 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const [dragOverProceso, setDragOverProceso] = useState<string | null>(null)
   const [renombrandoProceso, setRenombrandoProceso] = useState<string | null>(null) // nombre actual del proceso
   const [nombreProcesoRenombrado, setNombreProcesoRenombrado] = useState("")
+  // Orden que el usuario acaba de soltar, aplicado de inmediato en pantalla
+  // sin esperar la ida y vuelta al servidor (ver handleDropProceso) — antes
+  // el reordenamiento se sentía "trabado" porque la lista no se movía hasta
+  // que terminaban de correr, en paralelo, hasta 8 llamadas de red y
+  // recargar el catálogo. procesosCreadosRef guarda el documentId de los
+  // procesos que este mismo drop creó (los que solo existían como etiqueta
+  // libre, nunca dados de alta) para que un segundo arrastre inmediato no
+  // dispare otra creación duplicada antes de que el catálogo recargado
+  // llegue a reflejar la primera.
+  const [ordenOptimista, setOrdenOptimista] = useState<string[] | null>(null)
+  const procesosCreadosRef = useRef<Map<string, string>>(new Map())
+  useEffect(() => {
+    const nombres = new Set(procesos.map(p => p.nombre))
+    procesosCreadosRef.current.forEach((_, nombre) => { if (nombres.has(nombre)) procesosCreadosRef.current.delete(nombre) })
+  }, [procesos])
 
   // Etiquetas/responsables/áreas usados — se derivan de las tareas ya
   // existentes, más los procesos ya dados de alta en el catálogo (ver
@@ -387,12 +402,21 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     // la del filtro "Proceso", así que un proceso podía verse en uno y no
     // en el otro.
     etiquetasUsadas.forEach(nombre => { if (!porEtiqueta.has(nombre)) porEtiqueta.set(nombre, []) })
-    // Orden: los procesos ya reordenados a mano (ver handleReordenarProcesos)
-    // van primero, respetando su "orden" guardado; cualquier etiqueta nueva
-    // que todavía no se ha arrastrado nunca cae alfabética al final, y "Sin
-    // proceso" siempre queda último de todos.
+    // Orden: primero el orden optimista del último drop en esta sesión (ver
+    // handleDropProceso — se aplica antes de que confirme el servidor), si
+    // no hay uno vale el "orden" ya guardado en el catálogo; cualquier
+    // etiqueta nueva que todavía no se ha arrastrado nunca cae alfabética al
+    // final, y "Sin proceso" siempre queda último de todos.
     const ordenPersistido = new Map(procesos.map(p => [p.nombre, p.orden]))
+    const ordenOptimistaIdx = ordenOptimista ? new Map(ordenOptimista.map((n, i) => [n, i])) : null
     const claves = [...porEtiqueta.keys()].filter(k => k !== SIN_PROCESO).sort((a, b) => {
+      if (ordenOptimistaIdx) {
+        const ia = ordenOptimistaIdx.get(a)
+        const ib = ordenOptimistaIdx.get(b)
+        if (ia !== undefined && ib !== undefined) return ia - ib
+        if (ia !== undefined) return -1
+        if (ib !== undefined) return 1
+      }
       const oa = ordenPersistido.get(a)
       const ob = ordenPersistido.get(b)
       if (oa !== undefined && ob !== undefined) return oa - ob
@@ -420,7 +444,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     }
 
     return claves.map(key => ({ proceso: key, grupos: construirGrupos(porEtiqueta.get(key)!) }))
-  }, [filtradas, agruparPorProyecto, procesos, etiquetasUsadas])
+  }, [filtradas, agruparPorProyecto, procesos, etiquetasUsadas, ordenOptimista])
 
   const stats = {
     total:       tareas.length,
@@ -662,13 +686,18 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
 
   async function handleReordenarProcesos(nombresEnOrden: string[]) {
     try {
-      await Promise.all(nombresEnOrden.map((nombre, i) => {
-        const persistido = procesos.find(p => p.nombre === nombre)
-        return persistido ? updateProcesoTarea(persistido.documentId, { orden: i }) : createProcesoTarea(nombre, ambito, i)
+      await Promise.all(nombresEnOrden.map(async (nombre, i) => {
+        const idExistente = procesosCreadosRef.current.get(nombre) ?? procesos.find(p => p.nombre === nombre)?.documentId
+        if (idExistente) {
+          await updateProcesoTarea(idExistente, { orden: i })
+        } else {
+          procesosCreadosRef.current.set(nombre, await createProcesoTarea(nombre, ambito, i))
+        }
       }))
       reloadProcesos()
     } catch {
       toast.error("No se pudo reordenar")
+      setOrdenOptimista(null)
     }
   }
 
@@ -680,6 +709,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     const sinOrigen = ordenActual.filter(p => p !== origen)
     const idxDestino = sinOrigen.indexOf(destino)
     sinOrigen.splice(idxDestino, 0, origen)
+    setOrdenOptimista(sinOrigen)
     handleReordenarProcesos(sinOrigen)
   }
 
