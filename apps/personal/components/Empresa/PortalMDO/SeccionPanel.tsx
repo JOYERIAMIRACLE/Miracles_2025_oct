@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { SeccionHero, HeroTabs } from "./shared"
+import type { TabItem } from "./shared"
 import { useGetLeads } from "@/api/lead/getLead"
 import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
@@ -537,57 +539,51 @@ export function SeccionPanel() {
   compFilt.forEach(v=>{const m=MI[getMonth(v.fecha??v.createdAt)];if(m!==undefined)revMes[m]+=v.monto})
 
   /* ── Shell ── */
-  const TAB_LABELS:Record<View,string> = {dashboard:"Dashboard",leads:"Leads",cotizaciones:"Cotizaciones",pedidos:"Pedidos",clientes:"Clientes"}
+  const TABS:TabItem[] = [
+    {id:"dashboard",    label:"Dashboard"},
+    {id:"leads",        label:"Leads"},
+    {id:"cotizaciones", label:"Cotizaciones"},
+    {id:"pedidos",      label:"Pedidos"},
+    {id:"clientes",     label:"Clientes"},
+  ]
 
   const shell=(content:React.ReactNode)=>(
     <div className="space-y-4" style={{fontFamily:"'DM Sans',system-ui,sans-serif",fontSize:13,color:T.text,lineHeight:1.55}}>
-      {/* Hero header */}
-      <div className="relative overflow-hidden rounded-2xl" style={{background:"linear-gradient(135deg,#040810 0%,#0a1428 55%,#0d1a38 100%)",border:"1px solid rgba(200,146,46,.18)"}}>
-        <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${T.gold},${T.gold}00)`}}/>
-        <div className="px-6 pt-5 pb-0">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-3">
-            <span>Medalla de Oro</span><span>·</span><span style={{color:T.gold}}>Panel de control</span>
-          </div>
-          {/* Title row */}
-          <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:30,fontWeight:400,color:"#f1f5f9",lineHeight:1,margin:0}}>Actividad comercial</h2>
-              {cliFilter&&(
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono"
-                  style={{background:`${T.gold}18`,border:`1px solid ${T.gold}44`,color:T.gold}}>
-                  {cliFilter.nombre}
-                  <button onClick={clearCli} className="ml-0.5 cursor-pointer bg-transparent border-none p-0 leading-none" style={{color:T.gold}}>×</button>
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <button onClick={toggleDemo} className="px-3 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all"
-                style={demo?{background:`${T.gold}20`,color:T.gold,border:`1px solid ${T.gold}44`}:{background:"transparent",color:"#4a5a7a",border:"1px solid #1e2d50"}}>
-                {demo?"▶ DEMO":"REAL"}
-              </button>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-mono text-slate-500">DESDE</span>
-                <input type="date" value={df} onChange={e=>setDf(e.target.value)}
-                  className="rounded-lg px-2 py-1 font-mono text-[11px] text-slate-200 outline-none border border-slate-700"
-                  style={{background:"#0e1a2e",colorScheme:"dark"}}/>
-                <span className="text-[10px] font-mono text-slate-500">HASTA</span>
-                <input type="date" value={dt} onChange={e=>setDt(e.target.value)}
-                  className="rounded-lg px-2 py-1 font-mono text-[11px] text-slate-200 outline-none border border-slate-700"
-                  style={{background:"#0e1a2e",colorScheme:"dark"}}/>
-              </div>
-            </div>
-          </div>
-          {/* Tab nav */}
-          <div className="flex gap-1 overflow-x-auto">
-            {(["dashboard","leads","cotizaciones","pedidos","clientes"] as View[]).map(v=>(
-              <NavTab key={v} active={view===v} label={TAB_LABELS[v]} onClick={()=>goView(v)}/>
-            ))}
-          </div>
-        </div>
-      </div>
+      <SeccionHero
+        breadcrumb={["Empresa", "Panel de control"]}
+        titulo="Actividad comercial"
+        descripcion="Leads, cotizaciones y ventas en un solo vistazo — filtra por período o cliente."
+      >
+        {/* Tabs */}
+        <HeroTabs tabs={TABS} active={view} onChange={v=>goView(v as View)}/>
 
-      {/* Month filter chip */}
+        {/* Controles de rango y demo */}
+        <div className="flex items-center gap-3 flex-wrap mt-3 pt-2 border-t border-white/10">
+          <button onClick={toggleDemo}
+            className="px-3 py-1 rounded-lg text-[11px] font-mono uppercase tracking-wider cursor-pointer transition-all"
+            style={demo?{background:"rgba(200,146,46,.18)",color:T.gold,border:"1px solid rgba(200,146,46,.35)"}:{background:"rgba(255,255,255,.06)",color:"rgba(255,255,255,.45)",border:"1px solid rgba(255,255,255,.12)"}}>
+            {demo?"▶ DEMO":"REAL"}
+          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] text-white/40">desde</span>
+            <input type="date" value={df} onChange={e=>setDf(e.target.value)}
+              className="rounded-lg px-2 py-1 font-mono text-[11px] text-white/80 outline-none border border-white/10 bg-white/5"
+              style={{colorScheme:"dark"}}/>
+            <span className="text-[11px] text-white/40">hasta</span>
+            <input type="date" value={dt} onChange={e=>setDt(e.target.value)}
+              className="rounded-lg px-2 py-1 font-mono text-[11px] text-white/80 outline-none border border-white/10 bg-white/5"
+              style={{colorScheme:"dark"}}/>
+          </div>
+          {cliFilter&&(
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-white/10 text-white/80 border border-white/15">
+              {cliFilter.nombre}
+              <button onClick={clearCli} className="cursor-pointer bg-transparent border-none p-0 leading-none text-white/50 hover:text-white">×</button>
+            </span>
+          )}
+        </div>
+      </SeccionHero>
+
+      {/* Chip de mes filtrado */}
       {mFilter>=0&&(
         <div className="flex items-center gap-2 px-1">
           <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-mono"
