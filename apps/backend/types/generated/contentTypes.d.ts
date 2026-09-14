@@ -2727,6 +2727,7 @@ export interface ApiProyectoProyecto extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     pagos: Schema.Attribute.Relation<
       'oneToMany',
       'api::pago-trabajo.pago-trabajo'

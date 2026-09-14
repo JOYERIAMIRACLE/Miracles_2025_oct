@@ -23,7 +23,7 @@ export type TareaType = {
   fechaInicio?:     string | null
   esTicket?:        boolean | null
   ticket?:          { id: number; documentId: string; titulo: string } | null
-  proyecto?:        { id: number; documentId: string; nombre: string } | null
+  proyecto?:        { id: number; documentId: string; nombre: string; orden?: number | null } | null
   createdAt?:       string
   updatedAt?:       string
 }

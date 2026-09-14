@@ -12,6 +12,7 @@ export type ProyectoType = {
   fechaFin:        string | null
   presupuesto:     number | null
   color:           string | null
+  orden?:          number
   clienteTrabajo?: { id: number; documentId: string; nombre: string; empresa: string | null } | null
   createdAt?:      string
   updatedAt?:      string
@@ -26,5 +27,6 @@ export type ProyectoPayload = {
   fechaFin?:        string | null
   presupuesto?:     number | null
   color?:           string | null
+  orden?:           number
   clienteTrabajo?:  { connect: [{ id: number }] } | { disconnect: [{ id: number }] } | null
 }

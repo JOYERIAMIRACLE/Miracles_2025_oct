@@ -281,6 +281,20 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     return () => window.removeEventListener("mouseup", limpiarDragProceso)
   }, [])
 
+  // Arrastrar las tarjetas de proyecto (dentro de un proceso) para
+  // reordenarlas — mismo mecanismo que dragProceso/ordenOptimista de arriba,
+  // aplicado un nivel más adentro. "orden" vive en el proyecto mismo (no por
+  // sección), así que si el mismo proyecto apareciera en más de un proceso
+  // quedaría en la misma posición relativa en todos lados.
+  const [dragProyectoId, setDragProyectoId] = useState<string | null>(null)
+  const [dragOverProyectoId, setDragOverProyectoId] = useState<string | null>(null)
+  const [ordenOptimistaProyectos, setOrdenOptimistaProyectos] = useState<string[] | null>(null)
+  useEffect(() => {
+    function limpiarDragProyecto() { setDragProyectoId(null); setDragOverProyectoId(null) }
+    window.addEventListener("mouseup", limpiarDragProyecto)
+    return () => window.removeEventListener("mouseup", limpiarDragProyecto)
+  }, [])
+
   // Etiquetas/responsables/áreas usados — se derivan de las tareas ya
   // existentes, más los procesos ya dados de alta en el catálogo (ver
   // useGetProcesosTarea) aunque ninguna tarea los use todavía. Antes esto
@@ -453,11 +467,34 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
           resultado.push({ tipo: "suelta", tarea: t })
         }
       }
-      return resultado
+      // Orden de las tarjetas de proyecto: el optimista del último drop en
+      // esta sesión primero (ver handleDropProyecto), si no el "orden"
+      // persistido en el proyecto; los que nunca se arrastraron mantienen el
+      // orden de aparición de arriba. Quedan agrupadas antes que las tareas
+      // sueltas para poder compararlas/priorizarlas de un vistazo.
+      const proyectoGrupos = resultado.filter((g): g is Extract<GrupoTareas, { tipo: "proyecto" }> => g.tipo === "proyecto")
+      const sueltaGrupos = resultado.filter(g => g.tipo === "suelta")
+      const ordenOptIdx = ordenOptimistaProyectos ? new Map(ordenOptimistaProyectos.map((id, i) => [id, i])) : null
+      proyectoGrupos.sort((a, b) => {
+        if (ordenOptIdx) {
+          const ia = ordenOptIdx.get(a.proyecto.documentId)
+          const ib = ordenOptIdx.get(b.proyecto.documentId)
+          if (ia !== undefined && ib !== undefined) return ia - ib
+          if (ia !== undefined) return -1
+          if (ib !== undefined) return 1
+        }
+        const oa = a.proyecto.orden ?? null
+        const ob = b.proyecto.orden ?? null
+        if (oa !== null && ob !== null && oa !== ob) return oa - ob
+        if (oa !== null && ob === null) return -1
+        if (oa === null && ob !== null) return 1
+        return 0
+      })
+      return [...proyectoGrupos, ...sueltaGrupos]
     }
 
     return claves.map(key => ({ proceso: key, grupos: construirGrupos(porEtiqueta.get(key)!) }))
-  }, [filtradas, agruparPorProyecto, procesos, etiquetasUsadas, ordenOptimista])
+  }, [filtradas, agruparPorProyecto, procesos, etiquetasUsadas, ordenOptimista, ordenOptimistaProyectos])
 
   const stats = {
     total:       tareas.length,
@@ -724,6 +761,37 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     sinOrigen.splice(idxDestino, 0, origen)
     setOrdenOptimista(sinOrigen)
     handleReordenarProcesos(sinOrigen)
+  }
+
+  // Mismo mecanismo que handleReordenarProcesos/handleDropProceso, un nivel
+  // más adentro (tarjetas de proyecto dentro de un proceso, ver
+  // dragProyectoId arriba) — "orden" vive en el proyecto mismo, así que un
+  // solo PUT por proyecto movido basta (no hay que crear nada, a diferencia
+  // de los procesos que pueden no estar dados de alta todavía).
+  async function handleReordenarProyectos(idsEnOrden: string[]) {
+    try {
+      await Promise.all(idsEnOrden.map((id, i) => updateProyecto(id, { orden: i })))
+    } catch {
+      toast.error("No se pudo reordenar")
+      setOrdenOptimistaProyectos(null)
+    }
+  }
+
+  function handleDropProyecto(destinoId: string, procesoActual: string) {
+    const origen = dragProyectoId
+    setDragProyectoId(null); setDragOverProyectoId(null)
+    if (!origen || origen === destinoId) return
+    const seccion = seccionesPorProceso.find(s => s.proceso === procesoActual)
+    if (!seccion) return
+    const ordenActual = seccion.grupos
+      .filter((g): g is Extract<GrupoTareas, { tipo: "proyecto" }> => g.tipo === "proyecto")
+      .map(g => g.proyecto.documentId)
+    const sinOrigen = ordenActual.filter(id => id !== origen)
+    const idxDestino = sinOrigen.indexOf(destinoId)
+    if (idxDestino === -1) return
+    sinOrigen.splice(idxDestino, 0, origen)
+    setOrdenOptimistaProyectos(sinOrigen)
+    handleReordenarProyectos(sinOrigen)
   }
 
   async function confirmarRenombrarProceso() {
@@ -1293,9 +1361,17 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                         const renombrandoEste = renombrandoProyecto === g.proyecto.documentId
                         return (
                           <div key={`proyecto-${g.proyecto.documentId}`}
-                            className={`rounded-xl border border-violet-200 dark:border-violet-800/40 p-2 space-y-2 ${
-                              colapsado ? "bg-white dark:bg-slate-900 shadow-sm" : "bg-violet-50/40 dark:bg-violet-500/5"
-                            }`}>
+                            // El área de drop es la tarjeta completa (ya tenía borde/fondo
+                            // propio, a diferencia del encabezado de proceso de arriba que
+                            // hubo que ampliar) — misma lección: un blanco angosto hace fácil
+                            // soltar afuera y que el drop no se registre en ningún lado.
+                            onDragOver={e => { if (dragProyectoId && dragProyectoId !== g.proyecto.documentId) { e.preventDefault(); setDragOverProyectoId(g.proyecto.documentId) } }}
+                            onDragLeave={() => setDragOverProyectoId(prev => prev === g.proyecto.documentId ? null : prev)}
+                            onDrop={e => { e.preventDefault(); handleDropProyecto(g.proyecto.documentId, seccion.proceso) }}
+                            className={`rounded-xl border p-2 space-y-2 transition-colors ${
+                              dragOverProyectoId === g.proyecto.documentId ? "border-violet-400 bg-violet-50 dark:bg-violet-500/10" :
+                              colapsado ? "border-violet-200 dark:border-violet-800/40 bg-white dark:bg-slate-900 shadow-sm" : "border-violet-200 dark:border-violet-800/40 bg-violet-50/40 dark:bg-violet-500/5"
+                            } ${dragProyectoId === g.proyecto.documentId ? "opacity-40" : ""}`}>
                             {renombrandoEste ? (
                               <div className="flex items-center gap-1.5 px-1.5 py-0.5" onClick={e => e.stopPropagation()}>
                                 <input autoFocus value={nombreRenombrado} onChange={e => setNombreRenombrado(e.target.value)}
@@ -1312,6 +1388,13 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                               </div>
                             ) : (
                               <div className="w-full flex items-center gap-2 px-1.5 py-1 group/grupo">
+                                <span draggable
+                                  onDragStart={e => { e.stopPropagation(); setDragProyectoId(g.proyecto.documentId) }}
+                                  onDragEnd={() => { setDragProyectoId(null); setDragOverProyectoId(null) }}
+                                  title="Arrastrar para reordenar"
+                                  className="p-1 -m-1 shrink-0 cursor-grab opacity-60 hover:opacity-100 transition touch-none select-none">
+                                  <GripVertical size={12} className="text-violet-400/70 dark:text-violet-500/60" />
+                                </span>
                                 <button type="button" onClick={() => toggleProyectoColapsado(g.proyecto.documentId)}
                                   className="flex items-center gap-2 flex-1 min-w-0 text-left">
                                   <ChevronDown size={13} className={`text-violet-500 shrink-0 transition-transform ${colapsado ? "-rotate-90" : ""}`} />

@@ -40,6 +40,10 @@
     "color": {
       "type": "string"
     },
+    "orden": {
+      "type": "integer",
+      "default": 0
+    },
     "clienteTrabajo": {
       "type": "relation",
       "relation": "manyToOne",
