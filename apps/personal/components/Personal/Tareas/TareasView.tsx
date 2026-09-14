@@ -1230,13 +1230,17 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                         // navegadores (el botón se queda con el mousedown para su propio
                         // estado :active y a veces el drag nunca llega a iniciar o se queda
                         // "trabado" a medio arrastrar). Con el asa aislada, el gesto siempre
-                        // arranca limpio.
+                        // arranca limpio — pero por eso mismo ahora SÍ importa poder verla:
+                        // antes estaba invisible (opacity-0) hasta pasar el mouse por encima
+                        // Y solo a partir de md:, así que en pantallas angostas era imposible
+                        // encontrarla y el arrastre parecía no responder nunca. Ahora queda
+                        // siempre visible, un poco más marcada al hacer hover.
                         <span draggable
                           onDragStart={e => { e.stopPropagation(); setDragProceso(seccion.proceso) }}
                           onDragEnd={() => { setDragProceso(null); setDragOverProceso(null) }}
                           title="Arrastrar para reordenar"
-                          className="p-1 -m-1 shrink-0 cursor-grab opacity-0 md:group-hover/proceso:opacity-100 transition touch-none select-none">
-                          <GripVertical size={13} className="text-slate-300 dark:text-slate-600" />
+                          className="p-1 -m-1 shrink-0 cursor-grab opacity-60 hover:opacity-100 transition touch-none select-none">
+                          <GripVertical size={13} className="text-slate-400 dark:text-slate-500" />
                         </span>
                       )}
                       <button type="button" onClick={() => toggleProcesoColapsado(seccion.proceso)}
