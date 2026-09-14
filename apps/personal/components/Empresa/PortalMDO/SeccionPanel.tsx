@@ -805,7 +805,7 @@ export function SeccionPanel() {
           <div className="space-y-2.5">
             {([
               {e:"Lead",       n:allLeads.length,                                      c:T.violet, go:()=>goView("leads")},
-              {e:"Cotizado",   n:allVentas.filter(v=>v.estado==="Cotizado").length,    c:T.muted,  go:()=>{goView("pedidos");setVEstado("Cotizado")}},
+              {e:"Cotizado",   n:allCots.length,                                       c:T.muted,  go:()=>goView("cotizaciones")},
               {e:"Pagado",     n:allVentas.filter(v=>v.estado==="Pagado").length,      c:T.violet, go:()=>{goView("pedidos");setVEstado("Pagado")}},
               {e:"Preparando", n:allVentas.filter(v=>v.estado==="Preparando").length,  c:T.amber,  go:()=>{goView("pedidos");setVEstado("Preparando")}},
               {e:"Enviado",    n:allVentas.filter(v=>v.estado==="Enviado").length,     c:T.sky,    go:()=>{goView("pedidos");setVEstado("Enviado")}},
