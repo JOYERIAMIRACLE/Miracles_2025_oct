@@ -71,6 +71,8 @@
     "portada_campanas_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "descripcion_contactos":      { "type": "text" },
     "portada_contactos":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
-    "portada_contactos_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] }
+    "portada_contactos_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_panel":              { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_panel_original":     { "type": "media", "multiple": false, "allowedTypes": ["images"] }
   }
 }
