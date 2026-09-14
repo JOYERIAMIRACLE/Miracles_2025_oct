@@ -467,6 +467,7 @@ export function SeccionPanel() {
   const [dt,setDt]           = useState(demo?"2026-09-30":nowLast)
   const [cliFilter,setCliFilter] = useState<CliFilter>(null)
   const [cliQ,setCLiQ]       = useState("")
+  const [tipoFilter,setTipoFilter] = useState<"todos"|"cliente"|"prospecto"|"usuario">("todos")
   const [mFilter,setMFilter] = useState(-1)   // índice 0-11, -1 = todos los meses
 
   // Leads filters
@@ -566,10 +567,10 @@ export function SeccionPanel() {
 
   /* ── Mapa de clientes (todas las vistas) ── */
   const clientesMap = useMemo(()=>{
-    type CE = {docId:string;nombre:string;leads:number;cots:number;ventas:number;total:number;ultima:string}
+    type CE = {docId:string;nombre:string;leads:number;cots:number;ventas:number;total:number;ultima:string;formulario:boolean}
     const map = new Map<string,CE>()
     const upd = (docId:string,nombre:string,fn:(e:CE)=>void, fecha:string)=>{
-      const e = map.get(docId)??{docId,nombre,leads:0,cots:0,ventas:0,total:0,ultima:fecha}
+      const e = map.get(docId)??{docId,nombre,leads:0,cots:0,ventas:0,total:0,ultima:fecha,formulario:false}
       fn(e)
       if(fecha>e.ultima) e.ultima=fecha
       map.set(docId,e)
@@ -577,7 +578,7 @@ export function SeccionPanel() {
     // Usa rawLeads/rawCots/rawVentas (solo rango de fecha, sin cliFilter) → vista Clientes muestra todos
     rawLeads.filter(l=>inRange(l.fechaLead??l.createdAt)).forEach(l=>{
       if(!l.cliente)return
-      upd(l.cliente.documentId,l.cliente.nombre,e=>e.leads++,l.fechaLead??l.createdAt)
+      upd(l.cliente.documentId,l.cliente.nombre,e=>{e.leads++;if(l.canal==="Formulario")e.formulario=true},l.fechaLead??l.createdAt)
     })
     rawCots.filter(c=>inRange(c.fecha??c.createdAt)).forEach(c=>{
       if(!c.cliente)return
@@ -593,21 +594,25 @@ export function SeccionPanel() {
   // clientesDash: misma lógica pero desde allLeads/allCots/allVentas (respeta cliFilter)
   // → la tabla del dashboard y el KPI se actualizan al seleccionar cliente o cambiar rango
   const clientesDash = useMemo(()=>{
-    type CE = {docId:string;nombre:string;leads:number;cots:number;ventas:number;total:number;ultima:string}
+    type CE = {docId:string;nombre:string;leads:number;cots:number;ventas:number;total:number;ultima:string;formulario:boolean}
     const map = new Map<string,CE>()
     const upd = (docId:string,nombre:string,fn:(e:CE)=>void,fecha:string)=>{
-      const e=map.get(docId)??{docId,nombre,leads:0,cots:0,ventas:0,total:0,ultima:fecha}
+      const e=map.get(docId)??{docId,nombre,leads:0,cots:0,ventas:0,total:0,ultima:fecha,formulario:false}
       fn(e); if(fecha>e.ultima)e.ultima=fecha; map.set(docId,e)
     }
-    allLeads.forEach(l=>{if(!l.cliente)return;upd(l.cliente.documentId,l.cliente.nombre,e=>e.leads++,l.fechaLead??l.createdAt)})
+    allLeads.forEach(l=>{if(!l.cliente)return;upd(l.cliente.documentId,l.cliente.nombre,e=>{e.leads++;if(l.canal==="Formulario")e.formulario=true},l.fechaLead??l.createdAt)})
     allCots.forEach(c=>{if(!c.cliente)return;upd(c.cliente.documentId,c.cliente.nombre,e=>{e.cots++;e.total+=c.total},c.fecha??c.createdAt)})
     allVentas.forEach(v=>{if(!v.cliente)return;upd(v.cliente.documentId,v.cliente.nombre,e=>{e.ventas++;if(v.estado==="Entregado")e.total+=v.monto},v.fecha??v.createdAt)})
     return [...map.values()].sort((a,b)=>b.total-a.total)
   },[allLeads,allCots,allVentas])
 
-  const cliFiltered = useMemo(()=>
-    cliQ ? clientesMap.filter(c=>c.nombre.toLowerCase().includes(cliQ.toLowerCase())) : clientesMap
-  ,[clientesMap,cliQ])
+  const cliFiltered = useMemo(()=>{
+    let base = cliQ ? clientesMap.filter(c=>c.nombre.toLowerCase().includes(cliQ.toLowerCase())) : clientesMap
+    if(tipoFilter==="cliente")   base = base.filter(c=>c.ventas>0)
+    if(tipoFilter==="prospecto") base = base.filter(c=>c.ventas===0)
+    if(tipoFilter==="usuario")   base = base.filter(c=>c.formulario)
+    return base
+  },[clientesMap,cliQ,tipoFilter])
 
   /* ── Dashboard stats ── */
   const entregados    = allVentas.filter(v=>v.estado==="Entregado")
@@ -618,6 +623,11 @@ export function SeccionPanel() {
   const cotConvPct    = allCots.length?Math.round(cotsConv.length/allCots.length*100):0
   const pedEntPct     = allVentas.length?Math.round(entregados.length/allVentas.length*100):0
   const leadsWeb      = allLeads.filter(l=>l.canal==="Formulario").length
+  // Segmentación de contactos: cliente vs prospecto vs usuario web
+  const contactosTotal   = clientesDash.length
+  const clientesRealesCnt= clientesDash.filter(c=>c.ventas>0).length
+  const prospectosCnt    = clientesDash.filter(c=>c.ventas===0).length
+  const usuariosWebCnt   = clientesDash.filter(c=>c.formulario).length
 
   /* ── Leads analysis ── */
   const ALL_CANALES=["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]
@@ -734,7 +744,7 @@ export function SeccionPanel() {
         <KpiCard title="Cotizaciones" value={allCots.length} subBadge={`${cotConvPct}%`} subLabel="convertidas" color={T.amber} onClick={()=>goView("cotizaciones")}/>
         <KpiCard title="Pedidos" value={allVentas.length} subBadge={`${pedEntPct}%`} subLabel="entregados" color={T.sky} onClick={()=>goView("pedidos")}/>
         <KpiCard title="Ingresos MXN" value={$m(ingresos)} subBadge={$m(tick)} subLabel="ticket promedio" color={T.gold} onClick={()=>goView("pedidos")}/>
-        <KpiCard title="Clientes" value={clientesDash.length} subBadge={leadsWeb} subLabel="llegaron vía formulario" color={T.em} onClick={()=>goView("clientes")}/>
+        <KpiCard title="Contactos" value={contactosTotal} subBadge={`${clientesRealesCnt}`} subLabel={`son clientes · ${prospectosCnt} prospectos`} color={T.em} onClick={()=>goView("clientes")}/>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -806,7 +816,7 @@ export function SeccionPanel() {
           </button>
         </div>
         <SimpleTable
-          headers={["Cliente","Leads","Cotiz.","Ventas","Total MXN"]}
+          headers={["Contacto","Leads","Cotiz.","Pedidos","Total MXN"]}
           rows={clientesDash.slice(0,5).map(c=>[c.nombre,String(c.leads),String(c.cots),String(c.ventas),$m(c.total)])}
           colors={[null,null,null,null,()=>T.gold]}
           onRowClick={r=>selectCli(clientesDash.find(c=>c.nombre===r[0])?.docId??"",r[0])}
@@ -820,19 +830,27 @@ export function SeccionPanel() {
   if(view==="clientes") return shell(
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {[
-          {v:clientesMap.length,l:"Total clientes",c:T.sky},
-          {v:clientesMap.filter(c=>c.ventas>0).length,l:"Con pedido",c:T.em},
-          {v:clientesMap.filter(c=>c.cots>0&&c.ventas===0).length,l:"Solo cotización",c:T.amber},
-          {v:clientesMap.filter(c=>c.leads>0&&c.cots===0).length,l:"Solo lead",c:T.violet},
-          {v:$m(clientesMap.length?Math.round(clientesMap.reduce((s,c)=>s+c.total,0)/(clientesMap.filter(c=>c.total>0).length||1)):0),l:"Ticket prom.",c:T.gold},
-          {v:$m(clientesMap.reduce((s,c)=>s+c.total,0)),l:"Total facturado",c:T.gold},
-        ].map((k,i)=>(
-          <div key={i} className="rounded-xl p-4" style={{background:`${k.c}10`,border:`1px solid ${k.c}25`}}>
-            <div className="font-mono text-xl font-semibold leading-none mb-1.5" style={{color:k.c}}>{k.v}</div>
-            <div className="text-[11px] text-slate-400 leading-tight">{k.l}</div>
-          </div>
-        ))}
+        {(()=>{
+          const tiles:[string|number,string,string,string|null][]=[
+            [clientesMap.length,                                                              "Total contactos",        T.sky,    "todos"],
+            [clientesMap.filter(c=>c.ventas>0).length,                                        "Clientes (compraron)",   T.em,     "cliente"],
+            [clientesMap.filter(c=>c.ventas===0).length,                                      "Prospectos (sin compra)",T.amber,  "prospecto"],
+            [clientesMap.filter(c=>c.formulario).length,                                       "Usuarios web",           T.violet, "usuario"],
+            [$m(clientesMap.length?Math.round(clientesMap.reduce((s,c)=>s+c.total,0)/(clientesMap.filter(c=>c.total>0).length||1)):0),"Ticket prom.",T.gold,null],
+            [$m(clientesMap.reduce((s,c)=>s+c.total,0)),                                      "Total facturado",        T.gold,   null],
+          ]
+          return tiles.map(([v,l,c,t],i)=>{
+            const active = t && tipoFilter===t
+            return(
+              <div key={i} onClick={()=>t&&setTipoFilter(prev=>prev===t?"todos":t as typeof tipoFilter)}
+                className={`rounded-xl p-4 transition-all ${t?"cursor-pointer":""}`}
+                style={{background:active?`${c}22`:`${c}10`,border:`1px solid ${active?c:c+"30"}`}}>
+                <div className="font-mono text-xl font-semibold leading-none mb-1.5" style={{color:c}}>{v}</div>
+                <div className="text-[11px] leading-tight" style={{color:active?c:"#94a3b8"}}>{l}</div>
+              </div>
+            )
+          })
+        })()}
       </div>
 
       <Card>
@@ -848,17 +866,27 @@ export function SeccionPanel() {
 
       <Card className="flex items-center gap-3">
         <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 shrink-0">Buscar</span>
-        <input value={cliQ} onChange={e=>setCLiQ(e.target.value)} placeholder="nombre del cliente…"
+        <input value={cliQ} onChange={e=>setCLiQ(e.target.value)} placeholder="buscar contacto…"
           className="flex-1 bg-transparent border-0 border-b border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[12px] outline-none pb-1 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-violet-400 dark:focus:border-violet-500 transition-colors"/>
         {cliQ&&<button onClick={()=>setCLiQ("")} className="text-slate-500 hover:text-slate-300 text-sm bg-transparent border-none cursor-pointer">×</button>}
       </Card>
 
-      <p className="text-[11px] font-mono text-slate-500 px-1 -mt-2">{cliFiltered.length} clientes en vista</p>
+      <p className="text-[11px] font-mono text-slate-500 px-1 -mt-2">
+        {cliFiltered.length} contactos en vista
+        {tipoFilter!=="todos"&&<button onClick={()=>setTipoFilter("todos")} className="ml-2 px-1.5 py-0.5 rounded text-[10px] cursor-pointer opacity-60 hover:opacity-100 transition-opacity" style={{background:`${T.sky}18`,color:T.sky,border:`1px solid ${T.sky}33`}}>× limpiar filtro</button>}
+      </p>
 
       <SimpleTable
-        headers={["Cliente","Leads","Cotiz.","Pedidos","Total MXN","Última actividad"]}
-        rows={cliFiltered.map(c=>[c.nombre,String(c.leads),String(c.cots),String(c.ventas),$m(c.total),dd(c.ultima)])}
-        colors={[null,(r)=>+r[1]>0?T.violet:T.muted,(r)=>+r[2]>0?T.amber:T.muted,(r)=>+r[3]>0?T.em:T.muted,()=>T.gold,null]}
+        headers={["Contacto","Leads","Cotiz.","Pedidos","Total MXN","Tipo"]}
+        rows={cliFiltered.map(c=>[c.nombre,String(c.leads),String(c.cots),String(c.ventas),$m(c.total),c.ventas>0?(c.formulario?"Cliente web":"Cliente"):c.formulario?"Usuario web":c.cots>0?"Prospecto":"Solo lead"])}
+        colors={[
+          null,
+          (r)=>+r[1]>0?T.violet:T.muted,
+          (r)=>+r[2]>0?T.amber:T.muted,
+          (r)=>+r[3]>0?T.em:T.muted,
+          ()=>T.gold,
+          (r)=>r[5]==="Cliente"||r[5]==="Cliente web"?T.em:r[5]==="Usuario web"?T.violet:r[5]==="Prospecto"?T.amber:T.muted,
+        ]}
         onRowClick={r=>selectCli(cliFiltered.find(c=>c.nombre===r[0])?.docId??"",r[0])}
         highlightCol={0}
       />
