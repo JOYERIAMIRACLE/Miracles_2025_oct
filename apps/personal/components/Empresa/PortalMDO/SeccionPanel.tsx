@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import { SeccionHero, HeroTabs, useHeroImagen } from "./shared"
 import type { TabItem } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
@@ -486,6 +486,39 @@ export function SeccionPanel() {
     setMFilter(-1)
   }
 
+  function lastDayOfMonth(year: number, month: number) {
+    return new Date(year, month + 1, 0).getDate()
+  }
+
+  function clearMonthFilter() {
+    setMFilter(-1)
+    if (demo) { setDf("2026-01-01"); setDt("2026-09-30") }
+    else { const d = new Date(); setDf(`${d.getFullYear()}-01-01`); setDt(d.toISOString().slice(0,10)) }
+  }
+
+  function selectMonth(i: number) {
+    if (mFilter === i) { clearMonthFilter(); return }
+    const year = parseInt(df.slice(0, 4))
+    const mm   = String(i + 1).padStart(2, "0")
+    const last = String(lastDayOfMonth(year, i)).padStart(2, "0")
+    setDf(`${year}-${mm}-01`)
+    setDt(`${year}-${mm}-${last}`)
+    setMFilter(i)
+  }
+
+  // Sync mFilter when df/dt change manually (e.g. user types a date)
+  useEffect(() => {
+    if (!df || !dt) return
+    const d1 = new Date(df + "T12:00:00"), d2 = new Date(dt + "T12:00:00")
+    const y1 = d1.getFullYear(), m1 = d1.getMonth(), day1 = d1.getDate()
+    const y2 = d2.getFullYear(), m2 = d2.getMonth(), day2 = d2.getDate()
+    if (y1 === y2 && m1 === m2 && day1 === 1 && day2 === lastDayOfMonth(y2, m2)) {
+      setMFilter(m1)
+    } else {
+      setMFilter(-1)
+    }
+  }, [df, dt]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const inRange = (iso:string|null) => { if(!iso)return false; const d=iso.slice(0,10); return d>=df&&d<=dt }
   const inMonth = (iso:string|null) => mFilter<0 || MI[getMonth(iso??"")] === mFilter
 
@@ -677,7 +710,7 @@ export function SeccionPanel() {
             <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono shrink-0"
               style={{background:`${T.sky}15`,border:`1px solid ${T.sky}44`,color:T.sky}}>
               MES: {MESES[mFilter]}
-              <button onClick={()=>setMFilter(-1)} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5" style={{color:T.sky}}>×</button>
+              <button onClick={clearMonthFilter} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5" style={{color:T.sky}}>×</button>
             </span>
           </>
         )}
@@ -757,7 +790,7 @@ export function SeccionPanel() {
       <Card>
         <SecLabel>Ingresos mensuales vs meta</SecLabel>
         <ChartLabel>Verde = mes que superó la meta de $45,000 MXN</ChartLabel>
-        <SvgRevBars months={MESES} data={revMes} target={META_MES} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
+        <SvgRevBars months={MESES} data={revMes} target={META_MES} activeBar={mFilter} onBarClick={selectMonth}/>
       </Card>
 
       {/* Top clientes en dashboard */}
@@ -837,7 +870,7 @@ export function SeccionPanel() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
           <div>
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
-            <SvgStackedBars months={MESES} data={leadsStk} colors={[T.em,T.rose]} labels={["Entregados","Rechazados"]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
+            <SvgStackedBars months={MESES} data={leadsStk} colors={[T.em,T.rose]} labels={["Entregados","Rechazados"]} activeBar={mFilter} onBarClick={selectMonth}/>
             <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Entregado" val={fLeads.filter(l=>l.Funnel==="Entrega").length} active={lFunnel==="Entrega"} onClick={()=>setLFunnel(lFunnel==="Entrega"?"":"Entrega")}/>
               <LegendDot color={T.rose} label="Rechazada" val={fLeads.filter(l=>l.Funnel==="Rechazada").length} active={lFunnel==="Rechazada"} onClick={()=>setLFunnel(lFunnel==="Rechazada"?"":"Rechazada")}/>
@@ -901,7 +934,7 @@ export function SeccionPanel() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
           <div className="md:col-span-2">
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
-            <SvgStackedBars months={MESES} data={cotsStk} colors={[T.em,T.rose]} labels={["Convertidas","Rechazadas"]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
+            <SvgStackedBars months={MESES} data={cotsStk} colors={[T.em,T.rose]} labels={["Convertidas","Rechazadas"]} activeBar={mFilter} onBarClick={selectMonth}/>
             <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Convertida" val={fCots.filter(c=>c.estado==="Convertida").length} active={cEstado==="Convertida"} onClick={()=>setCEstado(cEstado==="Convertida"?"":"Convertida")}/>
               <LegendDot color={T.rose} label="Rechazada" val={fCots.filter(c=>c.estado==="Rechazada").length} active={cEstado==="Rechazada"} onClick={()=>setCEstado(cEstado==="Rechazada"?"":"Rechazada")}/>
@@ -944,7 +977,7 @@ export function SeccionPanel() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
           <div className="md:col-span-2">
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
-            <SvgStackedBars months={MESES} data={vStk} colors={[T.em,T.rose]} labels={["Entregados","Cancelados"]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
+            <SvgStackedBars months={MESES} data={vStk} colors={[T.em,T.rose]} labels={["Entregados","Cancelados"]} activeBar={mFilter} onBarClick={selectMonth}/>
             <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Entregado" val={fVentas.filter(v=>v.estado==="Entregado").length} active={vEstado==="Entregado"} onClick={()=>setVEstado(vEstado==="Entregado"?"":"Entregado")}/>
               <LegendDot color={T.rose} label="Cancelado" val={fVentas.filter(v=>v.estado==="Cancelado").length} active={vEstado==="Cancelado"} onClick={()=>setVEstado(vEstado==="Cancelado"?"":"Cancelado")}/>
