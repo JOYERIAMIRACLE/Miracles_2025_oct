@@ -151,7 +151,7 @@ const VISTA_TABS = [
   { id: "metricas",   label: "Métricas",   icon: BarChart2 },
 ]
 
-export function TareasView({ ambito, titulo, breadcrumb, vistaInicial }: { ambito: AmbitoTarea; titulo: string; breadcrumb?: string[]; vistaInicial?: Vista }) {
+export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea; titulo: string; breadcrumb?: string[] }) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const { user } = useCurrentUser()
@@ -167,7 +167,7 @@ export function TareasView({ ambito, titulo, breadcrumb, vistaInicial }: { ambit
   const { identidad, loading: identidadLoading, reload: reloadIdentidad } = useGetIdentidad()
   const documentIdIdentidad = identidad?.documentId ?? null
   const hero = useHeroImagen("portada_tareas", documentIdIdentidad, reloadIdentidad)
-  const [vista, setVista] = useState<Vista>(vistaInicial ?? "lista")
+  const [vista, setVista] = useState<Vista>("lista")
   const [filtro, setFiltro] = useState<EstadoTarea | "todas">("en_progreso")
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>("")
   const [filtroPrioridad, setFiltroPrioridad] = useState<PrioridadTarea | "">("")

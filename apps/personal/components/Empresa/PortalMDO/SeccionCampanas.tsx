@@ -13,7 +13,7 @@ const TABS = [
 ]
 
 export function SeccionCampanas() {
-  const [tab, setTab] = useState<TabCampanas>("mensual")
+  const [tab, setTab] = useState<TabCampanas>("semanal")
   const { identidad, loading, reload } = useGetIdentidad()
   const documentId = identidad?.documentId ?? null
   const hero = useHeroImagen("portada_campanas", documentId, reload)

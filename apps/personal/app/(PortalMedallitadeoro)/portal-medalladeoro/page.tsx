@@ -63,7 +63,7 @@ export default function PortalMedalladeoroPage() {
       case "portal":      return <SeccionPortalHome onNavigate={navigate} />
       case "conoce":       return <SeccionConoceMDO />
       case "mision":       return <SeccionMision />
-      case "tareas":       return <TareasView ambito="empresa" titulo="Tareas" breadcrumb={["Operación", "Tareas"]} vistaInicial="calendario" />
+      case "tareas":       return <TareasView ambito="empresa" titulo="Tareas" breadcrumb={["Operación", "Tareas"]} />
       case "campanas":     return <SeccionCampanas />
       case "contactos":    return <SeccionContactos />
       case "ventas":       return <SeccionVentas />
