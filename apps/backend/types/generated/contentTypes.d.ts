@@ -1154,6 +1154,7 @@ export interface ApiCotizacionCotizacion extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    atendidoPor: Schema.Attribute.String;
     cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1173,6 +1174,10 @@ export interface ApiCotizacionCotizacion extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     notas: Schema.Attribute.Text;
     numero: Schema.Attribute.String;
+    origenCotizacion: Schema.Attribute.Enumeration<
+      ['COT', 'WEB', 'CART', 'ANU', 'EML']
+    > &
+      Schema.Attribute.DefaultTo<'COT'>;
     precioEnvio: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
     publishedAt: Schema.Attribute.DateTime;
     total: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
@@ -1604,6 +1609,8 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     portada_depto_mision_original: Schema.Attribute.Media<'images'>;
     portada_depto_rh: Schema.Attribute.Media<'images'>;
     portada_depto_rh_original: Schema.Attribute.Media<'images'>;
+    portada_panel: Schema.Attribute.Media<'images'>;
+    portada_panel_original: Schema.Attribute.Media<'images'>;
     portada_principios: Schema.Attribute.Media<'images'>;
     portada_tareas: Schema.Attribute.Media<'images'>;
     portada_tareas_original: Schema.Attribute.Media<'images'>;
@@ -1722,6 +1729,20 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
   attributes: {
     calificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     campanaOrigen: Schema.Attribute.String;
+    canal: Schema.Attribute.Enumeration<
+      [
+        'WhatsApp',
+        'Tel\u00E9fono',
+        'Correo',
+        'Instagram',
+        'Facebook',
+        'Mostrador',
+        'Formulario',
+        'Vendedor',
+        'Web',
+        'Distribuidor',
+      ]
+    >;
     canalContacto: Schema.Attribute.String;
     cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
     createdAt: Schema.Attribute.DateTime;
@@ -1742,10 +1763,30 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     notas: Schema.Attribute.Text;
     numero: Schema.Attribute.String;
+    origen: Schema.Attribute.Enumeration<
+      [
+        'Prospecci\u00F3n',
+        'Mostrador',
+        'Referido',
+        'Formulario web',
+        'Carrito',
+        'Anuncio Meta',
+        'Anuncio Google',
+        'Campa\u00F1a email',
+      ]
+    >;
     origenApp: Schema.Attribute.Enumeration<['manual', 'tienda']> &
       Schema.Attribute.DefaultTo<'manual'>;
     origenContacto: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    referidorCliente: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::cliente.cliente'
+    >;
+    referidorNombre: Schema.Attribute.String;
+    referidorTipo: Schema.Attribute.Enumeration<
+      ['cliente', 'vendedor_externo']
+    >;
     segmento: Schema.Attribute.Enumeration<
       ['Pareja', 'Matrimonio', 'Familiar', 'Personalizado']
     >;
@@ -3266,6 +3307,40 @@ export interface ApiSnapshotMesSnapshotMes extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiSuscriptorSuscriptor extends Struct.CollectionTypeSchema {
+  collectionName: 'suscriptores';
+  info: {
+    displayName: 'Suscriptor Newsletter';
+    pluralName: 'suscriptores';
+    singularName: 'suscriptor';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    bienvenidaEnviada: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::suscriptor.suscriptor'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String;
+    origen: Schema.Attribute.Enumeration<['tienda', 'blog', 'manual']> &
+      Schema.Attribute.DefaultTo<'tienda'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiTareaTarea extends Struct.CollectionTypeSchema {
   collectionName: 'tareas';
   info: {
@@ -3523,6 +3598,7 @@ export interface ApiVentaVenta extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     cuenta: Schema.Attribute.Relation<'manyToOne', 'api::cuenta.cuenta'>;
+    direccionEnvio: Schema.Attribute.JSON;
     envios: Schema.Attribute.Relation<'oneToMany', 'api::envio.envio'>;
     estado: Schema.Attribute.Enumeration<
       ['Cotizado', 'Pagado', 'Preparando', 'Enviado', 'Entregado', 'Cancelado']
@@ -3552,6 +3628,39 @@ export interface ApiVentaVenta extends Struct.CollectionTypeSchema {
       'oneToOne',
       'api::transaccion.transaccion'
     >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiVisitaVisita extends Struct.CollectionTypeSchema {
+  collectionName: 'visitas';
+  info: {
+    displayName: 'Visita Web';
+    pluralName: 'visitas';
+    singularName: 'visita';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fecha: Schema.Attribute.Date;
+    fuente: Schema.Attribute.Enumeration<
+      ['directo', 'busqueda', 'social', 'referido', 'email', 'otro']
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::visita.visita'
+    > &
+      Schema.Attribute.Private;
+    pagina: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    sesion: Schema.Attribute.UID;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -4137,12 +4246,14 @@ declare module '@strapi/strapi' {
       'api::sku-opcion.sku-opcion': ApiSkuOpcionSkuOpcion;
       'api::snapshot-cuenta.snapshot-cuenta': ApiSnapshotCuentaSnapshotCuenta;
       'api::snapshot-mes.snapshot-mes': ApiSnapshotMesSnapshotMes;
+      'api::suscriptor.suscriptor': ApiSuscriptorSuscriptor;
       'api::tarea.tarea': ApiTareaTarea;
       'api::ticket.ticket': ApiTicketTicket;
       'api::transaccion.transaccion': ApiTransaccionTransaccion;
       'api::vehiculo.vehiculo': ApiVehiculoVehiculo;
       'api::venta-linea.venta-linea': ApiVentaLineaVentaLinea;
       'api::venta.venta': ApiVentaVenta;
+      'api::visita.visita': ApiVisitaVisita;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

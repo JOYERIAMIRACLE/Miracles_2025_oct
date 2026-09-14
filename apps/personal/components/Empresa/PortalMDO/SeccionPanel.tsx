@@ -193,8 +193,8 @@ function SvgStackedBars({ months, data, colors, labels, onBarClick, activeBar }:
   )
 }
 
-function SvgDonut({ segs, onSegmentClick }:{
-  segs:{l:string;v:number;c:string}[]; onSegmentClick?:(label:string)=>void
+function SvgDonut({ segs, onSegmentClick, active }:{
+  segs:{l:string;v:number;c:string}[]; onSegmentClick?:(label:string)=>void; active?:string
 }) {
   const ref=useRef<HTMLDivElement>(null)
   const {tip,show,move,hide}=useChartTip(ref)
@@ -218,16 +218,23 @@ function SvgDonut({ segs, onSegmentClick }:{
     <div ref={ref} style={{position:"relative",display:"inline-block"}}>
       <ChartTip t={tip}/>
       <svg viewBox="0 0 160 160" style={{width:150,maxWidth:"100%",flexShrink:0,display:"block"}}>
-        {slices.map((s,i)=>(
-          <path key={i} d={s.d} fill={s.c} opacity={0.82}
-            style={{cursor:onSegmentClick?"pointer":"default",transition:"opacity .15s"}}
-            onClick={()=>onSegmentClick?.(s.l)}
-            onMouseEnter={e=>{(e.currentTarget as SVGPathElement).style.opacity="1";show(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}}
-            onMouseMove={e=>move(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}
-            onMouseLeave={e=>{(e.currentTarget as SVGPathElement).style.opacity="0.82";hide()}}/>
-        ))}
+        {slices.map((s,i)=>{
+          const isAct=!active||active===s.l
+          const baseOp=isAct?0.88:0.2
+          return (
+            <path key={i} d={s.d} fill={s.c} opacity={baseOp}
+              style={{cursor:onSegmentClick?"pointer":"default",transition:"opacity .2s"}}
+              onClick={()=>onSegmentClick?.(s.l)}
+              onMouseEnter={e=>{(e.currentTarget as SVGPathElement).style.opacity="1";show(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}}
+              onMouseMove={e=>move(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}
+              onMouseLeave={e=>{(e.currentTarget as SVGPathElement).style.opacity=String(baseOp);hide()}}/>
+          )
+        })}
+        {active&&slices.map((s,i)=>s.l===active?(
+          <path key={`hl-${i}`} d={s.d} fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} style={{pointerEvents:"none"}}/>
+        ):null)}
         {slices.filter(s=>s.pct>=9).map((s,i)=>(
-          <text key={i} x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="middle" fill={T.text} fontFamily="monospace" fontSize={7.5}>{s.pct}%</text>
+          <text key={i} x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="middle" fill={T.text} fontFamily="monospace" fontSize={7.5} opacity={!active||active===s.l?1:0.4}>{s.pct}%</text>
         ))}
       </svg>
     </div>
@@ -326,11 +333,11 @@ function SecLabel({children}:{children:string}){
     </div>
   )
 }
-function LegendDot({color,label,val,active,onClick}:{color:string;label:string;val:number;active?:boolean;onClick?:()=>void}){
+function LegendDot({color,label,val,active,dimmed,onClick}:{color:string;label:string;val:number;active?:boolean;dimmed?:boolean;onClick?:()=>void}){
   const empty=val===0
   return (
-    <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1 ring-inset":"hover:bg-slate-100 dark:hover:bg-slate-800/40"}`}
-      style={{opacity:empty?0.45:1}}>
+    <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1 ring-inset ring-violet-400/50":"hover:bg-slate-100 dark:hover:bg-slate-800/40"}`}
+      style={{opacity:dimmed?0.28:empty?0.45:1,transition:"opacity .2s"}}>
       <span className="w-2 h-2 rounded-full shrink-0" style={{background:color,opacity:empty?0.5:1}}/>
       <span className="text-[11px] flex-1 text-slate-500 dark:text-slate-400" style={{color:active?color:undefined,fontWeight:active?600:400}}>{label}</span>
       <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300" style={{color:empty?"#94a3b8":undefined}}>{val}</span>
@@ -641,7 +648,8 @@ export function SeccionPanel() {
   const ALL_CANALES=["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]
   const leadsStk:[number,number][]=Array(12).fill(null).map(()=>[0,0])
   fLeads.forEach(l=>{const m=MI[getMonth(l.fechaLead??l.createdAt)];if(m!==undefined){if(l.Funnel==="Entrega")leadsStk[m][0]++;else if(l.Funnel==="Rechazada")leadsStk[m][1]++}})
-  const canalCounts=fLeads.reduce((a,l)=>{const k=l.canal??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)
+  const _canalBase=allLeads.filter(l=>(!lFunnel||l.Funnel===lFunnel)&&inMonth(l.fechaLead??l.createdAt))
+  const canalCounts=_canalBase.reduce((a,l)=>{const k=l.canal??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)
   const canalSegs=ALL_CANALES.map(l=>({l,v:canalCounts[l]||0,c:CANAL_COLOR[l]||T.muted})).sort((a,b)=>b.v-a.v)
   const origenSegs=Object.entries(fLeads.reduce((a,l)=>{const k=l.origen??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([l,v])=>({l,v,c:T.sky}))
   const pctCot=fLeads.length?Math.round(fLeads.filter(l=>allCots.some(c=>c.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
@@ -651,14 +659,16 @@ export function SeccionPanel() {
   const ORIGEN_LABEL:Record<string,string>={COT:"Mostrador",WEB:"Formulario web",CART:"Carrito",ANU:"Anuncio",EML:"Email"}
   const cotsStk:[number,number][]=Array(12).fill(null).map(()=>[0,0])
   fCots.forEach(c=>{const m=MI[getMonth(c.fecha??c.createdAt)];if(m!==undefined){if(c.estado==="Convertida")cotsStk[m][0]++;else if(c.estado==="Rechazada")cotsStk[m][1]++}})
-  const cotEstadoSegs=(["Convertida","Enviada","Aceptada","Borrador","Rechazada"] as const).map(e=>({l:e,v:fCots.filter(c=>c.estado===e).length,c:e==="Convertida"?T.em:e==="Rechazada"?T.rose:e==="Aceptada"?T.violet:e==="Enviada"?T.sky:T.muted}))
+  const _cotBase=allCots.filter(c=>(!cOrigen||c.origenCotizacion===cOrigen)&&(!cTipo||(cTipo==="web"?(c.origenCotizacion==="CART"||c.origenCotizacion==="WEB"):(c.origenCotizacion!=="CART"&&c.origenCotizacion!=="WEB")))&&inMonth(c.fecha??c.createdAt))
+  const cotEstadoSegs=(["Convertida","Enviada","Aceptada","Borrador","Rechazada"] as const).map(e=>({l:e,v:_cotBase.filter(c=>c.estado===e).length,c:e==="Convertida"?T.em:e==="Rechazada"?T.rose:e==="Aceptada"?T.violet:e==="Enviada"?T.sky:T.muted}))
   const cotOrigenCounts=fCots.reduce((a,c)=>{const k=c.origenCotizacion??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)
   const cotOrigenSegs=(["COT","WEB","CART","ANU","EML"] as const).map(k=>({l:ORIGEN_LABEL[k],v:cotOrigenCounts[k]||0,c:CANAL_COLOR[k]||T.sky})).sort((a,b)=>b.v-a.v)
 
   /* ── Ventas analysis ── */
   const vStk:[number,number][]=Array(12).fill(null).map(()=>[0,0])
   fVentas.forEach(v=>{const m=MI[getMonth(v.fecha??v.createdAt)];if(m!==undefined){if(v.estado==="Entregado")vStk[m][0]++;else if(v.estado==="Cancelado")vStk[m][1]++}})
-  const ventaEstadoSegs=(["Entregado","Enviado","Preparando","Pagado","Cotizado","Cancelado"] as const).map(e=>({l:e,v:fVentas.filter(v=>v.estado===e).length,c:e==="Entregado"?T.em:e==="Cancelado"?T.rose:e==="Enviado"?T.sky:e==="Preparando"?T.amber:e==="Pagado"?T.violet:T.muted}))
+  const _ventaBase=allVentas.filter(v=>(!vCanal||v.centro_venta?.nombre===vCanal)&&inMonth(v.fecha??v.createdAt))
+  const ventaEstadoSegs=(["Entregado","Enviado","Preparando","Pagado","Cotizado","Cancelado"] as const).map(e=>({l:e,v:_ventaBase.filter(v=>v.estado===e).length,c:e==="Entregado"?T.em:e==="Cancelado"?T.rose:e==="Enviado"?T.sky:e==="Preparando"?T.amber:e==="Pagado"?T.violet:T.muted}))
   const allCanalesVenta=[...new Set(rawVentas.map(v=>v.centro_venta?.nombre).filter(Boolean) as string[])]
   const ventaCanalCounts=fVentas.reduce((a,v)=>{const k=v.centro_venta?.nombre??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)
   const ventaCanalSegs=allCanalesVenta.map(l=>({l,v:ventaCanalCounts[l]||0,c:T.sky})).sort((a,b)=>b.v-a.v)
@@ -921,8 +931,8 @@ export function SeccionPanel() {
           <div>
             <ChartLabel>Por canal · clic para filtrar</ChartLabel>
             <div className="flex items-center gap-3">
-              <SvgDonut segs={canalSegs} onSegmentClick={v=>setLCanal(lCanal===v?"":v)}/>
-              <div className="flex-1">{canalSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={lCanal===s.l} onClick={()=>setLCanal(lCanal===s.l?"":s.l)}/>)}</div>
+              <SvgDonut segs={canalSegs} active={lCanal||undefined} onSegmentClick={v=>setLCanal(lCanal===v?"":v)}/>
+              <div className="flex-1">{canalSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={lCanal===s.l} dimmed={!!lCanal&&lCanal!==s.l} onClick={()=>setLCanal(lCanal===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
         </div>
@@ -985,8 +995,8 @@ export function SeccionPanel() {
           <div>
             <ChartLabel>Por estado · clic para filtrar</ChartLabel>
             <div className="flex items-start gap-2 flex-wrap">
-              <SvgDonut segs={cotEstadoSegs} onSegmentClick={v=>setCEstado(cEstado===v?"":v)}/>
-              <div className="flex-1 min-w-20 pt-1">{cotEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={cEstado===s.l} onClick={()=>setCEstado(cEstado===s.l?"":s.l)}/>)}</div>
+              <SvgDonut segs={cotEstadoSegs} active={cEstado||undefined} onSegmentClick={v=>setCEstado(cEstado===v?"":v)}/>
+              <div className="flex-1 min-w-20 pt-1">{cotEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={cEstado===s.l} dimmed={!!cEstado&&cEstado!==s.l} onClick={()=>setCEstado(cEstado===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
         </div>
@@ -1028,8 +1038,8 @@ export function SeccionPanel() {
           <div>
             <ChartLabel>Por estado · clic para filtrar</ChartLabel>
             <div className="flex items-start gap-2 flex-wrap">
-              <SvgDonut segs={ventaEstadoSegs} onSegmentClick={v=>setVEstado(vEstado===v?"":v)}/>
-              <div className="flex-1 min-w-20 pt-1">{ventaEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={vEstado===s.l} onClick={()=>setVEstado(vEstado===s.l?"":s.l)}/>)}</div>
+              <SvgDonut segs={ventaEstadoSegs} active={vEstado||undefined} onSegmentClick={v=>setVEstado(vEstado===v?"":v)}/>
+              <div className="flex-1 min-w-20 pt-1">{ventaEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={vEstado===s.l} dimmed={!!vEstado&&vEstado!==s.l} onClick={()=>setVEstado(vEstado===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
         </div>
