@@ -7,6 +7,7 @@ import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { useGetLeads } from "@/api/lead/getLead"
 import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
+import { useVisitasRango } from "@/api/visitas/visitas"
 import type { Lead, CanalLead, OrigenLead } from "@/types/lead"
 import type { Cotizacion, EstadoCotizacion, OrigenCotizacion } from "@/types/cotizacion"
 import type { VentaEmpresa, EstadoVenta } from "@/types/ventaEmpresa"
@@ -470,6 +471,13 @@ export function SeccionPanel() {
   const [tipoFilter,setTipoFilter] = useState<"todos"|"cliente"|"prospecto"|"usuario">("todos")
   const [mFilter,setMFilter] = useState(-1)   // índice 0-11, -1 = todos los meses
 
+  // Visitas web anónimas (sesiones únicas del sitio público)
+  const { total: visitasReales } = useVisitasRango(demo?"":df, demo?"":dt)
+  // En demo: ~15 visitantes por cada lead (tasa conv. formulario ~6-7%)
+  const visitasWeb = demo
+    ? rawLeads.filter(l=>l.canal==="Formulario").length * 15
+    : (visitasReales ?? 0)
+
   // Leads filters
   const [lCanal,setLCanal]   = useState("")
   const [lFunnel,setLFunnel] = useState("")
@@ -751,27 +759,30 @@ export function SeccionPanel() {
         <Card>
           <SecLabel>Embudo · Web</SecLabel>
           {(()=>{
+            const leadsForm=allLeads.filter(l=>l.canal==="Formulario").length
             const steps=[
-              {l:"Formulario",n:allLeads.filter(l=>l.canal==="Formulario").length,c:T.violet,go:()=>goView("leads",{lCanal:"Formulario"})},
-              {l:"Cot. web",n:allCots.filter(c=>c.origenCotizacion==="WEB"||c.origenCotizacion==="CART").length,c:T.amber,go:()=>goView("cotizaciones",{cTipo:"web"})},
-              {l:"Pedidos",n:allVentas.length,c:T.sky,go:()=>goView("pedidos")},
-              {l:"Entregado",n:entregados.length,c:T.em,go:()=>goView("pedidos",{vEstado:"Entregado"})},
+              {l:"Visitantes",n:visitasWeb,  c:T.muted, go:()=>{}, tip:"Sesiones anónimas en el sitio web"},
+              {l:"Formulario", n:leadsForm,   c:T.violet,go:()=>goView("leads",{lCanal:"Formulario"}), tip:"Enviaron el formulario de contacto"},
+              {l:"Cot. web",   n:allCots.filter(c=>c.origenCotizacion==="WEB"||c.origenCotizacion==="CART").length,c:T.amber,go:()=>goView("cotizaciones",{cTipo:"web"}),tip:"Recibieron cotización web"},
+              {l:"Pedidos",    n:allVentas.length,c:T.sky,  go:()=>goView("pedidos"), tip:"Realizaron un pedido"},
+              {l:"Entregado",  n:entregados.length,c:T.em,  go:()=>goView("pedidos",{vEstado:"Entregado"}),tip:"Pedido entregado"},
             ]
             const peak=Math.max(...steps.map(s=>s.n),1)
             const base=steps[0].n||1
             return(
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid gap-2" style={{gridTemplateColumns:`repeat(${steps.length},1fr)`}}>
                 {steps.map((f,i)=>{
                   const barPct=Math.round(f.n/peak*100)
                   const convPct=i===0?100:Math.round(f.n/base*100)
+                  const isAnon=i===0
                   return(
-                    <div key={i} onClick={f.go} className="flex flex-col items-center gap-1.5 cursor-pointer group">
+                    <div key={i} onClick={f.go} className={`flex flex-col items-center gap-1.5 ${isAnon?"cursor-default":"cursor-pointer"} group`} title={f.tip}>
                       <div className="w-full rounded-t-md overflow-hidden" style={{height:60,background:"#0f1a2e",borderBottom:`2px solid ${f.c}55`,display:"flex",alignItems:"flex-end"}}>
-                        <div className="w-full transition-all duration-300 rounded-t-sm" style={{height:`${barPct}%`,background:`${f.c}30`}}/>
+                        <div className="w-full transition-all duration-300 rounded-t-sm" style={{height:`${barPct}%`,background:isAnon?`${f.c}18`:`${f.c}30`}}/>
                       </div>
                       <div className="font-mono text-base font-semibold" style={{color:f.c}}>{f.n}</div>
-                      <div className="text-[9px] font-mono" style={{color:i===0?"#64748b":convPct>=100?T.em:convPct>=50?T.amber:T.rose}}>{convPct}%</div>
-                      <div className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 text-center leading-tight">{f.l}</div>
+                      <div className="text-[9px] font-mono" style={{color:isAnon?"#64748b":convPct>=100?T.em:convPct>=50?T.amber:T.rose}}>{isAnon?"—":convPct+"%"}</div>
+                      <div className="text-[10px] font-medium uppercase tracking-wider text-center leading-tight" style={{color:isAnon?"#4a5a7a":T.muted}}>{f.l}</div>
                     </div>
                   )
                 })}

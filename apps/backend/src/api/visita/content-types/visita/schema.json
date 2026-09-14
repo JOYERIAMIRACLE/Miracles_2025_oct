@@ -1,0 +1,17 @@
+{
+  "kind": "collectionType",
+  "collectionName": "visitas",
+  "info": {
+    "singularName": "visita",
+    "pluralName": "visitas",
+    "displayName": "Visita Web"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "fecha":   { "type": "date" },
+    "pagina":  { "type": "string" },
+    "sesion":  { "type": "uid" },
+    "fuente":  { "type": "enumeration", "enum": ["directo","busqueda","social","referido","email","otro"] }
+  }
+}
