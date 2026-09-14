@@ -34,14 +34,16 @@ export async function saveIdentidad(
 ): Promise<IdentidadEmpresa> {
   const url    = documentId ? `${BASE}/api/identidad-empresas/${documentId}` : `${BASE}/api/identidad-empresas`
   const method = documentId ? "PUT" : "POST"
+  console.log("[saveIdentidad]", method, url, payload)
   const res    = await fetch(url, {
     method,
     headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ data: payload }),
   })
+  const json = await res.json()
+  console.log("[saveIdentidad] response", res.status, json)
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err?.error?.message ?? "Error al guardar identidad")
+    throw new Error(json?.error?.message ?? `HTTP ${res.status}`)
   }
-  return (await res.json()).data
+  return json.data
 }
