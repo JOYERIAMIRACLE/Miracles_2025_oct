@@ -254,14 +254,17 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const [nombreProcesoRenombrado, setNombreProcesoRenombrado] = useState("")
 
   // Etiquetas/responsables/áreas usados — se derivan de las tareas ya
-  // existentes (no hay un catálogo genérico separado en este proyecto), así
-  // que cualquier valor nuevo queda disponible para autocompletar en cuanto
-  // se usa una vez.
+  // existentes, más los procesos ya dados de alta en el catálogo (ver
+  // useGetProcesosTarea) aunque ninguna tarea los use todavía. Antes esto
+  // último faltaba aquí — el filtro "Proceso" y el desplegable de la lista
+  // agrupada (seccionesPorProceso, más abajo) sacaban sus procesos de dos
+  // fuentes distintas y podían mostrar conjuntos distintos entre sí.
   const etiquetasUsadas = useMemo(() => {
     const set = new Set<string>()
     tareas.forEach(t => { if (t.etiqueta) set.add(t.etiqueta) })
+    procesos.forEach(p => set.add(p.nombre))
     return [...set].sort()
-  }, [tareas])
+  }, [tareas, procesos])
 
   // El catálogo se deriva de las tareas ya usadas — si es la primera vez que
   // el usuario en sesión aparece como responsable (ver default de abajo), su
@@ -376,10 +379,14 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
       if (!porEtiqueta.has(key)) porEtiqueta.set(key, [])
       porEtiqueta.get(key)!.push(t)
     })
-    // Todo proceso ya dado de alta (ver useGetProcesosTarea) aparece siempre,
-    // aunque el filtro actual lo deje sin ninguna tarea — antes el grupo
-    // completo desaparecía en vez de mostrarse vacío.
-    procesos.forEach(p => { if (!porEtiqueta.has(p.nombre)) porEtiqueta.set(p.nombre, []) })
+    // Todo proceso conocido (dado de alta en el catálogo, o usado por
+    // cualquier tarea aunque no sea de las que sobrevivieron al filtro
+    // actual — ver etiquetasUsadas) aparece siempre, aunque quede sin
+    // ninguna tarea visible; antes el grupo completo desaparecía en vez de
+    // mostrarse vacío, y además usaba una lista de procesos más corta que
+    // la del filtro "Proceso", así que un proceso podía verse en uno y no
+    // en el otro.
+    etiquetasUsadas.forEach(nombre => { if (!porEtiqueta.has(nombre)) porEtiqueta.set(nombre, []) })
     // Orden: los procesos ya reordenados a mano (ver handleReordenarProcesos)
     // van primero, respetando su "orden" guardado; cualquier etiqueta nueva
     // que todavía no se ha arrastrado nunca cae alfabética al final, y "Sin
@@ -413,7 +420,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     }
 
     return claves.map(key => ({ proceso: key, grupos: construirGrupos(porEtiqueta.get(key)!) }))
-  }, [filtradas, agruparPorProyecto, procesos])
+  }, [filtradas, agruparPorProyecto, procesos, etiquetasUsadas])
 
   const stats = {
     total:       tareas.length,
