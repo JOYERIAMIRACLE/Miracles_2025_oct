@@ -245,24 +245,24 @@ function SvgRevBars({ data, target, months }:{
 
 /* ─── UI primitives ────────────────────────────────────────────────── */
 function ChartLabel({children}:{children:string}){
-  return <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-3">{children}</p>
+  return <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">{children}</p>
 }
 function SecLabel({children}:{children:string}){
   return (
-    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-800">
-      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,letterSpacing:".18em",textTransform:"uppercase",color:T.gold,fontWeight:700}}>{children}</span>
-      <div className="flex-1 h-px" style={{background:`linear-gradient(90deg,${T.gold}33,transparent)`}}/>
+    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">{children}</span>
+      <div className="flex-1 h-px bg-gradient-to-r from-violet-500/20 to-transparent"/>
     </div>
   )
 }
 function LegendDot({color,label,val,active,onClick}:{color:string;label:string;val:number;active?:boolean;onClick?:()=>void}){
   const empty=val===0
   return (
-    <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1":"hover:bg-slate-800/40"}`}
-      style={{opacity:empty?0.45:1,ringColor:color+"55"}}>
+    <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1 ring-inset":"hover:bg-slate-100 dark:hover:bg-slate-800/40"}`}
+      style={{opacity:empty?0.45:1}}>
       <span className="w-2 h-2 rounded-full shrink-0" style={{background:color,opacity:empty?0.5:1}}/>
-      <span className="text-[11px] flex-1" style={{color:active?color:"#94a3b8",fontWeight:active?600:400}}>{label}</span>
-      <span className="font-mono text-[11px]" style={{color:empty?"#4a5a7a":T.text}}>{val}</span>
+      <span className="text-[11px] flex-1 text-slate-500 dark:text-slate-400" style={{color:active?color:undefined,fontWeight:active?600:400}}>{label}</span>
+      <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300" style={{color:empty?"#94a3b8":undefined}}>{val}</span>
     </div>
   )
 }
@@ -270,35 +270,30 @@ function MetricTile({val,label,color,onClick}:{val:string|number;label:string;co
   const c = color||T.violet
   return (
     <div onClick={onClick} className={`rounded-xl p-4 text-center transition-all ${onClick?"cursor-pointer hover:scale-[1.02]":""}`}
-      style={{background:`${c}12`,border:`1px solid ${c}30`}}>
+      style={{background:`${c}12`,border:`1px solid ${c}28`}}>
       <div className="font-mono text-xl font-semibold leading-none" style={{color:c}}>{val}</div>
-      <div className="text-[10px] mt-1.5 text-slate-400">{label}</div>
+      <div className="text-[10px] mt-1.5 text-slate-500 dark:text-slate-400">{label}</div>
     </div>
   )
 }
 function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>void}){
   return (
-    <button onClick={onClick} className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${active?"ring-1":"border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-300"}`}
-      style={active?{background:`${T.gold}20`,color:T.gold,border:`1px solid ${T.gold}55`,boxShadow:`0 0 8px ${T.gold}15`}:{}}>
-      {label}
-    </button>
-  )
-}
-function NavTab({active,label,onClick}:{active:boolean;label:string;onClick:()=>void}){
-  return (
-    <button onClick={onClick} className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap rounded-lg transition-all ${active?"":"text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"}`}
-      style={active?{background:`${T.gold}18`,color:T.gold,boxShadow:`inset 0 -2px 0 ${T.gold}`}:{}}>
+    <button onClick={onClick} className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+      active
+        ? "bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/30 dark:border-violet-500/25"
+        : "border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+    }`}>
       {label}
     </button>
   )
 }
 function Card({children,className=""}:{children:React.ReactNode;className?:string}){
-  return <div className={`bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4 ${className}`}>{children}</div>
+  return <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 ${className}`}>{children}</div>
 }
 function FilterRow({label,options,active,onToggle}:{label:string;options:string[];active:string;onToggle:(v:string)=>void}){
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 shrink-0 min-w-[52px]">{label}</span>
+      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 shrink-0 min-w-13">{label}</span>
       {options.map(v=><Chip key={v} active={active===v} label={v} onClick={()=>onToggle(v)}/>)}
     </div>
   )
@@ -312,12 +307,12 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol }:{
   highlightCol?:number
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-800 mt-1">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 mt-1">
       <table className="w-full border-collapse text-[12px]">
         <thead>
-          <tr className="border-b border-slate-800 bg-slate-950/60">
+          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
             {headers.map(h=>(
-              <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 whitespace-nowrap">
+              <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 whitespace-nowrap">
                 {h}
               </th>
             ))}
@@ -326,12 +321,12 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol }:{
         <tbody>
           {rows.length===0?(
             <tr>
-              <td colSpan={headers.length} className="px-4 py-8 text-center text-slate-500 italic text-[12px]">
+              <td colSpan={headers.length} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500 italic text-[12px]">
                 Sin resultados.
               </td>
             </tr>
           ):rows.map((r,i)=>(
-            <tr key={i} className={`border-b border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-800/40":""}`}
+            <tr key={i} className={`border-b border-slate-100 dark:border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40":""}`}
               onClick={()=>onRowClick?.(r,i)}>
               {r.map((cell,j)=>{
                 const fn=colors[j]
@@ -339,10 +334,10 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol }:{
                 return (
                   <td key={j} className="px-4 py-2.5 align-middle">
                     <span style={{
-                      fontFamily:j===4||j===0?"'JetBrains Mono',monospace":undefined,
+                      fontFamily:j===4||j===0?"var(--font-geist-mono),monospace":undefined,
                       fontSize:j===0?10:j===4?12:undefined,
                       fontWeight:j===4?600:undefined,
-                      color:color??(j===highlightCol?T.gold:j===0||j===1?"#64748b":"#e2e8f0"),
+                      color:color??(j===highlightCol?T.gold:undefined),
                       textDecoration:j===highlightCol&&onRowClick?"underline":undefined,
                     }}>{cell}</span>
                   </td>
@@ -548,7 +543,7 @@ export function SeccionPanel() {
   ]
 
   const shell=(content:React.ReactNode)=>(
-    <div className="space-y-4" style={{fontFamily:"'DM Sans',system-ui,sans-serif",fontSize:13,color:T.text,lineHeight:1.55}}>
+    <div className="space-y-4 text-slate-900 dark:text-slate-100">
       <SeccionHero
         breadcrumb={["Empresa", "Panel de control"]}
         titulo="Actividad comercial"
@@ -641,7 +636,7 @@ export function SeccionPanel() {
                       </div>
                       <div className="font-mono text-base font-semibold" style={{color:f.c}}>{f.n}</div>
                       <div className="text-[9px] font-mono" style={{color:i===0?"#64748b":convPct>=100?T.em:convPct>=50?T.amber:T.rose}}>{convPct}%</div>
-                      <div className="text-[10px] text-slate-500 text-center leading-tight" style={{fontFamily:"'Cormorant Garamond',serif",letterSpacing:".06em",textTransform:"uppercase"}}>{f.l}</div>
+                      <div className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 text-center leading-tight">{f.l}</div>
                     </div>
                   )
                 })}
@@ -722,8 +717,7 @@ export function SeccionPanel() {
       <Card className="flex items-center gap-3">
         <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 shrink-0">Buscar</span>
         <input value={cliQ} onChange={e=>setCLiQ(e.target.value)} placeholder="nombre del cliente…"
-          className="flex-1 bg-transparent border-none border-b border-slate-700 text-slate-200 font-mono text-[12px] outline-none pb-1 placeholder:text-slate-600 focus:border-slate-500 transition-colors"
-          style={{borderBottom:"1px solid #334155"}}/>
+          className="flex-1 bg-transparent border-0 border-b border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[12px] outline-none pb-1 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-violet-400 dark:focus:border-violet-500 transition-colors"/>
         {cliQ&&<button onClick={()=>setCLiQ("")} className="text-slate-500 hover:text-slate-300 text-sm bg-transparent border-none cursor-pointer">×</button>}
       </Card>
 
