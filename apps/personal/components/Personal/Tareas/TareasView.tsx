@@ -267,6 +267,19 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     const nombres = new Set(procesos.map(p => p.nombre))
     procesosCreadosRef.current.forEach((_, nombre) => { if (nombres.has(nombre)) procesosCreadosRef.current.delete(nombre) })
   }, [procesos])
+  // Red de seguridad: si por lo que sea (otro overlay tapando el elemento a
+  // medio arrastre, foco perdido de la ventana, etc.) el navegador nunca
+  // llega a disparar "dragend" sobre el asa, la fila se queda con la
+  // opacidad de "being dragged" para siempre, sin forma de soltarla salvo
+  // recargando la página. Soltar el botón del mouse en CUALQUIER parte de
+  // la ventana significa, por definición, que ya no hay ningún arrastre
+  // legítimo en curso — así que ahí mismo se limpia el estado, pase lo que
+  // pase con los eventos nativos de drag.
+  useEffect(() => {
+    function limpiarDragProceso() { setDragProceso(null); setDragOverProceso(null) }
+    window.addEventListener("mouseup", limpiarDragProceso)
+    return () => window.removeEventListener("mouseup", limpiarDragProceso)
+  }, [])
 
   // Etiquetas/responsables/áreas usados — se derivan de las tareas ya
   // existentes, más los procesos ya dados de alta en el catálogo (ver
