@@ -242,23 +242,65 @@ function SvgRevBars({ data, target, months }:{
 }
 
 /* ─── UI primitives ────────────────────────────────────────────────── */
-function ChartLabel({children}:{children:string}){return<div style={{fontFamily:"monospace",fontSize:9,letterSpacing:".08em",textTransform:"uppercase",color:T.muted,marginBottom:8}}>{children}</div>}
-function SecLabel({children}:{children:string}){return<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:".16em",textTransform:"uppercase",color:T.gold,fontWeight:600,marginBottom:14,paddingBottom:8,borderBottom:`1px solid ${T.border}`}}>{children}</div>}
+function ChartLabel({children}:{children:string}){
+  return <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-3">{children}</p>
+}
+function SecLabel({children}:{children:string}){
+  return (
+    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-800">
+      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,letterSpacing:".18em",textTransform:"uppercase",color:T.gold,fontWeight:700}}>{children}</span>
+      <div className="flex-1 h-px" style={{background:`linear-gradient(90deg,${T.gold}33,transparent)`}}/>
+    </div>
+  )
+}
 function LegendDot({color,label,val,active,onClick}:{color:string;label:string;val:number;active?:boolean;onClick?:()=>void}){
   const empty=val===0
-  return<div onClick={onClick} style={{display:"flex",alignItems:"center",gap:5,marginBottom:3,cursor:onClick?"pointer":undefined,opacity:empty?0.45:1,borderBottom:active?`1px solid ${color}55`:"1px solid transparent",paddingBottom:1}}>
-    <span style={{width:8,height:8,borderRadius:"50%",background:color,flexShrink:0,opacity:empty?0.5:1}}/>
-    <span style={{fontSize:10,color:active?color:T.muted,flex:1,fontWeight:active?600:400}}>{label}</span>
-    <span style={{fontFamily:"monospace",fontSize:10,color:empty?T.muted:T.text}}>{val}</span>
-  </div>
+  return (
+    <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1":"hover:bg-slate-800/40"}`}
+      style={{opacity:empty?0.45:1,ringColor:color+"55"}}>
+      <span className="w-2 h-2 rounded-full shrink-0" style={{background:color,opacity:empty?0.5:1}}/>
+      <span className="text-[11px] flex-1" style={{color:active?color:"#94a3b8",fontWeight:active?600:400}}>{label}</span>
+      <span className="font-mono text-[11px]" style={{color:empty?"#4a5a7a":T.text}}>{val}</span>
+    </div>
+  )
 }
 function MetricTile({val,label,color,onClick}:{val:string|number;label:string;color?:string;onClick?:()=>void}){
-  return<div onClick={onClick} style={{background:T.surf2,border:`1px solid ${T.border}`,padding:"10px 14px",textAlign:"center",cursor:onClick?"pointer":undefined}}><div style={{fontFamily:"monospace",fontSize:20,fontWeight:500,color:color||T.text}}>{val}</div><div style={{fontSize:10,color:T.muted,marginTop:2}}>{label}</div></div>
+  const c = color||T.violet
+  return (
+    <div onClick={onClick} className={`rounded-xl p-4 text-center transition-all ${onClick?"cursor-pointer hover:scale-[1.02]":""}`}
+      style={{background:`${c}12`,border:`1px solid ${c}30`}}>
+      <div className="font-mono text-xl font-semibold leading-none" style={{color:c}}>{val}</div>
+      <div className="text-[10px] mt-1.5 text-slate-400">{label}</div>
+    </div>
+  )
 }
-function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>void}){return<button onClick={onClick} style={{fontFamily:"monospace",fontSize:10,letterSpacing:".06em",padding:"3px 10px",borderRadius:1,cursor:"pointer",outline:"none",border:`1px solid ${active?T.gold:T.border2}`,background:active?T.gold+"22":"transparent",color:active?T.gold:T.muted,transition:"all .15s"}}>{label}</button>}
-function NavTab({active,label,onClick}:{active:boolean;label:string;onClick:()=>void}){return<button onClick={onClick} style={{fontFamily:"monospace",fontSize:10,letterSpacing:".08em",textTransform:"uppercase",padding:"9px 15px",border:"none",cursor:"pointer",whiteSpace:"nowrap",outline:"none",background:active?T.surface:"transparent",color:active?T.gold:T.muted,borderBottom:`2px solid ${active?T.gold:"transparent"}`,marginBottom:-1,transition:"color .15s"}}>{label}</button>}
-function Card({children,style}:{children:React.ReactNode;style?:React.CSSProperties}){return<div style={{background:T.surface,border:`1px solid ${T.border}`,padding:18,marginBottom:20,...style}}>{children}</div>}
-function FilterRow({label,options,active,onToggle}:{label:string;options:string[];active:string;onToggle:(v:string)=>void}){return<div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:6,marginBottom:8}}><span style={{fontSize:10,color:T.muted,letterSpacing:".06em",fontFamily:"monospace",whiteSpace:"nowrap"}}>{label}</span>{options.map(v=><Chip key={v} active={active===v} label={v} onClick={()=>onToggle(v)}/>)}</div>}
+function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>void}){
+  return (
+    <button onClick={onClick} className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${active?"ring-1":"border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-300"}`}
+      style={active?{background:`${T.gold}20`,color:T.gold,border:`1px solid ${T.gold}55`,boxShadow:`0 0 8px ${T.gold}15`}:{}}>
+      {label}
+    </button>
+  )
+}
+function NavTab({active,label,onClick}:{active:boolean;label:string;onClick:()=>void}){
+  return (
+    <button onClick={onClick} className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap rounded-lg transition-all ${active?"":"text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"}`}
+      style={active?{background:`${T.gold}18`,color:T.gold,boxShadow:`inset 0 -2px 0 ${T.gold}`}:{}}>
+      {label}
+    </button>
+  )
+}
+function Card({children,className=""}:{children:React.ReactNode;className?:string}){
+  return <div className={`bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4 ${className}`}>{children}</div>
+}
+function FilterRow({label,options,active,onToggle}:{label:string;options:string[];active:string;onToggle:(v:string)=>void}){
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 shrink-0 min-w-[52px]">{label}</span>
+      {options.map(v=><Chip key={v} active={active===v} label={v} onClick={()=>onToggle(v)}/>)}
+    </div>
+  )
+}
 
 /* ─── Tabla ─────────────────────────────────────────────────────────── */
 function SimpleTable({ headers, rows, colors, onRowClick, highlightCol }:{
@@ -268,29 +310,37 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol }:{
   highlightCol?:number
 }) {
   return (
-    <div style={{overflowX:"auto",marginTop:4}}>
-      <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+    <div className="overflow-x-auto rounded-xl border border-slate-800 mt-1">
+      <table className="w-full border-collapse text-[12px]">
         <thead>
-          <tr>{headers.map(h=><th key={h} style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:".12em",textTransform:"uppercase",color:T.muted,fontWeight:600,textAlign:"left",padding:"7px 12px 7px 0",borderBottom:`1px solid ${T.border2}`,whiteSpace:"nowrap"}}>{h}</th>)}</tr>
+          <tr className="border-b border-slate-800 bg-slate-950/60">
+            {headers.map(h=>(
+              <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 whitespace-nowrap">
+                {h}
+              </th>
+            ))}
+          </tr>
         </thead>
         <tbody>
           {rows.length===0?(
-            <tr><td colSpan={headers.length} style={{padding:"24px 0",color:T.muted,fontStyle:"italic"}}>Sin resultados.</td></tr>
+            <tr>
+              <td colSpan={headers.length} className="px-4 py-8 text-center text-slate-500 italic text-[12px]">
+                Sin resultados.
+              </td>
+            </tr>
           ):rows.map((r,i)=>(
-            <tr key={i} style={{transition:"background .1s",cursor:onRowClick?"pointer":undefined}}
-              onClick={()=>onRowClick?.(r,i)}
-              onMouseEnter={e=>(e.currentTarget.style.background=T.surf2)}
-              onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+            <tr key={i} className={`border-b border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-800/40":""}`}
+              onClick={()=>onRowClick?.(r,i)}>
               {r.map((cell,j)=>{
                 const fn=colors[j]
                 const color=typeof fn==="function"?fn(r):undefined
                 return (
-                  <td key={j} style={{padding:"8px 12px 8px 0",borderBottom:`1px solid ${T.border}`,verticalAlign:"middle"}}>
+                  <td key={j} className="px-4 py-2.5 align-middle">
                     <span style={{
-                      fontFamily:j===4||j===0?"monospace":undefined,
+                      fontFamily:j===4||j===0?"'JetBrains Mono',monospace":undefined,
                       fontSize:j===0?10:j===4?12:undefined,
-                      fontWeight:j===4?500:undefined,
-                      color:color??(j===highlightCol?T.gold:j===0||j===1?T.muted:T.text),
+                      fontWeight:j===4?600:undefined,
+                      color:color??(j===highlightCol?T.gold:j===0||j===1?"#64748b":"#e2e8f0"),
                       textDecoration:j===highlightCol&&onRowClick?"underline":undefined,
                     }}>{cell}</span>
                   </td>
@@ -490,47 +540,66 @@ export function SeccionPanel() {
   const TAB_LABELS:Record<View,string> = {dashboard:"Dashboard",leads:"Leads",cotizaciones:"Cotizaciones",pedidos:"Pedidos",clientes:"Clientes"}
 
   const shell=(content:React.ReactNode)=>(
-    <div style={{background:T.bg,minHeight:"100%",padding:24,margin:-24,fontFamily:"'DM Sans',system-ui,sans-serif",fontSize:13,color:T.text,lineHeight:1.55}}>
-      {/* Header */}
-      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",flexWrap:"wrap",gap:12,borderBottom:`1px solid ${T.gold}`,paddingBottom:14,marginBottom:0}}>
-        <div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:T.gold,fontWeight:600,marginBottom:4}}>
-            Medalla de Oro · Panel de control
+    <div className="space-y-4" style={{fontFamily:"'DM Sans',system-ui,sans-serif",fontSize:13,color:T.text,lineHeight:1.55}}>
+      {/* Hero header */}
+      <div className="relative overflow-hidden rounded-2xl" style={{background:"linear-gradient(135deg,#040810 0%,#0a1428 55%,#0d1a38 100%)",border:"1px solid rgba(200,146,46,.18)"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${T.gold},${T.gold}00)`}}/>
+        <div className="px-6 pt-5 pb-0">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-3">
+            <span>Medalla de Oro</span><span>·</span><span style={{color:T.gold}}>Panel de control</span>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,fontWeight:400,lineHeight:1.15}}>Actividad comercial</div>
-            {cliFilter&&(
-              <div style={{display:"flex",alignItems:"center",gap:6,background:T.gold+"1a",border:`1px solid ${T.gold}55`,padding:"2px 8px 2px 10px"}}>
-                <span style={{fontFamily:"monospace",fontSize:10,color:T.gold}}>{cliFilter.nombre}</span>
-                <button onClick={clearCli} style={{fontFamily:"monospace",fontSize:11,color:T.gold,background:"none",border:"none",cursor:"pointer",padding:"0 2px",lineHeight:1}}>×</button>
+          {/* Title row */}
+          <div className="flex items-start justify-between gap-4 flex-wrap mb-5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:30,fontWeight:400,color:"#f1f5f9",lineHeight:1,margin:0}}>Actividad comercial</h2>
+              {cliFilter&&(
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono"
+                  style={{background:`${T.gold}18`,border:`1px solid ${T.gold}44`,color:T.gold}}>
+                  {cliFilter.nombre}
+                  <button onClick={clearCli} className="ml-0.5 cursor-pointer bg-transparent border-none p-0 leading-none" style={{color:T.gold}}>×</button>
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={toggleDemo} className="px-3 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all"
+                style={demo?{background:`${T.gold}20`,color:T.gold,border:`1px solid ${T.gold}44`}:{background:"transparent",color:"#4a5a7a",border:"1px solid #1e2d50"}}>
+                {demo?"▶ DEMO":"REAL"}
+              </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-mono text-slate-500">DESDE</span>
+                <input type="date" value={df} onChange={e=>setDf(e.target.value)}
+                  className="rounded-lg px-2 py-1 font-mono text-[11px] text-slate-200 outline-none border border-slate-700"
+                  style={{background:"#0e1a2e",colorScheme:"dark"}}/>
+                <span className="text-[10px] font-mono text-slate-500">HASTA</span>
+                <input type="date" value={dt} onChange={e=>setDt(e.target.value)}
+                  className="rounded-lg px-2 py-1 font-mono text-[11px] text-slate-200 outline-none border border-slate-700"
+                  style={{background:"#0e1a2e",colorScheme:"dark"}}/>
               </div>
-            )}
+            </div>
+          </div>
+          {/* Tab nav */}
+          <div className="flex gap-1 overflow-x-auto">
+            {(["dashboard","leads","cotizaciones","pedidos","clientes"] as View[]).map(v=>(
+              <NavTab key={v} active={view===v} label={TAB_LABELS[v]} onClick={()=>goView(v)}/>
+            ))}
           </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-          <button onClick={toggleDemo} style={{fontFamily:"monospace",fontSize:9,letterSpacing:".07em",padding:"3px 10px",border:`1px solid ${demo?"#f0a830":"#283060"}`,background:demo?"#f0a83022":"transparent",color:demo?"#f0a830":"#4a5a7a",cursor:"pointer",outline:"none",borderRadius:1}}>{demo?"▶ DEMO":"REAL"}</button>
-          <span style={{fontSize:10,color:T.muted,fontFamily:"monospace"}}>DESDE</span>
-          <input type="date" value={df} onChange={e=>setDf(e.target.value)} style={{background:T.surface,border:`1px solid ${T.border2}`,color:T.text,padding:"4px 6px",fontFamily:"monospace",fontSize:11,outline:"none",colorScheme:"dark"}}/>
-          <span style={{fontSize:10,color:T.muted,fontFamily:"monospace"}}>HASTA</span>
-          <input type="date" value={dt} onChange={e=>setDt(e.target.value)} style={{background:T.surface,border:`1px solid ${T.border2}`,color:T.text,padding:"4px 6px",fontFamily:"monospace",fontSize:11,outline:"none",colorScheme:"dark"}}/>
-        </div>
       </div>
-      {/* Nav tabs */}
-      <div style={{display:"flex",gap:0,borderBottom:`1px solid ${T.border}`,overflowX:"auto",marginBottom:24,marginTop:16}}>
-        {(["dashboard","leads","cotizaciones","pedidos","clientes"] as View[]).map(v=>(
-          <NavTab key={v} active={view===v} label={TAB_LABELS[v]} onClick={()=>goView(v)}/>
-        ))}
-      </div>
+
+      {/* Month filter chip */}
       {mFilter>=0&&(
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-          <div style={{display:"inline-flex",alignItems:"center",gap:6,background:T.sky+"1a",border:`1px solid ${T.sky}55`,padding:"2px 8px 2px 10px"}}>
-            <span style={{fontFamily:"monospace",fontSize:10,color:T.sky}}>MES: {MESES[mFilter]}</span>
-            <button onClick={()=>setMFilter(-1)} style={{fontFamily:"monospace",fontSize:11,color:T.sky,background:"none",border:"none",cursor:"pointer",padding:"0 2px",lineHeight:1}}>×</button>
-          </div>
+        <div className="flex items-center gap-2 px-1">
+          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-mono"
+            style={{background:`${T.sky}15`,border:`1px solid ${T.sky}44`,color:T.sky}}>
+            MES: {MESES[mFilter]}
+            <button onClick={()=>setMFilter(-1)} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-70 hover:opacity-100" style={{color:T.sky}}>×</button>
+          </span>
         </div>
       )}
+
       {loading?(
-        <div style={{textAlign:"center",padding:60,color:T.muted,fontFamily:"monospace",fontSize:12}}>Cargando datos…</div>
+        <div className="flex items-center justify-center py-20 text-slate-500 font-mono text-sm">Cargando datos…</div>
       ):content}
     </div>
   )
@@ -538,20 +607,23 @@ export function SeccionPanel() {
   /* ═══ DASHBOARD ═══════════════════════════════════════════════════ */
   if(view==="dashboard") return shell(
     <>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:1,background:T.border,border:`1px solid ${T.border}`,marginBottom:24}}>
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {kpis.map((k,i)=>(
           <div key={i} onClick={k.go}
-            style={{background:T.surface,padding:"16px 14px",display:"flex",flexDirection:"column",gap:4,cursor:"pointer",transition:"background .15s"}}
-            onMouseEnter={e=>(e.currentTarget.style.background=T.surf2)}
-            onMouseLeave={e=>(e.currentTarget.style.background=T.surface)}>
-            <div style={{fontFamily:"monospace",fontSize:26,fontWeight:500,lineHeight:1,color:k.c}}>{k.v}</div>
-            <div style={{fontSize:11,color:T.muted}}>{k.l}</div>
+            className="rounded-xl p-4 cursor-pointer transition-all duration-150 hover:scale-[1.02]"
+            style={{background:T.surface,border:`1px solid ${T.border}`}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=k.c+"55";(e.currentTarget as HTMLDivElement).style.boxShadow=`0 0 18px ${k.c}12`}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=T.border;(e.currentTarget as HTMLDivElement).style.boxShadow="none"}}>
+            <div className="font-mono text-2xl font-semibold leading-none mb-2" style={{color:k.c}}>{k.v}</div>
+            <div className="text-[11px] text-slate-400 leading-tight">{k.l}</div>
           </div>
         ))}
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:".16em",textTransform:"uppercase",color:T.sky,fontWeight:600,marginBottom:14}}>Embudo · Web</div>
+          <SecLabel>Embudo · Web</SecLabel>
           {(()=>{
             const steps=[
               {l:"Formulario",n:allLeads.filter(l=>l.canal==="Formulario").length,c:T.violet,go:()=>goView("leads",{lCanal:"Formulario"})},
@@ -562,18 +634,18 @@ export function SeccionPanel() {
             const peak=Math.max(...steps.map(s=>s.n),1)
             const base=steps[0].n||1
             return(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:4}}>
+              <div className="grid grid-cols-4 gap-2">
                 {steps.map((f,i)=>{
                   const barPct=Math.round(f.n/peak*100)
                   const convPct=i===0?100:Math.round(f.n/base*100)
                   return(
-                    <div key={i} onClick={f.go} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
-                      <div style={{width:"100%",background:T.surf2,height:56,display:"flex",alignItems:"flex-end",overflow:"hidden",borderBottom:`2px solid ${f.c}44`}}>
-                        <div style={{width:"100%",height:`${barPct}%`,background:`${f.c}33`,transition:"height .3s"}}/>
+                    <div key={i} onClick={f.go} className="flex flex-col items-center gap-1.5 cursor-pointer group">
+                      <div className="w-full rounded-t-md overflow-hidden" style={{height:60,background:"#0f1a2e",borderBottom:`2px solid ${f.c}55`,display:"flex",alignItems:"flex-end"}}>
+                        <div className="w-full transition-all duration-300 rounded-t-sm" style={{height:`${barPct}%`,background:`${f.c}30`}}/>
                       </div>
-                      <div style={{fontFamily:"monospace",fontSize:16,fontWeight:500,color:f.c}}>{f.n}</div>
-                      <div style={{fontSize:9,color:i===0?T.muted:convPct>=100?T.em:convPct>=50?T.amber:T.rose,fontFamily:"monospace"}}>{convPct}%</div>
-                      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,textTransform:"uppercase",color:T.muted,textAlign:"center"}}>{f.l}</div>
+                      <div className="font-mono text-base font-semibold" style={{color:f.c}}>{f.n}</div>
+                      <div className="text-[9px] font-mono" style={{color:i===0?"#64748b":convPct>=100?T.em:convPct>=50?T.amber:T.rose}}>{convPct}%</div>
+                      <div className="text-[10px] text-slate-500 text-center leading-tight" style={{fontFamily:"'Cormorant Garamond',serif",letterSpacing:".06em",textTransform:"uppercase"}}>{f.l}</div>
                     </div>
                   )
                 })}
@@ -582,25 +654,33 @@ export function SeccionPanel() {
           })()}
         </Card>
         <Card>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:".16em",textTransform:"uppercase",color:T.gold,fontWeight:600,marginBottom:14}}>Pipeline de ventas</div>
-          {(["Cotizado","Pagado","Preparando","Enviado","Entregado","Cancelado"] as const).map(e=>{
-            const n=allVentas.filter(v=>v.estado===e).length; const max=allVentas.length||1; const pct=Math.round(n/max*100)
-            const c=e==="Entregado"?T.em:e==="Cancelado"?T.rose:e==="Enviado"?T.sky:e==="Preparando"?T.amber:e==="Pagado"?T.violet:T.muted
-            return(
-              <div key={e} onClick={()=>{goView("pedidos");setVEstado(e)}} style={{display:"grid",gridTemplateColumns:"82px 1fr 30px",alignItems:"center",gap:8,marginBottom:6,cursor:"pointer"}}>
-                <div style={{fontSize:11,color:T.muted}}>{e}</div>
-                <div style={{height:5,background:T.surf2,borderRadius:1,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:`${c}88`}}/></div>
-                <div style={{fontFamily:"monospace",fontSize:11,textAlign:"right",color:T.text}}>{n}</div>
-              </div>
-            )
-          })}
+          <SecLabel>Pipeline de ventas</SecLabel>
+          <div className="space-y-2.5">
+            {(["Cotizado","Pagado","Preparando","Enviado","Entregado","Cancelado"] as const).map(e=>{
+              const n=allVentas.filter(v=>v.estado===e).length; const max=allVentas.length||1; const pct=Math.round(n/max*100)
+              const c=e==="Entregado"?T.em:e==="Cancelado"?T.rose:e==="Enviado"?T.sky:e==="Preparando"?T.amber:e==="Pagado"?T.violet:T.muted
+              return(
+                <div key={e} onClick={()=>{goView("pedidos");setVEstado(e)}} className="grid items-center gap-3 cursor-pointer group" style={{gridTemplateColumns:"80px 1fr 28px"}}>
+                  <div className="text-[11px] text-slate-400 group-hover:text-slate-200 transition-colors">{e}</div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{background:"#0f1a2e"}}>
+                    <div className="h-full rounded-full transition-all" style={{width:`${pct}%`,background:`${c}99`}}/>
+                  </div>
+                  <div className="font-mono text-[11px] text-right" style={{color:c}}>{n}</div>
+                </div>
+              )
+            })}
+          </div>
         </Card>
       </div>
+
       {/* Top clientes en dashboard */}
       <Card>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+        <div className="flex items-center justify-between mb-2">
           <SecLabel>Top clientes · período</SecLabel>
-          <button onClick={()=>goView("clientes")} style={{fontFamily:"monospace",fontSize:9,color:T.gold,background:"none",border:`1px solid ${T.gold}44`,padding:"2px 10px",cursor:"pointer"}}>ver todos →</button>
+          <button onClick={()=>goView("clientes")} className="text-[10px] font-mono px-3 py-1 rounded-full cursor-pointer transition-all hover:opacity-90"
+            style={{color:T.gold,background:`${T.gold}12`,border:`1px solid ${T.gold}33`}}>
+            ver todos →
+          </button>
         </div>
         <SimpleTable
           headers={["Cliente","Leads","Cotiz.","Ventas","Total MXN"]}
@@ -616,25 +696,24 @@ export function SeccionPanel() {
   /* ═══ CLIENTES ════════════════════════════════════════════════════ */
   if(view==="clientes") return shell(
     <>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:1,background:T.border,border:`1px solid ${T.border}`,marginBottom:20}}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           {v:clientesMap.length,l:"Total clientes",c:T.sky},
           {v:clientesMap.filter(c=>c.ventas>0).length,l:"Con pedido",c:T.em},
           {v:clientesMap.filter(c=>c.cots>0&&c.ventas===0).length,l:"Solo cotización",c:T.amber},
           {v:clientesMap.filter(c=>c.leads>0&&c.cots===0).length,l:"Solo lead",c:T.violet},
-          {v:$m(clientesMap.length?Math.round(clientesMap.reduce((s,c)=>s+c.total,0)/clientesMap.filter(c=>c.total>0).length||0):0),l:"Ticket prom.",c:T.gold},
+          {v:$m(clientesMap.length?Math.round(clientesMap.reduce((s,c)=>s+c.total,0)/(clientesMap.filter(c=>c.total>0).length||1)):0),l:"Ticket prom.",c:T.gold},
           {v:$m(clientesMap.reduce((s,c)=>s+c.total,0)),l:"Total facturado",c:T.gold},
         ].map((k,i)=>(
-          <div key={i} style={{background:T.surface,padding:"16px 14px",display:"flex",flexDirection:"column",gap:4}}>
-            <div style={{fontFamily:"monospace",fontSize:22,fontWeight:500,lineHeight:1,color:k.c}}>{k.v}</div>
-            <div style={{fontSize:11,color:T.muted}}>{k.l}</div>
+          <div key={i} className="rounded-xl p-4" style={{background:`${k.c}10`,border:`1px solid ${k.c}25`}}>
+            <div className="font-mono text-xl font-semibold leading-none mb-1.5" style={{color:k.c}}>{k.v}</div>
+            <div className="text-[11px] text-slate-400 leading-tight">{k.l}</div>
           </div>
         ))}
       </div>
 
-      {/* Top 8 por ingresos */}
       <Card>
-        <ChartLabel>Top clientes por ingreso acumulado</ChartLabel>
+        <ChartLabel>Top clientes por ingreso acumulado · clic para filtrar</ChartLabel>
         <SvgHBars
           items={clientesMap.slice(0,8).map(c=>({l:c.nombre.split(" ")[0]+" "+c.nombre.split(" ")[1]?.[0]+".",v:c.total,c:T.gold}))}
           onBarClick={label=>{
@@ -644,15 +723,15 @@ export function SeccionPanel() {
         />
       </Card>
 
-      {/* Buscador */}
-      <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:12,padding:"10px 14px",background:T.surface,border:`1px solid ${T.border}`}}>
-        <span style={{fontFamily:"monospace",fontSize:10,color:T.muted,whiteSpace:"nowrap"}}>BUSCAR</span>
-        <input value={cliQ} onChange={e=>setCLiQ(e.target.value)} placeholder="nombre…"
-          style={{flex:1,background:"transparent",border:"none",borderBottom:`1px solid ${T.border2}`,color:T.text,fontFamily:"monospace",fontSize:12,outline:"none",padding:"2px 4px"}}/>
-        {cliQ&&<button onClick={()=>setCLiQ("")} style={{color:T.muted,background:"none",border:"none",cursor:"pointer",fontSize:13}}>×</button>}
-      </div>
+      <Card className="flex items-center gap-3">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 shrink-0">Buscar</span>
+        <input value={cliQ} onChange={e=>setCLiQ(e.target.value)} placeholder="nombre del cliente…"
+          className="flex-1 bg-transparent border-none border-b border-slate-700 text-slate-200 font-mono text-[12px] outline-none pb-1 placeholder:text-slate-600 focus:border-slate-500 transition-colors"
+          style={{borderBottom:"1px solid #334155"}}/>
+        {cliQ&&<button onClick={()=>setCLiQ("")} className="text-slate-500 hover:text-slate-300 text-sm bg-transparent border-none cursor-pointer">×</button>}
+      </Card>
 
-      <div style={{fontFamily:"monospace",fontSize:12,color:T.muted,marginBottom:8}}>{cliFiltered.length} clientes en vista</div>
+      <p className="text-[11px] font-mono text-slate-500 px-1 -mt-2">{cliFiltered.length} clientes en vista</p>
 
       <SimpleTable
         headers={["Cliente","Leads","Cotiz.","Pedidos","Total MXN","Última actividad"]}
@@ -669,31 +748,31 @@ export function SeccionPanel() {
     <>
       <Card>
         <SecLabel>Resumen de Leads · período seleccionado</SecLabel>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:20}}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
           <div>
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
             <SvgStackedBars months={MESES} data={leadsStk} colors={[T.em,T.rose]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
-            <div style={{display:"flex",gap:14,marginTop:6}}>
+            <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Entregado" val={fLeads.filter(l=>l.Funnel==="Entrega").length} active={lFunnel==="Entrega"} onClick={()=>setLFunnel(lFunnel==="Entrega"?"":"Entrega")}/>
               <LegendDot color={T.rose} label="Rechazada" val={fLeads.filter(l=>l.Funnel==="Rechazada").length} active={lFunnel==="Rechazada"} onClick={()=>setLFunnel(lFunnel==="Rechazada"?"":"Rechazada")}/>
             </div>
           </div>
           <div>
             <ChartLabel>Por canal · clic para filtrar</ChartLabel>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div className="flex items-center gap-3">
               <SvgDonut segs={canalSegs} onSegmentClick={v=>setLCanal(lCanal===v?"":v)}/>
-              <div style={{flex:1}}>{canalSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={lCanal===s.l} onClick={()=>setLCanal(lCanal===s.l?"":s.l)}/>)}</div>
+              <div className="flex-1">{canalSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={lCanal===s.l} onClick={()=>setLCanal(lCanal===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <ChartLabel>Por origen · clic para filtrar</ChartLabel>
             <SvgHBars items={origenSegs.length?origenSegs:[{l:"Sin datos",v:0,c:T.muted}]} onBarClick={()=>{}}/>
           </div>
           <div>
             <ChartLabel>Métricas de conversión</ChartLabel>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div className="grid grid-cols-2 gap-2">
               <MetricTile val={`${pctCot}%`} label="c/ cotización" color={T.amber} onClick={()=>goView("cotizaciones")}/>
               <MetricTile val={`${pctPed}%`} label="c/ pedido" color={T.em} onClick={()=>goView("pedidos")}/>
               <MetricTile val={fLeads.length} label="Leads total" color={T.violet}/>
@@ -702,11 +781,11 @@ export function SeccionPanel() {
           </div>
         </div>
       </Card>
-      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16,padding:"12px 14px",background:T.surface,border:`1px solid ${T.border}`}}>
+      <Card className="flex flex-col gap-3">
         <FilterRow label="CANAL"  options={["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]} active={lCanal} onToggle={v=>setLCanal(lCanal===v?"":v)}/>
         <FilterRow label="FUNNEL" options={["Lead","Oferta","Pedido","Entrega","Rechazada"]} active={lFunnel} onToggle={v=>setLFunnel(lFunnel===v?"":v)}/>
-      </div>
-      <div style={{fontFamily:"monospace",fontSize:12,color:T.muted,paddingBottom:8}}>{fLeads.length} leads en vista · {allLeads.length} en rango</div>
+      </Card>
+      <p className="text-[11px] font-mono text-slate-500 px-1 -mt-2">{fLeads.length} leads en vista · {allLeads.length} en rango</p>
       <SimpleTable
         headers={["Fecha","Cliente","Canal","Origen","Funnel"]}
         rows={fLeads.slice(0,100).map(l=>[dd(l.fechaLead??l.createdAt),l.cliente?.nombre??"—",l.canal??"—",l.origen??"—",l.Funnel])}
@@ -721,28 +800,32 @@ export function SeccionPanel() {
   if(view==="cotizaciones") return shell(
     <>
       <Card>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10,marginBottom:14}}>
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <SecLabel>Resumen de Cotizaciones · período seleccionado</SecLabel>
-          <div style={{display:"flex",gap:0,marginTop:-6}}>
+          <div className="flex gap-1">
             {([["","Todo"],["web","Web"],["trad","Tradicional"]] as [string,string][]).map(([k,l])=>(
-              <button key={k} onClick={()=>setCTipo(cTipo===k&&k!==""?"":k)} style={{fontFamily:"monospace",fontSize:9,letterSpacing:".06em",textTransform:"uppercase",padding:"4px 12px",cursor:"pointer",outline:"none",border:`1px solid ${cTipo===k?T.gold:T.border2}`,background:cTipo===k?T.gold+"22":"transparent",color:cTipo===k?T.gold:T.muted}}>{l}</button>
+              <button key={k} onClick={()=>setCTipo(cTipo===k&&k!==""?"":k)}
+                className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all"
+                style={cTipo===k?{background:`${T.gold}20`,color:T.gold,border:`1px solid ${T.gold}44`}:{background:"transparent",color:"#64748b",border:"1px solid #1e293b"}}>
+                {l}
+              </button>
             ))}
           </div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"3fr 1fr",gap:20,marginBottom:20}}>
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
+          <div className="md:col-span-2">
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
             <SvgStackedBars months={MESES} data={cotsStk} colors={[T.em,T.rose]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
-            <div style={{display:"flex",gap:14,marginTop:6}}>
+            <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Convertida" val={fCots.filter(c=>c.estado==="Convertida").length} active={cEstado==="Convertida"} onClick={()=>setCEstado(cEstado==="Convertida"?"":"Convertida")}/>
               <LegendDot color={T.rose} label="Rechazada" val={fCots.filter(c=>c.estado==="Rechazada").length} active={cEstado==="Rechazada"} onClick={()=>setCEstado(cEstado==="Rechazada"?"":"Rechazada")}/>
             </div>
           </div>
           <div>
             <ChartLabel>Por estado · clic para filtrar</ChartLabel>
-            <div style={{display:"flex",alignItems:"flex-start",gap:8,flexWrap:"wrap"}}>
+            <div className="flex items-start gap-2 flex-wrap">
               <SvgDonut segs={cotEstadoSegs} onSegmentClick={v=>setCEstado(cEstado===v?"":v)}/>
-              <div style={{flex:1,minWidth:80,paddingTop:4}}>{cotEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={cEstado===s.l} onClick={()=>setCEstado(cEstado===s.l?"":s.l)}/>)}</div>
+              <div className="flex-1 min-w-[80px] pt-1">{cotEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={cEstado===s.l} onClick={()=>setCEstado(cEstado===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
         </div>
@@ -752,11 +835,11 @@ export function SeccionPanel() {
             onBarClick={l=>{const k=Object.entries(ORIGEN_LABEL).find(([,v])=>v===l)?.[0];if(k)setCOrigen(cOrigen===k?"":k)}}/>
         </div>
       </Card>
-      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16,padding:"12px 14px",background:T.surface,border:`1px solid ${T.border}`}}>
+      <Card className="flex flex-col gap-3">
         <FilterRow label="ESTADO" options={["Borrador","Enviada","Aceptada","Rechazada","Convertida"]} active={cEstado} onToggle={v=>setCEstado(cEstado===v?"":v)}/>
         <FilterRow label="ORIGEN" options={["COT","WEB","CART","ANU","EML"]} active={cOrigen} onToggle={v=>setCOrigen(cOrigen===v?"":v)}/>
-      </div>
-      <div style={{fontFamily:"monospace",fontSize:12,color:T.muted,paddingBottom:8}}>{fCots.length} cotizaciones en vista · {allCots.length} en rango</div>
+      </Card>
+      <p className="text-[11px] font-mono text-slate-500 px-1 -mt-2">{fCots.length} cotizaciones en vista · {allCots.length} en rango</p>
       <SimpleTable
         headers={["Folio","Fecha","Cliente","Origen","Total","Estado"]}
         rows={fCots.slice(0,100).map(c=>[c.numero??"—",dd(c.fecha??c.createdAt),c.cliente?.nombre??"—",ORIGEN_LABEL[c.origenCotizacion??""]??c.origenCotizacion??"—",$m(c.total),c.estado??"—"])}
@@ -772,47 +855,46 @@ export function SeccionPanel() {
     <>
       <Card>
         <SecLabel>Resumen de Pedidos · período seleccionado</SecLabel>
-        <div style={{display:"grid",gridTemplateColumns:"3fr 1fr",gap:20,marginBottom:20}}>
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
+          <div className="md:col-span-2">
             <ChartLabel>Por mes · clic para filtrar mes</ChartLabel>
             <SvgStackedBars months={MESES} data={vStk} colors={[T.em,T.rose]} activeBar={mFilter} onBarClick={i=>setMFilter(mFilter===i?-1:i)}/>
-            <div style={{display:"flex",gap:14,marginTop:6}}>
+            <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Entregado" val={fVentas.filter(v=>v.estado==="Entregado").length} active={vEstado==="Entregado"} onClick={()=>setVEstado(vEstado==="Entregado"?"":"Entregado")}/>
               <LegendDot color={T.rose} label="Cancelado" val={fVentas.filter(v=>v.estado==="Cancelado").length} active={vEstado==="Cancelado"} onClick={()=>setVEstado(vEstado==="Cancelado"?"":"Cancelado")}/>
             </div>
           </div>
           <div>
             <ChartLabel>Por estado · clic para filtrar</ChartLabel>
-            <div style={{display:"flex",alignItems:"flex-start",gap:8,flexWrap:"wrap"}}>
+            <div className="flex items-start gap-2 flex-wrap">
               <SvgDonut segs={ventaEstadoSegs} onSegmentClick={v=>setVEstado(vEstado===v?"":v)}/>
-              <div style={{flex:1,minWidth:80,paddingTop:4}}>{ventaEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={vEstado===s.l} onClick={()=>setVEstado(vEstado===s.l?"":s.l)}/>)}</div>
+              <div className="flex-1 min-w-20 pt-1">{ventaEstadoSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={vEstado===s.l} onClick={()=>setVEstado(vEstado===s.l?"":s.l)}/>)}</div>
             </div>
           </div>
         </div>
-        {/* Ingresos por mes vs meta */}
-        <div style={{marginBottom:20}}>
+        <div className="mb-5">
           <ChartLabel>Ingresos mensuales vs meta $45,000 MXN · verde = mes cumplido</ChartLabel>
           <SvgRevBars months={MESES} data={revMes} target={META_MES}/>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:24,alignItems:"start"}}>
+        <div className="grid gap-6 items-start" style={{gridTemplateColumns:"1fr 160px"}}>
           <div>
             <ChartLabel>Por canal / centro de venta · clic para filtrar</ChartLabel>
             <SvgHBars items={ventaCanalSegs.length?ventaCanalSegs:[{l:"Sin datos",v:0,c:T.muted}]}
               onBarClick={l=>setVCanal(vCanal===l?"":l)}/>
           </div>
-          <div style={{minWidth:140}}>
+          <div className="flex flex-col gap-2">
             <ChartLabel>Métricas</ChartLabel>
             <MetricTile val={$m(tickFilt)} label="Ticket promedio" color={T.gold}/>
-            <div style={{marginTop:8}}><MetricTile val={compFilt.length} label="Entregados" color={T.em} onClick={()=>setVEstado(vEstado==="Entregado"?"":"Entregado")}/></div>
-            <div style={{marginTop:8}}><MetricTile val={$m(compFilt.reduce((s,v)=>s+v.monto,0))} label="Ingresos período" color={T.gold}/></div>
+            <MetricTile val={compFilt.length} label="Entregados" color={T.em} onClick={()=>setVEstado(vEstado==="Entregado"?"":"Entregado")}/>
+            <MetricTile val={$m(compFilt.reduce((s,v)=>s+v.monto,0))} label="Ingresos período" color={T.gold}/>
           </div>
         </div>
       </Card>
-      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16,padding:"12px 14px",background:T.surface,border:`1px solid ${T.border}`}}>
+      <Card className="flex flex-col gap-3">
         <FilterRow label="ESTADO" options={["Cotizado","Pagado","Preparando","Enviado","Entregado","Cancelado"]} active={vEstado} onToggle={v=>setVEstado(vEstado===v?"":v)}/>
         <FilterRow label="CANAL"  options={[...new Set(rawVentas.map(v=>v.centro_venta?.nombre).filter(Boolean) as string[])]} active={vCanal} onToggle={v=>setVCanal(vCanal===v?"":v)}/>
-      </div>
-      <div style={{fontFamily:"monospace",fontSize:12,color:T.muted,paddingBottom:8}}>{fVentas.length} ventas en vista · {allVentas.length} en rango</div>
+      </Card>
+      <p className="text-[11px] font-mono text-slate-500 px-1 -mt-2">{fVentas.length} ventas en vista · {allVentas.length} en rango</p>
       <SimpleTable
         headers={["Folio","Fecha","Cliente","Concepto","Monto","Estado"]}
         rows={fVentas.slice(0,100).map(v=>[v.numero??"—",dd(v.fecha??v.createdAt),v.cliente?.nombre??"—",v.concepto??"—",$m(v.monto),v.estado??"—"])}
