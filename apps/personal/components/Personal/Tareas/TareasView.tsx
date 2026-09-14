@@ -1216,17 +1216,28 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                       </button>
                     </div>
                   ) : (
-                    <div draggable={puedeReordenar}
-                      onDragStart={() => puedeReordenar && setDragProceso(seccion.proceso)}
+                    <div
                       onDragOver={e => { if (puedeReordenar && dragProceso && dragProceso !== seccion.proceso) { e.preventDefault(); setDragOverProceso(seccion.proceso) } }}
                       onDragLeave={() => setDragOverProceso(prev => prev === seccion.proceso ? null : prev)}
                       onDrop={e => { e.preventDefault(); handleDropProceso(seccion.proceso) }}
-                      onDragEnd={() => { setDragProceso(null); setDragOverProceso(null) }}
                       className={`w-full flex items-center gap-1 px-1 py-1 group/proceso rounded-lg transition-colors ${
                         dragOverProceso === seccion.proceso ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-400/50" : ""
                       } ${dragProceso === seccion.proceso ? "opacity-40" : ""}`}>
                       {puedeReordenar && (
-                        <GripVertical size={13} className="text-slate-300 dark:text-slate-600 shrink-0 cursor-grab opacity-0 md:group-hover/proceso:opacity-100 transition" />
+                        // El asa de arrastre vive en su propio nodo draggable, separado del
+                        // botón grande de abajo (toggle colapsar) — arrancar el drag nativo
+                        // HTML5 desde dentro de un <button> es poco confiable entre
+                        // navegadores (el botón se queda con el mousedown para su propio
+                        // estado :active y a veces el drag nunca llega a iniciar o se queda
+                        // "trabado" a medio arrastrar). Con el asa aislada, el gesto siempre
+                        // arranca limpio.
+                        <span draggable
+                          onDragStart={e => { e.stopPropagation(); setDragProceso(seccion.proceso) }}
+                          onDragEnd={() => { setDragProceso(null); setDragOverProceso(null) }}
+                          title="Arrastrar para reordenar"
+                          className="p-1 -m-1 shrink-0 cursor-grab opacity-0 md:group-hover/proceso:opacity-100 transition touch-none select-none">
+                          <GripVertical size={13} className="text-slate-300 dark:text-slate-600" />
+                        </span>
                       )}
                       <button type="button" onClick={() => toggleProcesoColapsado(seccion.proceso)}
                         className="flex items-center gap-2 flex-1 min-w-0 text-left">
