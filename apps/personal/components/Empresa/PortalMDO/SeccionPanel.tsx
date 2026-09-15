@@ -121,6 +121,27 @@ const CANAL_COLOR:Record<string,string> = { WhatsApp:"#25d366",Instagram:"#e1306
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
 const MI:Record<string,number> = {"01":0,"02":1,"03":2,"04":3,"05":4,"06":5,"07":6,"08":7,"09":8,"10":9,"11":10,"12":11}
 
+/* ─── Kinetic: count-up animation hook ─────────────────────────────── */
+function useAnimatedValue(target: number, duration = 700): number {
+  const [val, setVal] = useState(0)
+  const raf = useRef<number>(0)
+  useEffect(() => {
+    let start: number | null = null
+    const from = 0
+    const tick = (ts: number) => {
+      if (!start) start = ts
+      const progress = Math.min((ts - start) / duration, 1)
+      // cubic ease-out
+      const ease = 1 - Math.pow(1 - progress, 3)
+      setVal(Math.round(from + (target - from) * ease))
+      if (progress < 1) raf.current = requestAnimationFrame(tick)
+    }
+    raf.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf.current)
+  }, [target, duration])
+  return val
+}
+
 /* ─── Tooltip compartido ────────────────────────────────────────────── */
 type TipState = {x:number;y:number;title:string;sub?:string}|null
 function ChartTip({t}:{t:TipState}){
@@ -159,6 +180,9 @@ function SvgStackedBars({ months, data, colors, labels, onBarClick, activeBar }:
   const ys=(v:number)=>PT+cH*(1-v/maxV)
   const bh=(v:number)=>cH*(v/maxV)
   const lbl=labels??["A","B"]
+  // Staggered entrance: each bar animates in with a delay
+  const [ready,setReady]=useState(false)
+  useEffect(()=>{const t=setTimeout(()=>setReady(true),60);return()=>clearTimeout(t)},[])
   return (
     <div ref={ref} style={{position:"relative"}}>
       <ChartTip t={tip}/>
@@ -168,13 +192,15 @@ function SvgStackedBars({ months, data, colors, labels, onBarClick, activeBar }:
           const tot=totals[i]; let cy=ys(tot)
           const tipTitle=`${m} · ${tot} total`
           const tipSub=data[i].map((v,j)=>v?`${v} ${lbl[j]}`:"").filter(Boolean).join(" · ")
+          const delay=`${i*40}ms`
           return (
-            <g key={m} style={{cursor:onBarClick?"pointer":undefined}}
+            <g key={m} style={{cursor:onBarClick?"pointer":undefined,
+                opacity:ready?1:0,transform:ready?"translateY(0)":"translateY(8px)",
+                transition:`opacity 0.35s ${delay}, transform 0.35s ${delay}`}}
               onClick={()=>onBarClick?.(i)}
               onMouseEnter={e=>show(e,tipTitle,tipSub||undefined)}
               onMouseMove={e=>move(e,tipTitle,tipSub||undefined)}
               onMouseLeave={hide}>
-              {/* hit area invisible */}
               <rect x={x} y={PT} width={+bi.toFixed(1)} height={cH} fill="transparent"/>
               {data[i].map((v,j)=>{
                 if(!v) return null
@@ -214,6 +240,9 @@ function SvgDonut({ segs, onSegmentClick, active }:{
     a+=da
     return {d:`M ${x1} ${y1} A ${ro} ${ro} 0 ${laf} 1 ${x2} ${y2} L ${xi1} ${yi1} A ${ri} ${ri} 0 ${laf} 0 ${xi2} ${yi2} Z`,c:x.c,pct,lx,ly,l:x.l,v:x.v}
   })
+  // Staggered entrance per segment
+  const [ready,setReady]=useState(false)
+  useEffect(()=>{const t=setTimeout(()=>setReady(true),40);return()=>clearTimeout(t)},[])
   return (
     <div ref={ref} style={{position:"relative",display:"inline-block"}}>
       <ChartTip t={tip}/>
@@ -221,19 +250,22 @@ function SvgDonut({ segs, onSegmentClick, active }:{
         {slices.map((s,i)=>{
           const isAct=!active||active===s.l
           const baseOp=isAct?0.88:0.2
+          const delay=`${i*55}ms`
           return (
-            <path key={i} d={s.d} fill={s.c} opacity={baseOp}
-              style={{cursor:onSegmentClick?"pointer":"default",transition:"opacity .2s"}}
+            <path key={i} d={s.d} fill={s.c}
+              opacity={ready?baseOp:0}
+              style={{cursor:onSegmentClick?"pointer":"default",
+                transition:`opacity 0.4s ${delay}`}}
               onClick={()=>onSegmentClick?.(s.l)}
               onMouseEnter={e=>{(e.currentTarget as SVGPathElement).style.opacity="1";show(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}}
               onMouseMove={e=>move(e,`${s.l} · ${s.v}`,`${s.pct}% del total`)}
-              onMouseLeave={e=>{(e.currentTarget as SVGPathElement).style.opacity=String(baseOp);hide()}}/>
+              onMouseLeave={e=>{(e.currentTarget as SVGPathElement).style.opacity=ready?String(baseOp):"0";hide()}}/>
           )
         })}
         {active&&slices.map((s,i)=>s.l===active?(
           <path key={`hl-${i}`} d={s.d} fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} style={{pointerEvents:"none"}}/>
         ):null)}
-        {slices.filter(s=>s.pct>=9).map((s,i)=>(
+        {ready&&slices.filter(s=>s.pct>=9).map((s,i)=>(
           <text key={i} x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="middle" fill={T.text} fontFamily="monospace" fontSize={7.5} opacity={!active||active===s.l?1:0.4}>{s.pct}%</text>
         ))}
       </svg>
@@ -269,7 +301,7 @@ function SvgHBars({ items, onBarClick, active }:{
               <rect x={PL} y={y+2} width={w} height={12} fill={x.c} opacity={baseOp} style={{transition:"opacity .15s"}}
                 onMouseEnter={e=>(e.currentTarget.style.opacity="1")}
                 onMouseLeave={e=>(e.currentTarget.style.opacity=String(baseOp))}/>
-              <text x={PL+parseFloat(w)+4} y={y+11} fill={T.text} fontFamily="monospace" fontSize={8}>{x.v}</text>
+              <text x={PL+w+4} y={y+11} fill={T.text} fontFamily="monospace" fontSize={8}>{x.v}</text>
             </g>
           )
         })}
@@ -291,6 +323,9 @@ function SvgRevBars({ data, target, months, onBarClick, activeBar }:{
   const ys=(v:number)=>PT+cH*(1-v/maxV)
   const bh=(v:number)=>cH*(v/maxV)
   const ty=+ys(target).toFixed(1)
+  // Staggered entrance animation
+  const [ready,setReady]=useState(false)
+  useEffect(()=>{const t=setTimeout(()=>setReady(true),60);return()=>clearTimeout(t)},[])
   return (
     <div ref={ref} style={{position:"relative"}}>
       <ChartTip t={tip}/>
@@ -305,8 +340,12 @@ function SvgRevBars({ data, target, months, onBarClick, activeBar }:{
           const hit=v>=target
           const op=activeBar===undefined||activeBar<0||activeBar===i?0.78:0.35
           const tipSub=hit?`✓ Meta superada ($${(target/1000).toFixed(0)}k)`:`✗ Bajo la meta · falta $${((target-v)/1000).toFixed(1)}k`
+          const delay=`${i*35}ms`
           return (
-            <g key={m} style={{cursor:onBarClick?"pointer":undefined}}
+            <g key={m}
+              style={{cursor:onBarClick?"pointer":undefined,
+                opacity:ready?1:0,transform:ready?"translateY(0)":"translateY(6px)",
+                transition:`opacity 0.35s ${delay}, transform 0.35s ${delay}`}}
               onClick={()=>onBarClick?.(i)}
               onMouseEnter={e=>v>0?show(e,`${m} · $${(v/1000).toFixed(1)}k`,tipSub):undefined}
               onMouseMove={e=>v>0?move(e,`${m} · $${(v/1000).toFixed(1)}k`,tipSub):undefined}
@@ -346,12 +385,16 @@ function LegendDot({color,label,val,active,dimmed,onClick}:{color:string;label:s
     </div>
   )
 }
-function MetricTile({val,label,color,onClick}:{val:string|number;label:string;color?:string;onClick?:()=>void}){
+function MetricTile({val,label,color,onClick,formatter}:{val:string|number;label:string;color?:string;onClick?:()=>void;formatter?:(n:number)=>string}){
   const c = color||T.violet
+  const isNum = typeof val === "number"
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const animVal = useAnimatedValue(isNum ? (val as number) : 0, 700)
+  const display = isNum ? (formatter ? formatter(animVal) : animVal.toLocaleString("es-MX")) : val
   return (
     <div onClick={onClick} className={`rounded-xl p-4 text-center transition-all ${onClick?"cursor-pointer hover:scale-[1.02]":""}`}
       style={{background:`${c}12`,border:`1px solid ${c}28`}}>
-      <div className="font-mono text-xl font-semibold leading-none" style={{color:c}}>{val}</div>
+      <div className="font-mono text-xl font-semibold leading-none" style={{color:c}}>{display}</div>
       <div className="text-[10px] mt-1.5 text-slate-500 dark:text-slate-400">{label}</div>
     </div>
   )
@@ -370,7 +413,15 @@ function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>vo
 function Card({children,className=""}:{children:React.ReactNode;className?:string}){
   return <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 ${className}`}>{children}</div>
 }
-function KpiCard({title,value,subBadge,subLabel,color,onClick}:{title:string;value:string|number;subBadge:string|number;subLabel:string;color:string;onClick?:()=>void}){
+function KpiCard({title,value,subBadge,subLabel,color,onClick,formatter,badgeFormatter}:{title:string;value:string|number;subBadge:string|number;subLabel:string;color:string;onClick?:()=>void;formatter?:(n:number)=>string;badgeFormatter?:(n:number)=>string}){
+  const isNum = typeof value === "number"
+  const isBadgeNum = typeof subBadge === "number"
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const animVal = useAnimatedValue(isNum ? (value as number) : 0, 800)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const animBadge = useAnimatedValue(isBadgeNum ? (subBadge as number) : 0, 650)
+  const displayVal = isNum ? (formatter ? formatter(animVal) : animVal.toLocaleString("es-MX")) : value
+  const displayBadge = isBadgeNum ? (badgeFormatter ? badgeFormatter(animBadge) : animBadge.toLocaleString("es-MX")) : subBadge
   return(
     <div onClick={onClick}
       className="rounded-xl p-5 flex flex-col gap-3 cursor-pointer transition-all duration-150 hover:scale-[1.01]"
@@ -378,12 +429,25 @@ function KpiCard({title,value,subBadge,subLabel,color,onClick}:{title:string;val
       onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=color+"55";(e.currentTarget as HTMLDivElement).style.boxShadow=`0 0 22px ${color}10`}}
       onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=T.border;(e.currentTarget as HTMLDivElement).style.boxShadow="none"}}>
       <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{title}</div>
-      <div className="font-mono text-4xl font-bold leading-none" style={{color}}>{value}</div>
+      <div className="font-mono text-4xl font-bold leading-none" style={{color}}>{displayVal}</div>
       <div className="flex items-center gap-2 pt-2.5 border-t border-slate-800">
         <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full shrink-0"
-          style={{background:`${color}18`,color,border:`1px solid ${color}30`}}>{subBadge}</span>
+          style={{background:`${color}18`,color,border:`1px solid ${color}30`}}>{displayBadge}</span>
         <span className="text-[11px] text-slate-400 leading-tight">{subLabel}</span>
       </div>
+    </div>
+  )
+}
+function PipelineBar({e,n,c,go,pct,idx}:{e:string;n:number;c:string;go:()=>void;pct:number;idx:number}){
+  const [filled,setFilled]=useState(false)
+  useEffect(()=>{const t=setTimeout(()=>setFilled(true),idx*70+80);return()=>clearTimeout(t)},[idx])
+  return(
+    <div onClick={go} className="grid items-center gap-3 cursor-pointer group" style={{gridTemplateColumns:"80px 1fr 28px"}}>
+      <div className="text-[11px] text-slate-400 group-hover:text-slate-200 transition-colors">{e}</div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{background:"#0f1a2e"}}>
+        <div className="h-full rounded-full" style={{width:filled?`${pct}%`:"0%",background:`${c}99`,transition:`width 0.55s cubic-bezier(0.34,1.02,0.64,1)`}}/>
+      </div>
+      <div className="font-mono text-[11px] text-right" style={{color:c}}>{n}</div>
     </div>
   )
 }
@@ -765,7 +829,7 @@ export function SeccionPanel() {
         <KpiCard title="Leads capturados" value={allLeads.length} subBadge={`${leadsConvPct}%`} subLabel="conv. a cotización" color={T.violet} onClick={()=>goView("leads")}/>
         <KpiCard title="Cotizaciones" value={allCots.length} subBadge={`${cotConvPct}%`} subLabel="convertidas" color={T.amber} onClick={()=>goView("cotizaciones")}/>
         <KpiCard title="Pedidos" value={allVentas.length} subBadge={`${pedEntPct}%`} subLabel="entregados" color={T.sky} onClick={()=>goView("pedidos")}/>
-        <KpiCard title="Ingresos MXN" value={$m(ingresos)} subBadge={$m(tick)} subLabel="ticket promedio" color={T.gold} onClick={()=>goView("pedidos")}/>
+        <KpiCard title="Ingresos MXN" value={ingresos} formatter={$m} subBadge={tick} badgeFormatter={$m} subLabel="ticket promedio" color={T.gold} onClick={()=>goView("pedidos")}/>
         <KpiCard title="Visitantes" value={visitasWeb} subBadge={`${contactosTotal}`} subLabel={`contactos · ${clientesRealesCnt} clientes`} color={T.em} onClick={()=>goView("clientes")}/>
       </div>
 
@@ -815,17 +879,9 @@ export function SeccionPanel() {
               {e:"Enviado",    n:allVentas.filter(v=>v.estado==="Enviado").length,     c:T.sky,    go:()=>{goView("pedidos");setVEstado("Enviado")}},
               {e:"Entregado",  n:allVentas.filter(v=>v.estado==="Entregado").length,   c:T.em,     go:()=>{goView("pedidos");setVEstado("Entregado")}},
               {e:"Cancelado",  n:allVentas.filter(v=>v.estado==="Cancelado").length,   c:T.rose,   go:()=>{goView("pedidos");setVEstado("Cancelado")}},
-            ] as {e:string;n:number;c:string;go:()=>void}[]).map(({e,n,c,go})=>{
+            ] as {e:string;n:number;c:string;go:()=>void}[]).map(({e,n,c,go},idx)=>{
               const max=allLeads.length||1; const pct=Math.round(n/max*100)
-              return(
-                <div key={e} onClick={go} className="grid items-center gap-3 cursor-pointer group" style={{gridTemplateColumns:"80px 1fr 28px"}}>
-                  <div className="text-[11px] text-slate-400 group-hover:text-slate-200 transition-colors">{e}</div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{background:"#0f1a2e"}}>
-                    <div className="h-full rounded-full transition-all" style={{width:`${pct}%`,background:`${c}99`}}/>
-                  </div>
-                  <div className="font-mono text-[11px] text-right" style={{color:c}}>{n}</div>
-                </div>
-              )
+              return <PipelineBar key={e} e={e} n={n} c={c} go={go} pct={pct} idx={idx}/>
             })}
           </div>
         </Card>
@@ -1063,9 +1119,9 @@ export function SeccionPanel() {
           </div>
           <div className="flex flex-col gap-2">
             <ChartLabel>Métricas</ChartLabel>
-            <MetricTile val={$m(tickFilt)} label="Ticket promedio" color={T.gold}/>
+            <MetricTile val={tickFilt} formatter={$m} label="Ticket promedio" color={T.gold}/>
             <MetricTile val={compFilt.length} label="Entregados" color={T.em} onClick={()=>setVEstado(vEstado==="Entregado"?"":"Entregado")}/>
-            <MetricTile val={$m(compFilt.reduce((s,v)=>s+v.monto,0))} label="Ingresos período" color={T.gold}/>
+            <MetricTile val={compFilt.reduce((s,v)=>s+v.monto,0)} formatter={$m} label="Ingresos período" color={T.gold}/>
           </div>
         </div>
       </Card>
