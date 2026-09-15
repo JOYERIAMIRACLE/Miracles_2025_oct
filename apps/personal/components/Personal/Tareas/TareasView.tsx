@@ -960,14 +960,23 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     const arrastrandoSobreEsta = dragOverId === t.documentId && dragId !== t.documentId
 
     return (
+      <div key={t.documentId} className="pb-2 last:pb-0"
+        // El área de drop de cada tarea es esta envoltura (tarjeta + su
+        // margen inferior), no solo la tarjeta misma — igual que ya pasó con
+        // los encabezados de proceso: el espacio entre tarjetas (antes puro
+        // margen, sin ningún elemento debajo que escuchara el drop) hacía
+        // que soltar un par de píxeles fuera de una tarjeta cayera en el
+        // hueco, burbujeara hasta el proyecto/proceso contenedor, y como
+        // ninguno de esos tenía nada que arrastrar (dragProyectoId/
+        // dragProceso en null) no pasaba nada — se sentía como que el
+        // reordenamiento "no funciona" sin ningún aviso de por qué.
+        onDragOver={e => { if (dragId && dragId !== t.documentId) { e.preventDefault(); setDragOverId(t.documentId) } }}
+        onDragLeave={() => setDragOverId(prev => prev === t.documentId ? null : prev)}
+        onDrop={e => { e.preventDefault(); handleDropTarea(t) }}>
       <div
-        key={t.documentId}
         draggable
         onDragStart={e => { setDragId(t.documentId); e.dataTransfer.effectAllowed = "move" }}
         onDragEnd={() => { setDragId(null); setDragOverId(null) }}
-        onDragOver={e => { if (dragId && dragId !== t.documentId) { e.preventDefault(); setDragOverId(t.documentId) } }}
-        onDragLeave={() => setDragOverId(prev => prev === t.documentId ? null : prev)}
-        onDrop={e => { e.preventDefault(); handleDropTarea(t) }}
         onClick={() => abrirEditar(t)}
         className={`flex items-start gap-3 p-3 rounded-xl border bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm cursor-pointer transition-all ${
           arrastrandoSobreEsta
@@ -1127,6 +1136,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
             />
           </div>
         </div>
+      </div>
       </div>
     )
   }
@@ -1453,7 +1463,11 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                   )}
 
                   {!procesoColapsado && (
-                    <div className="space-y-2 pl-1">
+                    // Sin space-y-2 a propósito: cada hijo (tarjeta suelta o
+                    // grupo de proyecto) trae su propio margen inferior — ver
+                    // el comentario en renderTareaCard sobre por qué el gap
+                    // de space-y-2 no sirve como área de drop.
+                    <div className="pl-1">
                       {seccion.grupos.map(g => {
                         if (g.tipo === "suelta") return renderTareaCard(g.tarea)
 
@@ -1468,7 +1482,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                             onDragOver={e => { if (dragProyectoId && dragProyectoId !== g.proyecto.documentId) { e.preventDefault(); setDragOverProyectoId(g.proyecto.documentId) } }}
                             onDragLeave={() => setDragOverProyectoId(prev => prev === g.proyecto.documentId ? null : prev)}
                             onDrop={e => { e.preventDefault(); handleDropProyecto(g.proyecto.documentId, seccion.proceso) }}
-                            className={`rounded-xl border p-2 space-y-2 transition-colors ${
+                            className={`rounded-xl border p-2 space-y-2 mb-2 last:mb-0 transition-colors ${
                               dragOverProyectoId === g.proyecto.documentId ? "border-violet-400 bg-violet-50 dark:bg-violet-500/10" :
                               colapsado ? "border-violet-200 dark:border-violet-800/40 bg-white dark:bg-slate-900 shadow-sm" : "border-violet-200 dark:border-violet-800/40 bg-violet-50/40 dark:bg-violet-500/5"
                             } ${dragProyectoId === g.proyecto.documentId ? "opacity-40" : ""}`}>
@@ -1514,7 +1528,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                               </div>
                             )}
                             {!colapsado && (
-                              <div className="space-y-2">
+                              <div>
                                 {g.tareas.map(t => renderTareaCard(t))}
                               </div>
                             )}
