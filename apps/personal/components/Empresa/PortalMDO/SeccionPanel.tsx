@@ -762,7 +762,7 @@ export function SeccionPanel() {
         <KpiCard title="Cotizaciones" value={allCots.length} subBadge={`${cotConvPct}%`} subLabel="convertidas" color={T.amber} onClick={()=>goView("cotizaciones")}/>
         <KpiCard title="Pedidos" value={allVentas.length} subBadge={`${pedEntPct}%`} subLabel="entregados" color={T.sky} onClick={()=>goView("pedidos")}/>
         <KpiCard title="Ingresos MXN" value={$m(ingresos)} subBadge={$m(tick)} subLabel="ticket promedio" color={T.gold} onClick={()=>goView("pedidos")}/>
-        <KpiCard title="Contactos" value={contactosTotal} subBadge={`${clientesRealesCnt}`} subLabel={`son clientes · ${prospectosCnt} prospectos`} color={T.em} onClick={()=>goView("clientes")}/>
+        <KpiCard title="Visitantes" value={visitasWeb} subBadge={`${contactosTotal}`} subLabel={`contactos · ${clientesRealesCnt} clientes`} color={T.em} onClick={()=>goView("clientes")}/>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
