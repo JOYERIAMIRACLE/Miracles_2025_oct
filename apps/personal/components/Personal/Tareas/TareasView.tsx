@@ -453,8 +453,15 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     })
     if (porEtiqueta.has(SIN_PROCESO)) claves.push(SIN_PROCESO)
 
+    // "orden" de la tarea misma (ver handleReordenarTareas/listaHermanos más
+    // abajo) — sort() es estable, así que las tareas que nunca se
+    // arrastraron (orden 0 todas) mantienen el orden por estado/fecha que ya
+    // traían de filtradas; las que sí se arrastraron alguna vez quedan
+    // donde el usuario las dejó.
+    const porOrdenTarea = (a: TareaType, b: TareaType) => (a.orden ?? 0) - (b.orden ?? 0)
+
     function construirGrupos(lista: TareaType[]): GrupoTareas[] {
-      if (!agruparPorProyecto) return lista.map(t => ({ tipo: "suelta" as const, tarea: t }))
+      if (!agruparPorProyecto) return [...lista].sort(porOrdenTarea).map(t => ({ tipo: "suelta" as const, tarea: t }))
       const vistos = new Set<string>()
       const resultado: GrupoTareas[] = []
       for (const t of lista) {
@@ -462,7 +469,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
         if (proyecto) {
           if (vistos.has(proyecto.documentId)) continue
           vistos.add(proyecto.documentId)
-          resultado.push({ tipo: "proyecto", proyecto, tareas: lista.filter(x => x.proyecto?.documentId === proyecto.documentId) })
+          resultado.push({ tipo: "proyecto", proyecto, tareas: lista.filter(x => x.proyecto?.documentId === proyecto.documentId).sort(porOrdenTarea) })
         } else {
           resultado.push({ tipo: "suelta", tarea: t })
         }
@@ -473,7 +480,8 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
       // orden de aparición de arriba. Quedan agrupadas antes que las tareas
       // sueltas para poder compararlas/priorizarlas de un vistazo.
       const proyectoGrupos = resultado.filter((g): g is Extract<GrupoTareas, { tipo: "proyecto" }> => g.tipo === "proyecto")
-      const sueltaGrupos = resultado.filter(g => g.tipo === "suelta")
+      const sueltaGrupos = resultado.filter((g): g is Extract<GrupoTareas, { tipo: "suelta" }> => g.tipo === "suelta")
+        .sort((a, b) => porOrdenTarea(a.tarea, b.tarea))
       const ordenOptIdx = ordenOptimistaProyectos ? new Map(ordenOptimistaProyectos.map((id, i) => [id, i])) : null
       proyectoGrupos.sort((a, b) => {
         if (ordenOptIdx) {
@@ -681,12 +689,57 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     }
   }
 
+  // Si origen y destino ya comparten grupo (mismo proyecto, o ambas sueltas
+  // en la misma sección — ver construirGrupos), devuelve el orden actual de
+  // esa lista tal como está en pantalla; si no comparten grupo, null (y
+  // handleDropTarea sigue con el flujo de agrupar, como antes). Se busca en
+  // seccionesPorProceso en vez de recalcular filtros a mano para que el
+  // orden que se toma como base sea siempre exactamente el que se ve.
+  function listaHermanos(origen: TareaType, destino: TareaType): string[] | null {
+    for (const seccion of seccionesPorProceso) {
+      for (const g of seccion.grupos) {
+        if (g.tipo !== "proyecto") continue
+        const ids = g.tareas.map(t => t.documentId)
+        if (ids.includes(origen.documentId) && ids.includes(destino.documentId)) return ids
+      }
+      const sueltaIds = seccion.grupos.filter((g): g is Extract<GrupoTareas, { tipo: "suelta" }> => g.tipo === "suelta").map(g => g.tarea.documentId)
+      if (sueltaIds.includes(origen.documentId) && sueltaIds.includes(destino.documentId)) return sueltaIds
+    }
+    return null
+  }
+
+  // Mismo mecanismo optimista que ya usan procesos/proyectos, pero aplicado
+  // directo sobre setTareas (t.orden) en vez de un estado "optimista"
+  // aparte — cada tarea ya vive en `tareas`, así que no hace falta una capa
+  // extra para reflejar el nuevo orden al instante.
+  async function handleReordenarTareas(idsEnOrden: string[]) {
+    const anteriores = new Map(idsEnOrden.map(id => [id, tareas.find(t => t.documentId === id)?.orden ?? null]))
+    setTareas(prev => prev.map(t => {
+      const idx = idsEnOrden.indexOf(t.documentId)
+      return idx === -1 ? t : { ...t, orden: idx }
+    }))
+    try {
+      await Promise.all(idsEnOrden.map((id, i) => updateTarea(id, { orden: i })))
+    } catch {
+      setTareas(prev => prev.map(t => anteriores.has(t.documentId) ? { ...t, orden: anteriores.get(t.documentId) ?? null } : t))
+      toast.error("No se pudo reordenar")
+    }
+  }
+
   function handleDropTarea(destino: TareaType) {
     const origenId = dragId
     setDragId(null); setDragOverId(null)
     if (!origenId || origenId === destino.documentId) return
     const origen = tareas.find(t => t.documentId === origenId)
     if (!origen) return
+    const hermanos = listaHermanos(origen, destino)
+    if (hermanos) {
+      const sinOrigen = hermanos.filter(id => id !== origenId)
+      const idxDestino = sinOrigen.indexOf(destino.documentId)
+      sinOrigen.splice(idxDestino, 0, origenId)
+      handleReordenarTareas(sinOrigen)
+      return
+    }
     const proyectoExistente = destino.proyecto ?? origen.proyecto
     if (proyectoExistente) {
       asignarProyectoExistente(origenId, destino.documentId, proyectoExistente)

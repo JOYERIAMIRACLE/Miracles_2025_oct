@@ -24,6 +24,7 @@ export type TareaType = {
   esTicket?:        boolean | null
   ticket?:          { id: number; documentId: string; titulo: string } | null
   proyecto?:        { id: number; documentId: string; nombre: string; orden?: number | null } | null
+  orden?:           number | null
   createdAt?:       string
   updatedAt?:       string
 }
@@ -46,4 +47,5 @@ export type TareaPayload = {
   esTicket?:         boolean | null
   ticket?:           { connect: [{ documentId: string }] } | { disconnect: [] } | null
   proyecto?:         { connect: [{ id: number }] } | { disconnect: [{ id: number }] } | null
+  orden?:            number
 }

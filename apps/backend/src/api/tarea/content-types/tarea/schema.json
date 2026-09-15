@@ -93,6 +93,10 @@
     "esTicket": {
       "type": "boolean",
       "default": false
+    },
+    "orden": {
+      "type": "integer",
+      "default": 0
     }
   }
 }

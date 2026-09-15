@@ -3376,6 +3376,7 @@ export interface ApiTareaTarea extends Struct.CollectionTypeSchema {
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::tarea.tarea'> &
       Schema.Attribute.Private;
     notas: Schema.Attribute.Text;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     prioridad: Schema.Attribute.Enumeration<
       ['baja', 'media', 'alta', 'urgente']
     > &
