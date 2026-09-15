@@ -157,7 +157,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   const { user } = useCurrentUser()
   const { tareas, setTareas, loading } = useGetTareas(ambito)
   const { historial, setHistorial }    = useGetHistorialTarea(ambito)
-  const { procesos, reload: reloadProcesos } = useGetProcesosTarea(ambito)
+  const { procesos, setProcesos, reload: reloadProcesos } = useGetProcesosTarea(ambito)
 
   // La imagen/descripción del header viven en identidad-empresa (un solo
   // registro global) — solo tiene sentido editarlas desde el ambito
@@ -763,6 +763,33 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
     handleReordenarProcesos(sinOrigen)
   }
 
+  // Marca un proceso como "activo" para resaltarlo en la lista y usarlo de
+  // guía visual de qué se está trabajando ahora mismo — "activo" vive en el
+  // catálogo (proceso-tarea) igual que "orden", así que un proceso que
+  // todavía no se ha dado de alta (solo existe como etiqueta libre) se crea
+  // recién al primer toggle, mismo mecanismo que handleReordenarProcesos.
+  async function toggleProcesoActivo(nombreProceso: string) {
+    const persistido = procesos.find(p => p.nombre === nombreProceso)
+    const actual = persistido?.activo ?? false
+    const nuevo = !actual
+    if (persistido) {
+      setProcesos(prev => prev.map(p => p.documentId === persistido.documentId ? { ...p, activo: nuevo } : p))
+    }
+    try {
+      if (persistido) {
+        await updateProcesoTarea(persistido.documentId, { activo: nuevo })
+      } else {
+        const ordenActual = seccionesPorProceso.map(s => s.proceso).filter(p => p !== SIN_PROCESO)
+        const idx = ordenActual.indexOf(nombreProceso)
+        await createProcesoTarea(nombreProceso, ambito, idx === -1 ? 0 : idx, nuevo)
+        reloadProcesos()
+      }
+    } catch {
+      if (persistido) setProcesos(prev => prev.map(p => p.documentId === persistido.documentId ? { ...p, activo: actual } : p))
+      toast.error("No se pudo actualizar el proceso")
+    }
+  }
+
   // Mismo mecanismo que handleReordenarProcesos/handleDropProceso, un nivel
   // más adentro (tarjetas de proyecto dentro de un proceso, ver
   // dragProyectoId arriba) — "orden" vive en el proyecto mismo, así que un
@@ -1280,6 +1307,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
               const etiquetaSeccion = seccion.proceso === SIN_PROCESO ? null : seccion.proceso
               const puedeReordenar = seccion.proceso !== SIN_PROCESO
               const renombrandoEsteProceso = renombrandoProceso === seccion.proceso
+              const procesoActivo = procesos.find(p => p.nombre === seccion.proceso)?.activo ?? false
               return (
                 <div key={`proceso-${seccion.proceso}`} className="space-y-2"
                   // El área de drop vive en TODA la tarjeta de la sección, no solo en
@@ -1307,7 +1335,8 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                   ) : (
                     <div
                       className={`w-full flex items-center gap-1 px-1 py-1 group/proceso rounded-lg transition-colors ${
-                        dragOverProceso === seccion.proceso ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-400/50" : ""
+                        dragOverProceso === seccion.proceso ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-400/50" :
+                        procesoActivo ? "bg-violet-50/60 dark:bg-violet-500/10 ring-1 ring-violet-300/60 dark:ring-violet-500/30" : ""
                       } ${dragProceso === seccion.proceso ? "opacity-40" : ""}`}>
                       {puedeReordenar && (
                         // El asa de arrastre vive en su propio nodo draggable, separado del
@@ -1332,11 +1361,29 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
                       <button type="button" onClick={() => toggleProcesoColapsado(seccion.proceso)}
                         className="flex items-center gap-2 flex-1 min-w-0 text-left">
                         <ChevronDown size={14} className={`text-slate-500 dark:text-slate-400 shrink-0 transition-transform ${procesoColapsado ? "-rotate-90" : ""}`} />
-                        <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide truncate">{seccion.proceso}</span>
+                        <span className={`text-[13px] font-bold uppercase tracking-wide truncate ${
+                          procesoActivo ? "text-violet-700 dark:text-violet-300" : "text-slate-700 dark:text-slate-200"
+                        }`}>{seccion.proceso}</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums shrink-0">
                           {seccion.grupos.reduce((n, g) => n + (g.tipo === "suelta" ? 1 : g.tareas.length), 0)}
                         </span>
                       </button>
+                      {puedeReordenar && (
+                        // Toggle "activo" — resalta el proceso (fondo, borde y nombre en
+                        // violeta) para usarlo de guía visual de en qué se está trabajando
+                        // ahora mismo, sin depender de ningún otro campo/filtro. Siempre
+                        // visible (no solo al hover) porque es un control primario, no uno
+                        // secundario como renombrar/agregar.
+                        <button type="button" onClick={e => { e.stopPropagation(); toggleProcesoActivo(seccion.proceso) }}
+                          title={procesoActivo ? "Quitar de activos" : "Marcar como activo"}
+                          className={`relative shrink-0 w-7 h-4 rounded-full transition-colors ${
+                            procesoActivo ? "bg-violet-500" : "bg-slate-300 dark:bg-slate-600"
+                          }`}>
+                          <span className={`absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
+                            procesoActivo ? "translate-x-3" : ""
+                          }`} />
+                        </button>
+                      )}
                       {puedeReordenar && (
                         <button type="button" title="Renombrar proceso"
                           onClick={() => { setRenombrandoProceso(seccion.proceso); setNombreProcesoRenombrado(seccion.proceso) }}

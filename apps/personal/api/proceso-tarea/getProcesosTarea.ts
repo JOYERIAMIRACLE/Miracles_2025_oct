@@ -18,5 +18,5 @@ export function useGetProcesosTarea(ambito: AmbitoTarea) {
     return () => { vigente = false; controller.abort() }
   }, [ambito, tick])
 
-  return { procesos, reload: () => setTick(t => t + 1) }
+  return { procesos, setProcesos, reload: () => setTick(t => t + 1) }
 }

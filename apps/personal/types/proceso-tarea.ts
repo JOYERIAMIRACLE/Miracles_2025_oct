@@ -6,4 +6,5 @@ export type ProcesoTarea = {
   nombre:     string
   ambito:     AmbitoTarea
   orden:      number
+  activo?:    boolean
 }

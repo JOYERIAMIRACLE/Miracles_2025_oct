@@ -2499,6 +2499,7 @@ export interface ApiProcesoTareaProcesoTarea
     draftAndPublish: false;
   };
   attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     ambito: Schema.Attribute.Enumeration<['personal', 'trabajo', 'empresa']> &
       Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;

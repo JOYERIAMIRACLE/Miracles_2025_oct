@@ -11,6 +11,7 @@
   "attributes": {
     "nombre": { "type": "string", "required": true, "maxLength": 80 },
     "ambito": { "type": "enumeration", "enum": ["personal", "trabajo", "empresa"], "required": true },
-    "orden":  { "type": "integer", "default": 0 }
+    "orden":  { "type": "integer", "default": 0 },
+    "activo": { "type": "boolean", "default": false }
   }
 }
