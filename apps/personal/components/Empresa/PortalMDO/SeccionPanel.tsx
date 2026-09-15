@@ -241,8 +241,8 @@ function SvgDonut({ segs, onSegmentClick, active }:{
   )
 }
 
-function SvgHBars({ items, onBarClick }:{
-  items:{l:string;v:number;c:string}[]; onBarClick?:(label:string)=>void
+function SvgHBars({ items, onBarClick, active }:{
+  items:{l:string;v:number;c:string}[]; onBarClick?:(label:string)=>void; active?:string
 }) {
   const ref=useRef<HTMLDivElement>(null)
   const {tip,show,move,hide}=useChartTip(ref)
@@ -256,17 +256,19 @@ function SvgHBars({ items, onBarClick }:{
         {items.map((x,i)=>{
           const y=PT+i*20,w=+(x.v/max*bw).toFixed(1)
           const pct=max>0?Math.round(x.v/max*100):0
+          const isAct=!active||active===x.l
+          const baseOp=isAct?0.82:0.22
           return (
-            <g key={i} style={{cursor:onBarClick?"pointer":undefined}}
+            <g key={i} style={{cursor:onBarClick?"pointer":undefined,transition:"opacity .2s",opacity:isAct?1:0.45}}
               onClick={()=>onBarClick?.(x.l)}
               onMouseEnter={e=>show(e,`${x.l} · ${x.v}`,`${pct}% del máximo`)}
               onMouseMove={e=>move(e,`${x.l} · ${x.v}`,`${pct}% del máximo`)}
               onMouseLeave={hide}>
               <rect x={PL} y={y} width={bw} height={16} fill="transparent"/>
-              <text x={PL-5} y={y+11} textAnchor="end" fill={T.muted} fontFamily="sans-serif" fontSize={9}>{x.l}</text>
-              <rect x={PL} y={y+2} width={w} height={12} fill={x.c} opacity={0.75} style={{transition:"opacity .15s"}}
+              <text x={PL-5} y={y+11} textAnchor="end" fill={isAct?T.text:T.muted} fontFamily="sans-serif" fontSize={9}>{x.l}</text>
+              <rect x={PL} y={y+2} width={w} height={12} fill={x.c} opacity={baseOp} style={{transition:"opacity .15s"}}
                 onMouseEnter={e=>(e.currentTarget.style.opacity="1")}
-                onMouseLeave={e=>(e.currentTarget.style.opacity="0.75")}/>
+                onMouseLeave={e=>(e.currentTarget.style.opacity=String(baseOp))}/>
               <text x={PL+parseFloat(w)+4} y={y+11} fill={T.text} fontFamily="monospace" fontSize={8}>{x.v}</text>
             </g>
           )
@@ -488,6 +490,7 @@ export function SeccionPanel() {
   // Leads filters
   const [lCanal,setLCanal]   = useState("")
   const [lFunnel,setLFunnel] = useState("")
+  const [lOrigen,setLOrigen] = useState("")
   // Cotizaciones filters
   const [cEstado,setCEstado] = useState("")
   const [cOrigen,setCOrigen] = useState("")
@@ -555,8 +558,8 @@ export function SeccionPanel() {
 
   // Filtros por vista + filtro de mes
   const fLeads = useMemo(()=>allLeads.filter(l=>
-    (!lCanal||l.canal===lCanal)&&(!lFunnel||l.Funnel===lFunnel)&&inMonth(l.fechaLead??l.createdAt)
-  ),[allLeads,lCanal,lFunnel,mFilter])
+    (!lCanal||l.canal===lCanal)&&(!lFunnel||l.Funnel===lFunnel)&&(!lOrigen||l.origen===lOrigen)&&inMonth(l.fechaLead??l.createdAt)
+  ),[allLeads,lCanal,lFunnel,lOrigen,mFilter])
 
   const fCots = useMemo(()=>allCots.filter(c=>
     (!cEstado||c.estado===cEstado)&&
@@ -572,7 +575,7 @@ export function SeccionPanel() {
   function goView(v:View,extra?:{lCanal?:string;lFunnel?:string;cEstado?:string;cTipo?:string;vEstado?:string}){
     setView(v)
     try{localStorage.setItem("panel_view",v)}catch{}
-    setLCanal(extra?.lCanal??""); setLFunnel(extra?.lFunnel??"")
+    setLCanal(extra?.lCanal??""); setLFunnel(extra?.lFunnel??""); setLOrigen("")
     setCEstado(extra?.cEstado??""); setCOrigen(""); setCTipo(extra?.cTipo??"")
     setVEstado(extra?.vEstado??""); setVCanal("")
     setMFilter(-1)
@@ -651,7 +654,8 @@ export function SeccionPanel() {
   const _canalBase=allLeads.filter(l=>(!lFunnel||l.Funnel===lFunnel)&&inMonth(l.fechaLead??l.createdAt))
   const canalCounts=_canalBase.reduce((a,l)=>{const k=l.canal??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)
   const canalSegs=ALL_CANALES.map(l=>({l,v:canalCounts[l]||0,c:CANAL_COLOR[l]||T.muted})).sort((a,b)=>b.v-a.v)
-  const origenSegs=Object.entries(fLeads.reduce((a,l)=>{const k=l.origen??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([l,v])=>({l,v,c:T.sky}))
+  const _origenBase=allLeads.filter(l=>(!lCanal||l.canal===lCanal)&&(!lFunnel||l.Funnel===lFunnel)&&inMonth(l.fechaLead??l.createdAt))
+  const origenSegs=Object.entries(_origenBase.reduce((a,l)=>{const k=l.origen??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([l,v])=>({l,v,c:T.sky}))
   const pctCot=fLeads.length?Math.round(fLeads.filter(l=>allCots.some(c=>c.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
   const pctPed=fLeads.length?Math.round(fLeads.filter(l=>allVentas.some(v=>v.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
 
@@ -946,7 +950,7 @@ export function SeccionPanel() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <ChartLabel>Por origen · clic para filtrar</ChartLabel>
-            <SvgHBars items={origenSegs.length?origenSegs:[{l:"Sin datos",v:0,c:T.muted}]} onBarClick={()=>{}}/>
+            <SvgHBars items={origenSegs.length?origenSegs:[{l:"Sin datos",v:0,c:T.muted}]} active={lOrigen||undefined} onBarClick={l=>setLOrigen(lOrigen===l?"":l)}/>
           </div>
           <div>
             <ChartLabel>Métricas de conversión</ChartLabel>
@@ -962,6 +966,7 @@ export function SeccionPanel() {
       <Card className="flex flex-col gap-3">
         <FilterRow label="CANAL"  options={["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]} active={lCanal} onToggle={v=>setLCanal(lCanal===v?"":v)}/>
         <FilterRow label="FUNNEL" options={["Lead","Oferta","Pedido","Entrega","Rechazada"]} active={lFunnel} onToggle={v=>setLFunnel(lFunnel===v?"":v)}/>
+        {lOrigen&&<FilterRow label="ORIGEN" options={[lOrigen]} active={lOrigen} onToggle={()=>setLOrigen("")}/>}
       </Card>
       <p className="text-[11px] font-mono text-slate-500 px-1 -mt-2">{fLeads.length} leads en vista · {allLeads.length} en rango</p>
       <SimpleTable
