@@ -180,10 +180,10 @@ export function ClientesView() {
       />
 
       {/* Tabla */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Contacto", "Etapa", "Valor", "Cotizaciones", "Datos de contacto", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -195,7 +195,7 @@ export function ClientesView() {
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" />
+                      <div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" />
                     </td>
                   ))}
                 </tr>
@@ -206,11 +206,11 @@ export function ClientesView() {
                 const valor  = valorPorCliente.get(c.documentId) ?? null
                 return (
                   <tr key={c.documentId}
-                    className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer"
                     onClick={() => setSelectedCliente(c)}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                        <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-[#2a1b3d] flex items-center justify-center shrink-0">
                           <User size={12} className="text-slate-500 dark:text-slate-500" />
                         </div>
                         <div>
@@ -258,9 +258,9 @@ export function ClientesView() {
                       ) : (
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button type="button" onClick={() => abrirEditar(c)}
-                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition"><Pencil size={13} /></button>
                           <button type="button" onClick={() => setDelId(c.documentId)}
-                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition"><Trash2 size={13} /></button>
                         </div>
                       )}
                     </td>

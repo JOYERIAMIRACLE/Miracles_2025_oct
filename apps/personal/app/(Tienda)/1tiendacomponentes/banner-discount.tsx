@@ -20,7 +20,7 @@ const BannerDiscount = () => {
       <div className='flex-col max-w-md mx-auto flex sm:flex-row mt-2 p-4 justify-center gap-8 '>
 
         {/* BOTON 1 COMPONENTE SHADCN*/}
-        <Link href="/tienda" className={cn(buttonVariants(), "bg-amber-600 hover:bg-amber-700 text-white")}>Comprar</Link>
+        <Link href="/tienda" className={cn(buttonVariants(), "bg-violet-600 hover:bg-violet-700 text-white")}>Comprar</Link>
 
         {/* BOTON 2 COMPONENTE SHADCN */}
         <Link href="/nosotros" className={buttonVariants({variant: "outline"})}>Más información</Link>

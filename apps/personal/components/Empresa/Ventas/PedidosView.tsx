@@ -74,7 +74,7 @@ function emptyForm(): VentaPayload {
   }
 }
 
-const inp = "w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+const inp = "w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] px-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
 
 export function PedidosView() {
   const { ventas: raw, setVentas, loading } = useGetVentas()
@@ -452,10 +452,10 @@ export function PedidosView() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
                 <tr>
                   {["Concepto", "Canal", "Fecha", "Estado", "Monto", ""].map(h => (
                     <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -464,7 +464,7 @@ export function PedidosView() {
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                 {pedidosDeCliente.map(v => (
-                  <tr key={v.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  <tr key={v.documentId} className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer"
                     onClick={() => openEditar(v)}>
                     <td className="px-4 py-3">
                       {v.numero && <p className="text-[10px] font-bold font-mono text-slate-500 dark:text-slate-500">{v.numero}</p>}
@@ -495,12 +495,12 @@ export function PedidosView() {
                       ) : v.estado === "Cotizado" || v.estado === "Cancelado" ? (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <button type="button" onClick={() => setDelId(v.documentId)}
-                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition"><Trash2 size={13} /></button>
                         </div>
                       ) : (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <button type="button" onClick={() => setCancelId(v.documentId)} title="Cancelar pedido"
-                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Ban size={13} /></button>
+                            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition"><Ban size={13} /></button>
                         </div>
                       )}
                     </td>
@@ -543,10 +543,10 @@ export function PedidosView() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Cliente", "Pedidos", "Estado activo", "Monto total", "Última fecha", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -556,11 +556,11 @@ export function PedidosView() {
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {loading && Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
-                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td>
+                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td>
                 ))}</tr>
               ))}
               {!loading && gruposFiltrados.map(g => (
-                <tr key={g.key} className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                <tr key={g.key} className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer"
                   onClick={() => setClienteView(g.key)}>
                   <td className="px-4 py-3">
                     <p className="font-medium text-slate-800 dark:text-slate-200">{g.nombre}</p>
@@ -599,11 +599,11 @@ export function PedidosView() {
   // nuevo desde el botón "+ Nuevo pedido" (ahí no hay una fila que expandir).
   function renderPedidoForm() {
     const tarjeta = (
-          <div className={editing ? "bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl" : "w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl"}>
+          <div className={editing ? "bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl" : "w-full max-w-2xl bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl"}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? `Pedido ${editing.numero ?? ""}` : "Nuevo pedido"}</h2>
               {!editing && (
-                <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d]">
                   <X size={16} />
                 </button>
               )}
@@ -628,23 +628,23 @@ export function PedidosView() {
                       <ChevronDown size={13} className={`text-slate-500 dark:text-slate-500 shrink-0 transition-transform ${cotOpen ? "rotate-180" : ""}`} />
                     </button>
                     {cotOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
                         <div className="px-2 pt-2 pb-1">
                           <div className="relative">
                             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-500" />
                             <input autoFocus value={cotQuery} onChange={e => setCotQuery(e.target.value)}
                               placeholder="Buscar por número o cliente…"
-                              className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 outline-none focus:border-violet-500" />
+                              className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 outline-none focus:border-violet-500" />
                           </div>
                         </div>
                         <div className="max-h-48 overflow-y-auto py-1">
                           <button type="button" onClick={() => elegirCotizacion(null)}
-                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${!cotizacionOrigen ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-500 dark:text-slate-500"}`}>
+                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-[#2a1b3d] ${!cotizacionOrigen ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-500 dark:text-slate-500"}`}>
                             Sin cotización — capturar a mano
                           </button>
                           {cotizacionesFiltradas.map(c => (
                             <button key={c.documentId} type="button" onClick={() => elegirCotizacion(c)}
-                              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 ${cotizacionOrigen?.documentId === c.documentId ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-300"}`}>
+                              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-[#2a1b3d] ${cotizacionOrigen?.documentId === c.documentId ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-300"}`}>
                               <span className="block truncate">{c.numero} — {fmt(c.total)}</span>
                               {c.cliente?.nombre && <span className="block text-[10px] text-slate-500 dark:text-slate-500 truncate">{c.cliente.nombre}</span>}
                             </button>
@@ -677,7 +677,7 @@ export function PedidosView() {
                   )}
                 </div>
                 <div className="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-slate-950/50">
+                  <div className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-[#2a1b3d]/50">
                     {["Producto / concepto", "Cant.", "Precio", "Subtotal", ""].map(h => (
                       <span key={h} className="text-[9px] font-semibold uppercase text-slate-400 dark:text-slate-600">{h}</span>
                     ))}
@@ -704,12 +704,12 @@ export function PedidosView() {
                         {lineasEditables ? (
                           <input type="number" min="1" title="Cantidad" value={l.cantidad}
                             onChange={e => actualizarLinea(idx, "cantidad", e.target.value)}
-                            className="px-2 py-1.5 text-[11px] text-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
+                            className="px-2 py-1.5 text-[11px] text-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
                         ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-center">{l.cantidad}</span>}
                         {lineasEditables ? (
                           <input type="number" min="0" step="0.01" title="Precio unitario" value={l.precioUnitario}
                             onChange={e => actualizarLinea(idx, "precioUnitario", e.target.value)}
-                            placeholder="0.00" className="px-2 py-1.5 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
+                            placeholder="0.00" className="px-2 py-1.5 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
                         ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-right">{fmt(Number(l.precioUnitario) || 0)}</span>}
                         <span className="text-[11px] text-right text-slate-700 dark:text-slate-300 font-medium">{fmt(totalLinea(l))}</span>
                         {lineasEditables && lineas.length > 1 ? (
@@ -722,7 +722,7 @@ export function PedidosView() {
                     ))}
                   </div>
                   {totalLineas > 0 && (
-                    <div className="flex justify-end px-3 py-1.5 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-end px-3 py-1.5 bg-slate-50 dark:bg-[#2a1b3d]/50 border-t border-slate-200 dark:border-slate-800">
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">Total líneas: <span className="text-slate-800 dark:text-slate-200 font-semibold">{fmt(totalLineas)}</span></span>
                     </div>
                   )}
@@ -746,7 +746,7 @@ export function PedidosView() {
                     )}
                   </label>
                   {cotizacionOrigen ? (
-                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/40 px-3 flex items-center text-sm font-semibold text-violet-600 dark:text-violet-400">
+                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 flex items-center text-sm font-semibold text-violet-600 dark:text-violet-400">
                       {fmt(form.monto || 0)}
                     </div>
                   ) : (
@@ -798,7 +798,7 @@ export function PedidosView() {
                     )}
                   </label>
                   {cotizacionOrigen ? (
-                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/40 px-3 flex items-center text-sm text-slate-700 dark:text-slate-300">
+                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 flex items-center text-sm text-slate-700 dark:text-slate-300">
                       {cotizacionOrigen.cliente?.nombre ?? "— Sin cliente —"}
                     </div>
                   ) : (
@@ -816,7 +816,7 @@ export function PedidosView() {
                 <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
                   onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
                 <button type="button" onClick={() => comprobanteRef.current?.click()}
-                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
                   <Paperclip size={13} className="shrink-0" />
                   <span className="truncate">
                     {comprobante ? comprobante.name : editing?.comprobantePago ? `Ya adjunto: ${editing.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
@@ -864,7 +864,7 @@ export function PedidosView() {
 
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
                 Cancelar
               </button>
               <button type="button" onClick={handleSave} disabled={saving}

@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { confirmDialog } from "../ConfirmDialog"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
+const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
 
 const MESES = [
   { valor: "01", label: "Enero" },   { valor: "02", label: "Febrero" },
@@ -95,7 +95,7 @@ function PdfViewer({ url }: { url: string }) {
   }, [url])
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-100 dark:bg-slate-950 p-4">
+    <div className="h-full overflow-y-auto bg-slate-100 dark:bg-[#2a1b3d] p-4">
       {loading && !error && (
         <div className="h-full flex items-center justify-center">
           <div className="flex flex-col items-center gap-3 text-slate-400 dark:text-slate-500">
@@ -201,8 +201,8 @@ function PreviewModal({ recurso, onClose, onDescargar, onEditar }: {
   return (
     <div className="fixed inset-0 z-60 flex flex-col items-center justify-center p-3 sm:p-6">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative flex flex-col w-full h-full max-w-5xl bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
-        <div className="flex items-start gap-3 px-4 py-3 bg-slate-900 shrink-0">
+      <div className="relative flex flex-col w-full h-full max-w-5xl bg-white dark:bg-[#2a1b3d] rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex items-start gap-3 px-4 py-3 bg-[#2a1b3d] shrink-0">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded ${badge}`}>{label}</span>
@@ -225,7 +225,7 @@ function PreviewModal({ recurso, onClose, onDescargar, onEditar }: {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-hidden bg-slate-100 dark:bg-slate-950 min-h-0">
+        <div className="flex-1 overflow-hidden bg-slate-100 dark:bg-[#2a1b3d] min-h-0">
           {isImg && <div className="h-full flex items-center justify-center p-6"><img src={url} alt={recurso.nombre} className="max-h-full max-w-full object-contain rounded-xl shadow-lg" /></div>}
           {isPdf && <PdfViewer url={url} />}
           {isOffice && <iframe src={officeUrl} className="h-full w-full border-0" title={recurso.nombre} />}
@@ -268,10 +268,10 @@ function SelectCustom({ value, onChange, opciones, placeholder, className, wrapC
         <ChevronDown className={`h-3 w-3 shrink-0 text-slate-400 dark:text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg z-40 py-1">
+        <div className="absolute top-full left-0 mt-1 w-full max-h-56 overflow-y-auto bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 shadow-xl rounded-lg z-40 py-1">
           {opciones.map(o => (
             <button key={o.valor} type="button" onClick={() => { onChange(o.valor); setOpen(false) }}
-              className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${o.valor === value ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-slate-800 font-medium" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+              className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${o.valor === value ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-[#2a1b3d] font-medium" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2a1b3d]"}`}>
               {o.label}
             </button>
           ))}
@@ -313,7 +313,7 @@ function CampoConOpciones({ campo, label, value, onChange, opciones, placeholder
             className={`flex-1 ${fieldCls}`} />
           {opciones.length > 0 && (
             <button type="button" onClick={() => { setModoNuevo(false); onChange("") }}
-              className="h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0">
+              className="h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors shrink-0">
               Cancelar
             </button>
           )}
@@ -340,7 +340,7 @@ function CampoConOpciones({ campo, label, value, onChange, opciones, placeholder
             {guardandoRenombre ? "…" : "Guardar"}
           </button>
           <button type="button" onClick={() => setRenombrando(false)} disabled={guardandoRenombre}
-            className="h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0">
+            className="h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors shrink-0">
             Cancelar
           </button>
         </div>
@@ -417,7 +417,7 @@ function SubirRecursoModal({ seccionDefault, categoriaDefault, categoriasExisten
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 w-full max-w-sm space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] rounded-xl p-5 w-full max-w-sm space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Subir recurso</h2>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Archivo(s)</label>
@@ -429,13 +429,13 @@ function SubirRecursoModal({ seccionDefault, categoriaDefault, categoriasExisten
             <input type="file" multiple
               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.svg,.psd,.ai"
               onChange={e => { if (e.target.files) agregarArchivos(e.target.files); e.target.value = "" }}
-              className="text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-200 file:font-medium file:text-xs hover:file:bg-slate-200 dark:hover:file:bg-slate-700" />
+              className="text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-[#2a1b3d] file:text-slate-700 dark:file:text-slate-200 file:font-medium file:text-xs hover:file:bg-slate-200 dark:hover:file:bg-slate-700" />
             <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Arrastra uno o varios archivos aquí, o elige varios a la vez. PDF, Word, PowerPoint, Excel, imágenes, Photoshop, Illustrator.</p>
           </div>
           {archivos.length > 0 && (
             <ul className="flex flex-col gap-1 mt-1">
               {archivos.map((f, i) => (
-                <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5">
+                <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#2a1b3d] rounded-lg px-2.5 py-1.5">
                   <span className="truncate">{f.name}</span>
                   <button type="button" onClick={() => quitarArchivo(i)} className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-red-500 transition-colors"><X className="h-3.5 w-3.5" /></button>
                 </li>
@@ -454,7 +454,7 @@ function SubirRecursoModal({ seccionDefault, categoriaDefault, categoriasExisten
         <SelectMesAnio mes={mesLanzamiento} anio={anioLanzamiento} onMesChange={setMesLanzamiento} onAnioChange={setAnioLanzamiento} help="Mes y año en que entró en uso esta versión, para filtrarla después." />
         {error && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-950/40 rounded-lg px-3 py-2">{error}</p>}
         <div className="flex gap-2 pt-1">
-          <button type="button" onClick={onClose} className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+          <button type="button" onClick={onClose} className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors">Cancelar</button>
           <button type="button" onClick={handleSubir} disabled={loading} className="flex-1 h-9 rounded-lg bg-violet-500 text-white text-sm font-semibold hover:bg-violet-600 disabled:opacity-50 transition-colors">
             {loading ? "Subiendo…" : multiple ? `Subir ${archivos.length} archivos` : "Subir"}
           </button>
@@ -501,7 +501,7 @@ function EditarRecursoModal({ recurso, categoriasExistentes, recursosExistentes,
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 w-full max-w-sm space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] rounded-xl p-5 w-full max-w-sm space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Editar recurso</h2>
           <p className="text-[10px] text-slate-400 dark:text-slate-500">
@@ -518,7 +518,7 @@ function EditarRecursoModal({ recurso, categoriasExistentes, recursosExistentes,
             className={`rounded-lg border-2 border-dashed p-2 transition-colors ${arrastrando ? "border-violet-400 bg-violet-50 dark:bg-violet-950/20" : "border-slate-200 dark:border-slate-700"}`}>
             <input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.svg,.psd,.ai"
               onChange={e => setArchivoNuevo(e.target.files?.[0] ?? null)}
-              className="text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-200 file:font-medium file:text-xs hover:file:bg-slate-200 dark:hover:file:bg-slate-700" />
+              className="text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-[#2a1b3d] file:text-slate-700 dark:file:text-slate-200 file:font-medium file:text-xs hover:file:bg-slate-200 dark:hover:file:bg-slate-700" />
             <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
               {archivoNuevo ? `Se reemplazará por "${archivoNuevo.name}".` : `Actual: ${recurso.archivo?.name ?? "sin archivo"}. Arrastra uno nuevo aquí o elígelo para reemplazarlo.`}
             </p>
@@ -530,7 +530,7 @@ function EditarRecursoModal({ recurso, categoriasExistentes, recursosExistentes,
         <SelectMesAnio mes={mesLanzamiento} anio={anioLanzamiento} onMesChange={setMesLanzamiento} onAnioChange={setAnioLanzamiento} help="Mes y año en que entró en uso esta versión, para filtrarla después." />
         {error && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-950/40 rounded-lg px-3 py-2">{error}</p>}
         <div className="flex gap-2 pt-1">
-          <button type="button" onClick={onClose} className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+          <button type="button" onClick={onClose} className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors">Cancelar</button>
           <button type="button" onClick={handleGuardar} disabled={loading} className="flex-1 h-9 rounded-lg bg-violet-500 text-white text-sm font-semibold hover:bg-violet-600 disabled:opacity-50 transition-colors">{loading ? "Guardando…" : "Guardar"}</button>
         </div>
       </div>
@@ -565,12 +565,12 @@ function RecursoCard({ variantes, puedeSubir, eliminando, onPreview, onDescargar
   return (
     <div className="group relative flex flex-col rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 hover:border-violet-300 dark:hover:border-violet-500/60 hover:shadow-md transition-all cursor-pointer"
       onClick={() => onPreview(r)}>
-      <div className="aspect-video overflow-y-auto bg-slate-100 dark:bg-slate-800"><CardThumb r={r} /></div>
+      <div className="aspect-video overflow-y-auto bg-slate-100 dark:bg-[#2a1b3d]"><CardThumb r={r} /></div>
       <div className="absolute top-0 left-0 right-0 aspect-video pointer-events-none bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">Ver archivo</span>
       </div>
       {variantes.length > 1 && (
-        <div className="flex flex-wrap gap-1 px-2.5 pt-2 bg-white dark:bg-slate-900" onClick={e => e.stopPropagation()}>
+        <div className="flex flex-wrap gap-1 px-2.5 pt-2 bg-white dark:bg-[#2a1b3d]" onClick={e => e.stopPropagation()}>
           {variantes.map(v => {
             const activo = v.documentId === r.documentId
             return (
@@ -582,7 +582,7 @@ function RecursoCard({ variantes, puedeSubir, eliminando, onPreview, onDescargar
           })}
         </div>
       )}
-      <div className="px-2.5 py-2.5 flex flex-col gap-0.5 bg-white dark:bg-slate-900">
+      <div className="px-2.5 py-2.5 flex flex-col gap-0.5 bg-white dark:bg-[#2a1b3d]">
         <div className="flex items-center gap-1.5">
           <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded ${badge}`}>{label}</span>
           <p className="text-sm font-semibold text-slate-900 dark:text-white truncate flex-1 leading-tight">{r.tipo?.trim() || r.nombre}</p>
@@ -641,7 +641,7 @@ function CrearCategoriaModal({ seccion, orden, onClose, onCreada }: { seccion: s
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 w-full max-w-xs space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl">
+      <div className="bg-white dark:bg-[#2a1b3d] rounded-xl p-5 w-full max-w-xs space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl">
         <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Nueva categoría</h2>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Nombre</label>
@@ -651,7 +651,7 @@ function CrearCategoriaModal({ seccion, orden, onClose, onCreada }: { seccion: s
         </div>
         {error && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-950/40 rounded-lg px-3 py-2">{error}</p>}
         <div className="flex gap-2 pt-1">
-          <button type="button" onClick={onClose} className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+          <button type="button" onClick={onClose} className="flex-1 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors">Cancelar</button>
           <button type="button" onClick={handleCrear} disabled={loading} className="flex-1 h-9 rounded-lg bg-violet-500 text-white text-sm font-semibold hover:bg-violet-600 disabled:opacity-50 transition-colors">{loading ? "Creando…" : "Crear"}</button>
         </div>
       </div>
@@ -713,7 +713,7 @@ function SidebarNav({ tabs, activo, onSelect, onCrear, huerfanos, verHuerfanos, 
             onDrop={() => handleDrop(indexReordenable)}
             onDragEnd={() => setArrastrando(null)}>
             <button type="button" onClick={() => onSelect(t.id)}
-              className={`flex-1 min-w-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-all ${isActive ? "text-violet-600 dark:text-violet-400 bg-slate-100 dark:bg-slate-700" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60"}`}>
+              className={`flex-1 min-w-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-all ${isActive ? "text-violet-600 dark:text-violet-400 bg-slate-100 dark:bg-slate-700" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/60"}`}>
               <Icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{t.label}</span>
             </button>
@@ -724,7 +724,7 @@ function SidebarNav({ tabs, activo, onSelect, onCrear, huerfanos, verHuerfanos, 
                   <MoreVertical className="h-3.5 w-3.5" />
                 </button>
                 {menuAbierto === t.id && (
-                  <div className="absolute right-0 top-full mt-1 z-20 w-40 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 w-40 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
                     {confirmandoElim === t.id ? (
                       <div className="flex items-center gap-2 px-3 py-1.5" onClick={e => e.stopPropagation()}>
                         <span className="text-xs text-slate-500 dark:text-slate-400">¿Eliminar?</span>
@@ -748,7 +748,7 @@ function SidebarNav({ tabs, activo, onSelect, onCrear, huerfanos, verHuerfanos, 
       })}
       {!!huerfanos && onVerHuerfanos && (
         <button type="button" onClick={onVerHuerfanos}
-          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-all mt-1 ${verHuerfanos ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-slate-800 border-r-2 border-violet-500" : "text-violet-600/80 dark:text-violet-500/80 hover:bg-violet-50 dark:hover:bg-slate-800/60"}`}>
+          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-all mt-1 ${verHuerfanos ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-[#2a1b3d] border-r-2 border-violet-500" : "text-violet-600/80 dark:text-violet-500/80 hover:bg-violet-50 dark:hover:bg-[#2a1b3d]/60"}`}>
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span className="truncate">Sin categoría ({huerfanos})</span>
         </button>
@@ -765,7 +765,7 @@ function FiltroConRenombrar({ label, value, onChange, opciones, todosLabel, camp
   const [valorARenombrar, setValorARenombrar] = useState("")
   const [nombreNuevo, setNombreNuevo] = useState("")
   const [guardando, setGuardando] = useState(false)
-  const selectPanelCls = "w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-violet-400 transition-colors"
+  const selectPanelCls = "w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 focus:outline-none focus:border-violet-400 transition-colors"
 
   async function handleGuardar() {
     if (!nombreNuevo.trim() || !onRenombrar) return
@@ -860,7 +860,7 @@ function CategoriaFileGrid({ recursos, puedeSubir, eliminando, onPreview, onDesc
     setArrastrandoIdx(null)
     onReordenar(nuevos.map(r => r.documentId))
   }
-  const selectPanelCls = "w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-violet-400 transition-colors"
+  const selectPanelCls = "w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 focus:outline-none focus:border-violet-400 transition-colors"
 
   return (
     <div>
@@ -871,7 +871,7 @@ function CategoriaFileGrid({ recursos, puedeSubir, eliminando, onPreview, onDesc
               <div className="relative">
                 <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
                 <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar por nombre…"
-                  className="h-9 pl-8 pr-7 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-violet-400 transition-colors w-40 sm:w-48" />
+                  className="h-9 pl-8 pr-7 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 focus:outline-none focus:border-violet-400 transition-colors w-40 sm:w-48" />
                 {busqueda && (
                   <button type="button" onClick={() => setBusqueda("")} aria-label="Limpiar búsqueda"
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300">
@@ -883,14 +883,14 @@ function CategoriaFileGrid({ recursos, puedeSubir, eliminando, onPreview, onDesc
             {mostrarFiltros && (
               <div ref={filtrosRef} className="relative">
                 <button type="button" onClick={() => setFiltrosOpen(v => !v)}
-                  className={`h-9 flex items-center gap-1.5 px-3 text-xs rounded-lg border transition-colors shadow-sm ${filtrosActivos > 0 ? "border-violet-400/60 bg-violet-500/10 text-violet-600 dark:text-violet-400" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600"}`}>
+                  className={`h-9 flex items-center gap-1.5 px-3 text-xs rounded-lg border transition-colors shadow-sm ${filtrosActivos > 0 ? "border-violet-400/60 bg-violet-500/10 text-violet-600 dark:text-violet-400" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600"}`}>
                   <SlidersHorizontal className="h-3.5 w-3.5" />
                   <span>Filtros</span>
                   {filtrosActivos > 0 && <span className="h-4 w-4 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center">{filtrosActivos}</span>}
                   <ChevronDown className={`h-3.5 w-3.5 text-slate-400 dark:text-slate-500 transition-transform ${filtrosOpen ? "rotate-180" : ""}`} />
                 </button>
                 {filtrosOpen && (
-                  <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-60 p-3 space-y-3">
+                  <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-60 p-3 space-y-3">
                     {fechasDisponibles.length >= 1 && (
                       <div className="space-y-1.5">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1"><CalIcon className="h-2.5 w-2.5" /> Fecha de lanzamiento</p>
@@ -1120,7 +1120,7 @@ export function RecursosDescargables({ seccion, extraTabs = [], layout = "tabs" 
               </aside>
               <div className="lg:hidden flex items-center gap-2">
                 <select aria-label="Recursos" value={verHuerfanos ? HUERFANOS_ID : activo!.id} onChange={e => setTabActivo(e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400 transition-colors">
+                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400 transition-colors">
                   {tabs.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   {puedeSubir && huerfanos.length > 0 && <option value={HUERFANOS_ID}>⚠ Sin categoría ({huerfanos.length})</option>}
                 </select>

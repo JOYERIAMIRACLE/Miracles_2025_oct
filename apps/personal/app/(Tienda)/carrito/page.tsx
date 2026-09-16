@@ -84,7 +84,7 @@ export default function page() {
                         </div>
                         <div className="flex items-center justify-center w-full mt-3">
                             <Button
-                                className="w-full cursor-pointer bg-amber-600 hover:bg-amber-700 text-white"
+                                className="w-full cursor-pointer bg-violet-600 hover:bg-violet-700 text-white"
                                 disabled={items.length === 0 || cargandoCliente || enviando}
                                 onClick={procederCompra}
                             >

@@ -93,7 +93,7 @@ const urgenciaBorder: Record<Urgencia, string> = {
 function TarjetaAccion({ t, onAtendido }: { t: Tarjeta; onAtendido: (id: string) => void }) {
   const wa = waUrl(t.telefono, t.waTexto)
   return (
-    <div className={`flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 border-l-2 ${urgenciaBorder[t.urgencia]} shadow-sm`}>
+    <div className={`flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 border-l-2 ${urgenciaBorder[t.urgencia]} shadow-sm`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{t.nombre}</span>
@@ -112,7 +112,7 @@ function TarjetaAccion({ t, onAtendido }: { t: Tarjeta; onAtendido: (id: string)
           </a>
         )}
         <button type="button" onClick={() => onAtendido(t.id)}
-          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-600 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Marcar como atendido">
+          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-600 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition" title="Marcar como atendido">
           <CheckCircle2 size={14} />
         </button>
       </div>
@@ -136,7 +136,7 @@ function SeccionPanel({ s, atendidos, onAtendido }: { s: Seccion; atendidos: Set
       {s.placeholder && visibles.length === 0 ? (
         <p className="text-[12px] text-slate-400 dark:text-slate-600 italic px-1">{s.placeholder}</p>
       ) : visibles.length === 0 ? (
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50">
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-[#2a1b3d]/50 border border-slate-200 dark:border-slate-800/50">
           <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
           <span className="text-[12px] text-slate-500 dark:text-slate-600">Sin acciones pendientes</span>
         </div>
@@ -370,7 +370,7 @@ export function DisparadoresView() {
   // ── render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">

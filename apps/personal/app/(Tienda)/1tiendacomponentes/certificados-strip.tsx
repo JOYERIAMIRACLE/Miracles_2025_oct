@@ -10,7 +10,7 @@ type Beneficio = {
 }
 
 const BENEFICIOS: Beneficio[] = [
-  { Icon: Truck,        color: "text-amber-500",   bg: "bg-amber-50 dark:bg-amber-950/40",   titulo: "Envío a todo México",    sub: "5-7 días hábiles"      },
+  { Icon: Truck,        color: "text-violet-500",   bg: "bg-violet-50 dark:bg-violet-950/40",   titulo: "Envío a todo México",    sub: "5-7 días hábiles"      },
   { Icon: BadgeCheck,   color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/40", titulo: "Calidad certificada",   sub: "Oro 10k y Plata .925"  },
   { Icon: ShieldCheck,  color: "text-sky-500",     bg: "bg-sky-50 dark:bg-sky-950/40",       titulo: "Compra segura",          sub: "Pago protegido"        },
   { Icon: Headphones,   color: "text-teal-500",    bg: "bg-teal-50 dark:bg-teal-950/40",     titulo: "Asesoría personalizada", sub: "Vía WhatsApp"          },

@@ -94,7 +94,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20" />
         <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-8">
-          <p className="text-amber-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
+          <p className="text-violet-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
             Medalla de Oro
           </p>
           <h1 className="text-white text-3xl md:text-5xl font-extrabold leading-tight drop-shadow-lg max-w-xl">
@@ -110,9 +110,9 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
 
         {/* Breadcrumb */}
         <nav className="text-xs text-slate-400 mb-6 flex items-center gap-1.5">
-          <Link href="/" className="hover:text-amber-600 transition-colors">Inicio</Link>
+          <Link href="/" className="hover:text-violet-600 transition-colors">Inicio</Link>
           <span>/</span>
-          <Link href="/tienda" className="hover:text-amber-600 transition-colors">Tienda</Link>
+          <Link href="/tienda" className="hover:text-violet-600 transition-colors">Tienda</Link>
           <span>/</span>
           <span className="text-slate-700 dark:text-slate-200">{displayName}</span>
         </nav>
@@ -123,7 +123,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
             {/* Botón filtros mobile */}
             <button
               onClick={() => setFiltersOpen(o => !o)}
-              className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 hover:border-amber-400 transition-colors sm:hidden"
+              className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 hover:border-violet-400 transition-colors sm:hidden"
             >
               <SlidersHorizontal size={12} />
               Filtros
@@ -138,7 +138,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
           <div className="relative">
             <button
               onClick={() => setSortOpen(o => !o)}
-              className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:border-amber-400 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:border-violet-400 transition-colors"
             >
               Ordenar: <span className="text-slate-900 dark:text-white">{SORT_LABELS[sortOrder]}</span>
               <span className="text-slate-400">▾</span>
@@ -150,7 +150,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
                     key={key}
                     onClick={() => { setSortOrder(key); setSortOpen(false) }}
                     className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
-                      sortOrder === key ? "font-bold text-amber-600 dark:text-amber-400" : "text-slate-700 dark:text-slate-300"
+                      sortOrder === key ? "font-bold text-violet-600 dark:text-violet-400" : "text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     {SORT_LABELS[key]}
@@ -195,8 +195,8 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
 
               {!loading && filtered.length === 0 && (
                 <div className="col-span-full py-20 flex flex-col items-center gap-4 text-center">
-                  <div className="h-12 w-12 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                    <Gem size={22} className="text-amber-500" />
+                  <div className="h-12 w-12 rounded-full bg-violet-400/10 border border-violet-400/30 flex items-center justify-center">
+                    <Gem size={22} className="text-violet-500" />
                   </div>
                   <div className="space-y-1.5 max-w-sm">
                     <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
@@ -208,7 +208,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
                   </div>
                   <Link
                     href="/category"
-                    className="text-sm font-semibold text-amber-500 hover:text-amber-400 transition-colors"
+                    className="text-sm font-semibold text-violet-500 hover:text-violet-400 transition-colors"
                   >
                     Ver todo el catálogo →
                   </Link>

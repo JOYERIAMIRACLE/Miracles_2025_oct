@@ -59,7 +59,7 @@ export default async function BlogPage() {
       />
 
       {/* Hero */}
-      <section className="bg-gradient-to-b from-amber-50 to-white dark:from-gray-900 dark:to-gray-950 py-16 px-6 text-center">
+      <section className="bg-gradient-to-b from-violet-50 to-white dark:from-gray-900 dark:to-gray-950 py-16 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-gray-100 mb-4">
           Blog Medalla de Oro
         </h1>

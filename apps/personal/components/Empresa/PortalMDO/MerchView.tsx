@@ -25,7 +25,7 @@ const CATEGORIA_BADGE: Record<CategoriaMaterial, string> = {
   promocional: "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
   folleto:     "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
   camisa:      "bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
-  otro:        "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700",
+  otro:        "bg-slate-100 dark:bg-[#2a1b3d] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700",
 }
 const CATEGORIA_HEX: Record<CategoriaMaterial, string> = {
   promocional: "#8b5cf6", folleto: "#38bdf8", camisa: "#fb7185", otro: "#94a3b8",
@@ -64,11 +64,11 @@ function FormMaterial({ mode, onSave, onCancel }: { mode: FormMode; onSave: (m: 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md rounded-xl w-full max-w-lg p-6 space-y-3 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 shadow-md rounded-xl w-full max-w-lg p-6 space-y-3 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-1">
           <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editing ? "Editar item" : "Nuevo item de inventario"}</h3>
           <button type="button" title="Cerrar" onClick={onCancel}
-            className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+            className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
@@ -107,7 +107,7 @@ function FormMaterial({ mode, onSave, onCancel }: { mode: FormMode; onSave: (m: 
 
 function StatTile({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
-    <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm text-center">
+    <div className="p-4 rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm text-center">
       <p className="text-[10px] text-slate-500 uppercase tracking-wider">{label}</p>
       <p className={`text-lg font-bold mt-1 ${color ?? "text-slate-800 dark:text-slate-100"}`}>{value}</p>
     </div>
@@ -135,7 +135,7 @@ function MetricasPanel({ materiales, porCategoria, stats }: {
         <StatTile label="Stock bajo" value={stats.bajos} color={stats.bajos > 0 ? "text-violet-500" : undefined} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Piezas por categoría</p>
           {donutData.length === 0 ? <p className="text-xs text-slate-400 text-center py-10">Sin datos</p> : (
             <div className="flex items-center gap-4">
@@ -165,7 +165,7 @@ function MetricasPanel({ materiales, porCategoria, stats }: {
             </div>
           )}
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-4">Stock bajo (actual vs. mínimo)</p>
           {stockBajo.length === 0 ? <p className="text-xs text-slate-400 text-center py-10">Todo el stock está por arriba del mínimo 🎉</p> : (
             <ResponsiveContainer width="100%" height={Math.min(stockBajo.length * 32 + 24, 260)}>
@@ -263,13 +263,13 @@ export function MerchView() {
         </button>
       </div>
 
-      <div className="flex gap-1 bg-white dark:bg-slate-900 p-1 rounded-lg w-fit border border-slate-300 dark:border-slate-700 shadow-sm">
+      <div className="flex gap-1 bg-white dark:bg-[#2a1b3d] p-1 rounded-lg w-fit border border-slate-300 dark:border-slate-700 shadow-sm">
         <button type="button" onClick={() => setTab("lista")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "lista" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "lista" ? "bg-slate-100 dark:bg-[#2a1b3d] text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
           <List size={14} /> Lista
         </button>
         <button type="button" onClick={() => setTab("metricas")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "metricas" ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "metricas" ? "bg-slate-100 dark:bg-[#2a1b3d] text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
           <BarChart2 size={14} /> Métricas
         </button>
       </div>
@@ -284,18 +284,18 @@ export function MerchView() {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar por nombre o notas…"
-                className="pl-8 pr-3 h-9 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-violet-400 transition shadow-sm w-64" />
+                className="pl-8 pr-3 h-9 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-violet-400 transition shadow-sm w-64" />
             </div>
             <div ref={filtrosRef} className="relative">
               <button type="button" onClick={() => setShowFiltros(v => !v)}
-                className="h-9 flex items-center gap-1.5 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition-colors shadow-sm">
+                className="h-9 flex items-center gap-1.5 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition-colors shadow-sm">
                 <SlidersHorizontal size={13} />
                 <span>Filtros</span>
                 {filtrosActivos > 0 && <span className="h-4 w-4 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center">{filtrosActivos}</span>}
                 <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${showFiltros ? "rotate-180" : ""}`} />
               </button>
               {showFiltros && (
-                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-60 p-3 space-y-3">
+                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-60 p-3 space-y-3">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Categoría</p>
                     <DropdownPicker label="Categoría" value={filtroCategoria ?? ""} placeholder="Todas"
@@ -323,7 +323,7 @@ export function MerchView() {
               <p className="text-sm">{hayFiltrosLista ? "Sin resultados para esos filtros." : "Sin items registrados."}</p>
             </div>
           ) : (
-            <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-700">
@@ -341,7 +341,7 @@ export function MerchView() {
                       return (
                         <motion.tr key={m.documentId} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                           onClick={() => setFormMode({ type: "edit", item: m })}
-                          className="border-b border-slate-200 dark:border-slate-700 last:border-0 group hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                          className="border-b border-slate-200 dark:border-slate-700 last:border-0 group hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors cursor-pointer">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               {bajo && <AlertTriangle className="h-3.5 w-3.5 text-violet-400 shrink-0" aria-label="Stock bajo mínimo" />}
@@ -350,7 +350,7 @@ export function MerchView() {
                             <span className={`sm:hidden mt-0.5 inline-flex text-[10px] px-1.5 py-0.5 rounded border ${CATEGORIA_BADGE[m.categoria]}`}>{CATEGORIA_LABEL[m.categoria]}</span>
                           </td>
                           <td className="px-4 py-3 hidden sm:table-cell">
-                            <span className="inline-flex items-center text-xs px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-medium">{CATEGORIA_LABEL[m.categoria]}</span>
+                            <span className="inline-flex items-center text-xs px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 font-medium">{CATEGORIA_LABEL[m.categoria]}</span>
                           </td>
                           <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-center gap-2">

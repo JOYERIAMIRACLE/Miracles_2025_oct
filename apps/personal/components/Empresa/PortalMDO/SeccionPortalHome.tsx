@@ -121,7 +121,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
                   const Icon = a.icon
                   return (
                     <button key={a.id} type="button" onClick={a.onClick}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer text-left">
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-all cursor-pointer text-left">
                       <Icon className="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" />
                       <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{a.label}</span>
                     </button>
@@ -153,7 +153,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg p-6 flex flex-col gap-5">
+          <div className="relative bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg p-6 flex flex-col gap-5">
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Personalizar accesos</h2>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Elige qué accesos mostrar en tu inicio</p>
@@ -168,7 +168,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
                       const MIcon = a.icon
                       return (
                         <button key={a.id} type="button" onClick={() => toggleTempSel(a.id)}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all ${sel ? "border-violet-400 bg-violet-50 dark:bg-violet-900/20" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-slate-300"}`}>
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all ${sel ? "border-violet-400 bg-violet-50 dark:bg-violet-900/20" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#2a1b3d] hover:border-slate-300"}`}>
                           <MIcon className={`h-4 w-4 shrink-0 ${sel ? "text-violet-500" : "text-slate-400"}`} />
                           <span className={`text-xs font-semibold flex-1 min-w-0 truncate ${sel ? "text-violet-700 dark:text-violet-400" : "text-slate-600 dark:text-slate-300"}`}>{a.label}</span>
                           <span className={`h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center ${sel ? "border-violet-500 bg-violet-500" : "border-slate-300 dark:border-slate-600"}`}>
@@ -188,7 +188,7 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
               </button>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  className="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors">
                   Cancelar
                 </button>
                 <button type="button" onClick={guardar}

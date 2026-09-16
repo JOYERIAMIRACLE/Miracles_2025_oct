@@ -5,7 +5,7 @@ const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 function renderText(node: TextNode, idx: number): React.ReactNode {
   if (node.type === "link") {
     return (
-      <a key={idx} href={node.url} target="_blank" rel="noopener noreferrer" className="text-amber-600 underline hover:text-amber-700">
+      <a key={idx} href={node.url} target="_blank" rel="noopener noreferrer" className="text-violet-600 underline hover:text-violet-700">
         {node.children?.map((c, i) => renderText(c, i))}
       </a>
     )
@@ -59,7 +59,7 @@ function renderBlock(block: BlockNode, idx: number): React.ReactNode {
     }
     case "quote":
       return (
-        <blockquote key={idx} className="border-l-4 border-amber-400 pl-4 italic my-5 text-gray-600 dark:text-gray-400">
+        <blockquote key={idx} className="border-l-4 border-violet-400 pl-4 italic my-5 text-gray-600 dark:text-gray-400">
           {block.children.map(renderText)}
         </blockquote>
       )

@@ -54,7 +54,7 @@ function emptyForm(): FormData {
   return { titulo: "", descripcion: "", estado: "sin_iniciar", prioridad: "media", fechaVencimiento: "", progreso: 0, categoria: "" }
 }
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
 
 // ─── Vista principal ──────────────────────────────────────────────────────────
 
@@ -208,7 +208,7 @@ export function TareasEmpresaView() {
           { label: "En progreso", value: stats.progreso,    color: "text-violet-400" },
           { label: "Completadas", value: stats.completadas, color: "text-violet-400" },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+          <div key={k.label} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-3">
             <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
           </div>
@@ -234,7 +234,7 @@ export function TareasEmpresaView() {
         {categoriasUsadas.length > 0 && (
           <select title="Filtrar por categoría" value={filtroCat}
             onChange={e => setFiltroCat(e.target.value)}
-            className="h-7 px-2 rounded-full text-xs border border-slate-700 bg-slate-900 text-slate-400 focus:outline-none">
+            className="h-7 px-2 rounded-full text-xs border border-slate-700 bg-[#2a1b3d] text-slate-400 focus:outline-none">
             <option value="">Todas las categorías</option>
             {categoriasUsadas.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -248,16 +248,16 @@ export function TareasEmpresaView() {
       {/* Lista */}
       {loading ? (
         <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-16 rounded-xl bg-slate-900 animate-pulse border border-slate-800" />
+          <div key={i} className="h-16 rounded-xl bg-[#2a1b3d] animate-pulse border border-slate-800" />
         ))}</div>
       ) : filtradas.length === 0 ? (
-        <div className="py-20 text-center text-slate-600 bg-slate-900 border border-slate-800 rounded-xl">
+        <div className="py-20 text-center text-slate-600 bg-[#2a1b3d] border border-slate-800 rounded-xl">
           <CheckSquare size={36} className="mx-auto mb-3 opacity-20" />
           <p className="text-sm">Sin tareas de marketing.</p>
           <p className="text-xs mt-1 text-slate-700">Crea tu primera tarea con el botón de arriba.</p>
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
           <div className="divide-y divide-slate-800/60">
             {filtradas.map(t => {
               const est   = ESTADOS.find(e => e.key === t.estado)
@@ -265,7 +265,7 @@ export function TareasEmpresaView() {
               const pct   = t.progreso ?? 0
               const barColor = pct >= 100 ? "bg-violet-500" : pct >= 60 ? "bg-violet-500" : pct >= 30 ? "bg-violet-500" : "bg-red-400"
               return (
-                <div key={t.documentId} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors group">
+                <div key={t.documentId} className="flex items-start gap-3 px-4 py-3 hover:bg-[#2a1b3d]/30 transition-colors group">
                   {/* Toggle completada */}
                   <button type="button"
                     onClick={() => cambiarEstado(t, t.estado === "completada" ? "sin_iniciar" : "completada")}
@@ -323,7 +323,7 @@ export function TareasEmpresaView() {
                   {/* Estado rápido */}
                   <select title="Cambiar estado" value={t.estado}
                     onChange={e => cambiarEstado(t, e.target.value as EstadoTarea)}
-                    className="h-7 rounded-lg border border-slate-700 bg-slate-800 px-2 text-[11px] text-slate-400 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity">
+                    className="h-7 rounded-lg border border-slate-700 bg-[#2a1b3d] px-2 text-[11px] text-slate-400 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity">
                     {ESTADOS.map(e => <option key={e.key} value={e.key}>{e.label}</option>)}
                   </select>
 
@@ -334,24 +334,24 @@ export function TareasEmpresaView() {
                       className={`p-1.5 rounded transition-colors ${
                         avancesOpen === t.documentId
                           ? "text-violet-400 bg-violet-500/10"
-                          : "text-slate-600 hover:text-violet-400 hover:bg-slate-800"
+                          : "text-slate-600 hover:text-violet-400 hover:bg-[#2a1b3d]"
                       }`}>
                       <Plus size={12} />
                     </button>
                     <button type="button" onClick={() => openEditar(t)} title="Editar"
-                      className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
+                      className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition">
                       <Pencil size={12} />
                     </button>
                     {delId === t.documentId ? (
                       <>
                         <button type="button" onClick={() => handleDelete(t.documentId)}
-                          className="text-[10px] text-red-400 hover:text-red-300 px-1.5 py-1 rounded hover:bg-slate-800">Sí</button>
+                          className="text-[10px] text-red-400 hover:text-red-300 px-1.5 py-1 rounded hover:bg-[#2a1b3d]">Sí</button>
                         <button type="button" onClick={() => setDelId(null)}
-                          className="text-[10px] text-slate-500 px-1.5 py-1 rounded hover:bg-slate-800">No</button>
+                          className="text-[10px] text-slate-500 px-1.5 py-1 rounded hover:bg-[#2a1b3d]">No</button>
                       </>
                     ) : (
                       <button type="button" onClick={() => setDelId(t.documentId)} title="Eliminar"
-                        className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
+                        className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition">
                         <X size={12} />
                       </button>
                     )}
@@ -367,11 +367,11 @@ export function TareasEmpresaView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+          <div className="w-full max-w-md bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar tarea" : "Nueva tarea"}</h2>
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
-                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16} /></button>
+                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d]"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
@@ -430,7 +430,7 @@ export function TareasEmpresaView() {
             </div>
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}

@@ -175,8 +175,8 @@ function TreeRow({
           isActive
             ? "bg-violet-600/15 border border-violet-500/25 shadow-sm"
             : isCat
-              ? "hover:bg-slate-800/70 border border-transparent"
-              : "hover:bg-slate-800/50 border border-transparent"
+              ? "hover:bg-[#2a1b3d]/70 border border-transparent"
+              : "hover:bg-[#2a1b3d]/50 border border-transparent"
         }`}
         style={{ paddingLeft: `${8 + depth * 18}px` }}
         onClick={() => onSelect(node.id)}
@@ -212,7 +212,7 @@ function TreeRow({
           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 tabular-nums ${
             isActive
               ? "bg-violet-500/40 text-violet-200 border border-violet-500/30"
-              : "bg-slate-800 text-slate-500 border border-slate-700/60"
+              : "bg-[#2a1b3d] text-slate-500 border border-slate-700/60"
           }`}>{skuCount[`${parentMatKind}:${node.nombre}`]}</span>
         )}
 
@@ -302,7 +302,7 @@ function DetailPanel({
   const delModelo = (id: string) =>
     onUpdate({ modelos: node.modelos.filter(m => m.id !== id) })
 
-  const inp = "w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40 transition"
+  const inp = "w-full bg-[#2a1b3d]/60 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40 transition"
   const lbl = "block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1"
 
   return (
@@ -349,7 +349,7 @@ function DetailPanel({
                   </button>
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-lg bg-slate-800 border border-dashed border-slate-700 flex items-center justify-center shrink-0">
+                <div className="w-16 h-16 rounded-lg bg-[#2a1b3d] border border-dashed border-slate-700 flex items-center justify-center shrink-0">
                   <Package size={18} className="text-slate-600"/>
                 </div>
               )}
@@ -410,13 +410,13 @@ function DetailPanel({
               {node.caracteristicas.map(c => (
                 <div key={c.id} className="flex gap-2 items-center">
                   <input
-                    className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                    className="flex-1 bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Clave (Ej. Metal)"
                     value={c.clave}
                     onChange={e => updCaract(c.id, { clave: e.target.value })}
                   />
                   <input
-                    className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                    className="flex-1 bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Valor (Ej. Oro)"
                     value={c.valor}
                     onChange={e => updCaract(c.id, { valor: e.target.value })}
@@ -455,15 +455,15 @@ function DetailPanel({
               </div>
               {node.modelos.map(m => (
                 <div key={m.id} className="grid grid-cols-[1fr_1fr_1fr_64px_72px_28px] gap-1.5 items-center">
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                  <input className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="SKU" value={m.sku} onChange={e => updModelo(m.id, { sku: e.target.value })} />
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                  <input className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Talla 6" value={m.nombre} onChange={e => updModelo(m.id, { nombre: e.target.value })} />
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                  <input className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Amarillo" value={m.variedad} onChange={e => updModelo(m.id, { variedad: e.target.value })} />
-                  <input type="number" className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                  <input type="number" className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="0" value={m.stock ?? ""} onChange={e => updModelo(m.id, { stock: e.target.value === "" ? null : Number(e.target.value) })} />
-                  <input type="number" className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                  <input type="number" className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="0.00" value={m.precio ?? ""} onChange={e => updModelo(m.id, { precio: e.target.value === "" ? null : Number(e.target.value) })} />
                   <button type="button" title="Eliminar modelo" onClick={() => delModelo(m.id)}
                     className="text-slate-700 hover:text-red-400 transition p-1">
@@ -487,7 +487,7 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all whitespace-nowrap ${
         active
           ? "bg-violet-500/20 border-violet-500/40 text-violet-200"
-          : "bg-slate-900 border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-200 hover:bg-slate-800/60"
+          : "bg-[#2a1b3d] border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-200 hover:bg-[#2a1b3d]/60"
       }`}>
       {active && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />}
       {label}
@@ -625,14 +625,14 @@ function SkuBrowserPanel({
             <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" />
             <input value={q} onChange={e => setQ(e.target.value)}
               placeholder="Buscar SKU…"
-              className="pl-7 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700/50 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-28 sm:w-36 transition" />
+              className="pl-7 pr-3 py-1.5 text-xs bg-[#2a1b3d] border border-slate-700/50 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-28 sm:w-36 transition" />
           </div>
           {showFilterBar && (
             <button type="button" onClick={() => setShowFilters(v => !v)}
               className={`relative flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                 showFilters || hasFilters
                   ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
-                  : "bg-slate-800 border-slate-700/60 text-slate-400 hover:text-slate-200"
+                  : "bg-[#2a1b3d] border-slate-700/60 text-slate-400 hover:text-slate-200"
               }`}>
               <SlidersHorizontal size={12} />
               <span className="hidden sm:inline">Filtros</span>
@@ -647,7 +647,7 @@ function SkuBrowserPanel({
             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition ${
               showBuilder
                 ? "bg-violet-600 text-white shadow-sm shadow-violet-500/20"
-                : "bg-slate-800 border border-slate-700/60 text-slate-300 hover:border-violet-500/40 hover:text-violet-300"
+                : "bg-[#2a1b3d] border border-slate-700/60 text-slate-300 hover:border-violet-500/40 hover:text-violet-300"
             }`}>
             <Wand2 size={12} />
             <span className="hidden sm:inline">{showBuilder ? "Cerrar" : "Nueva pieza"}</span>
@@ -657,7 +657,7 @@ function SkuBrowserPanel({
 
       {/* Panel de filtros — colapsable */}
       {showFilterBar && showFilters && (
-        <div className="border-b border-slate-800 bg-slate-950/50 shrink-0">
+        <div className="border-b border-slate-800 bg-[#2a1b3d]/50 shrink-0">
           <div className="px-4 py-3 space-y-2">
 
             {availMat.length > 1 && (
@@ -724,7 +724,7 @@ function SkuBrowserPanel({
 
           {hasFilters && (
             <div className="px-4 pb-3 flex items-center gap-2">
-              <div className="flex-1 h-px bg-slate-800/80" />
+              <div className="flex-1 h-px bg-[#2a1b3d]/80" />
               <button type="button" onClick={clearFilters}
                 className="flex items-center gap-1 text-[10px] font-medium text-violet-400 hover:text-violet-300 transition">
                 <X size={9} /> Limpiar filtros
@@ -736,7 +736,7 @@ function SkuBrowserPanel({
 
       {/* SkuBuilder expandible */}
       {showBuilder && (
-        <div className="shrink-0 border-b border-slate-800 p-5 overflow-y-auto max-h-[55vh] bg-slate-950/50">
+        <div className="shrink-0 border-b border-slate-800 p-5 overflow-y-auto max-h-[55vh] bg-[#2a1b3d]/50">
           <SkuBuilder
             defaultTipo={tipoCat?.code}
             onAdd={entry => { onSkuAdded(entry); setShowBuilder(false) }}
@@ -748,7 +748,7 @@ function SkuBrowserPanel({
       <div className="flex-1 overflow-y-auto p-5">
         {visibleProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-12">
-            <div className="w-14 h-14 rounded-full bg-slate-800/80 border border-slate-700/50 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-[#2a1b3d]/80 border border-slate-700/50 flex items-center justify-center">
               <Gem size={22} className="text-slate-600" />
             </div>
             <div>
@@ -770,7 +770,7 @@ function SkuBrowserPanel({
               const coverImg = p.imagenes?.[0]
               return (
                 <div key={p.documentId}
-                  className="relative flex flex-col rounded-xl bg-slate-800/25 border border-slate-700/40 hover:border-slate-600/60 hover:bg-slate-800/50 transition-all overflow-hidden">
+                  className="relative flex flex-col rounded-xl bg-[#2a1b3d]/25 border border-slate-700/40 hover:border-slate-600/60 hover:bg-[#2a1b3d]/50 transition-all overflow-hidden">
 
                   {/* Stripe de material */}
                   <div className={`absolute left-0 inset-y-0 w-0.75 rounded-l-xl ${ms.dot}`} aria-hidden />
@@ -781,7 +781,7 @@ function SkuBrowserPanel({
                       <img src={prodImgUrl(coverImg.url)} alt={p.nombreProducto}
                         className="w-10 h-10 rounded-lg object-cover border border-slate-700/50 shrink-0 mt-0.5" />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-slate-800 border border-dashed border-slate-700/50 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-10 h-10 rounded-lg bg-[#2a1b3d] border border-dashed border-slate-700/50 flex items-center justify-center shrink-0 mt-0.5">
                         <Package size={14} className="text-slate-600" />
                       </div>
                     )}
@@ -792,12 +792,12 @@ function SkuBrowserPanel({
                   </div>
 
                   {/* Footer con tags */}
-                  <div className="flex flex-wrap gap-1 pl-5 pr-3 py-2 border-t border-slate-800/70 bg-slate-900/30">
+                  <div className="flex flex-wrap gap-1 pl-5 pr-3 py-2 border-t border-slate-800/70 bg-[#2a1b3d]/30">
                     {p.materialProducto && (
                       <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${ms.matBadge}`}>{p.materialProducto}</span>
                     )}
                     {p.stock !== null && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-slate-700/50 bg-slate-800/50 text-slate-400 font-medium">×{p.stock}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-slate-700/50 bg-[#2a1b3d]/50 text-slate-400 font-medium">×{p.stock}</span>
                     )}
                     <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-emerald-700/30 bg-emerald-900/20 text-emerald-400 font-medium">Inventario</span>
                   </div>
@@ -948,7 +948,7 @@ export function CatalogoJoyeriaView() {
             <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar…"
-              className="pl-7 pr-6 py-1.5 text-xs bg-slate-900 border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-32 transition" />
+              className="pl-7 pr-6 py-1.5 text-xs bg-[#2a1b3d] border border-slate-700/60 rounded-lg text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-32 transition" />
             {busqueda && (
               <button type="button" title="Limpiar" onClick={() => setBusqueda("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
@@ -1015,7 +1015,7 @@ export function CatalogoJoyeriaView() {
           {/* Botón volver al árbol — solo mobile */}
           <button type="button"
             onClick={() => { setShowDetail(false); setSelected(null) }}
-            className="md:hidden flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium text-violet-400 border-b border-slate-800 hover:bg-slate-800/40 transition-colors shrink-0">
+            className="md:hidden flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium text-violet-400 border-b border-slate-800 hover:bg-[#2a1b3d]/40 transition-colors shrink-0">
             <ChevronRight size={13} className="rotate-180" /> Árbol
           </button>
 
@@ -1024,7 +1024,7 @@ export function CatalogoJoyeriaView() {
             <div className="flex-1 overflow-y-auto">
               <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${TIPO_CONFIG[selectedNode.tipo].color} bg-slate-800/80 border-slate-700/50 uppercase tracking-widest`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${TIPO_CONFIG[selectedNode.tipo].color} bg-[#2a1b3d]/80 border-slate-700/50 uppercase tracking-widest`}>
                     {TIPO_CONFIG[selectedNode.tipo].label}
                   </span>
                   <span className="text-slate-100 text-sm font-semibold">

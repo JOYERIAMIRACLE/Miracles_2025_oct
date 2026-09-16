@@ -21,7 +21,7 @@ const CATEGORIA_BADGE: Record<CategoriaMaterial, string> = {
   otro:        "bg-slate-500/15 text-slate-400 border-slate-500/20",
 }
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
 
 export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMaterial }) {
   const { materiales, setMateriales, loading } = useGetMaterialesTrabajo(ambito)
@@ -101,7 +101,7 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
           { label: "Piezas",     value: stats.piezas, color: "text-violet-400" },
           { label: "Stock bajo", value: stats.bajos,  color: stats.bajos > 0 ? "text-violet-400" : "text-slate-500" },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div key={k.label} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
           </div>
@@ -129,9 +129,9 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
       </div>
 
       {/* Tabla */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-800 bg-slate-950/50">
+          <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
             <tr>
               {["Nombre", "Categoría", "Cantidad", "Notas", ""].map(h => (
                 <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest">{h}</th>
@@ -141,13 +141,13 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
           <tbody className="divide-y divide-slate-800/60">
             {loading && Array.from({ length: 4 }).map((_, i) => (
               <tr key={i}>{Array.from({ length: 5 }).map((_, j) => (
-                <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td>
+                <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4" /></td>
               ))}</tr>
             ))}
             {!loading && filtrados.map(m => {
               const bajo = m.minimo > 0 && m.cantidad <= m.minimo
               return (
-                <tr key={m.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                <tr key={m.documentId} className="hover:bg-[#2a1b3d]/40 transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {bajo && <AlertTriangle size={12} className="text-violet-400 shrink-0" />}
@@ -173,9 +173,9 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button type="button" onClick={() => openEditar(m)}
-                        className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
+                        className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition"><Pencil size={13} /></button>
                       <button type="button" onClick={() => handleDelete(m)}
-                        className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><X size={13} /></button>
+                        className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition"><X size={13} /></button>
                     </div>
                   </td>
                 </tr>
@@ -195,11 +195,11 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+          <div className="w-full max-w-sm bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar material" : "Nuevo material"}</h2>
               <button type="button" onClick={() => setModalOpen(false)}
-                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16} /></button>
+                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d]"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
@@ -236,7 +236,7 @@ export function PromocionalesView({ ambito = "trabajo" }: { ambito?: AmbitoMater
             </div>
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}

@@ -4,15 +4,15 @@ import { useGetCategories } from '@/api/GetProduct'
 import { CategoryType } from '@/types/category'
 
 const FALLBACK_GRADIENTS: Record<string, string> = {
-  anillos:   "from-rose-900 via-rose-800 to-amber-900",
-  cadenas:   "from-amber-900 via-yellow-800 to-amber-700",
-  esclavas:  "from-amber-800 via-amber-700 to-yellow-600",
+  anillos:   "from-rose-900 via-rose-800 to-violet-900",
+  cadenas:   "from-violet-900 via-yellow-800 to-violet-700",
+  esclavas:  "from-violet-800 via-violet-700 to-yellow-600",
   dijes:     "from-emerald-900 via-teal-800 to-slate-800",
   broqueles: "from-slate-700 via-slate-600 to-slate-500",
   aretes:    "from-violet-900 via-purple-800 to-slate-800",
-  pulsos:    "from-amber-900 via-orange-800 to-amber-800",
+  pulsos:    "from-violet-900 via-orange-800 to-violet-800",
   rosarios:  "from-slate-800 via-indigo-900 to-slate-900",
-  argollas:  "from-yellow-900 via-amber-800 to-orange-800",
+  argollas:  "from-yellow-900 via-violet-800 to-orange-800",
 }
 const FALLBACK_ICONS: Record<string, string> = {
   anillos: "💍", cadenas: "📿", esclavas: "⛓️", dijes: "✨",
@@ -31,7 +31,7 @@ const CategoriaGrid = () => {
     <section className="max-w-6xl mx-auto px-6 md:px-8 py-14 md:py-20">
 
       <div className="mb-8 md:mb-10">
-        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500 mb-2">
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
           Medalla de Oro
         </p>
         <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white">
@@ -87,7 +87,7 @@ const CategoriaGrid = () => {
                   <p className="text-white text-base md:text-lg font-bold leading-tight drop-shadow">
                     {cat.NombreCategoria}
                   </p>
-                  <p className="text-white/60 text-[11px] mt-0.5 font-medium uppercase tracking-widest group-hover:text-amber-400 transition-colors duration-300">
+                  <p className="text-white/60 text-[11px] mt-0.5 font-medium uppercase tracking-widest group-hover:text-violet-400 transition-colors duration-300">
                     Ver catálogo →
                   </p>
                 </div>

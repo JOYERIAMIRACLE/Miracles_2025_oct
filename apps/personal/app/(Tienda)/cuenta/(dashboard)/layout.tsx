@@ -32,7 +32,7 @@ export default function CuentaDashboardLayout({ children }: { children: ReactNod
   if (loading || !usuario) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center bg-white dark:bg-zinc-950">
-        <Loader2 className="h-5 w-5 animate-spin text-amber-600" />
+        <Loader2 className="h-5 w-5 animate-spin text-violet-600" />
       </div>
     )
   }
@@ -44,7 +44,7 @@ export default function CuentaDashboardLayout({ children }: { children: ReactNod
     <div className="bg-white dark:bg-zinc-950 min-h-[70vh]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-          <Link href="/" className="hover:text-amber-600">Inicio</Link>
+          <Link href="/" className="hover:text-violet-600">Inicio</Link>
           <span>/</span>
           <span className="text-gray-700 dark:text-gray-300">Mi cuenta</span>
         </nav>
@@ -55,8 +55,8 @@ export default function CuentaDashboardLayout({ children }: { children: ReactNod
                 cajas idénticas apiladas) — un separador interno basta. */}
             <div className="bg-white dark:bg-zinc-900 ring-1 ring-gray-200 dark:ring-white/10 rounded-2xl overflow-hidden">
               <div className="flex items-center gap-3 p-4 border-b border-gray-100 dark:border-white/10">
-                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-amber-100 to-amber-200/60 dark:from-amber-500/20 dark:to-amber-600/10 flex items-center justify-center shrink-0">
-                  <User className="h-4.5 w-4.5 text-amber-700 dark:text-amber-400" />
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-violet-100 to-violet-200/60 dark:from-violet-500/20 dark:to-violet-600/10 flex items-center justify-center shrink-0">
+                  <User className="h-4.5 w-4.5 text-violet-700 dark:text-violet-400" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">{usuario.username}</p>
@@ -72,11 +72,11 @@ export default function CuentaDashboardLayout({ children }: { children: ReactNod
                       <Link key={href} href={href}
                         className={`relative flex items-center gap-2.5 pl-3.5 pr-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                           active
-                            ? "text-amber-700 dark:text-amber-400 bg-amber-50/70 dark:bg-amber-500/[0.07]"
+                            ? "text-violet-700 dark:text-violet-400 bg-violet-50/70 dark:bg-violet-500/[0.07]"
                             : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                         }`}>
-                        {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.75 rounded-full bg-amber-600 dark:bg-amber-400" />}
-                        <Icon size={16} className={active ? "text-amber-600 dark:text-amber-400" : "text-gray-400 dark:text-gray-500"} />
+                        {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.75 rounded-full bg-violet-600 dark:bg-violet-400" />}
+                        <Icon size={16} className={active ? "text-violet-600 dark:text-violet-400" : "text-gray-400 dark:text-gray-500"} />
                         {label}
                       </Link>
                     )

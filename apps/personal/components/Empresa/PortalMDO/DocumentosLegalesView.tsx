@@ -59,7 +59,7 @@ function DocumentoLegalRow({ d, puedeEditar, onEditar }: { d: DocumentoLegalType
     <div>
       <div role="button" tabIndex={0} onClick={() => setAbierto(o => !o)}
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setAbierto(o => !o) } }}
-        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${abierto ? "bg-slate-50 dark:bg-slate-800/60" : "hover:bg-slate-50 dark:hover:bg-slate-800/60"}`}>
+        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${abierto ? "bg-slate-50 dark:bg-[#2a1b3d]/60" : "hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/60"}`}>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{d.nombre}</p>
           {d.subtitulo && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-snug mt-0.5">{d.subtitulo}</p>}
@@ -67,7 +67,7 @@ function DocumentoLegalRow({ d, puedeEditar, onEditar }: { d: DocumentoLegalType
         {puedeEditar && (
           <>
             <button type="button" title="Editar" onClick={e => { e.stopPropagation(); onEditar() }}
-              className="p-1.5 text-slate-400 hover:text-violet-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0">
+              className="p-1.5 text-slate-400 hover:text-violet-500 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition shrink-0">
               <Pencil className="h-4 w-4" />
             </button>
             <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
@@ -79,9 +79,9 @@ function DocumentoLegalRow({ d, puedeEditar, onEditar }: { d: DocumentoLegalType
       {abierto && (
         <div className="px-4 pt-3 pb-4">
           {caracteristicas.length === 0 && archivos.length === 0 ? (
-            <p className="text-xs text-slate-400 italic text-center py-6 rounded-xl bg-slate-50 dark:bg-slate-800/40">Sin más detalles capturados.</p>
+            <p className="text-xs text-slate-400 italic text-center py-6 rounded-xl bg-slate-50 dark:bg-[#2a1b3d]/40">Sin más detalles capturados.</p>
           ) : (
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/30 p-4 space-y-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-[#2a1b3d]/30 p-4 space-y-4">
               {caracteristicas.length > 0 && (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
                   {caracteristicas.map((c, i) => {
@@ -113,7 +113,7 @@ function DocumentoLegalRow({ d, puedeEditar, onEditar }: { d: DocumentoLegalType
                   <div className="flex flex-wrap gap-2">
                     {archivos.map(a => (
                       <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:border-violet-300 dark:hover:border-violet-500/60 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:border-violet-300 dark:hover:border-violet-500/60 hover:text-violet-600 dark:hover:text-violet-400 transition-colors">
                         <Paperclip className="h-3 w-3 text-slate-400 shrink-0" />
                         <span>{a.name}</span>
                         <Download className="h-3 w-3 text-slate-400 shrink-0" />
@@ -203,18 +203,18 @@ export function DocumentosLegalesView({ puedeEditar = true }: { puedeEditar?: bo
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input value={busqueda} onChange={e => setBusqueda(e.target.value)} onFocus={() => setDropdownOpen(true)}
                 placeholder="Buscar documento..."
-                className="w-full pl-8 pr-8 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 transition-colors" />
+                className="w-full pl-8 pr-8 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 transition-colors" />
               <button type="button" tabIndex={-1} onClick={() => setDropdownOpen(o => !o)}
                 title="Ver todos los documentos" aria-label="Ver todos los documentos"
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
               </button>
               {dropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-20 max-h-64 overflow-y-auto py-1">
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-20 max-h-64 overflow-y-auto py-1">
                   {documentos.map(d => (
                     <button key={d.documentId} type="button"
                       onClick={() => { setBusqueda(d.nombre); setDropdownOpen(false) }}
-                      className="w-full text-left px-3 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
+                      className="w-full text-left px-3 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-[#2a1b3d]">
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{d.nombre}</p>
                       {d.subtitulo && <p className="text-xs text-slate-400 truncate">{d.subtitulo}</p>}
                     </button>
@@ -224,7 +224,7 @@ export function DocumentosLegalesView({ puedeEditar = true }: { puedeEditar?: bo
             </div>
             {puedeEditar && (
               <button type="button" onClick={() => abrirGestion()}
-                className="ml-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition shrink-0">
+                className="ml-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition shrink-0">
                 <Settings2 className="h-3.5 w-3.5" /> Gestionar
               </button>
             )}
@@ -387,7 +387,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 w-full max-w-2xl space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl max-h-[90vh] overflow-y-auto mb-10">
+      <div className="bg-white dark:bg-[#2a1b3d] rounded-xl p-5 w-full max-w-2xl space-y-4 border border-slate-200 dark:border-slate-700 shadow-xl max-h-[90vh] overflow-y-auto mb-10">
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -395,7 +395,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
               {view === "list" ? "Documentos legales" : editando ? "Editar documento" : "Nuevo documento"}
             </h2>
             {view === "list" && !loading && (
-              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded font-mono">{lista.length}</span>
+              <span className="text-[10px] bg-slate-100 dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded font-mono">{lista.length}</span>
             )}
           </div>
           <div className="flex items-center gap-1">
@@ -406,7 +406,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
               </button>
             )}
             <button type="button" onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
               <X size={15} />
             </button>
           </div>
@@ -420,13 +420,13 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
             )}
             {lista.map(d => (
               <button key={d.documentId} type="button" onClick={() => openEdit(d)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-colors text-left">
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] hover:border-slate-300 dark:hover:border-slate-600 transition-colors text-left">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold leading-tight truncate text-slate-800 dark:text-slate-100">{d.nombre}</p>
                   {d.subtitulo && <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">{d.subtitulo}</p>}
                 </div>
                 {!d.activo && (
-                  <span className="text-[10px] font-semibold px-2 py-1 rounded-full shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">Inactivo</span>
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-full shrink-0 bg-slate-100 dark:bg-[#2a1b3d] text-slate-400 dark:text-slate-500">Inactivo</span>
                 )}
                 <ChevronRight size={14} className="text-slate-300 dark:text-slate-600 shrink-0" />
               </button>
@@ -467,7 +467,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
               ) : (
                 <div className="col-span-12 rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
                   {form.caracteristicas.map((c, i) => (
-                    <div key={i} className="p-3 space-y-2 bg-white dark:bg-slate-900">
+                    <div key={i} className="p-3 space-y-2 bg-white dark:bg-[#2a1b3d]">
                       <div className="flex items-center gap-2">
                         <input ref={i === form.caracteristicas.length - 1 ? nuevaFilaRef : undefined}
                           value={c.label} onChange={e => actualizarCaracteristica(i, "label", e.target.value)}
@@ -490,7 +490,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
                 <label className={labelCls}>Archivos</label>
                 {archivosExistentes.length === 0 && archivosNuevos.length === 0 ? (
                   <button type="button" onClick={() => archivoRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-1.5 px-3 py-3 text-sm border border-dashed border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-500 dark:text-slate-400">
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-3 text-sm border border-dashed border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition text-slate-500 dark:text-slate-400">
                     <Plus size={13} /> Agregar archivo
                   </button>
                 ) : (
@@ -518,7 +518,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
                       </div>
                     ))}
                     <button type="button" onClick={() => archivoRef.current?.click()}
-                      className="w-full flex items-center gap-1.5 px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-500 dark:text-slate-400">
+                      className="w-full flex items-center gap-1.5 px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition text-slate-500 dark:text-slate-400">
                       <Plus size={13} /> Agregar archivo
                     </button>
                   </div>
@@ -530,7 +530,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
               <div className="col-span-12 flex items-center gap-2 pt-2">
                 <input id="documento-legal-activo" type="checkbox" checked={form.activo}
                   onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))}
-                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-slate-800" />
+                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-[#2a1b3d]" />
                 <label htmlFor="documento-legal-activo" className="text-sm text-slate-600 dark:text-slate-300">Documento activo (visible en el portal)</label>
               </div>
             </div>
@@ -557,7 +557,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
               ) : <span />}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setView("list")}
-                  className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm transition-colors">
+                  className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] text-sm transition-colors">
                   Cancelar
                 </button>
                 <button type="button" onClick={guardar} disabled={saving}

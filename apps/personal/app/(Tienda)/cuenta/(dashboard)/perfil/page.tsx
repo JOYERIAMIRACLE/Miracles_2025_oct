@@ -42,13 +42,13 @@ export default function PerfilPage() {
           <div>
             <label htmlFor="nombre" className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">Nombre completo</label>
             <input id="nombre" type="text" value={nombre} onChange={e => setNombre(e.target.value)}
-              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all" />
+              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400/50 transition-all" />
           </div>
           <div>
             <label htmlFor="telefono" className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">Teléfono</label>
             <input id="telefono" type="tel" value={telefono} onChange={e => setTelefono(e.target.value)}
               placeholder="55 0000 0000"
-              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all" />
+              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400/50 transition-all" />
           </div>
           <div>
             <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">Email</label>
@@ -58,7 +58,7 @@ export default function PerfilPage() {
             <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-1">El correo de tu cuenta no se puede cambiar por aquí todavía.</p>
           </div>
           <button type="button" onClick={guardar} disabled={saving}
-            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
+            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
             {saving && <Loader2 size={14} className="animate-spin" />} Guardar cambios
           </button>
         </div>

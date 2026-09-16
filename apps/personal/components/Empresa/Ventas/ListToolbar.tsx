@@ -35,7 +35,7 @@ export function ListToolbar<T extends string>({
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-500" />
         <input type="text" placeholder={searchPlaceholder}
           value={search} onChange={e => onSearchChange(e.target.value)}
-          className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
+          className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] pl-9 pr-3 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
       </div>
 
       {/* Filtros */}
@@ -52,12 +52,12 @@ export function ListToolbar<T extends string>({
         {filtrosOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setFiltrosOpen(false)} />
-            <div className="absolute z-50 top-full right-0 mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl p-1.5">
+            <div className="absolute z-50 top-full right-0 mt-1.5 w-52 bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl p-1.5">
               {filtros.map(f => (
                 <button key={f.value} type="button"
                   onClick={() => { onFiltroChange(f.value); setFiltrosOpen(false) }}
                   className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
-                    filtroActivo === f.value ? "bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300" : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    filtroActivo === f.value ? "bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300" : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#2a1b3d]"
                   }`}>
                   {f.label}
                   {filtroActivo === f.value && <Check size={13} />}
@@ -82,9 +82,9 @@ export function ListToolbar<T extends string>({
           {metricasOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setMetricasOpen(false)} />
-              <div className="absolute z-50 top-full right-0 mt-1.5 w-64 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl p-3 grid grid-cols-2 gap-2.5">
+              <div className="absolute z-50 top-full right-0 mt-1.5 w-64 bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl p-3 grid grid-cols-2 gap-2.5">
                 {metricas.map(m => (
-                  <div key={m.label} className="bg-slate-100 dark:bg-slate-800/50 rounded-lg p-2.5">
+                  <div key={m.label} className="bg-slate-100 dark:bg-[#2a1b3d]/50 rounded-lg p-2.5">
                     <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-0.5">{m.label}</p>
                     <p className={`text-lg font-bold ${m.colorClass ?? "text-slate-800 dark:text-slate-200"}`}>{m.value}</p>
                   </div>

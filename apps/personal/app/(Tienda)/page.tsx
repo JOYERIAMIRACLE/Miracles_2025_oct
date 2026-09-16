@@ -72,7 +72,7 @@ export default function HeroPage() {
           </Link>
           <Link
             href="/tienda"
-            className="px-10 py-3 bg-amber-600/90 text-white text-xs tracking-widest uppercase hover:bg-amber-700 transition-all duration-300"
+            className="px-10 py-3 bg-violet-600/90 text-white text-xs tracking-widest uppercase hover:bg-violet-700 transition-all duration-300"
           >
             Descubrir más
           </Link>

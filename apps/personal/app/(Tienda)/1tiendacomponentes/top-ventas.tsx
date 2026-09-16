@@ -16,7 +16,7 @@ const TopVentas = () => {
         {/* Encabezado */}
         <div className="flex items-end justify-between mb-8 md:mb-10">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500 mb-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
               Los favoritos
             </p>
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white">
@@ -25,7 +25,7 @@ const TopVentas = () => {
           </div>
           <Link
             href="/tienda"
-            className="hidden md:block text-[11px] font-bold uppercase tracking-widest text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
+            className="hidden md:block text-[11px] font-bold uppercase tracking-widest text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 transition-colors"
           >
             Ver todo →
           </Link>
@@ -97,7 +97,7 @@ const TopVentas = () => {
                       {/* Info */}
                       <div className="mt-3 px-0.5">
                         {producto.materialProducto && (
-                          <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">
+                          <span className="text-[10px] font-semibold uppercase tracking-widest text-violet-500">
                             {producto.materialProducto}
                           </span>
                         )}
@@ -123,7 +123,7 @@ const TopVentas = () => {
           <div className="mt-8 text-center md:hidden">
             <Link
               href="/tienda"
-              className="text-[11px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400"
+              className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400"
             >
               Ver todo el catálogo →
             </Link>

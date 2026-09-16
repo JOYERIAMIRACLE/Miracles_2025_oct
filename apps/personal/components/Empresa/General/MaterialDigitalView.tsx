@@ -15,7 +15,7 @@ import { createMaterialDigital, updateMaterialDigital, deleteMaterialDigital } f
 
 const AMBITO = "empresa" as const
 
-const inputCls = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 transition"
+const inputCls = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-[#2a1b3d] text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500 transition"
 const labelCls = "block text-[11px] text-slate-500 mb-1"
 
 function emptyPayload(categoria: CategoriaDigital): MaterialDigitalPayload {
@@ -60,14 +60,14 @@ function Modal({ editando, categoriaInicial, onGuardar, onCerrar }: {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-lg my-8 p-6 space-y-4">
+      <div className="bg-[#2a1b3d] border border-slate-700 rounded-xl w-full max-w-lg my-8 p-6 space-y-4">
 
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-100">
             {editando ? "Editar material" : "Nuevo material"}
           </h2>
           <button type="button" title="Cerrar" onClick={onCerrar}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d] transition">
             <X size={16} />
           </button>
         </div>
@@ -245,11 +245,11 @@ function MaterialCard({ material, onEdit, onDelete }: {
         ) : (
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
             <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); onEdit() }}
-              className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-slate-800 transition" title="Editar">
+              className="p-1 text-slate-600 hover:text-slate-300 rounded hover:bg-[#2a1b3d] transition" title="Editar">
               <Pencil size={12} />
             </button>
             <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmando(true) }}
-              className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-slate-800 transition" title="Eliminar">
+              className="p-1 text-slate-600 hover:text-red-400 rounded hover:bg-[#2a1b3d] transition" title="Eliminar">
               <Trash2 size={12} />
             </button>
           </div>
@@ -288,8 +288,8 @@ function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
                   className={[
                     "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mt-1",
                     active
-                      ? "bg-slate-800 text-slate-100"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-900",
+                      ? "bg-[#2a1b3d] text-slate-100"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d]",
                   ].join(" ")}>
                   <span className="truncate">{grupo.label}</span>
                   <div className="flex items-center gap-1.5 shrink-0">
@@ -323,8 +323,8 @@ function SidebarGrupos({ categoriaActiva, materiales, onSelect }: {
                       className={[
                         "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-all text-left",
                         catActive
-                          ? "bg-slate-800 text-slate-100 font-medium"
-                          : "text-slate-500 hover:text-slate-300 hover:bg-slate-900",
+                          ? "bg-[#2a1b3d] text-slate-100 font-medium"
+                          : "text-slate-500 hover:text-slate-300 hover:bg-[#2a1b3d]",
                       ].join(" ")}>
                       <span className="truncate">{c.label}</span>
                       {catQty > 0 && (
@@ -425,7 +425,7 @@ export function MaterialDigitalView() {
     <div className="flex bg-dot-pattern min-h-[calc(100vh-3.5rem)]">
 
       {/* Sidebar de categorías — solo desktop, sticky bajo el header */}
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-slate-800/60 bg-slate-950 self-start sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-slate-800/60 bg-[#2a1b3d] self-start sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
         <div className="py-3">
           <SidebarGrupos
             categoriaActiva={categoriaActiva}
@@ -442,7 +442,7 @@ export function MaterialDigitalView() {
         <div className="lg:hidden px-4 pt-4 pb-2">
           <select aria-label="Categoría" value={categoriaActiva}
             onChange={e => { setCategoriaActiva(e.target.value as CategoriaDigital); setBusqueda("") }}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-900 text-slate-200 outline-none focus:border-slate-600 transition">
+            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-[#2a1b3d] text-slate-200 outline-none focus:border-slate-600 transition">
             {GRUPOS_MATERIAL.map(g => (
               <optgroup key={g.id} label={g.label}>
                 {g.categorias.map(c => (
@@ -469,7 +469,7 @@ export function MaterialDigitalView() {
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
                 <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
                   placeholder="Buscar…"
-                  className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-slate-900 text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 w-full sm:w-44 transition" />
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-[#2a1b3d] text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 w-full sm:w-44 transition" />
               </div>
               <button type="button" onClick={abrirNuevo}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition shrink-0">

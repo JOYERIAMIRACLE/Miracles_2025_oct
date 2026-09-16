@@ -32,8 +32,8 @@ const FilterEstilo = ({ value, onChange, opciones }: FilterEstiloProps) => {
           onClick={() => onChange(estilo === value ? "" : estilo)}
           className={`px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide border transition-all ${
             value === estilo
-              ? "bg-amber-500 text-white border-amber-500"
-              : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-500"
+              ? "bg-violet-500 text-white border-violet-500"
+              : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-violet-400 dark:hover:border-violet-500"
           }`}
         >
           {estilo}

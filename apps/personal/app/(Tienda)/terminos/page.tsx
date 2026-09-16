@@ -18,13 +18,13 @@ export default function TerminosPage() {
 
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-amber-600">Inicio</Link>
+        <Link href="/" className="hover:text-violet-600">Inicio</Link>
         <span>/</span>
         <span className="text-gray-700 dark:text-gray-300">Términos y condiciones</span>
       </nav>
 
       <header className="mb-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
+        <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">
           Legal
         </p>
         <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight">
@@ -33,14 +33,14 @@ export default function TerminosPage() {
         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
           Última actualización: {ULTIMA_ACTUALIZACION}
         </p>
-        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed border-l-4 border-amber-400 pl-4">
+        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed border-l-4 border-violet-400 pl-4">
           Los tiempos y condiciones específicas de envío y devolución (días de entrega, ventana
           de devolución, garantía) no se repiten aquí — viven en las páginas dedicadas de{" "}
-          <Link href="/envios" className="text-amber-600 hover:text-amber-700 dark:text-amber-400 font-medium">
+          <Link href="/envios" className="text-violet-600 hover:text-violet-700 dark:text-violet-400 font-medium">
             Envíos
           </Link>{" "}
           y{" "}
-          <Link href="/devoluciones" className="text-amber-600 hover:text-amber-700 dark:text-amber-400 font-medium">
+          <Link href="/devoluciones" className="text-violet-600 hover:text-violet-700 dark:text-violet-400 font-medium">
             Devoluciones
           </Link>{" "}
           para que siempre estén actualizadas en un solo lugar.

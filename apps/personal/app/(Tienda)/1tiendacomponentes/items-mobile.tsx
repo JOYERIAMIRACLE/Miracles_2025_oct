@@ -38,9 +38,9 @@ const ItemsMenuMobile = () => {
               <li key={item.title}>
                 <Link
                   href={item.href}
-                  className="group block p-2 rounded-md hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors"
+                  className="group block p-2 rounded-md hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
                 >
-                  <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                  <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-violet-600 dark:group-hover:text-violet-400">
                     {item.title}
                   </div>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 italic">
@@ -51,10 +51,10 @@ const ItemsMenuMobile = () => {
             ))}
           </ul>
           <div className="flex flex-col gap-1 border-t border-border pt-3">
-            <Link href="/blog" className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-amber-600 dark:hover:text-amber-400 p-2 rounded-md hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors">
+            <Link href="/blog" className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-violet-600 dark:hover:text-violet-400 p-2 rounded-md hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors">
               Blog
             </Link>
-            <Link href="/nosotros" className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-amber-600 dark:hover:text-amber-400 p-2 rounded-md hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors">
+            <Link href="/nosotros" className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:text-violet-600 dark:hover:text-violet-400 p-2 rounded-md hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors">
               Empresa
             </Link>
           </div>

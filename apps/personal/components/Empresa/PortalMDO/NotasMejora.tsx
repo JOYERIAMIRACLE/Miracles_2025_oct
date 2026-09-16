@@ -243,7 +243,7 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
           className={`relative h-11 w-11 rounded-full shadow-lg flex items-center justify-center transition-colors ${
             activo
               ? "bg-orange-500 text-white"
-              : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:text-orange-500"
+              : "bg-white dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:text-orange-500"
           }`}>
           <Pin className="h-5 w-5" />
         </button>
@@ -254,7 +254,7 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
           className={`relative h-11 w-11 rounded-full shadow-lg flex items-center justify-center transition-colors ${
             panelOpen
               ? "bg-orange-500 text-white"
-              : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:text-orange-500"
+              : "bg-white dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:text-orange-500"
           }`}>
           <ListChecks className="h-5 w-5" />
           {pendientesTotal > 0 && (
@@ -267,8 +267,8 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
 
       {panelOpen && (
         <div ref={panelRef}
-          className="fixed bottom-[5.5rem] right-6 z-40 w-80 max-h-[70vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
-          <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900">
+          className="fixed bottom-[5.5rem] right-6 z-40 w-80 max-h-[70vh] overflow-y-auto bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-[#2a1b3d]">
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Notas de mejora {notas.length > 0 && <span className="text-slate-300 dark:text-slate-600">({notas.length})</span>}
             </p>
@@ -283,7 +283,7 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {notasOrdenadas.map(n => (
                 <div key={n.documentId} onClick={() => irANota(n)}
-                  className="flex items-start gap-2 px-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                  className="flex items-start gap-2 px-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/60 transition-colors">
                   <span className={`mt-1 h-2 w-2 rounded-full shrink-0 ${n.estado === "resuelta" ? "bg-emerald-500" : "bg-orange-500"}`} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm leading-snug line-clamp-2 ${n.estado === "resuelta" ? "text-slate-400 dark:text-slate-500 line-through" : "text-slate-700 dark:text-slate-200"}`}>
@@ -340,13 +340,13 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
           {nuevo && (
             <div style={{ left: `clamp(9rem, ${nuevo.x}%, calc(100% - 9rem))`, top: `${nuevo.y}%` }}
               onClick={e => e.stopPropagation()}
-              className="absolute z-40 w-72 -translate-x-1/2 mt-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 space-y-2">
+              className="absolute z-40 w-72 -translate-x-1/2 mt-3 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 space-y-2">
               <textarea autoFocus rows={3} value={texto} onChange={e => setTexto(e.target.value)}
                 placeholder="¿Qué se puede mejorar aquí?"
-                className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-2 focus:outline-none focus:border-orange-400" />
+                className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 p-2 focus:outline-none focus:border-orange-400" />
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setNuevo(null)}
-                  className="px-2.5 py-1.5 text-xs rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                  className="px-2.5 py-1.5 text-xs rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
                   Cancelar
                 </button>
                 <button type="button" onClick={guardarNueva} disabled={saving || !texto.trim()}
@@ -360,11 +360,11 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
           {abierta && (
             <div style={{ left: `clamp(9rem, ${abierta.x}%, calc(100% - 9rem))`, top: `${abierta.y}%` }}
               onClick={e => e.stopPropagation()}
-              className="absolute z-40 w-72 -translate-x-1/2 mt-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 space-y-2">
+              className="absolute z-40 w-72 -translate-x-1/2 mt-3 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 {editandoTexto ? (
                   <textarea autoFocus rows={3} value={textoEdit} onChange={e => setTextoEdit(e.target.value)}
-                    className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-2 focus:outline-none focus:border-orange-400" />
+                    className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 p-2 focus:outline-none focus:border-orange-400" />
                 ) : (
                   <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">{abierta.texto}</p>
                 )}
@@ -387,7 +387,7 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
               {editandoTexto && (
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setEditandoTexto(false)}
-                    className="px-2.5 py-1.5 text-xs rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    className="px-2.5 py-1.5 text-xs rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
                     Cancelar
                   </button>
                   <button type="button" onClick={guardarTexto} disabled={saving || !textoEdit.trim()}
@@ -403,10 +403,10 @@ export function NotasMejora({ onNavigate }: { onNavigate?: (id: string, tab?: st
                   <>
                     <textarea autoFocus rows={2} value={respuestaEdit} onChange={e => setRespuestaEdit(e.target.value)}
                       placeholder="Escribe una respuesta o seguimiento..."
-                      className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 p-2 focus:outline-none focus:border-orange-400" />
+                      className="w-full text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 p-2 focus:outline-none focus:border-orange-400" />
                     <div className="flex justify-end gap-2">
                       <button type="button" onClick={() => setEditandoRespuesta(false)}
-                        className="px-2.5 py-1.5 text-xs rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        className="px-2.5 py-1.5 text-xs rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
                         Cancelar
                       </button>
                       <button type="button" onClick={guardarRespuesta} disabled={saving}

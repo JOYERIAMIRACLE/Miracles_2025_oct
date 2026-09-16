@@ -113,11 +113,11 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
     }
   }
 
-  const inp = "px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full"
+  const inp = "px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full"
 
   const cardCls = fullPage
-    ? "bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl flex flex-col"
-    : "bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
+    ? "bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl flex flex-col"
+    : "bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-2xl flex flex-col max-h-[92vh]"
 
   const contenido = (
       <div className={cardCls}
@@ -141,7 +141,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
           </div>
           {!fullPage && (
             <button type="button" title="Cerrar" onClick={onClose}
-              className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0">
+              className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition shrink-0">
               <X size={16} />
             </button>
           )}
@@ -219,7 +219,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
                   value={precioEnvio === 0 ? "" : precioEnvio}
                   onChange={e => setPrecioEnvio(Number(e.target.value) || 0)}
                   placeholder="0.00"
-                  className="w-28 px-2 py-1 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
+                  className="w-28 px-2 py-1 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
               </div>
               <div className="flex justify-between text-sm font-bold border-t border-slate-300 dark:border-slate-700 pt-2">
                 <span className="text-slate-800 dark:text-slate-200">Total</span>
@@ -246,7 +246,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500 mb-2">Válido hasta</p>
               <input type="date" value={validoHasta ?? ""} onChange={e => setValidoHasta(e.target.value)}
-                className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
+                className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500" />
             </div>
           </div>
 
@@ -313,7 +313,7 @@ export function CotizacionModal({ cliente, cotizacion, totalCotizaciones, onClos
             <textarea value={notas} onChange={e => setNotas(e.target.value)}
               placeholder="Términos, condiciones, observaciones…"
               rows={3}
-              className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 resize-none" />
+              className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 resize-none" />
           </div>
         </div>
 

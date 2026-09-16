@@ -20,12 +20,12 @@ const Infoproduct = ({ product }: CarouselProductoinfoProps) => {
     <div className='px-6'>
       {/* Breadcrumb */}
       <nav className='text-sm text-gray-500 mb-4 flex items-center gap-1.5'>
-        <Link href='/' className='hover:text-amber-600'>Inicio</Link>
+        <Link href='/' className='hover:text-violet-600'>Inicio</Link>
         {product.categoria?.NombreCategoria && (
           <>
             <span>/</span>
             {product.categoria.slug ? (
-              <Link href={`/category/${product.categoria.slug}`} className='hover:text-amber-600'>
+              <Link href={`/category/${product.categoria.slug}`} className='hover:text-violet-600'>
                 {product.categoria.NombreCategoria}
               </Link>
             ) : (
@@ -50,7 +50,7 @@ const Infoproduct = ({ product }: CarouselProductoinfoProps) => {
       {/* Badges: material, figura, talla */}
       <div className='flex flex-wrap items-center gap-2 mb-3'>
         {product.materialProducto && (
-          <span className='px-2 py-1 text-xs text-white bg-amber-800 rounded-full'>
+          <span className='px-2 py-1 text-xs text-white bg-violet-800 rounded-full'>
             {product.materialProducto}
           </span>
         )}
@@ -88,7 +88,7 @@ const Infoproduct = ({ product }: CarouselProductoinfoProps) => {
 
       <div className='flex items-center gap-4'>
         <Button
-          className='flex-1 bg-amber-600 text-white hover:bg-amber-700 disabled:bg-gray-300 disabled:text-gray-700 disabled:hover:bg-gray-300'
+          className='flex-1 bg-violet-600 text-white hover:bg-violet-700 disabled:bg-gray-300 disabled:text-gray-700 disabled:hover:bg-gray-300'
           onClick={() => addItem(product)}
           disabled={outOfStock}
         >

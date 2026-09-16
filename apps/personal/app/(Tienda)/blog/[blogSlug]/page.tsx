@@ -135,9 +135,9 @@ export default async function BlogPostPage({
 
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-          <Link href="/" className="hover:text-amber-600">Inicio</Link>
+          <Link href="/" className="hover:text-violet-600">Inicio</Link>
           <span>/</span>
-          <Link href="/blog" className="hover:text-amber-600">Blog</Link>
+          <Link href="/blog" className="hover:text-violet-600">Blog</Link>
           <span>/</span>
           <span className="text-gray-700 dark:text-gray-300 truncate max-w-[200px]">{post.titulo}</span>
         </nav>
@@ -145,7 +145,7 @@ export default async function BlogPostPage({
         {/* Meta */}
         <div className="flex items-center gap-3 mb-4">
           {categoriaLabel && (
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400">
               {categoriaLabel}
             </span>
           )}
@@ -166,7 +166,7 @@ export default async function BlogPostPage({
 
         {/* Resumen */}
         {post.resumen && (
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed border-l-4 border-amber-400 pl-4">
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed border-l-4 border-violet-400 pl-4">
             {post.resumen}
           </p>
         )}
@@ -192,7 +192,7 @@ export default async function BlogPostPage({
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
           <Link
             href="/blog"
-            className="text-sm font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400"
+            className="text-sm font-semibold text-violet-600 hover:text-violet-700 dark:text-violet-400"
           >
             ← Volver al Blog
           </Link>

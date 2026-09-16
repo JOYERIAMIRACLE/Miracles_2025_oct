@@ -20,13 +20,13 @@ export default function PrivacidadPage() {
 
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-amber-600">Inicio</Link>
+        <Link href="/" className="hover:text-violet-600">Inicio</Link>
         <span>/</span>
         <span className="text-gray-700 dark:text-gray-300">Política de privacidad</span>
       </nav>
 
       <header className="mb-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
+        <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">
           Legal
         </p>
         <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight">
@@ -130,7 +130,7 @@ export default function PrivacidadPage() {
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
             Si tienes cualquier duda sobre esta política de privacidad o sobre el manejo de tus
             datos personales, puedes escribirnos a{" "}
-            <a href={`mailto:${CONTACTO_EMAIL}`} className="text-amber-600 hover:text-amber-700 dark:text-amber-400 font-medium">
+            <a href={`mailto:${CONTACTO_EMAIL}`} className="text-violet-600 hover:text-violet-700 dark:text-violet-400 font-medium">
               {CONTACTO_EMAIL}
             </a>.
           </p>

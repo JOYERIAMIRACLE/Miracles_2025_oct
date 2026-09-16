@@ -26,8 +26,8 @@ const enlacesLegal = [
 // las cuentas reales del negocio.
 const CONTACTO_EMAIL = "contacto@medalladeoro.com.mx"
 
-const linkCls = "text-sm text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-const iconLinkCls = "flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:text-amber-600 hover:border-amber-300 dark:hover:text-amber-400 dark:hover:border-amber-800 transition-colors"
+const linkCls = "text-sm text-gray-500 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+const iconLinkCls = "flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:text-violet-600 hover:border-violet-300 dark:hover:text-violet-400 dark:hover:border-violet-800 transition-colors"
 
 const Footer = () => {
   return (

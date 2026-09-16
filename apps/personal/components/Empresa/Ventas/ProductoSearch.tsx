@@ -33,10 +33,10 @@ export function ProductoSearch({
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="Buscar o elegir por categoría…"
-        className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full"
+        className="px-2 py-1.5 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full"
       />
       {open && (
-        <div className="absolute z-20 top-full left-0 w-80 mt-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg shadow-2xl overflow-hidden">
+        <div className="absolute z-20 top-full left-0 w-80 mt-0.5 bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-lg shadow-2xl overflow-hidden">
           <div className="flex flex-wrap gap-1 p-2 border-b border-slate-200 dark:border-slate-800">
             <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => setFiltroCat("todas")}
               className={`h-6 px-2 rounded-full text-[10px] font-medium border transition-all ${filtroCat==="todas"?"bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600":"border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>

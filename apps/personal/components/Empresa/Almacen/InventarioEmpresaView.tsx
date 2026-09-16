@@ -95,7 +95,7 @@ const emptyForm = (): FormData => ({
   conPiedra:false, tipoPiedra:"", kilates:"", largoCm:"", cierre:"",
   tiendaActivo:false, esFavorito:false, puntoVenta:false,
 })
-const inp    = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
+const inp    = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
 const selCls = inp + " cursor-pointer"
 
 function SectLabel({ children }: { children: React.ReactNode }) {
@@ -111,9 +111,9 @@ function SectCollapse({ title, open, onToggle, children }: {
   title: string; open: boolean; onToggle: () => void; children: React.ReactNode
 }) {
   return (
-    <div className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-violet-500/30 bg-slate-800/50" : "border-slate-800 bg-slate-800/30"}`}>
+    <div className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-violet-500/30 bg-[#2a1b3d]/50" : "border-slate-800 bg-[#2a1b3d]/30"}`}>
       <button type="button" onClick={onToggle}
-        className="flex items-center gap-3 w-full px-4 py-3.5 group hover:bg-slate-800/60 transition-colors">
+        className="flex items-center gap-3 w-full px-4 py-3.5 group hover:bg-[#2a1b3d]/60 transition-colors">
         <div className={`w-1 h-4 rounded-full shrink-0 transition-colors ${open ? "bg-violet-400" : "bg-violet-500/40 group-hover:bg-violet-500/70"}`} />
         <p className="text-[11px] font-bold uppercase tracking-widest text-slate-300 flex-1 text-left group-hover:text-slate-100 transition-colors">{title}</p>
         <ChevronDown size={14} className={`text-slate-500 group-hover:text-slate-300 transition-transform shrink-0 ${open ? "" : "-rotate-90"}`} />
@@ -129,7 +129,7 @@ function UbicToggle({ checked, onChange, label, desc, icon: Icon }: {
 }) {
   return (
     <button type="button" onClick={() => onChange(!checked)}
-      className="flex items-center gap-3 w-full py-2 px-3 rounded-lg hover:bg-slate-800/50 transition-colors group text-left">
+      className="flex items-center gap-3 w-full py-2 px-3 rounded-lg hover:bg-[#2a1b3d]/50 transition-colors group text-left">
       <div className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${checked ? "bg-violet-600" : "bg-slate-700"}`}>
         <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
       </div>
@@ -164,7 +164,7 @@ function FotoManager({ fotos, onAdd, onRemove }: {
           </div>
         ))}
         <button type="button" onClick={() => inputRef.current?.click()}
-          className="w-20 h-20 rounded-xl bg-slate-800 border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-1 shrink-0 text-slate-500 hover:border-violet-500/50 hover:text-violet-400 transition-colors">
+          className="w-20 h-20 rounded-xl bg-[#2a1b3d] border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-1 shrink-0 text-slate-500 hover:border-violet-500/50 hover:text-violet-400 transition-colors">
           <ImagePlus size={18}/>
           <span className="text-[10px] font-medium">Agregar</span>
         </button>
@@ -698,13 +698,13 @@ export function InventarioEmpresaView() {
           </button>
           <div ref={menuRef} className="relative">
             <button type="button" onClick={() => setMenuOpen(o => !o)} title="Más opciones"
-              className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition-colors">
               <MoreVertical size={15} />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden py-1 z-30">
+              <div className="absolute right-0 top-full mt-1.5 w-44 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden py-1 z-30">
                 <button type="button" onClick={() => { setMargenPanel(v => !v); setMenuOpen(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors text-left">
                   <Percent size={13} className="text-violet-500" /> Margen global
                 </button>
               </div>
@@ -738,14 +738,14 @@ export function InventarioEmpresaView() {
 
       {/* Panel margen global */}
       {margenPanel && (
-        <div className="bg-slate-900 border border-violet-500/20 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
+        <div className="bg-[#2a1b3d] border border-violet-500/20 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-slate-400 shrink-0">Margen global</span>
             <input type="number" min={0} max={500} step={5}
               title="Margen (%)"
               value={globalMargen}
               onChange={e => setGlobalMargen(Math.max(0, Number(e.target.value)))}
-              className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-center font-mono text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/40" />
+              className="w-16 h-8 rounded-lg border border-slate-700 bg-[#2a1b3d] px-2 text-sm text-center font-mono text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/40" />
             <span className="text-sm text-slate-500">%</span>
           </div>
           <span className="text-xs text-slate-600">
@@ -769,12 +769,12 @@ export function InventarioEmpresaView() {
       {/* Cards — mobile */}
       <div className="md:hidden space-y-2">
         {loading && Array.from({length:3}).map((_,i) => (
-          <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2 animate-pulse">
+          <div key={i} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-3 space-y-2 animate-pulse">
             <div className="flex gap-3">
-              <div className="w-14 h-14 rounded-lg bg-slate-800 shrink-0"/>
+              <div className="w-14 h-14 rounded-lg bg-[#2a1b3d] shrink-0"/>
               <div className="flex-1 space-y-1.5 pt-1">
-                <div className="h-4 bg-slate-800 rounded w-3/4"/>
-                <div className="h-3 bg-slate-800 rounded w-1/3"/>
+                <div className="h-4 bg-[#2a1b3d] rounded w-3/4"/>
+                <div className="h-3 bg-[#2a1b3d] rounded w-1/3"/>
               </div>
             </div>
           </div>
@@ -785,14 +785,14 @@ export function InventarioEmpresaView() {
           const isPublishing = publishing===it.documentId
           const isFeaturing  = featuring===it.documentId
           return (
-            <div key={it.documentId} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div key={it.documentId} className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
               {/* Fila superior: thumb + nombre + badges */}
               <div className="flex items-start gap-3 p-3 cursor-pointer" onClick={() => openEditar(it)}>
                 {thumb?.url ? (
                   <img src={imgUrl(thumb.url)} alt={it.nombreProducto}
                     className="w-14 h-14 rounded-lg object-cover border border-slate-700 shrink-0"/>
                 ) : (
-                  <div className="w-14 h-14 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                  <div className="w-14 h-14 rounded-lg bg-[#2a1b3d] border border-slate-700 flex items-center justify-center shrink-0">
                     <Package size={18} className="text-slate-600"/>
                   </div>
                 )}
@@ -873,10 +873,10 @@ export function InventarioEmpresaView() {
       </div>
 
       {/* Tabla — desktop */}
-      <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="hidden md:block bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
               <tr>
                 {["","Producto / SKU","Categoría","Material","Talla / Figura","Costo","P. Venta","Margen","Stock","Tienda","⭐",""].map((h,i) => (
                   <th key={i} className="h-10 px-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -886,7 +886,7 @@ export function InventarioEmpresaView() {
             <tbody className="divide-y divide-slate-800/60">
               {loading && Array.from({length:5}).map((_,i) => (
                 <tr key={i}>{Array.from({length:11}).map((_,j) => (
-                  <td key={j} className="px-3 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4"/></td>
+                  <td key={j} className="px-3 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4"/></td>
                 ))}</tr>
               ))}
               {!loading && filtrados.map(it => {
@@ -895,7 +895,7 @@ export function InventarioEmpresaView() {
                 const isPublishing = publishing===it.documentId
                 const isFeaturing  = featuring===it.documentId
                 return (
-                  <tr key={it.documentId} onClick={() => openEditar(it)} className="hover:bg-slate-800/40 transition-colors group cursor-pointer">
+                  <tr key={it.documentId} onClick={() => openEditar(it)} className="hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer">
 
                     {/* Thumbnail */}
                     <td className="px-2 py-2 w-10">
@@ -903,7 +903,7 @@ export function InventarioEmpresaView() {
                         <img src={imgUrl(thumb.url)} alt={it.nombreProducto}
                           className="w-9 h-9 rounded-lg object-cover border border-slate-700"/>
                       ) : (
-                        <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-600">
+                        <div className="w-9 h-9 rounded-lg bg-[#2a1b3d] border border-slate-700 flex items-center justify-center text-slate-600">
                           <Package size={13}/>
                         </div>
                       )}
@@ -1006,11 +1006,11 @@ export function InventarioEmpresaView() {
                       ) : (
                         <div className="flex items-center gap-1">
                           <button type="button" onClick={() => openEditar(it)} title="Editar"
-                            className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
+                            className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition">
                             <Pencil size={12}/>
                           </button>
                           <button type="button" onClick={() => setDelId(it.documentId)} title="Eliminar"
-                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
+                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition">
                             <X size={12}/>
                           </button>
                         </div>
@@ -1034,7 +1034,7 @@ export function InventarioEmpresaView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4"
           onClick={e => { if (e.target===e.currentTarget) setModalOpen(false) }}>
-          <div className={`w-full bg-slate-900 border border-slate-700 sm:rounded-xl rounded-t-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden ${
+          <div className={`w-full bg-[#2a1b3d] border border-slate-700 sm:rounded-xl rounded-t-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden ${
             !editing && !catalogCard && showSkuBuilder ? "sm:max-w-2xl" : !editing && !catalogCard ? "sm:max-w-xl" : "sm:max-w-lg"
           }`}>
             {/* Franja de material */}
@@ -1053,7 +1053,7 @@ export function InventarioEmpresaView() {
                   {fotos[0] ? (
                     <img src={fotoSrc(fotos[0])} alt="" className="w-9 h-9 rounded-lg object-cover border border-slate-700 shrink-0" />
                   ) : (
-                    <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-[#2a1b3d] border border-slate-700 flex items-center justify-center shrink-0">
                       <Package size={14} className="text-slate-600" />
                     </div>
                   )}
@@ -1070,7 +1070,7 @@ export function InventarioEmpresaView() {
                 </h2>
               )}
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
-                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 shrink-0"><X size={16}/></button>
+                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d] shrink-0"><X size={16}/></button>
             </div>
 
             {/* ── ESTADO 1: Picker de catálogo (nuevo sin selección) ── */}
@@ -1106,7 +1106,7 @@ export function InventarioEmpresaView() {
                     <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"/>
                     <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catSearch}
                       onChange={e => setCatSearch(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500/40"/>
+                      className="w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500/40"/>
                   </div>
                 </div>}
 
@@ -1126,7 +1126,7 @@ export function InventarioEmpresaView() {
                           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-1 mb-1">
                             {mat.nombre} › {cat.nombre}
                           </p>
-                          <div className="bg-slate-800/40 rounded-xl border border-slate-800 divide-y divide-slate-800 overflow-hidden">
+                          <div className="bg-[#2a1b3d]/40 rounded-xl border border-slate-800 divide-y divide-slate-800 overflow-hidden">
                             {prods.map(prod =>
                               prod.modelos.length > 0
                                 ? prod.modelos.map(mod => (
@@ -1281,7 +1281,7 @@ export function InventarioEmpresaView() {
                               <div className="flex items-center gap-2 pt-6">
                                 <input type="checkbox" id="con-piedra-cat" checked={form.conPiedra}
                                   onChange={e => setForm(f => ({...f, conPiedra:e.target.checked}))}
-                                  className="h-4 w-4 rounded border-slate-600 bg-slate-800"/>
+                                  className="h-4 w-4 rounded border-slate-600 bg-[#2a1b3d]"/>
                                 <label htmlFor="con-piedra-cat" className="text-sm text-slate-300">Con piedra</label>
                               </div>
                               {form.conPiedra && (
@@ -1325,7 +1325,7 @@ export function InventarioEmpresaView() {
 
                 <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
                   <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                    className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                    className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">Cancelar</button>
                   <button type="button" onClick={handleSave} disabled={saving}
                     className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                     {saving && <Loader2 size={14} className="animate-spin"/>}
@@ -1373,7 +1373,7 @@ export function InventarioEmpresaView() {
                             Talla/Estilo (o desde el constructor). Escribirlo a mano
                             lo desincronizaba de esos campos sin darse cuenta. */}
                         <input type="text" placeholder="Auto" value={form.sku} readOnly title="Se genera automáticamente — usa el constructor para elegir uno distinto"
-                          className={inp+" font-mono bg-slate-800/40 dark:bg-slate-800/40 text-slate-400 cursor-not-allowed"}/>
+                          className={inp+" font-mono bg-[#2a1b3d]/40 dark:bg-[#2a1b3d]/40 text-slate-400 cursor-not-allowed"}/>
                       </div>
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Tipo</label>
@@ -1390,7 +1390,7 @@ export function InventarioEmpresaView() {
                       {editing.slug && (
                         <div className="col-span-2">
                           <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">URL en tienda</label>
-                          <div className="flex items-center gap-2 h-9 rounded-lg border border-slate-700/50 bg-slate-800/30 px-3">
+                          <div className="flex items-center gap-2 h-9 rounded-lg border border-slate-700/50 bg-[#2a1b3d]/30 px-3">
                             <span className="text-[11px] text-slate-600 shrink-0">/producto/</span>
                             <span className="text-[11px] font-mono text-violet-400 truncate flex-1">{editing.slug}</span>
                             <button type="button" title="Copiar URL"
@@ -1497,7 +1497,7 @@ export function InventarioEmpresaView() {
                   {/* Precios y stock */}
                   <SectCollapse title="Precios y Stock" open={openSection === "precios"} onToggle={() => toggleSection("precios")}>
                     {Number(form.costoProduccion) > 0 && (
-                      <div className="mb-3 flex items-center gap-2 bg-slate-800/50 border border-slate-700/60 rounded-lg px-3 py-2 flex-wrap">
+                      <div className="mb-3 flex items-center gap-2 bg-[#2a1b3d]/50 border border-slate-700/60 rounded-lg px-3 py-2 flex-wrap">
                         <span className="text-[11px] text-slate-400 shrink-0">Margen</span>
                         <input type="number" min={0} max={500} step={5} title="Margen objetivo %"
                           value={localMargen}
@@ -1506,7 +1506,7 @@ export function InventarioEmpresaView() {
                             setLocalMargen(m)
                             setForm(f => ({ ...f, costo: String(Math.round(Number(f.costoProduccion) * (1 + m / 100) * 100) / 100) }))
                           }}
-                          className="w-14 h-7 rounded-lg border border-slate-600 bg-slate-900 px-2 text-sm text-center font-mono text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                          className="w-14 h-7 rounded-lg border border-slate-600 bg-[#2a1b3d] px-2 text-sm text-center font-mono text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
                         />
                         <span className="text-xs text-slate-500">%</span>
                         <span className="text-slate-700 text-sm">→</span>
@@ -1555,10 +1555,10 @@ export function InventarioEmpresaView() {
                     <div className="rounded-xl border border-slate-800 overflow-hidden">
                       <UbicToggle checked={form.tiendaActivo} onChange={v => setForm(f => ({...f, tiendaActivo:v}))}
                         label="Tienda online" desc="Visible en el catálogo de la tienda" icon={Store} />
-                      <div className="h-px bg-slate-800/80 mx-3" />
+                      <div className="h-px bg-[#2a1b3d]/80 mx-3" />
                       <UbicToggle checked={form.esFavorito} onChange={v => setForm(f => ({...f, esFavorito:v}))}
                         label="Favoritos" desc="Aparece en la sección de destacados" icon={Heart} />
-                      <div className="h-px bg-slate-800/80 mx-3" />
+                      <div className="h-px bg-[#2a1b3d]/80 mx-3" />
                       <UbicToggle checked={form.puntoVenta} onChange={v => setForm(f => ({...f, puntoVenta:v}))}
                         label="Punto de venta" desc="Disponible en ventas presenciales" icon={ShoppingBag} />
                     </div>
@@ -1568,7 +1568,7 @@ export function InventarioEmpresaView() {
 
                 <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
                   <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                    className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                    className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">Cancelar</button>
                   <button type="button" onClick={handleSave} disabled={saving}
                     className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                     {saving && <Loader2 size={14} className="animate-spin"/>}

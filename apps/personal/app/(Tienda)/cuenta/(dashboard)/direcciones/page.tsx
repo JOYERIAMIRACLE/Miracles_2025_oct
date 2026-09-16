@@ -36,14 +36,14 @@ export default function DireccionesPage() {
       ) : (
         <div className={`${cardCls} p-5 sm:p-6 space-y-4`}>
           <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-            <MapPin size={16} className="text-amber-600 dark:text-amber-400" />
+            <MapPin size={16} className="text-violet-600 dark:text-violet-400" />
             <p className="text-sm font-semibold">Dirección de envío</p>
           </div>
           <textarea value={direccion} onChange={e => setDireccion(e.target.value)} rows={3}
             placeholder="Calle, número, colonia, ciudad, estado, código postal…"
-            className="w-full text-sm rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all" />
+            className="w-full text-sm rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400/50 transition-all" />
           <button type="button" onClick={guardar} disabled={saving}
-            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
+            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
             {saving && <Loader2 size={14} className="animate-spin" />} Guardar dirección
           </button>
         </div>

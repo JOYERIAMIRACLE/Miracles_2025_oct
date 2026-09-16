@@ -49,7 +49,7 @@ const ProductCard1 = ({ product }: ProductCardProps) => {
             </span>
           )}
           {product.materialProducto && (
-            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 bg-amber-500 text-white rounded-full">
+            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 bg-violet-500 text-white rounded-full">
               {product.materialProducto}
             </span>
           )}
@@ -92,7 +92,7 @@ const ProductCard1 = ({ product }: ProductCardProps) => {
           {!outOfStock && (
             <button
               onClick={() => addItem(product)}
-              className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
+              className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 transition-colors"
             >
               <ShoppingCart size={11} />
               Carrito

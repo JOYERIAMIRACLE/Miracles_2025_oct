@@ -65,7 +65,7 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="flex items-center gap-1.5">
-      <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-slate-100 dark:bg-[#2a1b3d] rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-4 text-right">{value}</span>
@@ -253,7 +253,7 @@ export function HistorialPipelineView() {
 
         {/* Selector de año — solo aplica al trayecto de leads */}
         {subTab === "leads" && (
-          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5">
+          <div className="flex items-center gap-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5">
             <button type="button" title="Año anterior" onClick={() => setAño(a => a - 1)}
               className="p-1 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 rounded transition">
               <ChevronLeft size={14} />
@@ -268,11 +268,11 @@ export function HistorialPipelineView() {
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl p-1 w-fit">
         {SUB_TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setSubTab(t.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              subTab === t.id ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400" : "text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              subTab === t.id ? "bg-slate-100 dark:bg-[#2a1b3d] text-violet-600 dark:text-violet-400" : "text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}>
             <t.icon size={14} /> {t.label}
           </button>
@@ -301,7 +301,7 @@ export function HistorialPipelineView() {
           { label: "Entregas",    value: totalesAño.entregas,    color: "text-violet-600 dark:text-violet-400",  pct: conv.ent },
           { label: "Rechazadas",  value: totalesAño.rechazadas,  color: "text-red-600 dark:text-red-400",     pct: Math.round((totalesAño.rechazadas / (totalesAño.leads || 1)) * 100) },
         ].map(k => (
-          <div key={k.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+          <div key={k.label} className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
             {k.pct !== null && (
@@ -312,7 +312,7 @@ export function HistorialPipelineView() {
       </div>
 
       {/* Embudo de conversión */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <TrendingUp size={13} className="text-slate-500 dark:text-slate-500" />
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">Conversión {año}</p>
@@ -355,7 +355,7 @@ export function HistorialPipelineView() {
       </div>
 
       {/* Tabla de evolución mensual */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">Evolución mensual {año}</p>
           {mesFiltro !== null && (
@@ -367,7 +367,7 @@ export function HistorialPipelineView() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest">Mes</th>
                 <th className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest w-28">Leads</th>
@@ -390,7 +390,7 @@ export function HistorialPipelineView() {
                       esMesFiltrado
                         ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
                         : tieneData
-                          ? "hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                          ? "hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/50"
                           : "opacity-40 hover:opacity-60"
                     }`}>
                     <td className="px-4 py-2.5">
@@ -424,7 +424,7 @@ export function HistorialPipelineView() {
               })}
 
               {/* Fila de totales */}
-              <tr className="bg-slate-100 dark:bg-slate-800/40 font-semibold">
+              <tr className="bg-slate-100 dark:bg-[#2a1b3d]/40 font-semibold">
                 <td className="px-4 py-2.5 text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Total</td>
                 {[totalesAño.leads, totalesAño.calificados, totalesAño.ofertas, totalesAño.pedidos, totalesAño.entregas, totalesAño.rechazadas].map((v, i) => (
                   <td key={i} className="px-4 py-2.5">
@@ -457,7 +457,7 @@ export function HistorialPipelineView() {
       </div>
 
       {/* Tabla de contactos con su recorrido completo */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-500">
             Recorrido por contacto
@@ -468,7 +468,7 @@ export function HistorialPipelineView() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Contacto", "Lead", "Calificado", "Oferta", "Pedido", "Entrega", "Rechazada", "Etapa actual"].map(h => (
                   <th key={h} className={`h-9 px-4 text-left text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap ${h === "Rechazada" ? "text-red-600 dark:text-red-800" : "text-slate-500 dark:text-slate-500"}`}>{h}</th>
@@ -480,7 +480,7 @@ export function HistorialPipelineView() {
                 <tr key={i}>
                   {Array.from({ length: 7 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-3 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" />
+                      <div className="h-3 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" />
                     </td>
                   ))}
                 </tr>
@@ -488,10 +488,10 @@ export function HistorialPipelineView() {
               {!loading && contactosFiltrados.map(c => {
                 const etapa = c.Funnel ?? "Lead"
                 return (
-                  <tr key={c.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
+                  <tr key={c.documentId} className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/30 transition-colors">
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                        <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-[#2a1b3d] flex items-center justify-center shrink-0">
                           <User size={10} className="text-slate-500 dark:text-slate-500" />
                         </div>
                         <div>
@@ -587,10 +587,10 @@ export function HistorialPipelineView() {
               { label: "Rechazadas", value: cotizaciones.filter(c => c.estado === "Rechazada").length, colorClass: "text-red-600 dark:text-red-400" },
             ]}
           />
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
                   <tr>
                     {["#", "Cliente", "Fecha", "Estado", "Total", "Trayecto"].map(h => (
                       <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -599,10 +599,10 @@ export function HistorialPipelineView() {
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                   {cotLoading && Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td></tr>
                   ))}
                   {!cotLoading && cotizacionesFiltradas.map(c => (
-                    <tr key={c.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
+                    <tr key={c.documentId} className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/30 transition-colors">
                       <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-700 dark:text-slate-300">{c.numero ?? "—"}</td>
                       <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.cliente?.nombre ?? "—"}</td>
                       <td className="px-4 py-2.5 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap">{fmtDt(c.fecha ?? c.createdAt)}</td>
@@ -649,10 +649,10 @@ export function HistorialPipelineView() {
               { label: "Cancelados", value: ventas.filter(v => v.estado === "Cancelado").length, colorClass: "text-red-600 dark:text-red-400" },
             ]}
           />
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
                   <tr>
                     {["#", "Cliente", "Fecha", "Estado", "Monto", "Trayecto"].map(h => (
                       <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -661,10 +661,10 @@ export function HistorialPipelineView() {
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                   {ventasLoading && Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                    <tr key={i}><td colSpan={6} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td></tr>
                   ))}
                   {!ventasLoading && pedidosFiltrados.map(v => (
-                    <tr key={v.documentId} className="hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
+                    <tr key={v.documentId} className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/30 transition-colors">
                       <td className="px-4 py-2.5 text-[11px] font-bold font-mono text-slate-700 dark:text-slate-300">{v.numero ?? "—"}</td>
                       <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{v.cliente?.nombre ?? "—"}</td>
                       <td className="px-4 py-2.5 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap">{v.fecha ? fmtDt(v.fecha) : "—"}</td>

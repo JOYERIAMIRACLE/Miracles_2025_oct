@@ -96,11 +96,11 @@ function IngresoModal({ onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Nuevo ingreso</h2>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
             <X size={16} />
           </button>
         </div>
@@ -239,7 +239,7 @@ export function IngresosEmpresaView() {
           { label: "Transferencia",      value: fmt(totalTransferencia),  icon: TrendingUp,  destacado: false },
           { label: "Clientes distintos", value: String(countClientes),    icon: CalendarDays, destacado: false },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4 flex items-start justify-between gap-2">
+          <div key={kpi.label} className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4 flex items-start justify-between gap-2">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">{kpi.label}</p>
               <p className={`text-xl font-bold ${kpi.destacado ? "text-violet-600 dark:text-violet-400" : "text-slate-900 dark:text-slate-100"}`}>{loading ? "..." : kpi.value}</p>
@@ -252,7 +252,7 @@ export function IngresosEmpresaView() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
         {loading ? (
           <p className="text-sm text-slate-400 text-center py-16">Cargando...</p>
         ) : filtrados.length === 0 ? (
@@ -279,7 +279,7 @@ export function IngresosEmpresaView() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {filtrados.map(ing => (
-                  <tr key={ing.documentId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition group">
+                  <tr key={ing.documentId} className="hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40 transition group">
                     <td className="px-4 py-3">
                       <p className="text-slate-800 dark:text-slate-200 font-medium">{ing.descripcion}</p>
                       {ing.notas && <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[200px]">{ing.notas}</p>}

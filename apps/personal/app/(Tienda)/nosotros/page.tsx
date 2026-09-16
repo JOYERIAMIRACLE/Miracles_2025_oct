@@ -26,14 +26,14 @@ export default function NosotrosPage() {
 
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-amber-600">Inicio</Link>
+        <Link href="/" className="hover:text-violet-600">Inicio</Link>
         <span>/</span>
         <span className="text-gray-700 dark:text-gray-300">Nosotros</span>
       </nav>
 
       {/* Hero / intro */}
       <header className="mb-12">
-        <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
+        <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">
           Sobre nosotros
         </p>
         <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight">
@@ -60,7 +60,7 @@ export default function NosotrosPage() {
         </h2>
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-            <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-amber-800 text-white mb-3">
+            <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-violet-800 text-white mb-3">
               Oro 10k
             </span>
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -70,7 +70,7 @@ export default function NosotrosPage() {
             </p>
           </div>
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-            <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-amber-800 text-white mb-3">
+            <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-violet-800 text-white mb-3">
               Plata 925
             </span>
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -106,7 +106,7 @@ export default function NosotrosPage() {
       </section>
 
       {/* CTA */}
-      <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 p-8 text-center">
+      <div className="rounded-2xl bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-900/40 p-8 text-center">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
           Explora nuestra colección
         </h2>
@@ -114,7 +114,7 @@ export default function NosotrosPage() {
           Anillos, cadenas, aretes, dijes y más — en oro 10k y plata 925, listos para enviarse a
           cualquier parte de México.
         </p>
-        <Link href="/tienda" className={cn(buttonVariants(), "bg-amber-600 hover:bg-amber-700 text-white font-semibold")}>
+        <Link href="/tienda" className={cn(buttonVariants(), "bg-violet-600 hover:bg-violet-700 text-white font-semibold")}>
           Ver la tienda
         </Link>
       </div>

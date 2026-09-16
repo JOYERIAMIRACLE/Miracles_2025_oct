@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useGetProveedores, createProveedor, updateProveedor, deleteProveedor } from "@/api/proveedor/getProveedores"
 import { Proveedor, ProveedorPayload } from "@/types/proveedor"
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
 
 const emptyForm = (): ProveedorPayload => ({
   nombre: "", contacto: "", telefono: "", email: "", rfc: "", direccion: "", notas: "", activo: true,
@@ -78,7 +78,7 @@ export function ProveedoresView() {
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..."
-              className="pl-8 pr-3 h-8 rounded-lg border border-slate-700 bg-slate-900 text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44" />
+              className="pl-8 pr-3 h-8 rounded-lg border border-slate-700 bg-[#2a1b3d] text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44" />
           </div>
           <button type="button" onClick={openNuevo}
             className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition">
@@ -88,10 +88,10 @@ export function ProveedoresView() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
               <tr>
                 {["Nombre / Contacto", "Teléfono", "Email", "RFC", "Estado", ""].map(h => (
                   <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{h}</th>
@@ -101,11 +101,11 @@ export function ProveedoresView() {
             <tbody className="divide-y divide-slate-800/60">
               {loading && Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
-                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td>
+                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4" /></td>
                 ))}</tr>
               ))}
               {!loading && filtrados.map(p => (
-                <tr key={p.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                <tr key={p.documentId} className="hover:bg-[#2a1b3d]/40 transition-colors group">
                   <td className="px-4 py-3">
                     <p className="font-medium text-slate-200">{p.nombre}</p>
                     {p.contacto && <p className="text-[11px] text-slate-500 mt-0.5">{p.contacto}</p>}
@@ -131,8 +131,8 @@ export function ProveedoresView() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => openEditar(p)} className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition"><Pencil size={12}/></button>
-                        <button type="button" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><Trash2 size={12}/></button>
+                        <button type="button" onClick={() => openEditar(p)} className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition"><Pencil size={12}/></button>
+                        <button type="button" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition"><Trash2 size={12}/></button>
                       </div>
                     )}
                   </td>
@@ -153,7 +153,7 @@ export function ProveedoresView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+          <div className="w-full max-w-md bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar proveedor" : "Nuevo proveedor"}</h2>
               <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 hover:text-slate-300 rounded"><X size={15}/></button>

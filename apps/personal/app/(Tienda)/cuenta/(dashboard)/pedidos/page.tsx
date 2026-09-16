@@ -64,7 +64,7 @@ export default function PedidosPage() {
                     {/* Envío / seguimiento */}
                     {envio && (
                       <div className="flex items-start gap-2.5 bg-gray-50 dark:bg-zinc-800/60 rounded-xl p-3">
-                        <Truck size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <Truck size={15} className="text-violet-600 dark:text-violet-400 shrink-0 mt-0.5" />
                         <div className="min-w-0 text-sm">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${ESTADO_ENVIO_COLORS[envio.estado as EstadoEnvio]}`}>
@@ -81,7 +81,7 @@ export default function PedidosPage() {
                     {v.comprobantePago && (
                       <a href={v.comprobantePago.url.startsWith("http") ? v.comprobantePago.url : `${process.env.NEXT_PUBLIC_BACKEND_URL}${v.comprobantePago.url}`}
                         target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300">
+                        className="flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300">
                         <Receipt size={13} /> Ver comprobante de pago
                       </a>
                     )}

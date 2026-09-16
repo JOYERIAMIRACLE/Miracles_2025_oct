@@ -24,7 +24,7 @@ export const EVENTOS_HISTORIAL: EventoHistorial[] = [
 
 export function HistorialCambiosCard({ onClose }: { onClose?: () => void }) {
   return (
-    <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5">
+    <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] shadow-sm p-5">
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Historial de cambios</h2>
@@ -32,7 +32,7 @@ export function HistorialCambiosCard({ onClose }: { onClose?: () => void }) {
         </div>
         {onClose && (
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0">
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition shrink-0">
             <X size={16} />
           </button>
         )}

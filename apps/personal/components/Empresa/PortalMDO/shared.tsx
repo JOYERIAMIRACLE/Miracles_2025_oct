@@ -69,7 +69,7 @@ export function TabBar({ tabs, active, onChange }: { tabs: TabItem[]; active: st
   }, [actualizarFades, tabs.length])
 
   return (
-    <div className="relative min-w-0 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
+    <div className="relative min-w-0 w-full bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
       <div ref={scrollRef} className="overflow-x-auto scrollbar-thin">
         <div className="inline-flex items-center gap-1 p-1.5">
           {tabs.map(t => {
@@ -80,7 +80,7 @@ export function TabBar({ tabs, active, onChange }: { tabs: TabItem[]; active: st
                 className={[
                   "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors",
                   isActive
-                    ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold"
+                    ? "bg-slate-100 dark:bg-[#2a1b3d] text-violet-600 dark:text-violet-400 font-bold"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
                 ].join(" ")}>
                 {Icon && <Icon size={14} />}
@@ -165,7 +165,7 @@ export function PageHeader({
 }
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-6 ${className}`}>{children}</div>
+  return <div className={`bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-6 ${className}`}>{children}</div>
 }
 
 export function Pending({ owner, desc }: { owner: string; desc: string }) {
@@ -371,7 +371,7 @@ export function SeccionHero({
   }
 
   return (
-    <div className="relative rounded-2xl overflow-hidden bg-slate-900">
+    <div className="relative rounded-2xl overflow-hidden bg-[#2a1b3d]">
       {imagenUrl ? (
         <>
           <img src={imagenUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-top opacity-50" />
@@ -388,22 +388,22 @@ export function SeccionHero({
             <MoreVertical size={15} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-40 bg-slate-900 border border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
+            <div className="absolute right-0 top-full mt-1.5 w-40 bg-[#2a1b3d] border border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
               {imagenUrl && (
                 <button type="button" onClick={() => { setShowPopup(true); setMenuOpen(false) }}
-                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition">
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-[#2a1b3d] transition">
                   Ver imagen
                 </button>
               )}
               {puedeEditar && imagenUrl && (
                 <button type="button" onClick={() => { abrirAjuste(); setMenuOpen(false) }} disabled={uploading}
-                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition disabled:opacity-50">
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-[#2a1b3d] transition disabled:opacity-50">
                   Ajustar imagen
                 </button>
               )}
               {puedeEditar && (
                 <button type="button" onClick={() => { onTrigger?.(); setMenuOpen(false) }} disabled={uploading}
-                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition disabled:opacity-50">
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-[#2a1b3d] transition disabled:opacity-50">
                   {uploading ? "Subiendo..." : "Cambiar imagen"}
                 </button>
               )}
@@ -428,7 +428,7 @@ export function SeccionHero({
 
       {showAdjust && (
         <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-          <div className="bg-slate-900 rounded-2xl p-4 w-full max-w-2xl">
+          <div className="bg-[#2a1b3d] rounded-2xl p-4 w-full max-w-2xl">
             <p className="text-sm font-semibold text-white mb-3">Ajustar imagen</p>
             <div className="relative w-full aspect-[7/2] rounded-xl overflow-hidden bg-black">
               {fuenteAjuste ? (

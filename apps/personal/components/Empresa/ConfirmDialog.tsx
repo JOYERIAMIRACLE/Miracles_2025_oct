@@ -56,7 +56,7 @@ function ConfirmDialogUI({ options, onResolve }: {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       role="dialog" aria-modal="true" aria-label={title}
       onClick={e => { if (e.target === e.currentTarget) onResolve(false) }}>
-      <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+      <div className="w-full max-w-sm bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl">
         <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-800">
           <AlertTriangle size={15} className={variant === "danger" ? "text-red-400 shrink-0" : "text-violet-400 shrink-0"} />
           <h2 className="text-sm font-semibold text-slate-100">{title}</h2>
@@ -69,7 +69,7 @@ function ConfirmDialogUI({ options, onResolve }: {
         </div>
         <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-800">
           <button type="button" autoFocus onClick={() => onResolve(false)}
-            className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">
+            className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">
             {cancelLabel}
           </button>
           <button type="button" onClick={() => onResolve(true)}

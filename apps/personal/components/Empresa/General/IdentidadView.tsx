@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useGetIdentidad, saveIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { IdentidadPayload } from "@/types/identidad-empresa"
 
-const inp  = "w-full rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+const inp  = "w-full rounded-lg border border-slate-700 bg-[#2a1b3d]/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
 const area = inp + " resize-none"
 
 function empty(): IdentidadPayload {
@@ -138,7 +138,7 @@ export function IdentidadView() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 space-y-4">
+    <section className="bg-[#2a1b3d]/50 border border-slate-800 rounded-xl p-5 space-y-4">
       <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{title}</h2>
       {children}
     </section>

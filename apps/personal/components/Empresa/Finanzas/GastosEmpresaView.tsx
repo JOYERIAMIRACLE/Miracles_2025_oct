@@ -219,7 +219,7 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
           { label: "Historial total",  value: fmt(totalHistorico), destacado: false },
           { label: "Registros",        value: String(gastos.length), destacado: false },
         ].map(k => (
-          <div key={k.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
+          <div key={k.label} className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
             <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.destacado ? "text-violet-600 dark:text-violet-400" : "text-slate-900 dark:text-slate-100"}`}>{k.value}</p>
           </div>
@@ -262,10 +262,10 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
 
       {/* ═══ TABLA ════════════════════════════════════════════════════════════ */}
       {tab === "tabla" && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
                 <tr>
                   {["Fecha", "Categoría", "Concepto", "Cuenta", "Proveedor", "Monto", ""].map(h => (
                     <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -275,12 +275,12 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {loading && Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td>
+                    <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td>
                   ))}</tr>
                 ))}
                 {!loading && filtrados.map(g => (
                   <tr key={g.documentId}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    className="hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer"
                     onClick={() => delId !== g.documentId && openEditar(g)}>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">{fmtFecha(g.fecha)}</td>
                     <td className="px-4 py-3">
@@ -303,7 +303,7 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
                         </div>
                       ) : (
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button type="button" title="Eliminar" onClick={() => setDelId(g.documentId)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                          <button type="button" title="Eliminar" onClick={() => setDelId(g.documentId)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition">
                             <X size={13} />
                           </button>
                         </div>
@@ -328,7 +328,7 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
         <div className="space-y-5">
 
           {/* Tendencia mensual */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5">
+          <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4">Gasto mensual — historial completo</h3>
             {porMes.length === 0 ? (
               <p className="text-xs text-slate-400 py-8 text-center">Sin datos</p>
@@ -349,7 +349,7 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
             {/* Donut categoría */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5">
+            <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4">Por categoría</h3>
               {porCategoria.length === 0 ? (
                 <p className="text-xs text-slate-400 py-8 text-center">Sin datos</p>
@@ -377,7 +377,7 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
             </div>
 
             {/* Top proveedores */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5">
+            <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4">Top proveedores</h3>
               {topProveedores.length === 0 ? (
                 <p className="text-xs text-slate-400 py-8 text-center">Sin datos</p>
@@ -386,7 +386,7 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
                   {topProveedores.map(p => (
                     <div key={p.prov} className="flex items-center gap-2">
                       <span className="text-xs text-slate-500 dark:text-slate-400 truncate w-36 shrink-0" title={p.prov}>{p.prov}</span>
-                      <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-slate-100 dark:bg-[#2a1b3d] rounded-full overflow-hidden">
                         <div className="h-full bg-violet-500 rounded-full transition-all"
                           style={{ width: `${Math.round(p.total / maxProv * 100)}%` }} />
                       </div>
@@ -403,11 +403,11 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
       {/* ═══ MODAL ═════════════════════════════════════════════════════════════ */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? "Editar gasto" : "Nuevo gasto"}</h2>
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               {/* Categoría */}
@@ -463,7 +463,7 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
             </div>
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}

@@ -61,7 +61,7 @@ export function DashboardEmpresaView() {
           { label: "Monto del mes",     value: loading ? "…" : fmt(stats.montoMes),                     color: "text-violet-400" },
           { label: "Pedidos en proceso",value: loading ? "…" : stats.pedidosActivos.length,             color: "text-violet-400" },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div key={k.label} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-2xl font-bold tabular-nums ${k.color}`}>{k.value}</p>
           </div>
@@ -71,11 +71,11 @@ export function DashboardEmpresaView() {
       <div className="grid md:grid-cols-2 gap-4">
 
         {/* Funnel de clientes */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
           <h2 className="text-sm font-semibold text-slate-300 mb-4">Pipeline de Clientes</h2>
           {loading ? (
             <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-8 rounded bg-slate-800 animate-pulse" />
+              <div key={i} className="h-8 rounded bg-[#2a1b3d] animate-pulse" />
             ))}</div>
           ) : (
             <div className="space-y-2">
@@ -87,7 +87,7 @@ export function DashboardEmpresaView() {
                     <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${FUNNEL_COLOR[etapa]} w-28 text-center shrink-0`}>
                       {FUNNEL_LABEL[etapa]}
                     </span>
-                    <div className="flex-1 bg-slate-800 rounded-full h-2">
+                    <div className="flex-1 bg-[#2a1b3d] rounded-full h-2">
                       <div
                         className="h-2 rounded-full bg-violet-500/60 transition-all duration-500"
                         style={{ width: `${pct}%` }}
@@ -102,11 +102,11 @@ export function DashboardEmpresaView() {
         </div>
 
         {/* Top productos */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
           <h2 className="text-sm font-semibold text-slate-300 mb-4">Top Productos por Venta</h2>
           {loading ? (
             <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-8 rounded bg-slate-800 animate-pulse" />
+              <div key={i} className="h-8 rounded bg-[#2a1b3d] animate-pulse" />
             ))}</div>
           ) : stats.topProductos.length === 0 ? (
             <p className="text-sm text-slate-600 py-4 text-center">Sin ventas registradas</p>
@@ -119,7 +119,7 @@ export function DashboardEmpresaView() {
                   <div key={nombre} className="flex items-center gap-3">
                     <span className="text-[10px] text-slate-600 w-4 tabular-nums">{i + 1}</span>
                     <span className="text-xs text-slate-300 flex-1 truncate">{nombre}</span>
-                    <div className="w-20 bg-slate-800 rounded-full h-1.5">
+                    <div className="w-20 bg-[#2a1b3d] rounded-full h-1.5">
                       <div className="h-1.5 rounded-full bg-violet-500/60" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="text-xs text-violet-400 tabular-nums shrink-0">{fmt(monto)}</span>
@@ -131,14 +131,14 @@ export function DashboardEmpresaView() {
         </div>
 
         {/* Pedidos activos */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-300">Pedidos en Proceso</h2>
             <span className="text-xs text-violet-400 font-semibold">{fmt(stats.montoActivo)}</span>
           </div>
           {loading ? (
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-10 rounded bg-slate-800 animate-pulse" />
+              <div key={i} className="h-10 rounded bg-[#2a1b3d] animate-pulse" />
             ))}</div>
           ) : stats.pedidosActivos.length === 0 ? (
             <p className="text-sm text-slate-600 py-4 text-center">Sin pedidos activos</p>
@@ -165,11 +165,11 @@ export function DashboardEmpresaView() {
         </div>
 
         {/* Ventas recientes */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
           <h2 className="text-sm font-semibold text-slate-300 mb-4">Ventas Recientes</h2>
           {loading ? (
             <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-10 rounded bg-slate-800 animate-pulse" />
+              <div key={i} className="h-10 rounded bg-[#2a1b3d] animate-pulse" />
             ))}</div>
           ) : stats.recientes.length === 0 ? (
             <p className="text-sm text-slate-600 py-4 text-center">Sin ventas registradas</p>

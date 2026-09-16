@@ -87,10 +87,10 @@ function MaterialModal({ editando, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-6 space-y-4">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar material" : "Nuevo material"}</h2>
-          <button type="button" title="Cerrar" onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+          <button type="button" title="Cerrar" onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
         <div>
           <label className={labelCls}>Nombre <span className="text-violet-500">*</span></label>
@@ -106,7 +106,7 @@ function MaterialModal({ editando, onClose, onSaved }: {
         </div>
         <div className="flex items-center gap-2">
           <input type="checkbox" id="mat-activo" checked={form.activo ?? true} onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))}
-            className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-slate-800" />
+            className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-[#2a1b3d]" />
           <label htmlFor="mat-activo" className="text-sm text-slate-600 dark:text-slate-300">Material activo</label>
         </div>
         <div className="flex gap-2 justify-end pt-1">
@@ -141,10 +141,10 @@ function MaterialesTab({ triggerNuevo }: { triggerNuevo: number }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Material", "Precio/gramo", "Stock disponible", "Estado", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -153,7 +153,7 @@ function MaterialesTab({ triggerNuevo }: { triggerNuevo: number }) {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {loading && Array.from({ length: 3 }).map((_, i) => (
-                <tr key={i}><td colSpan={5} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                <tr key={i}><td colSpan={5} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td></tr>
               ))}
               {!loading && materiales.length === 0 && (
                 <tr><td colSpan={5} className="py-12 text-center text-slate-400 dark:text-slate-600">
@@ -166,7 +166,7 @@ function MaterialesTab({ triggerNuevo }: { triggerNuevo: number }) {
                   className={`cursor-pointer transition-colors group ${
                     modalOpen && editando?.documentId === m.documentId
                       ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                      : "hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40"
                   }`}>
                   <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{m.nombre}</td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{fmt(m.precioReferenciaGramo)}</td>
@@ -274,7 +274,7 @@ function MaterialCombobox({ value, materiales, onChange, onCreated }: {
       {open && rect && createPortal(
         <div ref={panelRef}
           style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 160), zIndex: 9999 }}
-          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden max-h-52 overflow-y-auto">
+          className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden max-h-52 overflow-y-auto">
           {filtrados.map(m => (
             <button key={m.documentId} type="button"
               onClick={() => { onChange(m.documentId); setText(m.nombre); setOpen(false) }}
@@ -414,10 +414,10 @@ function NuevaCompraModal({ editando, materiales, proveedores, totalCompras, onC
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar compra de materia prima" : "Nueva compra de materia prima"}</h2>
-          <button type="button" title="Cerrar" onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+          <button type="button" title="Cerrar" onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
 
         {yaRecibida && (
@@ -442,7 +442,7 @@ function NuevaCompraModal({ editando, materiales, proveedores, totalCompras, onC
           <label className={labelCls}>Líneas del recibo</label>
           <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700">
+              <thead className="bg-slate-50 dark:bg-[#2a1b3d]/60 border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   {["Concepto", "Material", "Precio/g", "Gramos", "Total", ""].map(h => (
                     <th key={h} className="px-2.5 py-2 text-left text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{h}</th>
@@ -552,12 +552,12 @@ function RecibirModal({ compra, onClose, onRecibida }: {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-6 space-y-4">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-6 space-y-4">
         <div>
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Recibir compra</h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{compra.lineas.length} línea{compra.lineas.length !== 1 ? "s" : ""} · {fmt(total)}</p>
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
+        <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#2a1b3d]/50 rounded-lg px-3 py-2">
           Al confirmar: se suman los gramos al inventario de cada material y se registra el gasto real en Finanzas.
         </p>
         <div>
@@ -624,7 +624,7 @@ function ConceptoCombobox({ value, onChange }: { value: string; onChange: (v: st
       {open && rect && (filtrados.length > 0 || esNuevo) && createPortal(
         <div ref={panelRef}
           style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 160), zIndex: 9999 }}
-          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden max-h-52 overflow-y-auto">
+          className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden max-h-52 overflow-y-auto">
           {filtrados.map(c => (
             <button key={c} type="button"
               onClick={() => { setText(c); onChange(c); setOpen(false) }}
@@ -893,7 +893,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
   return (
     <>
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
@@ -906,12 +906,12 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
             </p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
             <X size={16} />
           </button>
         </div>
 
-        <p className="px-6 py-3 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <p className="px-6 py-3 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#2a1b3d]/40 border-b border-slate-200 dark:border-slate-800 shrink-0">
           Clasifica pieza por pieza lo que entró en cada línea. Al confirmar se crean como productos en el inventario (no publicados en tienda).
         </p>
 
@@ -945,7 +945,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
             return (
               <div key={linea.documentId} className="border border-slate-200 dark:border-slate-700 rounded-xl">
                 {/* Cabecera línea */}
-                <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between gap-4 flex-wrap rounded-t-xl">
+                <div className="px-4 py-3 bg-slate-50 dark:bg-[#2a1b3d]/50 flex items-center justify-between gap-4 flex-wrap rounded-t-xl">
                   <div>
                     <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{linea.descripcion}</p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">{linea.material?.nombre ?? "—"} · {fmtG(linea.gramos)} · {fmt(linea.precioPorGramo)}/g</p>
@@ -966,7 +966,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                     Track con contraste explícito (no solo un tono más del
                     mismo gris del panel): en fondo oscuro se perdía casi
                     por completo contra el resto del modal. */}
-                <div className="h-2 bg-slate-200 dark:bg-slate-950 border-y border-slate-300/60 dark:border-slate-700/60 overflow-hidden">
+                <div className="h-2 bg-slate-200 dark:bg-[#2a1b3d] border-y border-slate-300/60 dark:border-slate-700/60 overflow-hidden">
                   {gHistorial > 0 ? (
                     <div className="h-full flex">
                       <div className="h-full bg-violet-400/40 shrink-0" style={{ width: `${pctHistorial}%` }} />
@@ -982,7 +982,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                   {estado.piezas.length > 0 && (
                     <div className="border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden mb-2">
                       <table className="w-full text-xs">
-                        <thead className="bg-slate-50 dark:bg-slate-800/60">
+                        <thead className="bg-slate-50 dark:bg-[#2a1b3d]/60">
                           <tr>
                             {["Categoría","Nombre/descripción","G/pz","Cant.","Talla","Total g",""].map(h => (
                               <th key={h} className="px-2 py-1.5 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -992,9 +992,9 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                           {estado.piezas.map((p, pi) => {
                             const incompleta = p.nombre.trim() && (!p.categoriaJoya || !Number(p.pesoGramos))
-                            const numInp = "w-full h-9 px-1 text-center text-base font-bold rounded-lg border-2 border-violet-500/60 bg-slate-800 text-violet-200 placeholder:text-slate-600 outline-none focus:border-violet-400 focus:text-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            const numInp = "w-full h-9 px-1 text-center text-base font-bold rounded-lg border-2 border-violet-500/60 bg-[#2a1b3d] text-violet-200 placeholder:text-slate-600 outline-none focus:border-violet-400 focus:text-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                             return (
-                            <tr key={pi} className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 ${incompleta ? "bg-red-50/40 dark:bg-red-900/10" : ""}`}>
+                            <tr key={pi} className={`hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/30 ${incompleta ? "bg-red-50/40 dark:bg-red-900/10" : ""}`}>
                               <td className="px-2 py-1 min-w-[110px]">
                                 <select value={p.categoriaJoya} onChange={e => updatePieza(li, pi, "categoriaJoya", e.target.value)}
                                   className={`${fieldCls} h-7 text-xs`}>
@@ -1065,7 +1065,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                         )}
                       </div>
                       {lineaBuscando === li && (
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl overflow-y-auto max-h-60 mt-0.5">
+                        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl overflow-y-auto max-h-60 mt-0.5">
                           {/* Header */}
                           <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                             <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
@@ -1098,7 +1098,7 @@ function InspeccionCompraModal({ compra, materiales, onClose, onDone }: {
                                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                     <span className={`text-[10px] font-mono ${isGold ? "text-amber-500 dark:text-amber-400" : "text-violet-500 dark:text-violet-400"}`}>{p.sku}</span>
                                     {p.categoria && (
-                                      <span className="text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">{p.categoria}</span>
+                                      <span className="text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400">{p.categoria}</span>
                                     )}
                                     {p.talla && (
                                       <span className="text-[9px] text-slate-400">T:{p.talla}</span>
@@ -1226,10 +1226,10 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Fecha", "Concepto", "Material", "Gramos", "Precio/g", "Total", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -1238,7 +1238,7 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {loading && Array.from({ length: 3 }).map((_, i) => (
-                <tr key={i}><td colSpan={7} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" /></td></tr>
+                <tr key={i}><td colSpan={7} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td></tr>
               ))}
               {!loading && compras.length === 0 && (
                 <tr><td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-600">
@@ -1253,7 +1253,7 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
                     className={`cursor-pointer transition-colors group ${
                       activa
                         ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                        : "hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40"
                     }`}>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">{c.fecha}</td>
                     <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">
@@ -1272,7 +1272,7 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                         <button type="button" title="Editar" onClick={() => { setEditando(c); setModalOpen(true) }}
-                          className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                          className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition">
                           <Pencil size={13} />
                         </button>
                         {c.estado === "borrador" && (
@@ -1295,7 +1295,7 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
                           </div>
                         ) : (
                           <button type="button" title="Eliminar" onClick={() => setDelId(c.documentId)}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition">
                             <Trash2 size={13} />
                           </button>
                         )}

@@ -25,22 +25,22 @@ export default function ResumenCuentaPage() {
           el resto queda como referencia secundaria. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Link href="/cuenta/pedidos"
-          className="bg-amber-600 hover:bg-amber-700 rounded-2xl p-4 transition-colors">
-          <Package size={16} className="text-amber-100 mb-2" />
+          className="bg-violet-600 hover:bg-violet-700 rounded-2xl p-4 transition-colors">
+          <Package size={16} className="text-violet-100 mb-2" />
           <p className="text-2xl font-bold text-white tabular-nums">{loading ? "—" : ventas.length}</p>
-          <p className="text-xs text-amber-100">Pedidos</p>
+          <p className="text-xs text-violet-100">Pedidos</p>
         </Link>
-        <Link href="/cuenta/cotizaciones" className={`${cardCls} p-4 hover:ring-amber-300 dark:hover:ring-amber-700 transition-colors`}>
+        <Link href="/cuenta/cotizaciones" className={`${cardCls} p-4 hover:ring-violet-300 dark:hover:ring-violet-700 transition-colors`}>
           <FileText size={16} className="text-gray-400 dark:text-gray-500 mb-2" />
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{loading ? "—" : cotizaciones.length}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">Cotizaciones</p>
         </Link>
-        <Link href="/productos-favoritos" className={`${cardCls} p-4 hover:ring-amber-300 dark:hover:ring-amber-700 transition-colors`}>
+        <Link href="/productos-favoritos" className={`${cardCls} p-4 hover:ring-violet-300 dark:hover:ring-violet-700 transition-colors`}>
           <Heart size={16} className="text-gray-400 dark:text-gray-500 mb-2" />
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{favorites.items.length}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">Favoritos</p>
         </Link>
-        <Link href="/carrito" className={`${cardCls} p-4 hover:ring-amber-300 dark:hover:ring-amber-700 transition-colors`}>
+        <Link href="/carrito" className={`${cardCls} p-4 hover:ring-violet-300 dark:hover:ring-violet-700 transition-colors`}>
           <ShoppingBag size={16} className="text-gray-400 dark:text-gray-500 mb-2" />
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{cart.items.length}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">En el carrito</p>
@@ -51,7 +51,7 @@ export default function ResumenCuentaPage() {
       <div className={`${cardCls} overflow-hidden`}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
           <h2 className="font-semibold text-gray-900 dark:text-gray-100">Últimos pedidos</h2>
-          <Link href="/cuenta/pedidos" className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-0.5">
+          <Link href="/cuenta/pedidos" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 flex items-center gap-0.5">
             Ver todos <ChevronRight size={13} />
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default function ResumenCuentaPage() {
         ) : ultimosPedidos.length === 0 ? (
           <div className="text-center py-10 px-5">
             <p className="text-sm text-gray-500 dark:text-gray-400">Todavía no tienes pedidos.</p>
-            <Link href="/tienda" className="text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 mt-1 inline-block">
+            <Link href="/tienda" className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 mt-1 inline-block">
               Explora el catálogo →
             </Link>
           </div>

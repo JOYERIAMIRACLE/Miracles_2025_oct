@@ -18,7 +18,15 @@ export function useGetIdentidad() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(API_URL, { headers: authHeaders() })
+        // Sin Authorization a propósito: este GET es público (lo usan tanto
+        // visitantes anónimos de la Tienda como el Portal), y Strapi rechaza
+        // con 401 cualquier request que traiga un Bearer inválido/vencido —
+        // NO cae de regreso a acceso público solo porque el token esté mal.
+        // Adjuntar el token de todos modos (como hacía antes) rompía el logo
+        // y demás datos de identidad para cualquiera cuyo token ya no fuera
+        // válido contra este backend (ej. sesión vieja, u otro entorno),
+        // aunque el dato en sí nunca necesitó login para leerse.
+        const res  = await fetch(API_URL)
         const json = await res.json()
         setIdentidad(json.data?.[0] ?? null)
       } finally { setLoading(false) }

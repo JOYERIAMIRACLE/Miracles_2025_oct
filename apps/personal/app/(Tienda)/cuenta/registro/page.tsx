@@ -44,7 +44,7 @@ function RegistroForm() {
   return (
     <div className="max-w-sm mx-auto px-6 py-16">
       <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-amber-600">Inicio</Link>
+        <Link href="/" className="hover:text-violet-600">Inicio</Link>
         <span>/</span>
         <span className="text-gray-700 dark:text-gray-300">Crear cuenta</span>
       </nav>
@@ -62,7 +62,7 @@ function RegistroForm() {
             <input
               id="nombre" type="text" value={nombre} onChange={e => setNombre(e.target.value)}
               placeholder="Tu nombre" required autoFocus autoComplete="name"
-              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all"
+              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400/50 transition-all"
             />
           </div>
         </div>
@@ -73,7 +73,7 @@ function RegistroForm() {
             <input
               id="email" type="email" value={email} onChange={e => setEmail(e.target.value)}
               placeholder="tu@email.com" required autoComplete="email"
-              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all"
+              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400/50 transition-all"
             />
           </div>
         </div>
@@ -84,7 +84,7 @@ function RegistroForm() {
             <input
               id="telefono" type="tel" value={telefono} onChange={e => setTelefono(e.target.value)}
               placeholder="55 0000 0000" autoComplete="tel"
-              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all"
+              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400/50 transition-all"
             />
           </div>
         </div>
@@ -95,7 +95,7 @@ function RegistroForm() {
             <input
               id="password" type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres" required autoComplete="new-password"
-              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-10 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all"
+              className="w-full h-10 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-10 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-violet-400/50 transition-all"
             />
             <button type="button" onClick={() => setShowPassword(p => !p)} tabIndex={-1}
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
@@ -112,14 +112,14 @@ function RegistroForm() {
         )}
 
         <button type="submit" disabled={loading}
-          className="w-full h-10 rounded-lg bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 active:scale-[0.98] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+          className="w-full h-10 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 active:scale-[0.98] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
           {loading && <Loader2 size={15} className="animate-spin" />}
           {loading ? "Creando cuenta…" : "Crear cuenta"}
         </button>
 
         <p className="text-center text-xs text-gray-500 dark:text-gray-400">
           ¿Ya tienes cuenta?{" "}
-          <Link href={`/cuenta/login?next=${encodeURIComponent(next)}`} className="text-amber-600 dark:text-amber-400 font-medium hover:text-amber-700 dark:hover:text-amber-300">
+          <Link href={`/cuenta/login?next=${encodeURIComponent(next)}`} className="text-violet-600 dark:text-violet-400 font-medium hover:text-violet-700 dark:hover:text-violet-300">
             Inicia sesión
           </Link>
         </p>

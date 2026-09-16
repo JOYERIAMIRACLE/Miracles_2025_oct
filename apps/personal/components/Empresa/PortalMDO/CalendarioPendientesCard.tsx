@@ -68,7 +68,7 @@ export function CalendarioPendientesCard() {
 
   return (
     <section
-      className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5"
+      className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] shadow-sm p-5"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -133,7 +133,7 @@ export function CalendarioPendientesCard() {
                   className={`relative h-8 rounded-lg text-xs flex items-center justify-center transition-colors ${
                     seleccionado ? "bg-violet-500 text-white"
                     : isToday(dia) ? "border border-violet-400 text-violet-600 dark:text-violet-400 font-bold"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#2a1b3d]"
                   }`}>
                   {format(dia, "d")}
                   {evs.length > 0 && !seleccionado && (

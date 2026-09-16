@@ -190,7 +190,7 @@ function CampanaChip({ titulo, categoria, fullWidth, archivos, onClick, onDelete
   if (confirmando) {
     return (
       <div onClick={e => e.stopPropagation()}
-        className={`flex items-center h-8 rounded-lg bg-slate-800 border border-red-800/40 overflow-hidden shrink-0 ${fullWidth ? "w-full" : "w-[156px]"}`}>
+        className={`flex items-center h-8 rounded-lg bg-[#2a1b3d] border border-red-800/40 overflow-hidden shrink-0 ${fullWidth ? "w-full" : "w-[156px]"}`}>
         <span className="text-[10px] text-slate-400 truncate px-2 flex-1 text-left leading-none">¿Eliminar?</span>
         <button type="button" onClick={() => { setConfirmando(false); onDelete?.() }}
           className="px-1.5 h-full text-[10px] text-red-400 font-medium shrink-0">Sí</button>
@@ -203,7 +203,7 @@ function CampanaChip({ titulo, categoria, fullWidth, archivos, onClick, onDelete
   return (
     <div
       onClick={onClick}
-      className={`group/chip flex items-center h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[156px]"}`}>
+      className={`group/chip flex items-center h-8 rounded-lg bg-[#2a1b3d] hover:bg-slate-700 border border-slate-700/60 hover:border-slate-600 transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[156px]"}`}>
       <span className={`flex items-center justify-center h-full w-7 shrink-0 text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>
         {cfg.letter}
       </span>
@@ -231,7 +231,7 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="flex items-center gap-3 mb-4">
       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
-      <span className="text-[10px] text-slate-600 font-mono bg-slate-800 px-1.5 py-0.5 rounded">{count}</span>
+      <span className="text-[10px] text-slate-600 font-mono bg-[#2a1b3d] px-1.5 py-0.5 rounded">{count}</span>
       <div className="flex-1 border-t border-slate-800" />
     </div>
   )
@@ -254,7 +254,7 @@ function CampanaCard({ c, onEdit, onDelete }: {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden group hover:border-slate-700 transition-colors">
+    <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden group hover:border-slate-700 transition-colors">
       <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-2">
         <div className="flex items-center gap-2 flex-wrap min-w-0">
           <CategoriaBadge cat={c.categoria} />
@@ -270,11 +270,11 @@ function CampanaCard({ c, onEdit, onDelete }: {
         ) : (
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0">
             <button type="button" onClick={onEdit} title="Editar"
-              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+              className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d] transition">
               <Pencil size={13} />
             </button>
             <button type="button" onClick={() => setConfirmando(true)} title="Eliminar"
-              className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition">
+              className="p-1.5 text-slate-500 hover:text-red-400 rounded hover:bg-[#2a1b3d] transition">
               <Trash2 size={13} />
             </button>
           </div>
@@ -352,16 +352,16 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
     </div>
   )
 
-  const inputCls   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
-  const inputHlCls = "w-full px-3 py-2 text-sm rounded-lg border border-violet-500/30 bg-slate-800 text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500/60"
+  const inputCls   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-700 bg-[#2a1b3d] text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
+  const inputHlCls = "w-full px-3 py-2 text-sm rounded-lg border border-violet-500/30 bg-[#2a1b3d] text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500/60"
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4">
+      <div className="bg-[#2a1b3d] border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-100">{editando ? "Editar campaña" : "Nueva campaña"}</h2>
           <button type="button" title="Cerrar" onClick={onCerrar}
-            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+            className="p-1.5 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d] transition">
             <X size={16} />
           </button>
         </div>
@@ -392,7 +392,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
                       ? cat === "MHS"   ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
                       : cat === "Store" ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
                                         : "bg-violet-600/20 border-violet-500/40 text-violet-300"
-                      : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
+                      : "bg-[#2a1b3d] border-slate-700 text-slate-500 hover:text-slate-300"
                   }`}>{cat}
                 </button>
               ))}
@@ -510,7 +510,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   return (
     <div className="border border-slate-800 rounded-xl overflow-hidden">
       <button type="button" onClick={() => setCollapsed(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/60 hover:bg-slate-800/40 transition">
+        className="w-full flex items-center justify-between px-4 py-3 bg-[#2a1b3d]/60 hover:bg-[#2a1b3d]/40 transition">
         <span className="text-sm font-bold text-slate-200">{mes} {anio}</span>
         <ChevronRight className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${collapsed ? "" : "rotate-90"}`} />
       </button>
@@ -664,14 +664,14 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+      <div className="w-full max-w-sm bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl">
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
           <div>
             <p className="text-sm font-semibold text-slate-100">Agregar al planeador</p>
             <p className="text-[11px] text-slate-500 mt-0.5">{fmtDia} · {categoria} · Semana {semanaNum}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition">
+            className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d] transition">
             <X size={15} />
           </button>
         </div>
@@ -686,7 +686,7 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-600" />
             <input value={busq} onChange={e => setBusq(e.target.value)}
               placeholder={`Buscar en ${mes} ${anio}…`}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-slate-800 text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 transition" />
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-700 bg-[#2a1b3d] text-slate-300 placeholder:text-slate-600 outline-none focus:border-slate-600 transition" />
           </div>
 
           <p className="text-[10px] text-slate-600 uppercase tracking-wider mb-1.5">O elige del catálogo ({opciones.length})</p>
@@ -700,7 +700,7 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
               const semanaFechaActual = c[`semana${semanaNum}Fecha` as keyof CampanaType] as string | null
               return (
                 <button key={c.documentId} type="button" onClick={() => onAsignar(c, semanaNum)}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 hover:border-slate-600 transition text-left group">
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[#2a1b3d]/60 hover:bg-[#2a1b3d] border border-slate-700/60 hover:border-slate-600 transition text-left group">
                   <CategoriaBadge cat={c.categoria} />
                   <span className="flex-1 text-xs text-slate-200 truncate">{c.unidadNegocio || "Sin título"}</span>
                   {semanaFechaActual ? (
@@ -747,12 +747,12 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
     <div>
       <div className="flex items-center gap-3 mb-6">
         <button type="button" title="Semana anterior" onClick={prevWeek}
-          className="h-8 w-8 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
+          className="h-8 w-8 rounded-md bg-[#2a1b3d] hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
           <ChevronLeft size={14} />
         </button>
         <span className="text-sm font-semibold text-slate-200 min-w-[220px] text-center">{weekLabel}</span>
         <button type="button" title="Semana siguiente" onClick={nextWeek}
-          className="h-8 w-8 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
+          className="h-8 w-8 rounded-md bg-[#2a1b3d] hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 transition">
           <ChevronRight size={14} />
         </button>
         <button type="button" onClick={() => setWStart(weekStart(new Date()))}
@@ -763,7 +763,7 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <div className="min-w-[860px]">
-          <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-800 bg-slate-900/60">
+          <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-800 bg-[#2a1b3d]/60">
             <div />
             {days.map((d, i) => (
               <div key={i} className={`px-2 py-2.5 border-l border-slate-800 text-center ${isHoy(d) ? "bg-violet-500/5" : ""}`}>
@@ -907,13 +907,13 @@ export function CampanasEmpresaView() {
         </button>
       </div>
 
-      <div className="flex gap-1 mb-6 bg-slate-900 p-1 rounded-lg w-fit border border-slate-800">
+      <div className="flex gap-1 mb-6 bg-[#2a1b3d] p-1 rounded-lg w-fit border border-slate-800">
         <button type="button" onClick={() => setTab("catalogo")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "catalogo" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "catalogo" ? "bg-[#2a1b3d] text-slate-100" : "text-slate-500 hover:text-slate-300"}`}>
           <LayoutGrid size={14} /> Catálogo
         </button>
         <button type="button" onClick={() => setTab("planeador")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "planeador" ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300"}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "planeador" ? "bg-[#2a1b3d] text-slate-100" : "text-slate-500 hover:text-slate-300"}`}>
           <Calendar size={14} /> Planeador
         </button>
       </div>

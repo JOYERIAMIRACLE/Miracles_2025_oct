@@ -23,7 +23,7 @@ export function HistorialTickerCard({ onOpen }: { onOpen: () => void }) {
   const dobles = [...EVENTOS_HISTORIAL, ...EVENTOS_HISTORIAL]
 
   return (
-    <div className="group w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-700 transition-all overflow-hidden">
+    <div className="group w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-700 transition-all overflow-hidden">
       <button type="button" onClick={onOpen} className="w-full flex items-center justify-between px-4 pt-3 pb-2 text-left">
         <div className="flex items-center gap-1.5">
           <History size={13} className="text-violet-500" />
@@ -32,7 +32,7 @@ export function HistorialTickerCard({ onOpen }: { onOpen: () => void }) {
         <span className="text-[10px] text-violet-500 group-hover:text-violet-600 dark:group-hover:text-violet-400 font-medium">Ver todo</span>
       </button>
 
-      <div className="relative h-24 mx-2 mb-2 rounded-lg bg-slate-50 dark:bg-slate-800/40">
+      <div className="relative h-24 mx-2 mb-2 rounded-lg bg-slate-50 dark:bg-[#2a1b3d]/40">
         {/* Loop ambiental — decorativo, activo mientras no hay hover; con fecha para distinguir mas reciente/antiguo */}
         <div className="absolute inset-0 overflow-hidden group-hover:hidden">
           <div className="animate-marquee-vertical">

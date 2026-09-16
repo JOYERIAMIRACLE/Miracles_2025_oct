@@ -86,10 +86,10 @@ function SubTabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => vo
     { id: "cdl",      label: "CDL",      icon: <Users size={14} /> },
   ]
   return (
-    <div className="flex gap-1 mb-6 bg-white dark:bg-slate-900 p-1 rounded-lg w-fit border border-slate-300 dark:border-slate-700 shadow-sm">
+    <div className="flex gap-1 mb-6 bg-white dark:bg-[#2a1b3d] p-1 rounded-lg w-fit border border-slate-300 dark:border-slate-700 shadow-sm">
       {tabs.map(t => (
         <button key={t.id} type="button" onClick={() => onChange(t.id)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${active === t.id ? "bg-slate-100 dark:bg-slate-800 text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${active === t.id ? "bg-slate-100 dark:bg-[#2a1b3d] text-violet-600 dark:text-violet-400 font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
           {t.icon}{t.label}
         </button>
       ))}
@@ -117,16 +117,16 @@ function FunnelVisual({ tot }: { tot: { impresiones: number; visitas: number; cl
     { etapa: "Convertidos", metrica: `Clientes nuevos · ${fmtPeso(tot.revenue)}`, value: fmt(tot.compras),       widthPct: 72,  prev: tot.oportunidades && tot.compras ? pct(tot.compras, tot.oportunidades) : null },
   ]
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-6">
+    <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-6">
       <p className="text-xs font-semibold text-slate-400 mb-6 uppercase tracking-wider">Funnel de conversión</p>
-      <div className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 shadow-sm rounded-xl px-4 py-3 text-center">
+      <div className="bg-slate-100 dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-600 shadow-sm rounded-xl px-4 py-3 text-center">
         <p className="text-[9px] text-slate-500 uppercase tracking-wider">Impresiones</p>
         <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{fmt(tot.impresiones)}</p>
       </div>
       <FunnelConector />
       <div className="flex gap-3">
         {[{ label: "Tráfico pagado", value: pagado }, { label: "Tráfico orgánico", value: organico }].map(s => (
-          <div key={s.label} className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 shadow-sm rounded-xl px-3 py-2.5 text-center">
+          <div key={s.label} className="flex-1 bg-slate-100 dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-600 shadow-sm rounded-xl px-3 py-2.5 text-center">
             <p className="text-[9px] text-slate-500 uppercase tracking-wider">{s.label}</p>
             <p className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">{fmt(s.value)}</p>
             <p className="text-[9px] text-slate-600 dark:text-slate-400">{pct(s.value, tot.impresiones)} de impresiones</p>
@@ -165,10 +165,10 @@ function ModalFunnel({ onGuardar, onCerrar }: { onGuardar: (p: EcosistemaPayload
   )
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-lg my-8 p-6 space-y-4">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-lg my-8 p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Nuevo registro</h2>
-          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -193,7 +193,7 @@ function ModalFunnel({ onGuardar, onCerrar }: { onGuardar: (p: EcosistemaPayload
         <div>
           <label className={labelCls}>Notas</label>
           <textarea value={form.notas ?? ""} onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))} rows={2} placeholder="Observaciones del período…"
-            className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-violet-400 transition-colors shadow-sm resize-none" />
+            className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-violet-400 transition-colors shadow-sm resize-none" />
         </div>
         <div className="flex gap-2 justify-end pt-1">
           <button type="button" onClick={onCerrar} className="px-3 py-2 text-sm text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg transition">Cancelar</button>
@@ -330,7 +330,7 @@ function TabFunnel() {
                   const vals = chartData.map(d => (d as Record<string, unknown>)[key] as number)
                   const total = vals.reduce((s, v) => s + v, 0)
                   return (
-                    <div key={key} className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-3">
+                    <div key={key} className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-3">
                       <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
                       <p className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">{fmtFn ? fmtFn(total) : fmt(total)}</p>
                       <ResponsiveContainer width="100%" height={56}>
@@ -348,17 +348,17 @@ function TabFunnel() {
 
           <FunnelVisual tot={totales} />
 
-          <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900">
+          <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-[#2a1b3d]">
             <table className="w-full min-w-[900px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                <tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
                   {[{ h: "Período", cls: "text-left text-slate-500" }, { h: "Impresiones", cls: "text-center text-slate-500" }, { h: "Visitas", cls: "text-center text-slate-500" },
                     { h: "Clics", cls: "text-center text-slate-500" }, { h: "Contactos", cls: "text-center text-slate-500" }, { h: "Oportunidades", cls: "text-center text-violet-600 dark:text-violet-400" },
                     { h: "Compras", cls: "text-center text-violet-600 dark:text-violet-400" }, { h: "Revenue", cls: "text-center text-violet-600 dark:text-violet-400" }].map(({ h, cls }) => (
                     <th key={h} className={`px-3 py-3 ${cls} text-[10px] font-semibold uppercase tracking-wider`}>{h}</th>
                   ))}
                 </tr>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                <tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
                   {["", "BoxScore", "BoxScore", "BoxScore", "BoxScore", "CDL", "CDL", "CDL"].map((src, i) => (
                     <td key={i} className={`px-3 py-0.5 text-center text-[9px] ${src === "CDL" ? "text-violet-500" : src ? "text-slate-500" : ""}`}>{src}</td>
                   ))}
@@ -366,7 +366,7 @@ function TabFunnel() {
               </thead>
               <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60">
                 {filtrados.map(r => (
-                  <tr key={r.key} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <tr key={r.key} className="hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors">
                     <td className="px-4 py-3"><p className="text-sm font-medium text-slate-800 dark:text-slate-100">{r.mes} {r.anio}</p></td>
                     <MetricaCell value={r.impresiones} />
                     <MetricaCell value={r.visitas} sub={r.visitas} subDen={r.impresiones} />
@@ -380,7 +380,7 @@ function TabFunnel() {
               </tbody>
               {filtrados.length > 1 && (
                 <tfoot>
-                  <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                  <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
                     <td className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Total {rangoLabel}</td>
                     <MetricaCell value={totales.impresiones} />
                     <MetricaCell value={totales.visitas} sub={totales.visitas} subDen={totales.impresiones} />
@@ -418,14 +418,14 @@ function Section({ id, label, badge, badgeGreen, openSection, onToggle, children
   const open = openSection === id
   return (
     <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-      <button type="button" onClick={() => onToggle(id)} className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <button type="button" onClick={() => onToggle(id)} className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-[#2a1b3d]/60 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition-colors">
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{label}</span>
         <div className="flex items-center gap-2">
           {badge && <span className={`text-[10px] font-semibold ${badgeGreen ? "text-violet-500" : "text-violet-500"}`}>{badge}</span>}
           <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
         </div>
       </button>
-      {open && <div className="px-4 pb-4 pt-3 space-y-3 bg-white dark:bg-slate-900">{children}</div>}
+      {open && <div className="px-4 pb-4 pt-3 space-y-3 bg-white dark:bg-[#2a1b3d]">{children}</div>}
     </div>
   )
 }
@@ -483,10 +483,10 @@ function ModalBoxscore({ editando, prefill, onGuardar, onCerrar }: {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto" onClick={cerrarSiVacio}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-2xl my-8 p-6 space-y-3">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-2xl my-8 p-6 space-y-3">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar semana" : "Nueva semana"}</h2>
-          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
         <Section id="fechas" label="Fechas" badge={`WK${form.semana} · ${form.mes.slice(0, 3)} ${form.anio}`} openSection={openSection} onToggle={toggleSection}>
           <div className="grid grid-cols-3 gap-3">
@@ -524,7 +524,7 @@ function Sparkline({ data, dataKey, color }: { data: object[]; dataKey: string; 
 
 function StatChip({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-center">
+    <div className="bg-slate-100 dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-center">
       <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500 mb-1">{label}</p>
       <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{value}</p>
       {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
@@ -562,16 +562,16 @@ function DrilldownModal({ row, semanas, onCerrar, onEditarSemana }: { row: BSRow
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between">
           <div><p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{row.section}</p><h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">{row.label}</h2></div>
-          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={18} /></button>
+          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={18} /></button>
         </div>
         <CalendarioRango desde={desdeEfectiva} hasta={hastaEfectiva} onDesde={setDesdeDate} onHasta={setHastaDate} onReset={() => { setDesdeDate(null); setHastaDate(null) }} limiteMin={rango.min} limiteMax={rango.max} />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatChip label="Mínimo" value={fmtV(minVal)} /><StatChip label="Máximo" value={fmtV(maxVal)} /><StatChip label="Promedio" value={fmtV(avgVal)} /><StatChip label="Última semana" value={fmtV(last)} sub={deltaPct} />
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-[#2a1b3d] rounded-xl p-4 border border-slate-200 dark:border-slate-700">
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="label" tick={{ fontSize: 9, fill: "#64748b" }} interval="preserveStartEnd" />
@@ -583,7 +583,7 @@ function DrilldownModal({ row, semanas, onCerrar, onEditarSemana }: { row: BSRow
         </div>
         <div ref={tablaRef} className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
           <table className="text-xs w-full min-w-max">
-            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
               {semanasFiltradas.map(s => (
                 <th key={s.documentId} className="px-3 py-2 text-center text-[10px] font-semibold text-slate-500">
                   <button type="button" onClick={() => onEditarSemana(s)} title={s.placeholder ? "Registrar esta semana" : "Editar esta semana"} className={s.placeholder ? "text-slate-400 dark:text-slate-600 hover:text-violet-400 transition" : "hover:text-violet-500 transition"}>WK{s.semana}</button>
@@ -633,26 +633,26 @@ function MensualTable({ title, accent, semanas, metricas }: { title: string; acc
     <div className="space-y-3">
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{title}</p>
       {selectedKey && <p className="text-[10px] text-slate-500">Mostrando: <span className="text-slate-700 dark:text-slate-200">{selectedLabel}</span> · <button type="button" onClick={() => setSelectedKey(null)} className="text-violet-500 hover:text-violet-700">Ver todas</button></p>}
-      <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900">
+      <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-[#2a1b3d]">
         <table className="text-sm min-w-max w-full">
-          <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-            <th className="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 sticky left-0 bg-white dark:bg-slate-900 w-44 z-10">Métrica</th>
+          <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
+            <th className="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 sticky left-0 bg-white dark:bg-[#2a1b3d] w-44 z-10">Métrica</th>
             {meses.map(m => <th key={m.label} className="px-3 py-2.5 text-center text-[10px] font-semibold text-slate-400 min-w-[80px]">{m.label}</th>)}
           </tr></thead>
           <tbody>
             {metricas.map(mt => {
               const isSelected = selectedKey === String(mt.key)
               return (
-                <tr key={String(mt.key)} onClick={() => handleRowClick(String(mt.key))} className={`border-b border-slate-200 dark:border-slate-700 cursor-pointer transition-colors ${isSelected ? "bg-slate-100 dark:bg-slate-800" : selectedKey ? "opacity-40 hover:opacity-70 hover:bg-slate-100 dark:hover:bg-slate-800" : "hover:bg-slate-100 dark:hover:bg-slate-800"}`}>
-                  <td className={`px-4 py-2.5 sticky left-0 z-10 border-l-2 ${isSelected ? `${accent} bg-white dark:bg-slate-900` : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"}`}>
+                <tr key={String(mt.key)} onClick={() => handleRowClick(String(mt.key))} className={`border-b border-slate-200 dark:border-slate-700 cursor-pointer transition-colors ${isSelected ? "bg-slate-100 dark:bg-[#2a1b3d]" : selectedKey ? "opacity-40 hover:opacity-70 hover:bg-slate-100 dark:hover:bg-[#2a1b3d]" : "hover:bg-slate-100 dark:hover:bg-[#2a1b3d]"}`}>
+                  <td className={`px-4 py-2.5 sticky left-0 z-10 border-l-2 ${isSelected ? `${accent} bg-white dark:bg-[#2a1b3d]` : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]"}`}>
                     <div className="flex items-center gap-2"><span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: mt.color }} /><p className="text-xs text-slate-700 dark:text-slate-300">{mt.label}</p></div>
                   </td>
                   {tableData.map(m => <td key={m.label} className="px-3 py-2.5 text-center"><span className="text-xs font-medium text-slate-800 dark:text-slate-200">{mt.fmt ? mt.fmt(m.vals[String(mt.key)]!) : fmt(m.vals[String(mt.key)]!)}</span></td>)}
                 </tr>
               )
             })}
-            <tr onClick={() => handleRowClick(TOTAL_KEY)} className={`border-t-2 border-slate-200 dark:border-slate-700 cursor-pointer transition-colors ${isTotalSelected ? "bg-slate-100 dark:bg-slate-800" : selectedKey ? "opacity-40 hover:opacity-70 hover:bg-slate-100 dark:hover:bg-slate-800" : "hover:bg-slate-100 dark:hover:bg-slate-800"}`}>
-              <td className={`px-4 py-2.5 sticky left-0 z-10 border-l-2 ${isTotalSelected ? "border-slate-300/60 bg-white dark:bg-slate-900" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"}`}>
+            <tr onClick={() => handleRowClick(TOTAL_KEY)} className={`border-t-2 border-slate-200 dark:border-slate-700 cursor-pointer transition-colors ${isTotalSelected ? "bg-slate-100 dark:bg-[#2a1b3d]" : selectedKey ? "opacity-40 hover:opacity-70 hover:bg-slate-100 dark:hover:bg-[#2a1b3d]" : "hover:bg-slate-100 dark:hover:bg-[#2a1b3d]"}`}>
+              <td className={`px-4 py-2.5 sticky left-0 z-10 border-l-2 ${isTotalSelected ? "border-slate-300/60 bg-white dark:bg-[#2a1b3d]" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]"}`}>
                 <div className="flex items-center gap-2"><span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: TOTAL_COLOR }} /><p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Total</p></div>
               </td>
               {totalesPorMes.map(m => <td key={m.label} className="px-3 py-2.5 text-center"><span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{fmt(m.total)}</span></td>)}
@@ -661,7 +661,7 @@ function MensualTable({ title, accent, semanas, metricas }: { title: string; acc
         </table>
       </div>
       {chartData.length >= 2 && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="label" tick={{ fontSize: 9, fill: "#64748b" }} /><YAxis tick={{ fontSize: 10, fill: "#64748b" }} width={44} tickFormatter={v => fmt(v as number)} />
@@ -753,10 +753,10 @@ function TabBoxscore() {
       </div>
 
       {semanas.length === 0 ? <p className="text-slate-400 text-sm text-center py-12">Sin semanas en el rango seleccionado.</p> : (
-        <div ref={tableRef} className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900">
+        <div ref={tableRef} className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-[#2a1b3d]">
           <table className="text-sm min-w-max">
-            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-              <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 w-48 sticky left-0 bg-white dark:bg-slate-900 z-10">Métrica</th>
+            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
+              <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 w-48 sticky left-0 bg-white dark:bg-[#2a1b3d] z-10">Métrica</th>
               {semanas.map(s => (
                 <th key={s.documentId} className="px-3 py-3 text-center text-[10px] font-semibold text-slate-400 min-w-[72px]">
                   <button type="button" onClick={() => abrirEdicion(s)} title={s.placeholder ? "Registrar esta semana" : undefined} className={s.placeholder ? "text-slate-300 dark:text-slate-600 hover:text-violet-400 transition" : "hover:text-violet-500 transition"}>WK{s.semana}</button>
@@ -770,8 +770,8 @@ function TabBoxscore() {
                 const rows = BS_ROWS.filter(r => r.section === sec)
                 const accentColor = SECTION_COLORS[sec] ?? "#475569"
                 return rows.map((row, ri) => (
-                  <tr key={`${sec}-${row.key}`} onClick={() => setSelectedRow(row)} className={`border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer ${ri === 0 ? "border-t border-slate-200 dark:border-slate-700" : ""}`}>
-                    <td className="px-4 py-2.5 sticky left-0 bg-white dark:bg-slate-900 z-10" style={{ boxShadow: `inset 2px 0 0 0 ${accentColor}99` }}>
+                  <tr key={`${sec}-${row.key}`} onClick={() => setSelectedRow(row)} className={`border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition-colors cursor-pointer ${ri === 0 ? "border-t border-slate-200 dark:border-slate-700" : ""}`}>
+                    <td className="px-4 py-2.5 sticky left-0 bg-white dark:bg-[#2a1b3d] z-10" style={{ boxShadow: `inset 2px 0 0 0 ${accentColor}99` }}>
                       {ri === 0 && <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">{sec}</p>}
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs text-slate-700 dark:text-slate-300">{row.label}</p>
@@ -789,7 +789,7 @@ function TabBoxscore() {
       )}
 
       {sparkData.length >= 2 && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl p-4">
           <p className="text-xs font-semibold text-slate-400 mb-4 uppercase tracking-wider">Tráfico general por semana</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={sparkData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
@@ -853,10 +853,10 @@ function ModalCdl({ editando, prefill, onGuardar, onCerrar }: { editando: CdlTyp
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto" onClick={cerrarSiVacio}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-lg my-8 p-6 space-y-3">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-lg my-8 p-6 space-y-3">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar CDL" : "Nuevo CDL"}</h2>
-          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
         <Section id="fechas" label="Fechas" badge={`${form.mes.slice(0, 3)} ${form.anio}`} openSection={openSection} onToggle={toggleSection}>
           <div className="grid grid-cols-2 gap-3">
@@ -911,16 +911,16 @@ function DrilldownModalCdl({ row, sectionTitle, meses, onCerrar, onEditarMes }: 
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-3xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between">
           <div><p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{sectionTitle}</p><h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">{row.label}</h2></div>
-          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={18} /></button>
+          <button type="button" title="Cerrar" onClick={onCerrar} className="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={18} /></button>
         </div>
         <CalendarioRango desde={desdeEfectiva} hasta={hastaEfectiva} onDesde={setDesdeDate} onHasta={setHastaDate} onReset={() => { setDesdeDate(null); setHastaDate(null) }} limiteMin={rango.min} limiteMax={rango.max} />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatChip label="Mínimo" value={fmtV(minVal)} /><StatChip label="Máximo" value={fmtV(maxVal)} /><StatChip label="Promedio" value={fmtV(avgVal)} /><StatChip label="Último mes" value={fmtV(last)} sub={deltaPct} />
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-[#2a1b3d] rounded-xl p-4 border border-slate-200 dark:border-slate-700">
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" /><XAxis dataKey="label" tick={{ fontSize: 9, fill: "#64748b" }} interval="preserveStartEnd" />
@@ -932,7 +932,7 @@ function DrilldownModalCdl({ row, sectionTitle, meses, onCerrar, onEditarMes }: 
         </div>
         <div ref={tablaRef} className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
           <table className="text-xs w-full min-w-max">
-            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
               {mesesFiltrados.map(m => (
                 <th key={m.key} className="px-3 py-2 text-center text-[10px] font-semibold text-slate-500">
                   <button type="button" onClick={() => onEditarMes(m)} title={m.placeholder ? "Registrar este mes" : "Editar este mes"} className={m.placeholder ? "text-slate-400 dark:text-slate-600 hover:text-violet-400 transition" : "hover:text-violet-500 transition"}>{m.mes.slice(0, 3)}</button>
@@ -1029,10 +1029,10 @@ function TabCdl() {
       </div>
 
       {mesesCdl.length === 0 ? <p className="text-slate-400 text-sm text-center py-12">Sin registros CDL aún.</p> : (
-        <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900">
+        <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm bg-white dark:bg-[#2a1b3d]">
           <table className="text-sm min-w-max">
-            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-              <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 w-48 sticky left-0 bg-white dark:bg-slate-900">Careabout</th>
+            <thead><tr className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
+              <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 w-48 sticky left-0 bg-white dark:bg-[#2a1b3d]">Careabout</th>
               {mesesCdl.map(m => (
                 <th key={m.key} className="px-3 py-3 text-center text-[10px] font-semibold text-slate-400 min-w-[80px]">
                   <button type="button" onClick={() => abrirEdicionCdl(m)} title={m.placeholder ? "Registrar este mes" : undefined} className={m.placeholder ? "text-slate-300 dark:text-slate-600 hover:text-violet-400 transition" : "hover:text-violet-500 transition"}>{m.mes.slice(0, 3)}</button>
@@ -1043,8 +1043,8 @@ function TabCdl() {
             </tr></thead>
             <tbody>
               {CDL_SECTIONS.map(sec => sec.rows.map((row, ri) => (
-                <tr key={`${sec.title}-${row.key}`} onClick={() => setSelectedRow({ row, sectionTitle: sec.title })} className={`border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer ${ri === 0 ? "border-t border-slate-200 dark:border-slate-700" : ""}`}>
-                  <td className="px-4 py-2.5 sticky left-0 bg-white dark:bg-slate-900" style={{ boxShadow: `inset 2px 0 0 0 ${sec.color}99` }}>
+                <tr key={`${sec.title}-${row.key}`} onClick={() => setSelectedRow({ row, sectionTitle: sec.title })} className={`border-b border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition-colors cursor-pointer ${ri === 0 ? "border-t border-slate-200 dark:border-slate-700" : ""}`}>
+                  <td className="px-4 py-2.5 sticky left-0 bg-white dark:bg-[#2a1b3d]" style={{ boxShadow: `inset 2px 0 0 0 ${sec.color}99` }}>
                     {ri === 0 && <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">{sec.title}</p>}
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs text-slate-700 dark:text-slate-300">{row.label}</p>

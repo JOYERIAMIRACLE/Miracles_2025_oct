@@ -40,7 +40,7 @@ export function HeroCarusel({ avisos, onGestionar, isAdmin, loading }: { avisos:
   }, [total])
 
   if (loading) return (
-    <section className="p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-md bg-white dark:bg-slate-900 grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
+    <section className="p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-md bg-white dark:bg-[#2a1b3d] grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
       <div className="rounded-xl p-8 flex flex-col justify-between gap-4">
         <div className="flex flex-col gap-3">
           <Skeleton className="h-5 w-20 rounded-full" />
@@ -61,7 +61,7 @@ export function HeroCarusel({ avisos, onGestionar, isAdmin, loading }: { avisos:
   )
 
   if (total === 0) return (
-    <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-400 dark:text-slate-500 min-h-[120px] flex flex-col items-center justify-center gap-3">
+    <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] p-8 text-center text-sm text-slate-400 dark:text-slate-500 min-h-[120px] flex flex-col items-center justify-center gap-3">
       <p>Sin comunicados activos</p>
       {isAdmin && onGestionar && (
         <button type="button" onClick={onGestionar}
@@ -79,11 +79,11 @@ export function HeroCarusel({ avisos, onGestionar, isAdmin, loading }: { avisos:
   const bg   = BG_COLOR[a.color]   ?? BG_COLOR.violet
 
   return (
-    <section className="p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-md bg-white dark:bg-slate-900 grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
+    <section className="p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-md bg-white dark:bg-[#2a1b3d] grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
       <div className="rounded-xl p-8 flex flex-col justify-between gap-4 relative overflow-hidden">
         {isAdmin && onGestionar && (
           <button type="button" onClick={onGestionar}
-            className="absolute top-4 right-4 flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-dashed border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-lg px-2.5 py-1 transition-colors bg-white/80 dark:bg-slate-900/80">
+            className="absolute top-4 right-4 flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-dashed border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 rounded-lg px-2.5 py-1 transition-colors bg-white/80 dark:bg-[#2a1b3d]/80">
             <Pencil size={10} /> Gestionar
           </button>
         )}

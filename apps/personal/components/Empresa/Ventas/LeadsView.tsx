@@ -188,7 +188,7 @@ export function LeadsView() {
       </div>
 
       {/* Alta rápida */}
-      <div className="flex items-center gap-2 p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+      <div className="flex items-center gap-2 p-2 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl">
         <Plus size={14} className="text-slate-400 dark:text-slate-600 shrink-0 ml-1" />
         <input ref={qNombreRef} value={qNombre} onChange={e => setQNombre(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") altaRapida() }}
@@ -197,7 +197,7 @@ export function LeadsView() {
         <input value={qTelefono} onChange={e => setQTelefono(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") altaRapida() }}
           placeholder="Teléfono (opcional)" disabled={qSaving}
-          className="w-44 shrink-0 h-9 px-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-300 dark:focus:border-slate-600" />
+          className="w-44 shrink-0 h-9 px-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/60 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-300 dark:focus:border-slate-600" />
         <button type="button" onClick={altaRapida} disabled={!qNombre.trim() || qSaving}
           className="flex items-center gap-1 h-9 px-3 text-xs font-medium text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 disabled:opacity-40 disabled:hover:bg-transparent rounded-lg transition shrink-0">
           <CornerDownLeft size={12} /> {qSaving ? "Agregando…" : "Agregar"}
@@ -212,7 +212,7 @@ export function LeadsView() {
             className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border transition ${
               filtroEtapa === v
                 ? "bg-violet-600 text-white border-violet-600"
-                : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-500 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                : "bg-white dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-500 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
             }`}>
             {label}
             <span className={`text-[10px] ${filtroEtapa === v ? "opacity-70" : "opacity-50"}`}>{count}</span>
@@ -236,10 +236,10 @@ export function LeadsView() {
       />
 
       {/* Tabla */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Contacto", "Etapa", "Canal", "Teléfono", "Notas", "Calificación", "Fecha", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -250,17 +250,17 @@ export function LeadsView() {
               {loading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>{Array.from({ length: 8 }).map((_, j) => (
                   <td key={j} className="px-4 py-3">
-                    <div className="h-4 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-3/4" />
+                    <div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" />
                   </td>
                 ))}</tr>
               ))}
               {!loading && leadsFiltrados.map(lead => (
                 <tr key={lead.documentId}
-                  className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                  className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer"
                   onClick={() => abrirPanel(lead)}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 shrink-0">
+                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2a1b3d] border-slate-300 dark:border-slate-700 shrink-0">
                         #{numMap.get(lead.documentId) ?? "—"}
                       </span>
                       <p className="font-medium text-slate-800 dark:text-slate-200">{lead.cliente?.nombre ?? "—"}</p>
@@ -295,7 +295,7 @@ export function LeadsView() {
                       className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
                         lead.calificado
                           ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30 hover:bg-violet-100 dark:hover:bg-violet-500/20"
-                          : "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700 hover:text-slate-700 dark:hover:text-slate-300"
+                          : "bg-slate-100 dark:bg-[#2a1b3d]/60 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700 hover:text-slate-700 dark:hover:text-slate-300"
                       }`}>
                       <CheckCircle2 size={11} className={lead.calificado ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-600"} />
                       {lead.calificado ? "Calificado" : "Calificar"}
@@ -314,9 +314,9 @@ export function LeadsView() {
                     ) : (
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button type="button" onClick={() => abrirEditar(lead)}
-                          className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
+                          className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition"><Pencil size={13} /></button>
                         <button type="button" onClick={() => setDelId(lead.documentId)}
-                          className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition"><Trash2 size={13} /></button>
+                          className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition"><Trash2 size={13} /></button>
                       </div>
                     )}
                   </td>

@@ -78,7 +78,7 @@ export default function PortalMedalladeoroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#121212]">
       <PortalMDOHeader onMenuClick={() => setSidebarOpen(o => !o)} onLogoClick={() => navigate("portal")} onNavigate={navigate} />
 
       <div className="flex min-h-[calc(100vh-56px)]">

@@ -75,7 +75,7 @@ function WeekBar({ pct }: { pct: number }) {
   const ref = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => { if (ref.current) ref.current.style.width = `${Math.min(pct, 100)}%` }, [pct])
   return (
-    <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
+    <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-[#2a1b3d]">
       <div ref={ref} className="h-1.5 rounded-full bg-violet-500 transition-all duration-500" />
     </div>
   )
@@ -223,7 +223,7 @@ export function PresupuestosEmpresaView() {
 
       {/* Tabs + acción */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-lg p-1 w-fit">
+        <div className="flex gap-1 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-lg p-1 w-fit">
           {([["resumen", "Resumen"], ["metricas", "Métricas"]] as const).map(([key, label]) => (
             <button key={key} type="button" onClick={() => setTab(key)}
               className={`flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium transition-all ${
@@ -243,7 +243,7 @@ export function PresupuestosEmpresaView() {
       {tab === "resumen" && (
       <>
       {/* Presupuesto vs Real */}
-      <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-5">
+      <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-5">
 
         {/* Selector de mes */}
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -253,13 +253,13 @@ export function PresupuestosEmpresaView() {
               <button type="button" onClick={() => {
                 const d = new Date(mes + "-15"); d.setMonth(d.getMonth() - 1)
                 setMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
-              }} className="h-7 w-7 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs transition-colors">←</button>
+              }} className="h-7 w-7 rounded-md bg-slate-100 dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs transition-colors">←</button>
               <input type="month" title="Seleccionar mes" value={mes} onChange={e => setMes(e.target.value)}
-                className="h-7 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2 text-slate-700 dark:text-slate-300" />
+                className="h-7 text-xs bg-slate-100 dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-md px-2 text-slate-700 dark:text-slate-300" />
               <button type="button" onClick={() => {
                 const d = new Date(mes + "-15"); d.setMonth(d.getMonth() + 1)
                 setMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`)
-              }} className="h-7 w-7 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs transition-colors">→</button>
+              }} className="h-7 w-7 rounded-md bg-slate-100 dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs transition-colors">→</button>
               {!esMesActual && (
                 <button type="button" onClick={() => setMes(mesDefault)} className="text-[10px] text-violet-500 hover:text-violet-600 ml-1">Hoy</button>
               )}
@@ -271,7 +271,7 @@ export function PresupuestosEmpresaView() {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/30">
+            className="p-3 rounded-lg bg-slate-50 dark:bg-[#2a1b3d]/60 border border-slate-200 dark:border-slate-700/30">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown className="h-3.5 w-3.5 text-violet-500" />
               <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Presupuesto mensual</span>
@@ -281,7 +281,7 @@ export function PresupuestosEmpresaView() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/30">
+            className="p-3 rounded-lg bg-slate-50 dark:bg-[#2a1b3d]/60 border border-slate-200 dark:border-slate-700/30">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown className="h-3.5 w-3.5 text-violet-500" />
               <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">Gastado en {mesLabel}</span>
@@ -295,7 +295,7 @@ export function PresupuestosEmpresaView() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/30">
+            className="p-3 rounded-lg bg-slate-50 dark:bg-[#2a1b3d]/60 border border-slate-200 dark:border-slate-700/30">
             <div className="flex items-center gap-2 mb-2">
               {disponible >= 0
                 ? <CheckCircle className="h-3.5 w-3.5 text-violet-500" />
@@ -314,7 +314,7 @@ export function PresupuestosEmpresaView() {
               <span className="text-xs text-slate-500 dark:text-slate-400">Total gastos del mes</span>
               <span className="text-[10px] text-slate-400 dark:text-slate-500">{fmt(totalGastado)} / {fmt(totalPresupuestado)}</span>
             </div>
-            <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700/30">
+            <div className="h-3 rounded-full bg-slate-100 dark:bg-[#2a1b3d] overflow-hidden border border-slate-200 dark:border-slate-700/30">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(pct, 100)}%` }}
@@ -340,7 +340,7 @@ export function PresupuestosEmpresaView() {
                       Real: <span className={pctReal > 100 ? "text-red-500 dark:text-red-400 font-medium" : "text-slate-600 dark:text-slate-300"}>{fmt(c.real)}</span> / {fmt(c.presupuestado)}
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div className="h-2 rounded-full bg-slate-100 dark:bg-[#2a1b3d] overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(pctReal, 100)}%` }}
@@ -363,7 +363,7 @@ export function PresupuestosEmpresaView() {
       {/* Charts */}
       {comparativa.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+          <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Distribución presupuesto mensual</h3>
             <div className="flex items-center gap-4">
               <ResponsiveContainer width="50%" height={160}>
@@ -386,7 +386,7 @@ export function PresupuestosEmpresaView() {
             </div>
           </div>
 
-          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+          <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Presupuesto por área — {mesLabel}</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={comparativa.map(c => ({ cat: c.cat.length > 9 ? c.cat.slice(0, 9) + "…" : c.cat, Presupuesto: Math.round(c.presupuestado) }))} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -405,14 +405,14 @@ export function PresupuestosEmpresaView() {
       {gastoPorSemana.length > 0 && (() => {
         const maxTotal = Math.max(...gastoPorSemana.map(s => s.total))
         return (
-          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+          <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Gasto por semana</h3>
             <div className="space-y-1">
               {[...gastoPorSemana].reverse().map(semana => {
                 const esActual = semana.monday === semanaActualKey
                 const pctW = maxTotal > 0 ? (semana.total / maxTotal) * 100 : 0
                 return (
-                  <div key={semana.monday} className={`rounded-lg px-3 py-3 transition-colors ${esActual ? "bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
+                  <div key={semana.monday} className={`rounded-lg px-3 py-3 transition-colors ${esActual ? "bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20" : "hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40"}`}>
                     <div className="flex items-center gap-3">
                       <span className={`text-[11px] font-mono w-36 shrink-0 ${esActual ? "text-violet-600 dark:text-violet-300 font-semibold" : "text-slate-500 dark:text-slate-400"}`}>{semana.rangeLabel}</span>
                       <WeekBar pct={pctW} />
@@ -432,10 +432,10 @@ export function PresupuestosEmpresaView() {
       {tab === "resumen" && (
       <>
       {/* Tabla de partidas con proyecciones */}
-      <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/60">
               <tr>
                 <th className="h-10 px-4 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Área / Tipo</th>
                 <th className="h-10 px-4 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Descripción</th>
@@ -450,7 +450,7 @@ export function PresupuestosEmpresaView() {
               {loading && Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i} className="border-b border-slate-100 dark:border-slate-800/50">
                   {Array.from({ length: 7 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-3.5 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" /></td>
+                    <td key={j} className="px-4 py-3"><div className="h-3.5 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse" /></td>
                   ))}
                 </tr>
               ))}
@@ -458,7 +458,7 @@ export function PresupuestosEmpresaView() {
               {!loading && porCategoria.map(({ cat, items }) => {
                 const subtotal = items.reduce((s, p) => s + calcMensual(p.monto ?? 0, p.frecuencia), 0)
                 return [
-                  <tr key={`cat-${cat}`} className="bg-slate-50 dark:bg-slate-800/40 border-t-2 border-slate-200 dark:border-slate-700/60">
+                  <tr key={`cat-${cat}`} className="bg-slate-50 dark:bg-[#2a1b3d]/40 border-t-2 border-slate-200 dark:border-slate-700/60">
                     <td colSpan={2} className="px-4 py-2">
                       <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{cat}</span>
                     </td>
@@ -472,7 +472,7 @@ export function PresupuestosEmpresaView() {
                     const mensual = calcMensual(p.monto ?? 0, p.frecuencia)
                     const esIng = p.tipo === "ingreso"
                     return (
-                      <tr key={p.documentId} className="border-b border-slate-100 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/20 group transition-colors">
+                      <tr key={p.documentId} className="border-b border-slate-100 dark:border-slate-800/40 hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/20 group transition-colors">
                         <td className="px-4 py-2.5">
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600/50">{p.frecuencia ?? "mensual"}</span>
                         </td>
@@ -483,14 +483,14 @@ export function PresupuestosEmpresaView() {
                         <td className="px-4 py-2.5 text-right tabular-nums text-xs text-slate-400 dark:text-slate-400">{fmt(mensual * 12)}</td>
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button type="button" title="Editar" onClick={() => openEditar(p)} className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"><Pencil size={13} /></button>
+                            <button type="button" title="Editar" onClick={() => openEditar(p)} className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition"><Pencil size={13} /></button>
                             {delId === p.documentId ? (
                               <div className="flex items-center gap-1 px-1">
                                 <button type="button" onClick={() => handleDelete(p.documentId)} className="text-[11px] text-red-500 font-medium">Sí</button>
                                 <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-400">No</button>
                               </div>
                             ) : (
-                              <button type="button" title="Eliminar" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"><X size={13} /></button>
+                              <button type="button" title="Eliminar" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition"><X size={13} /></button>
                             )}
                           </div>
                         </td>
@@ -501,7 +501,7 @@ export function PresupuestosEmpresaView() {
               })}
 
               {!loading && activas.length > 0 && (
-                <tr className="border-t-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900">
+                <tr className="border-t-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-[#2a1b3d]">
                   <td colSpan={2} className="px-4 py-3">
                     <span className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Flujo neto</span>
                   </td>
@@ -532,10 +532,10 @@ export function PresupuestosEmpresaView() {
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
+          <div className="w-full max-w-md bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? "Editar partida" : "Nueva partida"}</h2>
-              <button type="button" title="Cerrar" onClick={() => setModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+              <button type="button" title="Cerrar" onClick={() => setModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
@@ -566,13 +566,13 @@ export function PresupuestosEmpresaView() {
                 </div>
               </div>
               {form.monto && Number(form.monto) > 0 && form.frecuencia !== "mensual" && (
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#2a1b3d]/50 rounded-lg px-3 py-2">
                   Equivale a {fmt(calcMensual(Number(form.monto), form.frecuencia))} / mes
                 </p>
               )}
             </div>
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
-              <button type="button" onClick={() => setModalOpen(false)} disabled={saving} className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+              <button type="button" onClick={() => setModalOpen(false)} disabled={saving} className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving} className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editing ? "Guardar" : "Crear"}

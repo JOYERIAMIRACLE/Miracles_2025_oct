@@ -25,7 +25,7 @@ const ANIO_HOY     = _now.getFullYear()
 const MES_HOY_IDX  = _now.getMonth()
 const SEMANA_HOY   = diaASemana(toYMD(_now))
 
-const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
+const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -229,7 +229,7 @@ function CampanaChip({ titulo, categoria, keyword, notas, fullWidth, archivos, m
   const riverColor = progressPct >= 100 ? "bg-violet-500" : "bg-violet-400"
   return (
     <div onClick={onClick}
-      className={`group/chip relative flex items-stretch rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[210px]"}`}>
+      className={`group/chip relative flex items-stretch rounded-xl bg-white dark:bg-[#2a1b3d] hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[210px]"}`}>
       <span className={`flex items-start justify-center pt-2.5 w-7 shrink-0 text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>{cfg.letter}</span>
       <div className="flex-1 min-w-0 px-2.5 py-2 space-y-0.5">
         {notas && <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-snug truncate">{notas}</p>}
@@ -237,7 +237,7 @@ function CampanaChip({ titulo, categoria, keyword, notas, fullWidth, archivos, m
         {titulo && <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug line-clamp-2">{titulo}</p>}
       </div>
       {(primerArchivo || multimediaUrl || onDelete) && (
-        <div className="flex flex-col items-center justify-center gap-1 w-6 shrink-0 bg-slate-50 dark:bg-slate-900/60 border-l border-slate-100 dark:border-slate-700/60">
+        <div className="flex flex-col items-center justify-center gap-1 w-6 shrink-0 bg-slate-50 dark:bg-[#2a1b3d]/60 border-l border-slate-100 dark:border-slate-700/60">
           {primerArchivo && (
             <a href={primerArchivo} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
               title={`Abrir link${archivos && archivos.length > 1 ? ` (${archivos.length})` : ""}`}
@@ -308,14 +308,14 @@ function Section({ id, abierto, titulo, badge, onToggle, children }: {
   return (
     <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
       <button type="button" onClick={onToggle}
-        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left bg-slate-50 dark:bg-[#2a1b3d]/60 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition-colors">
         <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
           {titulo}
           {badge && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400">{badge}</span>}
         </span>
         <ChevronDown className={`h-3.5 w-3.5 text-slate-400 shrink-0 transition-transform ${abierto ? "rotate-180" : ""}`} />
       </button>
-      {abierto && <div className="p-4 space-y-3 bg-white dark:bg-slate-900">{children}</div>}
+      {abierto && <div className="p-4 space-y-3 bg-white dark:bg-[#2a1b3d]">{children}</div>}
     </div>
   )
 }
@@ -382,20 +382,20 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
       onClick={e => { if (e.target === e.currentTarget) onCerrar() }}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl mb-10">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl mb-10">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{editando ? "Editar campaña" : "Nueva campaña"}</h2>
           <div className="flex items-center gap-1.5">
             <select value={form.mes} onChange={e => setForm(f => ({ ...f, mes: e.target.value as MesCampana }))}
-              className="h-8 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 outline-none">
+              className="h-8 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 px-2 outline-none">
               {MESES.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
             <select value={form.anio} onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))}
-              className="h-8 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 outline-none">
+              className="h-8 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 px-2 outline-none">
               {[ANIO_ACTUAL - 1, ANIO_ACTUAL, ANIO_ACTUAL + 1].map(a => <option key={a} value={a}>{a}</option>)}
             </select>
             <button type="button" title="Cerrar" onClick={onCerrar}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
               <X size={16} />
             </button>
           </div>
@@ -427,7 +427,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
                         ? cat === "MHS" ? "bg-violet-50 dark:bg-violet-600/20 border-violet-300 dark:border-violet-500/40 text-violet-600 dark:text-violet-300"
                         : cat === "Store" ? "bg-violet-50 dark:bg-violet-600/20 border-violet-300 dark:border-violet-500/40 text-violet-600 dark:text-violet-300"
                         : "bg-violet-50 dark:bg-violet-600/20 border-violet-300 dark:border-violet-500/40 text-violet-600 dark:text-violet-300"
-                        : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                        : "bg-slate-50 dark:bg-[#2a1b3d] border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                     }`}>{cat}</button>
                 ))}
               </div>
@@ -466,7 +466,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
                 {mediaPreview ? (
                   <img src={mediaPreview} alt="" className="w-full h-24 object-cover" />
                 ) : (
-                  <div className="w-full h-24 flex flex-col items-center justify-center gap-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                  <div className="w-full h-24 flex flex-col items-center justify-center gap-1 bg-slate-50 dark:bg-[#2a1b3d] hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                     <Camera className="h-5 w-5 text-slate-400" />
                     <p className="text-xs text-slate-400">{subiendoMedia ? "Subiendo..." : "Subir imagen o video"}</p>
                   </div>
@@ -488,13 +488,13 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
                   <div className="flex gap-0.5">
                     {DIAS_PUB.map(d => (
                       <button key={d} type="button" onClick={() => setPub(p => ({ ...p, [key]: { ...p[key], dia: p[key].dia === d ? "" : d } }))}
-                        className={`h-6 w-6 rounded text-[10px] font-medium transition-colors ${pub[key].dia === d ? "bg-violet-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}>
+                        className={`h-6 w-6 rounded text-[10px] font-medium transition-colors ${pub[key].dia === d ? "bg-violet-500 text-white" : "bg-slate-100 dark:bg-[#2a1b3d] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}>
                         {d}
                       </button>
                     ))}
                   </div>
                   <input type="time" value={pub[key].hora} onChange={e => setPub(p => ({ ...p, [key]: { ...p[key], hora: e.target.value } }))}
-                    className="h-6 text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1 outline-none ml-auto" />
+                    className="h-6 text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-600 dark:text-slate-300 px-1 outline-none ml-auto" />
                 </div>
               ))}
               {anyConHora && (
@@ -603,18 +603,18 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
   return (
     <div className="border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
       <button type="button" onClick={() => setCollapsed(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-[#2a1b3d] hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{mes} {anio}</span>
           {campanas.length > 0 && (
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">{campanas.length}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2a1b3d] px-1.5 py-0.5 rounded font-mono">{campanas.length}</span>
           )}
         </div>
         <ChevronRight className={`h-4 w-4 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${collapsed ? "" : "rotate-90"}`} />
       </button>
       {!collapsed && (
         <>
-          <div className="px-4 py-2 border-b border-slate-300 dark:border-slate-700 flex items-center gap-2 min-h-[36px] bg-slate-50 dark:bg-slate-800/40">
+          <div className="px-4 py-2 border-b border-slate-300 dark:border-slate-700 flex items-center gap-2 min-h-[36px] bg-slate-50 dark:bg-[#2a1b3d]/40">
             {editingObjetivo ? (
               <input autoFocus value={objetivoDraft} onChange={e => setObjetivoDraft(e.target.value)} onBlur={saveObjetivo}
                 onKeyDown={e => { if (e.key === "Enter") saveObjetivo(); if (e.key === "Escape") setEditingObjetivo(false) }}
@@ -639,7 +639,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
             if (!hayPasadas) return null
             return (
               <button type="button" onClick={() => setShowPasadas(v => !v)}
-                className="w-full px-4 py-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border-b border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 transition text-left flex items-center gap-1.5">
+                className="w-full px-4 py-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border-b border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] transition text-left flex items-center gap-1.5">
                 <span>{showPasadas ? "▲" : "▼"}</span>
                 {showPasadas ? "Ocultar semanas pasadas" : "Mostrar semanas pasadas"}
               </button>
@@ -680,7 +680,7 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
                 <div key={n} className={`flex items-stretch min-h-[56px] min-w-fit ${esPasada ? "opacity-40" : ""}`}>
                   <div className={[
                     "w-44 shrink-0 sticky left-0 z-10 flex flex-col justify-center gap-0.5 px-4 py-3",
-                    "bg-slate-50 dark:bg-slate-800/60",
+                    "bg-slate-50 dark:bg-[#2a1b3d]/60",
                     "border-r border-slate-200 dark:border-slate-700",
                     badge ? "border-l-2 border-l-violet-400" : "",
                   ].join(" ")}>
@@ -774,10 +774,10 @@ function VistaCatalogo({ campanas, hayFiltros, filtroDesde, filtroHasta, onEdit,
     <div className="space-y-3">
       {pasados.length > 0 && (
         <button type="button" onClick={() => setShowMesesPasados(v => !v)}
-          className="w-full flex items-center gap-1.5 px-4 py-2 text-[11px] text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left">
+          className="w-full flex items-center gap-1.5 px-4 py-2 text-[11px] text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-[#2a1b3d] hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition text-left">
           <span>{showMesesPasados ? "▲" : "▼"}</span>
           {showMesesPasados ? "Ocultar meses pasados" : "Mostrar meses pasados"}
-          <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">{pasados.length}</span>
+          <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2a1b3d] px-1.5 py-0.5 rounded font-mono">{pasados.length}</span>
         </button>
       )}
 
@@ -813,13 +813,13 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl">
+      <div className="w-full max-w-sm bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl">
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
           <div>
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Agregar al planeador</p>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{fmtDia} · {categoria} · Semana {semanaNum}</p>
           </div>
-          <button type="button" title="Cerrar" onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <button type="button" title="Cerrar" onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
             <X size={15} />
           </button>
         </div>
@@ -831,7 +831,7 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
           <div className="relative mb-2">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <input value={busq} onChange={e => setBusq(e.target.value)} placeholder={`Buscar en ${mes} ${anio}…`}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 placeholder:text-slate-400 outline-none focus:border-violet-400 transition" />
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-300 placeholder:text-slate-400 outline-none focus:border-violet-400 transition" />
           </div>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">O elige del catálogo ({opciones.length})</p>
         </div>
@@ -842,7 +842,7 @@ function PopupAsignar({ dayStr, categoria, campanas, onNueva, onAsignar, onClose
             const semanaFechaActual = c[`semana${semanaNum}Fecha` as keyof CampanaType] as string | null
             return (
               <button key={c.documentId} type="button" onClick={() => onAsignar(c, semanaNum)}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600 transition text-left group">
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#2a1b3d]/60 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600 transition text-left group">
                 <CategoriaBadge cat={c.categoria} />
                 <span className="flex-1 text-xs text-slate-700 dark:text-slate-200 truncate">{c.unidadNegocio || "Sin título"}</span>
                 {semanaFechaActual
@@ -875,16 +875,16 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
     <div>
       <div className="flex items-center gap-3 mb-6">
         <button type="button" title="Semana anterior" onClick={() => setWStart(d => addDays(d, -7))}
-          className="h-8 w-8 rounded-md bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 transition"><ChevronLeft size={14} /></button>
+          className="h-8 w-8 rounded-md bg-white dark:bg-[#2a1b3d] hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 transition"><ChevronLeft size={14} /></button>
         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 min-w-[220px] text-center">{weekLabel}</span>
         <button type="button" title="Semana siguiente" onClick={() => setWStart(d => addDays(d, 7))}
-          className="h-8 w-8 rounded-md bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 transition"><ChevronRight size={14} /></button>
+          className="h-8 w-8 rounded-md bg-white dark:bg-[#2a1b3d] hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 transition"><ChevronRight size={14} /></button>
         <button type="button" onClick={() => setWStart(weekStart(new Date()))}
           className="text-[11px] text-slate-400 hover:text-violet-500 underline underline-offset-2 transition ml-1">Hoy</button>
       </div>
       <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
         <div className="min-w-[860px]">
-          <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60">
+          <div className="grid grid-cols-[72px_repeat(5,1fr)] border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#2a1b3d]/60">
             <div />
             {days.map((d, i) => (
               <div key={i} className={`px-2 py-2.5 border-l border-slate-200 dark:border-slate-700 text-center ${isHoy(d) ? "bg-violet-50 dark:bg-violet-500/5" : ""}`}>
@@ -942,7 +942,7 @@ function HBar({ label, value, max, sub }: { label: string; value: number; max: n
         <span className="text-slate-600 dark:text-slate-300 truncate">{label}</span>
         <span className="text-slate-400 dark:text-slate-500 shrink-0 ml-2">{value}{sub ? ` · ${sub}` : ""}</span>
       </div>
-      <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+      <div className="h-2 rounded-full bg-slate-100 dark:bg-[#2a1b3d] overflow-hidden">
         <div className="h-full bg-violet-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -1014,7 +1014,7 @@ function VistaMetricas({ campanas }: { campanas: CampanaType[] }) {
       <div className="flex items-center gap-1.5">
         {([["todo", "Todo"], ["mes", "Último mes"], ["trimestre", "Trimestre"]] as const).map(([id, lbl]) => (
           <button key={id} type="button" onClick={() => setPeriodo(id)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${periodo === id ? "bg-violet-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${periodo === id ? "bg-violet-500 text-white" : "bg-slate-100 dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
             {lbl}
           </button>
         ))}
@@ -1022,7 +1022,7 @@ function VistaMetricas({ campanas }: { campanas: CampanaType[] }) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {stats.map(s => (
-          <div key={s.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+          <div key={s.label} className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">{s.label}</p>
             <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}{s.sub ? <span className="text-xs font-normal text-slate-400 ml-1">({s.sub})</span> : null}</p>
           </div>
@@ -1030,19 +1030,19 @@ function VistaMetricas({ campanas }: { campanas: CampanaType[] }) {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Por unidad de negocio</p>
           {porCategoria.length === 0 ? <p className="text-xs text-slate-400">Sin datos</p> : porCategoria.map(([cat, v]) => (
             <HBar key={cat} label={cat} value={v.total} max={total} sub={v.total ? `${Math.round((v.pub / v.total) * 100)}% publicado` : undefined} />
           ))}
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Por medio de publicación</p>
           {porMedio.length === 0 ? <p className="text-xs text-slate-400">Sin datos</p> : porMedio.map(([medio, n]) => (
             <HBar key={medio} label={REDES_PUBLICACION.find(r => r.key === medio)?.label ?? medio} value={n} max={Math.max(...porMedio.map(m => m[1]))} />
           ))}
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Top keywords</p>
           {topKeywords.length === 0 ? <p className="text-xs text-slate-400">Sin datos</p> : topKeywords.map(([kw, n]) => (
             <HBar key={kw} label={kw} value={n} max={topKeywords[0][1]} />
@@ -1201,21 +1201,21 @@ export function CampanasPlannerView({ tab }: { tab: TabCampanas }) {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar campaña…"
-                className="pl-8 pr-3 h-9 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-violet-400 transition shadow-sm w-52" />
+                className="pl-8 pr-3 h-9 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-violet-400 transition shadow-sm w-52" />
             </div>
 
             <div ref={statusRef} className="relative">
               <button type="button" onClick={() => { setStatusOpen(v => !v); setShowFiltros(false) }}
-                className="h-9 flex items-center gap-2 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition-colors shadow-sm">
+                className="h-9 flex items-center gap-2 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition-colors shadow-sm">
                 <span className={`h-2 w-2 rounded-full shrink-0 ${ESTADOS_CAMPANA.find(e => e.key === filtroStatus)?.dot ?? "bg-slate-300"}`} />
                 <span>{filtroStatus === "todas" ? "Estado" : ESTADOS_CAMPANA.find(e => e.key === filtroStatus)?.label}</span>
                 <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${statusOpen ? "rotate-180" : ""}`} />
               </button>
               {statusOpen && (
-                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 min-w-[190px] py-1 overflow-hidden">
+                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 min-w-[190px] py-1 overflow-hidden">
                   {ESTADOS_CAMPANA.map(e => (
                     <button key={e.key} type="button" onClick={() => { setFiltroStatus(e.key); setStatusOpen(false) }}
-                      className={`w-full flex items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 ${filtroStatus === e.key ? "text-violet-500 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}>
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-[#2a1b3d] ${filtroStatus === e.key ? "text-violet-500 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-200"}`}>
                       <span className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full shrink-0 ${e.dot}`} />{e.label}</span>
                       <span className="text-[11px] text-slate-400 tabular-nums">{statusStats[e.key]}</span>
                     </button>
@@ -1226,14 +1226,14 @@ export function CampanasPlannerView({ tab }: { tab: TabCampanas }) {
 
             <div ref={filtrosRef} className="relative">
               <button type="button" onClick={() => setShowFiltros(v => !v)}
-                className={`h-9 flex items-center gap-1.5 px-3 text-sm rounded-lg border transition-colors shadow-sm ${filtrosActivos > 0 ? "border-violet-400/60 bg-violet-500/10 text-violet-600 dark:text-violet-400" : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600"}`}>
+                className={`h-9 flex items-center gap-1.5 px-3 text-sm rounded-lg border transition-colors shadow-sm ${filtrosActivos > 0 ? "border-violet-400/60 bg-violet-500/10 text-violet-600 dark:text-violet-400" : "border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600"}`}>
                 <SlidersHorizontal size={13} />
                 <span>Filtros</span>
                 {filtrosActivos > 0 && <span className="h-4 w-4 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center">{filtrosActivos}</span>}
                 <ChevronDown size={13} className={`text-slate-400 transition-transform duration-150 ${showFiltros ? "rotate-180" : ""}`} />
               </button>
               {showFiltros && (
-                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-64 p-3 space-y-3">
+                <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 w-64 p-3 space-y-3">
                   <div className="space-y-1.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1"><CalendarDays size={10} /> Fecha de publicación</p>
                     <div className="flex flex-col gap-1.5">

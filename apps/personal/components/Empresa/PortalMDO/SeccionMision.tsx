@@ -42,7 +42,7 @@ function ImagenUpload({ campo, url, documentId, onUploaded, className = "" }: {
 }) {
   const { uploading, inputRef, handleFile, trigger } = useUploadImagen(campo, documentId, onUploaded)
   return (
-    <div className={`relative group rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 ${className}`}>
+    <div className={`relative group rounded-xl overflow-hidden bg-slate-100 dark:bg-[#2a1b3d] ${className}`}>
       {url
         ? <img src={url} alt="" className="w-full h-full object-cover" />
         : <div className="w-full h-full flex flex-col items-center justify-center gap-2 min-h-40">
@@ -93,7 +93,7 @@ function TabPrincipios({ identidad, documentId, onUploaded }: { identidad: Retur
         <p className="text-xs text-slate-400 dark:text-slate-500 italic mb-4">Pendiente de definir</p>
         <div className="grid sm:grid-cols-2 gap-3">
           {IMGS_ORIENTADOR.map((campo, i) => (
-            <div key={campo} className="flex rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900">
+            <div key={campo} className="flex rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700 bg-white dark:bg-[#2a1b3d]">
               <ImagenUpload campo={campo} url={identidad?.[campo]?.url} documentId={documentId} onUploaded={onUploaded} className="shrink-0 w-52 self-stretch" />
               <div className="flex flex-col justify-center px-4 py-3 flex-1 min-w-0">
                 <span className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-1">Orientador {i + 1}</span>

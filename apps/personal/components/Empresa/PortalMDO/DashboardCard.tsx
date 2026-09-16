@@ -32,7 +32,7 @@ export function DashboardCard() {
   const activa = METRICAS[idx]
 
   return (
-    <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5 space-y-5">
+    <section className="rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] shadow-sm p-5 space-y-5">
       <div>
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Dashboard</h3>

@@ -80,7 +80,7 @@ export default function ContactoRapido() {
             <p className="text-white text-sm font-semibold mb-3">{TELEFONO}</p>
             <a
               href={TELEFONO_HREF}
-              className="block w-full text-center py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold uppercase tracking-widest rounded transition-colors"
+              className="block w-full text-center py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold uppercase tracking-widest rounded transition-colors"
             >
               Llamar
             </a>
@@ -99,7 +99,7 @@ export default function ContactoRapido() {
             <p className="text-white text-sm font-semibold mb-3 break-words">{CORREO}</p>
             <a
               href={`mailto:${CORREO}`}
-              className="block w-full text-center py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold uppercase tracking-widest rounded transition-colors"
+              className="block w-full text-center py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold uppercase tracking-widest rounded transition-colors"
             >
               Enviar correo
             </a>
@@ -136,7 +136,7 @@ export default function ContactoRapido() {
             <a
               href={MAPS_HREF}
               target="_blank" rel="noopener noreferrer"
-              className="block mt-2 text-center text-amber-400 hover:text-amber-300 text-[10px] font-semibold uppercase tracking-widest transition-colors"
+              className="block mt-2 text-center text-violet-400 hover:text-violet-300 text-[10px] font-semibold uppercase tracking-widest transition-colors"
             >
               Ver en Google Maps →
             </a>

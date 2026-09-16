@@ -66,7 +66,7 @@ export const STAGE_META: Record<FunnelEtapa, {
   prefix: string; desc: string; numColor: string; dot: string
   fechaKey: keyof ClienteEmpresa; nextLabel?: string
 }> = {
-  Lead:      { prefix: "L",   desc: "Contacto que llegó por algún medio",      fechaKey: "fechaLead",      nextLabel: "Enviar oferta",      numColor: "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700",              dot: "bg-slate-400" },
+  Lead:      { prefix: "L",   desc: "Contacto que llegó por algún medio",      fechaKey: "fechaLead",      nextLabel: "Enviar oferta",      numColor: "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2a1b3d] border-slate-300 dark:border-slate-700",              dot: "bg-slate-400" },
   Oferta:    { prefix: "OF",  desc: "Oferta de venta enviada al cliente",       fechaKey: "fechaOferta",    nextLabel: "Confirmar pedido",   numColor: "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/40 border-violet-300 dark:border-violet-800/50",        dot: "bg-violet-400" },
   Pedido:    { prefix: "PED", desc: "Pedido confirmado, pendiente de entrega",  fechaKey: "fechaPedido",    nextLabel: "Registrar entrega",  numColor: "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/40 border-violet-300 dark:border-violet-800/50",  dot: "bg-violet-400" },
   Entrega:   { prefix: "ENT", desc: "Pedido entregado al cliente",              fechaKey: "fechaEntrega",                                    numColor: "text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/40 border-violet-300 dark:border-violet-800/50",    dot: "bg-violet-400" },
@@ -169,7 +169,7 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
                   actual ? `bg-transparent ${meta.dot.replace("bg-", "border-")}` :
                            "bg-transparent border-slate-300 dark:border-slate-700"
                 }`} />
-                <div className={`w-px min-h-[28px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-100 dark:bg-slate-800"}`} />
+                <div className={`w-px min-h-[28px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-100 dark:bg-[#2a1b3d]"}`} />
               </div>
               <div className="pb-1 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -215,7 +215,7 @@ export function Timeline({ cliente }: { cliente: ClienteEmpresa }) {
                              "bg-transparent border-slate-300 dark:border-slate-700"
                 }`} />
                 {!isLast && (
-                  <div className={`w-px flex-1 min-h-[16px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-100 dark:bg-slate-800"}`} />
+                  <div className={`w-px flex-1 min-h-[16px] mt-0.5 ${pasada || actual ? "bg-slate-600" : "bg-slate-100 dark:bg-[#2a1b3d]"}`} />
                 )}
               </div>
               <div className="pb-2 flex-1">
@@ -253,7 +253,7 @@ function ClienteCard({ lead, num, etapa, valor, dias, sinPedidoReal, onEdit, onD
   const [confirmando, setConfirmando] = useState(false)
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col gap-2 group hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer"
+    <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col gap-2 group hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer"
       onClick={onSelect}>
 
       <div className="flex items-center justify-between gap-1">
@@ -276,9 +276,9 @@ function ClienteCard({ lead, num, etapa, valor, dias, sinPedidoReal, onEdit, onD
         ) : (
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
             <button type="button" onClick={onEdit} title="Editar"
-              className="p-1 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><Pencil size={11} /></button>
+              className="p-1 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><Pencil size={11} /></button>
             <button type="button" onClick={() => setConfirmando(true)} title="Eliminar"
-              className="p-1 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><Trash2 size={11} /></button>
+              className="p-1 text-slate-400 dark:text-slate-600 hover:text-red-600 dark:hover:text-red-400 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><Trash2 size={11} /></button>
           </div>
         )}
       </div>
@@ -348,7 +348,7 @@ function ClienteCard({ lead, num, etapa, valor, dias, sinPedidoReal, onEdit, onD
           className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg border text-[10px] font-medium transition-all ${
             lead.calificado
               ? "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30 hover:bg-violet-100 dark:hover:bg-violet-500/20"
-              : "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
+              : "bg-slate-100 dark:bg-[#2a1b3d]/60 text-slate-500 dark:text-slate-500 border-slate-300 dark:border-slate-700 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
           }`}>
           <CheckCircle2 size={11} className={lead.calificado ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-600"} />
           {lead.calificado ? "Calificado" : "Calificar"}
@@ -447,7 +447,7 @@ function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClos
     ventaId:    pedidosDelCliente.length === 1 ? pedidosDelCliente[0].documentId : "",
   })
   const [guardando, setGuardando] = useState(false)
-  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
+  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
   const lbl = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
 
   const guardar = async () => {
@@ -481,14 +481,14 @@ function PagoModal({ clienteNombre, clienteDocumentId, pedidosDelCliente, onClos
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Registrar pago</h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-500">{clienteNombre}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={15} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={15} /></button>
         </div>
 
         <div>
@@ -600,7 +600,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
   const [comprobante, setComprobante] = useState<File | null>(null)
   const comprobanteRef = useRef<HTMLInputElement>(null)
   const [guardando, setGuardando] = useState(false)
-  const inp = "w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+  const inp = "w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] px-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
   const lbl = "text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block"
 
   // Pagos — viven aquí (dentro del pedido), no en la ficha del cliente, ya
@@ -640,14 +640,14 @@ export function PedidoModal({ venta, onClose, onSaved }: {
     <>
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-lg bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{venta.numero ?? "Pedido"}</h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">{venta.cliente?.nombre ?? "Sin cliente"}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
 
         <div className="px-5 py-5 space-y-6 overflow-y-auto flex-1">
@@ -657,9 +657,9 @@ export function PedidoModal({ venta, onClose, onSaved }: {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Productos</span>
-                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+                <div className="flex-1 h-px bg-slate-200 dark:bg-[#2a1b3d]" />
               </div>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden bg-slate-50 dark:bg-slate-950/40">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden bg-slate-50 dark:bg-[#2a1b3d]/40">
                 {venta.lineas.map(l => (
                   <div key={l.documentId} className="flex items-center justify-between px-3 py-2 text-[12px]">
                     <span className="text-slate-700 dark:text-slate-300">{l.descripcion} <span className="text-slate-400 dark:text-slate-600">×{l.cantidad}</span></span>
@@ -674,7 +674,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Detalles</span>
-              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2a1b3d]" />
             </div>
             <div className="space-y-3">
               <div>
@@ -700,7 +700,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Estado y cobro</span>
-              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2a1b3d]" />
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -725,7 +725,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
                 <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
                   onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
                 <button type="button" onClick={() => comprobanteRef.current?.click()}
-                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
                   <Paperclip size={13} className="shrink-0" />
                   <span className="truncate text-[12px]">
                     {comprobante ? comprobante.name : venta.comprobantePago ? `Adjunto: ${venta.comprobantePago.name} — reemplazar` : "Adjuntar foto o PDF del comprobante…"}
@@ -739,7 +739,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Notas</span>
-              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2a1b3d]" />
             </div>
             <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
               rows={2} placeholder="Observaciones, acuerdos, instrucciones especiales…"
@@ -750,7 +750,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-slate-600">Pagos registrados</span>
-              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+              <div className="flex-1 h-px bg-slate-200 dark:bg-[#2a1b3d]" />
               {venta.cliente && (
                 <button type="button" onClick={() => setPagoModalOpen(true)}
                   className="flex items-center gap-1 text-[10px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition shrink-0">
@@ -760,17 +760,17 @@ export function PedidoModal({ venta, onClose, onSaved }: {
             </div>
 
             {/* Resumen de saldo */}
-            <div className="flex items-center gap-4 px-3 py-2 mb-2 rounded-lg bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-[11px]">
+            <div className="flex items-center gap-4 px-3 py-2 mb-2 rounded-lg bg-slate-50 dark:bg-[#2a1b3d]/50 border border-slate-200 dark:border-slate-800 text-[11px]">
               <div className="flex flex-col">
                 <span className="text-slate-400 dark:text-slate-600 uppercase tracking-wide text-[9px] font-medium">Total pedido</span>
                 <span className="font-mono font-semibold text-slate-700 dark:text-slate-300 tabular-nums">{fmtMoney(venta.monto)}</span>
               </div>
-              <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
+              <div className="w-px h-6 bg-slate-200 dark:bg-[#2a1b3d]" />
               <div className="flex flex-col">
                 <span className="text-slate-400 dark:text-slate-600 uppercase tracking-wide text-[9px] font-medium">Pagado</span>
                 <span className="font-mono font-semibold text-violet-600 dark:text-violet-400 tabular-nums">{fmtMoney(totalPagado)}</span>
               </div>
-              <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
+              <div className="w-px h-6 bg-slate-200 dark:bg-[#2a1b3d]" />
               <div className="flex flex-col">
                 <span className="text-slate-400 dark:text-slate-600 uppercase tracking-wide text-[9px] font-medium">Saldo</span>
                 <span className={`font-mono font-semibold tabular-nums ${saldo > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-600"}`}>{fmtMoney(Math.max(saldo, 0))}</span>
@@ -791,7 +791,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] text-slate-400 dark:text-slate-600">{fmtDt(p.fecha)}</span>
                           {p.metodoPago && (
-                            <span className="text-[9px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-600 bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5">{p.metodoPago}</span>
+                            <span className="text-[9px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-600 bg-slate-100 dark:bg-[#2a1b3d] rounded px-1 py-0.5">{p.metodoPago}</span>
                           )}
                         </div>
                       </div>
@@ -820,7 +820,7 @@ export function PedidoModal({ venta, onClose, onSaved }: {
 
         <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
           <button type="button" onClick={onClose} disabled={guardando}
-            className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+            className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">Cancelar</button>
           <button type="button" onClick={guardar} disabled={guardando}
             className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
             {guardando ? "Guardando..." : "Guardar cambios"}
@@ -884,7 +884,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
     metodoPago: "Transferencia" as MetodoPagoTransaccion,
   })
   const [guardando, setGuardando] = useState(false)
-  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
+  const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
   const lbl = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
 
   async function convertirCotizacion(cot: Cotizacion) {
@@ -949,7 +949,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60 p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
@@ -958,7 +958,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
             <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">{cliente.nombre}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onClose}
-            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={15} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={15} /></button>
         </div>
 
         <p className="text-[11px] text-slate-500 dark:text-slate-500 leading-relaxed">
@@ -972,7 +972,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
             <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
               onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
             <button type="button" onClick={() => comprobanteRef.current?.click()}
-              className="w-full flex items-center gap-2 h-8 mb-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/40 px-3 text-[11px] text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+              className="w-full flex items-center gap-2 h-8 mb-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 text-[11px] text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
               <Paperclip size={12} className="shrink-0" />
               <span className="truncate">{comprobante ? comprobante.name : "Adjuntar evidencia de pago (opcional)"}</span>
             </button>
@@ -981,7 +981,7 @@ export function NuevoPedidoGateModal({ cliente, cotizacionesAceptadas, totalVent
               {cotizacionesAceptadas.map(cot => (
                 <button key={cot.documentId} type="button" disabled={convirtiendo === cot.documentId}
                   onClick={() => convertirCotizacion(cot)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:border-violet-600 bg-slate-100 dark:bg-slate-800/60 hover:bg-violet-50 dark:hover:bg-violet-500/5 transition text-left disabled:opacity-50">
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:border-violet-600 bg-slate-100 dark:bg-[#2a1b3d]/60 hover:bg-violet-50 dark:hover:bg-violet-500/5 transition text-left disabled:opacity-50">
                   <div>
                     <p className="text-[11px] font-bold font-mono text-slate-700 dark:text-slate-300">{cot.numero}</p>
                     <p className="text-[11px] font-semibold text-violet-600 dark:text-violet-400">{fmtMoney(cot.total)}</p>
@@ -1209,11 +1209,11 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
 
   const iniciales = cliente.nombre.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() ?? "").join("")
 
-  const cardCls = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
+  const cardCls = "bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
   const cardHeadCls = "flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800"
   const cardTitleCls = "text-xs font-bold text-slate-800 dark:text-slate-200"
   const editLblCls = "text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1 block"
-  const editInpCls = "w-full px-2.5 py-1.5 text-[13px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-violet-500"
+  const editInpCls = "w-full px-2.5 py-1.5 text-[13px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-violet-500"
   const editCancelCls = "px-3 py-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-lg transition"
   const editSaveCls = "flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition disabled:opacity-50"
   const cardEditBtnCls = "flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition"
@@ -1292,7 +1292,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
       </div>
 
       {/* Resumen de valor de vida del cliente */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-200 dark:divide-slate-800 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <div className="px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600 mb-1.5">Total histórico</p>
           <p className="text-2xl font-bold text-violet-600 dark:text-violet-400 font-mono tracking-tight">{fmtMoney(totalGastado)}</p>
@@ -1464,7 +1464,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                 <div className="space-y-2">
                   <textarea value={notasForm} onChange={e => setNotasForm(e.target.value)} rows={4}
                     placeholder="Preferencias, ocasiones, detalles a recordar…"
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-violet-500 resize-none" />
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-violet-500 resize-none" />
                   <div className="flex justify-end gap-2">
                     <button type="button" onClick={() => setEditandoNotas(false)} className={editCancelCls}>Cancelar</button>
                     <button type="button" onClick={guardarNotas} disabled={guardandoNotas} className={editSaveCls}>
@@ -1473,7 +1473,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   </div>
                 </div>
               ) : cliente.notas ? (
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed bg-slate-100 dark:bg-slate-800/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed bg-slate-100 dark:bg-[#2a1b3d]/40 rounded-lg px-3 py-2.5">{cliente.notas}</p>
               ) : (
                 <p className="text-[11px] text-slate-300 dark:text-slate-700">Sin notas todavía.</p>
               )}
@@ -1512,7 +1512,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                   return (
                     <button key={lead.documentId} type="button"
                       onClick={() => setLeadVer(lead)}
-                      className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                      className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40 transition">
                       <div className="shrink-0 mt-0.5">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 font-mono">{numDisplay}</span>
                       </div>
@@ -1582,7 +1582,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                     {cotizaciones.map(c => (
                       <button key={c.documentId} type="button"
                         onClick={() => setCotModalState(c)}
-                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition text-left">
+                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/60 transition text-left">
                         <span className="text-[11px] font-bold font-mono text-violet-600 dark:text-violet-400 w-16 shrink-0">{c.numero}</span>
                         <div className="min-w-0 flex-1">
                           <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{tituloCotizacion(c.items)}</p>
@@ -1621,7 +1621,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
                     {ventasDelCliente.map(v => (
                       <button key={v.documentId} type="button"
                         onClick={() => setPedidoAbierto(v)}
-                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition text-left">
+                        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/60 transition text-left">
                         <span className="text-[11px] font-bold font-mono text-violet-600 dark:text-violet-400 w-16 shrink-0">{v.numero ?? "—"}</span>
                         <div className="min-w-0 flex-1">
                           <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{v.concepto}</p>
@@ -1652,7 +1652,7 @@ export function ClientePanel({ cliente, num, ventasDelCliente, onClose, onUpdate
               ) : (
                 <div className="space-y-0.5">
                   {historialSkus.map(h => (
-                    <div key={h.sku} className="flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition">
+                    <div key={h.sku} className="flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/60 transition">
                       <Tag size={12} className="text-violet-500 shrink-0" />
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{h.descripcion}</p>
@@ -1778,9 +1778,9 @@ function ClienteModalSection({ title, open, onToggle, children }: {
   title: string; open: boolean; onToggle: () => void; children: React.ReactNode
 }) {
   return (
-    <div className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-violet-300 dark:border-violet-500/30 bg-violet-50/30 dark:bg-slate-800/50" : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30"}`}>
+    <div className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-violet-300 dark:border-violet-500/30 bg-violet-50/30 dark:bg-[#2a1b3d]/50" : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/30"}`}>
       <button type="button" onClick={onToggle}
-        className="flex items-center gap-3 w-full px-3.5 py-3 group hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
+        className="flex items-center gap-3 w-full px-3.5 py-3 group hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/60 transition-colors">
         <div className={`w-1 h-4 rounded-full shrink-0 transition-colors ${open ? "bg-violet-500" : "bg-violet-400/40 group-hover:bg-violet-400/70"}`} />
         <p className="text-[11px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 flex-1 text-left group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">{title}</p>
         <ChevronDown size={14} className={`text-slate-400 dark:text-slate-500 transition-transform shrink-0 ${open ? "" : "-rotate-90"}`} />
@@ -1796,7 +1796,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
   onGuardar: () => void; onCerrar: () => void; guardando: boolean
 }) {
   const etapa = form.Funnel ?? "Lead"
-  const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
+  const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
   const lbl   = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
   const [openSec, setOpenSec] = useState<"contacto" | "detalles" | "clasificacion" | null>(null)
   const toggle = (k: "contacto" | "detalles" | "clasificacion") => setOpenSec(s => s === k ? null : k)
@@ -1804,14 +1804,14 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar" : "Nuevo"} {FUNNEL_LABEL[etapa]}</h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">{STAGE_META[etapa].desc}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onCerrar}
-            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+            className="p-1.5 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
         </div>
 
         <div>

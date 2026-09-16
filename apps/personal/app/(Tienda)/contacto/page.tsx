@@ -64,14 +64,14 @@ export default function ContactoPage() {
 
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-amber-600">Inicio</Link>
+        <Link href="/" className="hover:text-violet-600">Inicio</Link>
         <span>/</span>
         <span className="text-gray-700 dark:text-gray-300">Contacto</span>
       </nav>
 
       {/* Encabezado */}
       <header className="mb-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
+        <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">
           Escríbenos
         </p>
         <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight">
@@ -84,7 +84,7 @@ export default function ContactoPage() {
 
       {/* Formulario */}
       {estado === "exito" ? (
-        <div className="rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 p-10 text-center">
+        <div className="rounded-2xl border border-violet-200 dark:border-violet-900/40 bg-violet-50 dark:bg-violet-900/20 p-10 text-center">
           <div className="text-4xl mb-4">✓</div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             ¡Mensaje recibido!
@@ -94,7 +94,7 @@ export default function ContactoPage() {
           </p>
           <button
             onClick={() => setEstado("idle")}
-            className="text-sm text-amber-600 dark:text-amber-400 underline"
+            className="text-sm text-violet-600 dark:text-violet-400 underline"
           >
             Enviar otro mensaje
           </button>
@@ -113,7 +113,7 @@ export default function ContactoPage() {
               value={nombre}
               onChange={e => setNombre(e.target.value)}
               placeholder="Tu nombre completo"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -128,7 +128,7 @@ export default function ContactoPage() {
               value={telefono}
               onChange={e => setTelefono(e.target.value)}
               placeholder="10 dígitos"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -142,7 +142,7 @@ export default function ContactoPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="tucorreo@ejemplo.com"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -154,7 +154,7 @@ export default function ContactoPage() {
             <select
               value={interes}
               onChange={e => setInteres(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
             >
               <option value="">Seleccionar...</option>
               {INTERESES.map(i => (
@@ -173,7 +173,7 @@ export default function ContactoPage() {
               value={mensaje}
               onChange={e => setMensaje(e.target.value)}
               placeholder="Cuéntanos qué buscas, si es un regalo, medida, etc."
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
             />
           </div>
 
@@ -186,7 +186,7 @@ export default function ContactoPage() {
           <button
             type="submit"
             disabled={estado === "enviando"}
-            className="w-full rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 px-6 py-3 text-sm font-semibold text-white transition-colors"
+            className="w-full rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-50 px-6 py-3 text-sm font-semibold text-white transition-colors"
           >
             {estado === "enviando" ? "Enviando…" : "Enviar mensaje"}
           </button>

@@ -3,6 +3,29 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Rebranding Medalla de Oro (sep-2026): se sobreescribe la escala completa
+   de "violet" de Tailwind con una rampa dorada anclada en violet-500 =
+   #BD9206 (el dorado exacto de marca) — el resto de los tonos se generan
+   con el mismo matiz (~46°) variando solo luminosidad/saturación. Como
+   TODO el sitio ya usa clases violet-* como su único color de acento (Tienda
+   y Portal), esto recolorea el acento entero sin tocar los ~90 archivos que
+   ya las usan. Ver colores planos (fondo claro F8F9FA / fondo oscuro 121212
+   / detalle 2A1B3D) aplicados aparte donde corresponde a superficie, no a
+   acento. */
+@theme {
+  --color-violet-50:  #fffbf0;
+  --color-violet-100: #fdf6dd;
+  --color-violet-200: #fbeab1;
+  --color-violet-300: #f9da76;
+  --color-violet-400: #f8c930;
+  --color-violet-500: #bd9206;
+  --color-violet-600: #9e7a05;
+  --color-violet-700: #7f6305;
+  --color-violet-800: #654f06;
+  --color-violet-900: #4f3e08;
+  --color-violet-950: #2d2406;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

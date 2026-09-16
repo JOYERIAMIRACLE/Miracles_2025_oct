@@ -36,7 +36,7 @@ export default function BlogCard({ post }: { post: BlogPostType }) {
             />
           </div>
         ) : (
-          <div className="aspect-[16/9] bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/20 dark:to-amber-800/20 flex items-center justify-center">
+          <div className="aspect-[16/9] bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900/20 dark:to-violet-800/20 flex items-center justify-center">
             <span className="text-4xl">💍</span>
           </div>
         )}
@@ -44,7 +44,7 @@ export default function BlogCard({ post }: { post: BlogPostType }) {
         <div className="p-5">
           <div className="flex items-center gap-3 mb-3">
             {categoriaLabel && (
-              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400">
                 {categoriaLabel}
               </span>
             )}
@@ -55,7 +55,7 @@ export default function BlogCard({ post }: { post: BlogPostType }) {
             )}
           </div>
 
-          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 mb-2">
+          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors line-clamp-2 mb-2">
             {post.titulo}
           </h2>
 
@@ -65,7 +65,7 @@ export default function BlogCard({ post }: { post: BlogPostType }) {
             </p>
           )}
 
-          <p className="mt-4 text-xs font-semibold text-amber-600 dark:text-amber-400 group-hover:underline">
+          <p className="mt-4 text-xs font-semibold text-violet-600 dark:text-violet-400 group-hover:underline">
             Leer artículo →
           </p>
         </div>

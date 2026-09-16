@@ -176,7 +176,7 @@ export function CuentasEmpresaView() {
     <div className="space-y-5">
 
       {/* Saldo total + acciones */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-6">
           <div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Saldo total empresa</p>
@@ -192,7 +192,7 @@ export function CuentasEmpresaView() {
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setTransModal(true)}
-            className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+            className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors shadow-sm">
             <ArrowLeftRight size={14} /> Transferir
           </button>
           <button type="button" onClick={openNuevo}
@@ -204,7 +204,7 @@ export function CuentasEmpresaView() {
 
       {/* Banco vs sistema */}
       {tieneBancos && (
-        <div className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm text-sm flex items-center justify-between">
+        <div className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#2a1b3d] shadow-sm text-sm flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
             {diferencia === 0 ? <CheckCircle size={14} className="text-violet-500" /> : <AlertTriangle size={14} className="text-red-500" />}
             <span className="text-[11px] font-medium uppercase tracking-wide">
@@ -230,7 +230,7 @@ export function CuentasEmpresaView() {
       {/* Grupos */}
       <div className="space-y-4">
         {loading && Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse" />
+          <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 animate-pulse" />
         ))}
         {!loading && grupos.length === 0 && (
           <div className="py-14 text-center text-slate-400 dark:text-slate-600">
@@ -241,15 +241,15 @@ export function CuentasEmpresaView() {
         {!loading && grupos.map(({ key, meta, items, subtotal }) => {
           const Icon = meta.icon
           return (
-            <div key={key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
+            <div key={key} className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-[#2a1b3d]/60 border-b border-slate-200 dark:border-slate-800">
                 <Icon size={14} className="text-violet-500" />
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex-1">{meta.label}</span>
                 <span className={`text-xs font-bold ${key === "__credito" ? "text-red-500 dark:text-red-400" : "text-slate-800 dark:text-slate-200"}`}>{fmt(subtotal)}</span>
               </div>
               {items.map(c => (
                 <div key={c.documentId}
-                  className="group flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-800/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                  className="group flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-800/50 last:border-0 hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40 transition-colors">
                   <ColorDot color={c.color} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ export function CuentasEmpresaView() {
                   </p>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button type="button" title="Editar" onClick={() => openEditar(c)}
-                      className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                      className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition">
                       <Pencil size={13} />
                     </button>
                     {delId === c.documentId ? (
@@ -283,7 +283,7 @@ export function CuentasEmpresaView() {
                       </div>
                     ) : (
                       <button type="button" title="Eliminar" onClick={() => setDelId(c.documentId)}
-                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition">
                         <Trash2 size={13} />
                       </button>
                     )}
@@ -298,13 +298,13 @@ export function CuentasEmpresaView() {
       {/* Modal transferencia */}
       {transModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarTransSiVacio}>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-6 space-y-4">
+          <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <ArrowLeftRight size={16} className="text-violet-500" /> Transferencia entre cuentas
               </h2>
               <button type="button" title="Cerrar" onClick={() => setTransModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
                 <X size={16} />
               </button>
             </div>
@@ -353,11 +353,11 @@ export function CuentasEmpresaView() {
       {/* Modal crear/editar */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarModalSiVacio}>
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
+          <div className="w-full max-w-md bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar cuenta" : "Nueva cuenta"}</h2>
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3">
               <div>
@@ -383,7 +383,7 @@ export function CuentasEmpresaView() {
                     Saldo {editando ? "actual" : "inicial"} ($)
                   </label>
                   {editando ? (
-                    <div className={`${fieldCls} flex items-center text-slate-400 dark:text-slate-500 cursor-not-allowed bg-slate-50 dark:bg-slate-800/60`}>{fmt(form.saldoActual)}</div>
+                    <div className={`${fieldCls} flex items-center text-slate-400 dark:text-slate-500 cursor-not-allowed bg-slate-50 dark:bg-[#2a1b3d]/60`}>{fmt(form.saldoActual)}</div>
                   ) : (
                     <input type="number" step="0.01" value={form.saldoActual ?? ""}
                       onChange={e => setForm(f => ({ ...f, saldoActual: e.target.value ? Number(e.target.value) : null }))}
@@ -417,13 +417,13 @@ export function CuentasEmpresaView() {
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="activa-emp" checked={form.activa ?? true}
                   onChange={e => setForm(f => ({ ...f, activa: e.target.checked }))}
-                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-slate-800" />
+                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-[#2a1b3d]" />
                 <label htmlFor="activa-emp" className="text-sm text-slate-600 dark:text-slate-300">Cuenta activa</label>
               </div>
             </div>
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
               <button type="button" onClick={() => setModalOpen(false)} disabled={guardando}
-                className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={guardando}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 disabled:opacity-50 transition">
                 {guardando && <Loader2 size={14} className="animate-spin" />}

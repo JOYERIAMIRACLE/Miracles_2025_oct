@@ -41,7 +41,7 @@ export function OperativosView() {
       </div>
 
       {/* Pipeline funnel */}
-      <section className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 space-y-4">
+      <section className="bg-[#2a1b3d]/50 border border-slate-800 rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
             <Users className="h-4 w-4 text-violet-400" />
@@ -83,7 +83,7 @@ export function OperativosView() {
                 <p className="text-2xl font-bold text-violet-400">{pipeline.tasa}%</p>
                 <p className="text-[11px] text-slate-600">Tasa de conversión</p>
               </div>
-              <div className="h-8 w-px bg-slate-800" />
+              <div className="h-8 w-px bg-[#2a1b3d]" />
               <p className="text-xs text-slate-500">
                 {pipeline.cerrados} clientes llegaron a Entrega de {pipeline.total} activos en el pipeline
               </p>
@@ -93,7 +93,7 @@ export function OperativosView() {
       </section>
 
       {/* Tareas */}
-      <section className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 space-y-4">
+      <section className="bg-[#2a1b3d]/50 border border-slate-800 rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
           <CheckSquare className="h-4 w-4 text-violet-400" />
           Tareas empresa
@@ -119,7 +119,7 @@ export function OperativosView() {
 
       {/* Clientes recientes */}
       {!loading && clientes.length > 0 && (
-        <section className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden">
+        <section className="bg-[#2a1b3d]/50 border border-slate-800 rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-800">
             <h2 className="text-sm font-semibold text-slate-200">Clientes recientes en pipeline</h2>
           </div>

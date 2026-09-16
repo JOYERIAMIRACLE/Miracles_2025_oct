@@ -101,7 +101,7 @@ const FiltersControlsCategory = ({
           {filterMaterial && (
             <button
               onClick={() => setFilterMaterial("")}
-              className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-full text-[10px] font-semibold"
             >
               {filterMaterial}
               <X size={10} />
@@ -110,7 +110,7 @@ const FiltersControlsCategory = ({
           {filterEstilo && (
             <button
               onClick={() => setFilterEstilo("")}
-              className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-full text-[10px] font-semibold"
             >
               {filterEstilo}
               <X size={10} />
@@ -119,7 +119,7 @@ const FiltersControlsCategory = ({
           {filterTalla && (
             <button
               onClick={() => setFilterTalla("")}
-              className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-full text-[10px] font-semibold"
             >
               {filterTalla}
               <X size={10} />
@@ -128,7 +128,7 @@ const FiltersControlsCategory = ({
           {filterPrecio && (
             <button
               onClick={() => setFilterPrecio("")}
-              className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-full text-[10px] font-semibold"
             >
               {PRECIO_BRACKETS[filterPrecio].label}
               <X size={10} />

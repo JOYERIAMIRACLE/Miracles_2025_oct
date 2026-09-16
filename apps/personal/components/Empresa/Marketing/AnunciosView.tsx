@@ -10,7 +10,7 @@ import {
 } from "@/types/anuncio"
 import { cn } from "@/lib/utils"
 
-const inp = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+const inp = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
 const fmt = (n: number) => `$${n.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`
 const pct = (a: number, b: number) => b > 0 ? `${((a / b) * 100).toFixed(1)}%` : "—"
 
@@ -87,7 +87,7 @@ export function AnunciosView() {
           { label: "Gastado",      value: fmt(totales.gastado),            color: "text-violet-400" },
           { label: "CTR global",   value: pct(totales.clics, totales.impresiones), color: "text-violet-400" },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div key={k.label} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
           </div>
@@ -123,10 +123,10 @@ export function AnunciosView() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
               <tr>
                 {["Nombre", "Plataforma", "Estado", "Presupuesto", "Gastado", "Impresiones", "Clics", "CTR", ""].map(h => (
                   <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -136,11 +136,11 @@ export function AnunciosView() {
             <tbody className="divide-y divide-slate-800/60">
               {loading && Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (
-                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4" /></td>
+                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4" /></td>
                 ))}</tr>
               ))}
               {!loading && filtrados.map(a => (
-                <tr key={a.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                <tr key={a.documentId} className="hover:bg-[#2a1b3d]/40 transition-colors group">
                   <td className="px-4 py-3 font-medium text-slate-200 max-w-[160px] truncate">{a.nombre}</td>
                   <td className="px-4 py-3">
                     <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", PLATAFORMA_COLOR[a.plataforma])}>{a.plataforma}</span>
@@ -156,7 +156,7 @@ export function AnunciosView() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button type="button" onClick={() => openEditar(a)}
-                        className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition"><Pencil size={13} /></button>
+                        className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition"><Pencil size={13} /></button>
                       {delId === a.documentId ? (
                         <div className="flex gap-1">
                           <button type="button" onClick={() => handleDelete(a.documentId)} className="text-[11px] text-red-400 font-medium">Sí</button>
@@ -164,7 +164,7 @@ export function AnunciosView() {
                         </div>
                       ) : (
                         <button type="button" onClick={() => setDelId(a.documentId)}
-                          className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition"><X size={13} /></button>
+                          className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition"><X size={13} /></button>
                       )}
                     </div>
                   </td>
@@ -185,11 +185,11 @@ export function AnunciosView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-md bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar anuncio" : "Nuevo anuncio"}</h2>
               <button type="button" onClick={() => setModalOpen(false)}
-                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16} /></button>
+                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d]"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
               <div>
@@ -259,7 +259,7 @@ export function AnunciosView() {
             </div>
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}

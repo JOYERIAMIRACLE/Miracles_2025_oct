@@ -1,7 +1,7 @@
 "use client"
 
 const MATERIALES = [
-  { value: "Oro 10k",   color: "bg-amber-500"  },
+  { value: "Oro 10k",   color: "bg-violet-500"  },
   { value: "Plata 925", color: "bg-slate-400"   },
 ]
 
@@ -31,8 +31,8 @@ const FilterMaterial = ({ value, onChange }: FilterMaterialProps) => {
           onClick={() => onChange(m.value === value ? "" : m.value)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide border transition-all ${
             value === m.value
-              ? "bg-amber-500 text-white border-amber-500"
-              : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-500"
+              ? "bg-violet-500 text-white border-violet-500"
+              : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-violet-400 dark:hover:border-violet-500"
           }`}
         >
           <span className={`w-2.5 h-2.5 rounded-full ${m.color} shrink-0`} />

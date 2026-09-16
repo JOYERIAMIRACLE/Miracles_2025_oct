@@ -9,7 +9,7 @@ import { useGetAllAvisos } from "@/api/aviso/getAvisos"
 import { createAviso, updateAviso, deleteAviso } from "@/api/aviso/mutateAviso"
 import { uploadMedia } from "@/lib/upload"
 
-const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
+const fieldCls = "w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-800 dark:text-slate-100 text-sm px-3 outline-none focus:ring-2 focus:ring-violet-300 dark:focus:ring-violet-500/40 focus:border-violet-400"
 
 export const AVISO_COLOR_HEX: Record<AvisoColor, string> = {
   violet: "#8b5cf6", emerald: "#10b981", blue: "#3b82f6",
@@ -100,7 +100,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 pt-10 overflow-y-auto"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden mb-10">
+      <div className="w-full max-w-2xl bg-white dark:bg-[#2a1b3d] rounded-2xl shadow-2xl overflow-hidden mb-10">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
             {view === "edit" && (
@@ -113,7 +113,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
               {view === "list" ? "Comunicados · Portal Medalla de oro" : editando ? "Editar comunicado" : "Nuevo comunicado"}
             </h2>
             {view === "list" && !loading && (
-              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded font-mono">{avisos.length}</span>
+              <span className="text-[10px] bg-slate-100 dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded font-mono">{avisos.length}</span>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
               </button>
             )}
             <button type="button" onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
               <X size={15} />
             </button>
           </div>
@@ -139,7 +139,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
               )}
               {avisos.map(a => (
                 <button key={a.documentId} type="button" onClick={() => openEdit(a)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-colors text-left">
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#2a1b3d] hover:border-slate-300 transition-colors text-left">
                   <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: AVISO_COLOR_HEX[a.color] }} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-semibold leading-tight truncate ${a.activo ? "text-slate-800 dark:text-slate-100" : "text-slate-400 line-through"}`}>{a.titulo}</p>
@@ -190,7 +190,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
                       {imagenPreview || editImagenUrl ? (
                         <img src={imagenPreview || editImagenUrl} alt="Imagen" className="w-full h-24 object-cover" />
                       ) : (
-                        <div className="w-full h-24 flex flex-col items-center justify-center gap-1 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <div className="w-full h-24 flex flex-col items-center justify-center gap-1 bg-slate-50 dark:bg-[#2a1b3d] hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                           <Camera className="h-5 w-5 text-slate-400" />
                           <p className="text-xs text-slate-400">Subir imagen</p>
                         </div>
@@ -270,7 +270,7 @@ export function GestionAvisosModal({ onClose, onUpdated }: { onClose: () => void
                   {(imagenPreview || editImagenUrl) && (
                     <img src={imagenPreview || editImagenUrl} alt="" className="w-full h-24 object-cover" />
                   )}
-                  <div className="p-3 bg-white dark:bg-slate-900">
+                  <div className="p-3 bg-white dark:bg-[#2a1b3d]">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <span className="h-2 w-2 rounded-full shrink-0" style={{ background: AVISO_COLOR_HEX[form.color] }} />
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">{form.area || "ÁREA"}</span>

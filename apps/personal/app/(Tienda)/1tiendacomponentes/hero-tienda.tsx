@@ -17,7 +17,7 @@ const HeroTienda = () => {
       {/* Contenido alineado a la izquierda */}
       <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-20 max-w-6xl mx-auto">
 
-        <p className="text-amber-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
+        <p className="text-violet-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
           Colección 2026
         </p>
 
@@ -32,7 +32,7 @@ const HeroTienda = () => {
         <div className="flex flex-col sm:flex-row gap-3 mt-7">
           <Link
             href="/category/cadenas"
-            className="inline-flex items-center justify-center px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold uppercase tracking-widest transition-colors"
+            className="inline-flex items-center justify-center px-8 py-3 bg-violet-500 hover:bg-violet-600 text-white text-[11px] font-bold uppercase tracking-widest transition-colors"
           >
             Explorar catálogo
           </Link>

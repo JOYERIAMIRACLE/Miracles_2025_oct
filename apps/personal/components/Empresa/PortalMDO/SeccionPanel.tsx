@@ -377,7 +377,7 @@ function SecLabel({children}:{children:string}){
 function LegendDot({color,label,val,active,dimmed,onClick}:{color:string;label:string;val:number;active?:boolean;dimmed?:boolean;onClick?:()=>void}){
   const empty=val===0
   return (
-    <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1 ring-inset ring-violet-400/50":"hover:bg-slate-100 dark:hover:bg-slate-800/40"}`}
+    <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1 ring-inset ring-violet-400/50":"hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/40"}`}
       style={{opacity:dimmed?0.28:empty?0.45:1,transition:"opacity .2s"}}>
       <span className="w-2 h-2 rounded-full shrink-0" style={{background:color,opacity:empty?0.5:1}}/>
       <span className="text-[11px] flex-1 text-slate-500 dark:text-slate-400" style={{color:active?color:undefined,fontWeight:active?600:400}}>{label}</span>
@@ -411,7 +411,7 @@ function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>vo
   )
 }
 function Card({children,className=""}:{children:React.ReactNode;className?:string}){
-  return <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 ${className}`}>{children}</div>
+  return <div className={`bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 ${className}`}>{children}</div>
 }
 function KpiCard({title,value,subBadge,subLabel,color,onClick,formatter,badgeFormatter}:{title:string;value:string|number;subBadge:string|number;subLabel:string;color:string;onClick?:()=>void;formatter?:(n:number)=>string;badgeFormatter?:(n:number)=>string}){
   const isNum = typeof value === "number"
@@ -471,7 +471,7 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol }:{
     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 mt-1">
       <table className="w-full border-collapse text-[12px]">
         <thead>
-          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
+          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/60">
             {headers.map(h=>(
               <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 whitespace-nowrap">
                 {h}
@@ -487,7 +487,7 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol }:{
               </td>
             </tr>
           ):rows.map((r,i)=>(
-            <tr key={i} className={`border-b border-slate-100 dark:border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40":""}`}
+            <tr key={i} className={`border-b border-slate-100 dark:border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40":""}`}
               onClick={()=>onRowClick?.(r,i)}>
               {r.map((cell,j)=>{
                 const fn=colors[j]
@@ -777,7 +777,7 @@ export function SeccionPanel() {
       </SeccionHero>
 
       {/* Barra de filtros — siempre visible debajo del hero */}
-      <div className="flex items-center gap-2 flex-wrap bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl px-4 py-2.5">
+      <div className="flex items-center gap-2 flex-wrap bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl px-4 py-2.5">
         <button onClick={toggleDemo}
           className="px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all shrink-0"
           style={demo?{background:`${T.gold}18`,color:T.gold,border:`1px solid ${T.gold}35`}:{background:"transparent",color:"#94a3b8",border:"1px solid #e2e8f0"}}>

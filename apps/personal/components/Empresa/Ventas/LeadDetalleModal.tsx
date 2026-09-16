@@ -62,7 +62,7 @@ export function LeadDetalleModal({ lead: inicial, onClose, onEdit, onSaved }: Pr
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-950 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#2a1b3d] rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
@@ -90,7 +90,7 @@ export function LeadDetalleModal({ lead: inicial, onClose, onEdit, onSaved }: Pr
               <Pencil size={11} /> Editar
             </button>
             <button type="button" onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
               <X size={16} />
             </button>
           </div>
@@ -117,7 +117,7 @@ export function LeadDetalleModal({ lead: inicial, onClose, onEdit, onSaved }: Pr
           )}
 
           {/* Metadata grid */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 bg-slate-50 dark:bg-[#2a1b3d]/50 rounded-xl p-4">
             <div>
               <p className={lbl}>Canal</p>
               <p className={`${val} flex items-center gap-1.5`}>
@@ -150,7 +150,7 @@ export function LeadDetalleModal({ lead: inicial, onClose, onEdit, onSaved }: Pr
             <div>
               <p className={`${lbl} mb-3`}>Historial de etapas</p>
               <div className="relative pl-5">
-                <div className="absolute left-2 top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-800" />
+                <div className="absolute left-2 top-2 bottom-2 w-px bg-slate-200 dark:bg-[#2a1b3d]" />
                 <div className="space-y-3">
                   {timeline.map(t => (
                     <div key={t.label} className="flex items-center gap-3">
@@ -183,7 +183,7 @@ export function LeadDetalleModal({ lead: inicial, onClose, onEdit, onSaved }: Pr
               <div className="space-y-2">
                 <textarea rows={4} value={notasVal}
                   onChange={e => setNotasVal(e.target.value)}
-                  className="w-full px-3 py-2 text-[13px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-violet-500 resize-none"
+                  className="w-full px-3 py-2 text-[13px] rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-violet-500 resize-none"
                   placeholder="Escribe notas del lead…" />
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setEditNotas(false)}

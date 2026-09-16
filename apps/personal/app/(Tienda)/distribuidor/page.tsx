@@ -86,7 +86,7 @@ export default function DistribuidorPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
         <div className="relative z-10 w-full max-w-4xl mx-auto px-6 md:px-8">
-          <p className="text-amber-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
+          <p className="text-violet-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
             Programa de distribuidores
           </p>
           <h1 className="text-white text-3xl md:text-5xl font-extrabold leading-tight drop-shadow-lg max-w-2xl">
@@ -97,7 +97,7 @@ export default function DistribuidorPage() {
           </p>
           <a
             href="#solicitud"
-            className="inline-block mt-6 px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-widest rounded transition-colors"
+            className="inline-block mt-6 px-8 py-3 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold uppercase tracking-widest rounded transition-colors"
           >
             Quiero ser distribuidor
           </a>
@@ -108,14 +108,14 @@ export default function DistribuidorPage() {
 
         {/* Breadcrumb */}
         <nav className="text-xs text-slate-400 mb-10 flex items-center gap-1.5">
-          <Link href="/" className="hover:text-amber-600 transition-colors">Inicio</Link>
+          <Link href="/" className="hover:text-violet-600 transition-colors">Inicio</Link>
           <span>/</span>
           <span className="text-slate-700 dark:text-slate-200">Distribuidor</span>
         </nav>
 
         {/* Beneficios */}
         <div className="mb-16">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
             Por qué distribuir con nosotros
           </p>
           <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-8">
@@ -124,8 +124,8 @@ export default function DistribuidorPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {BENEFICIOS.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex gap-4">
-                <div className="h-11 w-11 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center shrink-0">
-                  <Icon size={20} className="text-amber-500" />
+                <div className="h-11 w-11 rounded-xl bg-violet-400/10 border border-violet-400/30 flex items-center justify-center shrink-0">
+                  <Icon size={20} className="text-violet-500" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{title}</h3>
@@ -138,7 +138,7 @@ export default function DistribuidorPage() {
 
         {/* Formulario de solicitud */}
         <div id="solicitud" className="scroll-mt-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
             Solicita información
           </p>
           <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-6">
@@ -146,7 +146,7 @@ export default function DistribuidorPage() {
           </h2>
 
           {estado === "exito" ? (
-            <div className="rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 p-10 text-center">
+            <div className="rounded-2xl border border-violet-200 dark:border-violet-900/40 bg-violet-50 dark:bg-violet-900/20 p-10 text-center">
               <div className="text-4xl mb-4">✓</div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                 ¡Solicitud recibida!
@@ -156,7 +156,7 @@ export default function DistribuidorPage() {
               </p>
               <button
                 onClick={() => setEstado("idle")}
-                className="text-sm text-amber-600 dark:text-amber-400 underline"
+                className="text-sm text-violet-600 dark:text-violet-400 underline"
               >
                 Enviar otra solicitud
               </button>
@@ -174,7 +174,7 @@ export default function DistribuidorPage() {
                   value={nombre}
                   onChange={e => setNombre(e.target.value)}
                   placeholder="Tu nombre completo"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
 
@@ -188,7 +188,7 @@ export default function DistribuidorPage() {
                   value={telefono}
                   onChange={e => setTelefono(e.target.value)}
                   placeholder="10 dígitos"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
 
@@ -201,7 +201,7 @@ export default function DistribuidorPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="tucorreo@ejemplo.com"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
 
@@ -214,7 +214,7 @@ export default function DistribuidorPage() {
                   value={negocio}
                   onChange={e => setNegocio(e.target.value)}
                   placeholder="Nombre de tu negocio y ciudad"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
 
@@ -227,7 +227,7 @@ export default function DistribuidorPage() {
                   value={mensaje}
                   onChange={e => setMensaje(e.target.value)}
                   placeholder="Cuéntanos qué volumen manejas o qué te interesa distribuir."
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
                 />
               </div>
 
@@ -238,7 +238,7 @@ export default function DistribuidorPage() {
               <button
                 type="submit"
                 disabled={estado === "enviando"}
-                className="w-full rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 px-6 py-3 text-sm font-semibold text-white transition-colors"
+                className="w-full rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-50 px-6 py-3 text-sm font-semibold text-white transition-colors"
               >
                 {estado === "enviando" ? "Enviando…" : "Solicitar información de mayoreo"}
               </button>

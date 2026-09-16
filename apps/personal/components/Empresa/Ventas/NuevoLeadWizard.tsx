@@ -50,7 +50,7 @@ const emptyLead = (): LeadForm => ({
   campanaOrigen: null, notas: null, segmento: null,
 })
 
-const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
+const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
 const lbl = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
 
 export function NuevoLeadWizard({
@@ -144,10 +144,10 @@ export function NuevoLeadWizard({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-[#2a1b3d] z-10">
           <div className="flex items-center gap-2">
             {paso !== "buscar" && (
               <button type="button" onClick={() => setPaso(paso === "lead" && esNuevo ? "contacto" : "buscar")}
@@ -169,7 +169,7 @@ export function NuevoLeadWizard({
             </div>
           </div>
           <button type="button" onClick={onCerrar}
-            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            className="p-1.5 text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
             <X size={15} />
           </button>
         </div>
@@ -309,7 +309,7 @@ export function NuevoLeadWizard({
           {paso === "lead" && (
             <>
               {seleccionado && (
-                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-100 dark:bg-[#2a1b3d]/60 border border-slate-200 dark:border-slate-800">
                   <UserCheck size={14} className="text-violet-500 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{seleccionado.nombre}</p>
@@ -337,7 +337,7 @@ export function NuevoLeadWizard({
 
               {/* Referidor — visible solo cuando origen es Referido */}
               {lf.origen === "Referido" && (
-                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 p-3 space-y-3">
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/30 p-3 space-y-3">
                   <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-wide">¿Quién refirió?</p>
                   <div>
                     <DropdownPicker label="Tipo de referidor" value={lf.referidorTipo ?? ""}

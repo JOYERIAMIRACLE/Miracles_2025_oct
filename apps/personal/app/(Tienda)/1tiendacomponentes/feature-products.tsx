@@ -72,8 +72,8 @@ const FeatureProducts = () => {
                                         <div className="flex justify-between gap-4 px-8">
                                             <h3 className="text-lg font-bold">{nombreProducto}</h3>
                                             <div className="flex items-center justify-between gap-3">
-                                                <p className="px-2 py-1 text-xs text-white bg-amber-800/80 backdrop-blur-sm rounded-full w-fit">{materialProducto}</p>
-                                                <p className="px-2 py-1 text-white bg-amber-900 rounded-full w-fit">{costo}</p>
+                                                <p className="px-2 py-1 text-xs text-white bg-violet-800/80 backdrop-blur-sm rounded-full w-fit">{materialProducto}</p>
+                                                <p className="px-2 py-1 text-white bg-violet-900 rounded-full w-fit">{costo}</p>
                                             </div>
                                         </div>
                                     </Card>

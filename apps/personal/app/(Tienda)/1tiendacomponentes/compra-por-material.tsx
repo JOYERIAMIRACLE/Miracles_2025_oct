@@ -6,7 +6,7 @@ const ComprarPorMaterial = () => {
       <div className="max-w-6xl mx-auto px-6 md:px-8">
 
         <div className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
             Elige tu material
           </p>
           <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white">
@@ -21,10 +21,10 @@ const ComprarPorMaterial = () => {
             href="/category"
             className="group relative overflow-hidden rounded-2xl h-64 md:h-80 block"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-amber-700 to-yellow-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-violet-700 to-yellow-500" />
             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_50%,_white,_transparent_60%)]" />
             <div className="absolute inset-0 flex flex-col justify-end p-8">
-              <p className="text-amber-200 text-[11px] font-bold uppercase tracking-[0.3em] mb-1.5">
+              <p className="text-violet-200 text-[11px] font-bold uppercase tracking-[0.3em] mb-1.5">
                 Alta pureza
               </p>
               <h3 className="text-white text-3xl md:text-4xl font-extrabold leading-none">
@@ -33,7 +33,7 @@ const ComprarPorMaterial = () => {
               <p className="text-white/60 text-sm mt-2 mb-4 max-w-xs">
                 Cadenas, aretes, anillos y dijes en oro de alta pureza con durabilidad excepcional.
               </p>
-              <span className="inline-flex items-center text-white text-[11px] font-bold uppercase tracking-widest group-hover:text-amber-300 transition-colors">
+              <span className="inline-flex items-center text-white text-[11px] font-bold uppercase tracking-widest group-hover:text-violet-300 transition-colors">
                 Ver catálogo →
               </span>
             </div>

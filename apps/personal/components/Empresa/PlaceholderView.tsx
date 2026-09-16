@@ -9,7 +9,7 @@ export function PlaceholderView({
 }) {
   return (
     <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] gap-5">
-      <div className="h-12 w-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center">
+      <div className="h-12 w-12 rounded-2xl bg-[#2a1b3d] border border-slate-800 flex items-center justify-center">
         <Construction className="h-6 w-6 text-slate-600" />
       </div>
       <div className="text-center max-w-xs">

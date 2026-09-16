@@ -106,7 +106,7 @@ export function PortalGlobe() {
         <canvas ref={canvasRef} />
       </div>
 
-      <div className={`absolute bottom-16 inset-x-4 sm:inset-x-10 rounded-xl border border-violet-500/30 bg-slate-950/90 backdrop-blur-sm px-4 py-3 flex items-start gap-2.5 transition-all duration-300 ${
+      <div className={`absolute bottom-16 inset-x-4 sm:inset-x-10 rounded-xl border border-violet-500/30 bg-[#2a1b3d]/90 backdrop-blur-sm px-4 py-3 flex items-start gap-2.5 transition-all duration-300 ${
         hover ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
       }`}>
         <MapPin size={16} className="text-violet-400 shrink-0 mt-0.5" />

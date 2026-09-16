@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 const OCASIONES = [
   { emoji: "🎀", titulo: "Quinceañera",       sub: "El regalo perfecto para su día especial",       href: "/tienda", color: "from-pink-900 via-rose-700 to-pink-400"   },
-  { emoji: "💍", titulo: "Compromiso",         sub: "Anillos y piezas para dar el gran paso",        href: "/tienda", color: "from-amber-900 via-amber-700 to-yellow-500" },
+  { emoji: "💍", titulo: "Compromiso",         sub: "Anillos y piezas para dar el gran paso",        href: "/tienda", color: "from-violet-900 via-violet-700 to-yellow-500" },
   { emoji: "💒", titulo: "Boda",               sub: "Argollas y sets nupciales únicos",              href: "/tienda", color: "from-slate-800 via-slate-600 to-slate-400"  },
   { emoji: "🌸", titulo: "Día de la Madre",    sub: "Piezas con amor para mamá",                    href: "/tienda", color: "from-purple-900 via-purple-700 to-fuchsia-400" },
   { emoji: "🎓", titulo: "Graduación",         sub: "Celebra el logro con una joya",                href: "/tienda", color: "from-blue-900 via-blue-700 to-cyan-500"     },
@@ -15,7 +15,7 @@ const ComprarPorOcasion = () => {
       <div className="max-w-6xl mx-auto px-6 md:px-8">
 
         <div className="mb-8 md:mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
             Para cada momento
           </p>
           <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white">

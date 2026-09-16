@@ -42,12 +42,12 @@ function BloqueQuienesSomos({ nombre, slogan, documentId, reload }: {
       {editando ? (
         <div className="space-y-2 mt-1.5">
           <input autoFocus value={nombreB} onChange={e => setNombreB(e.target.value)} placeholder="Nombre"
-            className="w-full h-8 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
+            className="w-full h-8 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] px-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
           <input value={sloganB} onChange={e => setSloganB(e.target.value)} placeholder="Slogan"
-            className="w-full h-8 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
+            className="w-full h-8 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] px-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
           <div className="flex gap-2">
             <button type="button" onClick={() => setEditando(false)}
-              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
               Cancelar
             </button>
             <button type="button" onClick={guardar} disabled={guardando}
@@ -99,10 +99,10 @@ function BloqueMisionVision({ titulo, valor, campo, documentId, reload }: {
       {editando ? (
         <div className="space-y-2">
           <textarea autoFocus rows={3} value={borrador} onChange={e => setBorrador(e.target.value)}
-            className="w-full text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
+            className="w-full text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] p-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
           <div className="flex gap-2">
             <button type="button" onClick={() => setEditando(false)}
-              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
               Cancelar
             </button>
             <button type="button" onClick={guardar} disabled={guardando}
@@ -176,7 +176,7 @@ function TabQuienesSomos() {
           { campo: "imagen_mision", label: "Misión",  emoji: "🎯", url: identidad?.imagen_mision?.url, hook: misionImg },
           { campo: "imagen_vision", label: "Visión",  emoji: "🏆", url: identidad?.imagen_vision?.url, hook: visionImg },
         ] as const).map(b => (
-          <div key={b.campo} className="relative group cursor-pointer rounded-xl overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800"
+          <div key={b.campo} className="relative group cursor-pointer rounded-xl overflow-hidden shadow-sm bg-slate-100 dark:bg-[#2a1b3d]"
             onClick={() => b.url && setPopupImg(b.url)}>
             {b.url
               ? <img src={b.url} alt={b.label} className="w-full h-auto block" />
@@ -220,7 +220,7 @@ function TabQuienesSomos() {
         ] as const).map(({ icon: Icon, label, valor, href }) => {
           const contenido = (
             <>
-              <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-violet-50 dark:group-hover:bg-violet-950/30 transition-colors">
+              <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-[#2a1b3d] flex items-center justify-center group-hover:bg-violet-50 dark:group-hover:bg-violet-950/30 transition-colors">
                 <Icon className="h-4 w-4 text-slate-500 dark:text-slate-400 group-hover:text-violet-500 transition-colors" />
               </div>
               <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</div>
@@ -229,7 +229,7 @@ function TabQuienesSomos() {
               </div>
             </>
           )
-          const cls = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-violet-300 hover:shadow-md transition-all group"
+          const cls = "bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:border-violet-300 hover:shadow-md transition-all group"
           return href
             ? <a key={label} href={href} className={cls}>{contenido}</a>
             : <div key={label} className={cls}>{contenido}</div>

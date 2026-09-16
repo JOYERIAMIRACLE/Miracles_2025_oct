@@ -118,7 +118,7 @@ export function EmpresaSidebar({ onNavigate }: { onNavigate?: () => void } = {})
   const pathname = usePathname()
 
   return (
-    <div className="flex flex-col w-64 bg-slate-950 h-full border-r border-slate-800/80">
+    <div className="flex flex-col w-64 bg-[#2a1b3d] h-full border-r border-slate-800/80">
       <div className="h-16 flex items-center px-5 border-b border-slate-800/80 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 bg-linear-to-br from-violet-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-500/20">
@@ -135,7 +135,7 @@ export function EmpresaSidebar({ onNavigate }: { onNavigate?: () => void } = {})
         <div className="px-3">
           {sections.map((section, sIdx) => (
             <div key={section.title ?? "_top"}>
-              {sIdx > 0 && <div className="h-px bg-slate-800/60 mx-2 my-3" />}
+              {sIdx > 0 && <div className="h-px bg-[#2a1b3d]/60 mx-2 my-3" />}
               {section.title && (
                 <p className={cn(
                   "text-[9px] font-bold uppercase tracking-widest px-2 mb-1.5 mt-0.5",
@@ -156,7 +156,7 @@ export function EmpresaSidebar({ onNavigate }: { onNavigate?: () => void } = {})
                           "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150 border",
                           isActive
                             ? `${activeColors[item.color]} shadow-sm`
-                            : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                            : "border-transparent text-slate-500 hover:text-slate-300 hover:bg-[#2a1b3d]/50"
                         )}>
                         <item.icon className={cn(
                           "h-4 w-4 shrink-0 transition-colors",

@@ -1144,7 +1144,7 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
   return (
     <div
       className="-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden transition-colors duration-300"
-      style={{ backgroundColor: isDark ? "#020617" : "#f8fafc" }}>
+      style={{ backgroundColor: isDark ? "#121212" : "#f8f9fa" }}>
       <div className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.1) 0%, transparent 55%)" }} />
       <div className="relative p-4 sm:p-6">

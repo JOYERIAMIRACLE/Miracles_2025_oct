@@ -52,8 +52,8 @@ const pill = (active: boolean) => `h-7 px-3 text-xs rounded-lg border transition
 }`
 function estadoBadgeCls(estado: EstadoPago): string {
   if (estado === "pagado") return "bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-500/30"
-  if (estado === "cancelado") return "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 line-through"
-  return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+  if (estado === "cancelado") return "bg-slate-100 dark:bg-[#2a1b3d] text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 line-through"
+  return "bg-slate-100 dark:bg-[#2a1b3d] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
 }
 
 // ─── Modal: confirmar cuenta al marcar como pagado (si el pago no tenía una asignada) ──
@@ -64,7 +64,7 @@ function ConfirmarCuentaModal({ pago, cuentas, onConfirmar, onCerrar }: {
   const [cuentaId, setCuentaId] = useState("")
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={e => { if (e.target === e.currentTarget) onCerrar() }}>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4">
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl w-full max-w-sm p-5 space-y-4">
         <div>
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Confirmar {pago.tipo === "cobro" ? "cobro" : "pago"}</h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{pago.concepto} · {fmt(pago.monto)}</p>
@@ -196,19 +196,19 @@ export function CalendarioPagosView() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
           <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Por pagar</p>
           <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{fmt(stats.pagosPend)}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
           <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Por cobrar</p>
           <p className="text-xl font-bold text-violet-600 dark:text-violet-400">{fmt(stats.cobrosPend)}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
           <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Neto pendiente</p>
           <p className={`text-xl font-bold ${stats.neto >= 0 ? "text-slate-900 dark:text-slate-100" : "text-red-500 dark:text-red-400"}`}>{fmt(stats.neto)}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
           <p className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Próximos 7 días</p>
           <p className={`text-xl font-bold ${stats.proximos > 0 ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-500"}`}>{stats.proximos}</p>
         </div>
@@ -218,10 +218,10 @@ export function CalendarioPagosView() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Calendario mensual */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
+        <div className="lg:col-span-2 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <button type="button" title="Mes anterior" onClick={() => setMesActual(m => new Date(m.getFullYear(), m.getMonth() - 1))}
-              className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+              className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition">
               <ChevronLeft size={18} />
             </button>
             <div className="text-center">
@@ -233,7 +233,7 @@ export function CalendarioPagosView() {
               </p>
             </div>
             <button type="button" title="Mes siguiente" onClick={() => setMesActual(m => new Date(m.getFullYear(), m.getMonth() + 1))}
-              className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+              className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded-lg transition">
               <ChevronRight size={18} />
             </button>
           </div>
@@ -258,7 +258,7 @@ export function CalendarioPagosView() {
                   className={`relative min-h-[52px] p-1 rounded-lg text-left transition-all border ${
                     seleccionado ? "border-violet-400 bg-violet-50 dark:bg-violet-500/10"
                     : tieneVencidos ? "border-red-200 dark:border-red-500/20 bg-red-50/50 dark:bg-red-500/5"
-                    : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    : "border-transparent hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/50"
                   }`}>
                   <span className={`text-xs inline-flex items-center justify-center w-5 h-5 ${
                     isToday(dia) ? "bg-violet-500 text-white rounded-full font-bold" : "text-slate-500 dark:text-slate-400"
@@ -285,7 +285,7 @@ export function CalendarioPagosView() {
         </div>
 
         {/* Panel lateral */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4 flex flex-col">
+        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4 flex flex-col">
           {diaSeleccionado ? (
             <>
               <div className="flex items-center justify-between mb-3">
@@ -308,12 +308,12 @@ export function CalendarioPagosView() {
                   const esVencido = dias !== null && dias < 0 && p.estado === "pendiente"
                   return (
                     <div key={p.documentId} className={`group rounded-lg border px-3 py-2.5 transition-colors ${
-                      esVencido ? "bg-red-50/50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20" : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/40 hover:border-slate-300 dark:hover:border-slate-700"
+                      esVencido ? "bg-red-50/50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20" : "bg-slate-50 dark:bg-[#2a1b3d]/40 border-slate-200 dark:border-slate-700/40 hover:border-slate-300 dark:hover:border-slate-700"
                     }`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 bg-slate-100 dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700">
                               {p.tipo === "cobro" ? "Cobro" : "Pago"}
                             </span>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${estadoBadgeCls(p.estado)}`}>
@@ -365,7 +365,7 @@ export function CalendarioPagosView() {
       </div>
 
       {/* Lista de próximos pagos */}
-      <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 flex-wrap px-4 py-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex gap-1">
             {([["todos", "Todos"], ["pago", "Pagos"], ["cobro", "Cobros"]] as const).map(([v, l]) => (
@@ -387,7 +387,7 @@ export function CalendarioPagosView() {
         <div className="divide-y divide-slate-100 dark:divide-slate-800/50 max-h-80 overflow-y-auto">
           {loading && Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-14 px-4 flex items-center">
-              <div className="h-3 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-full" />
+              <div className="h-3 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-full" />
             </div>
           ))}
           {!loading && filtrados.length === 0 && (
@@ -400,8 +400,8 @@ export function CalendarioPagosView() {
             const dias = diasRestantes(p.fecha)
             const esVencido = dias !== null && dias < 0 && p.estado === "pendiente"
             return (
-              <div key={p.documentId} className={`group flex items-center gap-3 px-4 py-3 transition-colors ${esVencido ? "bg-red-50/50 dark:bg-red-500/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/30"}`}>
-                <span className="text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700">
+              <div key={p.documentId} className={`group flex items-center gap-3 px-4 py-3 transition-colors ${esVencido ? "bg-red-50/50 dark:bg-red-500/5" : "hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/30"}`}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 bg-slate-100 dark:bg-[#2a1b3d] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700">
                   {p.tipo === "cobro" ? "Cobro" : "Pago"}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -421,7 +421,7 @@ export function CalendarioPagosView() {
                       {ESTADO_PAGO_LABELS[p.estado]}
                     </span>
                     {p.recurrente && (
-                      <span className="text-[10px] px-1 py-0.5 rounded border bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 shrink-0">{p.frecuencia}</span>
+                      <span className="text-[10px] px-1 py-0.5 rounded border bg-slate-100 dark:bg-[#2a1b3d] text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 shrink-0">{p.frecuencia}</span>
                     )}
                   </div>
                 </div>
@@ -431,12 +431,12 @@ export function CalendarioPagosView() {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   {p.estado === "pendiente" && (
                     <button type="button" title="Marcar como pagado" onClick={() => handleMarkPaid(p)}
-                      className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition">
+                      className="p-1.5 text-slate-400 hover:text-violet-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition">
                       <Check size={13} />
                     </button>
                   )}
                   <button type="button" title="Editar" onClick={() => openEditar(p)}
-                    className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition">
+                    className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition">
                     <Pencil size={13} />
                   </button>
                   {delId === p.documentId ? (
@@ -446,7 +446,7 @@ export function CalendarioPagosView() {
                     </div>
                   ) : (
                     <button type="button" title="Eliminar" onClick={() => setDelId(p.documentId)}
-                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition">
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] rounded transition">
                       <X size={13} />
                     </button>
                   )}
@@ -460,11 +460,11 @@ export function CalendarioPagosView() {
       {/* Modal crear/editar */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarSiVacio}>
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-md bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? "Editar" : "Nuevo pago programado"}</h2>
               <button type="button" title="Cerrar" onClick={() => setModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X size={16} /></button>
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
               <div>
@@ -507,7 +507,7 @@ export function CalendarioPagosView() {
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="recurrente" checked={form.recurrente}
                   onChange={e => setForm(f => ({ ...f, recurrente: e.target.checked }))}
-                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-slate-800" />
+                  className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-violet-500 focus:ring-violet-300 dark:bg-[#2a1b3d]" />
                 <label htmlFor="recurrente" className="text-sm text-slate-600 dark:text-slate-300">Recurrente</label>
               </div>
               {form.recurrente && (
@@ -525,7 +525,7 @@ export function CalendarioPagosView() {
             </div>
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}

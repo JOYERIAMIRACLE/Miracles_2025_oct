@@ -7,8 +7,8 @@ import { useGetBlogPosts, createBlogPost, updateBlogPost, publishBlogPost, unpub
 import { BlogPostType, CATEGORIA_BLOG_LABELS } from "@/types/blog-post"
 import { cn } from "@/lib/utils"
 
-const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
-const area = "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
+const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+const area = "w-full rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
 
 const CATEGORIAS = Object.keys(CATEGORIA_BLOG_LABELS) as (keyof typeof CATEGORIA_BLOG_LABELS)[]
 
@@ -111,7 +111,7 @@ export function BlogView() {
           { label: "Publicados", value: stats.publicado, color: "text-violet-400" },
           { label: "Borradores", value: stats.borrador,  color: "text-violet-400" },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div key={k.label} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
           </div>
@@ -139,7 +139,7 @@ export function BlogView() {
       {/* Lista */}
       <div className="space-y-2">
         {loading && Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-16 rounded-xl bg-slate-900 border border-slate-800 animate-pulse" />
+          <div key={i} className="h-16 rounded-xl bg-[#2a1b3d] border border-slate-800 animate-pulse" />
         ))}
         {!loading && filtrados.length === 0 && (
           <div className="py-14 text-center text-slate-600">
@@ -148,7 +148,7 @@ export function BlogView() {
           </div>
         )}
         {!loading && filtrados.map(p => (
-          <div key={p.documentId} className="group flex items-center gap-3 bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-700 transition-colors">
+          <div key={p.documentId} className="group flex items-center gap-3 bg-[#2a1b3d]/60 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-700 transition-colors">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-sm font-medium text-slate-200 truncate">{p.titulo}</p>
@@ -167,11 +167,11 @@ export function BlogView() {
             </div>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
               <button type="button" onClick={() => togglePublish(p)} title={p.publishedAt ? "Despublicar" : "Publicar"}
-                className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-slate-800 rounded transition">
+                className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-[#2a1b3d] rounded transition">
                 {p.publishedAt ? <EyeOff size={13} /> : <Eye size={13} />}
               </button>
               <button type="button" onClick={() => openEditar(p)}
-                className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
+                className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition">
                 <Pencil size={13} />
               </button>
               {delId === p.documentId ? (
@@ -181,7 +181,7 @@ export function BlogView() {
                 </div>
               ) : (
                 <button type="button" onClick={() => setDelId(p.documentId)}
-                  className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
+                  className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition">
                   <X size={13} />
                 </button>
               )}
@@ -194,11 +194,11 @@ export function BlogView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-lg bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar post" : "Nuevo post"}</h2>
               <button type="button" onClick={() => setModalOpen(false)}
-                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16} /></button>
+                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d]"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
               <div>
@@ -232,7 +232,7 @@ export function BlogView() {
             </div>
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}

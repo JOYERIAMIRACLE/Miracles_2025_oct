@@ -73,7 +73,7 @@ export function FinancierosView() {
   return (
     <div className="space-y-5 max-w-5xl">
       <div className="flex items-center justify-end">
-        <div className="flex gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-1 shadow-sm">
+        <div className="flex gap-1 bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-lg p-1 shadow-sm">
           {PERIODOS.map(p => (
             <button key={p.value} type="button"
               onClick={() => setPeriodo(p.value)}
@@ -104,7 +104,7 @@ export function FinancierosView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Últimas ventas */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+        <section className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
             <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Últimas ventas</h2>
           </div>
@@ -128,7 +128,7 @@ export function FinancierosView() {
         </section>
 
         {/* Últimos gastos */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+        <section className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
             <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Últimos gastos</h2>
           </div>
@@ -154,11 +154,11 @@ export function FinancierosView() {
 
       {/* Desglose por método de pago */}
       {!loading && Object.keys(stats.porMetodo).length > 0 && (
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
+        <section className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-4">
           <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">Ingresos por método de pago</h2>
           <div className="flex flex-wrap gap-3">
             {Object.entries(stats.porMetodo).map(([metodo, total]) => (
-              <div key={metodo} className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 rounded-lg px-3 py-2">
+              <div key={metodo} className="bg-slate-50 dark:bg-[#2a1b3d]/60 border border-slate-200 dark:border-slate-700/50 rounded-lg px-3 py-2">
                 <p className="text-[11px] text-slate-400 dark:text-slate-500">{metodo}</p>
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{fmt(total)}</p>
               </div>
@@ -176,7 +176,7 @@ function KpiCard({
   label: string; value: string; icon: typeof TrendingUp; suffix?: string; destacado?: boolean; negativo?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-4 space-y-2">
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#2a1b3d] shadow-sm p-4 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
         <div className="h-7 w-7 rounded-lg flex items-center justify-center bg-violet-50 dark:bg-violet-500/10">

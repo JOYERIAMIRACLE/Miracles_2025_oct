@@ -18,7 +18,7 @@ import { OrdenCompra, LineaOrden, EstadoOrden, ESTADO_CONFIG, OrdenPayload } fro
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
 
 const BASE_URL  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const inp       = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
+const inp       = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
 const fmt       = (n: number | null) => n != null ? `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : "—"
 const fmtDate   = (s: string | null) => s ? new Date(s + "T12:00:00").toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"2-digit" }) : "—"
 const uid       = () => crypto.randomUUID()
@@ -120,7 +120,7 @@ function OrdenModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-2xl bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
@@ -186,7 +186,7 @@ function OrdenModal({
             {catOpen && (
               <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
                 onClick={e => { if (e.target === e.currentTarget) { setCatOpen(false); setCatQ(""); setCatMat(null) } }}>
-                <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+                <div className="w-full max-w-2xl bg-[#2a1b3d] border border-slate-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
 
                   {/* Header */}
                   <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
@@ -244,7 +244,7 @@ function OrdenModal({
                       <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600"/>
                       <input autoFocus placeholder="Buscar por nombre, categoría o SKU…" value={catQ}
                         onChange={e => setCatQ(e.target.value)}
-                        className="w-full h-9 rounded-lg border border-slate-700 bg-slate-800 pl-8 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500/40" />
+                        className="w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] pl-8 pr-3 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-violet-500/40" />
                     </div>
                     <div className="flex gap-1 shrink-0">
                       {[null, ...catalogo.map(m => m.nombre)].map(m => (
@@ -291,7 +291,7 @@ function OrdenModal({
                           <div key={key}>
                             {/* Header de categoría — toggle */}
                             <button type="button" onClick={() => toggleSection(key)}
-                              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-800/60 transition-colors group">
+                              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-[#2a1b3d]/60 transition-colors group">
                               {isOpen
                                 ? <ChevronDown  size={12} className="text-slate-500 shrink-0"/>
                                 : <ChevronRight size={12} className="text-slate-600 shrink-0"/>}
@@ -306,7 +306,7 @@ function OrdenModal({
 
                             {/* Productos (acordeón) */}
                             {isOpen && (
-                              <div className="ml-4 mb-1 bg-slate-800/30 rounded-xl border border-slate-800/60 divide-y divide-slate-800/40 overflow-hidden">
+                              <div className="ml-4 mb-1 bg-[#2a1b3d]/30 rounded-xl border border-slate-800/60 divide-y divide-slate-800/40 overflow-hidden">
                                 {prods.map(prod =>
                                   prod.modelos.length > 0
                                     ? prod.modelos.map(mod => (
@@ -365,15 +365,15 @@ function OrdenModal({
             <div className="space-y-1.5">
               {lineas.map(l => (
                 <div key={l.id} className="grid grid-cols-[1fr_2fr_80px_90px_24px] gap-1.5 items-center">
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs font-mono text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                  <input className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs font-mono text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="SKU" value={l.sku} onChange={e => updLinea(l.id, { sku: e.target.value })} />
-                  <input className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                  <input className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="Nombre" value={l.nombre} onChange={e => updLinea(l.id, { nombre: e.target.value })} />
                   <input type="number" min={1}
-                    className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-violet-500/40"
+                    className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-violet-500/40"
                     value={l.cantidad} onChange={e => updLinea(l.id, { cantidad: Number(e.target.value) })} />
                   <input type="number" min={0} step="0.01"
-                    className="bg-slate-800/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
+                    className="bg-[#2a1b3d]/60 border border-slate-700/50 rounded px-2 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40"
                     placeholder="0.00" value={l.costoUnitario || ""} onChange={e => updLinea(l.id, { costoUnitario: Number(e.target.value) })} />
                   <button type="button" onClick={() => setLineas(prev => prev.filter(x => x.id !== l.id))}
                     className="text-slate-700 hover:text-red-400 transition"><X size={12}/></button>
@@ -505,7 +505,7 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
+      <div className="w-full max-w-xl bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
@@ -538,7 +538,7 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
                   placeholder="50"
                   value={margen}
                   onChange={e => setMargen(Math.max(0, Number(e.target.value)))}
-                  className="w-16 h-8 rounded-lg border border-slate-700 bg-slate-800 px-2 text-sm text-slate-100 text-center focus:outline-none focus:ring-2 focus:ring-violet-500/40 font-mono" />
+                  className="w-16 h-8 rounded-lg border border-slate-700 bg-[#2a1b3d] px-2 text-sm text-slate-100 text-center focus:outline-none focus:ring-2 focus:ring-violet-500/40 font-mono" />
                 <span className="text-sm text-slate-400">%</span>
               </div>
               <span className="text-[11px] text-slate-600">
@@ -563,13 +563,13 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
                     <input type="number" min={0} max={l.cantidad}
                       title={`Cantidad a recibir: ${l.nombre}`}
                       placeholder="0"
-                      className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-violet-500/60 text-center"
+                      className="bg-[#2a1b3d] border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-violet-500/60 text-center"
                       value={cantidades[l.id] ?? l.cantidad}
                       onChange={e => setCantidades(prev => ({ ...prev, [l.id]: Number(e.target.value) }))} />
                     <input type="number" min={0} step="0.01"
                       title={`Costo unitario: ${l.nombre}`}
                       placeholder="0.00"
-                      className="bg-slate-800 border border-violet-500/30 rounded px-2 py-1 text-xs text-violet-300 focus:outline-none focus:border-violet-500/70 text-right tabular-nums"
+                      className="bg-[#2a1b3d] border border-violet-500/30 rounded px-2 py-1 text-xs text-violet-300 focus:outline-none focus:border-violet-500/70 text-right tabular-nums"
                       value={c || ""}
                       onChange={e => setCostosLocales(prev => ({ ...prev, [l.id]: Number(e.target.value) }))} />
                     <span className={`text-xs text-right tabular-nums font-medium ${pv ? "text-violet-400" : "text-slate-700"}`}>
@@ -581,7 +581,7 @@ function RecibirModal({ orden, onClose, onDone }: { orden: OrdenCompra; onClose:
             </div>
 
             {/* Resumen */}
-            <div className="px-5 py-3 bg-slate-800/40 border-y border-slate-800 text-xs flex flex-col gap-1">
+            <div className="px-5 py-3 bg-[#2a1b3d]/40 border-y border-slate-800 text-xs flex flex-col gap-1">
               <div className="flex items-center justify-between text-slate-400">
                 <span>{totalPiezas} piezas</span>
                 <div className="flex gap-4">
@@ -675,7 +675,7 @@ export function ComprasView() {
           <div className="relative">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar…"
-              className="pl-7 pr-3 h-8 rounded-lg border border-slate-700 bg-slate-900 text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-40 transition" />
+              className="pl-7 pr-3 h-8 rounded-lg border border-slate-700 bg-[#2a1b3d] text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-40 transition" />
           </div>
           <button type="button" onClick={() => { setSelected(null); setModal("nueva") }}
             className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition">
@@ -692,7 +692,7 @@ export function ComprasView() {
           { label: "Recibidas",      value: kpis.recibidas,       color: "text-violet-400" },
           { label: "Valor recibido", value: fmt(kpis.valorTotal), color: "text-violet-400"   },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+          <div key={k.label} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-3">
             <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-lg font-bold ${k.color}`}>{k.value}</p>
           </div>
@@ -714,10 +714,10 @@ export function ComprasView() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-slate-950/50">
+            <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
               <tr>
                 {["Orden / Proveedor","Fecha","Entrega est.","Estado","Piezas","Total",""].map(h => (
                   <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
@@ -727,14 +727,14 @@ export function ComprasView() {
             <tbody className="divide-y divide-slate-800/60">
               {loading && Array.from({length:4}).map((_,i) => (
                 <tr key={i}>{Array.from({length:7}).map((_,j) => (
-                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-800 animate-pulse w-3/4"/></td>
+                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4"/></td>
                 ))}</tr>
               ))}
               {!loading && filtradas.map(o => {
                 const cfg  = ESTADO_CONFIG[o.estado]
                 const cant = o.lineas.reduce((s, l) => s + l.cantidad, 0)
                 return (
-                  <tr key={o.documentId} className="hover:bg-slate-800/40 transition-colors group">
+                  <tr key={o.documentId} className="hover:bg-[#2a1b3d]/40 transition-colors group">
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-200 font-mono text-xs">{o.numero}</p>
                       <p className="text-[11px] text-slate-500">{o.proveedor?.nombre ?? "—"}</p>
@@ -761,25 +761,25 @@ export function ComprasView() {
                           {(o.estado === "borrador" || o.estado === "enviada") && (
                             <button type="button" title="Recibir mercancía"
                               onClick={() => { setSelected(o); setModal("recibir") }}
-                              className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-slate-800 rounded transition">
+                              className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-[#2a1b3d] rounded transition">
                               <PackageCheck size={13}/>
                             </button>
                           )}
                           {o.estado === "borrador" && (
                             <button type="button" title="Marcar como enviada"
                               onClick={() => handleEstado(o, "enviada")}
-                              className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-slate-800 rounded transition">
+                              className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-[#2a1b3d] rounded transition">
                               <Truck size={13}/>
                             </button>
                           )}
                           <button type="button" title="Editar"
                             onClick={() => { setSelected(o); setModal("editar") }}
-                            className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
+                            className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition">
                             <Pencil size={12}/>
                           </button>
                           <button type="button" title="Eliminar"
                             onClick={() => setDelId(o.documentId)}
-                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
+                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition">
                             <Trash2 size={12}/>
                           </button>
                         </div>

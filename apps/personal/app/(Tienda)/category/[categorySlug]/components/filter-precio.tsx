@@ -34,8 +34,8 @@ const FilterPrecio = ({ value, onChange }: FilterPrecioProps) => {
           onClick={() => onChange(key === value ? "" : key)}
           className={`w-full text-left px-3 py-2 rounded-lg text-[11px] font-semibold border transition-all ${
             value === key
-              ? "bg-amber-500 text-white border-amber-500"
-              : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500"
+              ? "bg-violet-500 text-white border-violet-500"
+              : "bg-transparent text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-violet-400 dark:hover:border-violet-500"
           }`}
         >
           {bracket.label}

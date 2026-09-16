@@ -243,7 +243,7 @@ function NodeCard({ node, fp, onEdit, onAddChild, onDel, hasChildren, collapsed,
   return (
     <div
       onClick={onEdit}
-      className="group w-52 rounded-xl border border-slate-700/60 bg-slate-900/90 backdrop-blur-sm hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer transition-all duration-150 select-none">
+      className="group w-52 rounded-xl border border-slate-700/60 bg-[#2a1b3d]/90 backdrop-blur-sm hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer transition-all duration-150 select-none">
       <div className="px-3 pt-3 pb-2">
         <div className="flex items-center gap-1.5 mb-1.5">
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
@@ -343,7 +343,7 @@ function TreeRow({ node, parentFp, idx, siblingCount, onEdit, onAddChild, onDel,
         <div className="ml-6 mt-2 border-l border-slate-800 pl-5 space-y-2">
           {node.children.map((c, i) => (
             <div key={c.id} className="relative">
-              <div className="absolute -left-5 top-[42px] w-5 h-px bg-slate-800" />
+              <div className="absolute -left-5 top-[42px] w-5 h-px bg-[#2a1b3d]" />
               <TreeRow node={c} parentFp={fp} idx={i} siblingCount={node.children.length} onEdit={onEdit} onAddChild={onAddChild} onDel={onDel} onMove={onMove} />
             </div>
           ))}
@@ -402,7 +402,7 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
     <div className="fixed right-0 inset-y-0 z-50 w-full max-w-[740px] bg-[#0b0d13] border-l border-white/[0.06] flex flex-col">
 
       <div className="flex items-center gap-4 px-7 py-6 border-b border-white/[0.06] shrink-0">
-        <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-white/[0.08] flex items-center justify-center shrink-0">
+        <div className="w-12 h-12 rounded-xl bg-[#2a1b3d]/80 border border-white/[0.08] flex items-center justify-center shrink-0">
           <Globe size={22} className="text-violet-400" />
         </div>
         <div className="flex-1 min-w-0">
@@ -537,7 +537,7 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
                 a.click()
                 URL.revokeObjectURL(url)
               }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-700/50 bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-700/50 bg-[#2a1b3d]/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors text-sm"
             >
               <Download size={14} />
               Descargar Slug/Meta (.txt)
@@ -721,8 +721,8 @@ export function SitioWebMiraclesView() {
     <div
       className="min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden"
       style={{
-        backgroundColor: "#020617",
-        backgroundImage: "radial-gradient(circle, #1e293b 1px, transparent 1px)",
+        backgroundColor: "#121212",
+        backgroundImage: "radial-gradient(circle, #2a1b3d 1px, transparent 1px)",
         backgroundSize: "28px 28px",
       }}>
 
@@ -755,7 +755,7 @@ export function SitioWebMiraclesView() {
               </button>
             )}
             <button type="button" onClick={exportJson}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 rounded-lg bg-slate-900/60 backdrop-blur-sm transition">
+              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600 rounded-lg bg-[#2a1b3d]/60 backdrop-blur-sm transition">
               <Download size={14} /> Exportar
             </button>
             <button type="button" onClick={() => handleAdd("root")}
@@ -779,7 +779,7 @@ export function SitioWebMiraclesView() {
           {total === 1 && (
             <div className="mt-6 ml-1">
               <button type="button" onClick={() => handleAdd("root")}
-                className="flex items-center gap-2 px-4 py-3 border border-dashed border-slate-700/60 rounded-xl text-slate-600 hover:text-slate-400 hover:border-slate-600 transition text-sm bg-slate-900/30">
+                className="flex items-center gap-2 px-4 py-3 border border-dashed border-slate-700/60 rounded-xl text-slate-600 hover:text-slate-400 hover:border-slate-600 transition text-sm bg-[#2a1b3d]/30">
                 <Plus size={13} /> Agregar primera página del sitio Miracles
               </button>
             </div>

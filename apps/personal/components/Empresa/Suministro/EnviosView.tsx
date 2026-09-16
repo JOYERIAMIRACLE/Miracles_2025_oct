@@ -13,8 +13,8 @@ import {
 } from "@/types/envio"
 import { cn } from "@/lib/utils"
 
-const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
-const area = "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
+const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+const area = "w-full rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
 
 const ESTADOS: EstadoEnvio[]    = ["pendiente", "preparando", "enviado", "en_transito", "entregado", "devuelto", "cancelado"]
 const PAQUETERIAS: PaqueteriaEnvio[] = ["fedex", "dhl", "estafeta", "ups", "correos_mex", "otro"]
@@ -162,7 +162,7 @@ export function EnviosView() {
           { label: "En tránsito", value: stats.en_transito, color: "text-violet-400" },
           { label: "Entregados",  value: stats.entregado,   color: "text-violet-400" },
         ].map(k => (
-          <div key={k.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div key={k.label} className="bg-[#2a1b3d] border border-slate-800 rounded-xl p-4">
             <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1">{k.label}</p>
             <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
           </div>
@@ -196,7 +196,7 @@ export function EnviosView() {
       {/* Lista */}
       <div className="space-y-2">
         {loading && Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-16 rounded-xl bg-slate-900 border border-slate-800 animate-pulse" />
+          <div key={i} className="h-16 rounded-xl bg-[#2a1b3d] border border-slate-800 animate-pulse" />
         ))}
         {!loading && filtrados.length === 0 && (
           <div className="py-14 text-center text-slate-600">
@@ -206,7 +206,7 @@ export function EnviosView() {
         )}
         {!loading && filtrados.map(e => (
           <div key={e.documentId}
-            className="group flex items-center gap-3 bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-700 transition-colors">
+            className="group flex items-center gap-3 bg-[#2a1b3d]/60 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-700 transition-colors">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-sm font-medium text-slate-200 truncate">
@@ -243,7 +243,7 @@ export function EnviosView() {
             </div>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
               <button type="button" onClick={() => openEditar(e)}
-                className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-800 rounded transition">
+                className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition">
                 <Pencil size={13} />
               </button>
               {delId === e.documentId ? (
@@ -253,7 +253,7 @@ export function EnviosView() {
                 </div>
               ) : (
                 <button type="button" onClick={() => setDelId(e.documentId)}
-                  className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-slate-800 rounded transition">
+                  className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition">
                   <X size={13} />
                 </button>
               )}
@@ -266,11 +266,11 @@ export function EnviosView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={ev => { if (ev.target === ev.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-lg bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar envío" : "Nuevo envío"}</h2>
               <button type="button" onClick={() => setModalOpen(false)}
-                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800"><X size={16} /></button>
+                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d]"><X size={16} /></button>
             </div>
             <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-3">
@@ -308,23 +308,23 @@ export function EnviosView() {
                     <ChevronDown size={13} className={`text-slate-500 shrink-0 transition-transform ${ventaOpen ? "rotate-180" : ""}`} />
                   </button>
                   {ventaOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-slate-900 border border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#2a1b3d] border border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
                       <div className="px-2 pt-2 pb-1">
                         <div className="relative">
                           <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
                           <input autoFocus value={ventaQuery} onChange={ev => setVentaQuery(ev.target.value)}
                             placeholder="Buscar por concepto o cliente…"
-                            className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-500 outline-none focus:border-violet-500" />
+                            className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-700 bg-[#2a1b3d] text-slate-100 placeholder:text-slate-500 outline-none focus:border-violet-500" />
                         </div>
                       </div>
                       <div className="max-h-48 overflow-y-auto py-1">
                         <button type="button" onClick={() => elegirVenta(null)}
-                          className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${!form.ventaId ? "text-violet-400 font-medium" : "text-slate-500"}`}>
+                          className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-[#2a1b3d] ${!form.ventaId ? "text-violet-400 font-medium" : "text-slate-500"}`}>
                           Sin pedido vinculado
                         </button>
                         {ventasFiltradas.map(v => (
                           <button key={v.documentId} type="button" onClick={() => elegirVenta(v)}
-                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-800 ${form.ventaId === v.documentId ? "text-violet-400 font-medium" : "text-slate-300"}`}>
+                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-[#2a1b3d] ${form.ventaId === v.documentId ? "text-violet-400 font-medium" : "text-slate-300"}`}>
                             <span className="block truncate">{v.concepto}</span>
                             {v.cliente?.nombre && <span className="block text-[10px] text-slate-500 truncate">{v.cliente.nombre}</span>}
                           </button>
@@ -374,7 +374,7 @@ export function EnviosView() {
             </div>
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Cancelar</button>
+                className="h-8 px-4 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-[#2a1b3d] transition">Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
                 {saving && <Loader2 size={14} className="animate-spin" />}
