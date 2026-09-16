@@ -100,8 +100,8 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
 
   return (
     <>
-    <aside className="fixed md:sticky left-0 md:left-auto top-14 z-40 w-56 shrink-0 bg-[#f8f9fa] dark:bg-[#2a1b3d] border-r border-slate-300 dark:border-slate-700 shadow-[2px_0_12px_rgba(0,0,0,0.07)] flex flex-col h-[calc(100vh-56px)] self-start overflow-hidden">
-      <nav className="flex-1 overflow-y-auto py-1 pt-3 pb-0">
+    <aside className="fixed md:sticky left-0 md:left-auto top-16 z-40 w-64 shrink-0 bg-[#f8f9fa] dark:bg-[#2a1b3d] border-r border-slate-300 dark:border-slate-700 shadow-[2px_0_12px_rgba(0,0,0,0.07)] flex flex-col h-[calc(100vh-64px)] self-start overflow-hidden">
+      <nav className="flex-1 overflow-y-auto py-1.5 pt-4 pb-0">
         {GRUPOS.map(grupo => {
           const isOpen       = gruposOpen.has(grupo.id)
           const isPortal     = grupo.id === "portal"
@@ -114,33 +114,33 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
           }
 
           return (
-            <div key={grupo.id} className="mb-0.5">
-              <div className={`flex items-center pr-2 rounded-r-lg mx-1 ${headerActive ? "bg-violet-50 dark:bg-[#2a1b3d]" : ""}`}>
+            <div key={grupo.id} className="mb-1">
+              <div className={`flex items-center pr-2 rounded-r-lg mx-1.5 ${headerActive ? "bg-violet-50 dark:bg-[#2a1b3d]" : ""}`}>
                 <button type="button" onClick={handleHeaderClick}
                   className={[
-                    "flex-1 flex items-center gap-2 text-left px-3 py-2.5 text-sm font-semibold transition-colors rounded-lg",
+                    "flex-1 flex items-center gap-2.5 text-left px-3 py-2.5 text-sm font-semibold transition-colors rounded-lg",
                     headerActive ? "text-violet-600 dark:text-violet-400" : "text-slate-700 dark:text-slate-300 hover:text-violet-500 hover:bg-slate-50 dark:hover:bg-[#2a1b3d]",
                   ].join(" ")}>
-                  <grupo.icon className="h-[18px] w-[18px] shrink-0" />
+                  <grupo.icon className="h-5 w-5 shrink-0" />
                   {grupo.label}
                 </button>
                 {isToggleOnly && (
                   <button type="button" aria-label={isOpen ? "Colapsar" : "Expandir"}
                     onClick={() => toggleGrupo(grupo.id)}
-                    className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors shrink-0">
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors shrink-0">
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   </button>
                 )}
               </div>
 
               {isToggleOnly && isOpen && (
-                <div className="pb-1 mb-1 border-b border-slate-100 dark:border-slate-700 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.06)]">
+                <div className="pb-1.5 mb-1.5 border-b border-slate-100 dark:border-slate-700 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.06)]">
                   {grupo.items.map(item => {
                     const Icon = item.icon
                     const itemOwnSection = item.ownSection ?? grupo.itemsAreOwnSection
                     const active = itemOwnSection ? seccion === item.id : seccion === grupo.id && tab === item.id
                     const itemCls = [
-                      "w-full flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all",
+                      "w-full flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium transition-all",
                       active
                         ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-[#2a1b3d] border-r-2 border-violet-500"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-[#2a1b3d]",
@@ -148,7 +148,7 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
                     if (item.href) {
                       return (
                         <a key={item.id} href={item.href} target="_blank" rel="noopener noreferrer" className={itemCls}>
-                          <Icon className="h-4 w-4 shrink-0" />
+                          <Icon className="h-4.5 w-4.5 shrink-0" />
                           <span className="flex-1 text-left truncate">{item.label}</span>
                         </a>
                       )
@@ -157,7 +157,7 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
                       <button key={item.id} type="button"
                         onClick={() => itemOwnSection ? onNavigate(item.id) : onNavigate(grupo.id, item.id)}
                         className={itemCls}>
-                        <Icon className="h-4 w-4 shrink-0" />
+                        <Icon className="h-4.5 w-4.5 shrink-0" />
                         <span className="flex-1 text-left truncate">{item.label}</span>
                       </button>
                     )
@@ -170,8 +170,8 @@ export function PortalMDOSidebar({ seccion, tab, onNavigate }: Props) {
       </nav>
       <div className="shrink-0 p-3 border-t border-slate-100 dark:border-slate-700">
         <button type="button" onClick={() => setConfigOpen(true)}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-[#2a1b3d] rounded-lg transition-colors">
-          <Settings className="h-4 w-4 shrink-0" />
+          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-[#2a1b3d] rounded-lg transition-colors">
+          <Settings className="h-4.5 w-4.5 shrink-0" />
           <span className="flex-1 text-left truncate">Configuración</span>
         </button>
       </div>
