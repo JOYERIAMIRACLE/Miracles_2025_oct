@@ -592,7 +592,7 @@ export function SeccionHeroFondo({
   }
 
   return (
-    <div className="relative overflow-hidden h-40 sm:h-56">
+    <div className="relative overflow-hidden h-80 sm:h-[26rem]">
       {imagenUrl ? (
         <>
           <img src={imagenUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-top opacity-50" />

@@ -90,7 +90,9 @@ export default function PortalMedalladeoroPage() {
             <PortalMDOSidebar seccion={seccion} tab={tab} onNavigate={navigate} />
           </>
         )}
-        <main className="flex-1 min-w-0 text-slate-900 dark:text-slate-100 relative overflow-x-hidden">
+        <main className={`flex-1 min-w-0 text-slate-900 dark:text-slate-100 relative overflow-x-hidden ${
+          seccion === "tareas" ? "bg-[#f8f9fa] dark:bg-[#121212]" : ""
+        }`}>
           {/* Atmospheric dark gradient — solo dark mode */}
           <div className="pointer-events-none absolute inset-0 hidden dark:block"
             style={{background:"radial-gradient(ellipse 90% 50% at 50% 0%, #2a1b3d33 0%, transparent 65%)"}}/>

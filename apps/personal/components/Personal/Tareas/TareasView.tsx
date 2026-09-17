@@ -1143,16 +1143,31 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
 
   return (
     <div
-      className="-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden transition-colors duration-300"
-      style={{ backgroundColor: isDark ? "#121212" : "#f8f9fa" }}>
+      // heroExterno: sube la raíz completa (header + tareas, una sola pieza)
+      // un poco sobre el borde inferior del hero (TareasHeroFondo, full-bleed
+      // arriba) — igual que la vitrina de Inicio sobre su mural, pero sutil.
+      // Es la raíz la que se mueve (vía margen), no un hijo escapando de
+      // ella — por eso el overflow-x-hidden de aquí abajo (necesario para que
+      // Calendario/Métricas no hagan scroll horizontal) no la recorta:
+      // overflow-hidden solo recorta lo que se sale DE ESTA caja hacia
+      // afuera, no afecta cómo el padre posiciona la caja misma.
+      // marginTop va en style (no className) a propósito: -m-4/md:-m-6 de
+      // abajo ya define margin-top por breakpoint, y una clase -mt-* de
+      // Tailwind con un breakpoint más chico (ej. sm:) pierde contra md:-m-6
+      // en el orden de la hoja de estilos compilada — el estilo inline gana
+      // siempre, sin depender de ese orden.
+      className={`-m-4 md:-m-6 min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden transition-colors duration-300 ${
+        heroExterno ? "rounded-sm rounded-tr-3xl shadow-lg" : ""
+      }`}
+      style={{
+        backgroundColor: isDark ? "#121212" : "#f8f9fa",
+        ...(heroExterno ? { marginTop: "-112px" } : {}),
+      }}>
       <div className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.1) 0%, transparent 55%)" }} />
       <div className="relative p-4 sm:p-6">
       <div className="mb-6">
         {heroExterno ? (
-          // Sin traslape ni fondo propio: el fondo (foto/opacidad) es solo del
-          // hero (TareasHeroFondo, full-bleed arriba). La vitrina va limpia
-          // debajo, transparente sobre el fondo de la página.
           <SeccionHeroContenido
             breadcrumb={breadcrumb ?? [titulo]}
             titulo={titulo}
