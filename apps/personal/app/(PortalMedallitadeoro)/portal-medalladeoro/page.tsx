@@ -5,6 +5,7 @@ import { PortalMDOHeader } from "@/components/Empresa/PortalMDO/PortalMDOHeader"
 import { PortalMDOSidebar } from "@/components/Empresa/PortalMDO/PortalMDOSidebar"
 import { SeccionPortalHome } from "@/components/Empresa/PortalMDO/SeccionPortalHome"
 import { PortalHomeHero } from "@/components/Empresa/PortalMDO/PortalHomeHero"
+import { TareasHeroFondo } from "@/components/Empresa/PortalMDO/TareasHeroFondo"
 import { SeccionConoceMDO } from "@/components/Empresa/PortalMDO/SeccionConoceMDO"
 import { SeccionMision } from "@/components/Empresa/PortalMDO/SeccionMision"
 import { SeccionContactos } from "@/components/Empresa/PortalMDO/SeccionContactos"
@@ -64,7 +65,7 @@ export default function PortalMedalladeoroPage() {
       case "portal":      return <SeccionPortalHome onNavigate={navigate} />
       case "conoce":       return <SeccionConoceMDO />
       case "mision":       return <SeccionMision />
-      case "tareas":       return <TareasView ambito="empresa" titulo="Tareas" breadcrumb={["Operación", "Tareas"]} />
+      case "tareas":       return <TareasView ambito="empresa" titulo="Tareas" breadcrumb={["Operación", "Tareas"]} heroExterno />
       case "campanas":     return <SeccionCampanas />
       case "contactos":    return <SeccionContactos />
       case "ventas":       return <SeccionVentas />
@@ -99,6 +100,12 @@ export default function PortalMedalladeoroPage() {
               Es la única sección que rompe la regla — ver PortalHomeHero.tsx.
               El resto de Inicio (y todas las demás secciones) siguen boxed. ─── */}
           {seccion === "portal" && <PortalHomeHero />}
+          {/* Mismo mecanismo de excepción que el hero de Inicio: el fondo de
+              Tareas (foto + overlay + ⋮) vive full-bleed, afuera del boxed
+              container de abajo — ver TareasHeroFondo.tsx. El breadcrumb/
+              título/descripción/tabs de Tareas siguen boxed, dentro de
+              TareasView (SeccionHeroContenido). */}
+          {seccion === "tareas" && <TareasHeroFondo />}
           {/* ─── LAYOUT RULE: Boxed/Contained ─────────────────────────────────
               Todo el contenido del portal vive dentro de este container.
               max-w-7xl = 1280px máximo, centrado con mx-auto.

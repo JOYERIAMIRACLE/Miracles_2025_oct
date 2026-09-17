@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, Trash2, X, Check, Calendar as CalIcon, Tag, List, Search, ChevronLeft, ChevronRight, BarChart2, Ticket, ChevronDown, Link2, ExternalLink, SlidersHorizontal, Layers, Pencil, GripVertical } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MetricasView } from "./MetricasView"
-import { SeccionHero, HeroTabs, useHeroImagen } from "@/components/Empresa/PortalMDO/shared"
+import { SeccionHero, HeroTabs, SeccionHeroContenido, ContenidoTabs, useHeroImagen } from "@/components/Empresa/PortalMDO/shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -151,7 +151,7 @@ const VISTA_TABS = [
   { id: "metricas",   label: "Métricas",   icon: BarChart2 },
 ]
 
-export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea; titulo: string; breadcrumb?: string[] }) {
+export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito: AmbitoTarea; titulo: string; breadcrumb?: string[]; heroExterno?: boolean }) {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const { user } = useCurrentUser()
@@ -1149,24 +1149,41 @@ export function TareasView({ ambito, titulo, breadcrumb }: { ambito: AmbitoTarea
         style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.1) 0%, transparent 55%)" }} />
       <div className="relative p-4 sm:p-6">
       <div className="mb-6">
-        <SeccionHero
-          breadcrumb={breadcrumb ?? [titulo]}
-          titulo={titulo}
-          descripcion={(esEmpresa && identidad?.descripcion_tareas) || "Gestiona y da seguimiento a tus tareas"}
-          campoDescripcion={esEmpresa ? "descripcion_tareas" : undefined}
-          onDescripcionGuardada={reloadIdentidad}
-          imagenUrl={esEmpresa ? identidad?.portada_tareas?.url : null}
-          imagenOriginalUrl={esEmpresa ? identidad?.portada_tareas_original?.url : null}
-          documentId={documentIdIdentidad}
-          puedeEditar={esEmpresa && !identidadLoading}
-          uploading={hero.uploading}
-          inputRef={hero.inputRef}
-          onTrigger={hero.trigger}
-          onFileChange={hero.handleFile}
-          onSaveCrop={hero.saveCrop}
-        >
-          <HeroTabs tabs={VISTA_TABS} active={vista} onChange={id => setVista(id as Vista)} />
-        </SeccionHero>
+        {heroExterno ? (
+          // Sin traslape ni fondo propio: el fondo (foto/opacidad) es solo del
+          // hero (TareasHeroFondo, full-bleed arriba). La vitrina va limpia
+          // debajo, transparente sobre el fondo de la página.
+          <SeccionHeroContenido
+            breadcrumb={breadcrumb ?? [titulo]}
+            titulo={titulo}
+            descripcion={(esEmpresa && identidad?.descripcion_tareas) || "Gestiona y da seguimiento a tus tareas"}
+            campoDescripcion={esEmpresa ? "descripcion_tareas" : undefined}
+            onDescripcionGuardada={reloadIdentidad}
+            documentId={documentIdIdentidad}
+            puedeEditar={esEmpresa && !identidadLoading}
+          >
+            <ContenidoTabs tabs={VISTA_TABS} active={vista} onChange={id => setVista(id as Vista)} />
+          </SeccionHeroContenido>
+        ) : (
+          <SeccionHero
+            breadcrumb={breadcrumb ?? [titulo]}
+            titulo={titulo}
+            descripcion={(esEmpresa && identidad?.descripcion_tareas) || "Gestiona y da seguimiento a tus tareas"}
+            campoDescripcion={esEmpresa ? "descripcion_tareas" : undefined}
+            onDescripcionGuardada={reloadIdentidad}
+            imagenUrl={esEmpresa ? identidad?.portada_tareas?.url : null}
+            imagenOriginalUrl={esEmpresa ? identidad?.portada_tareas_original?.url : null}
+            documentId={documentIdIdentidad}
+            puedeEditar={esEmpresa && !identidadLoading}
+            uploading={hero.uploading}
+            inputRef={hero.inputRef}
+            onTrigger={hero.trigger}
+            onFileChange={hero.handleFile}
+            onSaveCrop={hero.saveCrop}
+          >
+            <HeroTabs tabs={VISTA_TABS} active={vista} onChange={id => setVista(id as Vista)} />
+          </SeccionHero>
+        )}
       </div>
 
       {/* En Lista, "Nueva tarea" vive dentro de la barra de filtros (más abajo)

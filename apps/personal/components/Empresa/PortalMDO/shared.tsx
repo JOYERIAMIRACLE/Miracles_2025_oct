@@ -510,3 +510,268 @@ export function SeccionHero({
     </div>
   )
 }
+
+/** Igual que HeroTabs pero pensada para vivir DENTRO de SeccionHeroContenido,
+    sobre el fondo claro/oscuro normal del Portal (no sobre una foto) — usa
+    los mismos colores de pastilla activa/inactiva que TabBar. */
+export function ContenidoTabs({ tabs, active, onChange }: { tabs: TabItem[]; active: string; onChange: (id: string) => void }) {
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {tabs.map(t => {
+        const Icon = t.icon
+        const isActive = active === t.id
+        return (
+          <button key={t.id} type="button" onClick={() => onChange(t.id)}
+            className={[
+              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+              isActive
+                ? "bg-slate-100 dark:bg-[#2a1b3d] text-violet-600 dark:text-violet-400 font-bold"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
+            ].join(" ")}>
+            {Icon && <Icon size={14} />}
+            {t.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Pieza full-bleed de un header tipo SeccionHero: foto + overlay + menú de
+    tres puntos (ver/ajustar/cambiar imagen), sin el breadcrumb/título/desc —
+    para secciones que quieren un hero a todo el ancho de <main> (como
+    PortalHomeHero) en vez de una card encajonada. Ver SeccionHeroContenido
+    para la mitad boxed que va debajo. */
+export function SeccionHeroFondo({
+  imagenUrl, imagenOriginalUrl, puedeEditar,
+  uploading, inputRef, onTrigger, onFileChange, onSaveCrop,
+}: {
+  imagenUrl?: string | null
+  imagenOriginalUrl?: string | null
+  puedeEditar?: boolean
+  uploading?: boolean
+  inputRef?: React.RefObject<HTMLInputElement | null>
+  onTrigger?: () => void
+  onFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onSaveCrop?: (file: File) => void
+}) {
+  const [showPopup, setShowPopup] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener("mousedown", onClick)
+    return () => document.removeEventListener("mousedown", onClick)
+  }, [])
+
+  const [showAdjust, setShowAdjust] = useState(false)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [cropArea, setCropArea] = useState<Area | null>(null)
+  const onCropComplete = useCallback((_: Area, areaPixels: Area) => setCropArea(areaPixels), [])
+  const fuenteAjuste = imagenOriginalUrl ?? imagenUrl ?? null
+
+  function abrirAjuste() {
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setShowAdjust(true)
+  }
+
+  async function handleGuardarAjuste() {
+    if (!fuenteAjuste || !cropArea) return
+    try {
+      const file = await recortarImagen(fuenteAjuste, cropArea)
+      setShowAdjust(false)
+      onSaveCrop?.(file)
+    } catch (err) {
+      toast.error(`Error · ${(err as Error).message}`)
+    }
+  }
+
+  return (
+    <div className="relative overflow-hidden h-40 sm:h-56">
+      {imagenUrl ? (
+        <>
+          <img src={imagenUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-top opacity-50" />
+          <div className="absolute inset-0 bg-linear-to-r from-black/60 to-violet-900/30" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-linear-to-r from-slate-800 to-slate-900" />
+      )}
+
+      {(imagenUrl || puedeEditar) && (
+        <div ref={menuRef} className="absolute top-4 right-6 z-20">
+          <button type="button" onClick={() => setMenuOpen(o => !o)} title="Opciones de imagen"
+            className="h-7 w-7 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm transition">
+            <MoreVertical size={15} />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1.5 w-40 bg-[#2a1b3d] border border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
+              {imagenUrl && (
+                <button type="button" onClick={() => { setShowPopup(true); setMenuOpen(false) }}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-[#2a1b3d] transition">
+                  Ver imagen
+                </button>
+              )}
+              {puedeEditar && imagenUrl && (
+                <button type="button" onClick={() => { abrirAjuste(); setMenuOpen(false) }} disabled={uploading}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-[#2a1b3d] transition disabled:opacity-50">
+                  Ajustar imagen
+                </button>
+              )}
+              {puedeEditar && (
+                <button type="button" onClick={() => { onTrigger?.(); setMenuOpen(false) }} disabled={uploading}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-200 hover:bg-[#2a1b3d] transition disabled:opacity-50">
+                  {uploading ? "Subiendo..." : "Cambiar imagen"}
+                </button>
+              )}
+            </div>
+          )}
+          {puedeEditar && <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />}
+        </div>
+      )}
+
+      {showPopup && imagenUrl && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setShowPopup(false)}>
+          <div className="relative max-w-5xl w-full" onClick={e => e.stopPropagation()}>
+            <button type="button" onClick={() => setShowPopup(false)}
+              className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm font-semibold flex items-center gap-1">
+              ✕ Cerrar
+            </button>
+            <img src={imagenUrl} alt="" className="w-full h-auto rounded-2xl shadow-2xl" />
+          </div>
+        </div>
+      )}
+
+      {showAdjust && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+          <div className="bg-[#2a1b3d] rounded-2xl p-4 w-full max-w-2xl">
+            <p className="text-sm font-semibold text-white mb-3">Ajustar imagen</p>
+            <div className="relative w-full aspect-[7/2] rounded-xl overflow-hidden bg-black">
+              {fuenteAjuste ? (
+                <Cropper
+                  image={fuenteAjuste}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={3.5}
+                  objectFit="cover"
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-xs text-white/50">
+                  Cargando imagen…
+                </div>
+              )}
+            </div>
+            <input type="range" min={1} max={3} step={0.01} value={zoom}
+              onChange={e => setZoom(Number(e.target.value))}
+              className="w-full mt-3 accent-violet-500" />
+            <div className="flex justify-end gap-2 mt-4">
+              <button type="button" onClick={() => setShowAdjust(false)} disabled={uploading}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition disabled:opacity-50">
+                Cancelar
+              </button>
+              <button type="button" onClick={handleGuardarAjuste} disabled={uploading || !cropArea || !fuenteAjuste}
+                className="px-4 py-1.5 text-xs font-semibold bg-violet-500 hover:bg-violet-600 text-white rounded-lg transition disabled:opacity-50">
+                {uploading ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Pieza boxed de un header tipo SeccionHero: breadcrumb + título + descripción
+    (editable) + tabs tras una raya — paleta clara/oscura adaptativa porque vive
+    sobre el fondo normal del Portal, no sobre una foto. Ver SeccionHeroFondo
+    para la mitad full-bleed que va arriba. */
+export function SeccionHeroContenido({
+  breadcrumb, titulo, descripcion,
+  campoDescripcion, onDescripcionGuardada, documentId, puedeEditar,
+  children,
+}: {
+  breadcrumb: string[]
+  titulo: string
+  descripcion: string
+  campoDescripcion?: keyof IdentidadEmpresa
+  onDescripcionGuardada?: () => void
+  documentId?: string | null
+  puedeEditar?: boolean
+  children?: React.ReactNode
+}) {
+  const [editandoDesc, setEditandoDesc] = useState(false)
+  const [descBorrador, setDescBorrador] = useState(descripcion)
+  const [guardandoDesc, setGuardandoDesc] = useState(false)
+
+  function entrarEdicionDesc() {
+    setDescBorrador(descripcion)
+    setEditandoDesc(true)
+  }
+
+  async function guardarDescripcion() {
+    if (!campoDescripcion || !descBorrador.trim()) return
+    setGuardandoDesc(true)
+    try {
+      await saveIdentidad(documentId ?? null, { [campoDescripcion]: descBorrador.trim() })
+      setEditandoDesc(false)
+      onDescripcionGuardada?.()
+    } catch (e) {
+      toast.error(`Error · ${(e as Error).message}`)
+    } finally {
+      setGuardandoDesc(false)
+    }
+  }
+
+  return (
+    <div>
+      <nav className="flex items-center gap-1 text-[11px] text-slate-500 mb-2 flex-wrap">
+        {breadcrumb.map((c, i) => (
+          <span key={i} className="flex items-center gap-1">
+            {i > 0 && <span className="text-slate-400 dark:text-slate-700 mx-0.5">›</span>}
+            <span className={i === breadcrumb.length - 1 ? "text-violet-600 dark:text-violet-400 font-medium" : ""}>{c}</span>
+          </span>
+        ))}
+      </nav>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">{titulo}</h1>
+      {editandoDesc ? (
+        <div className="max-w-xl space-y-2">
+          <textarea autoFocus rows={3} value={descBorrador} onChange={e => setDescBorrador(e.target.value)}
+            className="w-full text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 p-2 focus:outline-none focus:border-violet-400" />
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setEditandoDesc(false)}
+              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Cancelar
+            </button>
+            <button type="button" onClick={guardarDescripcion} disabled={guardandoDesc || !descBorrador.trim()}
+              className="px-2.5 py-1 text-xs rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-40 text-white font-semibold transition">
+              {guardandoDesc ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start gap-1.5 max-w-xl group/desc">
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed flex-1">{descripcion}</p>
+          {puedeEditar && campoDescripcion && (
+            <button type="button" title="Editar descripción" onClick={entrarEdicionDesc}
+              className="opacity-0 group-hover/desc:opacity-100 text-slate-400 hover:text-violet-500 dark:hover:text-violet-400 transition shrink-0 mt-0.5">
+              <Pencil size={13} />
+            </button>
+          )}
+        </div>
+      )}
+      {children && (
+        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
