@@ -129,11 +129,19 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
           el orden del DOM — esto le da al contenido su lugar al frente.
           max-w-6xl más angosto que el hero para que el fondo oscuro se asome
           a los lados. ─── */}
-      <div className="-mt-6 sm:-mt-28 max-w-6xl mx-auto space-y-5 relative z-10">
+      <div className="-mt-6 sm:-mt-28 max-w-6xl mx-auto space-y-5 relative z-10 pointer-events-none">
+        {/* pointer-events-none arriba + pointer-events-auto en cada bloque real:
+            este contenedor se sube con margen negativo sobre el hero (ver nota
+            de arriba) y con z-10 tapa cualquier franja vacía que le sobre hacia
+            adentro de la caja del globo — el cálculo en píxeles de cuánto
+            overlap es "seguro" es frágil (depende del alto real del header,
+            de si hay tarjeta de tráfico, etc.). Con pointer-events-none aquí,
+            el mouse atraviesa esa franja vacía y le llega al globo de todos
+            modos, sin depender de que el margen esté calculado exacto. */}
         {/* Wrapper de "aire": mismo color de fondo que el layout (page.tsx),
             así que no se ve como una caja — solo da espacio alrededor de
             comunicados/accesos rápidos sin achicar el contenido de esas cards. */}
-        <div className="bg-[#f8f9fa] dark:bg-[#08091a] p-4 sm:p-6 rounded-sm rounded-tr-3xl">
+        <div className="pointer-events-auto bg-[#f8f9fa] dark:bg-[#08091a] p-4 sm:p-6 rounded-sm rounded-tr-3xl">
           <div className="flex flex-col gap-1.5">
             <HeroCarusel avisos={avisos} loading={loadingAvisos} isAdmin onGestionar={() => setGestionOpen(true)} />
             {/* Accesos rápidos — igual que Portal SDI: fila horizontal de tiles
@@ -189,10 +197,12 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
         </div>
 
         {gestionOpen && (
-          <GestionAvisosModal onClose={() => setGestionOpen(false)} onUpdated={reloadAvisos} />
+          <div className="pointer-events-auto">
+            <GestionAvisosModal onClose={() => setGestionOpen(false)} onUpdated={reloadAvisos} />
+          </div>
         )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+        <div className="pointer-events-auto grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
           <div className="flex flex-col gap-5">
           <DashboardCard />
 

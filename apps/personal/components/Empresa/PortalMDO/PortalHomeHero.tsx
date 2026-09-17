@@ -49,15 +49,21 @@ export function PortalHomeHero() {
           "containing block" para un hijo absoluto es la PADDING BOX del
           padre, así que left-0 cae en el borde exterior del padding, no
           después de él). Por eso el inset de 24px (igual al px-6 de page.tsx)
-          se pone directo en cada tarjeta como left-6/right-6, no aquí. */}
-      <div className="absolute inset-0 max-w-6xl mx-auto">
+          se pone directo en cada tarjeta como left-6/right-6, no aquí.
+          pointer-events-none aquí + pointer-events-auto en cada tarjeta: este
+          div es inset-0 (cubre TODA el área del globo, no solo donde están
+          las tarjetas) y viene DESPUÉS del globo en el DOM — sin esto, su
+          caja invisible intercepta el mouse antes de que le llegue al <a>
+          del globo (que vive en el div anterior), matando el hover por
+          completo aunque no haya nada visible ahí. */}
+      <div className="absolute inset-0 max-w-6xl mx-auto pointer-events-none">
         {/* "Bienvenido" — esquina superior izquierda. left-6 (no left-0): ver
             nota arriba sobre por qué el padding del wrapper no sirve para
             hijos absolutos — 24px replica el px-6 real de page.tsx. top-6
             (no top-0): el hero empieza justo debajo del header sticky,
             necesita aire para no pegarse a él. max-w-[85%] en mobile evita
             que se recorte en pantallas muy angostas (320-375px). */}
-        <div className={`absolute top-4 sm:top-6 left-6 z-10 max-w-[85%] sm:max-w-sm px-4 py-3 sm:px-5 sm:py-4 ${FLOATING_CARD}`}>
+        <div className={`pointer-events-auto absolute top-4 sm:top-6 left-6 z-10 max-w-[85%] sm:max-w-sm px-4 py-3 sm:px-5 sm:py-4 ${FLOATING_CARD}`}>
           <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold text-white leading-tight">Bienvenido, {displayName}</h1>
           <p className="text-sm text-slate-300 mt-1">{fechaHoy}</p>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -75,7 +81,7 @@ export function PortalHomeHero() {
             "bottom" se mide contra el borde inferior real — necesita subir
             más para no chocar con la vitrina, que se monta encima del hero. */}
         {visitasHoy != null && (
-          <div className={`absolute bottom-4 sm:bottom-28 right-6 z-10 max-w-55 px-4 py-3 flex items-start gap-2.5 ${FLOATING_CARD}`}>
+          <div className={`pointer-events-auto absolute bottom-4 sm:bottom-28 right-6 z-10 max-w-55 px-4 py-3 flex items-start gap-2.5 ${FLOATING_CARD}`}>
             <TrendingUp size={16} className="text-yellow-500 shrink-0 mt-0.5" />
             <div className="min-w-0">
               <p className="text-xs font-bold text-white">Tráfico web</p>
