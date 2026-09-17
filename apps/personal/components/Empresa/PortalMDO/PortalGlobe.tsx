@@ -91,9 +91,12 @@ export function PortalGlobe({ heroMode = false }: { heroMode?: boolean }) {
 
   return (
     <a
-      href="https://medallitadeoro.com.mx"
-      target="_blank"
-      rel="noopener noreferrer"
+      // TEMPORAL: apunta a la Tienda (https://miracles-frontend.pages.dev/tienda
+      // en el dominio de pruebas actual) mientras se configura el dominio real
+      // medallitadeoro.com.mx — cuando esté listo, volver a
+      // href="https://medallitadeoro.com.mx" con target="_blank"
+      // rel="noopener noreferrer" (enlace externo).
+      href="/tienda"
       className={`absolute inset-0 flex ${heroMode ? "items-start" : "items-center"} justify-center group cursor-pointer`}
       onMouseEnter={() => { hoverRef.current = true; setHover(true) }}
       onMouseLeave={() => { hoverRef.current = false; setHover(false) }}

@@ -152,8 +152,13 @@ export function SeccionPortalHome({ onNavigate }: { onNavigate: (id: string, tab
                 portal. El tile punteado "Agregar/Quitar" es el único punto de
                 entrada al modal de personalizar. */}
             <section className="pt-6">
+              {/* pt-2 en la fila (no solo en la <section> de afuera): overflow-x-auto
+                  hace que overflow-y se calcule como auto también (no visible), así
+                  que el levantamiento del hover (-translate-y-0.5) se recorta contra
+                  el borde superior de ESTA caja — el padding de la sección, al estar
+                  afuera de la caja que recorta, no da espacio para esa animación. */}
               <div ref={filaAccesosRef} onScroll={chequearDesplazamiento}
-                className="flex items-start justify-center gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+                className="flex items-start justify-center gap-4 overflow-x-auto pt-2 pb-2 -mx-1 px-1">
                 <button type="button" onClick={abrirModal} className="flex flex-col items-center gap-2 shrink-0 w-20 group">
                   <div className={`h-20 w-20 rounded-2xl bg-white dark:bg-[#2a1b3d] border-2 border-dashed border-slate-300 dark:border-slate-600 shadow-sm flex items-center justify-center text-slate-400 group-hover:border-violet-400 group-hover:text-violet-500 transition-colors ${!isConfigured ? "animate-pulse" : ""}`}>
                     <Plus className="h-7 w-7" />
