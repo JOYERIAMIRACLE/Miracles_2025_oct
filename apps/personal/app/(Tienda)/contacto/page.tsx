@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useState, FormEvent } from "react"
+import Container from "../1tiendacomponentes/container"
 
 const INTERESES = [
   "Anillo",
@@ -60,7 +61,7 @@ export default function ContactoPage() {
   }
 
   return (
-    <article className="max-w-2xl mx-auto px-6 sm:px-8 py-12">
+    <Container as="article" size="narrow" className="py-12">
 
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
@@ -209,6 +210,6 @@ export default function ContactoPage() {
         </div>
       </div>
 
-    </article>
+    </Container>
   )
 }

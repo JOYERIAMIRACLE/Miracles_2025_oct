@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Container from './container'
 
 const OCASIONES = [
   { emoji: "🎀", titulo: "Quinceañera",       sub: "El regalo perfecto para su día especial",       href: "/tienda", color: "from-pink-900 via-rose-700 to-pink-400"   },
@@ -12,7 +13,7 @@ const OCASIONES = [
 const ComprarPorOcasion = () => {
   return (
     <section className="bg-white dark:bg-slate-950 py-14 md:py-20">
-      <div className="max-w-6xl mx-auto px-6 md:px-8">
+      <Container>
 
         <div className="mb-8 md:mb-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
@@ -52,7 +53,7 @@ const ComprarPorOcasion = () => {
             </Link>
           ))}
         </div>
-      </div>
+      </Container>
     </section>
   )
 }

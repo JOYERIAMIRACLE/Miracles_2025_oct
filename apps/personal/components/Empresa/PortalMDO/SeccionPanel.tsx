@@ -16,7 +16,7 @@ import type { FunnelEtapa } from "@/types/clienteEmpresa"
 /* ─── Demo mode ────────────────────────────────────────────────────────
    USE_DEMO = true  → datos ficticios (ene-sep 2026, meta 45k MXN/mes)
    USE_DEMO = false → datos reales de Strapi                           */
-const USE_DEMO = true
+export const USE_DEMO = true
 
 function _s(n: number) { return ((n * 1664525 + 1013904223) & 0x7fffffff) / 0x7fffffff }
 
@@ -110,7 +110,7 @@ function buildDemoData(): { leads: Lead[]; cots: Cotizacion[]; ventas: VentaEmpr
   return { leads, cots, ventas }
 }
 
-const DEMO_DATA = buildDemoData()
+export const DEMO_DATA = buildDemoData()
 
 /* ─── Tokens ────────────────────────────────────────────────────────── */
 const T = { gold:"#c8922e",em:"#34c77b",sky:"#4aaed4",rose:"#e05555",violet:"#9b82d4",amber:"#f0a830",muted:"#4a5a7a",text:"#dde3f0",surface:"#0e1530",surf2:"#131a3a",border:"#1c2545",border2:"#283060",bg:"#080d1e" }

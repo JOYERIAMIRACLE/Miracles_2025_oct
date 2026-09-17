@@ -4,6 +4,7 @@ import { useGetFeaturedProducts } from '@/api/useGetFeaturedProducts'
 import { ProductType } from '@/types/product'
 import { formatPrice } from '@/lib/formatprice'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
+import Container from './container'
 
 const TopVentas = () => {
   const { loading, result } = useGetFeaturedProducts()
@@ -11,7 +12,7 @@ const TopVentas = () => {
 
   return (
     <section className="bg-slate-50 dark:bg-slate-900 py-14 md:py-20">
-      <div className="max-w-6xl mx-auto px-6 md:px-8">
+      <Container>
 
         {/* Encabezado */}
         <div className="flex items-end justify-between mb-8 md:mb-10">
@@ -129,7 +130,7 @@ const TopVentas = () => {
             </Link>
           </div>
         )}
-      </div>
+      </Container>
     </section>
   )
 }

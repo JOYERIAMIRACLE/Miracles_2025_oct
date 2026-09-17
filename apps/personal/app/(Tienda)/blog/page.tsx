@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { BlogPostType } from "@/types/blog-post"
 import BlogCard from "./components/BlogCard"
+import Container from "../1tiendacomponentes/container"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const SITE_URL = "https://miracles-frontend.pages.dev"
@@ -69,7 +70,7 @@ export default async function BlogPage() {
       </section>
 
       {/* Grid de artículos */}
-      <section className="max-w-6xl mx-auto px-6 sm:px-12 py-12">
+      <Container as="section" className="py-12">
         {posts.length === 0 ? (
           <div className="text-center py-24">
             <p className="text-2xl text-gray-400">Próximamente...</p>
@@ -82,7 +83,7 @@ export default async function BlogPage() {
             ))}
           </div>
         )}
-      </section>
+      </Container>
     </>
   )
 }

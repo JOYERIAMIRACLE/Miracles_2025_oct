@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { PortalMDOHeader } from "@/components/Empresa/PortalMDO/PortalMDOHeader"
 import { PortalMDOSidebar } from "@/components/Empresa/PortalMDO/PortalMDOSidebar"
 import { SeccionPortalHome } from "@/components/Empresa/PortalMDO/SeccionPortalHome"
+import { PortalHomeHero } from "@/components/Empresa/PortalMDO/PortalHomeHero"
 import { SeccionConoceMDO } from "@/components/Empresa/PortalMDO/SeccionConoceMDO"
 import { SeccionMision } from "@/components/Empresa/PortalMDO/SeccionMision"
 import { SeccionContactos } from "@/components/Empresa/PortalMDO/SeccionContactos"
@@ -78,7 +79,7 @@ export default function PortalMedalladeoroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#121212]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#08091a]">
       <PortalMDOHeader onMenuClick={() => setSidebarOpen(o => !o)} onLogoClick={() => navigate("portal")} onNavigate={navigate} />
 
       <div className="flex min-h-[calc(100vh-56px)]">
@@ -88,8 +89,24 @@ export default function PortalMedalladeoroPage() {
             <PortalMDOSidebar seccion={seccion} tab={tab} onNavigate={navigate} />
           </>
         )}
-        <main className="flex-1 min-w-0 p-6 text-slate-900 dark:text-slate-100 relative">
-          {renderContent()}
+        <main className="flex-1 min-w-0 text-slate-900 dark:text-slate-100 relative overflow-x-hidden">
+          {/* Atmospheric dark gradient — solo dark mode */}
+          <div className="pointer-events-none absolute inset-0 hidden dark:block"
+            style={{background:"radial-gradient(ellipse 90% 50% at 50% 0%, #2a1b3d33 0%, transparent 65%)"}}/>
+          {/* ─── EXCEPCIÓN al boxed layout: el hero de Inicio vive AFUERA del
+              container de abajo, a todo el ancho de <main> (hasta el sidebar),
+              para que el mural llegue a las orillas reales de la pantalla.
+              Es la única sección que rompe la regla — ver PortalHomeHero.tsx.
+              El resto de Inicio (y todas las demás secciones) siguen boxed. ─── */}
+          {seccion === "portal" && <PortalHomeHero />}
+          {/* ─── LAYOUT RULE: Boxed/Contained ─────────────────────────────────
+              Todo el contenido del portal vive dentro de este container.
+              max-w-7xl = 1280px máximo, centrado con mx-auto.
+              No usar full-width en secciones individuales fuera de este wrapper.
+              ─────────────────────────────────────────────────────────────── */}
+          <div className="max-w-7xl mx-auto px-6 py-6 w-full relative z-10">
+            {renderContent()}
+          </div>
           <NotasMejora onNavigate={navigate} />
         </main>
       </div>

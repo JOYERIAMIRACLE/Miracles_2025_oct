@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useState, FormEvent } from "react"
 import { Truck, Percent, Headset, Gem } from "lucide-react"
+import Container from "../1tiendacomponentes/container"
 
 const BENEFICIOS = [
   {
@@ -85,7 +86,7 @@ export default function DistribuidorPage() {
           className="absolute inset-0 w-full h-full object-cover object-right opacity-60"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-6 md:px-8">
+        <Container className="relative z-10 w-full">
           <p className="text-violet-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
             Programa de distribuidores
           </p>
@@ -101,10 +102,10 @@ export default function DistribuidorPage() {
           >
             Quiero ser distribuidor
           </a>
-        </div>
+        </Container>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 md:px-8 py-14 md:py-20">
+      <Container size="narrow" className="py-14 md:py-20">
 
         {/* Breadcrumb */}
         <nav className="text-xs text-slate-400 mb-10 flex items-center gap-1.5">
@@ -245,7 +246,7 @@ export default function DistribuidorPage() {
             </form>
           )}
         </div>
-      </div>
+      </Container>
     </main>
   )
 }

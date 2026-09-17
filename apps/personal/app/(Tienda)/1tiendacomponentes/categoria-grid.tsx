@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useGetCategories } from '@/api/GetProduct'
 import { CategoryType } from '@/types/category'
+import Container from './container'
 
 const FALLBACK_GRADIENTS: Record<string, string> = {
   anillos:   "from-rose-900 via-rose-800 to-violet-900",
@@ -28,7 +29,7 @@ const CategoriaGrid = () => {
     : []
 
   return (
-    <section className="max-w-6xl mx-auto px-6 md:px-8 py-14 md:py-20">
+    <Container as="section" className="py-14 md:py-20">
 
       <div className="mb-8 md:mb-10">
         <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
@@ -103,7 +104,7 @@ const CategoriaGrid = () => {
           <p className="mt-4 text-sm">Las categorías aparecerán aquí pronto.</p>
         </div>
       )}
-    </section>
+    </Container>
   )
 }
 

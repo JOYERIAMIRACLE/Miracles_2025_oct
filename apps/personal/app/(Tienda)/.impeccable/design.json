@@ -106,6 +106,10 @@
       { "name": "sm", "value": "640px" },
       { "name": "md", "value": "768px" },
       { "name": "lg", "value": "1024px" }
+    ],
+    "containers": [
+      { "name": "container-default", "maxWidth": "1152px", "tailwind": "max-w-6xl", "padding": "px-6 md:px-8 lg:px-12", "purpose": "Grids, listados, producto/categoría/carrito/cuenta, y la fila interna de navbar/hero/footer full-bleed." },
+      { "name": "container-narrow", "maxWidth": "768px", "tailwind": "max-w-3xl", "padding": "px-6 sm:px-8", "purpose": "Contenido editorial/de lectura larga — páginas legales, blog individual, nosotros, contacto." }
     ]
   },
   "components": [
@@ -179,7 +183,8 @@
       { "name": "The Frosted Label Rule", "body": "Cualquier etiqueta sobre una fotografía usa fondo translúcido con backdrop-blur, nunca sólido opaco.", "section": "colors" },
       { "name": "The One Loud Moment Rule", "body": "El tracking amplio en mayúsculas se usa solo para kickers/anuncios de sección, nunca para párrafos.", "section": "typography" },
       { "name": "The Two-Breakpoint Rule", "body": "El layout de contenido pivota en sm:; la visibilidad de navegación pivota en md:.", "section": "layout" },
-      { "name": "The Hover-Elevates Rule", "body": "Ninguna tarjeta tiene sombra en reposo — solo al interactuar.", "section": "elevation" }
+      { "name": "The Hover-Elevates Rule", "body": "Ninguna tarjeta tiene sombra en reposo — solo al interactuar.", "section": "elevation" },
+      { "name": "The Boxed Content Rule", "body": "Todo el contenido de la Tienda, incluida la fila interna de las barras full-bleed (navbar, hero, footer), se renderiza a través del componente compartido Container — nunca un max-w-* escrito a mano.", "section": "layout" }
     ],
     "dos": [
       "Do usar dorado (amber) tanto para lo decorativo como para cualquier botón que mueva hacia la compra.",

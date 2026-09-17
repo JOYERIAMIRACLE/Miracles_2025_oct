@@ -1,5 +1,6 @@
 import { Truck, BadgeCheck, ShieldCheck, Headphones } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import Container from "./container"
 
 type Beneficio = {
   Icon:   LucideIcon
@@ -19,7 +20,7 @@ const BENEFICIOS: Beneficio[] = [
 const CertificadosStrip = () => {
   return (
     <div className="bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
-      <div className="max-w-6xl mx-auto px-6 py-5">
+      <Container className="py-5">
         <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-1 md:grid md:grid-cols-4">
           {BENEFICIOS.map((b) => (
             <div
@@ -40,7 +41,7 @@ const CertificadosStrip = () => {
             </div>
           ))}
         </div>
-      </div>
+      </Container>
     </div>
   )
 }

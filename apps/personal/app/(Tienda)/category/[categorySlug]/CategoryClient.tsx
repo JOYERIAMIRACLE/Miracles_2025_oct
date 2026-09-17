@@ -11,6 +11,7 @@ import FiltersControlsCategory from "./components/filters-controls-category"
 import ProductCard1 from "./components/product-card1"
 import { PrecioOption, PRECIO_BRACKETS } from "./components/filter-precio"
 import { opcionesDe } from "./components/opciones-filtro"
+import Container from "../../1tiendacomponentes/container"
 
 interface Props {
   categorySlug: string
@@ -93,7 +94,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
           className="absolute inset-0 w-full h-full object-cover object-right"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20" />
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-8">
+        <Container className="relative z-10 w-full">
           <p className="text-violet-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
             Medalla de Oro
           </p>
@@ -103,10 +104,10 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
           <p className="text-white/60 mt-2 text-sm max-w-xs">
             Oro 10k y Plata 925 para cada ocasión.
           </p>
-        </div>
+        </Container>
       </div>
 
-      <div className="max-w-6xl py-8 mx-auto px-6 md:px-8 sm:py-12">
+      <Container className="py-8 sm:py-12">
 
         {/* Breadcrumb */}
         <nav className="text-xs text-slate-400 mb-6 flex items-center gap-1.5">
@@ -217,7 +218,7 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
             </div>
           </div>
         </div>
-      </div>
+      </Container>
     </main>
   )
 }

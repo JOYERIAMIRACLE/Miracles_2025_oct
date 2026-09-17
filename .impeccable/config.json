@@ -56,6 +56,81 @@
         ],
         "createdAt": "2026-09-07T00:55:03.304Z",
         "reason": "Texto slate en pill/lista de opciones no seleccionada (transicion a violeta al hover/seleccionar), contraste adecuado; codigo preexistente no tocado en este cambio (solo agregue un prop a una linea muy posterior), mismo patron ya sancionado en SkuBuilder.tsx, InventarioEmpresaView.tsx y DropdownPicker.tsx"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-09-07T15:33:00.806Z",
+        "reason": "preexistente: fallback de sistema del body en globals.css, no una fuente 'de moda' (no esta en la lista de ejemplos de la regla), fuera de alcance del cambio actual"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Trabajo/portal/RecursosDescargables.tsx"
+        ],
+        "createdAt": "2026-09-07T17:44:01.569Z",
+        "reason": "preexistente, sin relacion al fix actual (solo cambie firma de props); son iconos en la fila de info blanca bajo la miniatura, no sobre fondo de color"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Trabajo/EnlacesCortoView.tsx"
+        ],
+        "createdAt": "2026-09-07T21:16:15.825Z",
+        "reason": "preexistente, sin relacion al cambio actual (solo agregue imports); iconos editar/eliminar sobre fondo blanco de card, no sobre color"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Trabajo/TrabajoSidebar.tsx"
+        ],
+        "createdAt": "2026-09-08T15:58:45.991Z",
+        "reason": "preexistente, sin relacion al cambio actual (solo quite un item del sidebar); es el resaltado orange-600 del link activo, no gris de verdad"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "files": [
+          "apps/personal/app/(Tienda)/1tiendacomponentes/navbar.tsx"
+        ],
+        "createdAt": "2026-09-12T23:54:08.062Z",
+        "reason": "Pre-existing value from the original Kuroda-style category strip (commit 9cfa518, before this session); kept as-is since bumping it to the nearest documented step (kicker 11px) would widen the strip and break the single-row fit with search+icons that this session's navbar merge was built around."
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "apps/personal/components/Empresa/PortalMDO/PortalMDOSidebar.tsx"
+        ],
+        "createdAt": "2026-09-15T15:36:20.715Z",
+        "reason": "Pre-existing code (not touched this session, confirmed unchanged after reverting my earlier edits): Configuración button's text-slate-500 is the resting color, hover:bg-violet-50 only applies together with hover:text-violet-600, so gray never actually sits on the colored background"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#0d0b1a",
+        "createdAt": "2026-09-16T22:25:25.464Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#bd920622",
+        "createdAt": "2026-09-16T22:25:25.626Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f8c930",
+        "createdAt": "2026-09-16T22:25:25.765Z"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "files": [
+          "apps/personal/components/Empresa/PortalMDO/HeroCarusel.tsx"
+        ],
+        "createdAt": "2026-09-17T01:09:47.995Z",
+        "reason": "Preexistente: botón 'Gestionar' y chip de área — no tocado en esta sesión (solo se cambió fondo/sombra de la card)"
       }
     ]
   }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Container from './container'
 
 const HeroTienda = () => {
   return (
@@ -15,7 +16,7 @@ const HeroTienda = () => {
       <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
 
       {/* Contenido alineado a la izquierda */}
-      <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-20 max-w-6xl mx-auto">
+      <Container className="relative z-10 h-full flex flex-col justify-center px-8 md:px-20">
 
         <p className="text-violet-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
           Colección 2026
@@ -43,7 +44,7 @@ const HeroTienda = () => {
             Conocer más
           </Link>
         </div>
-      </div>
+      </Container>
     </div>
   )
 }

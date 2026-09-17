@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Instagram, Facebook, Mail, MessageCircle } from 'lucide-react'
 import { Separator } from '../../../components/ui/separator'
+import Container from './container'
 
 // Enlaces reales del sitio — antes estos 4 eran placeholders (href="#",
 // incluido un typo "sobrenomberw") que no llevaban a ningún lado.
@@ -32,7 +33,7 @@ const iconLinkCls = "flex items-center justify-center w-9 h-9 rounded-full borde
 const Footer = () => {
   return (
     <footer className="mt-4 bg-white dark:bg-zinc-950 border-t border-gray-100 dark:border-gray-900">
-      <div className="w-full max-w-6xl mx-auto p-6 px-6 sm:px-14 md:py-12">
+      <Container className="py-6 md:py-12">
 
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* LOGO Y TAGLINE */}
@@ -101,7 +102,7 @@ const Footer = () => {
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
           &copy; {new Date().getFullYear()} Medalla de Oro — Todos los derechos reservados.
         </p>
-      </div>
+      </Container>
     </footer>
   )
 }

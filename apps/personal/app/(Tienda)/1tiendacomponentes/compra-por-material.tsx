@@ -1,9 +1,10 @@
 import Link from 'next/link'
+import Container from './container'
 
 const ComprarPorMaterial = () => {
   return (
     <section className="bg-white dark:bg-slate-950 py-14 md:py-20">
-      <div className="max-w-6xl mx-auto px-6 md:px-8">
+      <Container>
 
         <div className="mb-8">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-500 mb-2">
@@ -62,7 +63,7 @@ const ComprarPorMaterial = () => {
             </div>
           </Link>
         </div>
-      </div>
+      </Container>
     </section>
   )
 }

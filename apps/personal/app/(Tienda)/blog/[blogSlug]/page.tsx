@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { BlogPostType, CATEGORIA_BLOG_LABELS } from "@/types/blog-post"
 import BlocksRenderer from "../components/BlocksRenderer"
+import Container from "../../1tiendacomponentes/container"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
@@ -131,7 +132,7 @@ export default async function BlogPostPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <article className="max-w-3xl mx-auto px-6 sm:px-8 py-12">
+      <Container as="article" size="narrow" className="py-12">
 
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
@@ -198,7 +199,7 @@ export default async function BlogPostPage({
           </Link>
         </div>
 
-      </article>
+      </Container>
     </>
   )
 }

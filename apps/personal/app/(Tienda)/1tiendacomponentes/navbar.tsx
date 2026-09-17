@@ -7,6 +7,7 @@ import Image from "next/image"
 import { useState, type FormEvent } from "react"
 import ItemsMenuMobile from "./items-mobile"
 import ModeToggle from "./toggle"
+import Container from "./container"
 import { useCart } from "@/hooks/useCart"
 import { useFavorites } from "@/hooks/useFavirites"
 import { useClienteAuth } from "@/hooks/useClienteAuth"
@@ -49,7 +50,7 @@ const Navbar = () => {
         }`}>
 
             {/* ── Fila principal ── */}
-            <div className={`flex justify-between items-center px-6 md:px-10 py-3 ${
+            <Container className={`flex justify-between items-center py-3 ${
                 !isHero ? "border-b border-border/40" : ""
             }`}>
 
@@ -141,10 +142,10 @@ const Navbar = () => {
 
                     <ModeToggle />
                 </div>
-            </div>
+            </Container>
 
             {/* ── Buscador — fila propia solo en mobile, ahí sí cabe completo ── */}
-            <form onSubmit={handleBuscar} className={`sm:hidden flex items-center relative px-6 pb-3 ${!isHero ? "border-b border-border/40" : ""}`}>
+            <Container as="form" onSubmit={handleBuscar} className={`sm:hidden flex items-center relative pb-3 ${!isHero ? "border-b border-border/40" : ""}`}>
                 <Search size={14} className={`absolute left-9 pointer-events-none ${isHero ? "text-white/50" : "text-slate-400"}`} />
                 <input
                     type="search"
@@ -158,12 +159,12 @@ const Navbar = () => {
                             : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-violet-400"
                     }`}
                 />
-            </form>
+            </Container>
 
             {/* ── Strip de categorías (Kuroda style) ── */}
             <div className={`border-b ${isHero ? "border-white/10" : "border-border/30"}`}>
                 <div className="overflow-x-auto scrollbar-hide">
-                    <div className="flex items-center px-4 md:px-10 min-w-max">
+                    <Container className="flex items-center min-w-max">
                         {CATEGORIAS_NAV.map((cat) => {
                             const isActive = pathname === cat.href
 
@@ -188,7 +189,7 @@ const Navbar = () => {
                                 </Link>
                             )
                         })}
-                    </div>
+                    </Container>
                 </div>
             </div>
         </div>

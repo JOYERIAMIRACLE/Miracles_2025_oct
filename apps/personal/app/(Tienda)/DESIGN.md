@@ -146,10 +146,17 @@ Paleta cálida sobre fondo claro, con un único acento dorado consistente y un r
 
 ## Layout
 
-Contenedor principal `max-w-6xl` centrado (`mx-auto`) en casi toda la tienda — categoría, detalle de producto, blog, carrito, favoritos. El pivote responsive real está dividido en dos capas: el contenido reflows en `sm:` (grids de 1→2→3 columnas), mientras la navegación colapsa a menú móvil en `md:`. El home es la única sección de ancho completo (`min-h-screen`, sin contenedor) para el hero fotográfico.
+Layout encajonado (boxed/contained): el contenido nunca ocupa el 100% del ancho de la pantalla, vive centrado en un bloque con márgenes laterales amplios. La fuente de verdad es el componente compartido `1tiendacomponentes/container.tsx` — ninguna sección debe escribir a mano su propio `max-w-* mx-auto px-*`, siempre pasa por `<Container>`. Dos tamaños:
+
+- **`size="default"` (`max-w-6xl`, 1152px, `px-6 md:px-8 lg:px-12`):** grids y listados — categoría, detalle de producto, blog (grid de tarjetas), carrito, favoritos, cuenta — y también la fila interna del navbar, el hero y el footer, que por fuera se mantienen full-bleed (fondo/blur/imagen corriendo de borde a borde) pero encajonan su contenido con este mismo ancho para alinearse con el resto de la página.
+- **`size="narrow"` (`max-w-3xl`, 768px, `px-6 sm:px-8`):** contenido editorial/de lectura larga — legales (términos, privacidad, envíos, devoluciones), blog individual, nosotros, contacto.
+
+El pivote responsive real está dividido en dos capas: el contenido reflows en `sm:` (grids de 1→2→3 columnas), mientras la navegación colapsa a menú móvil en `md:`.
 
 ### Named Rules
 **The Two-Breakpoint Rule.** El layout de contenido pivota en `sm:`; la visibilidad de navegación pivota en `md:`. Son decisiones intencionales distintas, no un descuido — no fusionar ambos pivotes al construir una sección nueva.
+
+**The Boxed Content Rule.** Todo el contenido, incluida la fila interna de las barras full-bleed (navbar, hero, footer), se renderiza a través de `<Container>` — nunca un `max-w-*` escrito a mano. Full-bleed es solo para la capa de fondo (color, blur, imagen); el contenido que vive encima siempre está encajonado.
 
 ## Elevation & Depth
 

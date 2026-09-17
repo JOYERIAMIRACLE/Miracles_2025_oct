@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import Container from "../1tiendacomponentes/container"
 
 const SITE_URL = "https://miracles-frontend.pages.dev"
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function EnviosPage() {
   return (
-    <article className="max-w-3xl mx-auto px-6 sm:px-8 py-12">
+    <Container as="article" size="narrow" className="py-12">
 
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
@@ -117,6 +118,6 @@ export default function EnviosPage() {
 
       </div>
 
-    </article>
+    </Container>
   )
 }

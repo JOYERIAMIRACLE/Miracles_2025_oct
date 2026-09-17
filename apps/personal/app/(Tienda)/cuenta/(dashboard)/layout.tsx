@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { LayoutDashboard, Package, FileText, Heart, MapPin, CreditCard, User, LogOut, Loader2 } from "lucide-react"
 import { useClientePortal } from "@/hooks/useClientePortal"
+import Container from "../../1tiendacomponentes/container"
 
 const NAV = [
   { label: "Resumen",          href: "/cuenta",              icon: LayoutDashboard },
@@ -42,7 +43,7 @@ export default function CuentaDashboardLayout({ children }: { children: ReactNod
     // esta zona vive junto a Carrito/Footer, que ya usan zinc-950 — antes se
     // notaba el salto de un negro a otro sin razón al entrar aquí.
     <div className="bg-white dark:bg-zinc-950 min-h-[70vh]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <Container className="py-8 sm:py-12">
         <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
           <Link href="/" className="hover:text-violet-600">Inicio</Link>
           <span>/</span>
@@ -94,7 +95,7 @@ export default function CuentaDashboardLayout({ children }: { children: ReactNod
 
           <div className="flex-1 min-w-0">{children}</div>
         </div>
-      </div>
+      </Container>
     </div>
   )
 }

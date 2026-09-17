@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// Rutas que NO requieren sesión
-const PUBLIC_PREFIXES = [
-  "/login",
-  "/_next",
-  "/favicon.ico",
-  "/robots.txt",
-  "/sitemap.xml",
+// Rutas internas (Portal/Admin) que requieren sesión — el resto del sitio,
+// incluida toda la Tienda pública, queda abierto por default.
+const PROTECTED_PREFIXES = [
+  "/portal-medalladeoro",
+  "/gestion-personal",
+  "/gestion-empresa",
+  "/empresa-rpg",
+  "/segundo-cerebro",
 ]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Dejar pasar activos estáticos y login
-  if (PUBLIC_PREFIXES.some(p => pathname.startsWith(p))) {
+  // Solo evaluar sesión para las rutas internas protegidas
+  if (!PROTECTED_PREFIXES.some(p => pathname.startsWith(p))) {
     return NextResponse.next()
   }
 

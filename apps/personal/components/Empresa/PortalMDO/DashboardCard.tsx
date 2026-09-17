@@ -1,19 +1,68 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Users, MousePointerClick, ShoppingCart, Package } from "lucide-react"
+import { Users, FileText, ShoppingCart, Package } from "lucide-react"
+import { useGetLeads } from "@/api/lead/getLead"
+import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
+import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
+import { USE_DEMO, DEMO_DATA } from "./SeccionPanel"
 
-// Datos de ejemplo — mismo criterio que el resto del portal (aún no
-// conectado a analítica real de medallitadeoro).
-const METRICAS = [
-  { key: "usuarios", label: "Usuarios mensuales", sub: "Tráfico web", icon: Users,             value: "36K",  delta: "+23%", pct: 62, bars: [45, 78, 30, 55, 90, 20, 65, 40, 82, 35] },
-  { key: "clics",     label: "Clics",              sub: "Este mes",   icon: MousePointerClick, value: "2M",   delta: "+18%", pct: 78, bars: [60, 40, 75, 50, 30, 85, 45, 65, 55, 70] },
-  { key: "ventas",    label: "Ventas",             sub: "Este mes",   icon: ShoppingCart,       value: "$435", delta: "+9%",  pct: 45, bars: [30, 55, 40, 80, 60, 25, 70, 45, 90, 35] },
-  { key: "piezas",    label: "Piezas",             sub: "Este mes",   icon: Package,            value: "43",   delta: "+5%",  pct: 30, bars: [50, 65, 35, 70, 45, 85, 30, 60, 40, 75] },
-]
 const CICLO_MS = 2500
+const $m = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
 
+function contarPorMes(fechas: (string | null | undefined)[]): number[] {
+  const porMes: Record<string, number> = {}
+  fechas.forEach(f => {
+    if (!f) return
+    const mes = f.slice(0, 7)
+    porMes[mes] = (porMes[mes] ?? 0) + 1
+  })
+  return normalizarBarras(Object.keys(porMes).sort().map(m => porMes[m]))
+}
+
+function sumarPorMes(items: { fecha: string | null | undefined; monto: number }[]): number[] {
+  const porMes: Record<string, number> = {}
+  items.forEach(({ fecha, monto }) => {
+    if (!fecha) return
+    const mes = fecha.slice(0, 7)
+    porMes[mes] = (porMes[mes] ?? 0) + monto
+  })
+  return normalizarBarras(Object.keys(porMes).sort().map(m => porMes[m]))
+}
+
+function normalizarBarras(valores: number[]): number[] {
+  if (valores.length === 0) return []
+  const max = Math.max(...valores, 1)
+  return valores.map(v => Math.round((v / max) * 88) + 12)
+}
+
+/**
+ * Resumen del Panel de control — mismos datos que SeccionPanel.tsx (real o
+ * demo, según USE_DEMO), condensados en 4 métricas para el Inicio.
+ */
 export function DashboardCard() {
+  const { leads: leadsReal }              = useGetLeads()
+  const { cotizaciones: cotsReal }        = useGetAllCotizaciones()
+  const { ventas: ventasReal }            = useGetVentas()
+
+  const leads  = USE_DEMO ? DEMO_DATA.leads  : leadsReal
+  const cots   = USE_DEMO ? DEMO_DATA.cots   : cotsReal
+  const ventas = USE_DEMO ? DEMO_DATA.ventas : ventasReal
+
+  const entregados = ventas.filter(v => v.estado === "Entregado")
+  const ingresos = entregados.reduce((s, v) => s + v.monto, 0)
+
+  const METRICAS = [
+    { key: "leads",  label: "Leads",        sub: "Total capturados", icon: Users,        value: `${leads.length}`,
+      bars: contarPorMes(leads.map(l => l.fechaLead ?? l.createdAt)) },
+    { key: "cots",   label: "Cotizaciones", sub: "Total generadas",  icon: FileText,     value: `${cots.length}`,
+      bars: contarPorMes(cots.map(c => c.fecha ?? c.createdAt)) },
+    { key: "ventas", label: "Pedidos",      sub: "Total registrados", icon: ShoppingCart, value: `${ventas.length}`,
+      bars: contarPorMes(ventas.map(v => v.fecha ?? v.createdAt)) },
+    { key: "ing",    label: "Ingresos",     sub: "Pedidos entregados", icon: Package,     value: $m(ingresos),
+      bars: sumarPorMes(entregados.map(v => ({ fecha: v.fecha ?? v.createdAt, monto: v.monto }))) },
+  ]
+
   const [idx, setIdx] = useState(0)
   const [pausado, setPausado] = useState(false)
 
@@ -21,7 +70,7 @@ export function DashboardCard() {
     if (pausado) return
     const iv = setInterval(() => setIdx(i => (i + 1) % METRICAS.length), CICLO_MS)
     return () => clearInterval(iv)
-  }, [pausado])
+  }, [pausado]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function seleccionar(i: number) {
     if (pausado && idx === i) { setPausado(false); return }
@@ -36,7 +85,9 @@ export function DashboardCard() {
       <div>
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Dashboard</h3>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/25">Datos de ejemplo</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/25">
+            {USE_DEMO ? "Datos de ejemplo" : "Resumen del panel"}
+          </span>
           {!pausado && (
             <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500">
               <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" /> En vivo
@@ -44,7 +95,7 @@ export function DashboardCard() {
           )}
         </div>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-          <span className="text-violet-500 font-semibold">({activa.delta})</span> {activa.label} · {activa.sub}
+          {activa.label} · {activa.sub}
         </p>
       </div>
 
@@ -67,9 +118,6 @@ export function DashboardCard() {
               </div>
               <p className={`text-lg font-bold transition-colors ${activo ? "text-violet-600 dark:text-violet-400" : "text-slate-800 dark:text-slate-100"}`}>{m.value}</p>
               <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-1.5">{m.label}</p>
-              <div className="h-1 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                <div className={`h-full rounded-full transition-all ${activo ? "bg-violet-500" : "bg-violet-500/40"}`} style={{ width: `${m.pct}%` }} />
-              </div>
             </button>
           )
         })}

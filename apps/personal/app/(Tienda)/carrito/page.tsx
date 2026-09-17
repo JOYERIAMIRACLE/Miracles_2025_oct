@@ -9,6 +9,7 @@ import { useClienteAuth } from "@/hooks/useClienteAuth"
 import { formatPrice } from "@/lib/formatprice"
 import { getClienteToken } from "@/lib/tiendaAuth"
 import CartItem from "./components/cart-item"
+import Container from "../1tiendacomponentes/container"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -61,7 +62,7 @@ export default function page() {
 
 
     return (
-        <div className="max-w-6xl px-4 py-12 mx-auto sm:px-6 lg:px-8 bg-white dark:bg-zinc-900">
+        <Container className="py-12 bg-white dark:bg-zinc-900">
             <h1 className="mb-4 text-3xl font-bold text-zinc-900 dark:text-zinc-100">Carrito de compra</h1>
             <div className=" grid sm:grid-cols-2 sm:gap-5">
                 <div className="p-6 rounded-lg bg-slate-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
@@ -95,6 +96,6 @@ export default function page() {
                 </div>
 
             </div>
-        </div>
+        </Container>
     )
 }
