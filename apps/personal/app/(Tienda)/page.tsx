@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link  from "next/link"
 import type { Metadata } from "next"
 import ContactoRapido from "./1tiendacomponentes/contacto-rapido"
+import AvisoPrivacidadBanner from "./1tiendacomponentes/aviso-privacidad-banner"
 
 const SITE_URL = "https://miracles-frontend.pages.dev"
 
@@ -80,16 +81,10 @@ export default function HeroPage() {
 
         {/* Canales de contacto */}
         <ContactoRapido />
-
-        {/* Aviso de privacidad — visible en el hero, no solo enterrado en el footer */}
-        <p className="text-white/40 text-[11px] max-w-md text-center leading-relaxed">
-          Al continuar navegando, aceptas nuestro{" "}
-          <Link href="/privacidad" className="underline hover:text-white/70 transition-colors">
-            Aviso de Privacidad
-          </Link>
-          .
-        </p>
       </div>
+
+      {/* Aviso de privacidad — barra al fondo del hero, tipo pop-up, con Aceptar */}
+      <AvisoPrivacidadBanner />
 
     </div>
   )
