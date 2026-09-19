@@ -634,7 +634,7 @@ function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>vo
   )
 }
 function Card({children,className=""}:{children:React.ReactNode;className?:string}){
-  return <div className={`bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 ${className}`}>{children}</div>
+  return <div className={`rounded-xl p-5 ${className}`}>{children}</div>
 }
 function KpiCard({title,value,subBadge,subLabel,color,onClick,formatter,badgeFormatter}:{title:string;value:string|number;subBadge:string|number;subLabel:string;color:string;onClick?:()=>void;formatter?:(n:number)=>string;badgeFormatter?:(n:number)=>string}){
   const isNum = typeof value === "number"
@@ -648,9 +648,8 @@ function KpiCard({title,value,subBadge,subLabel,color,onClick,formatter,badgeFor
   return(
     <div onClick={onClick}
       className="rounded-xl p-5 flex flex-col gap-3 cursor-pointer transition-all duration-150 hover:scale-[1.01]"
-      style={{background:T.surface,border:`1px solid ${T.border}`}}
-      onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=color+"55";(e.currentTarget as HTMLDivElement).style.boxShadow=`0 0 22px ${color}10`}}
-      onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.borderColor=T.border;(e.currentTarget as HTMLDivElement).style.boxShadow="none"}}>
+      onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.boxShadow=`0 0 22px ${color}10`}}
+      onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.boxShadow="none"}}>
       <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{title}</div>
       <div className="font-mono text-4xl font-bold leading-none" style={{color}}>{displayVal}</div>
       <div className="flex items-center gap-2 pt-2.5 border-t border-slate-800">
@@ -705,7 +704,7 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, renderAc
 }) {
   const cols = renderActions ? [...headers, ""] : headers
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 mt-1">
+    <div className="overflow-x-auto rounded-xl mt-1">
       <table className="w-full border-collapse text-[12px]">
         <thead>
           <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/60">
@@ -1151,7 +1150,7 @@ export function SeccionVentas() {
       {VIEWS_CON_FILTROS.includes(view) && (
         <>
         {/* Barra de filtros — siempre visible debajo del hero */}
-        <div className="flex items-center justify-end gap-2 flex-wrap bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl px-4 py-2.5">
+        <div className="flex items-center justify-end gap-2 flex-wrap rounded-xl px-4 py-2.5">
           <button onClick={toggleDemo}
             className="px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all shrink-0"
             style={demo?{background:`${T.gold}18`,color:T.gold,border:`1px solid ${T.gold}35`}:{background:"transparent",color:"#94a3b8",border:"1px solid #e2e8f0"}}>
