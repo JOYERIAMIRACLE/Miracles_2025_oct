@@ -13,6 +13,7 @@ import { useFavorites } from "@/hooks/useFavirites"
 import { useClienteAuth } from "@/hooks/useClienteAuth"
 
 const CATEGORIAS_NAV = [
+  { nombre: "Inicio",    href: "/tienda" },
   { nombre: "Ver todo",  href: "/category" },
   { nombre: "Anillos",   href: "/category/anillos" },
   { nombre: "Cadenas",   href: "/category/cadenas" },
@@ -91,17 +92,7 @@ const Navbar = () => {
                         />
                     </form>
 
-                    {/* Inicio + Blog + Empresa — desktop, misma alineación que los iconos */}
-                    <Link
-                        href="/tienda"
-                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
-                            isHero
-                                ? "text-white/70 hover:text-white"
-                                : "text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
-                        }`}
-                    >
-                        Inicio
-                    </Link>
+                    {/* Blog + Empresa — desktop, misma alineación que los iconos */}
                     <Link
                         href="/blog"
                         className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
