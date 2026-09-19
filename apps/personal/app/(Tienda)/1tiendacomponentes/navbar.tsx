@@ -14,7 +14,7 @@ import { useClienteAuth } from "@/hooks/useClienteAuth"
 
 const CATEGORIAS_NAV = [
   { nombre: "Inicio",    href: "/tienda" },
-  { nombre: "Ver todo",  href: "/category" },
+  { nombre: "Ver catálogo", href: "/category" },
   { nombre: "Anillos",   href: "/category/anillos" },
   { nombre: "Cadenas",   href: "/category/cadenas" },
   { nombre: "Esclavas",  href: "/category/esclavas" },
