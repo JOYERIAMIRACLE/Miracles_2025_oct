@@ -1,0 +1,22 @@
+{
+  "kind": "collectionType",
+  "collectionName": "colaboradores",
+  "info": {
+    "singularName": "colaborador",
+    "pluralName": "colaboradores",
+    "displayName": "Portal - Colaborador"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "nombre":           { "type": "string", "required": true },
+    "puesto":           { "type": "string" },
+    "area":             { "type": "string" },
+    "foto":             { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "fecha_nacimiento": { "type": "date" },
+    "fecha_ingreso":    { "type": "date" },
+    "email":            { "type": "string" },
+    "activo":           { "type": "boolean", "default": true },
+    "orden":            { "type": "integer", "default": 0 }
+  }
+}

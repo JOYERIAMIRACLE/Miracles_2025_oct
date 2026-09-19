@@ -322,6 +322,16 @@ const PUBLIC_ACTIONS_PORTAL_MDO = [
   'api::venta-linea.venta-linea.create',
   'api::venta-linea.venta-linea.update',
   'api::venta-linea.venta-linea.delete',
+  'api::colaborador.colaborador.find',
+  'api::colaborador.colaborador.findOne',
+  'api::colaborador.colaborador.create',
+  'api::colaborador.colaborador.update',
+  'api::colaborador.colaborador.delete',
+  'api::evento-empresa.evento-empresa.find',
+  'api::evento-empresa.evento-empresa.findOne',
+  'api::evento-empresa.evento-empresa.create',
+  'api::evento-empresa.evento-empresa.update',
+  'api::evento-empresa.evento-empresa.delete',
 ];
 
 // Notas de mejora (Portal Medallita de Oro) — a diferencia del resto de

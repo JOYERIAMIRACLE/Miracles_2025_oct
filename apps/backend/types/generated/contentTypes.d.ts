@@ -1061,6 +1061,42 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiColaboradorColaborador extends Struct.CollectionTypeSchema {
+  collectionName: 'colaboradores';
+  info: {
+    displayName: 'Portal - Colaborador';
+    pluralName: 'colaboradores';
+    singularName: 'colaborador';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    area: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.String;
+    fecha_ingreso: Schema.Attribute.Date;
+    fecha_nacimiento: Schema.Attribute.Date;
+    foto: Schema.Attribute.Media<'images'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::colaborador.colaborador'
+    > &
+      Schema.Attribute.Private;
+    nombre: Schema.Attribute.String & Schema.Attribute.Required;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    puesto: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCompraMaterialLineaCompraMaterialLinea
   extends Struct.CollectionTypeSchema {
   collectionName: 'compra_material_lineas';
@@ -1431,6 +1467,39 @@ export interface ApiEventoCalendarioEventoCalendario
   };
 }
 
+export interface ApiEventoEmpresaEventoEmpresa
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'evento_empresas';
+  info: {
+    displayName: 'Portal - Evento de empresa';
+    pluralName: 'evento-empresas';
+    singularName: 'evento-empresa';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    activo: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    descripcion: Schema.Attribute.Text;
+    fecha: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::evento-empresa.evento-empresa'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    seccion: Schema.Attribute.String;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiEventoSocialEventoSocial
   extends Struct.CollectionTypeSchema {
   collectionName: 'evento_socials';
@@ -1561,7 +1630,13 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     descripcion_depto_marketing: Schema.Attribute.Text;
     descripcion_depto_mision: Schema.Attribute.Text;
     descripcion_depto_rh: Schema.Attribute.Text;
+    descripcion_documentos: Schema.Attribute.Text;
+    descripcion_enlaces: Schema.Attribute.Text;
+    descripcion_inventario: Schema.Attribute.Text;
+    descripcion_marca: Schema.Attribute.Text;
+    descripcion_sitio_web: Schema.Attribute.Text;
     descripcion_tareas: Schema.Attribute.Text;
+    descripcion_ventas: Schema.Attribute.Text;
     direccion: Schema.Attribute.Text;
     foto_equipo: Schema.Attribute.Media<'images'>;
     icono_principio_1: Schema.Attribute.Media<'images'>;
@@ -1581,6 +1656,10 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     img_orientador_3: Schema.Attribute.Media<'images'>;
     img_orientador_4: Schema.Attribute.Media<'images'>;
     img_valores_logo: Schema.Attribute.Media<'images'>;
+    indicador_objetivo_mensual: Schema.Attribute.Decimal;
+    indicador_producto: Schema.Attribute.Decimal;
+    indicador_proyectos: Schema.Attribute.Decimal;
+    indicador_servicios: Schema.Attribute.Decimal;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1609,11 +1688,23 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     portada_depto_mision_original: Schema.Attribute.Media<'images'>;
     portada_depto_rh: Schema.Attribute.Media<'images'>;
     portada_depto_rh_original: Schema.Attribute.Media<'images'>;
+    portada_documentos: Schema.Attribute.Media<'images'>;
+    portada_documentos_original: Schema.Attribute.Media<'images'>;
+    portada_enlaces: Schema.Attribute.Media<'images'>;
+    portada_enlaces_original: Schema.Attribute.Media<'images'>;
+    portada_inventario: Schema.Attribute.Media<'images'>;
+    portada_inventario_original: Schema.Attribute.Media<'images'>;
+    portada_marca: Schema.Attribute.Media<'images'>;
+    portada_marca_original: Schema.Attribute.Media<'images'>;
     portada_panel: Schema.Attribute.Media<'images'>;
     portada_panel_original: Schema.Attribute.Media<'images'>;
     portada_principios: Schema.Attribute.Media<'images'>;
+    portada_sitio_web: Schema.Attribute.Media<'images'>;
+    portada_sitio_web_original: Schema.Attribute.Media<'images'>;
     portada_tareas: Schema.Attribute.Media<'images'>;
     portada_tareas_original: Schema.Attribute.Media<'images'>;
+    portada_ventas: Schema.Attribute.Media<'images'>;
+    portada_ventas_original: Schema.Attribute.Media<'images'>;
     publishedAt: Schema.Attribute.DateTime;
     redesSociales: Schema.Attribute.Text;
     sitioWeb: Schema.Attribute.String;
@@ -4196,6 +4287,7 @@ declare module '@strapi/strapi' {
       'api::centro-venta.centro-venta': ApiCentroVentaCentroVenta;
       'api::cliente-trabajo.cliente-trabajo': ApiClienteTrabajoClienteTrabajo;
       'api::cliente.cliente': ApiClienteCliente;
+      'api::colaborador.colaborador': ApiColaboradorColaborador;
       'api::compra-material-linea.compra-material-linea': ApiCompraMaterialLineaCompraMaterialLinea;
       'api::compra-material.compra-material': ApiCompraMaterialCompraMaterial;
       'api::cotizacion.cotizacion': ApiCotizacionCotizacion;
@@ -4205,6 +4297,7 @@ declare module '@strapi/strapi' {
       'api::ejercicio.ejercicio': ApiEjercicioEjercicio;
       'api::envio.envio': ApiEnvioEnvio;
       'api::evento-calendario.evento-calendario': ApiEventoCalendarioEventoCalendario;
+      'api::evento-empresa.evento-empresa': ApiEventoEmpresaEventoEmpresa;
       'api::evento-social.evento-social': ApiEventoSocialEventoSocial;
       'api::global.global': ApiGlobalGlobal;
       'api::historial-tarea.historial-tarea': ApiHistorialTareaHistorialTarea;

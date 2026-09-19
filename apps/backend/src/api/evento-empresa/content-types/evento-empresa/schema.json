@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "evento_empresas",
+  "info": {
+    "singularName": "evento-empresa",
+    "pluralName": "evento-empresas",
+    "displayName": "Portal - Evento de empresa"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "titulo":      { "type": "string", "required": true },
+    "fecha":       { "type": "date", "required": true },
+    "descripcion": { "type": "text" },
+    "seccion":     { "type": "string" },
+    "activo":      { "type": "boolean", "default": true }
+  }
+}
