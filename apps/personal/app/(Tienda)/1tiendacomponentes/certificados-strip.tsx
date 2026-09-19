@@ -4,17 +4,20 @@ import Container from "./container"
 
 type Beneficio = {
   Icon:   LucideIcon
-  color:  string
-  bg:     string
   titulo: string
   sub:    string
 }
 
+// Un solo color de marca para los 4 — antes cada ícono tenía su propio color
+// decorativo (violeta/verde/azul/teal) sin ningún significado semántico real.
+const ICONO_COLOR_CLS = "text-violet-500"
+const ICONO_BG_CLS     = "bg-violet-50 dark:bg-violet-950/40"
+
 const BENEFICIOS: Beneficio[] = [
-  { Icon: Truck,        color: "text-violet-500",   bg: "bg-violet-50 dark:bg-violet-950/40",   titulo: "Envío a todo México",    sub: "5-7 días hábiles"      },
-  { Icon: BadgeCheck,   color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/40", titulo: "Calidad certificada",   sub: "Oro 10k y Plata .925"  },
-  { Icon: ShieldCheck,  color: "text-sky-500",     bg: "bg-sky-50 dark:bg-sky-950/40",       titulo: "Compra segura",          sub: "Pago protegido"        },
-  { Icon: Headphones,   color: "text-teal-500",    bg: "bg-teal-50 dark:bg-teal-950/40",     titulo: "Asesoría personalizada", sub: "Vía WhatsApp"          },
+  { Icon: Truck,       titulo: "Envío a todo México",    sub: "5-7 días hábiles"      },
+  { Icon: BadgeCheck,  titulo: "Calidad certificada",    sub: "Oro 10k y Plata .925"  },
+  { Icon: ShieldCheck, titulo: "Compra segura",          sub: "Pago protegido"        },
+  { Icon: Headphones,  titulo: "Asesoría personalizada", sub: "Vía WhatsApp"          },
 ]
 
 const CertificadosStrip = () => {
@@ -27,8 +30,8 @@ const CertificadosStrip = () => {
               key={b.titulo}
               className="flex flex-col items-center text-center gap-2 min-w-[110px] md:min-w-0"
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${b.bg}`}>
-                <b.Icon size={18} strokeWidth={1.75} className={b.color} />
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${ICONO_BG_CLS}`}>
+                <b.Icon size={18} strokeWidth={1.75} className={ICONO_COLOR_CLS} />
               </div>
               <div>
                 <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 leading-tight whitespace-nowrap">

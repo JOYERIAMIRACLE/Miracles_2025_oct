@@ -54,8 +54,8 @@ const Navbar = () => {
                 !isHero ? "border-b border-border/40" : ""
             }`}>
 
-                {/* Logo */}
-                <div className="cursor-pointer shrink-0 select-none" onClick={() => router.push("/")}>
+                {/* Logo — lleva a /tienda (el catálogo/vitrina real), no al hero vacío */}
+                <div className="cursor-pointer shrink-0 select-none" onClick={() => router.push("/tienda")}>
                     {isHero ? (
                         <Image src="/logo oficial oficial.png" alt="Medallita de Oro" width={150} height={48} className="object-contain" priority />
                     ) : (
@@ -91,7 +91,17 @@ const Navbar = () => {
                         />
                     </form>
 
-                    {/* Blog + Empresa — desktop, misma alineación que los iconos */}
+                    {/* Inicio + Blog + Empresa — desktop, misma alineación que los iconos */}
+                    <Link
+                        href="/tienda"
+                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                            isHero
+                                ? "text-white/70 hover:text-white"
+                                : "text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
+                        }`}
+                    >
+                        Inicio
+                    </Link>
                     <Link
                         href="/blog"
                         className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
