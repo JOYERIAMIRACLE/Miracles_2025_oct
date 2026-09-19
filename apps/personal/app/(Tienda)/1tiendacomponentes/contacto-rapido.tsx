@@ -3,11 +3,12 @@
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
-type Panel = "telefono" | "correo" | "ubicacion" | null
+type Panel = "instagram" | "facebook" | "whatsapp" | "telefono" | "correo" | "ubicacion" | null
 
-// Placeholders hasta tener los datos reales — mismo criterio que ya usaba
-// este archivo (tel:+521XXXXXXXXXX) y footer.tsx (contacto@medalladeoro.com.mx):
-// visibles, fáciles de encontrar y reemplazar en un solo lugar.
+// Placeholders hasta tener los datos/cuentas reales — mismo criterio que ya
+// usaba este archivo (tel:+521XXXXXXXXXX) y footer.tsx (contacto@medalladeoro.com.mx):
+// visibles, fáciles de encontrar y reemplazar en un solo lugar en cuanto
+// exista el enlace real de cada red.
 const TELEFONO      = "+52 1 XX XXXX XXXX"
 const TELEFONO_HREF = "tel:+521XXXXXXXXXX"
 const CORREO        = "contacto@medalladeoro.com.mx"
@@ -15,6 +16,12 @@ const DIRECCION     = "Av. Insurgentes Sur 1602, Col. Crédito Constructor, CDMX
 const MAPS_QUERY    = "Medalla+de+Oro+Joyer%C3%ADa"
 const MAPS_HREF     = `https://www.google.com/maps/search/?api=1&query=${MAPS_QUERY}`
 const MAPS_EMBED    = `https://www.google.com/maps?q=${MAPS_QUERY}&output=embed`
+const INSTAGRAM_HANDLE = "@medalladeoro.joyeria"
+const INSTAGRAM_HREF   = "https://instagram.com/medalladeoro.joyeria"
+const FACEBOOK_NAME    = "Medalla de Oro Joyería"
+const FACEBOOK_HREF    = "https://facebook.com/medalladeoro.joyeria"
+const WHATSAPP_NUMERO  = "+52 1 XX XXXX XXXX"
+const WHATSAPP_HREF    = "https://wa.me/521XXXXXXXXXX"
 
 // Reset de botón explícito: los <button> (Teléfono/Correo/Ver ubicación)
 // traen padding/borde por default del navegador que los <a> no tienen.
@@ -44,32 +51,64 @@ export default function ContactoRapido() {
 
   return (
     <div ref={ref} className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
+      {/* Instagram */}
       <div className={itemWrapCls}>
-        <a
-          href="https://instagram.com/"
-          target="_blank" rel="noopener noreferrer"
-          className={triggerCls}
-        >
+        <button type="button" onClick={() => toggle("instagram")} className={triggerCls}>
           Instagram
-        </a>
+        </button>
+        {open === "instagram" && (
+          <div className={panelCls}>
+            <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1">Síguenos en Instagram</p>
+            <p className="text-white text-sm font-semibold mb-3">{INSTAGRAM_HANDLE}</p>
+            <a
+              href={INSTAGRAM_HREF}
+              target="_blank" rel="noopener noreferrer"
+              className="block w-full text-center py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold uppercase tracking-widest rounded transition-colors"
+            >
+              Abrir Instagram
+            </a>
+          </div>
+        )}
       </div>
+
+      {/* Facebook */}
       <div className={itemWrapCls}>
-        <a
-          href="https://facebook.com/"
-          target="_blank" rel="noopener noreferrer"
-          className={triggerCls}
-        >
+        <button type="button" onClick={() => toggle("facebook")} className={triggerCls}>
           Facebook
-        </a>
+        </button>
+        {open === "facebook" && (
+          <div className={panelCls}>
+            <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1">Síguenos en Facebook</p>
+            <p className="text-white text-sm font-semibold mb-3">{FACEBOOK_NAME}</p>
+            <a
+              href={FACEBOOK_HREF}
+              target="_blank" rel="noopener noreferrer"
+              className="block w-full text-center py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold uppercase tracking-widest rounded transition-colors"
+            >
+              Abrir Facebook
+            </a>
+          </div>
+        )}
       </div>
+
+      {/* WhatsApp */}
       <div className={itemWrapCls}>
-        <a
-          href="https://wa.me/"
-          target="_blank" rel="noopener noreferrer"
-          className={triggerCls}
-        >
+        <button type="button" onClick={() => toggle("whatsapp")} className={triggerCls}>
           WhatsApp
-        </a>
+        </button>
+        {open === "whatsapp" && (
+          <div className={panelCls}>
+            <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1">Escríbenos por WhatsApp</p>
+            <p className="text-white text-sm font-semibold mb-3">{WHATSAPP_NUMERO}</p>
+            <a
+              href={WHATSAPP_HREF}
+              target="_blank" rel="noopener noreferrer"
+              className="block w-full text-center py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold uppercase tracking-widest rounded transition-colors"
+            >
+              Abrir WhatsApp
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Teléfono */}
