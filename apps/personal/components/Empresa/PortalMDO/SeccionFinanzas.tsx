@@ -1,7 +1,7 @@
 "use client"
 
 import { TrendingUp, Receipt, PieChart, CreditCard, CalendarDays, BarChart3 } from "lucide-react"
-import { useSectionTab, HeroTabs, SeccionHero, useHeroImagen } from "./shared"
+import { useSectionTab, SeccionVitrina, ContenidoTabs, SeccionHeroContenido, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { IngresosEmpresaView } from "@/components/Empresa/Finanzas/IngresosEmpresaView"
 import { GastosEmpresaView } from "@/components/Empresa/Finanzas/GastosEmpresaView"
@@ -31,31 +31,24 @@ export function SeccionFinanzas() {
   const hero = useHeroImagen("portada_depto_administracion", documentId, reload)
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Operación", "Finanzas", activo.label]}
         titulo="Finanzas"
         descripcion={identidad?.descripcion_depto_administracion || "Ingresos, gastos, presupuestos, cuentas y métricas de medalla de oro."}
         campoDescripcion="descripcion_depto_administracion"
         onDescripcionGuardada={reload}
-        imagenUrl={identidad?.portada_depto_administracion?.url}
-        imagenOriginalUrl={identidad?.portada_depto_administracion_original?.url}
         documentId={documentId}
         puedeEditar={!loading}
-        uploading={hero.uploading}
-        inputRef={hero.inputRef}
-        onTrigger={hero.trigger}
-        onFileChange={hero.handleFile}
-        onSaveCrop={hero.saveCrop}
       >
-        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
-      </SeccionHero>
+        <ContenidoTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHeroContenido>
       {tab === "ingresos"      && <IngresosEmpresaView />}
       {tab === "gastos"        && <GastosEmpresaView ambito="empresa" />}
       {tab === "presupuestos"  && <PresupuestosEmpresaView />}
       {tab === "cuentas"       && <CuentasEmpresaView />}
       {tab === "calendario"    && <CalendarioPagosView />}
       {tab === "metricas"      && <FinancierosView />}
-    </div>
+    </SeccionVitrina>
   )
 }

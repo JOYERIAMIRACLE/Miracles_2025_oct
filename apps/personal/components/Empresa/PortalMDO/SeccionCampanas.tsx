@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { LayoutGrid, CalendarDays, BarChart2 } from "lucide-react"
-import { SeccionHero, HeroTabs, useHeroImagen } from "./shared"
+import { SeccionVitrina, SeccionHeroContenido, ContenidoTabs, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { CampanasPlannerView, TabCampanas } from "./CampanasPlannerView"
 
@@ -19,26 +19,19 @@ export function SeccionCampanas() {
   const hero = useHeroImagen("portada_campanas", documentId, reload)
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Operación", "Campañas"]}
         titulo="Campañas"
         descripcion={identidad?.descripcion_campanas || "Calendario de contenido — antes vivía dentro de Marketing, ahora aquí junto al resto del trabajo del día a día."}
         campoDescripcion="descripcion_campanas"
         onDescripcionGuardada={reload}
-        imagenUrl={identidad?.portada_campanas?.url}
-        imagenOriginalUrl={identidad?.portada_campanas_original?.url}
         documentId={documentId}
         puedeEditar={!loading}
-        uploading={hero.uploading}
-        inputRef={hero.inputRef}
-        onTrigger={hero.trigger}
-        onFileChange={hero.handleFile}
-        onSaveCrop={hero.saveCrop}
       >
-        <HeroTabs tabs={TABS} active={tab} onChange={id => setTab(id as TabCampanas)} />
-      </SeccionHero>
+        <ContenidoTabs tabs={TABS} active={tab} onChange={id => setTab(id as TabCampanas)} />
+      </SeccionHeroContenido>
       <CampanasPlannerView tab={tab} />
-    </div>
+    </SeccionVitrina>
   )
 }

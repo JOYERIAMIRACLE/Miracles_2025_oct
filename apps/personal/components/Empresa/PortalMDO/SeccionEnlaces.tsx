@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, X, Check, Search, ExternalLink, Pencil, Trash2, Link2, ChevronDown } from "lucide-react"
-import { SeccionHero } from "./shared"
+import { SeccionVitrina, SeccionHeroContenido, useHeroImagen } from "./shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { useGetMaterialDigital } from "@/api/material-digital/getMaterialDigital"
 import { createMaterialDigital, updateMaterialDigital, deleteMaterialDigital } from "@/api/material-digital/mutateMaterialDigital"
 import { MaterialDigitalType, MaterialDigitalPayload, CategoriaDigital, CATEGORIA_CONFIG } from "@/types/material-digital"
@@ -167,6 +168,9 @@ function EnlaceCard({ m, onEdit, onDelete }: {
 // ─── Sección ────────────────────────────────────────────────────────────────
 
 export function SeccionEnlaces() {
+  const { identidad, loading: loadingId, reload: reloadIdentidad } = useGetIdentidad()
+  const documentId = identidad?.documentId ?? null
+  const heroImg = useHeroImagen("portada_enlaces", documentId, reloadIdentidad)
   const { materiales: todosLosMateriales, setMateriales: setTodosLosMateriales, loading } = useGetMaterialDigital("empresa")
   const [formMode, setFormMode] = useState<FormMode | null>(null)
   const [busqueda, setBusqueda] = useState("")
@@ -218,11 +222,15 @@ export function SeccionEnlaces() {
   }
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Servicios y apps", "Enlaces"]}
         titulo="Enlaces"
-        descripcion="Links de utilidad y accesos a bases de datos de medalla de oro."
+        descripcion={identidad?.descripcion_enlaces || "Links de utilidad y accesos a bases de datos de medalla de oro."}
+        campoDescripcion="descripcion_enlaces"
+        onDescripcionGuardada={reloadIdentidad}
+        documentId={documentId}
+        puedeEditar={!loadingId}
       />
 
       {loading ? (
@@ -301,6 +309,6 @@ export function SeccionEnlaces() {
           )}
         </>
       )}
-    </div>
+    </SeccionVitrina>
   )
 }

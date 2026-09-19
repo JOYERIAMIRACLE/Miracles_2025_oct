@@ -1,7 +1,7 @@
 "use client"
 
 import { UserCheck, Handshake } from "lucide-react"
-import { useSectionTab, HeroTabs, SeccionHero, useHeroImagen } from "./shared"
+import { useSectionTab, SeccionVitrina, ContenidoTabs, SeccionHeroContenido, useHeroImagen } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { ClientesView } from "@/components/Empresa/Ventas/ClientesView"
 import { ProveedoresView } from "@/components/Empresa/Compras/ProveedoresView"
@@ -19,27 +19,20 @@ export function SeccionContactos() {
   const hero = useHeroImagen("portada_contactos", documentId, reload)
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Operación", activo.label]}
         titulo="Contactos"
         descripcion={identidad?.descripcion_contactos || "Clientes y proveedores de medalla de oro, en un solo lugar."}
         campoDescripcion="descripcion_contactos"
         onDescripcionGuardada={reload}
-        imagenUrl={identidad?.portada_contactos?.url}
-        imagenOriginalUrl={identidad?.portada_contactos_original?.url}
         documentId={documentId}
         puedeEditar={!loading}
-        uploading={hero.uploading}
-        inputRef={hero.inputRef}
-        onTrigger={hero.trigger}
-        onFileChange={hero.handleFile}
-        onSaveCrop={hero.saveCrop}
       >
-        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
-      </SeccionHero>
+        <ContenidoTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHeroContenido>
       {tab === "clientes"    && <ClientesView />}
       {tab === "proveedores" && <ProveedoresView />}
-    </div>
+    </SeccionVitrina>
   )
 }

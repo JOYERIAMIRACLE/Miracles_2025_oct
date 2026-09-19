@@ -1161,7 +1161,7 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
       }`}
       style={{
         backgroundColor: isDark ? "#121212" : "#f8f9fa",
-        ...(heroExterno ? { marginTop: "-112px" } : {}),
+        ...(heroExterno ? { marginTop: "-164px" } : {}),
       }}>
       <div className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.1) 0%, transparent 55%)" }} />

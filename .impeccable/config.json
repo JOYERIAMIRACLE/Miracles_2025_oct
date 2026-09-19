@@ -131,6 +131,11 @@
         ],
         "createdAt": "2026-09-17T01:09:47.995Z",
         "reason": "Preexistente: botón 'Gestionar' y chip de área — no tocado en esta sesión (solo se cambió fondo/sombra de la card)"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "createdAt": "2026-09-18T03:17:44.675Z"
       }
     ]
   }

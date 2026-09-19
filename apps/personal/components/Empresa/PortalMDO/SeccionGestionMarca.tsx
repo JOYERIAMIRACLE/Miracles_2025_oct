@@ -1,7 +1,8 @@
 "use client"
 
 import { Palette, LayoutTemplate, Images, Briefcase, ShoppingBag, Type } from "lucide-react"
-import { useSectionTab, HeroTabs, Card, SeccionHero } from "./shared"
+import { useSectionTab, SeccionVitrina, ContenidoTabs, Card, SeccionHeroContenido, useHeroImagen } from "./shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { RecursosDescargables, type RecursoExtraTab } from "./RecursosDescargables"
 import { MerchView } from "./MerchView"
 
@@ -61,21 +62,28 @@ const IDENTIDAD_EXTRA_TABS: RecursoExtraTab[] = [
 export function SeccionGestionMarca() {
   const { tab, setTab } = useSectionTab("marca", "identidad")
   const activo = TABS.find(t => t.id === tab) ?? TABS[0]
+  const { identidad, loading, reload } = useGetIdentidad()
+  const documentId = identidad?.documentId ?? null
+  const hero = useHeroImagen("portada_marca", documentId, reload)
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Recursos", "Gestión de marca", activo.label]}
         titulo="Gestión de marca"
-        descripcion="Identidad, plantillas, galería, materiales comerciales y merch — todo lo de marca en un solo lugar."
+        descripcion={identidad?.descripcion_marca || "Identidad, plantillas, galería, materiales comerciales y merch — todo lo de marca en un solo lugar."}
+        campoDescripcion="descripcion_marca"
+        onDescripcionGuardada={reload}
+        documentId={documentId}
+        puedeEditar={!loading}
       >
-        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
-      </SeccionHero>
+        <ContenidoTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHeroContenido>
       {tab === "identidad"   && <RecursosDescargables seccion="marketing-identidad" layout="sidebar" extraTabs={IDENTIDAD_EXTRA_TABS} />}
       {tab === "plantillas"  && <RecursosDescargables seccion="marketing-plantillas" layout="sidebar" />}
       {tab === "galeria"     && <RecursosDescargables seccion="marketing-galeria" layout="sidebar" />}
       {tab === "materiales"  && <RecursosDescargables seccion="marketing-materiales" layout="sidebar" />}
       {tab === "merch"       && <MerchView />}
-    </div>
+    </SeccionVitrina>
   )
 }

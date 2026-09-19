@@ -73,6 +73,28 @@ export type IdentidadEmpresa = {
   portada_contactos_original: IdentidadImagen
   portada_panel:              IdentidadImagen
   portada_panel_original:     IdentidadImagen
+  descripcion_ventas:      string | null
+  portada_ventas:          IdentidadImagen
+  portada_ventas_original: IdentidadImagen
+  descripcion_inventario:      string | null
+  portada_inventario:          IdentidadImagen
+  portada_inventario_original: IdentidadImagen
+  descripcion_documentos:      string | null
+  portada_documentos:          IdentidadImagen
+  portada_documentos_original: IdentidadImagen
+  descripcion_marca:      string | null
+  portada_marca:          IdentidadImagen
+  portada_marca_original: IdentidadImagen
+  descripcion_enlaces:      string | null
+  portada_enlaces:          IdentidadImagen
+  portada_enlaces_original: IdentidadImagen
+  descripcion_sitio_web:      string | null
+  portada_sitio_web:          IdentidadImagen
+  portada_sitio_web_original: IdentidadImagen
+  indicador_objetivo_mensual: number | null
+  indicador_producto:        number | null
+  indicador_servicios:       number | null
+  indicador_proyectos:       number | null
   createdAt?:     string
   updatedAt?:     string
 }

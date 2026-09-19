@@ -1,7 +1,8 @@
 "use client"
 
 import { Users, UserSearch, FileText, ShoppingBag, TrendingUp, Bell } from "lucide-react"
-import { useSectionTab, HeroTabs, SeccionHero } from "./shared"
+import { useSectionTab, SeccionVitrina, ContenidoTabs, SeccionHeroContenido, useHeroImagen } from "./shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
 import { LeadsView } from "@/components/Empresa/Ventas/LeadsView"
 import { CotizacionesView } from "@/components/Empresa/Ventas/CotizacionesView"
@@ -21,22 +22,29 @@ const TABS = [
 export function SeccionVentas() {
   const { tab, setTab } = useSectionTab("ventas", "pipeline")
   const activo = TABS.find(t => t.id === tab) ?? TABS[0]
+  const { identidad, loading, reload } = useGetIdentidad()
+  const documentId = identidad?.documentId ?? null
+  const hero = useHeroImagen("portada_ventas", documentId, reload)
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Operación", "Ventas", activo.label]}
         titulo="Ventas"
-        descripcion="El embudo completo — de Lead a cotización a pedido confirmado."
+        descripcion={identidad?.descripcion_ventas || "El embudo completo — de Lead a cotización a pedido confirmado."}
+        campoDescripcion="descripcion_ventas"
+        onDescripcionGuardada={reload}
+        documentId={documentId}
+        puedeEditar={!loading}
       >
-        <HeroTabs tabs={TABS} active={tab} onChange={setTab} />
-      </SeccionHero>
+        <ContenidoTabs tabs={TABS} active={tab} onChange={setTab} />
+      </SeccionHeroContenido>
       {tab === "pipeline"     && <PipelineView />}
       {tab === "leads"        && <LeadsView />}
       {tab === "cotizaciones" && <CotizacionesView />}
       {tab === "pedidos"      && <PedidosView />}
       {tab === "metricas"     && <HistorialPipelineView />}
       {tab === "disparadores" && <DisparadoresView />}
-    </div>
+    </SeccionVitrina>
   )
 }

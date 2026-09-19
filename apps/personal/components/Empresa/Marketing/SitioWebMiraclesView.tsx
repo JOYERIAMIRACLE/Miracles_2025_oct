@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Plus, Trash2, X, Download, Globe, Loader2, CloudOff, ChevronDown, ChevronUp, ExternalLink } from "lucide-react"
 import { getToken } from "@/lib/auth"
+import { SeccionHeroContenido, heroOverlapStyle } from "@/components/Empresa/PortalMDO/shared"
+import type { IdentidadEmpresa } from "@/types/identidad-empresa"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -641,7 +643,18 @@ function DrawerPagina({ node, fp, siteDomain, onUpdate, onClose, onSave, saving 
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function SitioWebMiraclesView() {
+export function SitioWebMiraclesView({
+  heroExterno, breadcrumb, titulo, descripcion, campoDescripcion, onDescripcionGuardada, documentId, puedeEditar,
+}: {
+  heroExterno?: boolean
+  breadcrumb?: string[]
+  titulo?: string
+  descripcion?: string
+  campoDescripcion?: keyof IdentidadEmpresa
+  onDescripcionGuardada?: () => void
+  documentId?: string | null
+  puedeEditar?: boolean
+} = {}) {
   const [tree,    setTree]    = useState<PageNode[]>([ROOT])
   const [modal,   setModal]   = useState<{ id: string } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -719,26 +732,52 @@ export function SitioWebMiraclesView() {
 
   return (
     <div
-      className="min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden"
+      // heroExterno: mismo tratamiento que TareasView — esquinas + traslape
+      // propios (no SeccionVitrina genérica), porque esta vista ya trae su
+      // propio fondo oscuro permanente (#121212 + patrón de puntos) que no
+      // debe mezclarse con el fondo claro/adaptativo de la vitrina genérica.
+      className={`min-h-[calc(100vh-3.5rem)] relative overflow-x-hidden ${heroExterno ? "rounded-sm rounded-tr-3xl shadow-lg" : ""}`}
       style={{
         backgroundColor: "#121212",
         backgroundImage: "radial-gradient(circle, #2a1b3d 1px, transparent 1px)",
         backgroundSize: "28px 28px",
+        ...(heroExterno ? heroOverlapStyle() : {}),
       }}>
 
       <div className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(16,185,129,0.07) 0%, transparent 55%)" }} />
 
       <div className="relative p-4 md:p-6">
+        {heroExterno && (
+          <div className="mb-6">
+            <SeccionHeroContenido
+              breadcrumb={breadcrumb ?? [titulo ?? "Sitio web"]}
+              titulo={titulo ?? "Sitio web"}
+              descripcion={descripcion ?? ""}
+              campoDescripcion={campoDescripcion}
+              onDescripcionGuardada={onDescripcionGuardada}
+              documentId={documentId}
+              puedeEditar={puedeEditar}
+            />
+          </div>
+        )}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-100">Sitio web Miracles</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+          {heroExterno ? (
+            <p className="text-xs text-slate-500">
               {total} página{total !== 1 ? "s" : ""} ·{" "}
               <span className="text-violet-400">{nlive} live</span> ·{" "}
               <span className="text-violet-400">{ndrft} borrador</span>
             </p>
-          </div>
+          ) : (
+            <div>
+              <h1 className="text-2xl font-bold text-slate-100">Sitio web Miracles</h1>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {total} página{total !== 1 ? "s" : ""} ·{" "}
+                <span className="text-violet-400">{nlive} live</span> ·{" "}
+                <span className="text-violet-400">{ndrft} borrador</span>
+              </p>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             {saving && (
               <span className="text-xs text-slate-500 flex items-center gap-1.5">

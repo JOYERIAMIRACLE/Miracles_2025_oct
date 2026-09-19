@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Compass, HeartHandshake, Smile, LifeBuoy, GraduationCap, Camera } from "lucide-react"
-import { useSectionTab, HeroTabs, Card, SeccionHero, useHeroImagen, useUploadImagen } from "./shared"
+import { useSectionTab, SeccionVitrina, ContenidoTabs, Card, SeccionHeroContenido, useHeroImagen, useUploadImagen } from "./shared"
 import type { IdentidadImagenCampo } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { RecursosDescargables } from "./RecursosDescargables"
@@ -191,30 +191,23 @@ export function SeccionMision() {
   }
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Departamentos", "Misión", activo.label]}
         titulo="Misión"
         descripcion={identidad?.descripcion_depto_mision || "Principios, valores y actitudes que guían nuestra manera de trabajar y relacionarnos en medalla de oro."}
         campoDescripcion="descripcion_depto_mision"
         onDescripcionGuardada={reload}
-        imagenUrl={identidad?.portada_depto_mision?.url}
-        imagenOriginalUrl={identidad?.portada_depto_mision_original?.url}
         documentId={documentId}
         puedeEditar={!loading}
-        uploading={hero.uploading}
-        inputRef={hero.inputRef}
-        onTrigger={hero.trigger}
-        onFileChange={hero.handleFile}
-        onSaveCrop={hero.saveCrop}
       >
-        <HeroTabs tabs={TABS} active={tab} onChange={cambiarTab} />
-      </SeccionHero>
+        <ContenidoTabs tabs={TABS} active={tab} onChange={cambiarTab} />
+      </SeccionHeroContenido>
       {TABS.map(t => visitadas.has(t.id) && (
         <div key={t.id} className={tab === t.id ? "" : "hidden"}>
           {renderTab(t.id)}
         </div>
       ))}
-    </div>
+    </SeccionVitrina>
   )
 }

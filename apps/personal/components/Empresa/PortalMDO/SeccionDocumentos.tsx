@@ -1,17 +1,26 @@
 "use client"
 
-import { SeccionHero } from "./shared"
+import { SeccionVitrina, SeccionHeroContenido, useHeroImagen } from "./shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { DocumentosLegalesView } from "./DocumentosLegalesView"
 
 export function SeccionDocumentos() {
+  const { identidad, loading, reload } = useGetIdentidad()
+  const documentId = identidad?.documentId ?? null
+  const hero = useHeroImagen("portada_documentos", documentId, reload)
+
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Recursos", "Documentos"]}
         titulo="Documentos"
-        descripcion="Documentos legales de medalla de oro — antes vivía dentro de Finanzas, ahora aquí junto al resto de recursos."
+        descripcion={identidad?.descripcion_documentos || "Documentos legales de medalla de oro — antes vivía dentro de Finanzas, ahora aquí junto al resto de recursos."}
+        campoDescripcion="descripcion_documentos"
+        onDescripcionGuardada={reload}
+        documentId={documentId}
+        puedeEditar={!loading}
       />
       <DocumentosLegalesView />
-    </div>
+    </SeccionVitrina>
   )
 }

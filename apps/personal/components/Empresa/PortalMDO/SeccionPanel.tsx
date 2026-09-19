@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { SeccionHero, HeroTabs, useHeroImagen } from "./shared"
+import { SeccionVitrina, SeccionHeroContenido, ContenidoTabs, useHeroImagen } from "./shared"
 import type { TabItem } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { useGetLeads } from "@/api/lead/getLead"
@@ -758,23 +758,16 @@ export function SeccionPanel() {
   ]
 
   const shell=(content:React.ReactNode)=>(
-    <div className="space-y-4 text-slate-900 dark:text-slate-100">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Empresa", "Panel de control"]}
         titulo="Actividad comercial"
         descripcion="Leads, cotizaciones y ventas en un solo vistazo — filtra por período o cliente."
-        imagenUrl={identidad?.portada_panel?.url}
-        imagenOriginalUrl={identidad?.portada_panel_original?.url}
         documentId={documentId}
         puedeEditar={!loadingId}
-        uploading={heroImg.uploading}
-        inputRef={heroImg.inputRef}
-        onTrigger={heroImg.trigger}
-        onFileChange={heroImg.handleFile}
-        onSaveCrop={heroImg.saveCrop}
       >
-        <HeroTabs tabs={TABS} active={view} onChange={v=>goView(v as View)}/>
-      </SeccionHero>
+        <ContenidoTabs tabs={TABS} active={view} onChange={v=>goView(v as View)}/>
+      </SeccionHeroContenido>
 
       {/* Barra de filtros — siempre visible debajo del hero */}
       <div className="flex items-center gap-2 flex-wrap bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl px-4 py-2.5">
@@ -818,7 +811,7 @@ export function SeccionPanel() {
       {loading?(
         <div className="flex items-center justify-center py-20 text-slate-500 font-mono text-sm">Cargando datos…</div>
       ):content}
-    </div>
+    </SeccionVitrina>
   )
 
   /* ═══ DASHBOARD ═══════════════════════════════════════════════════ */

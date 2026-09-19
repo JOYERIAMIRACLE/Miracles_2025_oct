@@ -6,6 +6,7 @@ import { PortalMDOSidebar } from "@/components/Empresa/PortalMDO/PortalMDOSideba
 import { SeccionPortalHome } from "@/components/Empresa/PortalMDO/SeccionPortalHome"
 import { PortalHomeHero } from "@/components/Empresa/PortalMDO/PortalHomeHero"
 import { TareasHeroFondo } from "@/components/Empresa/PortalMDO/TareasHeroFondo"
+import { HeroFondoExterno, FONDO_PORTAL } from "@/components/Empresa/PortalMDO/shared"
 import { SeccionConoceMDO } from "@/components/Empresa/PortalMDO/SeccionConoceMDO"
 import { SeccionMision } from "@/components/Empresa/PortalMDO/SeccionMision"
 import { SeccionContactos } from "@/components/Empresa/PortalMDO/SeccionContactos"
@@ -80,7 +81,7 @@ export default function PortalMedalladeoroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#08091a]">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#121212]">
       <PortalMDOHeader onMenuClick={() => setSidebarOpen(o => !o)} onLogoClick={() => navigate("portal")} onNavigate={navigate} />
 
       <div className="flex min-h-[calc(100vh-56px)]">
@@ -90,9 +91,7 @@ export default function PortalMedalladeoroPage() {
             <PortalMDOSidebar seccion={seccion} tab={tab} onNavigate={navigate} />
           </>
         )}
-        <main className={`flex-1 min-w-0 text-slate-900 dark:text-slate-100 relative overflow-x-hidden ${
-          seccion === "tareas" ? "bg-[#f8f9fa] dark:bg-[#121212]" : ""
-        }`}>
+        <main className={`flex-1 min-w-0 text-slate-900 dark:text-slate-100 relative overflow-x-hidden ${FONDO_PORTAL}`}>
           {/* Atmospheric dark gradient — solo dark mode */}
           <div className="pointer-events-none absolute inset-0 hidden dark:block"
             style={{background:"radial-gradient(ellipse 90% 50% at 50% 0%, #2a1b3d33 0%, transparent 65%)"}}/>
@@ -108,6 +107,21 @@ export default function PortalMedalladeoroPage() {
               título/descripción/tabs de Tareas siguen boxed, dentro de
               TareasView (SeccionHeroContenido). */}
           {seccion === "tareas" && <TareasHeroFondo />}
+          {/* seccion === "panel": misma receta, generalizada — ver
+              heroOverlapStyle/SeccionHeroContenido/HeroFondoExterno en
+              shared.tsx para la receta completa. */}
+          {seccion === "panel" && <HeroFondoExterno campo="portada_panel" />}
+          {seccion === "campanas" && <HeroFondoExterno campo="portada_campanas" />}
+          {seccion === "contactos" && <HeroFondoExterno campo="portada_contactos" />}
+          {seccion === "ventas" && <HeroFondoExterno campo="portada_ventas" />}
+          {seccion === "inventario" && <HeroFondoExterno campo="portada_inventario" />}
+          {seccion === "finanzas" && <HeroFondoExterno campo="portada_depto_administracion" />}
+          {seccion === "documentos" && <HeroFondoExterno campo="portada_documentos" />}
+          {seccion === "marca" && <HeroFondoExterno campo="portada_marca" />}
+          {seccion === "enlaces" && <HeroFondoExterno campo="portada_enlaces" />}
+          {seccion === "conoce" && <HeroFondoExterno campo="portada_conoce" />}
+          {seccion === "mision" && <HeroFondoExterno campo="portada_depto_mision" />}
+          {seccion === "sitio-web" && <HeroFondoExterno campo="portada_sitio_web" />}
           {/* ─── LAYOUT RULE: Boxed/Contained ─────────────────────────────────
               Todo el contenido del portal vive dentro de este container.
               max-w-7xl = 1280px máximo, centrado con mx-auto.

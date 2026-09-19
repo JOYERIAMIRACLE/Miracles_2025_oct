@@ -23,7 +23,7 @@ export function PortalHomeHero() {
   const { total: visitasHoy } = useVisitasRango(hoy, hoy)
 
   return (
-    <div className="relative overflow-hidden pt-6 pb-10 sm:pb-16" style={{ background: "#0d0b1a" }}>
+    <div className="relative overflow-hidden pt-6 pb-10 sm:pb-16" style={{ background: "#121212" }}>
       <div className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(ellipse 140% 100% at 50% 35%, #bd920622 0%, transparent 70%)" }} />
 

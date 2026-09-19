@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Loader2, Camera, MapPin, Phone, Mail, Pencil } from "lucide-react"
 import { toast } from "sonner"
-import { Card, SeccionHero, useHeroImagen, useUploadImagen, boldify } from "./shared"
+import { Card, SeccionVitrina, SeccionHeroContenido, useHeroImagen, useUploadImagen, boldify } from "./shared"
 import { useGetIdentidad, saveIdentidad } from "@/api/identidad-empresa/getIdentidad"
 
 // ── Bloque "¿Quiénes somos?" — nombre + slogan en un mismo mini-formulario,
@@ -257,24 +257,17 @@ export function SeccionConoceMDO() {
   const hero = useHeroImagen("portada_conoce", identidad?.documentId ?? null, reload)
 
   return (
-    <div className="space-y-4">
-      <SeccionHero
+    <SeccionVitrina>
+      <SeccionHeroContenido
         breadcrumb={["Conoce a Medalla de oro", "¿Quiénes somos?"]}
         titulo="Conoce a Medalla de oro"
         descripcion={identidad?.descripcion_conoce || "Historia, propósito, visión y equipo de Joyería Miracles — todo lo que necesitas saber sobre medalla de oro."}
         campoDescripcion="descripcion_conoce"
         onDescripcionGuardada={reload}
-        imagenUrl={identidad?.portada_conoce?.url}
-        imagenOriginalUrl={identidad?.portada_conoce_original?.url}
         documentId={identidad?.documentId ?? null}
         puedeEditar={!loading}
-        uploading={hero.uploading}
-        inputRef={hero.inputRef}
-        onTrigger={hero.trigger}
-        onFileChange={hero.handleFile}
-        onSaveCrop={hero.saveCrop}
       />
       <TabQuienesSomos />
-    </div>
+    </SeccionVitrina>
   )
 }

@@ -40,7 +40,7 @@ export function HeroCarusel({ avisos, onGestionar, isAdmin, loading }: { avisos:
   }, [total])
 
   if (loading) return (
-    <section className="p-1.5 rounded-sm rounded-tr-3xl bg-[#f8f9fa] dark:bg-[#08091a] grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
+    <section className="p-1.5 rounded-sm rounded-tr-3xl grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
       <div className="rounded-xl p-5 sm:p-8 flex flex-col justify-between gap-4">
         <div className="flex flex-col gap-3">
           <Skeleton className="h-5 w-20 rounded-full" />
@@ -61,7 +61,7 @@ export function HeroCarusel({ avisos, onGestionar, isAdmin, loading }: { avisos:
   )
 
   if (total === 0) return (
-    <section className="rounded-sm rounded-tr-3xl bg-[#f8f9fa] dark:bg-[#08091a] p-5 sm:p-8 text-center text-sm text-slate-400 dark:text-slate-500 min-h-[120px] flex flex-col items-center justify-center gap-3">
+    <section className="rounded-sm rounded-tr-3xl p-5 sm:p-8 text-center text-sm text-slate-400 dark:text-slate-500 min-h-[120px] flex flex-col items-center justify-center gap-3">
       <p>Sin comunicados activos</p>
       {isAdmin && onGestionar && (
         <button type="button" onClick={onGestionar}
@@ -79,7 +79,7 @@ export function HeroCarusel({ avisos, onGestionar, isAdmin, loading }: { avisos:
   const bg   = BG_COLOR[a.color]   ?? BG_COLOR.violet
 
   return (
-    <section className="p-1.5 rounded-sm rounded-tr-3xl bg-[#f8f9fa] dark:bg-[#08091a] grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
+    <section className="p-1.5 rounded-sm rounded-tr-3xl grid grid-cols-1 xl:grid-cols-2 gap-1.5 min-h-[300px] xl:aspect-32/9">
       <div className="rounded-xl p-5 sm:p-8 flex flex-col justify-between gap-4 relative overflow-hidden">
         {isAdmin && onGestionar && (
           <button type="button" onClick={onGestionar}

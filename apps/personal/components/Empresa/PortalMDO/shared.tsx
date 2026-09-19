@@ -6,9 +6,9 @@ import type { LucideIcon } from "lucide-react"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import { toast } from "sonner"
-import { saveIdentidad } from "@/api/identidad-empresa/getIdentidad"
+import { saveIdentidad, useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { uploadMedia } from "@/lib/upload"
-import type { IdentidadEmpresa } from "@/types/identidad-empresa"
+import type { IdentidadEmpresa, IdentidadImagen } from "@/types/identidad-empresa"
 
 export function fechaActual() {
   return new Date().toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })
@@ -252,7 +252,7 @@ async function recortarImagen(imagenUrl: string, area: Area): Promise<File> {
  * recortar la primera vez que se sube, para que "Ajustar imagen" siempre
  * parta de la foto completa en vez de recortar sobre un recorte anterior.
  */
-type HeroImagenCampo = "portada_conoce" | "portada_depto_mision" | "portada_depto_rh" | "portada_depto_cadena" | "portada_depto_comercial" | "portada_depto_marketing" | "portada_depto_administracion" | "portada_tareas" | "portada_campanas" | "portada_contactos" | "portada_panel"
+export type HeroImagenCampo = "portada_conoce" | "portada_depto_mision" | "portada_depto_rh" | "portada_depto_cadena" | "portada_depto_comercial" | "portada_depto_marketing" | "portada_depto_administracion" | "portada_tareas" | "portada_campanas" | "portada_contactos" | "portada_panel" | "portada_ventas" | "portada_inventario" | "portada_documentos" | "portada_marca" | "portada_enlaces" | "portada_sitio_web"
 
 export function useHeroImagen(campo: HeroImagenCampo, documentId: string | null, onUploaded: () => void) {
   const [uploading, setUploading] = useState(false)
@@ -689,10 +689,133 @@ export function SeccionHeroFondo({
   )
 }
 
+/** Versión genérica de TareasHeroFondo: dado el nombre de un campo de imagen
+    de identidad-empresa, resuelve su fetch/upload/recorte por su cuenta y
+    renderiza SeccionHeroFondo — para que una sección nueva no tenga que
+    escribir su propio archivo "XHeroFondo.tsx" de una sola línea. */
+export function HeroFondoExterno({ campo }: { campo: HeroImagenCampo }) {
+  const { identidad, loading, reload } = useGetIdentidad()
+  const documentId = identidad?.documentId ?? null
+  const hero = useHeroImagen(campo, documentId, reload)
+  const imagen = identidad?.[campo] as IdentidadImagen | undefined
+  const imagenOriginal = (identidad as Record<string, IdentidadImagen> | null)?.[`${campo}_original`]
+
+  return (
+    <SeccionHeroFondo
+      imagenUrl={imagen?.url}
+      imagenOriginalUrl={imagenOriginal?.url}
+      puedeEditar={!loading}
+      uploading={hero.uploading}
+      inputRef={hero.inputRef}
+      onTrigger={hero.trigger}
+      onFileChange={hero.handleFile}
+      onSaveCrop={hero.saveCrop}
+    />
+  )
+}
+
+/** ─── Receta: dar a una sección un hero full-bleed que se solapa con su
+    propio contenido (Tareas, Panel, y cualquier sección futura) ──────────
+     1. page.tsx: <HeroFondoExterno campo="portada_x" /> como hermano ANTES
+        de <div className="max-w-7xl ...">, igual que las líneas existentes
+        para "portal" y "tareas".
+     2. La raíz propia de la sección (NO un hijo anidado) recibe
+        rounded-sm rounded-tr-3xl (firma "Portal SDI" — ver
+        PortalHomeHero.FLOATING_CARD / SeccionPortalHome "wrapper de aire")
+        + heroOverlapStyle() vía `style`.
+     3. Esa misma raíz renderiza <SeccionHeroContenido> como su PRIMER hijo
+        (no un hermano aparte), para que header + contenido se lean como
+        una sola pieza.
+
+     Dos bugs reales ya nos mordieron con esto — no los repitas:
+     (a) El overlap va en la raíz que define su propio fondo/tamaño, NUNCA
+         en un hijo anidado dentro de algo con overflow-x-hidden (o
+         cualquier overflow-x != visible sin overflow-y explícito): CSS
+         computa overflow-y:auto ahí y recorta en silencio lo que el
+         margen negativo empuje POR ENCIMA del borde superior del
+         contenedor. overflow-hidden en un elemento no afecta cómo ESE
+         MISMO elemento se posiciona en SU PADRE vía margin — solo recorta
+         lo anidado adentro.
+     (b) El margin-top negativo va en `style`, no en una clase -mt-*,
+         cuando la raíz YA tiene una clase margin shorthand en un
+         breakpoint mayor (ej. md:-m-6, como en TareasView) — Tailwind
+         emite breakpoints en orden ascendente y la regla de mayor
+         breakpoint gana en el ancho donde ambas aplican, sin importar el
+         orden en className. Si la raíz parte de cero (sin margin
+         shorthand — ej. el wrapper de aire de Home, que usa
+         -mt-6 sm:-mt-28 como clase normal), no hay conflicto. Usar
+         heroOverlapStyle() de todos modos evita tener que razonar caso
+         por caso si hay conflicto o no. ─────────────────────────────── */
+export function heroOverlapStyle(px = 164): React.CSSProperties {
+  return { marginTop: `-${px}px` }
+}
+
+/** Fondo compartido de todo lo que NO es el hero full-bleed: <main> (page.tsx)
+    y cada vitrina (SeccionVitrina, y la vitrina a medida de Inicio) importan
+    ESTA constante en vez de escribir el hex por su cuenta — así no se pueden
+    desincronizar entre sí. (El hero en sí, PortalHomeHero, es intencionalmente
+    siempre oscuro sin importar el tema — no usa esta constante.) */
+export const FONDO_PORTAL = "bg-[#f8f9fa] dark:bg-[#121212]"
+
+/** Raíz compartida de la vitrina que flota sobre un HeroFondoExterno — usar
+    esta en vez de copiar el className/style a mano en cada sección nueva:
+    un cambio futuro (radio de esquina, color, cuánto se solapa) se hace
+    aquí y aplica a todas las secciones que la usan. Tareas queda afuera a
+    propósito (su raíz trae de antes -m-4/md:-m-6/min-h/overflow-x-hidden/
+    color propio por una razón no relacionada — forzarla aquí pediría una
+    válvula de escape que no vale la pena para un componente ya en
+    producción). */
+export function SeccionVitrina({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`relative rounded-sm rounded-tr-3xl p-4 sm:p-6 text-slate-900 dark:text-slate-100 ${FONDO_PORTAL} ${className}`}
+      style={heroOverlapStyle()}
+    >
+      {/* Mismo brillo sutil que TareasView, para que todas las secciones
+          compartan el mismo acento — no depende de dark/light, mismo tono
+          en ambos, igual que la referencia. */}
+      <div className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(ellipse at 55% 0%, rgba(139,92,246,0.1) 0%, transparent 55%)" }} />
+      <div className="relative space-y-4">
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /** Pieza boxed de un header tipo SeccionHero: breadcrumb + título + descripción
     (editable) + tabs tras una raya — paleta clara/oscura adaptativa porque vive
     sobre el fondo normal del Portal, no sobre una foto. Ver SeccionHeroFondo
     para la mitad full-bleed que va arriba. */
+/** Portado de sdi-portal/components/Trabajo/portal/shared.tsx — barra de
+    acento + título uppercase, usada como encabezado de columna (Recursos,
+    Calendario, Cumpleaños, etc. en Inicio). Acento violeta en vez de naranja
+    (regla de un solo color de MDO). */
+export function ColumnHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2.5 mt-2 py-1">
+      <span className="h-6 w-1.5 rounded-full bg-violet-500 shrink-0" />
+      <h3 className="text-lg font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">{children}</h3>
+    </div>
+  )
+}
+
+/** Portado de sdi-portal/components/Trabajo/portal/shared.tsx — avatar con
+    foto o, si no hay, iniciales sobre un degradado. Simplificado a un solo
+    degradado violeta (sdi-portal rota 7 colores por colaborador vía
+    `color_avatar`; MDO no guarda ese campo a propósito, regla de un solo
+    acento). */
+export function AvatarColab({ colaborador: c, size = "md" }: { colaborador: { nombre: string; foto: { url: string } | null }; size?: "sm" | "md" | "lg" }) {
+  const sz  = size === "sm" ? "h-8 w-8 text-[10px]" : size === "lg" ? "h-16 w-16 text-lg" : "h-10 w-10 text-xs"
+  const ini = c.nombre.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase()
+  if (c.foto?.url) return <img src={c.foto.url} alt={c.nombre} className={`${sz} rounded-full object-cover shrink-0`} />
+  return (
+    <div className={`${sz} rounded-full bg-linear-to-br from-violet-500 to-purple-500 flex items-center justify-center text-white font-bold shrink-0`}>
+      {ini}
+    </div>
+  )
+}
+
 export function SeccionHeroContenido({
   breadcrumb, titulo, descripcion,
   campoDescripcion, onDescripcionGuardada, documentId, puedeEditar,
