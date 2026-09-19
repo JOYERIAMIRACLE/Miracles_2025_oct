@@ -151,7 +151,7 @@ export default function ContactoRapido() {
       {/* Formulario de contacto completo — distinto de los canales directos de arriba */}
       <div className={itemWrapCls}>
         <Link href="/contacto" className={triggerCls}>
-          Contacto
+          Pregunta directa
         </Link>
       </div>
 
