@@ -19,7 +19,7 @@ const HeroTienda = () => {
       <Container className="relative z-10 h-full flex flex-col justify-center px-8 md:px-20">
 
         <p className="text-violet-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-3">
-          Colección 2026
+          Catálogo 2026
         </p>
 
         <h1 className="text-white text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight max-w-lg drop-shadow-md">
