@@ -5,7 +5,7 @@ import { Users, FileText, ShoppingCart, Package } from "lucide-react"
 import { useGetLeads } from "@/api/lead/getLead"
 import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
-import { USE_DEMO, DEMO_DATA } from "./SeccionPanel"
+import { USE_DEMO, DEMO_DATA } from "./SeccionVentas"
 
 const CICLO_MS = 2500
 const $m = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
@@ -37,8 +37,8 @@ function normalizarBarras(valores: number[]): number[] {
 }
 
 /**
- * Resumen del Panel de control — mismos datos que SeccionPanel.tsx (real o
- * demo, según USE_DEMO), condensados en 4 métricas para el Inicio.
+ * Resumen de Ventas — mismos datos que SeccionVentas.tsx (real o demo,
+ * según USE_DEMO), condensados en 4 métricas para el Inicio.
  */
 export function DashboardCard() {
   const { leads: leadsReal }              = useGetLeads()

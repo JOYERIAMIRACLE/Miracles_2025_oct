@@ -4,7 +4,7 @@ import { useState } from "react"
 import {
   Home, Landmark, Building2, Flag, Briefcase, ListChecks,
   Megaphone, Contact, ShoppingBag, Boxes, DollarSign, Globe,
-  FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings, Brain, BarChart2,
+  FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings, Brain,
 } from "lucide-react"
 import { PortalMDOConfigModal } from "./PortalMDOConfigModal"
 
@@ -46,11 +46,10 @@ export const GRUPOS: NavGroup[] = [
   {
     id: "operacion", label: "Operación", icon: Briefcase, itemsAreOwnSection: true,
     items: [
-      { id: "panel",      label: "Panel de control", icon: BarChart2 },
       { id: "tareas",     label: "Tareas",     icon: ListChecks },
+      { id: "ventas",     label: "Ventas",     icon: ShoppingBag },
       { id: "campanas",   label: "Campañas",   icon: Megaphone },
       { id: "contactos",  label: "Contactos",  icon: Contact },
-      { id: "ventas",     label: "Ventas",     icon: ShoppingBag },
       { id: "inventario", label: "Inventario", icon: Boxes },
       { id: "finanzas",   label: "Finanzas",   icon: DollarSign },
       { id: "sitio-web",  label: "Sitio web",  icon: Globe },

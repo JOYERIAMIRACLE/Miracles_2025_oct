@@ -31,6 +31,91 @@
         ],
         "createdAt": "2026-09-03T05:10:18.982Z",
         "reason": "Agent: L1119 is a within-palette avatar gradient (from-violet-500 to-violet-800, same shade family as PortalMDOHeader/RecursosDescargables already reviewed and cleared in this session's critique); L1185 is plain text-violet-400 on a stat number, the app's standard single-accent-on-metric convention documented in DESIGN.md, not a gradient or multi-hue palette at all"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(139,92,246,0.1)",
+        "createdAt": "2026-09-19T04:20:07.708Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#c8922e",
+        "createdAt": "2026-09-19T04:34:18.924Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#34c77b",
+        "createdAt": "2026-09-19T04:34:19.194Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#4aaed4",
+        "createdAt": "2026-09-19T04:34:19.618Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e05555",
+        "createdAt": "2026-09-19T04:34:19.897Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#9b82d4",
+        "createdAt": "2026-09-19T04:34:20.130Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f0a830",
+        "createdAt": "2026-09-19T04:34:20.357Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#4a5a7a",
+        "createdAt": "2026-09-19T04:34:20.622Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#dde3f0",
+        "createdAt": "2026-09-19T04:34:20.905Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#0e1530",
+        "createdAt": "2026-09-19T04:34:21.151Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#131a3a",
+        "createdAt": "2026-09-19T04:34:21.427Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#1c2545",
+        "createdAt": "2026-09-19T04:34:21.714Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#283060",
+        "createdAt": "2026-09-19T04:34:21.999Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#080d1e",
+        "createdAt": "2026-09-19T04:34:22.264Z"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "createdAt": "2026-09-19T04:34:22.535Z"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "12px",
+        "createdAt": "2026-09-19T04:34:42.390Z"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "9px",
+        "createdAt": "2026-09-19T04:34:42.641Z"
       }
     ]
   }

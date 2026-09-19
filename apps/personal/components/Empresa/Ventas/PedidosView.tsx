@@ -78,84 +78,14 @@ const inp = "w-full h-9 rounded-lg border border-slate-300 dark:border-slate-700
 
 export function PedidosView() {
   const { ventas: raw, setVentas, loading } = useGetVentas()
-  const { clientes } = useGetClientes()
-  const { centrosVenta } = useGetCentrosVenta()
-  const { items: productos } = useGetInventario()
-  const { cotizaciones } = useGetAllCotizaciones()
 
   const [search,      setSearch]      = useState("")
   const [filtroEst,   setFiltroEst]   = useState<EstadoVenta | "">("")
   const [clienteView, setClienteView] = useState<string | null>(null)
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editing,     setEditing]     = useState<VentaEmpresa | null>(null)
-  const [form,      setForm]      = useState<VentaPayload>(emptyForm())
-  const [lineas,      setLineas]      = useState<LineaForm[]>([emptyLinea()])
-  const [eliminadas,  setEliminadas]  = useState<string[]>([])
-  const [conceptoAuto, setConceptoAuto] = useState(true)
-  const [montoAuto,    setMontoAuto]    = useState(true)
-  const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
   const [cancelId,  setCancelId]  = useState<string | null>(null)
-
-  // Cotización de origen (opcional, solo al crear) — al elegirla, el pedido
-  // hereda cliente/líneas/monto reales de esa cotización en vez de volver a
-  // capturarlos a mano, y queda ligado (estado "Convertida" + ventaGenerada)
-  // para que el trayecto cotización→pedido no se pierda.
-  const [cotizacionOrigen, setCotizacionOrigen] = useState<Cotizacion | null>(null)
-  const [cotOpen,  setCotOpen]  = useState(false)
-  const [cotQuery, setCotQuery] = useState("")
-  const cotRef = useRef<HTMLDivElement>(null)
-  const [comprobante,    setComprobante]    = useState<File | null>(null)
-  const comprobanteRef = useRef<HTMLInputElement>(null)
-  const [direccion,      setDireccion]      = useState<DireccionEnvio>(emptyDireccion())
-  const [showDirec,      setShowDirec]      = useState(false)
-
-  useEffect(() => {
-    function handler(e: MouseEvent) { if (cotRef.current && !cotRef.current.contains(e.target as Node)) setCotOpen(false) }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [])
-
-  const cotizacionesElegibles = useMemo(
-    () => cotizaciones.filter(c => c.estado !== "Convertida" && c.estado !== "Rechazada"),
-    [cotizaciones]
-  )
-  const cotizacionesFiltradas = useMemo(() => {
-    const q = cotQuery.trim().toLowerCase()
-    const base = cotizacionesElegibles
-    if (!q) return base.slice(0, 30)
-    return base.filter(c =>
-      (c.numero ?? "").toLowerCase().includes(q) || (c.cliente?.nombre ?? "").toLowerCase().includes(q)
-    ).slice(0, 30)
-  }, [cotizacionesElegibles, cotQuery])
-
-  function elegirCotizacion(c: Cotizacion | null) {
-    setCotizacionOrigen(c)
-    setCotOpen(false)
-    setCotQuery("")
-    if (c) {
-      // Monto fijo al total de la cotización (ya incluye envío si lo tenía)
-      // — no se recalcula desde las líneas para que nunca quede "diferente"
-      // de lo ya acordado, aunque después se ajuste alguna línea/cantidad.
-      setForm(f => ({ ...f, cliente: c.cliente?.documentId ?? null, monto: c.total }))
-      setMontoAuto(false)
-      const lineasDeCot = (c.items ?? []).filter(i => i.descripcion.trim()).map(i => ({
-        productoId: i.productoId ?? "", descripcion: i.descripcion,
-        cantidad: String(i.cantidad || 1), precioUnitario: String(i.precio || 0),
-      }))
-      const nuevasLineas = lineasDeCot.length ? lineasDeCot : [emptyLinea()]
-      setLineas(nuevasLineas)
-      setConceptoAuto(true)
-      aplicarConceptoAuto(nuevasLineas)
-    } else {
-      setMontoAuto(true)
-    }
-  }
-
-  // Un pedido ya confirmado (no "Cotizado") ya descontó stock — sus líneas
-  // quedan de solo lectura para no desincronizar el descuento ya aplicado;
-  // solo el estado y los datos de cabecera siguen editables.
-  const lineasEditables = !editing || editing.estado === "Cotizado"
 
   const ventas = useMemo(() => {
     return raw
@@ -218,180 +148,20 @@ export function PedidosView() {
 
   function openNuevo() {
     setEditing(null)
-    setForm(emptyForm())
-    setLineas([emptyLinea()])
-    setEliminadas([])
-    setConceptoAuto(true)
-    setMontoAuto(true)
-    setCotizacionOrigen(null)
-    setComprobante(null)
-    setDireccion(emptyDireccion())
-    setShowDirec(false)
     setModalOpen(true)
   }
 
   function openEditar(v: VentaEmpresa) {
     setEditing(v)
-    setForm({
-      concepto:   v.concepto,
-      monto:      v.monto,
-      fecha:      v.fecha,
-      estado:     v.estado ?? "Cotizado",
-      metodoPago: v.metodoPago,
-      notas:      v.notas,
-      cantidad:   v.cantidad,
-      cliente:    v.cliente?.documentId ?? null,
-      producto:   v.producto?.documentId ?? null,
-      centro_venta: v.centro_venta?.documentId ?? null,
-    })
-    setLineas(v.lineas?.length
-      ? v.lineas.map(l => ({
-          documentId: l.documentId, productoId: l.producto?.documentId ?? "",
-          descripcion: l.descripcion, cantidad: String(l.cantidad), precioUnitario: String(l.precioUnitario),
-        }))
-      : [emptyLinea()])
-    setEliminadas([])
-    setConceptoAuto(false)
-    setMontoAuto(false)
-    setCotizacionOrigen(null)
-    setComprobante(null)
-    const dir = v.direccionEnvio ?? emptyDireccion()
-    setDireccion(dir)
-    setShowDirec(!!v.direccionEnvio?.calle)
     setModalOpen(true)
   }
 
-  function actualizarLinea(i: number, campo: keyof LineaForm, valor: string) {
-    setLineas(prev => {
-      const next = prev.map((l, idx) => idx === i ? { ...l, [campo]: valor } : l)
-      if (conceptoAuto) aplicarConceptoAuto(next)
-      if (montoAuto) aplicarMontoAuto(next)
-      return next
+  function handleSaved(v: VentaEmpresa) {
+    setVentas(prev => {
+      const existe = prev.some(x => x.documentId === v.documentId)
+      return existe ? prev.map(x => x.documentId === v.documentId ? v : x) : [v, ...prev]
     })
-  }
-  function seleccionarProductoLinea(i: number, p: ProductType) {
-    setLineas(prev => {
-      const next = prev.map((l, idx) => idx === i
-        ? { ...l, productoId: p.documentId, descripcion: p.nombreProducto, precioUnitario: l.precioUnitario || String(p.costo ?? 0) }
-        : l)
-      if (conceptoAuto) aplicarConceptoAuto(next)
-      if (montoAuto) aplicarMontoAuto(next)
-      return next
-    })
-  }
-  function agregarLinea() {
-    setLineas(prev => [...prev, emptyLinea()])
-  }
-  function quitarLinea(i: number) {
-    const l = lineas[i]
-    if (l?.documentId) setEliminadas(prev => [...prev, l.documentId!])
-    setLineas(prev => {
-      const next = prev.filter((_, idx) => idx !== i)
-      if (conceptoAuto) aplicarConceptoAuto(next)
-      if (montoAuto) aplicarMontoAuto(next)
-      return next
-    })
-  }
-  function aplicarConceptoAuto(ls: LineaForm[]) {
-    const validas = ls.filter(l => l.descripcion.trim())
-    const concepto = validas.length
-      ? validas.map(l => `${l.descripcion.trim()}${Number(l.cantidad) > 1 ? ` ×${l.cantidad}` : ""}`).join(", ")
-      : ""
-    setForm(f => ({ ...f, concepto }))
-  }
-  function aplicarMontoAuto(ls: LineaForm[]) {
-    const total = ls.reduce((s, l) => s + totalLinea(l), 0)
-    if (total > 0) setForm(f => ({ ...f, monto: total }))
-  }
-
-  const totalLineas = lineas.reduce((s, l) => s + totalLinea(l), 0)
-
-  async function handleSave() {
-    if (!form.concepto.trim()) { toast.error("El concepto es obligatorio"); return }
-    if (!form.monto)           { toast.error("El monto es obligatorio"); return }
-
-    const lineasValidas = lineas.filter(l => l.descripcion.trim() && Number(l.cantidad) > 0)
-    const estadoObjetivo = (editing ? form.estado ?? editing.estado : form.estado) ?? "Cotizado"
-    const aplicaStockObjetivo = estadoObjetivo !== "Cotizado" && estadoObjetivo !== "Cancelado"
-    if (lineasEditables && aplicaStockObjetivo) {
-      const faltantes = calcularFaltantesLineas(lineasValidas, productos)
-      if (faltantes.length > 0) {
-        const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`)
-        const ok = await confirmDialog({
-          title: "Stock insuficiente",
-          message: detalle,
-          confirmLabel: "Continuar de todas formas",
-          variant: "action",
-        })
-        if (!ok) return
-      }
-    }
-
-    const tieneDir = direccion.calle.trim() || direccion.ciudad.trim()
-    const direccionPayload = tieneDir ? direccion : null
-
-    setSaving(true)
-    try {
-      const comprobanteId = comprobante ? (await uploadMedia(comprobante)).id : undefined
-
-      if (editing) {
-        if (lineasEditables) {
-          for (const documentId of eliminadas) await deleteVentaLinea(documentId)
-          for (const l of lineasValidas) {
-            const payload = {
-              venta: editing.documentId, producto: l.productoId || null,
-              descripcion: l.descripcion.trim(), cantidad: Number(l.cantidad),
-              precioUnitario: Number(l.precioUnitario) || 0, subtotal: totalLinea(l),
-            }
-            if (l.documentId) await updateVentaLinea(l.documentId, payload)
-            else await createVentaLinea(payload)
-          }
-        }
-        const updated = await updateVenta(editing.documentId, {
-          ...form,
-          direccionEnvio: direccionPayload,
-          ...(comprobanteId !== undefined ? { comprobantePago: comprobanteId } : {}),
-        })
-        setVentas(prev => prev.map(v => v.documentId === updated.documentId ? updated : v))
-        toast.success("Pedido actualizado")
-      } else {
-        // Nace como "Cotizado" (sin efecto de stock) para poder crear las líneas
-        // antes de aplicar el estado real elegido — evita descontar stock con
-        // líneas que todavía no existen.
-        const estadoFinal = form.estado ?? "Cotizado"
-        const creada = await createVenta({ ...form, direccionEnvio: direccionPayload, numero: `PED-${String(raw.length + 1).padStart(3, "0")}`, estado: "Cotizado" })
-        for (const l of lineasValidas) {
-          await createVentaLinea({
-            venta: creada.documentId, producto: l.productoId || null,
-            descripcion: l.descripcion.trim(), cantidad: Number(l.cantidad),
-            precioUnitario: Number(l.precioUnitario) || 0, subtotal: totalLinea(l),
-          })
-        }
-        const patch: Partial<VentaPayload> = {}
-        if (estadoFinal !== "Cotizado") patch.estado = estadoFinal
-        if (comprobanteId !== undefined) patch.comprobantePago = comprobanteId
-        const nueva = Object.keys(patch).length > 0
-          ? await updateVenta(creada.documentId, patch)
-          : creada
-        // Si el pedido nació de una cotización, se marca "Convertida" y se
-        // liga al pedido real — mismo patrón que "Convertir a Pedido" en
-        // Cotizaciones, para que el trayecto no se pierda sin importar por
-        // dónde se creó el pedido.
-        if (cotizacionOrigen) {
-          await updateCotizacion(cotizacionOrigen.documentId, {
-            estado: "Convertida",
-            ventaGenerada: { connect: [{ id: nueva.id }] },
-          })
-        }
-        setVentas(prev => [nueva, ...prev])
-        toast.success("Pedido registrado")
-      }
-      setModalOpen(false)
-    } catch {
-      toast.error("Ocurrió un error al guardar")
-    } finally {
-      setSaving(false)
-    }
+    setModalOpen(false)
   }
 
   async function handleDelete(documentId: string) {
@@ -419,7 +189,9 @@ export function PedidosView() {
   }
 
   // Editar una fila existente reemplaza toda la lista por una página completa
-  if (modalOpen && editing) return renderPedidoForm()
+  if (modalOpen && editing) {
+    return <PedidoFormModal editing={editing} totalPedidos={raw.length} onClose={() => setModalOpen(false)} onSaved={handleSaved} />
+  }
 
   // ── Vista drill-down: pedidos de un cliente específico ──────────────────────
   if (clienteView) {
@@ -514,7 +286,7 @@ export function PedidosView() {
           </div>
         </div>
 
-        {modalOpen && renderPedidoForm()}
+        {modalOpen && <PedidoFormModal editing={editing} totalPedidos={raw.length} onClose={() => setModalOpen(false)} onSaved={handleSaved} />}
       </div>
     )
   }
@@ -590,309 +362,536 @@ export function PedidosView() {
         </div>
       </div>
 
-      {modalOpen && renderPedidoForm()}
+      {modalOpen && <PedidoFormModal editing={editing} totalPedidos={raw.length} onClose={() => setModalOpen(false)} onSaved={handleSaved} />}
     </div>
   )
+}
 
-  // Contenido del formulario (crear/editar) — se muestra como página completa
-  // al hacer clic en una fila existente, y como modal flotante al crear uno
-  // nuevo desde el botón "+ Nuevo pedido" (ahí no hay una fila que expandir).
-  function renderPedidoForm() {
-    const tarjeta = (
-          <div className={editing ? "bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl" : "w-full max-w-2xl bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl"}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? `Pedido ${editing.numero ?? ""}` : "Nuevo pedido"}</h2>
-              {!editing && (
-                <button type="button" onClick={() => setModalOpen(false)} className="p-1 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d]">
-                  <X size={16} />
-                </button>
-              )}
-            </div>
+/** Formulario de crear/editar pedido — extraído de PedidosView para poder
+    reusarlo también desde el tab "Pedidos" de Ventas (antes Panel de
+    control). Self-contenido: fetches sus propios clientes/centros de
+    venta/inventario/cotizaciones, no depende del estado de quien lo monta
+    salvo `editing` (null = crear) y los callbacks de cierre/guardado. */
+export function PedidoFormModal({ editing, totalPedidos, onClose, onSaved }: {
+  editing:      VentaEmpresa | null
+  totalPedidos: number
+  onClose:      () => void
+  onSaved:      (v: VentaEmpresa) => void
+}) {
+  const { clientes } = useGetClientes()
+  const { centrosVenta } = useGetCentrosVenta()
+  const { items: productos } = useGetInventario()
+  const { cotizaciones } = useGetAllCotizaciones()
 
-            <div className={editing ? "px-5 py-4 space-y-4" : "px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto"}>
+  const [form, setForm] = useState<VentaPayload>(() => editing ? {
+    concepto:   editing.concepto,
+    monto:      editing.monto,
+    fecha:      editing.fecha,
+    estado:     editing.estado ?? "Cotizado",
+    metodoPago: editing.metodoPago,
+    notas:      editing.notas,
+    cantidad:   editing.cantidad,
+    cliente:    editing.cliente?.documentId ?? null,
+    producto:   editing.producto?.documentId ?? null,
+    centro_venta: editing.centro_venta?.documentId ?? null,
+  } : emptyForm())
+  const [lineas, setLineas] = useState<LineaForm[]>(() => editing?.lineas?.length
+    ? editing.lineas.map(l => ({
+        documentId: l.documentId, productoId: l.producto?.documentId ?? "",
+        descripcion: l.descripcion, cantidad: String(l.cantidad), precioUnitario: String(l.precioUnitario),
+      }))
+    : [emptyLinea()])
+  const [eliminadas, setEliminadas] = useState<string[]>([])
+  const [conceptoAuto, setConceptoAuto] = useState(!editing)
+  const [montoAuto,    setMontoAuto]    = useState(!editing)
+  const [saving,    setSaving]    = useState(false)
 
-              {/* Cotización de origen — al elegirla, hereda cliente/líneas/monto
-                  reales de esa cotización (no se vuelven a capturar a mano) y
-                  queda ligada, para que el trayecto cotización→pedido no se
-                  pierda sin importar por dónde se cree el pedido. */}
-              {!editing && (
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Cotización de origen (opcional)</label>
-                  <div ref={cotRef} className="relative">
-                    <button type="button" onClick={() => setCotOpen(o => !o)}
-                      className={inp + " cursor-pointer flex items-center gap-2 text-left"}>
-                      <FileText size={13} className="text-slate-500 dark:text-slate-500 shrink-0" />
-                      <span className={`flex-1 truncate ${cotizacionOrigen ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-500"}`}>
-                        {cotizacionOrigen ? `${cotizacionOrigen.numero} — ${cotizacionOrigen.cliente?.nombre ?? "sin cliente"} · ${fmt(cotizacionOrigen.total)}` : "Sin cotización — capturar a mano"}
-                      </span>
-                      <ChevronDown size={13} className={`text-slate-500 dark:text-slate-500 shrink-0 transition-transform ${cotOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {cotOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
-                        <div className="px-2 pt-2 pb-1">
-                          <div className="relative">
-                            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-500" />
-                            <input autoFocus value={cotQuery} onChange={e => setCotQuery(e.target.value)}
-                              placeholder="Buscar por número o cliente…"
-                              className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 outline-none focus:border-violet-500" />
-                          </div>
+  // Cotización de origen (opcional, solo al crear) — al elegirla, el pedido
+  // hereda cliente/líneas/monto reales de esa cotización en vez de volver a
+  // capturarlos a mano, y queda ligado (estado "Convertida" + ventaGenerada)
+  // para que el trayecto cotización→pedido no se pierda.
+  const [cotizacionOrigen, setCotizacionOrigen] = useState<Cotizacion | null>(null)
+  const [cotOpen,  setCotOpen]  = useState(false)
+  const [cotQuery, setCotQuery] = useState("")
+  const cotRef = useRef<HTMLDivElement>(null)
+  const [comprobante,    setComprobante]    = useState<File | null>(null)
+  const comprobanteRef = useRef<HTMLInputElement>(null)
+  const [direccion,      setDireccion]      = useState<DireccionEnvio>(() => editing?.direccionEnvio ?? emptyDireccion())
+  const [showDirec,      setShowDirec]      = useState(() => !!editing?.direccionEnvio?.calle)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) { if (cotRef.current && !cotRef.current.contains(e.target as Node)) setCotOpen(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const cotizacionesElegibles = useMemo(
+    () => cotizaciones.filter(c => c.estado !== "Convertida" && c.estado !== "Rechazada"),
+    [cotizaciones]
+  )
+  const cotizacionesFiltradas = useMemo(() => {
+    const q = cotQuery.trim().toLowerCase()
+    const base = cotizacionesElegibles
+    if (!q) return base.slice(0, 30)
+    return base.filter(c =>
+      (c.numero ?? "").toLowerCase().includes(q) || (c.cliente?.nombre ?? "").toLowerCase().includes(q)
+    ).slice(0, 30)
+  }, [cotizacionesElegibles, cotQuery])
+
+  function elegirCotizacion(c: Cotizacion | null) {
+    setCotizacionOrigen(c)
+    setCotOpen(false)
+    setCotQuery("")
+    if (c) {
+      // Monto fijo al total de la cotización (ya incluye envío si lo tenía)
+      // — no se recalcula desde las líneas para que nunca quede "diferente"
+      // de lo ya acordado, aunque después se ajuste alguna línea/cantidad.
+      setForm(f => ({ ...f, cliente: c.cliente?.documentId ?? null, monto: c.total }))
+      setMontoAuto(false)
+      const lineasDeCot = (c.items ?? []).filter(i => i.descripcion.trim()).map(i => ({
+        productoId: i.productoId ?? "", descripcion: i.descripcion,
+        cantidad: String(i.cantidad || 1), precioUnitario: String(i.precio || 0),
+      }))
+      const nuevasLineas = lineasDeCot.length ? lineasDeCot : [emptyLinea()]
+      setLineas(nuevasLineas)
+      setConceptoAuto(true)
+      aplicarConceptoAuto(nuevasLineas)
+    } else {
+      setMontoAuto(true)
+    }
+  }
+
+  // Un pedido ya confirmado (no "Cotizado") ya descontó stock — sus líneas
+  // quedan de solo lectura para no desincronizar el descuento ya aplicado;
+  // solo el estado y los datos de cabecera siguen editables.
+  const lineasEditables = !editing || editing.estado === "Cotizado"
+
+  function actualizarLinea(i: number, campo: keyof LineaForm, valor: string) {
+    setLineas(prev => {
+      const next = prev.map((l, idx) => idx === i ? { ...l, [campo]: valor } : l)
+      if (conceptoAuto) aplicarConceptoAuto(next)
+      if (montoAuto) aplicarMontoAuto(next)
+      return next
+    })
+  }
+  function seleccionarProductoLinea(i: number, p: ProductType) {
+    setLineas(prev => {
+      const next = prev.map((l, idx) => idx === i
+        ? { ...l, productoId: p.documentId, descripcion: p.nombreProducto, precioUnitario: l.precioUnitario || String(p.costo ?? 0) }
+        : l)
+      if (conceptoAuto) aplicarConceptoAuto(next)
+      if (montoAuto) aplicarMontoAuto(next)
+      return next
+    })
+  }
+  function agregarLinea() {
+    setLineas(prev => [...prev, emptyLinea()])
+  }
+  function quitarLinea(i: number) {
+    const l = lineas[i]
+    if (l?.documentId) setEliminadas(prev => [...prev, l.documentId!])
+    setLineas(prev => {
+      const next = prev.filter((_, idx) => idx !== i)
+      if (conceptoAuto) aplicarConceptoAuto(next)
+      if (montoAuto) aplicarMontoAuto(next)
+      return next
+    })
+  }
+  function aplicarConceptoAuto(ls: LineaForm[]) {
+    const validas = ls.filter(l => l.descripcion.trim())
+    const concepto = validas.length
+      ? validas.map(l => `${l.descripcion.trim()}${Number(l.cantidad) > 1 ? ` ×${l.cantidad}` : ""}`).join(", ")
+      : ""
+    setForm(f => ({ ...f, concepto }))
+  }
+  function aplicarMontoAuto(ls: LineaForm[]) {
+    const total = ls.reduce((s, l) => s + totalLinea(l), 0)
+    if (total > 0) setForm(f => ({ ...f, monto: total }))
+  }
+
+  const totalLineas = lineas.reduce((s, l) => s + totalLinea(l), 0)
+
+  async function handleSave() {
+    if (!form.concepto.trim()) { toast.error("El concepto es obligatorio"); return }
+    if (!form.monto)           { toast.error("El monto es obligatorio"); return }
+
+    const lineasValidas = lineas.filter(l => l.descripcion.trim() && Number(l.cantidad) > 0)
+    const estadoObjetivo = (editing ? form.estado ?? editing.estado : form.estado) ?? "Cotizado"
+    const aplicaStockObjetivo = estadoObjetivo !== "Cotizado" && estadoObjetivo !== "Cancelado"
+    if (lineasEditables && aplicaStockObjetivo) {
+      const faltantes = calcularFaltantesLineas(lineasValidas, productos)
+      if (faltantes.length > 0) {
+        const detalle = faltantes.map(f => `• ${f.nombre}: pides ${f.pedido}, disponible ${f.disponible}`)
+        const ok = await confirmDialog({
+          title: "Stock insuficiente",
+          message: detalle,
+          confirmLabel: "Continuar de todas formas",
+          variant: "action",
+        })
+        if (!ok) return
+      }
+    }
+
+    const tieneDir = direccion.calle.trim() || direccion.ciudad.trim()
+    const direccionPayload = tieneDir ? direccion : null
+
+    setSaving(true)
+    try {
+      const comprobanteId = comprobante ? (await uploadMedia(comprobante)).id : undefined
+
+      if (editing) {
+        if (lineasEditables) {
+          for (const documentId of eliminadas) await deleteVentaLinea(documentId)
+          for (const l of lineasValidas) {
+            const payload = {
+              venta: editing.documentId, producto: l.productoId || null,
+              descripcion: l.descripcion.trim(), cantidad: Number(l.cantidad),
+              precioUnitario: Number(l.precioUnitario) || 0, subtotal: totalLinea(l),
+            }
+            if (l.documentId) await updateVentaLinea(l.documentId, payload)
+            else await createVentaLinea(payload)
+          }
+        }
+        const updated = await updateVenta(editing.documentId, {
+          ...form,
+          direccionEnvio: direccionPayload,
+          ...(comprobanteId !== undefined ? { comprobantePago: comprobanteId } : {}),
+        })
+        toast.success("Pedido actualizado")
+        onSaved(updated)
+      } else {
+        // Nace como "Cotizado" (sin efecto de stock) para poder crear las líneas
+        // antes de aplicar el estado real elegido — evita descontar stock con
+        // líneas que todavía no existen.
+        const estadoFinal = form.estado ?? "Cotizado"
+        const creada = await createVenta({ ...form, direccionEnvio: direccionPayload, numero: `PED-${String(totalPedidos + 1).padStart(3, "0")}`, estado: "Cotizado" })
+        for (const l of lineasValidas) {
+          await createVentaLinea({
+            venta: creada.documentId, producto: l.productoId || null,
+            descripcion: l.descripcion.trim(), cantidad: Number(l.cantidad),
+            precioUnitario: Number(l.precioUnitario) || 0, subtotal: totalLinea(l),
+          })
+        }
+        const patch: Partial<VentaPayload> = {}
+        if (estadoFinal !== "Cotizado") patch.estado = estadoFinal
+        if (comprobanteId !== undefined) patch.comprobantePago = comprobanteId
+        const nueva = Object.keys(patch).length > 0
+          ? await updateVenta(creada.documentId, patch)
+          : creada
+        // Si el pedido nació de una cotización, se marca "Convertida" y se
+        // liga al pedido real — mismo patrón que "Convertir a Pedido" en
+        // Cotizaciones, para que el trayecto no se pierda sin importar por
+        // dónde se creó el pedido.
+        if (cotizacionOrigen) {
+          await updateCotizacion(cotizacionOrigen.documentId, {
+            estado: "Convertida",
+            ventaGenerada: { connect: [{ id: nueva.id }] },
+          })
+        }
+        toast.success("Pedido registrado")
+        onSaved(nueva)
+      }
+    } catch {
+      toast.error("Ocurrió un error al guardar")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const tarjeta = (
+        <div className={editing ? "bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl" : "w-full max-w-2xl bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xl"}>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{editing ? `Pedido ${editing.numero ?? ""}` : "Nuevo pedido"}</h2>
+            {!editing && (
+              <button type="button" onClick={onClose} className="p-1 text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-[#2a1b3d]">
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <div className={editing ? "px-5 py-4 space-y-4" : "px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto"}>
+
+            {/* Cotización de origen — al elegirla, hereda cliente/líneas/monto
+                reales de esa cotización (no se vuelven a capturar a mano) y
+                queda ligada, para que el trayecto cotización→pedido no se
+                pierda sin importar por dónde se cree el pedido. */}
+            {!editing && (
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Cotización de origen (opcional)</label>
+                <div ref={cotRef} className="relative">
+                  <button type="button" onClick={() => setCotOpen(o => !o)}
+                    className={inp + " cursor-pointer flex items-center gap-2 text-left"}>
+                    <FileText size={13} className="text-slate-500 dark:text-slate-500 shrink-0" />
+                    <span className={`flex-1 truncate ${cotizacionOrigen ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-500"}`}>
+                      {cotizacionOrigen ? `${cotizacionOrigen.numero} — ${cotizacionOrigen.cliente?.nombre ?? "sin cliente"} · ${fmt(cotizacionOrigen.total)}` : "Sin cotización — capturar a mano"}
+                    </span>
+                    <ChevronDown size={13} className={`text-slate-500 dark:text-slate-500 shrink-0 transition-transform ${cotOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {cotOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-xl rounded-lg z-50 overflow-hidden">
+                      <div className="px-2 pt-2 pb-1">
+                        <div className="relative">
+                          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-500" />
+                          <input autoFocus value={cotQuery} onChange={e => setCotQuery(e.target.value)}
+                            placeholder="Buscar por número o cliente…"
+                            className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 outline-none focus:border-violet-500" />
                         </div>
-                        <div className="max-h-48 overflow-y-auto py-1">
-                          <button type="button" onClick={() => elegirCotizacion(null)}
-                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-[#2a1b3d] ${!cotizacionOrigen ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-500 dark:text-slate-500"}`}>
-                            Sin cotización — capturar a mano
+                      </div>
+                      <div className="max-h-48 overflow-y-auto py-1">
+                        <button type="button" onClick={() => elegirCotizacion(null)}
+                          className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-[#2a1b3d] ${!cotizacionOrigen ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-500 dark:text-slate-500"}`}>
+                          Sin cotización — capturar a mano
+                        </button>
+                        {cotizacionesFiltradas.map(c => (
+                          <button key={c.documentId} type="button" onClick={() => elegirCotizacion(c)}
+                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-[#2a1b3d] ${cotizacionOrigen?.documentId === c.documentId ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-300"}`}>
+                            <span className="block truncate">{c.numero} — {fmt(c.total)}</span>
+                            {c.cliente?.nombre && <span className="block text-[10px] text-slate-500 dark:text-slate-500 truncate">{c.cliente.nombre}</span>}
                           </button>
-                          {cotizacionesFiltradas.map(c => (
-                            <button key={c.documentId} type="button" onClick={() => elegirCotizacion(c)}
-                              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-[#2a1b3d] ${cotizacionOrigen?.documentId === c.documentId ? "text-violet-600 dark:text-violet-400 font-medium" : "text-slate-700 dark:text-slate-300"}`}>
-                              <span className="block truncate">{c.numero} — {fmt(c.total)}</span>
-                              {c.cliente?.nombre && <span className="block text-[10px] text-slate-500 dark:text-slate-500 truncate">{c.cliente.nombre}</span>}
-                            </button>
-                          ))}
-                          {cotizacionesFiltradas.length === 0 && (
-                            <p className="text-[11px] text-slate-400 dark:text-slate-600 text-center py-3">Sin cotizaciones que coincidan.</p>
+                        ))}
+                        {cotizacionesFiltradas.length === 0 && (
+                          <p className="text-[11px] text-slate-400 dark:text-slate-600 text-center py-3">Sin cotizaciones que coincidan.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Líneas de productos */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+                  Productos del pedido {!lineasEditables && (
+                    <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
+                      <Lock size={10} /> confirmado — solo lectura
+                    </span>
+                  )}
+                </label>
+                {lineasEditables && (
+                  <button type="button" onClick={agregarLinea}
+                    className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
+                    <Plus size={11} /> Agregar línea
+                  </button>
+                )}
+              </div>
+              <div className="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-[#2a1b3d]/50">
+                  {["Producto / concepto", "Cant.", "Precio", "Subtotal", ""].map(h => (
+                    <span key={h} className="text-[9px] font-semibold uppercase text-slate-400 dark:text-slate-600">{h}</span>
+                  ))}
+                </div>
+                <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {lineas.map((l, idx) => (
+                    <div key={idx} className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 items-center px-2 py-1.5">
+                      {lineasEditables ? (
+                        <div className="relative">
+                          <ProductoSearch value={l.descripcion}
+                            onChange={v => actualizarLinea(idx, "descripcion", v)}
+                            onSelect={p => seleccionarProductoLinea(idx, p)}
+                            productos={productos} />
+                          {l.productoId && (
+                            <span title="Ligado a inventario real — descuenta stock al confirmarse"
+                              className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-violet-500" />
                           )}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Líneas de productos */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
-                    Productos del pedido {!lineasEditables && (
-                      <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
-                        <Lock size={10} /> confirmado — solo lectura
-                      </span>
-                    )}
-                  </label>
-                  {lineasEditables && (
-                    <button type="button" onClick={agregarLinea}
-                      className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition">
-                      <Plus size={11} /> Agregar línea
-                    </button>
-                  )}
-                </div>
-                <div className="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-[#2a1b3d]/50">
-                    {["Producto / concepto", "Cant.", "Precio", "Subtotal", ""].map(h => (
-                      <span key={h} className="text-[9px] font-semibold uppercase text-slate-400 dark:text-slate-600">{h}</span>
-                    ))}
-                  </div>
-                  <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                    {lineas.map((l, idx) => (
-                      <div key={idx} className="grid grid-cols-[1fr_56px_90px_90px_28px] gap-1.5 items-center px-2 py-1.5">
-                        {lineasEditables ? (
-                          <div className="relative">
-                            <ProductoSearch value={l.descripcion}
-                              onChange={v => actualizarLinea(idx, "descripcion", v)}
-                              onSelect={p => seleccionarProductoLinea(idx, p)}
-                              productos={productos} />
-                            {l.productoId && (
-                              <span title="Ligado a inventario real — descuenta stock al confirmarse"
-                                className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-violet-500" />
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                            {l.productoId && <Package size={10} className="text-violet-600 dark:text-violet-500 shrink-0" />} {l.descripcion}
-                          </span>
-                        )}
-                        {lineasEditables ? (
-                          <input type="number" min="1" title="Cantidad" value={l.cantidad}
-                            onChange={e => actualizarLinea(idx, "cantidad", e.target.value)}
-                            className="px-2 py-1.5 text-[11px] text-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
-                        ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-center">{l.cantidad}</span>}
-                        {lineasEditables ? (
-                          <input type="number" min="0" step="0.01" title="Precio unitario" value={l.precioUnitario}
-                            onChange={e => actualizarLinea(idx, "precioUnitario", e.target.value)}
-                            placeholder="0.00" className="px-2 py-1.5 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
-                        ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-right">{fmt(Number(l.precioUnitario) || 0)}</span>}
-                        <span className="text-[11px] text-right text-slate-700 dark:text-slate-300 font-medium">{fmt(totalLinea(l))}</span>
-                        {lineasEditables && lineas.length > 1 ? (
-                          <button type="button" title="Quitar línea" onClick={() => quitarLinea(idx)}
-                            className="p-1 text-slate-300 dark:text-slate-700 hover:text-red-600 dark:hover:text-red-400 rounded transition flex items-center justify-center">
-                            <Trash2 size={11} />
-                          </button>
-                        ) : <span />}
-                      </div>
-                    ))}
-                  </div>
-                  {totalLineas > 0 && (
-                    <div className="flex justify-end px-3 py-1.5 bg-slate-50 dark:bg-[#2a1b3d]/50 border-t border-slate-200 dark:border-slate-800">
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Total líneas: <span className="text-slate-800 dark:text-slate-200 font-semibold">{fmt(totalLineas)}</span></span>
+                      ) : (
+                        <span className="text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                          {l.productoId && <Package size={10} className="text-violet-600 dark:text-violet-500 shrink-0" />} {l.descripcion}
+                        </span>
+                      )}
+                      {lineasEditables ? (
+                        <input type="number" min="1" title="Cantidad" value={l.cantidad}
+                          onChange={e => actualizarLinea(idx, "cantidad", e.target.value)}
+                          className="px-2 py-1.5 text-[11px] text-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
+                      ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-center">{l.cantidad}</span>}
+                      {lineasEditables ? (
+                        <input type="number" min="0" step="0.01" title="Precio unitario" value={l.precioUnitario}
+                          onChange={e => actualizarLinea(idx, "precioUnitario", e.target.value)}
+                          placeholder="0.00" className="px-2 py-1.5 text-[11px] text-right rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 outline-none focus:border-slate-400 dark:focus:border-slate-500 w-full" />
+                      ) : <span className="text-[11px] text-slate-500 dark:text-slate-400 text-right">{fmt(Number(l.precioUnitario) || 0)}</span>}
+                      <span className="text-[11px] text-right text-slate-700 dark:text-slate-300 font-medium">{fmt(totalLinea(l))}</span>
+                      {lineasEditables && lineas.length > 1 ? (
+                        <button type="button" title="Quitar línea" onClick={() => quitarLinea(idx)}
+                          className="p-1 text-slate-300 dark:text-slate-700 hover:text-red-600 dark:hover:text-red-400 rounded transition flex items-center justify-center">
+                          <Trash2 size={11} />
+                        </button>
+                      ) : <span />}
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Concepto <span className="text-red-600 dark:text-red-400">*</span></label>
-                <input type="text" placeholder="Ej. Anillo compromiso oro 14k" value={form.concepto}
-                  onChange={e => { setConceptoAuto(false); setForm(f => ({ ...f, concepto: e.target.value })) }} className={inp} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">
-                    Monto ($) <span className="text-red-600 dark:text-red-400">*</span>
-                    {cotizacionOrigen && (
-                      <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
-                        <Lock size={10} /> de la cotización
-                      </span>
-                    )}
-                  </label>
-                  {cotizacionOrigen ? (
-                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 flex items-center text-sm font-semibold text-violet-600 dark:text-violet-400">
-                      {fmt(form.monto || 0)}
-                    </div>
-                  ) : (
-                    <input type="number" placeholder="0" value={form.monto || ""}
-                      onChange={e => { setMontoAuto(false); setForm(f => ({ ...f, monto: Number(e.target.value) || 0 })) }} className={inp} />
-                  )}
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Canal de venta</label>
-                  <select title="Canal de venta" value={form.centro_venta ?? ""}
-                    onChange={e => setForm(f => ({ ...f, centro_venta: e.target.value || null }))} className={inp + " cursor-pointer"}>
-                    <option value="">— Sin especificar —</option>
-                    {centrosVenta.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Fecha</label>
-                  <input type="date" value={form.fecha ?? ""}
-                    onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className={inp} />
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Estado</label>
-                  <select title="Estado" value={form.estado ?? ""}
-                    onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoVenta }))} className={inp + " cursor-pointer"}>
-                    {ESTADOS_VENTA.map(e => <option key={e} value={e}>{e}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Método de pago</label>
-                  <select title="Método de pago" value={form.metodoPago ?? ""}
-                    onChange={e => setForm(f => ({ ...f, metodoPago: (e.target.value || null) as MetodoPago | null }))} className={inp + " cursor-pointer"}>
-                    <option value="">— Sin especificar —</option>
-                    {METODOS_PAGO.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">
-                    Cliente
-                    {cotizacionOrigen && (
-                      <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
-                        <Lock size={10} /> de la cotización
-                      </span>
-                    )}
-                  </label>
-                  {cotizacionOrigen ? (
-                    <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 flex items-center text-sm text-slate-700 dark:text-slate-300">
-                      {cotizacionOrigen.cliente?.nombre ?? "— Sin cliente —"}
-                    </div>
-                  ) : (
-                    <select title="Cliente" value={form.cliente ?? ""}
-                      onChange={e => setForm(f => ({ ...f, cliente: e.target.value || null }))} className={inp + " cursor-pointer"}>
-                      <option value="">— Sin cliente —</option>
-                      {clientes.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
-                    </select>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Evidencia de pago (opcional)</label>
-                <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
-                  onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
-                <button type="button" onClick={() => comprobanteRef.current?.click()}
-                  className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
-                  <Paperclip size={13} className="shrink-0" />
-                  <span className="truncate">
-                    {comprobante ? comprobante.name : editing?.comprobantePago ? `Ya adjunto: ${editing.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
-                  </span>
-                </button>
-              </div>
-
-              {/* Dirección de envío */}
-              <div>
-                <button type="button" onClick={() => setShowDirec(v => !v)}
-                  className="flex items-center gap-1.5 w-full text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                  <span>Dirección de envío (opcional)</span>
-                  {direccion.calle.trim() && (
-                    <span className="px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 text-[9px] font-bold">Con dirección</span>
-                  )}
-                  <span className="ml-auto text-slate-400 dark:text-slate-600">{showDirec ? "▲" : "▼"}</span>
-                </button>
-                {showDirec && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {([
-                      ["calle",       "Calle y número",    "col-span-2"],
-                      ["colonia",     "Colonia",            ""],
-                      ["ciudad",      "Ciudad",             ""],
-                      ["estado",      "Estado",             ""],
-                      ["cp",          "C.P.",               ""],
-                      ["referencias", "Referencias",        "col-span-2"],
-                    ] as [keyof DireccionEnvio, string, string][]).map(([key, label, extra]) => (
-                      <div key={key} className={extra}>
-                        <p className="text-[9px] text-slate-400 dark:text-slate-600 mb-0.5">{label}</p>
-                        <input value={direccion[key]} onChange={e => setDireccion(d => ({ ...d, [key]: e.target.value }))}
-                          placeholder={label} className={inp} />
-                      </div>
-                    ))}
+                {totalLineas > 0 && (
+                  <div className="flex justify-end px-3 py-1.5 bg-slate-50 dark:bg-[#2a1b3d]/50 border-t border-slate-200 dark:border-slate-800">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Total líneas: <span className="text-slate-800 dark:text-slate-200 font-semibold">{fmt(totalLineas)}</span></span>
                   </div>
                 )}
               </div>
+            </div>
 
+            <div>
+              <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Concepto <span className="text-red-600 dark:text-red-400">*</span></label>
+              <input type="text" placeholder="Ej. Anillo compromiso oro 14k" value={form.concepto}
+                onChange={e => { setConceptoAuto(false); setForm(f => ({ ...f, concepto: e.target.value })) }} className={inp} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Notas</label>
-                <textarea placeholder="Observaciones, detalles del pedido…" value={form.notas ?? ""}
-                  onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
-                  rows={2} className={inp + " resize-none h-auto py-2"} />
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">
+                  Monto ($) <span className="text-red-600 dark:text-red-400">*</span>
+                  {cotizacionOrigen && (
+                    <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
+                      <Lock size={10} /> de la cotización
+                    </span>
+                  )}
+                </label>
+                {cotizacionOrigen ? (
+                  <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 flex items-center text-sm font-semibold text-violet-600 dark:text-violet-400">
+                    {fmt(form.monto || 0)}
+                  </div>
+                ) : (
+                  <input type="number" placeholder="0" value={form.monto || ""}
+                    onChange={e => { setMontoAuto(false); setForm(f => ({ ...f, monto: Number(e.target.value) || 0 })) }} className={inp} />
+                )}
+              </div>
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Canal de venta</label>
+                <select title="Canal de venta" value={form.centro_venta ?? ""}
+                  onChange={e => setForm(f => ({ ...f, centro_venta: e.target.value || null }))} className={inp + " cursor-pointer"}>
+                  <option value="">— Sin especificar —</option>
+                  {centrosVenta.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
+                </select>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-800">
-              <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
-                className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
-                Cancelar
-              </button>
-              <button type="button" onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
-                {saving && <Loader2 size={14} className="animate-spin" />}
-                {editing ? "Guardar cambios" : "Registrar"}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Fecha</label>
+                <input type="date" value={form.fecha ?? ""}
+                  onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className={inp} />
+              </div>
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Estado</label>
+                <select title="Estado" value={form.estado ?? ""}
+                  onChange={e => setForm(f => ({ ...f, estado: e.target.value as EstadoVenta }))} className={inp + " cursor-pointer"}>
+                  {ESTADOS_VENTA.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Método de pago</label>
+                <select title="Método de pago" value={form.metodoPago ?? ""}
+                  onChange={e => setForm(f => ({ ...f, metodoPago: (e.target.value || null) as MetodoPago | null }))} className={inp + " cursor-pointer"}>
+                  <option value="">— Sin especificar —</option>
+                  {METODOS_PAGO.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">
+                  Cliente
+                  {cotizacionOrigen && (
+                    <span className="inline-flex items-center gap-1 text-violet-600 dark:text-violet-400 normal-case ml-1">
+                      <Lock size={10} /> de la cotización
+                    </span>
+                  )}
+                </label>
+                {cotizacionOrigen ? (
+                  <div className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 flex items-center text-sm text-slate-700 dark:text-slate-300">
+                    {cotizacionOrigen.cliente?.nombre ?? "— Sin cliente —"}
+                  </div>
+                ) : (
+                  <select title="Cliente" value={form.cliente ?? ""}
+                    onChange={e => setForm(f => ({ ...f, cliente: e.target.value || null }))} className={inp + " cursor-pointer"}>
+                    <option value="">— Sin cliente —</option>
+                    {clientes.map(c => <option key={c.documentId} value={c.documentId}>{c.nombre}</option>)}
+                  </select>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Evidencia de pago (opcional)</label>
+              <input ref={comprobanteRef} type="file" accept="image/*,.pdf" className="hidden"
+                onChange={e => setComprobante(e.target.files?.[0] ?? null)} />
+              <button type="button" onClick={() => comprobanteRef.current?.click()}
+                className="w-full flex items-center gap-2 h-9 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d]/40 px-3 text-sm text-slate-500 dark:text-slate-400 hover:border-violet-500/50 hover:text-slate-800 dark:hover:text-slate-200 transition-all">
+                <Paperclip size={13} className="shrink-0" />
+                <span className="truncate">
+                  {comprobante ? comprobante.name : editing?.comprobantePago ? `Ya adjunto: ${editing.comprobantePago.name} — elegir otro archivo` : "Adjuntar foto o archivo del comprobante…"}
+                </span>
               </button>
             </div>
+
+            {/* Dirección de envío */}
+            <div>
+              <button type="button" onClick={() => setShowDirec(v => !v)}
+                className="flex items-center gap-1.5 w-full text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                <span>Dirección de envío (opcional)</span>
+                {direccion.calle.trim() && (
+                  <span className="px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 text-[9px] font-bold">Con dirección</span>
+                )}
+                <span className="ml-auto text-slate-400 dark:text-slate-600">{showDirec ? "▲" : "▼"}</span>
+              </button>
+              {showDirec && (
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    ["calle",       "Calle y número",    "col-span-2"],
+                    ["colonia",     "Colonia",            ""],
+                    ["ciudad",      "Ciudad",             ""],
+                    ["estado",      "Estado",             ""],
+                    ["cp",          "C.P.",               ""],
+                    ["referencias", "Referencias",        "col-span-2"],
+                  ] as [keyof DireccionEnvio, string, string][]).map(([key, label, extra]) => (
+                    <div key={key} className={extra}>
+                      <p className="text-[9px] text-slate-400 dark:text-slate-600 mb-0.5">{label}</p>
+                      <input value={direccion[key]} onChange={e => setDireccion(d => ({ ...d, [key]: e.target.value }))}
+                        placeholder={label} className={inp} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5 block">Notas</label>
+              <textarea placeholder="Observaciones, detalles del pedido…" value={form.notas ?? ""}
+                onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
+                rows={2} className={inp + " resize-none h-auto py-2"} />
+            </div>
           </div>
-    )
 
-    if (editing) {
-      return (
-        <div className="p-4 md:p-6 max-w-2xl mx-auto">
-          <button type="button" onClick={() => setModalOpen(false)}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition mb-4">
-            <ArrowLeft size={14} /> Volver a Pedidos
-          </button>
-          {tarjeta}
+          <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-800">
+            <button type="button" onClick={onClose} disabled={saving}
+              className="h-8 px-4 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
+              Cancelar
+            </button>
+            <button type="button" onClick={handleSave} disabled={saving}
+              className="flex items-center gap-2 h-8 px-4 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-500 disabled:opacity-50 transition">
+              {saving && <Loader2 size={14} className="animate-spin" />}
+              {editing ? "Guardar cambios" : "Registrar"}
+            </button>
+          </div>
         </div>
-      )
-    }
+  )
 
+  if (editing) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-        onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
+      <div className="p-4 md:p-6 max-w-2xl mx-auto">
+        <button type="button" onClick={onClose}
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition mb-4">
+          <ArrowLeft size={14} /> Volver a Pedidos
+        </button>
         {tarjeta}
       </div>
     )
   }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      {tarjeta}
+    </div>
+  )
 }
