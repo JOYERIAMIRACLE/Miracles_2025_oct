@@ -113,6 +113,16 @@ const Navbar = () => {
                     >
                         Empresa
                     </Link>
+                    <Link
+                        href="/contacto"
+                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
+                            isHero
+                                ? "text-white/70 hover:text-white"
+                                : "text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
+                        }`}
+                    >
+                        Contáctanos
+                    </Link>
 
                     {/* Carrito */}
                     {cart.items.length === 0

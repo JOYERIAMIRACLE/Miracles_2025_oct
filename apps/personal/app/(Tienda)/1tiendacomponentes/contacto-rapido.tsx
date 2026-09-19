@@ -11,6 +11,7 @@ type Panel = "telefono" | "correo" | "ubicacion" | null
 const TELEFONO      = "+52 1 XX XXXX XXXX"
 const TELEFONO_HREF = "tel:+521XXXXXXXXXX"
 const CORREO        = "contacto@medalladeoro.com.mx"
+const DIRECCION     = "Av. Insurgentes Sur 1602, Col. Crédito Constructor, CDMX"
 const MAPS_QUERY    = "Medalla+de+Oro+Joyer%C3%ADa"
 const MAPS_HREF     = `https://www.google.com/maps/search/?api=1&query=${MAPS_QUERY}`
 const MAPS_EMBED    = `https://www.google.com/maps?q=${MAPS_QUERY}&output=embed`
@@ -23,7 +24,9 @@ const triggerCls = "bg-transparent border-0 appearance-none p-0 m-0 cursor-point
 // métricas de fuente/line-height por default del navegador) no miden
 // exactamente lo mismo y el renglón se ve descuadrado entre ambos tipos.
 const itemWrapCls = "relative flex items-center h-4"
-const panelCls     = "absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 w-56 bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl p-4 backdrop-blur-sm"
+// w-72 (no w-56): a ese ancho el correo completo ("contacto@medalladeoro.com.mx"
+// en text-sm font-semibold) se partía a una segunda línea dentro del panel.
+const panelCls     = "absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 w-72 bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl p-4 backdrop-blur-sm"
 
 export default function ContactoRapido() {
   const [open, setOpen] = useState<Panel>(null)
@@ -114,7 +117,8 @@ export default function ContactoRapido() {
         </button>
         {open === "ubicacion" && (
           <div className={panelCls}>
-            <p className="text-white/50 text-[10px] uppercase tracking-wide mb-2">Visítanos</p>
+            <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1">Visítanos en</p>
+            <p className="text-white text-sm font-semibold mb-3">{DIRECCION}</p>
             <a
               href={MAPS_HREF}
               target="_blank" rel="noopener noreferrer"
@@ -142,6 +146,13 @@ export default function ContactoRapido() {
             </a>
           </div>
         )}
+      </div>
+
+      {/* Formulario de contacto completo — distinto de los canales directos de arriba */}
+      <div className={itemWrapCls}>
+        <Link href="/contacto" className={triggerCls}>
+          Contacto
+        </Link>
       </div>
 
       <div className={itemWrapCls}>

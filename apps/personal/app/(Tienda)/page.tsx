@@ -80,6 +80,15 @@ export default function HeroPage() {
 
         {/* Canales de contacto */}
         <ContactoRapido />
+
+        {/* Aviso de privacidad — visible en el hero, no solo enterrado en el footer */}
+        <p className="text-white/40 text-[11px] max-w-md text-center leading-relaxed">
+          Al continuar navegando, aceptas nuestro{" "}
+          <Link href="/privacidad" className="underline hover:text-white/70 transition-colors">
+            Aviso de Privacidad
+          </Link>
+          .
+        </p>
       </div>
 
     </div>
