@@ -137,18 +137,19 @@ const FiltersControlsCategory = ({
         </div>
       )}
 
-      {/* Secciones */}
+      {/* Secciones — solo "Tipo de producto" abre desplegada por default;
+          el resto empieza colapsado para no saturar el sidebar. */}
       {categorias && categorias.length > 0 && (
-        <SeccionFiltro titulo="Categoría">
+        <SeccionFiltro titulo="Tipo de producto">
           <FilterCategoria categorias={categorias} activa={categoriaActual ?? ""} />
         </SeccionFiltro>
       )}
 
-      <SeccionFiltro titulo="Precio">
+      <SeccionFiltro titulo="Precio" defaultOpen={false}>
         <FilterPrecio value={filterPrecio} onChange={setFilterPrecio} />
       </SeccionFiltro>
 
-      <SeccionFiltro titulo="Material">
+      <SeccionFiltro titulo="Material" defaultOpen={false}>
         <FilterMaterial value={filterMaterial} onChange={setFilterMaterial} />
       </SeccionFiltro>
 
@@ -156,13 +157,13 @@ const FiltersControlsCategory = ({
           concreto tiene valores reales — así "Talla" no sale en Dijes y
           "Estilo" no sale en categorías sin variedad real de figura. */}
       {opcionesTalla.length > 0 && (
-        <SeccionFiltro titulo="Talla">
+        <SeccionFiltro titulo="Talla" defaultOpen={false}>
           <FilterTalla value={filterTalla} onChange={setFilterTalla} opciones={opcionesTalla} />
         </SeccionFiltro>
       )}
 
       {opcionesEstilo.length > 0 && (
-        <SeccionFiltro titulo="Estilo / Figura">
+        <SeccionFiltro titulo="Estilo / Figura" defaultOpen={false}>
           <FilterEstilo value={filterEstilo} onChange={setFilterEstilo} opciones={opcionesEstilo} />
         </SeccionFiltro>
       )}
