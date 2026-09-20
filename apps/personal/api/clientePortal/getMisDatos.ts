@@ -32,12 +32,16 @@ export async function fetchMisCotizaciones(_clienteDocumentId: string): Promise<
   return json.data ?? []
 }
 
-export async function actualizarMiCliente(documentId: string, payload: Partial<{
+// PUT /api/clientes/:id (el REST genérico de Strapi) exige rol "authenticated"
+// (el del staff) — el cliente de Tienda tiene rol "cliente_tienda", que solo
+// trae el permiso "user.me". Por eso este guardado pasa por /api/tienda/mis-datos,
+// que verifica el JWT a mano y solo permite tocar el propio registro del cliente.
+export async function actualizarMiCliente(_documentId: string, payload: Partial<{
   nombre: string; telefono: string | null; direccion: string | null
 }>): Promise<ClienteEmpresa> {
-  const res = await fetch(`${BASE}/api/clientes/${documentId}`, {
+  const res = await fetch(`${BASE}/api/tienda/mis-datos`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: tiendaHeaders(),
     body: JSON.stringify({ data: payload }),
   })
   const json = await res.json()

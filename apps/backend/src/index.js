@@ -814,6 +814,40 @@ module.exports = {
         },
         config: { auth: false },
       },
+      // El cliente_tienda solo tiene permiso 'user.me' (bootstrap más abajo)
+      // — nunca cliente.update — así que el REST genérico PUT /api/clientes/:id
+      // le daría 403 aunque mande el JWT. Mismo patrón que el GET de arriba:
+      // verificar el JWT a mano y tocar solo el registro de ESTE cliente.
+      {
+        method: 'PUT',
+        path: '/api/tienda/mis-datos',
+        handler: async (ctx) => {
+          try {
+            const token = (ctx.request.headers.authorization || '').replace('Bearer ', '').trim();
+            if (!token) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const { id } = await strapi.plugins['users-permissions'].services.jwt.verify(token);
+            const user = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { id } });
+            if (!user) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+            const cliente = await strapi.db.query('api::cliente.cliente').findOne({ where: { email: user.email } });
+            if (!cliente) { ctx.status = 404; ctx.body = { error: { message: 'Cliente no encontrado' } }; return; }
+
+            const { nombre, telefono, direccion } = (ctx.request.body || {}).data || {};
+            const data = {};
+            if (nombre    !== undefined) data.nombre    = nombre;
+            if (telefono  !== undefined) data.telefono  = telefono;
+            if (direccion !== undefined) data.direccion = direccion;
+
+            const actualizado = await strapi.db.query('api::cliente.cliente').update({
+              where: { id: cliente.id },
+              data,
+            });
+            ctx.body = { data: actualizado };
+          } catch (e) {
+            ctx.status = 401; ctx.body = { error: 'Token inválido' };
+          }
+        },
+        config: { auth: false },
+      },
       {
         method: 'GET',
         path: '/api/tienda/mis-pedidos',
