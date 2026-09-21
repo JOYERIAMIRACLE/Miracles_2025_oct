@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Loader2, Eye, EyeOff, Mail, Lock, ShoppingBag, Sparkles } from "lucide-react"
 import { setToken, isTokenValid, getToken, setUserRole, getUserRole, fetchUserRole, setSessionCookie } from "@/lib/auth"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
@@ -139,7 +140,10 @@ export default function LoginPage() {
               </div>
             </div>
             <div>
-              <label htmlFor="password" className="text-xs font-medium text-zinc-400 mb-1.5 block">Contraseña</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="text-xs font-medium text-zinc-400">Contraseña</label>
+                <Link href="/login/olvide-password" className="text-xs text-violet-400 hover:text-violet-300 font-medium">¿Olvidaste tu contraseña?</Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
                 <input

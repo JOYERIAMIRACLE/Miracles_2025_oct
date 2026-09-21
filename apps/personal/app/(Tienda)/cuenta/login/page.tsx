@@ -64,7 +64,10 @@ function LoginForm() {
           </div>
         </div>
         <div>
-          <label htmlFor="password" className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">Contraseña</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="password" className="text-xs font-medium text-gray-500 dark:text-gray-400">Contraseña</label>
+            <Link href="/cuenta/olvide-password" className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-medium">¿Olvidaste tu contraseña?</Link>
+          </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-600 pointer-events-none" />
             <input
