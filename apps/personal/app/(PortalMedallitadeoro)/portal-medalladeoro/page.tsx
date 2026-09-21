@@ -18,13 +18,14 @@ import { SeccionFinanzas } from "@/components/Empresa/PortalMDO/SeccionFinanzas"
 import { SeccionDocumentos } from "@/components/Empresa/PortalMDO/SeccionDocumentos"
 import { SeccionGestionMarca } from "@/components/Empresa/PortalMDO/SeccionGestionMarca"
 import { SeccionEnlaces } from "@/components/Empresa/PortalMDO/SeccionEnlaces"
+import { SeccionUsuarios } from "@/components/Empresa/PortalMDO/SeccionUsuarios"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
 import { NotasMejora } from "@/components/Empresa/PortalMDO/NotasMejora"
 
 const SECCIONES_VALIDAS = [
   "portal", "conoce", "mision",
   "tareas", "campanas", "contactos", "ventas", "inventario", "finanzas", "sitio-web",
-  "documentos", "marca", "enlaces",
+  "documentos", "marca", "enlaces", "usuarios",
 ]
 
 function leerHash(): { seccion: string; tab: string } {
@@ -73,6 +74,7 @@ export default function PortalMedalladeoroPage() {
       case "documentos":   return <SeccionDocumentos />
       case "marca":        return <SeccionGestionMarca />
       case "enlaces":      return <SeccionEnlaces />
+      case "usuarios":     return <SeccionUsuarios />
       default:              return <SeccionPortalHome onNavigate={navigate} />
     }
   }

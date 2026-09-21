@@ -5,6 +5,7 @@ import {
   Home, Landmark, Building2, Flag, Briefcase, ListChecks,
   Megaphone, Contact, ShoppingBag, Boxes, DollarSign, Globe,
   FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings, Brain,
+  UserCog, Users,
 } from "lucide-react"
 import { PortalMDOConfigModal } from "./PortalMDOConfigModal"
 
@@ -69,6 +70,12 @@ export const GRUPOS: NavGroup[] = [
       { id: "segundo-cerebro", label: "Second Brain", icon: Brain, href: "/segundo-cerebro" },
     ],
   },
+  {
+    id: "administracion", label: "Administración", icon: UserCog, itemsAreOwnSection: true,
+    items: [
+      { id: "usuarios", label: "Usuarios", icon: Users },
+    ],
+  },
 ]
 
 export const DEPT_ICONS: Record<string, typeof Home> = {
@@ -76,6 +83,7 @@ export const DEPT_ICONS: Record<string, typeof Home> = {
   tareas: ListChecks, campanas: Megaphone, contactos: Contact,
   ventas: ShoppingBag, inventario: Boxes, finanzas: DollarSign, "sitio-web": Globe,
   documentos: FileText, marca: Palette, enlaces: Link2, "segundo-cerebro": Brain,
+  usuarios: Users,
 }
 
 interface Props {
