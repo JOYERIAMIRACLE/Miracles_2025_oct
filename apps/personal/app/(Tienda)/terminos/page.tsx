@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Container from "../1tiendacomponentes/container"
 
-const SITE_URL = "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 
 export const metadata: Metadata = {
   title: "Términos y condiciones | Medalla de Oro",

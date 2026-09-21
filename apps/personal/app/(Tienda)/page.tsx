@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import ContactoRapido from "./1tiendacomponentes/contacto-rapido"
 import AvisoPrivacidadBanner from "./1tiendacomponentes/aviso-privacidad-banner"
 
-const SITE_URL = "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 
 const TITLE = "Medalla de Oro | Oro y Plata de Alta Calidad"
 const DESCRIPTION = "Joyería fina en oro de 10k y plata 925: anillos, cadenas, aretes, dijes, pulsos y más. Envíos a todo México."

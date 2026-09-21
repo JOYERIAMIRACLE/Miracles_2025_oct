@@ -3,7 +3,7 @@ import { ProductType } from "@/types/product"
 import CategoryClient from "./CategoryClient"
 
 const BACKEND  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE_URL = "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 
 type CategoryData = { NombreCategoria: string; slug: string; MainImage?: { url: string } | null }
 

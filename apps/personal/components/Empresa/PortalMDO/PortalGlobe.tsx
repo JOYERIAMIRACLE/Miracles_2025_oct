@@ -91,12 +91,9 @@ export function PortalGlobe({ heroMode = false }: { heroMode?: boolean }) {
 
   return (
     <a
-      // TEMPORAL: apunta a la Tienda (https://miracles-frontend.pages.dev/tienda
-      // en el dominio de pruebas actual) mientras se configura el dominio real
-      // medallitadeoro.com.mx — cuando esté listo, volver a
-      // href="https://medallitadeoro.com.mx" con target="_blank"
-      // rel="noopener noreferrer" (enlace externo).
-      href="/tienda"
+      href="https://medalladeoro.com.mx"
+      target="_blank"
+      rel="noopener noreferrer"
       className={`absolute inset-0 flex ${heroMode ? "items-start" : "items-center"} justify-center group cursor-pointer`}
       onMouseEnter={() => { hoverRef.current = true; setHover(true) }}
       onMouseLeave={() => { hoverRef.current = false; setHover(false) }}
@@ -137,7 +134,7 @@ export function PortalGlobe({ heroMode = false }: { heroMode?: boolean }) {
         }`}>
           <MapPin size={16} className="text-yellow-500 shrink-0 mt-0.5" />
           <div className="min-w-0">
-            <p className="text-xs font-bold text-white">Medallitadeoro</p>
+            <p className="text-xs font-bold text-white">Medalladeoro</p>
             <p className="text-[11px] text-slate-300 leading-relaxed whitespace-pre-line line-clamp-3">
               {identidad?.direccion || "Dirección pendiente de definir"}
             </p>
@@ -148,7 +145,7 @@ export function PortalGlobe({ heroMode = false }: { heroMode?: boolean }) {
       {/* Dominio — siempre visible. bottom-16 (no bottom-4): deja espacio libre
           abajo, fuera de la zona donde la vitrina se monta encima del mural. */}
       <span className="absolute bottom-16 inset-x-0 text-center text-sm font-semibold text-yellow-600 group-hover:text-yellow-400 transition-colors">
-        medallitadeoro.com.mx
+        medalladeoro.com.mx
       </span>
     </a>
   )

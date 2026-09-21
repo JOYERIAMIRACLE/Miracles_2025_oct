@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Container from "../1tiendacomponentes/container"
 
-const SITE_URL = "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 
 // Mismo correo de marcador de posición usado en el footer (1tiendacomponentes/footer.tsx) —
 // se reutiliza aquí verbatim para no tener dos "contactos oficiales" distintos en el sitio.

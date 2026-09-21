@@ -3,7 +3,7 @@ import { ProductType } from "@/types/product"
 import ProductoClient from "./ProductoClient"
 
 const BACKEND  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE_URL = "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 
 async function fetchProduct(slug: string): Promise<ProductType | null> {
   try {

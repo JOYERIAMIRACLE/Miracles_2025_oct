@@ -10,6 +10,8 @@ module.exports = [
         'https://miracles-frontend.pages.dev',
         'https://joyeriamiraclesweb.com',
         'https://medalladeoro.com',
+        'https://medalladeoro.com.mx',
+        'https://www.medalladeoro.com.mx',
         // Dev local
         'http://localhost:3000',
         'http://localhost:1337',

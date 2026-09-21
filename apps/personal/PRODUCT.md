@@ -35,7 +35,7 @@ Not a category product sold to strangers — custom-built internal tooling plus 
 
 ## Brand Commitments
 
-- Internal/portal name: **"Medalla de oro"** — deliberately renamed from "Medallitadeoro" in the portal's own UI and URL slug. The public storefront's real name and domain (medallitadeoro.com / medallitadeoro.com.mx) stay untouched and out of scope for this rename.
+- Internal/portal name: **"Medalla de oro"** — deliberately renamed from "Medallitadeoro" in the portal's own UI and URL slug. The public storefront's real name and domain (medalladeoro.com / medalladeoro.com.mx) stay untouched and out of scope for this rename.
 - Single-accent design system across the whole app: violet is the one decorative accent; red/emerald/amber are reserved for real semantic states (alert/success/warning) only, never used decoratively by category.
 - Real logo asset (`identidad-empresa.logo`): a white "M" mark with a bright green chevron accent, transparent PNG. Confirmed this session as the authoritative brand color reference (green + white/black) — overrides the separately stored `colores` text field ("negro, azul marino, rosa oscuro"), which is stale.
 - Portal Medalla de oro design priority: **functional, fast to operate**, over ornamental — matches how it has been built so far (dense tables, single accent, minimal decoration). Segundo Cerebro is explicitly allowed to be more expressive/bold; it is not held to the same restraint.
@@ -43,7 +43,7 @@ Not a category product sold to strangers — custom-built internal tooling plus 
 ## Evidence on Hand
 
 - Real logo: `identidad-empresa.logo` (hosted on Cloudinary), currently used on the login screen and portal header.
-- Real public domain/site: medallitadeoro.com / medallitadeoro.com.mx (Tienda storefront, and the office-map link in Portal Medalla de oro) — explicitly out of scope for any portal/Segundo Cerebro rebrand work.
+- Real public domain/site: medalladeoro.com / medalladeoro.com.mx (Tienda storefront, and the office-map link in Portal Medalla de oro) — explicitly out of scope for any portal/Segundo Cerebro rebrand work.
 - No DESIGN.md exists yet for any surface. Portal Medalla de oro's actual token and pattern conventions (violet accent, Tailwind v4, dark theme via next-themes) live only in code today — a `/impeccable document` pass would need to read the code to produce one.
 
 ## Product Principles

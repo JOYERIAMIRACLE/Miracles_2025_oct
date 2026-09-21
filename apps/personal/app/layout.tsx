@@ -36,7 +36,7 @@ const orgJsonLd = {
   name: "Joyería Miracles",
   url: SITE,
   description: "Venta de joyería fina en oro de 10k, 14k y plata 925. Envíos a todo México.",
-  email: "miraclejoyeria@gmail.com",
+  email: "contacto@medalladeoro.com.mx",
   areaServed: "MX",
   currenciesAccepted: "MXN",
   priceRange: "$$",

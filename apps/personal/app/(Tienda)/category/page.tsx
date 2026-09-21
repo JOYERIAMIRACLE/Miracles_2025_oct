@@ -5,7 +5,7 @@ import { CategoryType } from "@/types/category"
 import AllCategoriesClient from "./AllCategoriesClient"
 
 const BACKEND  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE_URL = "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
 
 async function fetchAllProducts(): Promise<ProductType[]> {
   try {
