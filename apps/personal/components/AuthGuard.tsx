@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getToken, isTokenValid } from "@/lib/auth"
+import { getToken, isTokenValid, getUserRole } from "@/lib/auth"
 import { Loader2 } from "lucide-react"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (isTokenValid(getToken())) {
+    // No basta con "hay JWT válido" — un cliente_tienda también tiene uno.
+    // Solo el rol de staff puede pasar a las secciones internas de gestión.
+    if (isTokenValid(getToken()) && getUserRole() === "authenticated") {
       setReady(true)
     } else {
       router.replace("/login")
