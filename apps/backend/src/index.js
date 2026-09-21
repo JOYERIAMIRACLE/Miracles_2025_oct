@@ -32,6 +32,14 @@ function getIP(ctx) {
   );
 }
 
+// Corta el caso de que alguien mande texto/código gigante en un campo de
+// formulario público (nombre, mensaje, etc.) — nunca afecta a un usuario
+// real (nadie escribe miles de caracteres a mano en un campo de nombre),
+// solo frena abuso automatizado o intentos de saturar la base de datos.
+function excedeLimite(valor, max) {
+  return typeof valor === 'string' && valor.length > max;
+}
+
 function setCorsHeaders(ctx) {
   const origin = ctx.request.headers.origin;
   if (origin && CORS_ORIGINS.includes(origin)) {
@@ -110,6 +118,17 @@ const registroRateLimit = rateLimitMiddleware('/api/tienda/registro', 'POST', {
 });
 const forgotPasswordRateLimit = rateLimitMiddleware('/api/auth/forgot-password', 'POST', {
   max: 5,
+  contarComoFallo: () => true,
+});
+// Umbrales más generosos que login/registro — una persona real puede mandar
+// el formulario de contacto o intentar el checkout varias veces seguidas
+// ajustando su carrito; el límite frena abuso masivo, no uso normal.
+const contactoRateLimit = rateLimitMiddleware('/api/tienda/contacto', 'POST', {
+  max: 10,
+  contarComoFallo: () => true,
+});
+const checkoutRateLimit = rateLimitMiddleware('/api/tienda/checkout-intento', 'POST', {
+  max: 20,
   contarComoFallo: () => true,
 });
 
@@ -726,6 +745,8 @@ module.exports = {
     strapi.server.use(loginRateLimit);
     strapi.server.use(registroRateLimit);
     strapi.server.use(forgotPasswordRateLimit);
+    strapi.server.use(contactoRateLimit);
+    strapi.server.use(checkoutRateLimit);
 
     strapi.server.routes([
       {
@@ -765,6 +786,10 @@ module.exports = {
               ctx.status = 400;
               ctx.body = { error: { message: 'Nombre y teléfono son requeridos' } };
               return;
+            }
+            if (excedeLimite(nombre, 200) || excedeLimite(telefono, 30) || excedeLimite(email, 200) ||
+                excedeLimite(interes, 200) || excedeLimite(mensaje, 2000) || excedeLimite(vendedor, 200)) {
+              ctx.status = 400; ctx.body = { error: { message: 'Uno de los campos excede el largo permitido' } }; return;
             }
             // canal puede ser: 'Formulario' (default), 'Vendedor', 'Mostrador'
             const canalLead = canal || 'Formulario';
@@ -820,8 +845,11 @@ module.exports = {
             if (!username || !email || !password) {
               ctx.status = 400; ctx.body = { error: { message: 'Nombre, email y contraseña son requeridos' } }; return;
             }
-            if (String(password).length < 6) {
-              ctx.status = 400; ctx.body = { error: { message: 'La contraseña debe tener al menos 6 caracteres' } }; return;
+            if (String(password).length < 6 || String(password).length > 128) {
+              ctx.status = 400; ctx.body = { error: { message: 'La contraseña debe tener entre 6 y 128 caracteres' } }; return;
+            }
+            if (excedeLimite(username, 100) || excedeLimite(email, 200)) {
+              ctx.status = 400; ctx.body = { error: { message: 'Uno de los campos excede el largo permitido' } }; return;
             }
             const emailNorm = String(email).toLowerCase().trim();
             const existente = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: emailNorm } });
@@ -1002,6 +1030,9 @@ module.exports = {
             if (!Array.isArray(items) || items.length === 0) {
               ctx.status = 400; ctx.body = { error: { message: 'El carrito está vacío' } }; return;
             }
+            if (items.length > 50 || items.some(it => excedeLimite(it?.nombre, 200) || excedeLimite(it?.sku, 100))) {
+              ctx.status = 400; ctx.body = { error: { message: 'El carrito tiene artículos inválidos' } }; return;
+            }
 
             // Buscar o crear cliente CRM
             let clienteId = null;
@@ -1115,6 +1146,9 @@ module.exports = {
             const { username, email } = ctx.request.body || {};
             if (!username || !email) {
               ctx.status = 400; ctx.body = { error: { message: 'Nombre y correo son requeridos' } }; return;
+            }
+            if (excedeLimite(username, 100) || excedeLimite(email, 200)) {
+              ctx.status = 400; ctx.body = { error: { message: 'Uno de los campos excede el largo permitido' } }; return;
             }
             const emailNorm = String(email).toLowerCase().trim();
             const existente = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: emailNorm } });
