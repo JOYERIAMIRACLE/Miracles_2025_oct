@@ -15,7 +15,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isTokenValid(getToken()) && getUserRole() === "authenticated") {
       setReady(true)
     } else {
-      router.replace("/login")
+      router.replace("/portal/login")
     }
   }, [router])
 

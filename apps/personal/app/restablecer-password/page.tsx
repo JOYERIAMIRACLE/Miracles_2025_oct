@@ -110,7 +110,7 @@ function RestablecerForm() {
         </button>
 
         <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-          <Link href="/login" className="text-violet-600 dark:text-violet-400 font-medium hover:text-violet-700 dark:hover:text-violet-300">
+          <Link href="/portal/login" className="text-violet-600 dark:text-violet-400 font-medium hover:text-violet-700 dark:hover:text-violet-300">
             Volver a iniciar sesión
           </Link>
         </p>

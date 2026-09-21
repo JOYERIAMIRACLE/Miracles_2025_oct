@@ -92,7 +92,7 @@ export default function OlvidePasswordPage() {
               <p className="text-sm text-zinc-400 leading-relaxed">
                 Si <span className="text-zinc-200 font-medium">{email}</span> tiene una cuenta, te llegará un link para restablecer tu contraseña.
               </p>
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-sm text-violet-400 hover:text-violet-300 font-medium">
+              <Link href="/portal/login" className="inline-flex items-center gap-1.5 text-sm text-violet-400 hover:text-violet-300 font-medium">
                 <ArrowLeft size={14} /> Volver a iniciar sesión
               </Link>
             </div>
@@ -130,7 +130,7 @@ export default function OlvidePasswordPage() {
               </button>
 
               <p className="text-center text-xs text-zinc-500">
-                <Link href="/login" className="text-violet-400 hover:text-violet-300 font-medium inline-flex items-center gap-1">
+                <Link href="/portal/login" className="text-violet-400 hover:text-violet-300 font-medium inline-flex items-center gap-1">
                   <ArrowLeft size={12} /> Volver a iniciar sesión
                 </Link>
               </p>

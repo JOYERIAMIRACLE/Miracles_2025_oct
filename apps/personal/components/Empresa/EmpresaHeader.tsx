@@ -40,7 +40,7 @@ const titles: Record<string, string> = {
 export function EmpresaHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
-  function handleLogout() { removeToken(); router.push("/login") }
+  function handleLogout() { removeToken(); router.push("/portal/login") }
   const title = titles[pathname] ?? pathname.split("/").filter(Boolean).pop()
     ?.replace(/-/g, " ")
     .replace(/\b\w/g, c => c.toUpperCase()) ?? "Empresa"

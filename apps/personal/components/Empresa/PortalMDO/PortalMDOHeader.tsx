@@ -165,7 +165,7 @@ function ProfileMenu() {
             </div>
           </div>
           <div className="py-1">
-            <button type="button" onClick={() => { logout(); router.push("/login") }}
+            <button type="button" onClick={() => { logout(); router.push("/portal/login") }}
               className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
               <LogOut className="h-3.5 w-3.5" /> Cerrar sesión
             </button>

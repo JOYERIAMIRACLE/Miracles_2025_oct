@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
   // Verificar cookie de sesión
   const session = request.cookies.get("miracles_session")?.value
   if (!session) {
-    const loginUrl = new URL("/login", request.url)
+    const loginUrl = new URL("/portal/login", request.url)
     // Guardar destino original para redirigir después del login
     loginUrl.searchParams.set("from", pathname)
     return NextResponse.redirect(loginUrl)
