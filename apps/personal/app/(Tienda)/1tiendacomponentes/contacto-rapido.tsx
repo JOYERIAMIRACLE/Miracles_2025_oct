@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react"
 type Panel = "instagram" | "facebook" | "whatsapp" | "telefono" | "correo" | "ubicacion" | null
 
 // Placeholders hasta tener los datos/cuentas reales — mismo criterio que ya
-// usaba este archivo (tel:+521XXXXXXXXXX) y footer.tsx (contacto@medalladeoro.com.mx):
+// usaba este archivo y footer.tsx (contacto@medalladeoro.com.mx):
 // visibles, fáciles de encontrar y reemplazar en un solo lugar en cuanto
 // exista el enlace real de cada red.
-const TELEFONO      = "+52 1 XX XXXX XXXX"
-const TELEFONO_HREF = "tel:+521XXXXXXXXXX"
+const TELEFONO      = "+52 81 2572 9510"
+const TELEFONO_HREF = "tel:+528125729510"
 const CORREO        = "contacto@medalladeoro.com.mx"
 const DIRECCION     = "Av. Insurgentes Sur 1602, Col. Crédito Constructor, CDMX"
 const MAPS_QUERY    = "Medalla+de+Oro+Joyer%C3%ADa"
@@ -20,8 +20,8 @@ const INSTAGRAM_HANDLE = "@medalladeoro.joyeria"
 const INSTAGRAM_HREF   = "https://instagram.com/medalladeoro.joyeria"
 const FACEBOOK_NAME    = "Medalla de Oro Joyería"
 const FACEBOOK_HREF    = "https://facebook.com/medalladeoro.joyeria"
-const WHATSAPP_NUMERO  = "+52 1 XX XXXX XXXX"
-const WHATSAPP_HREF    = "https://wa.me/521XXXXXXXXXX"
+const WHATSAPP_NUMERO  = "+52 81 2572 9510"
+const WHATSAPP_HREF    = "https://wa.me/528125729510"
 
 // Reset de botón explícito: los <button> (Teléfono/Correo/Ver ubicación)
 // traen padding/borde por default del navegador que los <a> no tienen.

@@ -37,6 +37,7 @@ const orgJsonLd = {
   url: SITE,
   description: "Venta de joyería fina en oro de 10k, 14k y plata 925. Envíos a todo México.",
   email: "contacto@medalladeoro.com.mx",
+  telephone: "+528125729510",
   areaServed: "MX",
   currenciesAccepted: "MXN",
   priceRange: "$$",

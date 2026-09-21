@@ -84,7 +84,7 @@ const Footer = () => {
               <Mail size={14} /> {CONTACTO_EMAIL}
             </a>
             <div className="flex items-center gap-2 mt-4">
-              <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className={iconLinkCls}>
+              <a href="https://wa.me/528125729510" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className={iconLinkCls}>
                 <MessageCircle size={16} />
               </a>
               <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={iconLinkCls}>
