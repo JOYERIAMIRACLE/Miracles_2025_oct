@@ -1,18 +1,14 @@
 module.exports = ({ env }) => ({
   email: {
     config: {
-      provider: 'nodemailer',
+      // API HTTP de Resend (puerto 443), no el relay SMTP (puerto 465) —
+      // Railway cuelga las conexiones salientes por SMTP durante 30+
+      // segundos sin responder (confirmado con curl directo), mientras que
+      // la API HTTP funciona igual que cualquier otra llamada saliente del
+      // backend (Cloudinary, Anthropic), que nunca ha tenido problema.
+      provider: 'strapi-provider-email-resend',
       providerOptions: {
-        // Resend vía su relay SMTP (usuario siempre literal "resend", la
-        // identidad viene de la API key como password) — mismo proveedor
-        // @strapi/provider-email-nodemailer ya instalado, sin paquete nuevo.
-        host: 'smtp.resend.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: 'resend',
-          pass: env('RESEND_API_KEY'),
-        },
+        apiKey: env('RESEND_API_KEY'),
       },
       settings: {
         defaultFrom: 'no-reply@mail.medalladeoro.com.mx',
