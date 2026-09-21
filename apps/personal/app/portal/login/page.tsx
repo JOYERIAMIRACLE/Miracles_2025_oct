@@ -57,7 +57,9 @@ export default function LoginPage() {
       })
       const json = await res.json()
       if (!res.ok || !json.jwt) {
-        setError("Email o contraseña incorrectos")
+        setError(res.status === 429
+          ? (json?.error?.message ?? "Demasiados intentos. Intenta de nuevo más tarde.")
+          : "Email o contraseña incorrectos")
         return
       }
       const role = await fetchUserRole(json.jwt, BASE)

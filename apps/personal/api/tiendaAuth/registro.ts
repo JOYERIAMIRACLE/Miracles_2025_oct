@@ -32,7 +32,9 @@ export async function iniciarSesionCliente(email: string, password: string): Pro
   })
   const json = await res.json()
   if (!res.ok || !json.jwt) {
-    throw new Error("Email o contraseña incorrectos")
+    throw new Error(res.status === 429
+      ? (json?.error?.message ?? "Demasiados intentos. Intenta de nuevo más tarde.")
+      : "Email o contraseña incorrectos")
   }
   return json as LoginResult
 }
