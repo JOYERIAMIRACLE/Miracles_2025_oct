@@ -8,12 +8,36 @@
 const RATE_LIMIT_VENTANA_MS = 15 * 60 * 1000; // ventana de 15 minutos
 const RATE_LIMIT_BLOQUEO_MS = 15 * 60 * 1000; // tiempo de bloqueo
 
+// Mismo allowlist que 'strapi::cors' en config/middlewares.js — se duplica
+// aquí porque estos middlewares se registran vía strapi.server.use() y
+// responden ANTES de llegar a strapi::cors cuando cortan la petición con
+// 429, así que ese 429 nunca lleva el header de CORS a menos que lo
+// pongamos nosotros mismos. Mantener sincronizado con middlewares.js.
+const CORS_ORIGINS = [
+  'https://richard-avrod.pages.dev',
+  'https://miracles-frontend.pages.dev',
+  'https://joyeriamiraclesweb.com',
+  'https://medalladeoro.com',
+  'https://medalladeoro.com.mx',
+  'https://www.medalladeoro.com.mx',
+  'http://localhost:3000',
+  'http://localhost:1337',
+];
+
 function getIP(ctx) {
   return (
     ctx.request.headers['x-forwarded-for']?.split(',')[0].trim() ||
     ctx.request.ip ||
     'unknown'
   );
+}
+
+function setCorsHeaders(ctx) {
+  const origin = ctx.request.headers.origin;
+  if (origin && CORS_ORIGINS.includes(origin)) {
+    ctx.set('Access-Control-Allow-Origin', origin);
+    ctx.set('Access-Control-Allow-Credentials', 'true');
+  }
 }
 
 // Factory: crea un middleware de rate-limit para una ruta+método específicos.
@@ -43,6 +67,7 @@ function rateLimitMiddleware(path, method, { max, contarComoFallo }) {
 
     if (rec?.bloqueadoHasta && now < rec.bloqueadoHasta) {
       const restanMin = Math.ceil((rec.bloqueadoHasta - now) / 60000);
+      setCorsHeaders(ctx);
       ctx.status = 429;
       ctx.body   = {
         error: {
