@@ -624,6 +624,33 @@ async function crearRolClienteTienda(strapi) {
   await otorgarPermisos(strapi, 'cliente_tienda', ['plugin::users-permissions.user.me']);
 }
 
+// Las plantillas de correo de users-permissions (reset-password, confirmación
+// de cuenta) traen de fábrica from: "Administration Panel <no-reply@strapi.io>"
+// — un dominio que no es el nuestro, así que Resend rechaza el envío (500).
+// Idempotente: solo corrige el "from" si sigue en el default de Strapi, nunca
+// pisa un "from" que alguien ya haya personalizado a mano en el Admin.
+async function corregirRemitenteEmailTemplates(strapi) {
+  const pluginStore = strapi.store({ type: 'plugin', name: 'users-permissions' });
+  const email = await pluginStore.get({ key: 'email' });
+  if (!email) return;
+
+  const FROM_CORRECTO = { name: 'Medalla de Oro', email: 'no-reply@mail.medalladeoro.com.mx' };
+  let cambios = 0;
+
+  for (const key of ['reset_password', 'email_confirmation']) {
+    const tpl = email[key];
+    if (tpl?.options?.from?.email === 'no-reply@strapi.io') {
+      tpl.options.from = FROM_CORRECTO;
+      cambios++;
+    }
+  }
+
+  if (cambios > 0) {
+    await pluginStore.set({ key: 'email', value: email });
+    strapi.log.info(`[bootstrap] Remitente corregido en ${cambios} plantilla(s) de email (de no-reply@strapi.io a ${FROM_CORRECTO.email})`);
+  }
+}
+
 async function sembrarCategoriasSiVacio(strapi) {
   if (!strapi.db.metadata.get('api::categoria.categoria')) {
     strapi.log.warn('[bootstrap] Modelo api::categoria.categoria no registrado — skip seed');
@@ -1171,5 +1198,6 @@ module.exports = {
     await run('sembrarCategoriasEmpresa',   () => sembrarCategoriasEmpresaSiVacio(strapi));
     await run('sembrarMapaIdentidades',     () => sembrarMapaIdentidadesSiVacio(strapi));
     await run('crearRolClienteTienda',      () => crearRolClienteTienda(strapi));
+    await run('corregirRemitenteEmailTemplates', () => corregirRemitenteEmailTemplates(strapi));
   },
 };
