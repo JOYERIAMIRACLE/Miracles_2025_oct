@@ -1110,8 +1110,13 @@ export function SeccionVentas() {
 
   /* ── Leads analysis ── */
   const ALL_CANALES=["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]
+  // Activos (Lead/Oferta/Pedido) vs Cerrados (Entrega/Rechazada) — antes
+  // solo contaba Entregado/Rechazada, así que un cliente con leads aún en
+  // proceso (el caso más común al filtrar por cliente) veía la gráfica
+  // vacía aunque sí tuviera actividad real. Así cuenta TODO lead, sin
+  // importar su etapa.
   const leadsStk:[number,number][]=buckets.map(()=>[0,0])
-  fLeads.forEach(l=>{const idx=bucketIdxMap.get(claveBucket(l.fechaLead??l.createdAt,agrupacion));if(idx!==undefined){if(l.Funnel==="Entrega")leadsStk[idx][0]++;else if(l.Funnel==="Rechazada")leadsStk[idx][1]++}})
+  fLeads.forEach(l=>{const idx=bucketIdxMap.get(claveBucket(l.fechaLead??l.createdAt,agrupacion));if(idx!==undefined){if(l.Funnel==="Entrega"||l.Funnel==="Rechazada")leadsStk[idx][1]++;else leadsStk[idx][0]++}})
   const _canalBase=allLeads.filter(l=>(!lFunnel||l.Funnel===lFunnel)&&inBucket(l.fechaLead??l.createdAt))
   const canalCounts=_canalBase.reduce((a,l)=>{const k=l.canal??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)
   const canalSegs=ALL_CANALES.map(l=>({l,v:canalCounts[l]||0,c:CANAL_COLOR[l]||T.muted})).sort((a,b)=>b.v-a.v)
@@ -1464,7 +1469,7 @@ export function SeccionVentas() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
           <div className="md:col-span-2">
             <ChartLabel>{`Por ${AGRUPACION_LABEL[agrupacion].toLowerCase()} · clic para filtrar`}</ChartLabel>
-            <SvgStackedBars months={bucketLabelsRaw} tipLabels={bucketTipLabels} data={leadsStk} colors={[T.em,T.rose]} labels={["Entregados","Rechazados"]} activeBar={bucketIdxActivo} groupLevels={bucketGroupLevels} onBarClick={i=>selectBucket(buckets[i])}/>
+            <SvgStackedBars months={bucketLabelsRaw} tipLabels={bucketTipLabels} data={leadsStk} colors={[T.violet,T.muted]} labels={["Activos","Cerrados"]} activeBar={bucketIdxActivo} groupLevels={bucketGroupLevels} onBarClick={i=>selectBucket(buckets[i])}/>
             <div className="flex gap-4 mt-2">
               <LegendDot color={T.em} label="Entregado" val={fLeads.filter(l=>l.Funnel==="Entrega").length} active={lFunnel==="Entrega"} onClick={()=>setLFunnel(lFunnel==="Entrega"?"":"Entrega")}/>
               <LegendDot color={T.rose} label="Rechazada" val={fLeads.filter(l=>l.Funnel==="Rechazada").length} active={lFunnel==="Rechazada"} onClick={()=>setLFunnel(lFunnel==="Rechazada"?"":"Rechazada")}/>
