@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Pencil, Trash2, CheckCircle2, Ban } from "lucide-react"
+import { Plus, Pencil, Trash2, CheckCircle2, Ban, Eye } from "lucide-react"
 import { SeccionVitrina, SeccionHeroContenido, ContenidoTabs, useHeroImagen } from "./shared"
 import type { TabItem } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
@@ -14,10 +14,11 @@ import type { Lead, CanalLead, OrigenLead } from "@/types/lead"
 import type { Cotizacion, EstadoCotizacion, OrigenCotizacion } from "@/types/cotizacion"
 import type { VentaEmpresa, EstadoVenta } from "@/types/ventaEmpresa"
 import type { ClienteEmpresa, ClientePayload, FunnelEtapa } from "@/types/clienteEmpresa"
+import { FUNNEL_ALL } from "@/types/clienteEmpresa"
 import { NuevoLeadWizard } from "@/components/Empresa/Ventas/NuevoLeadWizard"
 import { SeleccionarClienteModal } from "@/components/Empresa/Ventas/CotizacionesView"
 import { CotizacionModal } from "@/components/Empresa/Ventas/CotizacionModal"
-import { ClienteModal, emptyCliente } from "@/components/Empresa/Ventas/PipelineView"
+import { ClienteModal, emptyCliente, ClientePanel, numDisplay } from "@/components/Empresa/Ventas/PipelineView"
 import { PedidoFormModal } from "@/components/Empresa/Ventas/PedidosView"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
 import { DisparadoresView } from "@/components/Empresa/Ventas/DisparadoresView"
@@ -802,6 +803,11 @@ export function SeccionVentas() {
   const [df,setDf]           = useState(demo?"2026-01-01":nowFirst)
   const [dt,setDt]           = useState(demo?"2026-09-30":nowLast)
   const [cliFilter,setCliFilter] = useState<CliFilter>(null)
+  // Ficha completa de cliente (ClientePanel) — abierta desde el botón "Ver
+  // cliente" en cualquier tabla de Ventas, sin tocar el onRowClick existente
+  // (que solo filtra). Solo disponible fuera de demo: los docId ficticios
+  // de DEMO_DATA no existen en Strapi, así que no hay nada real que mostrar.
+  const [clienteDetalle,setClienteDetalle] = useState<ClienteEmpresa|null>(null)
   const [cliQ,setCLiQ]       = useState("")
   const [tipoFilter,setTipoFilter] = useState<"todos"|"cliente"|"prospecto"|"usuario">("todos")
   const [agrupacion,setAgrupacion] = useState<Agrupacion>("mes")
@@ -1025,6 +1031,24 @@ export function SeccionVentas() {
     return [...map.values()].sort((a,b)=>b.total-a.total)
   },[rawLeads,rawCots,rawVentas,df,dt,clientesReales,demo])
 
+  // Número de posición dentro de su etapa del funnel, para el badge de
+  // ClientePanel — mismo cálculo que ya usa ClientesView.tsx (numMap).
+  const numMap = useMemo(()=>{
+    const porFunnel = new Map<FunnelEtapa,ClienteEmpresa[]>()
+    FUNNEL_ALL.forEach(e=>porFunnel.set(e,[]))
+    clientesReales.slice()
+      .sort((a,b)=>new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime())
+      .forEach(c=>porFunnel.get(c.Funnel??"Lead")?.push(c))
+    const m = new Map<string,string>()
+    FUNNEL_ALL.forEach(etapa=>porFunnel.get(etapa)?.forEach((c,i)=>m.set(c.documentId,numDisplay(etapa,i))))
+    return m
+  },[clientesReales])
+
+  const ventasDelClienteDetalle = useMemo(
+    ()=>clienteDetalle?rawVentas.filter(v=>v.cliente?.documentId===clienteDetalle.documentId):[],
+    [rawVentas,clienteDetalle]
+  )
+
   // clientesDash: misma lógica pero desde allLeads/allCots/allVentas (respeta cliFilter)
   // → la tabla del dashboard y el KPI se actualizan al seleccionar cliente o cambiar rango
   const clientesDash = useMemo(()=>{
@@ -1210,6 +1234,29 @@ export function SeccionVentas() {
     </SeccionVitrina>
   )
 
+  /* ═══ FICHA DE CLIENTE — tiene prioridad sobre cualquier pestaña; al
+     cerrarla se vuelve a la pestaña donde se estaba (view no cambia) ═══ */
+  if (clienteDetalle) return (
+    <div className="p-4 md:p-6">
+      <ClientePanel
+        cliente={clienteDetalle}
+        num={numMap.get(clienteDetalle.documentId) ?? "—"}
+        ventasDelCliente={ventasDelClienteDetalle}
+        onClose={()=>setClienteDetalle(null)}
+        onUpdate={u=>{ setClienteDetalle(u); setClientesReales(prev=>prev.map(x=>x.documentId===u.documentId?u:x)) }}
+        onEdit={()=>{ abrirEditarCliente(clienteDetalle); setClienteDetalle(null) }}
+        onAvanzar={()=>{}}
+        onRetroceder={async()=>null}
+        onRechazar={async()=>null}
+        onRecuperar={async()=>null}
+        onNuevoPedido={()=>{}}
+        onVentaActualizada={v=>setRawVentasFetch(prev=>prev.map(x=>x.documentId===v.documentId?v:x))}
+        backLabel="Volver a Ventas"
+        mostrarAccionesEtapa={false}
+      />
+    </div>
+  )
+
   /* ═══ PIPELINE / DISPARADORES / MÉTRICAS — vistas completas, sin el
      motor de filtros/gráficas de Panel (no encajan en ese patrón) ═══ */
   if (view==="pipeline")     return shell(<PipelineView/>)
@@ -1303,6 +1350,11 @@ export function SeccionVentas() {
           colors={[null,null,null,null,()=>T.gold]}
           onRowClick={r=>selectCli(clientesDash.find(c=>c.nombre===r[0])?.docId??"",r[0])}
           highlightCol={0}
+          renderActions={!demo ? (i)=>{
+            const row = clientesDash.slice(0,5)[i]
+            const c = clientesReales.find(x=>x.documentId===row.docId)
+            return c ? <ActionBtn title="Ver cliente" onClick={()=>setClienteDetalle(c)}><Eye size={13}/></ActionBtn> : null
+          } : undefined}
         />
       </Card>
     </>
@@ -1389,6 +1441,7 @@ export function SeccionVentas() {
             </span>
           ) : (
             <>
+              <ActionBtn title="Ver cliente" onClick={()=>setClienteDetalle(c)}><Eye size={13}/></ActionBtn>
               <ActionBtn title="Editar contacto" onClick={()=>abrirEditarCliente(c)}><Pencil size={13}/></ActionBtn>
               <ActionBtn title="Eliminar contacto" tone="danger" onClick={()=>setDelClienteId(row.docId)}><Trash2 size={13}/></ActionBtn>
             </>
@@ -1463,6 +1516,7 @@ export function SeccionVentas() {
         highlightCol={1}
         renderActions={puedeEditar ? (i)=>{
           const lead = fLeads.slice(0,100)[i]
+          const c = lead.cliente ? clientesReales.find(x=>x.documentId===lead.cliente!.documentId) : null
           return delLeadId===lead.documentId ? (
             <span className="flex items-center gap-1.5 whitespace-nowrap" onClick={e=>e.stopPropagation()}>
               <span className="text-[10px] text-slate-500">¿Borrar?</span>
@@ -1471,6 +1525,7 @@ export function SeccionVentas() {
             </span>
           ) : (
             <>
+              {c && <ActionBtn title="Ver cliente" onClick={()=>setClienteDetalle(c)}><Eye size={13}/></ActionBtn>}
               <ActionBtn title={lead.calificado?"Quitar calificación":"Calificar"} onClick={()=>toggleCalificarLead(lead)}>
                 <CheckCircle2 size={13} className={lead.calificado?"text-violet-600 dark:text-violet-400":undefined}/>
               </ActionBtn>
@@ -1556,6 +1611,7 @@ export function SeccionVentas() {
         highlightCol={2}
         renderActions={puedeEditar ? (i)=>{
           const cot = fCots.slice(0,100)[i]
+          const c = cot.cliente ? clientesReales.find(x=>x.documentId===cot.cliente!.documentId) : null
           return delCotId===cot.documentId ? (
             <span className="flex items-center gap-1.5 whitespace-nowrap" onClick={e=>e.stopPropagation()}>
               <span className="text-[10px] text-slate-500">¿Borrar?</span>
@@ -1564,6 +1620,7 @@ export function SeccionVentas() {
             </span>
           ) : (
             <>
+              {c && <ActionBtn title="Ver cliente" onClick={()=>setClienteDetalle(c)}><Eye size={13}/></ActionBtn>}
               <ActionBtn title="Editar cotización" onClick={()=>abrirEditarCot(cot)}><Pencil size={13}/></ActionBtn>
               <ActionBtn title="Eliminar cotización" tone="danger" onClick={()=>setDelCotId(cot.documentId)}><Trash2 size={13}/></ActionBtn>
             </>
@@ -1642,6 +1699,7 @@ export function SeccionVentas() {
         highlightCol={2}
         renderActions={puedeEditar ? (i)=>{
           const venta = fVentas.slice(0,100)[i]
+          const c = venta.cliente ? clientesReales.find(x=>x.documentId===venta.cliente!.documentId) : null
           if (delPedidoId===venta.documentId) return (
             <span className="flex items-center gap-1.5 whitespace-nowrap" onClick={e=>e.stopPropagation()}>
               <span className="text-[10px] text-slate-500">¿Borrar?</span>
@@ -1658,6 +1716,7 @@ export function SeccionVentas() {
           )
           return (
             <>
+              {c && <ActionBtn title="Ver cliente" onClick={()=>setClienteDetalle(c)}><Eye size={13}/></ActionBtn>}
               <ActionBtn title="Editar pedido" onClick={()=>{setPedidoEditando(venta);setPedidoModalOpen(true)}}><Pencil size={13}/></ActionBtn>
               {venta.estado==="Cotizado"||venta.estado==="Cancelado" ? (
                 <ActionBtn title="Eliminar pedido" tone="danger" onClick={()=>setDelPedidoId(venta.documentId)}><Trash2 size={13}/></ActionBtn>
