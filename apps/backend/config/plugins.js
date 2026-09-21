@@ -3,17 +3,20 @@ module.exports = ({ env }) => ({
     config: {
       provider: 'nodemailer',
       providerOptions: {
-        host: 'smtp.gmail.com',
+        // Resend vía su relay SMTP (usuario siempre literal "resend", la
+        // identidad viene de la API key como password) — mismo proveedor
+        // @strapi/provider-email-nodemailer ya instalado, sin paquete nuevo.
+        host: 'smtp.resend.com',
         port: 465,
         secure: true,
         auth: {
-          user: env('SMTP_USER'),
-          pass: env('SMTP_PASS'),
+          user: 'resend',
+          pass: env('RESEND_API_KEY'),
         },
       },
       settings: {
-        defaultFrom: env('SMTP_USER'),
-        defaultReplyTo: env('SMTP_USER'),
+        defaultFrom: 'no-reply@mail.medalladeoro.com.mx',
+        defaultReplyTo: 'contacto@medalladeoro.com.mx',
       },
     },
   },

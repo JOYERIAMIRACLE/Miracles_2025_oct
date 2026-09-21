@@ -1,14 +1,12 @@
 'use strict';
 
-// ─── Protección anti-fuerza-bruta en login ───────────────────────────────────
-// Mapa en memoria: clave = IP, valor = { intentos, bloqueadoHasta }
+// ─── Protección anti-fuerza-bruta / spam en rutas sensibles ──────────────────
+// Mapa en memoria por ruta: clave = IP, valor = { intentos, bloqueadoHasta }.
 // Se reinicia al reiniciar el proceso — suficiente para bloqueos temporales.
 // No usar para seguridad crítica de estado permanente (p.e. cuentas bloqueadas
-// en DB), pero sí para frenar bots y ataques automáticos de contraseña.
-const loginFails = new Map();
-const LOGIN_MAX_INTENTOS = 5;       // intentos fallidos antes de bloquear
-const LOGIN_VENTANA_MS   = 15 * 60 * 1000; // ventana de 15 minutos
-const LOGIN_BLOQUEO_MS   = 15 * 60 * 1000; // tiempo de bloqueo
+// en DB), pero sí para frenar bots y ataques automáticos.
+const RATE_LIMIT_VENTANA_MS = 15 * 60 * 1000; // ventana de 15 minutos
+const RATE_LIMIT_BLOQUEO_MS = 15 * 60 * 1000; // tiempo de bloqueo
 
 function getIP(ctx) {
   return (
@@ -18,16 +16,31 @@ function getIP(ctx) {
   );
 }
 
-function loginRateLimitMiddleware() {
+// Factory: crea un middleware de rate-limit para una ruta+método específicos.
+// `contarComoFallo(ctx)` decide qué status cuenta como "intento fallido" a
+// sumar (login: 400: credenciales malas; registro/forgot-password: cualquier
+// request completado cuenta, porque no hay "fallo" que distinguir — el abuso
+// es el volumen de intentos, no si tuvieron éxito).
+function rateLimitMiddleware(path, method, { max, contarComoFallo }) {
+  const fails = new Map();
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, rec] of fails.entries()) {
+      const caducado = !rec.bloqueadoHasta
+        ? now - (rec.ultimaFalla || 0) > RATE_LIMIT_VENTANA_MS
+        : now > rec.bloqueadoHasta;
+      if (caducado) fails.delete(ip);
+    }
+  }, 60 * 60 * 1000);
+
   return async (ctx, next) => {
-    if (ctx.path !== '/api/auth/local' || ctx.method !== 'POST') {
+    if (ctx.path !== path || ctx.method !== method) {
       return next();
     }
     const ip  = getIP(ctx);
     const now = Date.now();
-    const rec = loginFails.get(ip);
+    const rec = fails.get(ip);
 
-    // IP bloqueada — rechazar sin procesar
     if (rec?.bloqueadoHasta && now < rec.bloqueadoHasta) {
       const restanMin = Math.ceil((rec.bloqueadoHasta - now) / 60000);
       ctx.status = 429;
@@ -35,45 +48,65 @@ function loginRateLimitMiddleware() {
         error: {
           status:  429,
           name:    'TooManyRequests',
-          message: `Demasiados intentos fallidos. Intenta de nuevo en ${restanMin} minuto${restanMin > 1 ? 's' : ''}.`,
+          message: `Demasiados intentos. Intenta de nuevo en ${restanMin} minuto${restanMin > 1 ? 's' : ''}.`,
         },
       };
       return;
     }
 
-    // Ejecutar el handler real de Strapi
     await next();
 
-    // Si Strapi devolvió 400 (credenciales incorrectas), sumar intento fallido
-    if (ctx.status === 400) {
-      const prev = loginFails.get(ip) || { intentos: 0, bloqueadoHasta: null };
-      // Reiniciar contador si la última falla fue hace más de LOGIN_VENTANA_MS
-      const intentos = (prev.ultimaFalla && now - prev.ultimaFalla > LOGIN_VENTANA_MS)
+    if (contarComoFallo(ctx)) {
+      const prev = fails.get(ip) || { intentos: 0, bloqueadoHasta: null };
+      const intentos = (prev.ultimaFalla && now - prev.ultimaFalla > RATE_LIMIT_VENTANA_MS)
         ? 1
         : prev.intentos + 1;
-      const bloqueadoHasta = intentos >= LOGIN_MAX_INTENTOS ? now + LOGIN_BLOQUEO_MS : null;
-      loginFails.set(ip, { intentos, ultimaFalla: now, bloqueadoHasta });
+      const bloqueadoHasta = intentos >= max ? now + RATE_LIMIT_BLOQUEO_MS : null;
+      fails.set(ip, { intentos, ultimaFalla: now, bloqueadoHasta });
 
       if (bloqueadoHasta) {
-        strapi?.log?.warn(`[login-ratelimit] IP ${ip} bloqueada por ${LOGIN_BLOQUEO_MS / 60000} min tras ${intentos} intentos`);
+        strapi?.log?.warn(`[ratelimit ${path}] IP ${ip} bloqueada por ${RATE_LIMIT_BLOQUEO_MS / 60000} min tras ${intentos} intentos`);
       }
-    } else if (ctx.status === 200) {
-      // Login exitoso — limpiar registro de fallos
-      loginFails.delete(ip);
+    } else if (ctx.status === 200 && ctx.path === '/api/auth/local') {
+      // Solo el login limpia el registro en éxito — registro/forgot-password
+      // no tienen un "éxito" que deba resetear el contador de otra persona.
+      fails.delete(ip);
     }
   };
 }
 
-// Limpiar el mapa cada hora para no acumular IPs antiguas indefinidamente
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, rec] of loginFails.entries()) {
-    const caducado = !rec.bloqueadoHasta
-      ? now - (rec.ultimaFalla || 0) > LOGIN_VENTANA_MS
-      : now > rec.bloqueadoHasta;
-    if (caducado) loginFails.delete(ip);
+const loginRateLimit = rateLimitMiddleware('/api/auth/local', 'POST', {
+  max: 5,
+  contarComoFallo: (ctx) => ctx.status === 400,
+});
+const registroRateLimit = rateLimitMiddleware('/api/tienda/registro', 'POST', {
+  max: 5,
+  contarComoFallo: () => true,
+});
+const forgotPasswordRateLimit = rateLimitMiddleware('/api/auth/forgot-password', 'POST', {
+  max: 5,
+  contarComoFallo: () => true,
+});
+
+// Verifica que la petición traiga un JWT válido de un usuario con rol
+// "authenticated" (staff del Portal) — a diferencia de las rutas /api/tienda/*
+// (que solo validan "existe el usuario"), esto además exige el rol correcto,
+// para endpoints que deben quedar fuera del alcance de cuentas cliente_tienda.
+async function requireStaffRole(ctx) {
+  const token = (ctx.request.headers.authorization || '').replace('Bearer ', '').trim();
+  if (!token) return null;
+  try {
+    const { id } = await strapi.plugins['users-permissions'].services.jwt.verify(token);
+    const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id },
+      populate: { role: true },
+    });
+    if (!user || user.role?.type !== 'authenticated') return null;
+    return user;
+  } catch {
+    return null;
   }
-}, 60 * 60 * 1000);
+}
 
 const CHAT_SYSTEM_PROMPT = `Eres el asistente personal de Ricardo para la app de gestión interna Miracles.
 
@@ -636,9 +669,11 @@ async function normalizarCategorias(strapi) {
 
 module.exports = {
   register({ strapi }) {
-    // Middleware anti-fuerza-bruta para /api/auth/local — se registra antes
-    // de las rutas para interceptar todas las peticiones de login.
-    strapi.server.use(loginRateLimitMiddleware());
+    // Middlewares anti-fuerza-bruta / spam — se registran antes de las rutas
+    // para interceptar login, registro de Tienda y solicitudes de reset.
+    strapi.server.use(loginRateLimit);
+    strapi.server.use(registroRateLimit);
+    strapi.server.use(forgotPasswordRateLimit);
 
     strapi.server.routes([
       {
@@ -646,6 +681,8 @@ module.exports = {
         path: '/api/miracles-chat',
         handler: async (ctx) => {
           try {
+            const staff = await requireStaffRole(ctx)
+            if (!staff) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return }
             const { messages } = ctx.request.body
             if (!Array.isArray(messages) || messages.length === 0) {
               ctx.status = 400; ctx.body = { error: 'messages required' }; return
@@ -994,6 +1031,102 @@ module.exports = {
           } catch (e) {
             ctx.status = 401; ctx.body = { error: 'Invalid token' }
           }
+        },
+        config: { auth: false },
+      },
+      // ─── Gestión de staff del Portal (rol authenticated) ────────────────────
+      // Todas protegidas con requireStaffRole — solo staff logueado puede
+      // listar/invitar/bloquear cuentas de otro staff.
+      {
+        method: 'GET',
+        path: '/api/portal/usuarios',
+        handler: async (ctx) => {
+          const staff = await requireStaffRole(ctx);
+          if (!staff) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+          const role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'authenticated' } });
+          const usuarios = await strapi.db.query('plugin::users-permissions.user').findMany({
+            where: { role: role?.id },
+            select: ['id', 'username', 'email', 'blocked', 'createdAt'],
+            orderBy: { username: 'asc' },
+          });
+          ctx.body = { data: usuarios };
+        },
+        config: { auth: false },
+      },
+      {
+        method: 'POST',
+        path: '/api/portal/usuarios',
+        handler: async (ctx) => {
+          const staff = await requireStaffRole(ctx);
+          if (!staff) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+          try {
+            const { username, email } = ctx.request.body || {};
+            if (!username || !email) {
+              ctx.status = 400; ctx.body = { error: { message: 'Nombre y correo son requeridos' } }; return;
+            }
+            const emailNorm = String(email).toLowerCase().trim();
+            const existente = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: emailNorm } });
+            if (existente) {
+              ctx.status = 400; ctx.body = { error: { message: 'Ya existe una cuenta con este correo' } }; return;
+            }
+            const role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'authenticated' } });
+            if (!role) { ctx.status = 500; ctx.body = { error: { message: 'Rol de staff no configurado' } }; return; }
+
+            // Contraseña aleatoria descartable — nunca se usa: el correo de
+            // "olvidé mi contraseña" disparado abajo es como el nuevo
+            // empleado define la suya de verdad.
+            const tempPassword = require('crypto').randomBytes(24).toString('hex');
+            const user = await strapi.plugins['users-permissions'].services.user.add({
+              username: String(username).trim(), email: emailNorm, password: tempPassword,
+              provider: 'local', confirmed: true, blocked: false, role: role.id,
+            });
+
+            // Auto-llamada al endpoint nativo de forgot-password (mismo
+            // proceso, puerto local) en vez de reimplementar su lógica de
+            // plantilla/envío — así se respeta cualquier configuración de
+            // Strapi Admin sin duplicar código que se desactualice.
+            try {
+              await fetch(`http://127.0.0.1:${strapi.config.get('server.port')}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailNorm }),
+              });
+            } catch (mailErr) {
+              strapi.log.warn('[portal-usuarios] No se pudo disparar el correo de bienvenida: ' + mailErr.message);
+            }
+
+            ctx.body = { data: { id: user.id, username: user.username, email: user.email, blocked: user.blocked } };
+          } catch (e) {
+            strapi.log.error('[portal-usuarios-crear] ' + e.message);
+            ctx.status = 500; ctx.body = { error: { message: 'No se pudo crear la cuenta' } };
+          }
+        },
+        config: { auth: false },
+      },
+      {
+        method: 'PUT',
+        path: '/api/portal/usuarios/:id/bloquear',
+        handler: async (ctx) => {
+          const staff = await requireStaffRole(ctx);
+          if (!staff) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+          const { id } = ctx.params;
+          if (Number(id) === staff.id) {
+            ctx.status = 400; ctx.body = { error: { message: 'No puedes bloquear tu propia cuenta' } }; return;
+          }
+          const actualizado = await strapi.db.query('plugin::users-permissions.user').update({ where: { id }, data: { blocked: true } });
+          ctx.body = { data: { id: actualizado.id, blocked: actualizado.blocked } };
+        },
+        config: { auth: false },
+      },
+      {
+        method: 'PUT',
+        path: '/api/portal/usuarios/:id/desbloquear',
+        handler: async (ctx) => {
+          const staff = await requireStaffRole(ctx);
+          if (!staff) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+          const { id } = ctx.params;
+          const actualizado = await strapi.db.query('plugin::users-permissions.user').update({ where: { id }, data: { blocked: false } });
+          ctx.body = { data: { id: actualizado.id, blocked: actualizado.blocked } };
         },
         config: { auth: false },
       },
