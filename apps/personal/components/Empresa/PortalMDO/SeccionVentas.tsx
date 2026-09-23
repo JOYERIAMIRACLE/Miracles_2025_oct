@@ -20,8 +20,6 @@ import { SeleccionarClienteModal } from "@/components/Empresa/Ventas/Cotizacione
 import { CotizacionModal } from "@/components/Empresa/Ventas/CotizacionModal"
 import { ClienteModal, emptyCliente, ClientePanel, numDisplay } from "@/components/Empresa/Ventas/PipelineView"
 import { PedidoFormModal } from "@/components/Empresa/Ventas/PedidosView"
-import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
-import { DisparadoresView } from "@/components/Empresa/Ventas/DisparadoresView"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { CalendarioRango } from "@/components/Shared/CalendarioPicker"
 
@@ -771,7 +769,7 @@ function formDesdeCliente(c: ClienteEmpresa): ClientePayload {
 }
 
 /* ─── Component ─────────────────────────────────────────────────────── */
-type View = "dashboard"|"leads"|"cotizaciones"|"pedidos"|"clientes"|"pipeline"|"disparadores"
+type View = "dashboard"|"leads"|"cotizaciones"|"pedidos"|"clientes"
 const VIEWS_CON_FILTROS: View[] = ["dashboard","leads","cotizaciones","pedidos","clientes"]
 type CliFilter = { docId:string; nombre:string } | null
 
@@ -798,7 +796,7 @@ export function SeccionVentas() {
   const nowLast  = ()=>new Date().toISOString().slice(0,10)
 
   const [view,setView]       = useState<View>(()=>{
-    try{const v=localStorage.getItem("panel_view");return(["dashboard","leads","cotizaciones","pedidos","clientes","pipeline","disparadores"].includes(v??"")?v as View:"dashboard")}catch{return"dashboard"}
+    try{const v=localStorage.getItem("panel_view");return(["dashboard","leads","cotizaciones","pedidos","clientes"].includes(v??"")?v as View:"dashboard")}catch{return"dashboard"}
   })
   const [df,setDf]           = useState(demo?"2026-01-01":nowFirst)
   const [dt,setDt]           = useState(demo?"2026-09-30":nowLast)
@@ -1152,12 +1150,10 @@ export function SeccionVentas() {
   /* ── Shell ── */
   const TABS:TabItem[] = [
     {id:"dashboard",    label:"Dashboard"},
-    {id:"pipeline",     label:"Pipeline"},
     {id:"leads",        label:"Leads"},
     {id:"cotizaciones", label:"Cotizaciones"},
     {id:"pedidos",      label:"Pedidos"},
     {id:"clientes",     label:"Clientes"},
-    {id:"disparadores", label:"Disparadores"},
   ]
 
   const activo = TABS.find(t=>t.id===view) ?? TABS[0]
@@ -1261,11 +1257,6 @@ export function SeccionVentas() {
       />
     </div>
   )
-
-  /* ═══ PIPELINE / DISPARADORES / MÉTRICAS — vistas completas, sin el
-     motor de filtros/gráficas de Panel (no encajan en ese patrón) ═══ */
-  if (view==="pipeline")     return shell(<PipelineView/>)
-  if (view==="disparadores") return shell(<DisparadoresView/>)
 
   /* ═══ DASHBOARD ═══════════════════════════════════════════════════ */
   if(view==="dashboard") return shell(

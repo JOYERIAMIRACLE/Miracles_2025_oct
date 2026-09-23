@@ -5,7 +5,7 @@ import {
   Home, Landmark, Building2, Flag, Briefcase, ListChecks,
   Megaphone, Contact, ShoppingBag, Boxes, DollarSign, Globe,
   FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings, Brain,
-  UserCog, Users,
+  UserCog, Users, Workflow,
 } from "lucide-react"
 import { PortalMDOConfigModal } from "./PortalMDOConfigModal"
 
@@ -49,6 +49,7 @@ export const GRUPOS: NavGroup[] = [
     items: [
       { id: "tareas",     label: "Tareas",     icon: ListChecks },
       { id: "ventas",     label: "Ventas",     icon: ShoppingBag },
+      { id: "crm",        label: "CRM",        icon: Workflow },
       { id: "campanas",   label: "Campañas",   icon: Megaphone },
       { id: "contactos",  label: "Contactos",  icon: Contact },
       { id: "inventario", label: "Inventario", icon: Boxes },
@@ -81,7 +82,7 @@ export const GRUPOS: NavGroup[] = [
 export const DEPT_ICONS: Record<string, typeof Home> = {
   "quienes-somos": Building2, mision: Flag,
   tareas: ListChecks, campanas: Megaphone, contactos: Contact,
-  ventas: ShoppingBag, inventario: Boxes, finanzas: DollarSign, "sitio-web": Globe,
+  ventas: ShoppingBag, crm: Workflow, inventario: Boxes, finanzas: DollarSign, "sitio-web": Globe,
   documentos: FileText, marca: Palette, enlaces: Link2, "segundo-cerebro": Brain,
   usuarios: Users,
 }

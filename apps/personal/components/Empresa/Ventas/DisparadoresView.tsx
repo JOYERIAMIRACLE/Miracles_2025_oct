@@ -9,6 +9,7 @@ import { Lead } from "@/types/lead"
 import { VentaEmpresa } from "@/types/ventaEmpresa"
 import { ClienteEmpresa } from "@/types/clienteEmpresa"
 import { Suscriptor } from "@/types/suscriptor"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -168,11 +169,11 @@ export function DisparadoresView() {
       const POP_CLI = "populate[cliente][fields][0]=nombre&populate[cliente][fields][1]=telefono&populate[cliente][fields][2]=documentId"
 
       const [rLeads, rVentasCiclo, rClientes, rSusc, rVentasAll] = await Promise.all([
-        fetch(`${BASE}/api/leads?${POP_CLI}&filters[Funnel][$eq]=Lead&pagination[pageSize]=500&sort=createdAt:desc`),
-        fetch(`${BASE}/api/ventas?${POP_CLI}&filters[estado][$in][0]=Enviado&filters[estado][$in][1]=Entregado&pagination[pageSize]=200&sort=fecha:desc`),
-        fetch(`${BASE}/api/clientes?fields[0]=nombre&fields[1]=telefono&fields[2]=documentId&fields[3]=fechaNacimiento&filters[fechaNacimiento][$notNull]=true&pagination[pageSize]=500`),
-        fetch(`${BASE}/api/suscriptores?pagination[pageSize]=200&sort=createdAt:desc`),
-        fetch(`${BASE}/api/ventas?${POP_CLI}&fields[0]=fecha&filters[estado][$in][0]=Pagado&filters[estado][$in][1]=Preparando&filters[estado][$in][2]=Enviado&filters[estado][$in][3]=Entregado&pagination[pageSize]=500&sort=fecha:desc`),
+        authFetch(`${BASE}/api/leads?${POP_CLI}&filters[Funnel][$eq]=Lead&pagination[pageSize]=500&sort=createdAt:desc`),
+        authFetch(`${BASE}/api/ventas?${POP_CLI}&filters[estado][$in][0]=Enviado&filters[estado][$in][1]=Entregado&pagination[pageSize]=200&sort=fecha:desc`),
+        authFetch(`${BASE}/api/clientes?fields[0]=nombre&fields[1]=telefono&fields[2]=documentId&fields[3]=fechaNacimiento&filters[fechaNacimiento][$notNull]=true&pagination[pageSize]=500`),
+        authFetch(`${BASE}/api/suscriptores?pagination[pageSize]=200&sort=createdAt:desc`),
+        authFetch(`${BASE}/api/ventas?${POP_CLI}&fields[0]=fecha&filters[estado][$in][0]=Pagado&filters[estado][$in][1]=Preparando&filters[estado][$in][2]=Enviado&filters[estado][$in][3]=Entregado&pagination[pageSize]=500&sort=fecha:desc`),
       ])
 
       const [jLeads, jVentasCiclo, jClientes, jSusc, jVentasAll] = await Promise.all([
