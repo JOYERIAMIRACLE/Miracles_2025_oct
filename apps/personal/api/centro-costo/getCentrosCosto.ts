@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { CentroCostoType } from "@/types/centro-costo"
+import { authFetch } from "@/lib/auth"
 
 export function useGetCentrosCosto() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/centro-costos`
@@ -10,7 +11,7 @@ export function useGetCentrosCosto() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setCentrosCosto(json.data ?? [])
       } catch (err: any) {

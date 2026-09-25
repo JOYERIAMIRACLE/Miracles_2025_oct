@@ -1,10 +1,11 @@
 import { ReunionPayload } from "@/types/reunion"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const headers = { "Content-Type": "application/json" }
 
 export async function createReunion(payload: ReunionPayload) {
-  const res = await fetch(`${BASE}/api/reuniones`, {
+  const res = await authFetch(`${BASE}/api/reuniones`, {
     method: "POST",
     headers,
     body: JSON.stringify({ data: payload }),
@@ -13,7 +14,7 @@ export async function createReunion(payload: ReunionPayload) {
 }
 
 export async function updateReunion(documentId: string, payload: Partial<ReunionPayload>) {
-  const res = await fetch(`${BASE}/api/reuniones/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/reuniones/${documentId}`, {
     method: "PUT",
     headers,
     body: JSON.stringify({ data: payload }),
@@ -22,5 +23,5 @@ export async function updateReunion(documentId: string, payload: Partial<Reunion
 }
 
 export async function deleteReunion(documentId: string) {
-  await fetch(`${BASE}/api/reuniones/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/reuniones/${documentId}`, { method: "DELETE" })
 }

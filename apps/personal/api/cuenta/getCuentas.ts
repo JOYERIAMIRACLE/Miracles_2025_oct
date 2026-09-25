@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { CuentaType, AmbitoCuenta } from "@/types/cuenta"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -20,7 +21,7 @@ export function useGetCuentas(ambito?: AmbitoCuenta) {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setCuentas(json.data ?? [])
       } catch (err: any) {

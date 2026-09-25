@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { MetricaCorporalType } from "@/types/salud"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -10,7 +11,7 @@ export function useGetMetricas() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/metrica-corporals?pagination[pageSize]=200&sort=fecha:desc`)
+        const res  = await authFetch(`${BASE}/api/metrica-corporals?pagination[pageSize]=200&sort=fecha:desc`)
         const json = await res.json()
         setMetricas(json.data ?? [])
       } finally { setLoading(false) }
@@ -21,7 +22,7 @@ export function useGetMetricas() {
 }
 
 export async function createMetrica(payload: Partial<MetricaCorporalType>) {
-  const res = await fetch(`${BASE}/api/metrica-corporals`, {
+  const res = await authFetch(`${BASE}/api/metrica-corporals`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -29,5 +30,5 @@ export async function createMetrica(payload: Partial<MetricaCorporalType>) {
 }
 
 export async function deleteMetrica(documentId: string) {
-  await fetch(`${BASE}/api/metrica-corporals/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/metrica-corporals/${documentId}`, { method: "DELETE" })
 }

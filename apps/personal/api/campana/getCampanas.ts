@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { CampanaType, AmbitoCampana } from "@/types/campana"
+import { authFetch } from "@/lib/auth"
 
 export function useGetCampanas(ambito: AmbitoCampana = "trabajo") {
   const filter = ambito === "empresa"
@@ -13,7 +14,7 @@ export function useGetCampanas(ambito: AmbitoCampana = "trabajo") {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setCampanas(json.data ?? [])
       } catch (err: any) {

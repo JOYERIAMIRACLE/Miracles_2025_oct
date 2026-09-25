@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { TareaType, AmbitoTarea } from "@/types/tarea"
+import { authFetch } from "@/lib/auth"
 
 export function useGetTareas(ambito?: AmbitoTarea) {
   const filterStr = ambito ? `&filters[ambito][$eq]=${ambito}` : ""
@@ -11,7 +12,7 @@ export function useGetTareas(ambito?: AmbitoTarea) {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setTareas(json.data ?? [])
       } catch (err: any) {

@@ -1,4 +1,5 @@
 import { EventoCalendarioType, EventoCalendarioPayload } from "@/types/evento-calendario"
+import { authFetch } from "@/lib/auth"
 
 export async function createEvento(payload: EventoCalendarioPayload): Promise<EventoCalendarioType> {
   const { cuenta: cuentaDocumentId, ...rest } = payload
@@ -6,7 +7,7 @@ export async function createEvento(payload: EventoCalendarioPayload): Promise<Ev
   if (cuentaDocumentId) {
     data.cuenta = { connect: [{ documentId: cuentaDocumentId }] }
   }
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/evento-calendarios`, {
+  const res = await authFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/evento-calendarios`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data }),

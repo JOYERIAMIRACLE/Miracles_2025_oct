@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { EcosistemaType, AmbitoEcosistema } from "@/types/ecosistema-mkt"
+import { authFetch } from "@/lib/auth"
 
 export function useGetEcosistema(ambito: AmbitoEcosistema = "trabajo") {
   const filter = ambito === "empresa"
@@ -13,7 +14,7 @@ export function useGetEcosistema(ambito: AmbitoEcosistema = "trabajo") {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setRegistros(json.data ?? [])
       } catch (err: any) {

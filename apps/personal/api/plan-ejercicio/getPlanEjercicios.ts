@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { PlanEjercicioType, PlanEjercicioPayload } from "@/types/planEjercicio"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -17,7 +18,7 @@ export function useGetPlanEjercicioSemana(semanaInicio: string) {
           "populate":                   "ejercicio",
           "pagination[pageSize]":       "100",
         })
-        const res  = await fetch(`${BASE}/api/plan-ejercicios?${params}`)
+        const res  = await authFetch(`${BASE}/api/plan-ejercicios?${params}`)
         const json = await res.json()
         setPlanEjercicios(json.data ?? [])
       } finally { setLoading(false) }
@@ -28,7 +29,7 @@ export function useGetPlanEjercicioSemana(semanaInicio: string) {
 }
 
 export async function createPlanEjercicio(payload: PlanEjercicioPayload): Promise<PlanEjercicioType> {
-  const res  = await fetch(`${BASE}/api/plan-ejercicios`, {
+  const res  = await authFetch(`${BASE}/api/plan-ejercicios`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -37,5 +38,5 @@ export async function createPlanEjercicio(payload: PlanEjercicioPayload): Promis
 }
 
 export async function deletePlanEjercicio(documentId: string) {
-  await fetch(`${BASE}/api/plan-ejercicios/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/plan-ejercicios/${documentId}`, { method: "DELETE" })
 }

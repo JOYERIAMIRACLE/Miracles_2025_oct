@@ -1,8 +1,9 @@
 import { MetaAhorroType, MetaAhorroPayload } from "@/types/meta-ahorro"
+import { authFetch } from "@/lib/auth"
 
 export async function createMeta(payload: MetaAhorroPayload): Promise<MetaAhorroType> {
   const clean = Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== null && v !== undefined && v !== ""))
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meta-ahorros`, {
+  const res = await authFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meta-ahorros`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: clean }),
   })

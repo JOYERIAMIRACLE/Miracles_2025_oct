@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { ActivoType } from "@/types/activo"
+import { authFetch } from "@/lib/auth"
 
 export function useGetActivos() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/activos`
@@ -10,7 +11,7 @@ export function useGetActivos() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setActivos(json.data ?? [])
       } catch (err: any) { setError(err.message) }

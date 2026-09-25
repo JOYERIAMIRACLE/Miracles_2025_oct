@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { MetaAhorroType } from "@/types/meta-ahorro"
+import { authFetch } from "@/lib/auth"
 
 export function useGetMetas() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/meta-ahorros`
@@ -10,7 +11,7 @@ export function useGetMetas() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setMetas(json.data ?? [])
       } catch (err: any) { setError(err.message) }

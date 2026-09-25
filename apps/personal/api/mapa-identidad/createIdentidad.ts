@@ -1,8 +1,9 @@
 import { MapaIdentidadType, MapaIdentidadPayload } from "@/types/mapa-identidad"
+import { authFetch } from "@/lib/auth"
 
 export async function createIdentidad(payload: MapaIdentidadPayload): Promise<MapaIdentidadType> {
   const clean = Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== null && v !== undefined && v !== ""))
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mapa-identidades`, {
+  const res = await authFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mapa-identidades`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: clean }),

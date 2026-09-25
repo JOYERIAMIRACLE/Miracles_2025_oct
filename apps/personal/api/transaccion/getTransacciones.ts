@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { TransaccionType } from "@/types/transaccion"
+import { authFetch } from "@/lib/auth"
 
 export function useGetTransacciones(ambito: "trabajo" | "empresa" = "trabajo") {
   const filter = ambito === "empresa"
@@ -13,7 +14,7 @@ export function useGetTransacciones(ambito: "trabajo" | "empresa" = "trabajo") {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setTransacciones(json.data ?? [])
       } catch (err: any) {
@@ -38,7 +39,7 @@ export function useGetTransaccionesByVenta(ventaDocumentId: string | null) {
     ;(async () => {
       try {
         const url  = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transaccions?filters[ventaOrigen][documentId][$eq]=${ventaDocumentId}&filters[tipo][$eq]=ingreso&populate=*&pagination[pageSize]=100&sort=createdAt:asc`
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setTransacciones(json.data ?? [])
       } finally {
@@ -62,7 +63,7 @@ export function useGetTransaccionesByCliente(clienteDocumentId: string | null) {
         // (clienteDocumentId) — así los registros viejos (solo tienen el
         // texto) y los nuevos (ya tienen la relación) aparecen ambos.
         const url  = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transaccions?filters[$or][0][clienteDocumentId][$eq]=${clienteDocumentId}&filters[$or][1][cliente][documentId][$eq]=${clienteDocumentId}&filters[tipo][$eq]=ingreso&populate=*&pagination[pageSize]=200&sort=createdAt:asc`
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setTransacciones(json.data ?? [])
       } finally {

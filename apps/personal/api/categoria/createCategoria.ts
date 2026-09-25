@@ -1,8 +1,9 @@
 import { CategoriaPayload, CategoriaType } from "@/types/categoria"
+import { authFetch } from "@/lib/auth"
 
 export async function createCategoria(payload: CategoriaPayload): Promise<CategoriaType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/categorias`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),

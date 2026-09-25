@@ -1,8 +1,9 @@
 import { TareaPayload, TareaType } from "@/types/tarea"
+import { authFetch } from "@/lib/auth"
 
 export async function updateTarea(documentId: string, payload: Partial<TareaPayload>): Promise<TareaType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tareas/${documentId}`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),

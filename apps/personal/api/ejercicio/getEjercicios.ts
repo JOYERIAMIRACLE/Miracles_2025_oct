@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { EjercicioType, EjercicioPayload } from "@/types/ejercicio"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -10,7 +11,7 @@ export function useGetEjercicios() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/ejercicios?pagination[pageSize]=200&sort=diaSemana:asc,titulo:asc`)
+        const res  = await authFetch(`${BASE}/api/ejercicios?pagination[pageSize]=200&sort=diaSemana:asc,titulo:asc`)
         const json = await res.json()
         setEjercicios(json.data ?? [])
       } finally { setLoading(false) }
@@ -21,7 +22,7 @@ export function useGetEjercicios() {
 }
 
 export async function createEjercicio(payload: EjercicioPayload): Promise<EjercicioType> {
-  const res  = await fetch(`${BASE}/api/ejercicios`, {
+  const res  = await authFetch(`${BASE}/api/ejercicios`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -30,7 +31,7 @@ export async function createEjercicio(payload: EjercicioPayload): Promise<Ejerci
 }
 
 export async function updateEjercicio(documentId: string, payload: Partial<EjercicioPayload>): Promise<EjercicioType> {
-  const res  = await fetch(`${BASE}/api/ejercicios/${documentId}`, {
+  const res  = await authFetch(`${BASE}/api/ejercicios/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -39,5 +40,5 @@ export async function updateEjercicio(documentId: string, payload: Partial<Ejerc
 }
 
 export async function deleteEjercicio(documentId: string) {
-  await fetch(`${BASE}/api/ejercicios/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/ejercicios/${documentId}`, { method: "DELETE" })
 }

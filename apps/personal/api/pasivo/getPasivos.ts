@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { PasivoType } from "@/types/pasivo"
+import { authFetch } from "@/lib/auth"
 
 export function useGetPasivos() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/pasivos`
@@ -10,7 +11,7 @@ export function useGetPasivos() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setPasivos(json.data ?? [])
       } catch (err: any) { setError(err.message) }

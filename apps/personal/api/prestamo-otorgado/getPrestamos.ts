@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { PrestamoOtorgadoType } from "@/types/prestamo-otorgado"
+import { authFetch } from "@/lib/auth"
 
 export function useGetPrestamos() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/prestamo-otorgados`
@@ -10,7 +11,7 @@ export function useGetPrestamos() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setPrestamos(json.data ?? [])
       } catch (err: any) { setError(err.message) }

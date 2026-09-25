@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from "react"
 import { PagoTrabajoType } from "@/types/pago-trabajo"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 const fetchPagos = async () => {
-  const res  = await fetch(`${BASE}/api/pago-trabajos?populate[0]=clienteTrabajo&populate[1]=proyecto&populate[2]=categoriaPago&pagination[pageSize]=2000&sort[0]=fecha:desc&sort[1]=createdAt:desc`)
+  const res  = await authFetch(`${BASE}/api/pago-trabajos?populate[0]=clienteTrabajo&populate[1]=proyecto&populate[2]=categoriaPago&pagination[pageSize]=2000&sort[0]=fecha:desc&sort[1]=createdAt:desc`)
   const json = await res.json()
   return (json.data ?? []) as PagoTrabajoType[]
 }

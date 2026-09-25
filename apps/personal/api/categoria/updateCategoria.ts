@@ -1,8 +1,9 @@
 import { CategoriaPayload, CategoriaType } from "@/types/categoria"
+import { authFetch } from "@/lib/auth"
 
 export async function updateCategoria(documentId: string, payload: Partial<CategoriaPayload>): Promise<CategoriaType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/categorias/${documentId}`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),

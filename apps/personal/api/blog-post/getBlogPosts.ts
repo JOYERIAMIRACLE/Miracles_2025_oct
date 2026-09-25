@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { BlogPostType } from "@/types/blog-post"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -10,7 +11,7 @@ export function useGetBlogPosts() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/blog-posts?pagination[pageSize]=200&sort=fecha_publicacion:desc&status=draft,published`)
+        const res  = await authFetch(`${BASE}/api/blog-posts?pagination[pageSize]=200&sort=fecha_publicacion:desc&status=draft,published`)
         const json = await res.json()
         setPosts(json.data ?? [])
       } finally { setLoading(false) }
@@ -21,7 +22,7 @@ export function useGetBlogPosts() {
 }
 
 export async function createBlogPost(payload: Record<string, unknown>): Promise<BlogPostType> {
-  const res = await fetch(`${BASE}/api/blog-posts`, {
+  const res = await authFetch(`${BASE}/api/blog-posts`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -29,7 +30,7 @@ export async function createBlogPost(payload: Record<string, unknown>): Promise<
 }
 
 export async function updateBlogPost(documentId: string, payload: Record<string, unknown>): Promise<BlogPostType> {
-  const res = await fetch(`${BASE}/api/blog-posts/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/blog-posts/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -37,7 +38,7 @@ export async function updateBlogPost(documentId: string, payload: Record<string,
 }
 
 export async function publishBlogPost(documentId: string): Promise<BlogPostType> {
-  const res = await fetch(`${BASE}/api/blog-posts/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/blog-posts/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: { publishedAt: new Date().toISOString() } }),
   })
@@ -45,7 +46,7 @@ export async function publishBlogPost(documentId: string): Promise<BlogPostType>
 }
 
 export async function unpublishBlogPost(documentId: string): Promise<BlogPostType> {
-  const res = await fetch(`${BASE}/api/blog-posts/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/blog-posts/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: { publishedAt: null } }),
   })
@@ -53,5 +54,5 @@ export async function unpublishBlogPost(documentId: string): Promise<BlogPostTyp
 }
 
 export async function deleteBlogPost(documentId: string) {
-  await fetch(`${BASE}/api/blog-posts/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/blog-posts/${documentId}`, { method: "DELETE" })
 }

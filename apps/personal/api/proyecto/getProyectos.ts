@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { ProyectoType } from "@/types/proyecto"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -11,7 +12,7 @@ export function useGetProyectos() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/proyectos?populate=clienteTrabajo&pagination[pageSize]=200&sort=createdAt:desc`)
+        const res  = await authFetch(`${BASE}/api/proyectos?populate=clienteTrabajo&pagination[pageSize]=200&sort=createdAt:desc`)
         const json = await res.json()
         setProyectos(json.data ?? [])
       } catch (err: any) {

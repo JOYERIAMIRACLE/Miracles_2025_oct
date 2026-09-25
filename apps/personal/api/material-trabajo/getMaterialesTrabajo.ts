@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { MaterialTrabajoType, AmbitoMaterial } from "@/types/material-trabajo"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -15,7 +16,7 @@ export function useGetMaterialesTrabajo(ambito: AmbitoMaterial = "trabajo") {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/material-trabajos?pagination[pageSize]=200&sort=nombre:asc${filter}`)
+        const res  = await authFetch(`${BASE}/api/material-trabajos?pagination[pageSize]=200&sort=nombre:asc${filter}`)
         const json = await res.json()
         setMateriales(json.data ?? [])
       } catch (err: any) {

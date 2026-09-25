@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { AnuncioType, AnuncioPayload } from "@/types/anuncio"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL  = `${BASE}/api/anuncios?pagination[pageSize]=200&sort=createdAt:desc`
@@ -11,7 +12,7 @@ export function useGetAnuncios() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(URL)
+        const res  = await authFetch(URL)
         const json = await res.json()
         setAnuncios(json.data ?? [])
       } finally { setLoading(false) }
@@ -22,7 +23,7 @@ export function useGetAnuncios() {
 }
 
 export async function createAnuncio(payload: AnuncioPayload): Promise<AnuncioType> {
-  const res = await fetch(`${BASE}/api/anuncios`, {
+  const res = await authFetch(`${BASE}/api/anuncios`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -30,7 +31,7 @@ export async function createAnuncio(payload: AnuncioPayload): Promise<AnuncioTyp
 }
 
 export async function updateAnuncio(documentId: string, payload: Partial<AnuncioPayload>): Promise<AnuncioType> {
-  const res = await fetch(`${BASE}/api/anuncios/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/anuncios/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -38,5 +39,5 @@ export async function updateAnuncio(documentId: string, payload: Partial<Anuncio
 }
 
 export async function deleteAnuncio(documentId: string) {
-  await fetch(`${BASE}/api/anuncios/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/anuncios/${documentId}`, { method: "DELETE" })
 }

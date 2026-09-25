@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { ReunionType } from "@/types/reunion"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -11,7 +12,7 @@ export function useGetReuniones() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/reuniones?populate[clienteTrabajo]=true&populate[proyecto]=true&pagination[pageSize]=200&sort=fecha:desc`)
+        const res  = await authFetch(`${BASE}/api/reuniones?populate[clienteTrabajo]=true&populate[proyecto]=true&pagination[pageSize]=200&sort=fecha:desc`)
         const json = await res.json()
         setReuniones(json.data ?? [])
       } catch (err: any) {

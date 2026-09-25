@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { RecetaType, RecetaPayload } from "@/types/recetario"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -12,7 +13,7 @@ export function useGetRecetas() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/recetas?pagination[pageSize]=200&sort=nombre:asc`)
+        const res  = await authFetch(`${BASE}/api/recetas?pagination[pageSize]=200&sort=nombre:asc`)
         const json = await res.json()
         setRecetas((json.data ?? []).map(normalize))
       } finally { setLoading(false) }
@@ -23,7 +24,7 @@ export function useGetRecetas() {
 }
 
 export async function createReceta(payload: RecetaPayload): Promise<RecetaType> {
-  const res  = await fetch(`${BASE}/api/recetas`, {
+  const res  = await authFetch(`${BASE}/api/recetas`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -32,7 +33,7 @@ export async function createReceta(payload: RecetaPayload): Promise<RecetaType> 
 }
 
 export async function updateReceta(documentId: string, payload: Partial<RecetaPayload>): Promise<RecetaType> {
-  const res  = await fetch(`${BASE}/api/recetas/${documentId}`, {
+  const res  = await authFetch(`${BASE}/api/recetas/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -41,5 +42,5 @@ export async function updateReceta(documentId: string, payload: Partial<RecetaPa
 }
 
 export async function deleteReceta(documentId: string) {
-  await fetch(`${BASE}/api/recetas/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/recetas/${documentId}`, { method: "DELETE" })
 }

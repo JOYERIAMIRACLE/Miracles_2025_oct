@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { PagoProgramadoType } from "@/types/pago-programado"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -10,7 +11,7 @@ export function useGetPagosProgramados() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/pago-programados?populate=cuenta&pagination[pageSize]=200&sort=fecha:asc`)
+        const res  = await authFetch(`${BASE}/api/pago-programados?populate=cuenta&pagination[pageSize]=200&sort=fecha:asc`)
         const json = await res.json()
         setPagos(json.data ?? [])
       } finally { setLoading(false) }
@@ -21,7 +22,7 @@ export function useGetPagosProgramados() {
 }
 
 export async function createPagoProgramado(payload: Record<string, unknown>): Promise<PagoProgramadoType> {
-  const res = await fetch(`${BASE}/api/pago-programados`, {
+  const res = await authFetch(`${BASE}/api/pago-programados`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -29,7 +30,7 @@ export async function createPagoProgramado(payload: Record<string, unknown>): Pr
 }
 
 export async function updatePagoProgramado(documentId: string, payload: Record<string, unknown>): Promise<PagoProgramadoType> {
-  const res = await fetch(`${BASE}/api/pago-programados/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/pago-programados/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -37,5 +38,5 @@ export async function updatePagoProgramado(documentId: string, payload: Record<s
 }
 
 export async function deletePagoProgramado(documentId: string) {
-  await fetch(`${BASE}/api/pago-programados/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/pago-programados/${documentId}`, { method: "DELETE" })
 }

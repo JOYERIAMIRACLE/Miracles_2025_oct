@@ -1,10 +1,11 @@
 import { ProyectoPayload, ProyectoType } from "@/types/proyecto"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const headers = { "Content-Type": "application/json" }
 
 export async function createProyecto(payload: ProyectoPayload): Promise<ProyectoType> {
-  const res = await fetch(`${BASE}/api/proyectos`, {
+  const res = await authFetch(`${BASE}/api/proyectos`, {
     method: "POST",
     headers,
     body: JSON.stringify({ data: payload }),
@@ -18,7 +19,7 @@ export async function createProyecto(payload: ProyectoPayload): Promise<Proyecto
 }
 
 export async function updateProyecto(documentId: string, payload: Partial<ProyectoPayload>): Promise<ProyectoType> {
-  const res = await fetch(`${BASE}/api/proyectos/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/proyectos/${documentId}`, {
     method: "PUT",
     headers,
     body: JSON.stringify({ data: payload }),
@@ -32,6 +33,6 @@ export async function updateProyecto(documentId: string, payload: Partial<Proyec
 }
 
 export async function deleteProyecto(documentId: string): Promise<void> {
-  const res = await fetch(`${BASE}/api/proyectos/${documentId}`, { method: "DELETE" })
+  const res = await authFetch(`${BASE}/api/proyectos/${documentId}`, { method: "DELETE" })
   if (!res.ok) throw new Error(`${res.status}`)
 }

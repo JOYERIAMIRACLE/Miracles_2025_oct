@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { RecursoType, RecursoCategoriaType } from "@/types/recurso"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const PAGE_SIZE = 50
@@ -21,7 +22,7 @@ export function useGetRecursos(seccion: string) {
     let vigente = true
     setLoading(true)
     setPagina(1)
-    fetch(urlPagina(seccion, 1), { signal: controller.signal })
+    authFetch(urlPagina(seccion, 1), { signal: controller.signal })
       .then(r => r.json())
       .then(json => {
         if (!vigente) return
@@ -38,7 +39,7 @@ export function useGetRecursos(seccion: string) {
     setCargandoMas(true)
     try {
       const siguiente = pagina + 1
-      const res  = await fetch(urlPagina(seccion, siguiente))
+      const res  = await authFetch(urlPagina(seccion, siguiente))
       const json = await res.json()
       setRecursos(prev => [...prev, ...(json.data ?? [])])
       setPagina(siguiente)
@@ -60,7 +61,7 @@ export function useGetCategorias(seccion: string, enabled: boolean) {
     if (!enabled) return
     const controller = new AbortController()
     let vigente = true
-    fetch(`${BASE}/api/recurso-categorias?filters[seccion][$eq]=${encodeURIComponent(seccion)}&sort=orden:asc&pagination[pageSize]=100`, { signal: controller.signal })
+    authFetch(`${BASE}/api/recurso-categorias?filters[seccion][$eq]=${encodeURIComponent(seccion)}&sort=orden:asc&pagination[pageSize]=100`, { signal: controller.signal })
       .then(r => r.json())
       .then(json => { if (vigente) setCategorias(json.data ?? []) })
       .catch(() => {})

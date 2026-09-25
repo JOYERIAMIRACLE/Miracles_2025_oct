@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { CategoriaType } from "@/types/categoria"
+import { authFetch } from "@/lib/auth"
 
 export function useGetCategorias(ambito: "trabajo" | "empresa" = "trabajo") {
   const filter = ambito === "empresa"
@@ -13,7 +14,7 @@ export function useGetCategorias(ambito: "trabajo" | "empresa" = "trabajo") {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setCategorias(json.data ?? [])
       } catch (err: any) {

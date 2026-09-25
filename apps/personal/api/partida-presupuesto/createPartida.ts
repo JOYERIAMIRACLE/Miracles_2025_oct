@@ -1,11 +1,12 @@
 import { PartidaPresupuestoType, PartidaPresupuestoPayload } from "@/types/partida-presupuesto"
+import { authFetch } from "@/lib/auth"
 
 export async function createPartida(payload: PartidaPresupuestoPayload): Promise<PartidaPresupuestoType> {
   // Strapi v5 rechaza enumeraciones con valor null — se omiten los campos nulos
   const clean = Object.fromEntries(
     Object.entries(payload).filter(([, v]) => v !== null && v !== undefined && v !== "")
   )
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/partida-presupuestos`, {
+  const res = await authFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/partida-presupuestos`, {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ data: clean }),

@@ -1,10 +1,11 @@
 import { MaterialTrabajoPayload } from "@/types/material-trabajo"
+import { authFetch } from "@/lib/auth"
 
 const BASE    = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const headers = { "Content-Type": "application/json" }
 
 export async function createMaterialTrabajo(payload: MaterialTrabajoPayload) {
-  const res = await fetch(`${BASE}/api/material-trabajos`, {
+  const res = await authFetch(`${BASE}/api/material-trabajos`, {
     method: "POST",
     headers,
     body: JSON.stringify({ data: payload }),
@@ -13,7 +14,7 @@ export async function createMaterialTrabajo(payload: MaterialTrabajoPayload) {
 }
 
 export async function updateMaterialTrabajo(documentId: string, payload: Partial<MaterialTrabajoPayload>) {
-  const res = await fetch(`${BASE}/api/material-trabajos/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/material-trabajos/${documentId}`, {
     method: "PUT",
     headers,
     body: JSON.stringify({ data: payload }),
@@ -22,5 +23,5 @@ export async function updateMaterialTrabajo(documentId: string, payload: Partial
 }
 
 export async function deleteMaterialTrabajo(documentId: string) {
-  await fetch(`${BASE}/api/material-trabajos/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/material-trabajos/${documentId}`, { method: "DELETE" })
 }

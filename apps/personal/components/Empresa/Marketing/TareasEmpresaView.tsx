@@ -8,6 +8,7 @@ import { createTarea } from "@/api/tarea/createTarea"
 import { updateTarea } from "@/api/tarea/updateTarea"
 import { deleteTarea } from "@/api/tarea/deleteTarea"
 import { ProgresoBar, AvancesPanel } from "@/components/Shared/TareasWidgets"
+import { authFetch } from "@/lib/auth"
 
 const ETIQUETA = "empresa-mkt"
 const BASE     = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -78,7 +79,7 @@ export function TareasEmpresaView() {
           "pagination[pageSize]":   "200",
           "sort":                   "createdAt:desc",
         })
-        const res  = await fetch(`${BASE}/api/tareas?${params}`)
+        const res  = await authFetch(`${BASE}/api/tareas?${params}`)
         const json = await res.json()
         setTareas(json.data ?? [])
       } finally {

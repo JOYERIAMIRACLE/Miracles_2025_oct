@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { ClienteTrabajoType } from "@/types/cliente-trabajo"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -11,7 +12,7 @@ export function useGetClientesTrabajo() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/cliente-trabajos?pagination[pageSize]=200&sort=nombre:asc`)
+        const res  = await authFetch(`${BASE}/api/cliente-trabajos?pagination[pageSize]=200&sort=nombre:asc`)
         const json = await res.json()
         setClientes(json.data ?? [])
       } catch (err: any) {

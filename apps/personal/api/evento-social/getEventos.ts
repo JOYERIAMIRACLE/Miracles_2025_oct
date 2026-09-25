@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { EventoSocial, EventoSocialPayload } from "@/types/evento-social"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL_BASE = `${BASE}/api/evento-socials`
@@ -10,7 +11,7 @@ export function useGetEventos() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${URL_BASE}?pagination[pageSize]=200&sort=fecha:desc`)
+        const res  = await authFetch(`${URL_BASE}?pagination[pageSize]=200&sort=fecha:desc`)
         const json = await res.json()
         setEventos(json.data ?? [])
       } finally { setLoading(false) }
@@ -20,7 +21,7 @@ export function useGetEventos() {
 }
 
 async function mutate(url: string, method: string, payload?: unknown): Promise<EventoSocial> {
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method, headers: { "Content-Type": "application/json" },
     body: payload ? JSON.stringify({ data: payload }) : undefined,
   })
@@ -31,6 +32,6 @@ async function mutate(url: string, method: string, payload?: unknown): Promise<E
 export const createEvento = (p: EventoSocialPayload)                    => mutate(URL_BASE, "POST", p)
 export const updateEvento = (id: string, p: Partial<EventoSocialPayload>) => mutate(`${URL_BASE}/${id}`, "PUT", p)
 export const deleteEvento = async (id: string) => {
-  const res = await fetch(`${URL_BASE}/${id}`, { method: "DELETE" })
+  const res = await authFetch(`${URL_BASE}/${id}`, { method: "DELETE" })
   if (!res.ok) throw new Error(`Error ${res.status}`)
 }

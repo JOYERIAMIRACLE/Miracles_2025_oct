@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { MaterialDigitalType, AmbitoMaterialDigital } from "@/types/material-digital"
+import { authFetch } from "@/lib/auth"
 
 const BASE = () => `${process.env.NEXT_PUBLIC_BACKEND_URL}`
 
@@ -16,7 +17,7 @@ export function useGetMaterialDigital(ambito: AmbitoMaterialDigital = "trabajo")
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE()}/api/material-digitals?pagination[pageSize]=500&sort=categoria:asc,subcategoria:asc,nombre:asc${filter}`)
+        const res  = await authFetch(`${BASE()}/api/material-digitals?pagination[pageSize]=500&sort=categoria:asc,subcategoria:asc,nombre:asc${filter}`)
         const json = await res.json()
         setMateriales(json.data ?? [])
       } finally { setLoading(false) }

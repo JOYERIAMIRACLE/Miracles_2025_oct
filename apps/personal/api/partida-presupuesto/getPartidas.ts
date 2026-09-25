@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { PartidaPresupuestoType, AmbitoPartida } from "@/types/partida-presupuesto"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -20,7 +21,7 @@ export function useGetPartidas(ambito?: AmbitoPartida) {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setPartidas(json.data ?? [])
       } catch (err: any) {

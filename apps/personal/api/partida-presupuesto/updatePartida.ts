@@ -1,10 +1,11 @@
 import { PartidaPresupuestoType, PartidaPresupuestoPayload } from "@/types/partida-presupuesto"
+import { authFetch } from "@/lib/auth"
 
 export async function updatePartida(documentId: string, payload: PartidaPresupuestoPayload): Promise<PartidaPresupuestoType> {
   const clean = Object.fromEntries(
     Object.entries(payload).filter(([, v]) => v !== null && v !== undefined && v !== "")
   )
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/partida-presupuestos/${documentId}`, {
+  const res = await authFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/partida-presupuestos/${documentId}`, {
     method:  "PUT",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ data: clean }),

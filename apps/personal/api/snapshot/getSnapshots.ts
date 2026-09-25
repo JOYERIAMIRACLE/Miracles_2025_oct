@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { SnapshotCuentaType, SnapshotMesType } from "@/types/snapshot"
+import { authFetch } from "@/lib/auth"
 
 export function useGetSnapshotsCuenta() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/snapshot-cuentas?pagination[pageSize]=500&sort=mes:desc`
@@ -10,7 +11,7 @@ export function useGetSnapshotsCuenta() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setSnapshots(json.data ?? [])
       } catch (err: any) { setError(err.message) }
@@ -30,7 +31,7 @@ export function useGetSnapshotsMes() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setSnapshots(json.data ?? [])
       } catch (err: any) { setError(err.message) }

@@ -10,6 +10,7 @@ import { createDocumentoLegal, updateDocumentoLegal, deleteDocumentoLegal } from
 import type { DocumentoLegalType, DocumentoLegalCaracteristica } from "@/types/documento-legal"
 import { uploadMedia } from "@/lib/upload"
 import { fieldCls } from "@/lib/styles"
+import { authFetch } from "@/lib/auth"
 
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
 const TEL_RE   = /\+?\d[\d\s.-]{6,}\d/
@@ -292,7 +293,7 @@ function GestionDocumentosLegalesModal({ onClose, onUpdated, editarId }: {
   async function cargar() {
     setLoading(true)
     try {
-      const res  = await fetch(`${BASE_URL}/api/documentos-legales?sort=orden:asc&populate=archivos&pagination[pageSize]=50`)
+      const res  = await authFetch(`${BASE_URL}/api/documentos-legales?sort=orden:asc&populate=archivos&pagination[pageSize]=50`)
       const json = await res.json()
       const data: DocumentoLegalType[] = json.data ?? []
       setLista(data)

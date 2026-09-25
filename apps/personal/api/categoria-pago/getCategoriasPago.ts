@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from "react"
 import { CategoriaPagoType } from "@/types/categoria-pago"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 const fetchCategorias = async () => {
-  const res  = await fetch(`${BASE}/api/categoria-pagos?sort[0]=nombre:asc&pagination[pageSize]=100`)
+  const res  = await authFetch(`${BASE}/api/categoria-pagos?sort[0]=nombre:asc&pagination[pageSize]=100`)
   const json = await res.json()
   return (json.data ?? []) as CategoriaPagoType[]
 }

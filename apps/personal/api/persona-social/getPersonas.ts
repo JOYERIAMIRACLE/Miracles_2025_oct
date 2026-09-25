@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { PersonaSocial, PersonaSocialPayload } from "@/types/persona-social"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL_BASE = `${BASE}/api/persona-socials`
@@ -10,7 +11,7 @@ export function useGetPersonas() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${URL_BASE}?pagination[pageSize]=200&sort=nombre:asc`)
+        const res  = await authFetch(`${URL_BASE}?pagination[pageSize]=200&sort=nombre:asc`)
         const json = await res.json()
         setPersonas(json.data ?? [])
       } finally { setLoading(false) }
@@ -20,7 +21,7 @@ export function useGetPersonas() {
 }
 
 async function mutate(url: string, method: string, payload?: unknown): Promise<PersonaSocial> {
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method, headers: { "Content-Type": "application/json" },
     body: payload ? JSON.stringify({ data: payload }) : undefined,
   })
@@ -31,6 +32,6 @@ async function mutate(url: string, method: string, payload?: unknown): Promise<P
 export const createPersona  = (p: PersonaSocialPayload)                  => mutate(URL_BASE, "POST", p)
 export const updatePersona  = (id: string, p: Partial<PersonaSocialPayload>) => mutate(`${URL_BASE}/${id}`, "PUT", p)
 export const deletePersona  = async (id: string) => {
-  const res = await fetch(`${URL_BASE}/${id}`, { method: "DELETE" })
+  const res = await authFetch(`${URL_BASE}/${id}`, { method: "DELETE" })
   if (!res.ok) throw new Error(`Error ${res.status}`)
 }

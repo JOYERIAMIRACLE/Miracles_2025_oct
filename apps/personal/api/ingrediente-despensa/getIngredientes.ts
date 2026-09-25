@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { IngredienteDespensa, IngredientePayload } from "@/types/ingrediente-despensa"
+import { authFetch } from "@/lib/auth"
 
 const BASE     = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL_BASE = `${BASE}/api/ingrediente-despensas`
@@ -11,7 +12,7 @@ export function useGetIngredientes() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${URL_BASE}?pagination[pageSize]=200&sort=nombre:asc`)
+        const res  = await authFetch(`${URL_BASE}?pagination[pageSize]=200&sort=nombre:asc`)
         const json = await res.json()
         setIngredientes(json.data ?? [])
       } finally {
@@ -24,7 +25,7 @@ export function useGetIngredientes() {
 }
 
 export async function createIngrediente(payload: IngredientePayload): Promise<IngredienteDespensa> {
-  const res = await fetch(URL_BASE, {
+  const res = await authFetch(URL_BASE, {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ data: payload }),
@@ -40,7 +41,7 @@ export async function updateIngrediente(
   documentId: string,
   payload: Partial<IngredientePayload>
 ): Promise<IngredienteDespensa> {
-  const res = await fetch(`${URL_BASE}/${documentId}`, {
+  const res = await authFetch(`${URL_BASE}/${documentId}`, {
     method:  "PUT",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ data: payload }),
@@ -53,6 +54,6 @@ export async function updateIngrediente(
 }
 
 export async function deleteIngrediente(documentId: string): Promise<void> {
-  const res = await fetch(`${URL_BASE}/${documentId}`, { method: "DELETE" })
+  const res = await authFetch(`${URL_BASE}/${documentId}`, { method: "DELETE" })
   if (!res.ok) throw new Error("Error al eliminar ingrediente")
 }

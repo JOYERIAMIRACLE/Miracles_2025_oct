@@ -1,8 +1,9 @@
 import { SnapshotCuentaPayload, SnapshotCuentaType, SnapshotMesPayload, SnapshotMesType } from "@/types/snapshot"
+import { authFetch } from "@/lib/auth"
 
 export async function createSnapshotCuenta(payload: SnapshotCuentaPayload): Promise<SnapshotCuentaType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/snapshot-cuentas`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
@@ -17,7 +18,7 @@ export async function createSnapshotCuenta(payload: SnapshotCuentaPayload): Prom
 
 export async function createSnapshotMes(payload: SnapshotMesPayload): Promise<SnapshotMesType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/snapshot-mes-list`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
@@ -32,7 +33,7 @@ export async function createSnapshotMes(payload: SnapshotMesPayload): Promise<Sn
 
 export async function updateSnapshotMes(documentId: string, payload: Partial<SnapshotMesPayload>): Promise<SnapshotMesType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/snapshot-mes-list/${documentId}`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
@@ -47,7 +48,7 @@ export async function updateSnapshotMes(documentId: string, payload: Partial<Sna
 
 export async function updateSnapshotCuenta(documentId: string, payload: Partial<SnapshotCuentaPayload>): Promise<SnapshotCuentaType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/snapshot-cuentas/${documentId}`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),

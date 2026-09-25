@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { PlanComidaType, PlanComidaPayload } from "@/types/planComida"
 import { RecetaType } from "@/types/recetario"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -25,7 +26,7 @@ export function useGetPlanSemana(semanaInicio: string) {
           "populate":                   "receta",
           "pagination[pageSize]":       "100",
         })
-        const res  = await fetch(`${BASE}/api/plan-comidas?${params}`)
+        const res  = await authFetch(`${BASE}/api/plan-comidas?${params}`)
         const json = await res.json()
         setPlanComidas((json.data ?? []).map(normalizePlan))
       } finally { setLoading(false) }
@@ -36,7 +37,7 @@ export function useGetPlanSemana(semanaInicio: string) {
 }
 
 export async function createPlanComida(payload: PlanComidaPayload): Promise<PlanComidaType> {
-  const res  = await fetch(`${BASE}/api/plan-comidas`, {
+  const res  = await authFetch(`${BASE}/api/plan-comidas`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -45,5 +46,5 @@ export async function createPlanComida(payload: PlanComidaPayload): Promise<Plan
 }
 
 export async function deletePlanComida(documentId: string) {
-  await fetch(`${BASE}/api/plan-comidas/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/plan-comidas/${documentId}`, { method: "DELETE" })
 }

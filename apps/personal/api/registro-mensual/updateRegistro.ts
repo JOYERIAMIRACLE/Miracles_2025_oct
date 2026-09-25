@@ -1,8 +1,9 @@
 import { RegistroMensualType, RegistroMensualPayload } from "@/types/registro-mensual"
+import { authFetch } from "@/lib/auth"
 
 export async function updateRegistro(documentId: string, payload: RegistroMensualPayload): Promise<RegistroMensualType> {
   const clean = Object.fromEntries(Object.entries(payload).filter(([, v]) => v !== null && v !== undefined && v !== ""))
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/registro-mensuals/${documentId}`, {
+  const res = await authFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/registro-mensuals/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: clean }),
   })

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { TicketType } from "@/types/ticket"
+import { authFetch } from "@/lib/auth"
 
 export function useGetTickets() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tickets?pagination[pageSize]=200&sort=createdAt:desc&populate[tareas][fields][0]=documentId&populate[tareas][fields][1]=titulo&populate[tareas][fields][2]=estado`
@@ -10,7 +11,7 @@ export function useGetTickets() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setTickets(json.data ?? [])
       } catch (err: any) {

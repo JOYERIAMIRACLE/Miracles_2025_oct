@@ -1,9 +1,10 @@
 import { MaterialDigitalType, MaterialDigitalPayload } from "@/types/material-digital"
+import { authFetch } from "@/lib/auth"
 
 const BASE = () => `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/material-digitals`
 
 export async function createMaterialDigital(payload: MaterialDigitalPayload): Promise<MaterialDigitalType> {
-  const res = await fetch(BASE(), {
+  const res = await authFetch(BASE(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
@@ -16,7 +17,7 @@ export async function createMaterialDigital(payload: MaterialDigitalPayload): Pr
 }
 
 export async function updateMaterialDigital(documentId: string, payload: Partial<MaterialDigitalPayload>): Promise<MaterialDigitalType> {
-  const res = await fetch(`${BASE()}/${documentId}`, {
+  const res = await authFetch(`${BASE()}/${documentId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
@@ -29,6 +30,6 @@ export async function updateMaterialDigital(documentId: string, payload: Partial
 }
 
 export async function deleteMaterialDigital(documentId: string): Promise<void> {
-  const res = await fetch(`${BASE()}/${documentId}`, { method: "DELETE" })
+  const res = await authFetch(`${BASE()}/${documentId}`, { method: "DELETE" })
   if (!res.ok) throw new Error(`${res.status}`)
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { EventoCalendarioType } from "@/types/evento-calendario"
+import { authFetch } from "@/lib/auth"
 
 export function useGetEventos() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/evento-calendarios?populate=cuenta&sort[0]=fecha:desc&pagination[pageSize]=500`
@@ -10,7 +11,7 @@ export function useGetEventos() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res = await fetch(url)
+        const res = await authFetch(url)
         const json = await res.json()
         setEventos(json.data ?? [])
       } catch (err: any) { setError(err.message) }

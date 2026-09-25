@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { AvisoType } from "@/types/aviso"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -11,7 +12,7 @@ export function useGetAvisos() {
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
-    fetch(`${BASE}/api/avisos?filters[activo][$eq]=true&sort=orden:asc&pagination[pageSize]=20&populate=imagen`, { signal: controller.signal })
+    authFetch(`${BASE}/api/avisos?filters[activo][$eq]=true&sort=orden:asc&pagination[pageSize]=20&populate=imagen`, { signal: controller.signal })
       .then(r => r.json())
       .then(json => setAvisos(json.data ?? []))
       .catch(() => {})
@@ -30,7 +31,7 @@ export function useGetAllAvisos() {
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
-    fetch(`${BASE}/api/avisos?sort=orden:asc&pagination[pageSize]=50&populate=imagen`, { signal: controller.signal })
+    authFetch(`${BASE}/api/avisos?sort=orden:asc&pagination[pageSize]=50&populate=imagen`, { signal: controller.signal })
       .then(r => r.json())
       .then(json => setAvisos(json.data ?? []))
       .catch(() => {})

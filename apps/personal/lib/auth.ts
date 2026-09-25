@@ -65,7 +65,10 @@ export function authFetch(url: string, init?: RequestInit): Promise<Response> {
     ? init.headers
     : new Headers(init?.headers as HeadersInit | undefined)
   if (token) base.set("Authorization", `Bearer ${token}`)
-  base.set("Content-Type", base.get("Content-Type") ?? "application/json")
+  // Con FormData el navegador fija Content-Type (con el boundary); pisarlo rompe la subida.
+  if (!(init?.body instanceof FormData)) {
+    base.set("Content-Type", base.get("Content-Type") ?? "application/json")
+  }
   return fetch(url, { ...init, headers: base })
 }
 

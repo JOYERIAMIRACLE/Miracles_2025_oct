@@ -13,6 +13,7 @@ import { SkuBuilder } from "@/components/Shared/SkuBuilder"
 import { SkuEntry } from "@/types/skuCatalogo"
 import { useGetMateriales } from "@/api/material/getMateriales"
 import { createMovimientoMaterial } from "@/api/movimiento-material/mutateMovimientoMaterial"
+import { authFetch } from "@/lib/auth"
 
 // Qué atributos mostrar según categoría — un solo modelo de campos opcionales
 // que cubre las 9 categorías, en vez de un formulario distinto por cada una.
@@ -421,7 +422,7 @@ export function InventarioEmpresaView() {
         "populate[compraLinea][fields][1]": "descripcion",
         "populate[compraLinea][populate][compra][fields][0]": "numero",
       })
-      const res  = await fetch(`${BACKEND}/api/movimientos-material?${params}`)
+      const res  = await authFetch(`${BACKEND}/api/movimientos-material?${params}`)
       const json = await res.json()
       type LineaPop = { precioPorGramo?: number; descripcion?: string; compra?: { numero?: string | null } } | null
       type MovRaw = { documentId: string; gramos: number; fecha: string; compraLinea?: LineaPop }

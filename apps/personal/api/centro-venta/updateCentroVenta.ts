@@ -1,8 +1,9 @@
 import { CentroVentaPayload, CentroVentaType } from "@/types/centro-venta"
+import { authFetch } from "@/lib/auth"
 
 export async function updateCentroVenta(documentId: string, payload: Partial<CentroVentaPayload>): Promise<CentroVentaType> {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/centro-ventas/${documentId}`
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),

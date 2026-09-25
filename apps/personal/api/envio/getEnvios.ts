@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { EnvioType } from "@/types/envio"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -14,7 +15,7 @@ export function useGetEnvios() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/envios?pagination[pageSize]=200&sort=createdAt:desc&${POPULATE}`)
+        const res  = await authFetch(`${BASE}/api/envios?pagination[pageSize]=200&sort=createdAt:desc&${POPULATE}`)
         const json = await res.json()
         setEnvios(json.data ?? [])
       } finally { setLoading(false) }
@@ -25,7 +26,7 @@ export function useGetEnvios() {
 }
 
 export async function createEnvio(payload: Record<string, unknown>): Promise<EnvioType> {
-  const res = await fetch(`${BASE}/api/envios?${POPULATE}`, {
+  const res = await authFetch(`${BASE}/api/envios?${POPULATE}`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -33,7 +34,7 @@ export async function createEnvio(payload: Record<string, unknown>): Promise<Env
 }
 
 export async function updateEnvio(documentId: string, payload: Record<string, unknown>): Promise<EnvioType> {
-  const res = await fetch(`${BASE}/api/envios/${documentId}?${POPULATE}`, {
+  const res = await authFetch(`${BASE}/api/envios/${documentId}?${POPULATE}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -41,5 +42,5 @@ export async function updateEnvio(documentId: string, payload: Record<string, un
 }
 
 export async function deleteEnvio(documentId: string) {
-  await fetch(`${BASE}/api/envios/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/envios/${documentId}`, { method: "DELETE" })
 }

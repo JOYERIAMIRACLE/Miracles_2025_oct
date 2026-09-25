@@ -1,9 +1,10 @@
 import { VentaLinea, VentaLineaPayload } from "@/types/venta-linea"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 export async function createVentaLinea(payload: VentaLineaPayload): Promise<VentaLinea> {
-  const r = await fetch(`${BASE}/api/venta-lineas?populate=producto`, {
+  const r = await authFetch(`${BASE}/api/venta-lineas?populate=producto`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -12,7 +13,7 @@ export async function createVentaLinea(payload: VentaLineaPayload): Promise<Vent
 }
 
 export async function updateVentaLinea(documentId: string, payload: Partial<VentaLineaPayload>): Promise<VentaLinea> {
-  const r = await fetch(`${BASE}/api/venta-lineas/${documentId}?populate=producto`, {
+  const r = await authFetch(`${BASE}/api/venta-lineas/${documentId}?populate=producto`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -21,5 +22,5 @@ export async function updateVentaLinea(documentId: string, payload: Partial<Vent
 }
 
 export async function deleteVentaLinea(documentId: string): Promise<void> {
-  await fetch(`${BASE}/api/venta-lineas/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/venta-lineas/${documentId}`, { method: "DELETE" })
 }

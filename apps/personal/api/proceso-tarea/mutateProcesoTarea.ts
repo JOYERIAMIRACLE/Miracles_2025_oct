@@ -1,9 +1,10 @@
 import { AmbitoTarea } from "@/types/tarea"
+import { authFetch } from "@/lib/auth"
 
 const BASE = () => `${process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}/api/proceso-tareas`
 
 export async function createProcesoTarea(nombre: string, ambito: AmbitoTarea, orden: number, activo?: boolean): Promise<string> {
-  const res = await fetch(BASE(), {
+  const res = await authFetch(BASE(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: { nombre, ambito, orden, ...(activo !== undefined ? { activo } : {}) } }),
@@ -14,7 +15,7 @@ export async function createProcesoTarea(nombre: string, ambito: AmbitoTarea, or
 }
 
 export async function updateProcesoTarea(documentId: string, payload: { nombre?: string; orden?: number; activo?: boolean }): Promise<void> {
-  const res = await fetch(`${BASE()}/${documentId}`, {
+  const res = await authFetch(`${BASE()}/${documentId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),

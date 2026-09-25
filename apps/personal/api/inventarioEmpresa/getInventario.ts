@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { ProductType } from "@/types/product"
-import { getToken } from "@/lib/auth"
+import { getToken, authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const URL  = `${BASE}/api/products`
@@ -22,7 +22,7 @@ export function useGetInventario() {
           "sort":                 "nombreProducto:asc",
           "populate":             "*",
         })
-        const res  = await fetch(`${URL}?${params}`)
+        const res  = await authFetch(`${URL}?${params}`)
         const json = await res.json()
         setItems(json.data ?? [])
       } finally { setLoading(false) }
@@ -48,7 +48,7 @@ export async function fetchProductosConSku(): Promise<ProductoConSku[]> {
       "fields[0]": "sku", "fields[1]": "nombreProducto", "fields[2]": "categoriaJoya",
       "fields[3]": "materialProducto", "fields[4]": "talla", "fields[5]": "pesoGramos",
     })
-    const res = await fetch(`${URL}?${params}`)
+    const res = await authFetch(`${URL}?${params}`)
     if (!res.ok) return []
     const json = await res.json()
     return (json.data ?? []) as ProductoConSku[]
@@ -121,7 +121,7 @@ export async function toggleActivoTienda(documentId: string, activo: boolean): P
 export async function resolverCategoriaId(categoriaJoya: string | null): Promise<string | undefined> {
   if (!categoriaJoya) return undefined
   try {
-    const res = await fetch(
+    const res = await authFetch(
       `${BASE}/api/product-categories?filters[NombreCategoria][$eq]=${encodeURIComponent(categoriaJoya)}&fields[0]=documentId`
     )
     const json = await res.json()

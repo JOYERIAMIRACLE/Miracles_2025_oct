@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { IdentidadEmpresa } from "@/types/identidad-empresa"
-import { getToken } from "@/lib/auth"
+import { getToken, isTokenValid } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 const API_URL = `${BASE}/api/identidad-empresas?pagination[pageSize]=1&populate=*`
@@ -18,15 +18,16 @@ export function useGetIdentidad() {
   useEffect(() => {
     ;(async () => {
       try {
-        // Sin Authorization a propósito: este GET es público (lo usan tanto
-        // visitantes anónimos de la Tienda como el Portal), y Strapi rechaza
-        // con 401 cualquier request que traiga un Bearer inválido/vencido —
-        // NO cae de regreso a acceso público solo porque el token esté mal.
-        // Adjuntar el token de todos modos (como hacía antes) rompía el logo
-        // y demás datos de identidad para cualquiera cuyo token ya no fuera
-        // válido contra este backend (ej. sesión vieja, u otro entorno),
-        // aunque el dato en sí nunca necesitó login para leerse.
-        const res  = await fetch(API_URL)
+        // Este GET sirve a dos públicos: el login (anónimo, el backend solo le
+        // entrega nombre y logo) y el Portal (con sesión, todos los campos).
+        // Strapi responde 401 a cualquier Bearer inválido/vencido en vez de
+        // tratarlo como anónimo, así que si el token no sirve se reintenta
+        // sin él para no perder el logo en el login.
+        const token = getToken()
+        let res = isTokenValid(token)
+          ? await fetch(API_URL, { headers: { Authorization: `Bearer ${token}` } })
+          : null
+        if (!res || res.status === 401 || res.status === 403) res = await fetch(API_URL)
         const json = await res.json()
         setIdentidad(json.data?.[0] ?? null)
       } finally { setLoading(false) }

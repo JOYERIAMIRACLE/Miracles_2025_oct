@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { RegistroMensualType } from "@/types/registro-mensual"
+import { authFetch } from "@/lib/auth"
 
 export function useGetRegistros() {
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/registro-mensuals?pagination[limit]=500`
@@ -10,7 +11,7 @@ export function useGetRegistros() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(url)
+        const res  = await authFetch(url)
         const json = await res.json()
         setRegistros(json.data ?? [])
       } catch (err: any) { setError(err.message) }

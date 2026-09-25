@@ -1,5 +1,6 @@
+import { authFetch } from "@/lib/auth"
 export async function updateIdentidadActivo(documentId: string, activo: boolean): Promise<void> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mapa-identidades/${documentId}`, {
+  const res = await authFetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mapa-identidades/${documentId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: { activo } }),

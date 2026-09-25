@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { RutinaType } from "@/types/salud"
+import { authFetch } from "@/lib/auth"
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
@@ -10,7 +11,7 @@ export function useGetRutinas() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await fetch(`${BASE}/api/rutinas?pagination[pageSize]=100&sort=nombre:asc`)
+        const res  = await authFetch(`${BASE}/api/rutinas?pagination[pageSize]=100&sort=nombre:asc`)
         const json = await res.json()
         setRutinas(json.data ?? [])
       } finally { setLoading(false) }
@@ -21,7 +22,7 @@ export function useGetRutinas() {
 }
 
 export async function createRutina(payload: Partial<RutinaType>) {
-  const res = await fetch(`${BASE}/api/rutinas`, {
+  const res = await authFetch(`${BASE}/api/rutinas`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -29,7 +30,7 @@ export async function createRutina(payload: Partial<RutinaType>) {
 }
 
 export async function updateRutina(documentId: string, payload: Partial<RutinaType>) {
-  const res = await fetch(`${BASE}/api/rutinas/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/rutinas/${documentId}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -37,5 +38,5 @@ export async function updateRutina(documentId: string, payload: Partial<RutinaTy
 }
 
 export async function deleteRutina(documentId: string) {
-  await fetch(`${BASE}/api/rutinas/${documentId}`, { method: "DELETE" })
+  await authFetch(`${BASE}/api/rutinas/${documentId}`, { method: "DELETE" })
 }
