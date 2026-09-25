@@ -1,6 +1,7 @@
 'use strict';
 
 const { crearDisparadorRebuild, MODELOS_REBUILD } = require('./rebuild-tienda');
+const { registrarActividad, atribucionParaLead, resumenTrafico, crearLimitadorPorMinuto } = require('./medicion');
 
 // ─── Protección anti-fuerza-bruta / spam en rutas sensibles ──────────────────
 // Mapa en memoria por ruta: clave = IP, valor = { intentos, bloqueadoHasta }.
@@ -136,6 +137,19 @@ const checkoutRateLimit = rateLimitMiddleware('/api/tienda/checkout-intento', 'P
 const resetPasswordRateLimit = rateLimitMiddleware('/api/auth/reset-password', 'POST', {
   max: 10,
   contarComoFallo: () => true,
+});
+// Medición de la Tienda: un visitante real manda pocos eventos por minuto; el
+// tope frena ráfagas sin bloquear a una IP compartida (ver medicion.js).
+const actividadRateLimit = crearLimitadorPorMinuto({
+  path: '/api/tienda/actividad',
+  method: 'POST',
+  max: 300,
+  getIP,
+  alExceder: (ctx) => {
+    setCorsHeaders(ctx);
+    ctx.status = 429;
+    ctx.body = { error: { status: 429, name: 'TooManyRequests' } };
+  },
 });
 
 // Verifica que la petición traiga un JWT válido de un usuario con rol
@@ -933,6 +947,7 @@ module.exports = {
     strapi.server.use(registroRateLimit);
     strapi.server.use(forgotPasswordRateLimit);
     strapi.server.use(resetPasswordRateLimit);
+    strapi.server.use(actividadRateLimit);
     strapi.server.use(contactoRateLimit);
     strapi.server.use(checkoutRateLimit);
     strapi.server.use(sanearRespuestaPublica);
@@ -962,6 +977,21 @@ module.exports = {
             strapi.log.error('[miracles-chat] ' + e.message)
             ctx.status = 500; ctx.body = { error: e.message }
           }
+        },
+        config: { auth: false },
+      },
+      // Medición anónima de la Tienda (ver medicion.js). Responde 204 siempre:
+      // el navegador no debe enterarse de por qué se descartó un evento.
+      {
+        method: 'POST',
+        path: '/api/tienda/actividad',
+        handler: async (ctx) => {
+          try {
+            await registrarActividad(strapi, ctx.request.body, { userAgent: ctx.request.headers['user-agent'] });
+          } catch (e) {
+            strapi.log.warn('[tienda-actividad] ' + e.message);
+          }
+          ctx.status = 204;
         },
         config: { auth: false },
       },
@@ -1014,6 +1044,7 @@ module.exports = {
                 campanaOrigen:   interes ? `Interés: ${interes}` : null,
                 notas:           notas,
                 fechaLead:       new Date().toISOString(),
+                ...atribucionParaLead(ctx.request.body),
               },
             });
             ctx.body = { ok: true };
@@ -1085,6 +1116,7 @@ module.exports = {
                   canal:     'Formulario',
                   origen:    'Formulario web',
                   fechaLead: new Date().toISOString(),
+                  ...atribucionParaLead(ctx.request.body),
                 },
               });
             } catch (crmErr) {
@@ -1275,6 +1307,7 @@ module.exports = {
                 campanaOrigen: `Carrito: ${items.map(it => it.nombre).join(', ')}`,
                 fechaLead:     new Date().toISOString(),
                 notas:         `Cotización automática #${cotizacion.id} — Total: $${total.toFixed(2)}`,
+                ...atribucionParaLead(ctx.request.body),
               },
             });
 
@@ -1302,6 +1335,24 @@ module.exports = {
             ctx.body = { type: user.role.type, name: user.role.name }
           } catch (e) {
             ctx.status = 401; ctx.body = { error: 'Invalid token' }
+          }
+        },
+        config: { auth: false },
+      },
+      // Resumen de tráfico de la Tienda para el Portal (solo staff).
+      {
+        method: 'GET',
+        path: '/api/portal/trafico',
+        handler: async (ctx) => {
+          const staff = await requireStaffRole(ctx);
+          if (!staff) { ctx.status = 401; ctx.body = { error: 'No autenticado' }; return; }
+          try {
+            const resumen = await resumenTrafico(strapi, { desde: ctx.query.desde, hasta: ctx.query.hasta });
+            if (resumen.error) { ctx.status = 400; ctx.body = { error: { message: resumen.error } }; return; }
+            ctx.body = { data: resumen };
+          } catch (e) {
+            strapi.log.error('[portal-trafico] ' + e.message);
+            ctx.status = 500; ctx.body = { error: { message: 'No se pudo calcular el tráfico' } };
           }
         },
         config: { auth: false },

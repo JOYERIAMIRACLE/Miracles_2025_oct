@@ -87,6 +87,30 @@
     },
     "origenContacto": {
       "type": "string"
+    },
+    "sesion": {
+      "type": "string"
+    },
+    "visitante": {
+      "type": "string"
+    },
+    "ftFuente": {
+      "type": "string"
+    },
+    "ftCampana": {
+      "type": "string"
+    },
+    "ltFuente": {
+      "type": "string"
+    },
+    "ltCampana": {
+      "type": "string"
+    },
+    "comoNosConocio": {
+      "type": "string"
+    },
+    "atribucion": {
+      "type": "json"
     }
   }
 }

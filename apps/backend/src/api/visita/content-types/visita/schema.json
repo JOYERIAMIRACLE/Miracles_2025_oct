@@ -9,9 +9,19 @@
   "options": { "draftAndPublish": false },
   "pluginOptions": {},
   "attributes": {
-    "fecha":   { "type": "date" },
-    "pagina":  { "type": "string" },
-    "sesion":  { "type": "uid" },
-    "fuente":  { "type": "enumeration", "enum": ["directo","busqueda","social","referido","email","otro"] }
+    "fecha":       { "type": "date" },
+    "pagina":      { "type": "string" },
+    "sesion":      { "type": "string" },
+    "visitante":   { "type": "string" },
+    "tipo":        { "type": "string" },
+    "fuente":      { "type": "enumeration", "enum": ["directo","busqueda","social","referido","email","mensajeria","otro"] },
+    "canal":       { "type": "string" },
+    "producto":    { "type": "string" },
+    "detalle":     { "type": "string" },
+    "utmSource":   { "type": "string" },
+    "utmMedium":   { "type": "string" },
+    "utmCampaign": { "type": "string" },
+    "utmContent":  { "type": "string" },
+    "referrer":    { "type": "string" }
   }
 }
