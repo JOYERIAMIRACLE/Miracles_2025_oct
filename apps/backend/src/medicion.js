@@ -119,7 +119,7 @@ async function registrarActividad(strapi, body, { userAgent } = {}) {
   const { fuente, canal } = derivarFuente(toque);
   let detalle = null;
   if (tipo === 'search_performed') detalle = limpiarBusqueda(body.detalle) || null;
-  else if (tipo === 'contact_clicked') detalle = slug(body.detalle, 20) || null;
+  else if (tipo === 'contact_clicked' || tipo === 'cart_checkout_started') detalle = slug(body.detalle, 20) || null;
 
   await strapi.db.query('api::visita.visita').create({
     data: {
