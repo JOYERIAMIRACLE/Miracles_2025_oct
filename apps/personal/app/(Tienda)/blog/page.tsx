@@ -4,7 +4,7 @@ import BlogCard from "./components/BlogCard"
 import Container from "../1tiendacomponentes/container"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
 
 async function fetchBlogPosts(): Promise<BlogPostType[]> {
   try {

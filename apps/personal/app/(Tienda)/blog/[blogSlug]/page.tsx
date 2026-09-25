@@ -6,7 +6,7 @@ import BlocksRenderer from "../components/BlocksRenderer"
 import Container from "../../1tiendacomponentes/container"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
 
 async function fetchPost(slug: string): Promise<BlogPostType | null> {
   try {

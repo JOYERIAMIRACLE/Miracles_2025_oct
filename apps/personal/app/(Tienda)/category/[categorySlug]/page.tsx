@@ -3,14 +3,14 @@ import { ProductType } from "@/types/product"
 import CategoryClient from "./CategoryClient"
 
 const BACKEND  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
 
-type CategoryData = { NombreCategoria: string; slug: string; MainImage?: { url: string } | null }
+type CategoryData = { NombreCategoria: string; slug: string; MainImage?: { url: string } | null; descripcionSeo?: string | null }
 
 async function fetchCategory(slug: string): Promise<CategoryData | null> {
   try {
     const res = await fetch(
-      `${BACKEND}/api/product-categories?filters[slug][$eq]=${slug}&populate=MainImage&pagination[pageSize]=1`,
+      `${BACKEND}/api/product-categories?filters[slug][$eq]=${slug}&populate=MainImage&fields[0]=NombreCategoria&fields[1]=slug&fields[2]=descripcionSeo&pagination[pageSize]=1`,
       { signal: AbortSignal.timeout(8000) }
     )
     if (!res.ok) return null
@@ -84,7 +84,8 @@ export async function generateMetadata({
     products[0]?.categoria?.NombreCategoria ??
     categorySlug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
 
-  const descripcion = `Colección de ${categoryName} en Medalla de Oro · Oro 10k y Plata 925 · ${products.length > 0 ? `${products.length} piezas disponibles · ` : ""}Envíos a todo México.`
+  const descripcion = category?.descripcionSeo?.trim()
+    || `Colección de ${categoryName} en Medalla de Oro · Oro 10k y Plata 925 · ${products.length > 0 ? `${products.length} piezas disponibles · ` : ""}Envíos a todo México.`
 
   const mainImg = category?.MainImage?.url
   const firstProductImg = products[0]?.imagenes?.[0]?.url
@@ -94,7 +95,7 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: `${categoryName} | Medalla de Oro`,
+    title: categoryName,
     description: descripcion,
     alternates: { canonical: `${SITE_URL}/category/${categorySlug}` },
     openGraph: {
@@ -161,7 +162,12 @@ export default async function Page({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CategoryClient categorySlug={categorySlug} categoryName={categoryName} initialProducts={products} />
+      <CategoryClient
+        categorySlug={categorySlug}
+        categoryName={categoryName}
+        initialProducts={products}
+        descripcionSeo={category?.descripcionSeo ?? undefined}
+      />
     </>
   )
 }

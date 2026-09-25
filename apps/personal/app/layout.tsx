@@ -18,12 +18,12 @@ const geistMono = Geist_Mono({
   preload: false,
 });
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
 
 export const metadata: Metadata = {
   title: {
-    default: "Joyería Miracles | Oro y Plata de Alta Calidad",
-    template: "%s | Joyería Miracles",
+    default: "Medalla de Oro | Joyería Fina en Oro y Plata",
+    template: "%s | Medalla de Oro",
   },
   description: "Venta de joyería fina en oro de 10k, 14k y plata 925. Envíos a todo México.",
   metadataBase: new URL(SITE),
@@ -33,7 +33,8 @@ export const metadata: Metadata = {
 const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "JewelryStore",
-  name: "Joyería Miracles",
+  name: "Medalla de Oro",
+  alternateName: "Joyería Miracles",
   url: SITE,
   description: "Venta de joyería fina en oro de 10k, 14k y plata 925. Envíos a todo México.",
   email: "contacto@medalladeoro.com.mx",

@@ -7,4 +7,5 @@ export type CategoryType = {
         id: number;
         url: string;
         };
+    descripcionSeo?: string;
 }

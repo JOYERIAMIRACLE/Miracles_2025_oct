@@ -3,7 +3,7 @@ import { ProductType } from "@/types/product"
 import ProductoClient from "./ProductoClient"
 
 const BACKEND  = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
 
 async function fetchProduct(slug: string): Promise<ProductType | null> {
   try {
@@ -68,7 +68,7 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: `${nombre} | Medalla de Oro`,
+    title: nombre,
     description: descripcion,
     alternates: { canonical: `${SITE_URL}/producto/${product.slug}` },
     openGraph: {

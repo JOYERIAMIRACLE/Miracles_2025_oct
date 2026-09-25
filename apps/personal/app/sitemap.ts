@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next"
 
 export const dynamic = "force-static"
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miracles-frontend.pages.dev"
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 async function fetchSlugs(endpoint: string, field: string): Promise<string[]> {

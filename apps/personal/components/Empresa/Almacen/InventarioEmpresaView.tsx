@@ -1395,11 +1395,11 @@ export function InventarioEmpresaView() {
                             <span className="text-[11px] text-slate-600 shrink-0">/producto/</span>
                             <span className="text-[11px] font-mono text-violet-400 truncate flex-1">{editing.slug}</span>
                             <button type="button" title="Copiar URL"
-                              onClick={() => { navigator.clipboard.writeText(`https://miracles-frontend.pages.dev/producto/${editing.slug}`); }}
+                              onClick={() => { navigator.clipboard.writeText(`https://medalladeoro.com.mx/producto/${editing.slug}`); }}
                               className="shrink-0 text-slate-600 hover:text-slate-300 transition p-1">
                               <Copy size={12}/>
                             </button>
-                            <a href={`https://miracles-frontend.pages.dev/producto/${editing.slug}`} target="_blank" rel="noopener noreferrer"
+                            <a href={`https://medalladeoro.com.mx/producto/${editing.slug}`} target="_blank" rel="noopener noreferrer"
                               title="Abrir en tienda" className="shrink-0 text-slate-600 hover:text-violet-400 transition p-1">
                               <ExternalLink size={12}/>
                             </a>

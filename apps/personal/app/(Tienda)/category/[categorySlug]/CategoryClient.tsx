@@ -17,6 +17,7 @@ interface Props {
   categorySlug: string
   categoryName: string
   initialProducts?: ProductType[]
+  descripcionSeo?: string
 }
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name-az"
@@ -40,7 +41,7 @@ function sortProducts(products: ProductType[], order: SortOption): ProductType[]
   return copy
 }
 
-export default function CategoryClient({ categorySlug, categoryName, initialProducts }: Props) {
+export default function CategoryClient({ categorySlug, categoryName, initialProducts, descripcionSeo }: Props) {
   const pathname = usePathname()
 
   const realSlug     = categorySlug !== "loading" ? categorySlug : (pathname.split("/").filter(Boolean).pop() ?? "")
@@ -216,6 +217,17 @@ export default function CategoryClient({ categorySlug, categoryName, initialProd
                 </div>
               )}
             </div>
+
+            {descripcionSeo && (
+              <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700 max-w-3xl">
+                <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 mb-3">
+                  Sobre {displayName.toLowerCase()}
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">
+                  {descripcionSeo}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </Container>
