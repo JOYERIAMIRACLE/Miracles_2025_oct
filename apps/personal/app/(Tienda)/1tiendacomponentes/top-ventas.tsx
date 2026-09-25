@@ -25,7 +25,7 @@ const TopVentas = () => {
             </h2>
           </div>
           <Link
-            href="/tienda"
+            href="/"
             className="hidden md:block text-[11px] font-bold uppercase tracking-widest text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 transition-colors"
           >
             Ver todo →
@@ -123,7 +123,7 @@ const TopVentas = () => {
         {!loading && (
           <div className="mt-8 text-center md:hidden">
             <Link
-              href="/tienda"
+              href="/"
               className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400"
             >
               Ver todo el catálogo →

@@ -25,7 +25,7 @@ export default function AvisoPrivacidadBanner() {
   }
 
   return (
-    <div className="absolute bottom-0 inset-x-0 z-20 bg-black/70 backdrop-blur-sm border-t border-white/10">
+    <div className="fixed bottom-0 inset-x-0 z-40 bg-black/70 backdrop-blur-sm border-t border-white/10">
       <div className="max-w-3xl mx-auto px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
         <p className="text-white/70 text-[11px] leading-relaxed">
           Usamos tu información para atender tu solicitud y medimos de forma anónima cómo se usa el sitio. Consulta nuestro{" "}

@@ -37,7 +37,7 @@ const MenuList = () => {
             <ul className="grid gap-2 p-4 md:w-[420px] lg:w-[540px] lg:grid-cols-2">
               <li className="lg:col-span-2">
                 <NavigationMenuLink asChild>
-                  <Link href="/tienda"
+                  <Link href="/"
                     className="flex flex-col justify-end rounded-md bg-linear-to-br from-violet-900/40 to-violet-700/20 p-4 no-underline outline-none focus:shadow-md">
                     <p className="text-lg font-bold text-violet-200">Medalla de Oro</p>
                     <p className="text-sm text-violet-300/70">Oro 10k y Plata 925 · Hecho con calidad</p>

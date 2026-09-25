@@ -43,7 +43,7 @@ export function AparadorMedallitadeoroPanel() {
       </div>
 
       <Link
-        href="/tienda"
+        href="/"
         className="flex items-center justify-center gap-2 h-11 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
       >
         Ir a la tienda <ArrowRight size={14} />

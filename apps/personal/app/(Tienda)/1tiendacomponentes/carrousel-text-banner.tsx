@@ -17,7 +17,7 @@ export const dataCarouselTop = [
     id:2,
     title: "Precios especiales",
     description: "Como cliente Miracles accedes a precios preferenciales",
-    link: "/tienda"
+    link: "/"
   },
   {
     id:3,

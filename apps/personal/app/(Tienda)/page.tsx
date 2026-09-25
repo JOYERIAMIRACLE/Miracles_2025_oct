@@ -1,8 +1,10 @@
-import Image from "next/image"
-import Link  from "next/link"
 import type { Metadata } from "next"
-import ContactoRapido from "./1tiendacomponentes/contacto-rapido"
-import AvisoPrivacidadBanner from "./1tiendacomponentes/aviso-privacidad-banner"
+import HeroTienda          from "./1tiendacomponentes/hero-tienda"
+import CertificadosStrip   from "./1tiendacomponentes/certificados-strip"
+import CategoriaGrid       from "./1tiendacomponentes/categoria-grid"
+import ComprarPorMaterial  from "./1tiendacomponentes/compra-por-material"
+import TopVentas           from "./1tiendacomponentes/top-ventas"
+import ComprarPorOcasion   from "./1tiendacomponentes/compra-por-ocasion"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
 
@@ -29,63 +31,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function HeroPage() {
+export default function HomePage() {
   return (
-    <div className="relative min-h-screen flex flex-col">
-
-      {/* Imagen de portada */}
-      <Image
-        src="/portada home.jpg.jpg"
-        alt="Medallita de Oro"
-        fill
-        className="object-cover object-center"
-        priority
-      />
-
-      {/* Overlay oscuro */}
-      <div className="absolute inset-0 bg-black/45" />
-
-      {/* Contenido centrado */}
-      <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-white px-6 text-center gap-6">
-
-        {/* Logo */}
-        <Image
-          src="/logo oficial oficial.png"
-          alt="Medallita de Oro"
-          width={220}
-          height={88}
-          className="object-contain drop-shadow-2xl"
-          priority
-        />
-
-        {/* Tagline */}
-        <p className="text-sm md:text-base tracking-[0.3em] text-white/70 uppercase font-light">
-          Joyería de oro y plata
-        </p>
-
-        {/* Botones CTA */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-2">
-          <Link
-            href="/category"
-            className="px-10 py-3 border border-white/80 text-white text-xs tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
-          >
-            Ver catálogo
-          </Link>
-          <Link
-            href="/tienda"
-            className="px-10 py-3 bg-violet-600/90 text-white text-xs tracking-widest uppercase hover:bg-violet-700 transition-all duration-300"
-          >
-            Descubrir más
-          </Link>
-        </div>
-
-        {/* Canales de contacto */}
-        <ContactoRapido />
-      </div>
-
-      {/* Aviso de privacidad — barra al fondo del hero, tipo pop-up, con Aceptar */}
-      <AvisoPrivacidadBanner />
-
+    <div>
+      <HeroTienda />
+      <CertificadosStrip />
+      <CategoriaGrid />
+      <ComprarPorOcasion />
+      <TopVentas />
+      <ComprarPorMaterial />
     </div>
   )
 }

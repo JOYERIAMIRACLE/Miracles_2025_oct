@@ -1,0 +1,5 @@
+# La tienda pasó a ser la página de inicio: /tienda ya no existe como ruta
+# propia, así que cualquier bookmark o resultado de Google que apunte ahí
+# se manda al inicio en vez de dar 404.
+/tienda    /    301
+/tienda/   /    301

@@ -2,12 +2,12 @@ import Link from 'next/link'
 import Container from './container'
 
 const OCASIONES = [
-  { emoji: "🎀", titulo: "Quinceañera",       sub: "El regalo perfecto para su día especial",       href: "/tienda", color: "from-pink-900 via-rose-700 to-pink-400"   },
-  { emoji: "💍", titulo: "Compromiso",         sub: "Anillos y piezas para dar el gran paso",        href: "/tienda", color: "from-violet-900 via-violet-700 to-yellow-500" },
-  { emoji: "💒", titulo: "Boda",               sub: "Argollas y sets nupciales únicos",              href: "/tienda", color: "from-slate-800 via-slate-600 to-slate-400"  },
-  { emoji: "🌸", titulo: "Día de la Madre",    sub: "Piezas con amor para mamá",                    href: "/tienda", color: "from-purple-900 via-purple-700 to-fuchsia-400" },
-  { emoji: "🎓", titulo: "Graduación",         sub: "Celebra el logro con una joya",                href: "/tienda", color: "from-blue-900 via-blue-700 to-cyan-500"     },
-  { emoji: "🎁", titulo: "Regalo especial",    sub: "Para cualquier ocasión que importa",            href: "/tienda", color: "from-emerald-900 via-emerald-700 to-teal-400" },
+  { emoji: "🎀", titulo: "Quinceañera",       sub: "El regalo perfecto para su día especial",       href: "/", color: "from-pink-900 via-rose-700 to-pink-400"   },
+  { emoji: "💍", titulo: "Compromiso",         sub: "Anillos y piezas para dar el gran paso",        href: "/", color: "from-violet-900 via-violet-700 to-yellow-500" },
+  { emoji: "💒", titulo: "Boda",               sub: "Argollas y sets nupciales únicos",              href: "/", color: "from-slate-800 via-slate-600 to-slate-400"  },
+  { emoji: "🌸", titulo: "Día de la Madre",    sub: "Piezas con amor para mamá",                    href: "/", color: "from-purple-900 via-purple-700 to-fuchsia-400" },
+  { emoji: "🎓", titulo: "Graduación",         sub: "Celebra el logro con una joya",                href: "/", color: "from-blue-900 via-blue-700 to-cyan-500"     },
+  { emoji: "🎁", titulo: "Regalo especial",    sub: "Para cualquier ocasión que importa",            href: "/", color: "from-emerald-900 via-emerald-700 to-teal-400" },
 ]
 
 const ComprarPorOcasion = () => {

@@ -60,7 +60,7 @@ export default function ResumenCuentaPage() {
         ) : ultimosPedidos.length === 0 ? (
           <div className="text-center py-10 px-5">
             <p className="text-sm text-gray-500 dark:text-gray-400">Todavía no tienes pedidos.</p>
-            <Link href="/tienda" className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 mt-1 inline-block">
+            <Link href="/" className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 mt-1 inline-block">
               Explora el catálogo →
             </Link>
           </div>

@@ -115,7 +115,7 @@ export default function NosotrosPage() {
           Anillos, cadenas, aretes, dijes y más — en oro 10k y plata 925, listos para enviarse a
           cualquier parte de México.
         </p>
-        <Link href="/tienda" className={cn(buttonVariants(), "bg-violet-600 hover:bg-violet-700 text-white font-semibold")}>
+        <Link href="/" className={cn(buttonVariants(), "bg-violet-600 hover:bg-violet-700 text-white font-semibold")}>
           Ver la tienda
         </Link>
       </div>

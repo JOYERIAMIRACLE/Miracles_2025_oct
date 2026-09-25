@@ -12,7 +12,7 @@ const BannerProduct = () => {
         <p className='my-2 text-lg'>Despierta tu expresión</p>
 
         {/* COMPONENTE BOTON UI  */}
-        <Link href="/tienda" className={cn(buttonVariants(), "bg-violet-600 hover:bg-violet-700 text-white")}>
+        <Link href="/" className={cn(buttonVariants(), "bg-violet-600 hover:bg-violet-700 text-white")}>
             Comprar
         </Link>
     </div>

@@ -7,7 +7,7 @@ import Container from './container'
 // Enlaces reales del sitio — antes estos 4 eran placeholders (href="#",
 // incluido un typo "sobrenomberw") que no llevaban a ningún lado.
 const enlacesTienda = [
-    { name: "Catálogo", href: "/tienda" },
+    { name: "Catálogo", href: "/" },
     { name: "Blog", href: "/blog" },
     { name: "Nosotros", href: "/nosotros" },
     { name: "Contacto", href: "/contacto" },

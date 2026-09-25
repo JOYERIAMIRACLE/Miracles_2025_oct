@@ -107,7 +107,7 @@ export default function AllCategoriesClient({ initialProducts, categorias }: Pro
         <nav className="text-xs text-slate-400 mb-6 flex items-center gap-1.5">
           <Link href="/" className="hover:text-violet-600 transition-colors">Inicio</Link>
           <span>/</span>
-          <Link href="/tienda" className="hover:text-violet-600 transition-colors">Tienda</Link>
+          <Link href="/" className="hover:text-violet-600 transition-colors">Tienda</Link>
           <span>/</span>
           <span className="text-slate-700 dark:text-slate-200">Catálogo</span>
         </nav>

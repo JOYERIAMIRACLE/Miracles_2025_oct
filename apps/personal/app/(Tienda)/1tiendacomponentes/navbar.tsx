@@ -14,7 +14,7 @@ import { useClienteAuth } from "@/hooks/useClienteAuth"
 import { track } from "@/lib/medicion"
 
 const CATEGORIAS_NAV = [
-  { nombre: "Inicio",    href: "/tienda" },
+  { nombre: "Inicio",    href: "/" },
   { nombre: "Ver catálogo", href: "/category" },
   { nombre: "Anillos",   href: "/category/anillos" },
   { nombre: "Cadenas",   href: "/category/cadenas" },
@@ -35,8 +35,6 @@ const Navbar = () => {
     const { cliente } = useClienteAuth()
     const [busqueda, setBusqueda] = useState("")
 
-    const isHero = pathname === "/"
-
     function handleBuscar(e: FormEvent) {
         e.preventDefault()
         const q = busqueda.trim()
@@ -46,31 +44,19 @@ const Navbar = () => {
     }
 
     return (
-        <div className={`z-50 transition-all ${
-            isHero
-                ? "absolute inset-x-0 top-0 text-white"
-                : "sticky top-0 bg-background/95 backdrop-blur-sm"
-        }`}>
+        <div className="z-50 sticky top-0 bg-background/95 backdrop-blur-sm">
 
             {/* ── Fila principal ── */}
-            <Container className={`flex justify-between items-center py-3 ${
-                !isHero ? "border-b border-border/40" : ""
-            }`}>
+            <Container className="flex justify-between items-center py-3 border-b border-border/40">
 
-                {/* Logo — lleva a /tienda (el catálogo/vitrina real), no al hero vacío */}
-                <div className="cursor-pointer shrink-0 select-none" onClick={() => router.push("/tienda")}>
-                    {isHero ? (
-                        <Image src="/logo oficial oficial.png" alt="Medallita de Oro" width={150} height={48} className="object-contain" priority />
-                    ) : (
-                        <>
-                            <Image src="/logo medallita de oro fondo blanco.png" alt="Medallita de Oro" width={150} height={48} className="object-contain block dark:hidden" />
-                            <Image src="/logo oficial oficial.png" alt="Medallita de Oro" width={150} height={48} className="object-contain hidden dark:block" />
-                        </>
-                    )}
+                {/* Logo — lleva al inicio (la tienda) */}
+                <div className="cursor-pointer shrink-0 select-none" onClick={() => router.push("/")}>
+                    <Image src="/logo medallita de oro fondo blanco.png" alt="Medallita de Oro" width={150} height={48} className="object-contain block dark:hidden" />
+                    <Image src="/logo oficial oficial.png" alt="Medallita de Oro" width={150} height={48} className="object-contain hidden dark:block" />
                 </div>
 
                 {/* Buscador + Blog/Empresa + iconos + mobile hamburger */}
-                <div className={`flex items-center gap-4 ${isHero ? "text-white" : ""}`}>
+                <div className="flex items-center gap-4">
 
                     {/* Hamburger solo mobile */}
                     <div className="md:hidden">
@@ -79,49 +65,33 @@ const Navbar = () => {
 
                     {/* Buscador — a lado de Blog, misma alineación que los iconos */}
                     <form onSubmit={handleBuscar} className="hidden sm:flex items-center relative">
-                        <Search size={14} className={`absolute left-2.5 pointer-events-none ${isHero ? "text-white/50" : "text-slate-400"}`} />
+                        <Search size={14} className="absolute left-2.5 pointer-events-none text-slate-400" />
                         <input
                             type="search"
                             value={busqueda}
                             onChange={e => setBusqueda(e.target.value)}
                             placeholder="Buscar…"
                             aria-label="Buscar productos"
-                            className={`w-28 lg:w-36 focus:w-48 h-8 pl-8 pr-3 rounded-full text-xs outline-none transition-all duration-200 ${
-                                isHero
-                                    ? "bg-white/10 text-white placeholder-white/50 border border-white/20 focus:bg-white/20 focus:border-white/40"
-                                    : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-violet-400"
-                            }`}
+                            className="w-28 lg:w-36 focus:w-48 h-8 pl-8 pr-3 rounded-full text-xs outline-none transition-all duration-200 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-violet-400"
                         />
                     </form>
 
                     {/* Blog + Empresa — desktop, misma alineación que los iconos */}
                     <Link
                         href="/blog"
-                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
-                            isHero
-                                ? "text-white/70 hover:text-white"
-                                : "text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
-                        }`}
+                        className="hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
                     >
                         Blog
                     </Link>
                     <Link
                         href="/nosotros"
-                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
-                            isHero
-                                ? "text-white/70 hover:text-white"
-                                : "text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
-                        }`}
+                        className="hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
                     >
                         Empresa
                     </Link>
                     <Link
                         href="/contacto"
-                        className={`hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors ${
-                            isHero
-                                ? "text-white/70 hover:text-white"
-                                : "text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
-                        }`}
+                        className="hidden md:block text-[11px] font-semibold uppercase tracking-widest transition-colors text-slate-500 dark:text-slate-400 hover:text-violet-500 dark:hover:text-violet-400"
                     >
                         Contáctanos
                     </Link>
@@ -158,24 +128,20 @@ const Navbar = () => {
             </Container>
 
             {/* ── Buscador — fila propia solo en mobile, ahí sí cabe completo ── */}
-            <Container as="form" onSubmit={handleBuscar} className={`sm:hidden flex items-center relative pb-3 ${!isHero ? "border-b border-border/40" : ""}`}>
-                <Search size={14} className={`absolute left-9 pointer-events-none ${isHero ? "text-white/50" : "text-slate-400"}`} />
+            <Container as="form" onSubmit={handleBuscar} className="sm:hidden flex items-center relative pb-3 border-b border-border/40">
+                <Search size={14} className="absolute left-9 pointer-events-none text-slate-400" />
                 <input
                     type="search"
                     value={busqueda}
                     onChange={e => setBusqueda(e.target.value)}
                     placeholder="Buscar…"
                     aria-label="Buscar productos"
-                    className={`w-full h-9 pl-8 pr-3 rounded-full text-sm outline-none transition-colors ${
-                        isHero
-                            ? "bg-white/10 text-white placeholder-white/50 border border-white/20 focus:bg-white/20 focus:border-white/40"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-violet-400"
-                    }`}
+                    className="w-full h-9 pl-8 pr-3 rounded-full text-sm outline-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-violet-400"
                 />
             </Container>
 
             {/* ── Strip de categorías (Kuroda style) ── */}
-            <div className={`border-b ${isHero ? "border-white/10" : "border-border/30"}`}>
+            <div className="border-b border-border/30">
                 <div className="overflow-x-auto scrollbar-hide">
                     <Container className="flex items-center min-w-max">
                         {CATEGORIAS_NAV.map((cat) => {
@@ -187,12 +153,8 @@ const Navbar = () => {
                                     href={cat.href}
                                     className={`relative px-3.5 py-2.5 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap transition-colors ${
                                         isActive
-                                            ? isHero
-                                                ? "text-violet-300"
-                                                : "text-violet-600 dark:text-violet-400"
-                                            : isHero
-                                                ? "text-white/55 hover:text-white"
-                                                : "text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400"
+                                            ? "text-violet-600 dark:text-violet-400"
+                                            : "text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400"
                                     }`}
                                 >
                                     {cat.nombre}
