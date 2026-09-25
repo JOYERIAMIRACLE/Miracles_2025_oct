@@ -23,6 +23,9 @@
       "type": "uid",
       "targetField": "NombreCategoria"
     },
+    "descripcionSeo": {
+      "type": "text"
+    },
     "products": {
       "type": "relation",
       "relation": "oneToMany",
