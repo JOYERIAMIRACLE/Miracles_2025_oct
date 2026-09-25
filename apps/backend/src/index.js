@@ -617,11 +617,11 @@ const PUBLIC_API_ALLOWLIST = [
   'api::identidad-empresa.identidad-empresa.find',
 ];
 
-// Interruptor del cierre. Con "true" el rol public se recorta a la lista
-// blanca en cada arranque; con cualquier otro valor se conserva el
-// comportamiento anterior (re-otorgar las listas legacy).
+// Interruptor del cierre. Activo por defecto: el rol public se recorta a la
+// lista blanca en cada arranque. Rollback de emergencia: CERRAR_API_PUBLICA=false
+// en Railway restaura el comportamiento anterior (re-otorgar las listas legacy).
 function cerrarApiPublicaActivo() {
-  return process.env.CERRAR_API_PUBLICA === 'true';
+  return process.env.CERRAR_API_PUBLICA !== 'false';
 }
 
 // Todas las acciones del content API de las colecciones propias (api::*).
@@ -689,7 +689,7 @@ async function aplicarPermisosPublic(strapi) {
     const quitados = await cerrarApiPublica(strapi);
     strapi.log.info(`[bootstrap] API pública CERRADA — public solo conserva ${PUBLIC_API_ALLOWLIST.length} acciones (quitadas ${quitados}); authenticated +${nuevos}`);
   } else {
-    strapi.log.warn(`[bootstrap] API pública ABIERTA (CERRAR_API_PUBLICA no es "true") — authenticated +${nuevos}`);
+    strapi.log.warn(`[bootstrap] API pública ABIERTA (CERRAR_API_PUBLICA=false) — authenticated +${nuevos}`);
   }
 }
 
