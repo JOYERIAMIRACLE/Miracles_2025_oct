@@ -10,7 +10,7 @@ import {
   SEXOS, Sexo,
   FUNNEL_COLOR,
 } from "@/types/clienteEmpresa"
-import { Lead, LeadPayload, CanalLead, OrigenLead, ReferidorTipo, CANALES_LEAD, ORIGENES_LEAD, prefijoLead } from "@/types/lead"
+import { Lead, LeadPayload, CanalLead, OrigenLead, ReferidorTipo, CANALES_LEAD, ORIGENES_LEAD, COMO_NOS_CONOCIO, prefijoLead } from "@/types/lead"
 import { createLead, countLeads } from "@/api/lead/getLead"
 import { DropdownPicker } from "../../Shared/DropdownPicker"
 import { CalendarioPicker } from "../../Shared/CalendarioPicker"
@@ -37,6 +37,7 @@ type LeadForm = {
   campanaOrigen:   string | null
   notas:           string | null
   segmento:        SegmentoCliente | null
+  comoNosConocio:  string | null
 }
 
 const emptyContacto = (): ContactoForm => ({
@@ -47,7 +48,7 @@ const emptyContacto = (): ContactoForm => ({
 
 const emptyLead = (): LeadForm => ({
   canal: null, origen: null, referidorTipo: null, referidorNombre: null,
-  campanaOrigen: null, notas: null, segmento: null,
+  campanaOrigen: null, notas: null, segmento: null, comoNosConocio: null,
 })
 
 const inp = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
@@ -127,6 +128,7 @@ export function NuevoLeadWizard({
         campanaOrigen:   lf.campanaOrigen,
         notas:           lf.notas,
         segmento:        lf.segmento,
+        comoNosConocio:  lf.comoNosConocio,
         calificado:      false,
         origenApp:       "manual",
       }
@@ -393,6 +395,14 @@ export function NuevoLeadWizard({
                   onChange={v => setLf(f => ({ ...f, segmento: (v || null) as SegmentoCliente | null }))}
                   placeholder="— Sin segmento —"
                   options={[{ value: "", label: "— Sin segmento —" }, ...SEGMENTOS.map(s => ({ value: s, label: s }))]} />
+              </div>
+
+              <div>
+                <label className={lbl}>¿Cómo nos conoció?</label>
+                <DropdownPicker label="¿Cómo nos conoció?" value={lf.comoNosConocio ?? ""}
+                  onChange={v => setLf(f => ({ ...f, comoNosConocio: v || null }))}
+                  placeholder="— Sin dato —"
+                  options={[{ value: "", label: "— Sin dato —" }, ...COMO_NOS_CONOCIO.map(o => ({ value: o, label: o }))]} />
               </div>
 
               <div>

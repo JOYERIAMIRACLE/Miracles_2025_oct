@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useState, FormEvent } from "react"
 import Container from "../1tiendacomponentes/container"
+import { ComoNosConociste } from "../1tiendacomponentes/como-nos-conociste"
+import { getAtribucion } from "@/lib/medicion"
 
 const INTERESES = [
   "Anillo",
@@ -22,6 +24,7 @@ export default function ContactoPage() {
   const [email,    setEmail]    = useState("")
   const [interes,  setInteres]  = useState("")
   const [mensaje,  setMensaje]  = useState("")
+  const [comoNosConocio, setComoNosConocio] = useState("")
   const [estado,   setEstado]   = useState<Estado>("idle")
   const [errMsg,   setErrMsg]   = useState("")
 
@@ -42,6 +45,8 @@ export default function ContactoPage() {
           email:    email.trim() || null,
           interes:  interes || null,
           mensaje:  mensaje.trim() || null,
+          comoNosConocio: comoNosConocio || null,
+          atribucion: getAtribucion(),
         }),
       })
       const json = await res.json()
@@ -53,7 +58,7 @@ export default function ContactoPage() {
 
       setEstado("exito")
       setNombre(""); setTelefono(""); setEmail("")
-      setInteres(""); setMensaje("")
+      setInteres(""); setMensaje(""); setComoNosConocio("")
     } catch {
       setErrMsg("No se pudo conectar con el servidor.")
       setEstado("error")
@@ -163,6 +168,8 @@ export default function ContactoPage() {
               ))}
             </select>
           </div>
+
+          <ComoNosConociste value={comoNosConocio} onChange={setComoNosConocio} />
 
           {/* Mensaje */}
           <div>

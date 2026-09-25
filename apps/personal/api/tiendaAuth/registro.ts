@@ -1,3 +1,5 @@
+import { getAtribucion } from "@/lib/medicion"
+
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
 export type RegistroPayload = {
@@ -15,7 +17,7 @@ export async function registrarCliente(payload: RegistroPayload): Promise<LoginR
   const res = await fetch(`${BASE}/api/tienda/registro`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: payload.nombre, email: payload.email, password: payload.password }),
+    body: JSON.stringify({ username: payload.nombre, email: payload.email, password: payload.password, atribucion: getAtribucion() }),
   })
   const json = await res.json()
   if (!res.ok || !json.jwt) {

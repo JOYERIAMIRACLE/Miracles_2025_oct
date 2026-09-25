@@ -4,6 +4,8 @@ import Link from "next/link"
 import { useState, FormEvent } from "react"
 import { Truck, Percent, Headset, Gem } from "lucide-react"
 import Container from "../1tiendacomponentes/container"
+import { ComoNosConociste } from "../1tiendacomponentes/como-nos-conociste"
+import { getAtribucion } from "@/lib/medicion"
 
 const BENEFICIOS = [
   {
@@ -36,6 +38,7 @@ export default function DistribuidorPage() {
   const [email,    setEmail]    = useState("")
   const [negocio,  setNegocio]  = useState("")
   const [mensaje,  setMensaje]  = useState("")
+  const [comoNosConocio, setComoNosConocio] = useState("")
   const [estado,   setEstado]   = useState<Estado>("idle")
   const [errMsg,   setErrMsg]   = useState("")
 
@@ -57,6 +60,8 @@ export default function DistribuidorPage() {
           canal:    "Distribuidor",
           interes:  negocio.trim() || null,
           mensaje:  mensaje.trim() || null,
+          comoNosConocio: comoNosConocio || null,
+          atribucion: getAtribucion(),
         }),
       })
       const json = await res.json()
@@ -68,7 +73,7 @@ export default function DistribuidorPage() {
 
       setEstado("exito")
       setNombre(""); setTelefono(""); setEmail("")
-      setNegocio(""); setMensaje("")
+      setNegocio(""); setMensaje(""); setComoNosConocio("")
     } catch {
       setErrMsg("No se pudo conectar con el servidor.")
       setEstado("error")
@@ -218,6 +223,8 @@ export default function DistribuidorPage() {
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
+
+              <ComoNosConociste value={comoNosConocio} onChange={setComoNosConocio} />
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">

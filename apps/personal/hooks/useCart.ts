@@ -2,6 +2,7 @@ import { ProductType } from "@/types/product"
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { toast } from "sonner"
+import { track } from "@/lib/medicion"
 
 interface CartStore {
   items: ProductType[],
@@ -31,6 +32,7 @@ export const useCart = create (
             set({
                 items: [...get().items, data]
             })
+            track("cart_item_added", { producto: data.slug ?? undefined })
 
             toast.success("Producto agregado", {
                 description: "El producto se ha agregado al carrito"

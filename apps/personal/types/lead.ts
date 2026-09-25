@@ -59,6 +59,14 @@ export interface Lead {
   origenApp:       OrigenApp | null
   canalContacto:   string | null
   origenContacto:  string | null
+  // medición de la Tienda (los leads capturados a mano solo traen comoNosConocio)
+  sesion?:         string | null
+  visitante?:      string | null
+  ftFuente?:       string | null
+  ftCampana?:      string | null
+  ltFuente?:       string | null
+  ltCampana?:      string | null
+  comoNosConocio?: string | null
   createdAt:       string
   cliente: {
     documentId: string
@@ -87,7 +95,13 @@ export interface LeadPayload {
   fechaRechazada?:  string | null
   fechaCalificado?: string | null
   origenApp?:       OrigenApp | null
+  comoNosConocio?:  string | null
 }
+
+export const COMO_NOS_CONOCIO = [
+  "Instagram", "Facebook", "WhatsApp", "Búsqueda en Google",
+  "Recomendación de un familiar o amigo", "Los vi en persona", "Otro",
+]
 
 export const LEAD_COLOR: Record<FunnelEtapa, string> = {
   Lead:      "bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-600",

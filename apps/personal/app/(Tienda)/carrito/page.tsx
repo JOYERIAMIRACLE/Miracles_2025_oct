@@ -8,6 +8,7 @@ import { useCart } from "@/hooks/useCart"
 import { useClienteAuth } from "@/hooks/useClienteAuth"
 import { formatPrice } from "@/lib/formatprice"
 import { getClienteToken } from "@/lib/tiendaAuth"
+import { getAtribucion, track } from "@/lib/medicion"
 import CartItem from "./components/cart-item"
 import Container from "../1tiendacomponentes/container"
 
@@ -22,6 +23,7 @@ export default function page() {
     const totalPrice = prices.reduce((total, price) => total + price, 0)
 
     async function procederCompra() {
+        track("cart_checkout_started", { detalle: cliente ? "registrado" : "anonimo" })
         if (!cliente) {
             router.push("/cuenta/registro?next=/carrito")
             return
@@ -41,7 +43,7 @@ export default function page() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${getClienteToken()}`,
                 },
-                body: JSON.stringify({ items: payload }),
+                body: JSON.stringify({ items: payload, atribucion: getAtribucion() }),
             })
             const json = await res.json()
             if (!res.ok) throw new Error(json?.error?.message ?? "Error al procesar")

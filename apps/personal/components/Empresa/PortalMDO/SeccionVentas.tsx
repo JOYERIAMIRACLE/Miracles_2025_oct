@@ -9,7 +9,7 @@ import { useGetLeads, updateLead, deleteLead } from "@/api/lead/getLead"
 import { useGetAllCotizaciones, deleteCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { useGetVentas, updateVenta, deleteVenta } from "@/api/ventaEmpresa/getVentas"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
-import { useVisitasRango } from "@/api/visitas/visitas"
+import { useTrafico } from "@/api/visitas/visitas"
 import type { Lead, CanalLead, OrigenLead } from "@/types/lead"
 import type { Cotizacion, EstadoCotizacion, OrigenCotizacion } from "@/types/cotizacion"
 import type { VentaEmpresa, EstadoVenta } from "@/types/ventaEmpresa"
@@ -769,8 +769,8 @@ function formDesdeCliente(c: ClienteEmpresa): ClientePayload {
 }
 
 /* ─── Component ─────────────────────────────────────────────────────── */
-type View = "dashboard"|"leads"|"cotizaciones"|"pedidos"|"clientes"
-const VIEWS_CON_FILTROS: View[] = ["dashboard","leads","cotizaciones","pedidos","clientes"]
+type View = "dashboard"|"trafico"|"leads"|"cotizaciones"|"pedidos"|"clientes"
+const VIEWS_CON_FILTROS: View[] = ["dashboard","trafico","leads","cotizaciones","pedidos","clientes"]
 type CliFilter = { docId:string; nombre:string } | null
 
 export function SeccionVentas() {
@@ -796,7 +796,7 @@ export function SeccionVentas() {
   const nowLast  = ()=>new Date().toISOString().slice(0,10)
 
   const [view,setView]       = useState<View>(()=>{
-    try{const v=localStorage.getItem("panel_view");return(["dashboard","leads","cotizaciones","pedidos","clientes"].includes(v??"")?v as View:"dashboard")}catch{return"dashboard"}
+    try{const v=localStorage.getItem("panel_view");return(["dashboard","trafico","leads","cotizaciones","pedidos","clientes"].includes(v??"")?v as View:"dashboard")}catch{return"dashboard"}
   })
   const [df,setDf]           = useState(demo?"2026-01-01":nowFirst)
   const [dt,setDt]           = useState(demo?"2026-09-30":nowLast)
@@ -811,8 +811,10 @@ export function SeccionVentas() {
   const [agrupacion,setAgrupacion] = useState<Agrupacion>("mes")
   const [bucketFilter,setBucketFilter] = useState("")   // "" = sin período seleccionado
 
-  // Visitas web anónimas (sesiones únicas del sitio público)
-  const { total: visitasReales } = useVisitasRango(demo?"":df, demo?"":dt)
+  // Tráfico anónimo de la Tienda (lo calcula el backend; en demo no se consulta).
+  // De aquí salen tanto el KPI de visitantes como la pestaña Tráfico.
+  const { data: trafico, loading: cargandoTrafico, error: errorTrafico } = useTrafico(demo?"":df, demo?"":dt)
+  const visitasReales = trafico ? trafico.sesiones : null
   // En demo: ~15 visitantes por cada lead (tasa conv. formulario ~6-7%)
   const visitasWeb = demo
     ? rawLeads.filter(l=>l.canal==="Formulario").length * 15
@@ -1120,6 +1122,10 @@ export function SeccionVentas() {
   const canalSegs=ALL_CANALES.map(l=>({l,v:canalCounts[l]||0,c:CANAL_COLOR[l]||T.muted})).sort((a,b)=>b.v-a.v)
   const _origenBase=allLeads.filter(l=>(!lCanal||l.canal===lCanal)&&(!lFunnel||l.Funnel===lFunnel)&&inBucket(l.fechaLead??l.createdAt))
   const origenSegs=Object.entries(_origenBase.reduce((a,l)=>{const k=l.origen??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([l,v])=>({l,v,c:T.sky}))
+  // Origen medido de los leads: primer y último contacto (de la Tienda) y lo que la persona declaró.
+  const contarOrigen=(campo:(l:typeof fLeads[number])=>string|null|undefined)=>Object.entries(fLeads.reduce((a,l)=>{const k=campo(l);if(k)a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([l,v])=>({l:l.slice(0,14),v,c:T.violet}))
+  const ftSegs=contarOrigen(l=>l.ftFuente), ltSegs=contarOrigen(l=>l.ltFuente), comoSegs=contarOrigen(l=>l.comoNosConocio)
+  const hayOrigenMedido=ftSegs.length>0||ltSegs.length>0||comoSegs.length>0
   const pctCot=fLeads.length?Math.round(fLeads.filter(l=>allCots.some(c=>c.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
   const pctPed=fLeads.length?Math.round(fLeads.filter(l=>allVentas.some(v=>v.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
 
@@ -1150,6 +1156,7 @@ export function SeccionVentas() {
   /* ── Shell ── */
   const TABS:TabItem[] = [
     {id:"dashboard",    label:"Dashboard"},
+    {id:"trafico",      label:"Tráfico"},
     {id:"leads",        label:"Leads"},
     {id:"cotizaciones", label:"Cotizaciones"},
     {id:"pedidos",      label:"Pedidos"},
@@ -1452,6 +1459,89 @@ export function SeccionVentas() {
     </>
   )
 
+  /* ═══ TRÁFICO ═════════════════════════════════════════════════════ */
+  if(view==="trafico") return shell(
+    <>
+      {demo ? (
+        <Card><p className="text-sm text-slate-500 dark:text-slate-400">Estás viendo datos de demostración. Cambia el botón DEMO a REAL para ver el tráfico verdadero de la Tienda.</p></Card>
+      ) : cargandoTrafico ? (
+        <div className="flex items-center justify-center py-20 text-slate-500 font-mono text-sm">Cargando tráfico…</div>
+      ) : errorTrafico || !trafico ? (
+        <Card><p className="text-sm text-slate-500 dark:text-slate-400">No se pudo cargar el tráfico{errorTrafico?`: ${errorTrafico}`:""}.</p></Card>
+      ) : (
+        <>
+          {trafico.truncado && (
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 px-1">Este rango tiene demasiados eventos y las cifras son parciales. Acota las fechas.</p>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MetricTile val={trafico.visitantes} label="Visitantes únicos"/>
+            <MetricTile val={trafico.sesiones} label="Sesiones"/>
+            <MetricTile val={trafico.paginasVistas} label="Páginas vistas"/>
+            <MetricTile val={trafico.embudo.contactaron} label="Tocaron un botón de contacto"/>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <SecLabel>Embudo de sesiones</SecLabel>
+              {(()=>{
+                const e=trafico.embudo
+                const pasos=[
+                  {l:"Sesiones",n:e.sesiones},
+                  {l:"Vieron un producto",n:e.vieronProducto},
+                  {l:"Agregaron al carrito",n:e.agregaronCarrito},
+                  {l:"Iniciaron el pago",n:e.iniciaronCheckout},
+                ]
+                const base=Math.max(pasos[0].n,1)
+                return(
+                  <div className="space-y-3">
+                    {pasos.map((p,i)=>{
+                      const pct=Math.round(p.n/base*100)
+                      return(
+                        <div key={p.l}>
+                          <div className="flex justify-between text-[11px] mb-1">
+                            <span className="text-slate-500 dark:text-slate-400">{p.l}</span>
+                            <span className="font-mono text-slate-700 dark:text-slate-300">{p.n}{i>0?` · ${pct}%`:""}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div className="h-2 rounded-full" style={{width:`${pct}%`,background:T.violet,opacity:0.85}}/>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </Card>
+            <Card>
+              <SecLabel>De dónde llegan</SecLabel>
+              <SvgHBars items={trafico.porCanal.length?trafico.porCanal.slice(0,8).map(x=>({l:x.canal.slice(0,14),v:x.sesiones,c:T.violet})):[{l:"Sin datos",v:0,c:T.muted}]}/>
+              <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">«Directo» es lo que no se pudo identificar: etiqueta tus enlaces con UTM (guía en docs/medicion.md).</p>
+            </Card>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <SecLabel>Páginas más vistas</SecLabel>
+              <SimpleTable headers={["Página","Vistas","Sesiones"]} rows={trafico.paginas.map(p=>[p.pagina,String(p.vistas),String(p.sesiones)])} colors={[null,null,null]}/>
+            </Card>
+            <Card>
+              <SecLabel>Productos que miran y agregan</SecLabel>
+              <SimpleTable headers={["Producto","Vistas","Al carrito"]} rows={trafico.productos.map(p=>[p.producto,String(p.vistas),String(p.carritos)])} colors={[null,null,null]}/>
+            </Card>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <SecLabel>Campañas</SecLabel>
+              <SimpleTable headers={["Campaña","Sesiones"]} rows={trafico.campanas.map(c=>[c.campana,String(c.sesiones)])} colors={[null,null]}/>
+            </Card>
+            <Card>
+              <SecLabel>Búsquedas en el sitio</SecLabel>
+              <SimpleTable headers={["Término","Veces"]} rows={trafico.busquedas.map(b=>[b.q,String(b.veces)])} colors={[null,null]}/>
+            </Card>
+          </div>
+        </>
+      )}
+    </>
+  )
+
   /* ═══ LEADS ═══════════════════════════════════════════════════════ */
   if(view==="leads") return shell(
     <>
@@ -1489,6 +1579,23 @@ export function SeccionVentas() {
             </div>
           </div>
         </div>
+        {!demo && (
+          <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800">
+            <ChartLabel>Origen medido de la Tienda</ChartLabel>
+            {hayOrigenMedido ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {([["Primer contacto",ftSegs],["Último contacto",ltSegs],["Cómo nos conoció",comoSegs]] as const).map(([titulo,segs])=>(
+                  <div key={titulo}>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">{titulo}</p>
+                    <SvgHBars items={segs.length?[...segs]:[{l:"Sin datos",v:0,c:T.muted}]}/>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Aún no hay leads con origen medido: aparecerán cuando alguien deje sus datos en la Tienda o los captures con «¿Cómo nos conoció?».</p>
+            )}
+          </div>
+        )}
       </Card>
       <Card className="flex flex-col gap-3">
         <FilterRow label="CANAL"  options={["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]} active={lCanal} onToggle={v=>setLCanal(lCanal===v?"":v)}/>

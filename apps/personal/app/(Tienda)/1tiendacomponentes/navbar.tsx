@@ -11,6 +11,7 @@ import Container from "./container"
 import { useCart } from "@/hooks/useCart"
 import { useFavorites } from "@/hooks/useFavirites"
 import { useClienteAuth } from "@/hooks/useClienteAuth"
+import { track } from "@/lib/medicion"
 
 const CATEGORIAS_NAV = [
   { nombre: "Inicio",    href: "/tienda" },
@@ -40,6 +41,7 @@ const Navbar = () => {
         e.preventDefault()
         const q = busqueda.trim()
         if (!q) return
+        track("search_performed", { detalle: q })
         router.push(`/category?q=${encodeURIComponent(q)}`)
     }
 

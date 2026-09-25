@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/app/(Tienda)/1tiendacomponentes/navbar";
 import Footer from "@/app/(Tienda)/1tiendacomponentes/footer";
 import { NotasMejoraTienda } from "@/app/(Tienda)/1tiendacomponentes/notas-mejora-tienda";
+import { MedicionTienda } from "@/app/(Tienda)/1tiendacomponentes/medicion-tienda";
 
 export const metadata: Metadata = {
   // Este título se inyectará en el %s del Root Layout
@@ -23,6 +24,7 @@ export default function TiendaLayout({
       <main className="flex-grow relative">
         {children}
         <NotasMejoraTienda />
+        <MedicionTienda />
       </main>
 
       {/* El Footer solo aparece en la zona de tienda */}
