@@ -4,6 +4,15 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # El backend lo dispara al publicar productos, categorías o posts (ver
+  # apps/backend/src/rebuild-tienda.js).
+  repository_dispatch:
+    types: [strapi-publish]
+
+# Un solo deploy a la vez; si llegan varios, GitHub conserva solo el más reciente en espera.
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
 
 jobs:
   deploy-personal:
@@ -24,6 +33,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Esperar al backend
+        run: node scripts/verify-build.mjs esperar
+        env:
+          NEXT_PUBLIC_BACKEND_URL: https://miracles2025oct-production.up.railway.app
+
       - name: Build personal
         run: pnpm --filter @miracles/personal build
         env:
@@ -31,6 +45,11 @@ jobs:
           NEXT_PUBLIC_STRAPI_URL: https://miracles2025oct-production.up.railway.app
           NEXT_PUBLIC_SITE_URL: https://medalladeoro.com.mx
           NEXT_PUBLIC_CAMPANA_TOKEN: ${{ secrets.NEXT_PUBLIC_CAMPANA_TOKEN }}
+
+      - name: Verificar que el build trae todas las páginas
+        run: node scripts/verify-build.mjs verificar
+        env:
+          NEXT_PUBLIC_BACKEND_URL: https://miracles2025oct-production.up.railway.app
 
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy apps/personal/out --project-name richard-avrod --commit-dirty=true

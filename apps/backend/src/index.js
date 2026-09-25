@@ -1,5 +1,7 @@
 'use strict';
 
+const { crearDisparadorRebuild, MODELOS_REBUILD } = require('./rebuild-tienda');
+
 // ─── Protección anti-fuerza-bruta / spam en rutas sensibles ──────────────────
 // Mapa en memoria por ruta: clave = IP, valor = { intentos, bloqueadoHasta }.
 // Se reinicia al reiniciar el proceso — suficiente para bloqueos temporales.
@@ -1422,5 +1424,20 @@ module.exports = {
     await run('sembrarMapaIdentidades',     () => sembrarMapaIdentidadesSiVacio(strapi));
     await run('crearRolClienteTienda',      () => crearRolClienteTienda(strapi));
     await run('corregirRemitenteEmailTemplates', () => corregirRemitenteEmailTemplates(strapi));
+
+    // Al final, para que las siembras de arriba no disparen una reconstrucción
+    // en cada arranque de Railway.
+    const alCambiarCatalogo = crearDisparadorRebuild({
+      token: process.env.GITHUB_DISPATCH_TOKEN,
+      repo: process.env.GITHUB_DISPATCH_REPO || undefined,
+      debounceMs: (Number(process.env.REBUILD_DEBOUNCE_SEGUNDOS) || 60) * 1000,
+      log: strapi.log,
+    });
+    strapi.db.lifecycles.subscribe({
+      models: MODELOS_REBUILD,
+      afterCreate: alCambiarCatalogo,
+      afterUpdate: alCambiarCatalogo,
+      afterDelete: alCambiarCatalogo,
+    });
   },
 };

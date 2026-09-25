@@ -59,7 +59,7 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: metaTitulo,
+    title: { absolute: `${metaTitulo} | Medalla de Oro` },
     description: descripcion,
     alternates: { canonical: `${SITE}/blog/${post.slug}` },
     ...(post.seo_keywords && { keywords: post.seo_keywords }),

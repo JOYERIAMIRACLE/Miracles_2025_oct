@@ -48,7 +48,7 @@ export async function generateMetadata({
   const { productoSlug } = await params
   const product = await fetchProduct(productoSlug)
 
-  if (!product) return { title: "Producto no encontrado" }
+  if (!product) return { title: "Producto no encontrado", robots: { index: false, follow: false } }
 
   const nombre = `${product.nombreProducto} ${product.categoria?.NombreCategoria ?? ""}`.trim()
 
@@ -68,7 +68,7 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: nombre,
+    title: { absolute: `${nombre} | Medalla de Oro` },
     description: descripcion,
     alternates: { canonical: `${SITE_URL}/producto/${product.slug}` },
     openGraph: {

@@ -74,6 +74,7 @@ export async function generateMetadata({
   params: Promise<{ categorySlug: string }>
 }): Promise<Metadata> {
   const { categorySlug } = await params
+  if (categorySlug === "loading") return { title: "Cargando", robots: { index: false, follow: false } }
   const [category, products] = await Promise.all([
     fetchCategory(categorySlug),
     fetchCategoryProducts(categorySlug),
@@ -95,7 +96,7 @@ export async function generateMetadata({
     : undefined
 
   return {
-    title: categoryName,
+    title: { absolute: `${categoryName} | Medalla de Oro` },
     description: descripcion,
     alternates: { canonical: `${SITE_URL}/category/${categorySlug}` },
     openGraph: {
