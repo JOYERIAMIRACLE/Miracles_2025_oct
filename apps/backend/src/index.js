@@ -131,6 +131,10 @@ const checkoutRateLimit = rateLimitMiddleware('/api/tienda/checkout-intento', 'P
   max: 20,
   contarComoFallo: () => true,
 });
+const resetPasswordRateLimit = rateLimitMiddleware('/api/auth/reset-password', 'POST', {
+  max: 10,
+  contarComoFallo: () => true,
+});
 
 // Verifica que la petición traiga un JWT válido de un usuario con rol
 // "authenticated" (staff del Portal) — a diferencia de las rutas /api/tienda/*
@@ -601,23 +605,204 @@ async function otorgarPermisos(strapi, roleType, actions) {
   }
 }
 
+// Lo ÚNICO que un visitante sin sesión puede pedirle a la API. Todo lo demás
+// del Portal viaja con el JWT del staff (authFetch) y vive en "authenticated".
+// El build de la Tienda y sus páginas de categoría/producto leen estos tres
+// endpoints; blog-post se lee en el build (páginas estáticas del blog);
+// identidad-empresa solo sirve el logo del login (ver sanearRespuestaPublica).
+const PUBLIC_API_ALLOWLIST = [
+  'api::product.product.find',
+  'api::product-category.product-category.find',
+  'api::blog-post.blog-post.find',
+  'api::identidad-empresa.identidad-empresa.find',
+];
+
+// Interruptor del cierre. Con "true" el rol public se recorta a la lista
+// blanca en cada arranque; con cualquier otro valor se conserva el
+// comportamiento anterior (re-otorgar las listas legacy).
+function cerrarApiPublicaActivo() {
+  return process.env.CERRAR_API_PUBLICA === 'true';
+}
+
+// Todas las acciones del content API de las colecciones propias (api::*).
+// Se prefiere la lista que ve el plugin users-permissions (incluye acciones
+// custom de controladores); si no está disponible se deducen del tipo.
+function accionesApiDelProyecto(strapi) {
+  const acciones = new Set();
+  try {
+    const todas = strapi.plugin('users-permissions').service('users-permissions').getActions();
+    for (const [ns, def] of Object.entries(todas)) {
+      if (!ns.startsWith('api::')) continue;
+      for (const [controlador, ctrl] of Object.entries(def.controllers || {})) {
+        for (const accion of Object.keys(ctrl)) acciones.add(`${ns}.${controlador}.${accion}`);
+      }
+    }
+  } catch (e) {
+    strapi.log.warn('[bootstrap] getActions no disponible, se deducen acciones por tipo: ' + e.message);
+  }
+  for (const [uid, ct] of Object.entries(strapi.contentTypes)) {
+    if (!uid.startsWith('api::')) continue;
+    const base = ct.kind === 'singleType' ? ['find', 'update', 'delete'] : ['find', 'findOne', 'create', 'update', 'delete'];
+    for (const a of base) acciones.add(`${uid}.${a}`);
+  }
+  return [...acciones];
+}
+
+// Staff = confianza total: authenticated recibe el CRUD completo de todas las
+// colecciones propias, así el Portal no depende de permisos marcados a mano.
+async function concederAStaffTodaLaApi(strapi) {
+  const role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'authenticated' } });
+  if (!role) return 0;
+  const q = strapi.db.query('plugin::users-permissions.permission');
+  const existentes = new Set((await q.findMany({ where: { role: role.id }, select: ['action'] })).map((p) => p.action));
+  const faltan = accionesApiDelProyecto(strapi).filter((a) => !existentes.has(a));
+  for (const action of faltan) await q.create({ data: { action, role: role.id } });
+  return faltan.length;
+}
+
+async function cerrarApiPublica(strapi) {
+  const role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'public' } });
+  if (!role) return 0;
+  const q = strapi.db.query('plugin::users-permissions.permission');
+  const permitidas = new Set(PUBLIC_API_ALLOWLIST);
+  const filas = await q.findMany({ where: { role: role.id, action: { $startsWith: 'api::' } }, select: ['id', 'action'] });
+  const sobran = filas.filter((f) => !permitidas.has(f.action)).map((f) => f.id);
+  if (sobran.length) await q.deleteMany({ where: { id: { $in: sobran } } });
+  await otorgarPermisos(strapi, 'public', PUBLIC_API_ALLOWLIST);
+  return sobran.length;
+}
+
 async function aplicarPermisosPublic(strapi) {
-  const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO, ...PUBLIC_ACTIONS_MAPA_IDENTIDAD, ...PUBLIC_ACTIONS_LEAD_CREATE];
-  await otorgarPermisos(strapi, 'public', todas);
-  // Revocar del rol public las acciones CRM sensibles (find/update/delete de leads,
-  // y todo de clientes/ventas/cotizaciones/suscriptores).
-  // lead.create NO se revoca — está en PUBLIC_ACTIONS_LEAD_CREATE para formularios públicos.
-  const crmSinCreate = AUTHENTICATED_ACTIONS_CRM.filter(a => a !== 'api::lead.lead.create');
-  await revocarPermisos(strapi, 'public', crmSinCreate);
-  // CRM: solo authenticated puede leer/escribir leads, clientes, ventas,
-  // cotizaciones y suscriptores. El frontend adjunta el JWT con authFetch().
+  const cerrar = cerrarApiPublicaActivo();
+  if (!cerrar) {
+    const todas = [...PUBLIC_ACTIONS_PRODUCT, ...PUBLIC_ACTIONS_CATEGORIA, ...PUBLIC_ACTIONS_TAREA, ...PUBLIC_ACTIONS_SNAPSHOT, ...PUBLIC_ACTIONS_TRABAJO, ...PUBLIC_ACTIONS_SOCIAL, ...PUBLIC_ACTIONS_PORTAL_MDO, ...PUBLIC_ACTIONS_MAPA_IDENTIDAD, ...PUBLIC_ACTIONS_LEAD_CREATE];
+    await otorgarPermisos(strapi, 'public', todas);
+    // lead.create NO se revoca — está en PUBLIC_ACTIONS_LEAD_CREATE para formularios públicos.
+    const crmSinCreate = AUTHENTICATED_ACTIONS_CRM.filter(a => a !== 'api::lead.lead.create');
+    await revocarPermisos(strapi, 'public', crmSinCreate);
+  }
   await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_CRM);
-  // Portal MDO general: authenticated también necesita estos permisos porque
-  // las mutaciones se hacen con el JWT del usuario logueado.
   await otorgarPermisos(strapi, 'authenticated', PUBLIC_ACTIONS_PORTAL_MDO);
-  // Notas de mejora: solo Authenticated, nunca Public.
   await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_NOTA_MEJORA);
-  strapi.log.info('[bootstrap] Permisos aplicados — CRM movido a Authenticated, Public reducido a contenido no sensible');
+  const nuevos = await concederAStaffTodaLaApi(strapi);
+  if (cerrar) {
+    const quitados = await cerrarApiPublica(strapi);
+    strapi.log.info(`[bootstrap] API pública CERRADA — public solo conserva ${PUBLIC_API_ALLOWLIST.length} acciones (quitadas ${quitados}); authenticated +${nuevos}`);
+  } else {
+    strapi.log.warn(`[bootstrap] API pública ABIERTA (CERRAR_API_PUBLICA no es "true") — authenticated +${nuevos}`);
+  }
+}
+
+// Registro nativo de Strapi: con allow_register y default_role=authenticated
+// cualquiera podía crearse una cuenta con rol de staff desde POST
+// /api/auth/local/register. Las cuentas se crean solo por /api/tienda/registro
+// (cliente_tienda) y por la invitación del Portal — ambas usan db.query directo.
+const PLUGIN_ACTIONS_REGISTRO_NATIVO = [
+  'plugin::users-permissions.auth.register',
+  'plugin::users-permissions.auth.connect',
+  'plugin::users-permissions.auth.sendEmailConfirmation',
+  'plugin::users-permissions.auth.emailConfirmation',
+];
+async function cerrarRegistroNativo(strapi) {
+  await revocarPermisos(strapi, 'public', PLUGIN_ACTIONS_REGISTRO_NATIVO);
+  await revocarPermisos(strapi, 'authenticated', PLUGIN_ACTIONS_REGISTRO_NATIVO);
+  const store = strapi.store({ type: 'plugin', name: 'users-permissions', key: 'advanced' });
+  const adv = await store.get();
+  if (adv && adv.allow_register !== false) {
+    await store.set({ value: { ...adv, allow_register: false } });
+  }
+  strapi.log.info('[bootstrap] Registro nativo de Strapi cerrado (allow_register=false, sin permiso register/connect)');
+}
+
+// Campos que la Tienda nunca necesita y que no deben salir a un anónimo.
+const CAMPOS_PRIVADOS_PRODUCTO = ['costoProduccion', 'costoManoObra', 'pesoGramos', 'materialInsumo', 'puntoVenta'];
+const CAMPOS_PUBLICOS_IDENTIDAD = ['id', 'documentId', 'nombre', 'slogan', 'logo'];
+
+function limpiarProductosPublicos(nodo) {
+  if (Array.isArray(nodo)) {
+    return nodo
+      .filter((n) => !(n && typeof n === 'object' && 'nombreProducto' in n && n.activo === false))
+      .map(limpiarProductosPublicos);
+  }
+  if (nodo && typeof nodo === 'object') {
+    for (const k of CAMPOS_PRIVADOS_PRODUCTO) delete nodo[k];
+    for (const k of Object.keys(nodo)) nodo[k] = limpiarProductosPublicos(nodo[k]);
+  }
+  return nodo;
+}
+
+function soloCamposPublicosIdentidad(item) {
+  if (!item || typeof item !== 'object') return item;
+  const salida = {};
+  for (const k of CAMPOS_PUBLICOS_IDENTIDAD) if (k in item) salida[k] = item[k];
+  return salida;
+}
+
+// Solo actúa sobre GET sin Authorization (visitante anónimo) en los endpoints
+// públicos que quedan abiertos: recorta campos internos y oculta productos
+// inactivos aunque el cliente quite el filtro activo=true de la URL.
+// Solo con el cierre activo: el Portal anterior leía identidad e inventario
+// sin token y dependía de recibir todos los campos.
+async function sanearRespuestaPublica(ctx, next) {
+  if (!cerrarApiPublicaActivo()) return next();
+  const esProducto  = /^\/api\/(products|product-categories)(\/|$)/.test(ctx.path);
+  const esIdentidad = /^\/api\/identidad-empresas(\/|$)/.test(ctx.path);
+  if (ctx.method !== 'GET' || ctx.request.header.authorization || !(esProducto || esIdentidad)) {
+    return next();
+  }
+  if (esProducto && ctx.path.startsWith('/api/products')) {
+    const params = new URLSearchParams(ctx.querystring);
+    for (const k of [...params.keys()]) {
+      if (k === 'filters[activo]' || k.startsWith('filters[activo][')) params.delete(k);
+    }
+    params.append('filters[activo][$eq]', 'true');
+    ctx.querystring = params.toString();
+  }
+  await next();
+  if (ctx.status !== 200 || !ctx.body || typeof ctx.body !== 'object') return;
+  const cuerpo = ctx.body;
+  if (esProducto) {
+    if ('data' in cuerpo) cuerpo.data = limpiarProductosPublicos(cuerpo.data);
+  } else if (esIdentidad && 'data' in cuerpo) {
+    cuerpo.data = Array.isArray(cuerpo.data) ? cuerpo.data.map(soloCamposPublicosIdentidad) : soloCamposPublicosIdentidad(cuerpo.data);
+  }
+}
+
+// Estos permisos no salen de ninguna lista del código: se marcaron a mano en el
+// Admin y dejaban a cualquiera sin sesión mandar correo desde el dominio, subir/
+// borrar/listar archivos y leer el esquema de la API. Ningún frontend los usa.
+const PUBLIC_ACTIONS_SIN_USO = [
+  'plugin::email.email.send',
+  'plugin::upload.content-api.upload',
+  'plugin::upload.content-api.destroy',
+  'plugin::upload.content-api.find',
+  'plugin::upload.content-api.findOne',
+  'plugin::content-type-builder.components.getComponent',
+  'plugin::content-type-builder.components.getComponents',
+  'plugin::content-type-builder.content-types.getContentType',
+  'plugin::content-type-builder.content-types.getContentTypes',
+];
+const AUTHENTICATED_ACTIONS_SIN_USO = [
+  'plugin::email.email.send',
+  'plugin::content-type-builder.components.getComponent',
+  'plugin::content-type-builder.components.getComponents',
+  'plugin::content-type-builder.content-types.getContentType',
+  'plugin::content-type-builder.content-types.getContentTypes',
+];
+// El staff sube imágenes y comprobantes con su JWT: se le asegura el permiso
+// ANTES de quitárselo a public.
+const AUTHENTICATED_ACTIONS_UPLOAD = [
+  'plugin::upload.content-api.upload',
+  'plugin::upload.content-api.destroy',
+  'plugin::upload.content-api.find',
+  'plugin::upload.content-api.findOne',
+];
+
+async function cerrarPermisosSinUso(strapi) {
+  await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_UPLOAD);
+  await revocarPermisos(strapi, 'public', PUBLIC_ACTIONS_SIN_USO);
+  await revocarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_SIN_USO);
+  strapi.log.info('[bootstrap] Cerrados permisos sin uso: correo, subida de archivos y esquema ya no son públicos');
 }
 
 // Rol separado para clientes que se registran en la Tienda pública — a
@@ -745,8 +930,10 @@ module.exports = {
     strapi.server.use(loginRateLimit);
     strapi.server.use(registroRateLimit);
     strapi.server.use(forgotPasswordRateLimit);
+    strapi.server.use(resetPasswordRateLimit);
     strapi.server.use(contactoRateLimit);
     strapi.server.use(checkoutRateLimit);
+    strapi.server.use(sanearRespuestaPublica);
 
     strapi.server.routes([
       {
@@ -1225,6 +1412,8 @@ module.exports = {
       catch (err) { strapi.log.error(`[bootstrap] ${label}: ${err.message}`); }
     };
     await run('aplicarPermisosPublic',      () => aplicarPermisosPublic(strapi));
+    await run('cerrarPermisosSinUso',       () => cerrarPermisosSinUso(strapi));
+    await run('cerrarRegistroNativo',       () => cerrarRegistroNativo(strapi));
     await run('sembrarCategorias',           () => sembrarCategoriasSiVacio(strapi));
     await run('backfillColoresCategorias',  () => backfillColoresCategorias(strapi));
     await run('normalizarCategorias',       () => normalizarCategorias(strapi));
