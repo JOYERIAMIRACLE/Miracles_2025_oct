@@ -20,12 +20,14 @@ import { SeccionDocumentos } from "@/components/Empresa/PortalMDO/SeccionDocumen
 import { SeccionGestionMarca } from "@/components/Empresa/PortalMDO/SeccionGestionMarca"
 import { SeccionEnlaces } from "@/components/Empresa/PortalMDO/SeccionEnlaces"
 import { SeccionUsuarios } from "@/components/Empresa/PortalMDO/SeccionUsuarios"
+import { SeccionArquitecturaSitio } from "@/components/Empresa/PortalMDO/SeccionArquitecturaSitio"
 import { TareasView } from "@/components/Personal/Tareas/TareasView"
 import { NotasMejora } from "@/components/Empresa/PortalMDO/NotasMejora"
 
 const SECCIONES_VALIDAS = [
   "portal", "conoce", "mision",
   "tareas", "campanas", "contactos", "ventas", "crm", "inventario", "finanzas", "sitio-web",
+  "arquitectura-sitio",
   "documentos", "marca", "enlaces", "usuarios",
 ]
 
@@ -73,6 +75,7 @@ export default function PortalMedalladeoroPage() {
       case "inventario":   return <SeccionInventario />
       case "finanzas":     return <SeccionFinanzas />
       case "sitio-web":    return <SeccionSitioWeb />
+      case "arquitectura-sitio": return <SeccionArquitecturaSitio />
       case "documentos":   return <SeccionDocumentos />
       case "marca":        return <SeccionGestionMarca />
       case "enlaces":      return <SeccionEnlaces />

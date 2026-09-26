@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/gestion-personal/", "/gestion-empresa/", "/carrito", "/productos-favoritos"],
+        disallow: ["/gestion-personal/", "/gestion-empresa/", "/carrito", "/productos-favoritos", "/cuenta/"],
       },
     ],
     sitemap: `${SITE}/sitemap.xml`,
