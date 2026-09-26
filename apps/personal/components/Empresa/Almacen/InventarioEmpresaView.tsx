@@ -6,7 +6,7 @@ import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { fieldCls } from "@/lib/styles"
 import { toast } from "sonner"
 import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured, resolverCategoriaId } from "@/api/inventarioEmpresa/getInventario"
-import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem } from "@/types/product"
+import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem, TipoAnillo, TIPOS_ANILLO } from "@/types/product"
 import { fetchCatalogo } from "@/api/catalogoJoyeria/getCatalogoJoyeria"
 import { CatalogoNodo } from "@/types/catalogoJoyeria"
 import { SkuBuilder } from "@/components/Shared/SkuBuilder"
@@ -18,11 +18,12 @@ import { authFetch } from "@/lib/auth"
 // Qué atributos mostrar según categoría — un solo modelo de campos opcionales
 // que cubre las 9 categorías, en vez de un formulario distinto por cada una.
 function atributosRelevantes(cat: CategoriaJoya | "") {
-  if (cat === "Anillos" || cat === "Argollas")   return { piedra: true,  largo: false, cierre: false }
-  if (cat === "Cadenas" || cat === "Esclavas" || cat === "Pulsos" || cat === "Rosarios") return { piedra: false, largo: true, cierre: false }
-  if (cat === "Aretes" || cat === "Broqueles")   return { piedra: true,  largo: false, cierre: true }
-  if (cat === "Dijes")                            return { piedra: true,  largo: false, cierre: false }
-  return { piedra: true, largo: true, cierre: true }
+  if (cat === "Anillos")                          return { piedra: true,  largo: false, cierre: false, tipoAnillo: true }
+  if (cat === "Argollas")                         return { piedra: true,  largo: false, cierre: false, tipoAnillo: false }
+  if (cat === "Cadenas" || cat === "Esclavas" || cat === "Pulsos" || cat === "Rosarios") return { piedra: false, largo: true, cierre: false, tipoAnillo: false }
+  if (cat === "Aretes" || cat === "Broqueles")   return { piedra: true,  largo: false, cierre: true, tipoAnillo: false }
+  if (cat === "Dijes")                            return { piedra: true,  largo: false, cierre: false, tipoAnillo: false }
+  return { piedra: true, largo: true, cierre: true, tipoAnillo: false }
 }
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
@@ -87,13 +88,14 @@ type FormData = {
   material: MaterialItem
   materialInsumo: string; pesoGramos: string; costoManoObra: string
   conPiedra: boolean; tipoPiedra: string; kilates: string; largoCm: string; cierre: string
+  tipoAnillo: TipoAnillo | ""
   tiendaActivo: boolean; esFavorito: boolean; puntoVenta: boolean
 }
 const emptyForm = (): FormData => ({
   nombreProducto:"", sku:"", descripcion:"", figura:"", categoriaJoya:"", materialProducto:"",
   talla:"", costoProduccion:"", costo:"", stock:"0", material:"producto",
   materialInsumo:"", pesoGramos:"", costoManoObra:"",
-  conPiedra:false, tipoPiedra:"", kilates:"", largoCm:"", cierre:"",
+  conPiedra:false, tipoPiedra:"", kilates:"", largoCm:"", cierre:"", tipoAnillo:"",
   tiendaActivo:false, esFavorito:false, puntoVenta:false,
 })
 const inp    = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
@@ -388,6 +390,7 @@ export function InventarioEmpresaView() {
       kilates: it.atributos?.kilates ?? "",
       largoCm: it.atributos?.largoCm != null ? String(it.atributos.largoCm) : "",
       cierre: it.atributos?.cierre ?? "",
+      tipoAnillo: it.atributos?.tipoAnillo ?? "",
       tiendaActivo: it.activo ?? false,
       esFavorito: it.isFeatured ?? false,
       puntoVenta: (it as Record<string, unknown>).puntoVenta as boolean ?? false,
@@ -557,6 +560,7 @@ export function InventarioEmpresaView() {
           kilates:    form.kilates.trim() || null,
           largoCm:    form.largoCm ? Number(form.largoCm) : null,
           cierre:     form.cierre.trim() || null,
+          tipoAnillo: form.tipoAnillo || null,
         },
         activo:     form.tiendaActivo,
         isFeatured: form.esFavorito,
@@ -1263,6 +1267,16 @@ export function InventarioEmpresaView() {
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Atributos de joya</p>
                         <div className="grid grid-cols-3 gap-3">
+                          {rel.tipoAnillo && (
+                            <div>
+                              <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Estilo de anillo</label>
+                              <select value={form.tipoAnillo} onChange={e => setForm(f => ({...f, tipoAnillo: e.target.value as TipoAnillo | ""}))} className={inp}>
+                                <option value="">Sin especificar</option>
+                                {TIPOS_ANILLO.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <p className="text-[10px] text-slate-500 mt-1">Compromiso/Solitario/Churumbela lo hacen aparecer también en esas categorías de la Tienda.</p>
+                            </div>
+                          )}
                           {rel.largo && (
                             <div>
                               <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Largo (cm)</label>

@@ -28,14 +28,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchSlugs("blog-posts", "slug"),
   ])
 
+  const OCASIONES = ["dia-de-la-madre", "quinceanera", "boda", "graduacion", "compromiso"]
+  const MATERIALES = ["oro-10k", "plata-925"]
+
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
+    { url: `${SITE}/category`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE}/nosotros`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE}/contacto`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.5 },
+    { url: `${SITE}/distribuidor`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE}/terminos`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE}/privacidad`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE}/envios`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/devoluciones`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
+    ...OCASIONES.map((o) => ({ url: `${SITE}/regalos/${o}`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 })),
+    ...MATERIALES.map((m) => ({ url: `${SITE}/material/${m}`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.7 })),
   ]
 
   const categoryRoutes: MetadataRoute.Sitemap = categorySlugs.map(slug => ({

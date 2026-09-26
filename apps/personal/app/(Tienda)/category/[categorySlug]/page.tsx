@@ -21,8 +21,12 @@ async function fetchCategory(slug: string): Promise<CategoryData | null> {
 
 async function fetchCategoryProducts(slug: string): Promise<ProductType[]> {
   try {
+    const tipos = TIPO_ANILLO_POR_SLUG[slug]
+    const filtroCategoria = tipos
+      ? tipos.map((t, i) => `filters[atributos][tipoAnillo][$in][${i}]=${encodeURIComponent(t)}`).join("&")
+      : `filters[categoria][slug][$eq]=${slug}`
     const res = await fetch(
-      `${BACKEND}/api/products?populate=*&filters[categoria][slug][$eq]=${slug}&filters[activo][$eq]=true&pagination[pageSize]=100`,
+      `${BACKEND}/api/products?populate=*&${filtroCategoria}&filters[activo][$eq]=true&pagination[pageSize]=100`,
       { signal: AbortSignal.timeout(8000) }
     )
     if (!res.ok) return []
@@ -36,7 +40,17 @@ async function fetchCategoryProducts(slug: string): Promise<ProductType[]> {
 // el momento del build, para que un hipo de Strapi nunca deje sin generar
 // una página que el navbar sí va a enlazar (esto es justo lo que pasó:
 // "esclavas" faltaba por un slug mal escrito en Strapi, no por el fetch).
-const CATEGORIAS_NAV = ["anillos", "cadenas", "esclavas", "aretes", "broqueles", "dijes", "pulsos", "rosarios", "argollas"]
+const CATEGORIAS_NAV = ["anillos", "cadenas", "esclavas", "aretes", "broqueles", "dijes", "pulsos", "rosarios", "argollas", "anillos-de-compromiso", "churumbela"]
+
+// "anillos-de-compromiso" y "churumbela" no son la relación `categoria` del
+// producto (siguen contando como "Anillos" ahí) — son un estilo marcado en
+// atributos.tipoAnillo, así una pieza puede aparecer en Anillos Y en su
+// categoría de estilo sin tener que elegir una sola. Ver componente
+// atributos-joya en el backend y el plan de SEO (26-sep-2026).
+const TIPO_ANILLO_POR_SLUG: Record<string, string[]> = {
+  "anillos-de-compromiso": ["Compromiso", "Solitario", "Churumbela"],
+  "churumbela": ["Churumbela"],
+}
 
 export async function generateStaticParams() {
   // "loading" siempre se genera — mismo patrón que ya usa /producto: es el

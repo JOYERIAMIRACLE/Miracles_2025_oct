@@ -939,6 +939,187 @@ async function normalizarCategorias(strapi) {
   }
 }
 
+// Categorías nuevas de la Tienda, decididas con datos reales de búsqueda
+// (Google Suggest + Google Ads Keyword Planner, México): "anillos de
+// compromiso" es el término de más volumen de todo el catálogo (165k/mes) y
+// no existía como categoría propia; "churumbela" es un estilo de anillo con
+// volumen propio (6,600/mes) comparable al de una categoría completa. Ambas
+// se arman filtrando por el atributo `atributos.tipoAnillo` (ver
+// components/joyeria/atributos-joya.json), no por la relación `categoria` —
+// así un anillo sigue apareciendo en "Anillos" y ADEMÁS en su categoría de
+// estilo, en vez de tener que elegir una sola.
+const PRODUCT_CATEGORY_SEED = [
+  {
+    NombreCategoria: 'Anillos de Compromiso',
+    slug: 'anillos-de-compromiso',
+    descripcionSeo: 'Anillos de compromiso en oro 10k y plata 925: solitarios, churumbelas y diseños con o sin piedra (diamante, esmeralda, zafiro, rubí). Envíos a todo México.',
+  },
+  {
+    NombreCategoria: 'Churumbela',
+    slug: 'churumbela',
+    descripcionSeo: 'Churumbelas en oro 10k y plata 925 — el anillo liso tradicional mexicano, ideal como argolla de matrimonio o compromiso. Envíos a todo México.',
+  },
+];
+
+async function sembrarCategoriasProductoSiFaltan(strapi) {
+  let creadas = 0;
+  for (const cat of PRODUCT_CATEGORY_SEED) {
+    const existente = await strapi.db.query('api::product-category.product-category').findOne({ where: { slug: cat.slug } });
+    if (existente) continue;
+    await strapi.db.query('api::product-category.product-category').create({
+      data: { ...cat, publishedAt: new Date().toISOString() },
+    });
+    creadas++;
+  }
+  if (creadas) strapi.log.info(`[bootstrap] ${creadas} categoría(s) de producto sembrada(s) (anillos-de-compromiso/churumbela)`);
+}
+
+// "Pulsos" no lo busca nadie en México para esto (0 volumen medible) — la
+// gente busca "pulseras" (590/mes). Solo renombra si el nombre sigue siendo
+// exactamente el original, para no pisar un cambio manual ya hecho en Admin.
+// draftAndPublish:true guarda el borrador y la versión publicada como DOS
+// filas con el mismo slug (una con published_at null) — hay que actualizar
+// las dos, o el sitio público seguiría mostrando la fila vieja.
+async function renombrarPulsosAPulseras(strapi) {
+  const filas = await strapi.db.query('api::product-category.product-category').findMany({ where: { slug: 'pulsos' } });
+  let cambios = 0;
+  for (const cat of filas) {
+    if (cat.NombreCategoria !== 'Pulsos') continue;
+    await strapi.db.query('api::product-category.product-category').update({
+      where: { id: cat.id },
+      data: { NombreCategoria: 'Pulseras', descripcionSeo: cat.descripcionSeo || 'Pulseras en oro 10k y plata 925 para mujer y hombre, en distintos estilos y medidas. Envíos a todo México.' },
+    });
+    cambios++;
+  }
+  if (cambios) strapi.log.info(`[bootstrap] Categoría "Pulsos" renombrada a "Pulseras" (${cambios} fila(s), así la busca la gente)`);
+}
+
+// Bloques de contenido del editor Blocks de Strapi — helpers cortos para
+// no repetir la forma { type, children } en cada post.
+const p = (texto) => ({ type: 'paragraph', children: [{ type: 'text', text: texto }] });
+const h2 = (texto) => ({ type: 'heading', level: 2, children: [{ type: 'text', text: texto }] });
+const ul = (items) => ({ type: 'list', format: 'unordered', children: items.map((t) => ({ type: 'list-item', children: [{ type: 'text', text: t }] })) });
+
+const BLOG_POSTS_SEED = [
+  {
+    titulo: 'Cómo limpiar tu plata 925 en casa',
+    slug: 'como-limpiar-plata-925',
+    categoria_blog: 'cuidado-de-joyas',
+    resumen: 'La plata 925 se opaca con el tiempo por contacto con aire, perfumes y sudor — no significa que sea de mala calidad. Así se limpia en casa sin dañarla.',
+    seo_titulo: 'Cómo limpiar plata 925 en casa',
+    seo_descripcion: 'Guía paso a paso para limpiar plata 925 en casa sin dañarla, con qué NO limpiarla y cada cuánto hacerlo.',
+    seo_keywords: 'como limpiar plata 925, limpiar plata en casa, plata 925 opaca',
+    contenido: [
+      p('La plata 925 (92.5% plata pura) se opaca con el tiempo por contacto con aire, perfume, cremas y sudor — es una reacción natural del metal, no un defecto de la pieza.'),
+      h2('Limpieza rápida (uso diario)'),
+      p('Frota la pieza con un paño suave de microfibra, sin productos. Elimina grasa y opacidad ligera en segundos y es lo único que necesita la mayoría de las piezas la mayor parte del tiempo.'),
+      h2('Limpieza profunda (opacidad notoria)'),
+      ul([
+        'Mezcla agua tibia con unas gotas de jabón neutro (no detergente de trastes).',
+        'Sumerge la pieza 2–3 minutos.',
+        'Talla suavemente con un cepillo de cerdas muy suaves (uno de dientes viejo sirve) en las hendiduras.',
+        'Enjuaga con agua tibia y seca de inmediato con un paño — nunca al aire, deja manchas.',
+      ]),
+      h2('Qué NO usar'),
+      p('Evita pasta de dientes, bicarbonato en piezas con piedra, y cualquier líquido con cloro (incluida el agua de la alberca) — opacan o dañan permanentemente el acabado y, si la pieza tiene piedra engastada, pueden aflojar el engaste.'),
+      h2('Para piezas con piedra'),
+      p('Limpia solo el metal con el paño seco y evita sumergirlas — algunas piedras (perla, esmeralda, ópalo) son porosas o sensibles al agua y al jabón.'),
+    ],
+  },
+  {
+    titulo: 'Cómo limpiar cadenas y anillos de oro sin dañarlos',
+    slug: 'como-limpiar-cadenas-de-oro',
+    categoria_blog: 'cuidado-de-joyas',
+    resumen: 'El oro no se opaca como la plata, pero acumula grasa y residuos de crema o perfume que le quitan brillo. Así se limpia en casa de forma segura.',
+    seo_titulo: 'Cómo limpiar cadenas y anillos de oro',
+    seo_descripcion: 'Cómo limpiar cadenas, anillos y esclavas de oro en casa sin productos agresivos, y qué evitar si la pieza tiene piedra.',
+    seo_keywords: 'como limpiar cadenas de oro, como limpiar anillos de oro, limpiar oro en casa',
+    contenido: [
+      p('A diferencia de la plata, el oro no se oxida ni se opaca por el aire — lo que le quita brillo es la acumulación de grasa natural de la piel, crema, perfume y jabón.'),
+      h2('Paso a paso'),
+      ul([
+        'Agua tibia con unas gotas de jabón neutro, remojar 5–10 minutos.',
+        'Cepillo de cerdas suaves para llegar a eslabones y hendiduras (en cadenas, cierres y broches).',
+        'Enjuagar bien — el jabón que queda opaca el brillo casi tanto como la grasa.',
+        'Secar con un paño de microfibra, sin frotar fuerte.',
+      ]),
+      h2('Con piedra engastada'),
+      p('Evita remojar piezas con piedras pegadas (no engastadas a presión) o con relleno/resina — limpia solo el metal con el paño húmedo y evita productos abrasivos.'),
+      h2('Cada cuánto limpiarla'),
+      p('Una pieza de uso diario (cadena, anillo de todos los días) se beneficia de esta limpieza cada 2–4 semanas; una que usas ocasionalmente, antes de cada uso especial.'),
+    ],
+  },
+  {
+    titulo: 'Qué es la plata 925 y por qué es tan popular',
+    slug: 'que-es-plata-925',
+    categoria_blog: 'tips-de-joyeria',
+    resumen: 'El "925" en una pieza de plata no es un capricho de marketing — es el estándar internacional de calidad. Esto es lo que significa y qué revisar antes de comprar.',
+    seo_titulo: 'Qué es la plata 925',
+    seo_descripcion: 'Qué significa el sello 925 en la plata, por qué se usa en joyería, y cómo distinguirla de la plata de baja ley.',
+    seo_keywords: 'que es plata 925, plata ley 925, plata 925 significado',
+    contenido: [
+      p('"925" significa que la pieza contiene 92.5% plata pura y 7.5% de otro metal (casi siempre cobre) — la plata pura al 100% es demasiado blanda para joyería de uso diario, así que esta aleación es el estándar mundial de calidad, no un relleno barato.'),
+      h2('Por qué se usa cobre'),
+      p('El cobre le da dureza y resistencia sin cambiar el color ni el brillo característico de la plata. Es la misma proporción que usan las principales casas de joyería del mundo.'),
+      h2('Cómo identificarla'),
+      p('Busca el sello "925" o ".925" grabado en la pieza, generalmente cerca del cierre (en cadenas y pulseras) o en la parte interna del aro (en anillos). Si una pieza se vende como "plata" sin ese sello ni especificar la ley, vale la pena preguntar.'),
+      h2('Cuánto dura'),
+      p('Con el cuidado básico (ver nuestra guía de limpieza), una pieza de plata 925 dura años sin perder su acabado — lo que se opaca con el tiempo es normal y se revierte limpiando, no significa que la pieza se esté "gastando".'),
+    ],
+  },
+  {
+    titulo: 'Oro de 10k vs 14k: cuál te conviene más',
+    slug: 'oro-10k-vs-14k-diferencias',
+    categoria_blog: 'tips-de-joyeria',
+    resumen: 'La diferencia entre oro 10k y 14k no es "cuál es mejor" sino para qué la vas a usar — cada uno tiene ventajas reales.',
+    seo_titulo: 'Oro 10k vs 14k: diferencias',
+    seo_descripcion: 'Diferencia real entre oro de 10k y 14k: pureza, durabilidad, color y para qué tipo de pieza conviene cada uno.',
+    seo_keywords: 'oro 10k vs 14k, diferencia oro 10k y 14k, que es oro 10k',
+    contenido: [
+      p('El número (10k, 14k) indica cuántas partes de 24 son oro puro: el oro 10k tiene 10/24 partes de oro puro (41.7%) y el 14k tiene 14/24 (58.5%). El resto es aleación de otros metales que le dan cuerpo a la pieza.'),
+      h2('Oro 10k: más resistente, más accesible'),
+      p('Al tener más aleación, el oro 10k es más duro y resistente a rayones y golpes — ideal para piezas de uso diario (anillos que no te quitas, cadenas de trabajo) y para quien busca el color y el prestigio del oro a un precio más accesible.'),
+      h2('Oro 14k: más pureza, tono más intenso'),
+      p('Tiene un color más profundo y mayor proporción de oro puro, pero es más suave — se raya con más facilidad y conviene más en piezas que se usan con cuidado (aretes, dijes) que en las de contacto constante.'),
+      h2('¿Cuál es "mejor"?'),
+      p('Ninguno es superior en general — depende del uso. Para una pieza que se usa todos los días y tiene que aguantar el trote diario, el 10k suele ser la decisión más práctica; ambos son oro real, con el sello de kilataje correspondiente.'),
+    ],
+  },
+  {
+    titulo: 'Cómo elegir el anillo de compromiso perfecto',
+    slug: 'como-elegir-anillo-de-compromiso',
+    categoria_blog: 'guias-de-regalo',
+    resumen: 'Antes de comprar un anillo de compromiso, estas son las preguntas que de verdad importan — de estilo, piedra y talla.',
+    seo_titulo: 'Cómo elegir un anillo de compromiso',
+    seo_descripcion: 'Guía para elegir anillo de compromiso: solitario vs churumbela, con piedra o sin piedra, y cómo acertar la talla sin arruinar la sorpresa.',
+    seo_keywords: 'como elegir anillo de compromiso, anillo de compromiso solitario, anillo de compromiso sin piedra',
+    contenido: [
+      p('No existe un anillo de compromiso "correcto" — existe el correcto para la persona que lo va a usar todos los días. Estas son las decisiones reales, no las de catálogo.'),
+      h2('Solitario, churumbela u otro estilo'),
+      p('El solitario (una sola piedra central, casi siempre diamante) es el más asociado a "anillo de compromiso" en el imaginario general. La churumbela — un anillo liso, tradicional en México — es una alternativa igual de válida, más discreta, y suele combinarse con la argolla de matrimonio después.'),
+      h2('¿Con piedra o sin piedra?'),
+      p('Un anillo sin piedra no es "menos" anillo de compromiso — muchas parejas lo prefieren precisamente porque no estorba en el día a día y es más resistente. Si sí quieres piedra, diamante es la opción clásica, y esmeralda, zafiro o rubí dan un resultado igual de serio con más color.'),
+      h2('La talla, sin arruinar la sorpresa'),
+      p('Pide prestado (con discreción) un anillo que la persona ya use en el dedo correspondiente y llévalo como referencia, o pregunta a alguien de su confianza. Casi todos los anillos se pueden ajustar una talla arriba o abajo después de la compra, así que no tiene que ser perfecto al primer intento.'),
+      h2('Presupuesto'),
+      p('El precio de un anillo de compromiso varía muchísimo según el material y si lleva piedra o no — define primero cuánto quieres invertir, y a partir de ahí elige entre oro 10k o plata 925, y con o sin piedra.'),
+    ],
+  },
+];
+
+async function sembrarBlogPostsSiFaltan(strapi) {
+  let creados = 0;
+  for (const post of BLOG_POSTS_SEED) {
+    const existente = await strapi.db.query('api::blog-post.blog-post').findOne({ where: { slug: post.slug } });
+    if (existente) continue;
+    await strapi.db.query('api::blog-post.blog-post').create({
+      data: { ...post, fecha_publicacion: new Date().toISOString().slice(0, 10), publishedAt: new Date().toISOString() },
+    });
+    creados++;
+  }
+  if (creados) strapi.log.info(`[bootstrap] ${creados} post(s) de blog sembrado(s)`);
+}
+
 module.exports = {
   register({ strapi }) {
     // Middlewares anti-fuerza-bruta / spam — se registran antes de las rutas
@@ -1468,6 +1649,9 @@ module.exports = {
     await run('cerrarPermisosSinUso',       () => cerrarPermisosSinUso(strapi));
     await run('cerrarRegistroNativo',       () => cerrarRegistroNativo(strapi));
     await run('sembrarCategorias',           () => sembrarCategoriasSiVacio(strapi));
+    await run('sembrarCategoriasProducto',  () => sembrarCategoriasProductoSiFaltan(strapi));
+    await run('renombrarPulsosAPulseras',   () => renombrarPulsosAPulseras(strapi));
+    await run('sembrarBlogPosts',           () => sembrarBlogPostsSiFaltan(strapi));
     await run('backfillColoresCategorias',  () => backfillColoresCategorias(strapi));
     await run('normalizarCategorias',       () => normalizarCategorias(strapi));
     await run('sembrarCategoriasPago',      () => sembrarCategoriasPagoSiVacio(strapi));

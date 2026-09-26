@@ -13,13 +13,15 @@ import {
 } from "@/components/ui/navigation-menu"
 
 const CATEGORIAS = [
+  { nombre: "Anillos de Compromiso", slug: "anillos-de-compromiso", desc: "Solitarios, churumbelas y diseños con o sin piedra, en oro 10k y plata 925." },
   { nombre: "Anillos",   slug: "anillos",   desc: "Desde solitarios hasta alianzas, en oro 10k y plata 925." },
+  { nombre: "Churumbela", slug: "churumbela", desc: "El anillo liso tradicional mexicano, en oro 10k y plata 925." },
   { nombre: "Cadenas",   slug: "cadenas",   desc: "Cartier, figaro, cubana y más estilos en diferentes medidas." },
   { nombre: "Esclavas",  slug: "esclavas",  desc: "Elegantes esclavas para dama y caballero." },
   { nombre: "Aretes",    slug: "aretes",    desc: "Argollas, palitos, gota y más diseños para cada ocasión." },
   { nombre: "Broqueles", slug: "broqueles", desc: "Pequeños y elegantes, perfectos para uso diario." },
   { nombre: "Dijes",     slug: "dijes",     desc: "Figuras y símbolos para personalizar tu collar o pulsera." },
-  { nombre: "Pulsos",    slug: "pulsos",    desc: "Pulseras y brazaletes en distintos estilos y medidas." },
+  { nombre: "Pulseras",  slug: "pulsos",    desc: "Pulseras y brazaletes en distintos estilos y medidas." },
   { nombre: "Esclavas",  slug: "esclavas",  desc: "Esclavas clásicas y modernas para toda ocasión." },
   { nombre: "Rosarios",  slug: "rosarios",  desc: "Rosarios artesanales en oro 10k y plata 925." },
   { nombre: "Argollas",  slug: "argollas",  desc: "Argollas de compromiso y matrimonio en todos los tamaños." },

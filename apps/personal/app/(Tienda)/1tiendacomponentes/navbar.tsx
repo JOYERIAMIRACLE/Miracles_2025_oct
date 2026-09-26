@@ -16,13 +16,14 @@ import { track } from "@/lib/medicion"
 const CATEGORIAS_NAV = [
   { nombre: "Inicio",    href: "/" },
   { nombre: "Ver catálogo", href: "/category" },
+  { nombre: "Compromiso", href: "/category/anillos-de-compromiso" },
   { nombre: "Anillos",   href: "/category/anillos" },
   { nombre: "Cadenas",   href: "/category/cadenas" },
   { nombre: "Esclavas",  href: "/category/esclavas" },
   { nombre: "Aretes",    href: "/category/aretes" },
   { nombre: "Broqueles", href: "/category/broqueles" },
   { nombre: "Dijes",     href: "/category/dijes" },
-  { nombre: "Pulsos",    href: "/category/pulsos" },
+  { nombre: "Pulseras",  href: "/category/pulsos" },
   { nombre: "Rosarios",  href: "/category/rosarios" },
   { nombre: "Argollas",  href: "/category/argollas" },
 ]

@@ -10,6 +10,10 @@
     "tipoPiedra": { "type": "string" },
     "kilates": { "type": "string" },
     "largoCm": { "type": "decimal" },
-    "cierre": { "type": "string" }
+    "cierre": { "type": "string" },
+    "tipoAnillo": {
+      "type": "enumeration",
+      "enum": ["Compromiso", "Solitario", "Churumbela", "Otro"]
+    }
   }
 }

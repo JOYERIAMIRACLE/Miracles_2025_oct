@@ -19,12 +19,16 @@ export type CategoriaType = {
   MainImage?:      { url: string } | null
 }
 
+export type TipoAnillo = "Compromiso" | "Solitario" | "Churumbela" | "Otro"
+export const TIPOS_ANILLO: TipoAnillo[] = ["Compromiso", "Solitario", "Churumbela", "Otro"]
+
 export type AtributosJoya = {
   conPiedra:  boolean | null
   tipoPiedra: string  | null
   kilates:    string  | null
   largoCm:    number  | null
   cierre:     string  | null
+  tipoAnillo: TipoAnillo | null
 }
 
 export type MaterialInsumoRef = { id: number; documentId: string; nombre: string; precioReferenciaGramo: number | null }
