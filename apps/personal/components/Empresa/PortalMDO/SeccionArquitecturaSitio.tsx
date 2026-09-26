@@ -24,6 +24,7 @@ const GRUPOS: Grupo[] = [
       { ruta: "/blog", nota: "Motor de contenido — hub del blog" },
       { ruta: "/blog/[slug]", nota: "5 posts reales ya publicados" },
       { ruta: "/producto/[slug]", nota: "Doble función: Landing si llega frío de Google, App si viene navegando el catálogo" },
+      { ruta: "/regalos/[ocasion]", nota: "Doble función: se construyeron para atrapar búsqueda fría (\"regalo día de la madre\" 2,900/mes), aunque también se llega desde las tarjetas del home" },
       { ruta: "/terminos, /privacidad, /envios, /devoluciones", nota: "Confianza/legal — bajo esfuerzo de autoridad" },
     ],
   },
@@ -34,7 +35,6 @@ const GRUPOS: Grupo[] = [
     paginas: [
       { ruta: "/category, /category/[slug]", nota: "9 categorías + anillos-de-compromiso + churumbela" },
       { ruta: "/material/oro-10k, /material/plata-925", nota: "Hub por material" },
-      { ruta: "/regalos/[ocasion]", nota: "5 hubs — dan URL real a las tarjetas del home" },
       { ruta: "/carrito, /productos-favoritos", nota: "Ya bloqueadas en robots.txt — correcto, sin cambios" },
     ],
   },
