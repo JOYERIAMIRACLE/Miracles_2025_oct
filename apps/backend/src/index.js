@@ -997,6 +997,7 @@ async function renombrarPulsosAPulseras(strapi) {
 // Bloques de contenido del editor Blocks de Strapi — helpers cortos para
 // no repetir la forma { type, children } en cada post.
 const p = (texto) => ({ type: 'paragraph', children: [{ type: 'text', text: texto }] });
+const link = (texto, url) => ({ type: 'link', url, children: [{ type: 'text', text: texto }] });
 const h2 = (texto) => ({ type: 'heading', level: 2, children: [{ type: 'text', text: texto }] });
 const ul = (items) => ({ type: 'list', format: 'unordered', children: items.map((t) => ({ type: 'list-item', children: [{ type: 'text', text: t }] })) });
 
@@ -1103,6 +1104,45 @@ const BLOG_POSTS_SEED = [
       p('Pide prestado (con discreción) un anillo que la persona ya use en el dedo correspondiente y llévalo como referencia, o pregunta a alguien de su confianza. Casi todos los anillos se pueden ajustar una talla arriba o abajo después de la compra, así que no tiene que ser perfecto al primer intento.'),
       h2('Presupuesto'),
       p('El precio de un anillo de compromiso varía muchísimo según el material y si lleva piedra o no — define primero cuánto quieres invertir, y a partir de ahí elige entre oro 10k o plata 925, y con o sin piedra.'),
+    ],
+  },
+  {
+    // Pieza "shareable" (dato propio), no solo "searchable" — analiza el
+    // comportamiento real de búsqueda en México (autocompletado de Google +
+    // Google Ads Keyword Planner, 26-sep-2026) en vez de inventar precios de
+    // mercado que nadie puede verificar. El precio real de cada pieza vive
+    // en el catálogo, no en este post.
+    titulo: 'Qué buscan los mexicanos antes de comprar un anillo de compromiso (datos reales de búsqueda)',
+    slug: 'que-buscan-antes-de-comprar-anillo-de-compromiso',
+    categoria_blog: 'tips-de-joyeria',
+    resumen: 'Analizamos el comportamiento real de búsqueda en México: cuánta gente busca cada estilo, qué preguntan antes de comprar, y qué determina el precio real de un anillo de compromiso.',
+    seo_titulo: 'Qué buscan los mexicanos antes de comprar un anillo de compromiso',
+    seo_descripcion: 'Datos reales de búsqueda en México sobre anillos de compromiso: estilos más buscados, qué preguntan los compradores, y qué determina el precio real.',
+    seo_keywords: 'cuanto cuesta un anillo de compromiso, anillos de compromiso mexico, precio anillo de compromiso',
+    contenido: [
+      p('"Anillos de compromiso" es, con mucha diferencia, el término de joyería más buscado en México: alrededor de 165,000 búsquedas al mes — más que todas las demás categorías de joyería juntas. Esto es lo que revela ese volumen sobre cómo compra la gente.'),
+      h2('El estilo que nadie esperaba: la churumbela'),
+      p('El solitario (una sola piedra, casi siempre diamante) es el estilo más asociado a "anillo de compromiso", pero la churumbela — el anillo liso tradicional mexicano — tiene un volumen de búsqueda propio comparable al de una categoría de joyería completa. No es un estilo "de segunda": es una decisión real de miles de personas al mes.'),
+      h2('Con piedra, sin piedra, y qué piedra'),
+      p('Entre quienes buscan piedra específica, diamante domina, seguido de esmeralda y zafiro a un volumen parecido entre sí, y rubí más atrás. Pero también hay búsqueda real de "sin piedra" — confirma que saltarse la piedra es una preferencia válida, no una limitación de presupuesto.'),
+      h2('Lo que de verdad preguntan antes de comprar'),
+      ul([
+        '"Cuánto cuesta" — la pregunta de precio más común, antes de cualquier otra.',
+        '"Dónde comprar" — validación de dónde confiar, no solo cuánto pagar.',
+        '"Con diamante" / "de oro" — el material y la piedra pesan más que la marca en la búsqueda inicial.',
+      ]),
+      h2('Qué determina el precio real (no un promedio inventado)'),
+      p('El precio de un anillo de compromiso no tiene un "promedio nacional" honesto — depende de tres decisiones concretas: el material (oro 10k o plata 925), si lleva piedra y de qué tipo (diamante, esmeralda, zafiro, rubí, o ninguna), y el estilo (solitario, churumbela u otro). Cualquier cifra que no desglose esas tres variables es, en el mejor de los casos, una aproximación.'),
+      {
+        type: 'paragraph',
+        children: [
+          { type: 'text', text: 'Puedes ver precios reales, no promedios, en el catálogo de ' },
+          link('Anillos de Compromiso', 'https://medalladeoro.com.mx/category/anillos-de-compromiso'),
+          { type: 'text', text: ' y de ' },
+          link('Churumbela', 'https://medalladeoro.com.mx/category/churumbela'),
+          { type: 'text', text: '.' },
+        ],
+      },
     ],
   },
 ];
