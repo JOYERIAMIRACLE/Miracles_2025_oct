@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   Gamepad2, Swords, Package, CalendarDays, LayoutDashboard,
   CheckSquare, ChefHat, Dumbbell, CalendarRange, ShoppingCart,
-  FolderOpen, Users, CalendarHeart, Sofa, Wrench, Car,
+  FolderOpen, Users, CalendarHeart, Sofa, Wrench, Car, Music,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -58,6 +58,12 @@ const sections: { title: string; items: NavItem[] }[] = [
       { name: "Eventos",  href: "/gestion-personal/social/eventos",  icon: CalendarHeart, color: "pink" },
     ],
   },
+  {
+    title: "Creatividad",
+    items: [
+      { name: "Música", href: "/gestion-personal/creatividad", icon: Music, color: "indigo" },
+    ],
+  },
 ]
 
 const activeColors: Record<string, string> = {
@@ -69,6 +75,7 @@ const activeColors: Record<string, string> = {
   pink:   "bg-pink-500/10 text-pink-400 border-pink-500/30 shadow-pink-500/5",
   red:    "bg-red-500/10 text-red-400 border-red-500/30 shadow-red-500/5",
   teal:   "bg-teal-500/10 text-teal-400 border-teal-500/30 shadow-teal-500/5",
+  indigo: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30 shadow-indigo-500/5",
 }
 
 const iconActiveColors: Record<string, string> = {
@@ -80,6 +87,7 @@ const iconActiveColors: Record<string, string> = {
   pink:   "text-pink-400",
   red:    "text-red-400",
   teal:   "text-teal-400",
+  indigo: "text-indigo-400",
 }
 
 export function PersonalSidebar() {

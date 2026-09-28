@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "canciones",
+  "info": {
+    "singularName": "cancion",
+    "pluralName": "canciones",
+    "displayName": "Canción"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "titulo": { "type": "string", "required": true },
+    "estilo": { "type": "string" },
+    "estado": {
+      "type": "enumeration",
+      "enum": ["idea", "en_proceso", "terminada", "publicada"],
+      "default": "en_proceso"
+    },
+    "slogan": { "type": "string" },
+    "hookPrincipal": { "type": "text" },
+    "referencias": { "type": "text" },
+    "letra": { "type": "text" },
+    "notasProceso": { "type": "text" },
+    "orden": { "type": "integer", "default": 0 }
+  }
+}
