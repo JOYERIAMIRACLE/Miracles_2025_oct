@@ -2,6 +2,17 @@ import { BlockNode, TextNode } from "@/types/blog-post"
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
 
+// Debe coincidir exactamente con slugHeading() en apps/backend/src/index.js
+// (BLOG_POSTS_SEED) — es lo que hace que los links de la tabla de contenido
+// salten al H2 correcto.
+function slugifyHeading(texto: string): string {
+  return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+}
+function textoPlano(children: TextNode[]): string {
+  return children.map((c) => c.text ?? "").join("")
+}
+
 function renderText(node: TextNode, idx: number): React.ReactNode {
   if (node.type === "link") {
     return (
@@ -37,7 +48,7 @@ function renderBlock(block: BlockNode, idx: number): React.ReactNode {
         6: "text-sm font-semibold mt-3 mb-1",
       }
       return (
-        <Tag key={idx} className={`${sizes[block.level]} text-gray-900 dark:text-gray-100`}>
+        <Tag key={idx} id={slugifyHeading(textoPlano(block.children))} className={`${sizes[block.level]} text-gray-900 dark:text-gray-100 scroll-mt-24`}>
           {block.children.map(renderText)}
         </Tag>
       )

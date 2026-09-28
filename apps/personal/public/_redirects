@@ -3,3 +3,10 @@
 # se manda al inicio en vez de dar 404.
 /tienda    /    301
 /tienda/   /    301
+
+# Posts del blog renombrados 28-sep-2026 a slugs con la keyword real (ver
+# POST_SLUGS_RENOMBRADOS en apps/backend/src/index.js).
+/blog/que-es-plata-925                                       /blog/plata-925-que-significa            301
+/blog/oro-10k-vs-14k-diferencias                              /blog/precio-oro-10k                     301
+/blog/como-elegir-anillo-de-compromiso                        /blog/anillos-de-compromiso-de-oro       301
+/blog/que-buscan-antes-de-comprar-anillo-de-compromiso        /blog/precio-anillo-de-compromiso        301

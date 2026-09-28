@@ -999,111 +999,229 @@ async function renombrarPulsosAPulseras(strapi) {
 const p = (texto) => ({ type: 'paragraph', children: [{ type: 'text', text: texto }] });
 const link = (texto, url) => ({ type: 'link', url, children: [{ type: 'text', text: texto }] });
 const h2 = (texto) => ({ type: 'heading', level: 2, children: [{ type: 'text', text: texto }] });
+// Debe generar el MISMO id que slugifyHeading() en BlocksRenderer.tsx (frontend),
+// para que los links de la tabla de contenido salten a la sección correcta.
+const slugHeading = (texto) => texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+// Tabla de contenido: cada título de la lista es un link ancla (#slug) al H2
+// correspondiente — reglas de contenido del blog (28-sep-2026): cada post
+// arranca de una keyword con volumen real, título con esa keyword, 800+
+// palabras, y tabla de contenido con subtítulos ligados a la keyword.
+const toc = (titulos) => ({
+  type: 'list', format: 'unordered',
+  children: titulos.map((t) => ({ type: 'list-item', children: [link(t, `#${slugHeading(t)}`)] })),
+});
 const ul = (items) => ({ type: 'list', format: 'unordered', children: items.map((t) => ({ type: 'list-item', children: [{ type: 'text', text: t }] })) });
 
+// Reglas de contenido del blog (28-sep-2026, fijas de aquí en adelante):
+// 1) cada post arranca de una keyword real con volumen medible (Google
+//    Suggest + Ads Keyword Planner, México — no se inventa la keyword ni el
+//    volumen); 2) el título usa la keyword más adecuada de ese grupo, no
+//    necesariamente la de más volumen si otra encaja mejor con el contenido
+//    ya escrito; 3) mínimo 800 palabras que desarrollen esa keyword a fondo;
+//    4) tabla de contenido al inicio, con subtítulos ligados a la keyword,
+//    cuyos links saltan al H2 real (ver toc()/slugHeading() arriba).
 const BLOG_POSTS_SEED = [
   {
+    // Keyword: "cómo limpiar plata 925" — 1,000/mes.
     titulo: 'Cómo limpiar tu plata 925 en casa',
     slug: 'como-limpiar-plata-925',
     categoria_blog: 'cuidado-de-joyas',
     resumen: 'La plata 925 se opaca con el tiempo por contacto con aire, perfumes y sudor — no significa que sea de mala calidad. Así se limpia en casa sin dañarla.',
     seo_titulo: 'Cómo limpiar plata 925 en casa',
-    seo_descripcion: 'Guía paso a paso para limpiar plata 925 en casa sin dañarla, con qué NO limpiarla y cada cuánto hacerlo.',
+    seo_descripcion: 'Guía completa para limpiar plata 925 en casa sin dañarla: limpieza rápida, limpieza profunda, qué NO usar y cada cuánto hacerlo.',
     seo_keywords: 'como limpiar plata 925, limpiar plata en casa, plata 925 opaca',
     contenido: [
-      p('La plata 925 (92.5% plata pura) se opaca con el tiempo por contacto con aire, perfume, cremas y sudor — es una reacción natural del metal, no un defecto de la pieza.'),
-      h2('Limpieza rápida (uso diario)'),
-      p('Frota la pieza con un paño suave de microfibra, sin productos. Elimina grasa y opacidad ligera en segundos y es lo único que necesita la mayoría de las piezas la mayor parte del tiempo.'),
-      h2('Limpieza profunda (opacidad notoria)'),
+      p('Si tu plata 925 se ve opaca o amarillenta, no compraste plata de mala calidad — es una reacción química normal del metal, y se revierte en minutos con lo que ya tienes en casa. Esto es todo lo que necesitas para limpiar plata 925 correctamente, sin dañarla.'),
+      toc(['Por qué se opaca la plata 925', 'Limpieza rápida del día a día', 'Limpieza profunda cuando ya se ve opaca', 'Qué productos nunca usar', 'Cómo limpiar piezas con piedra', 'Cada cuánto limpiar tu plata 925', 'Cómo guardarla para que dure más', 'Cuándo mejor llevarla con un profesional']),
+      h2('Por qué se opaca la plata 925'),
+      p('La plata 925 (92.5% plata pura, 7.5% de otro metal, casi siempre cobre) reacciona con el azufre que hay en el aire, el sudor, los perfumes y algunas cremas — esa reacción es lo que crea la capa oscura o amarillenta que ves con el tiempo. No es óxido ni corrosión real, y no significa que la pieza sea de baja calidad: hasta la plata más fina del mundo se opaca si nunca se limpia. De hecho, entre más la uses, menos se opaca — el roce constante con la piel retrasa la reacción.'),
+      h2('Limpieza rápida del día a día'),
+      p('Para el mantenimiento normal no necesitas ningún producto: un paño suave de microfibra (el mismo tipo que usas para lentes) es suficiente para quitar la opacidad ligera y la grasa acumulada. Frota con movimientos cortos, en la misma dirección, sin presionar fuerte. Esto toma menos de un minuto, y si lo haces cada semana tu plata casi nunca va a llegar a verse realmente opaca.'),
+      h2('Limpieza profunda cuando ya se ve opaca'),
       ul([
-        'Mezcla agua tibia con unas gotas de jabón neutro (no detergente de trastes).',
-        'Sumerge la pieza 2–3 minutos.',
-        'Talla suavemente con un cepillo de cerdas muy suaves (uno de dientes viejo sirve) en las hendiduras.',
-        'Enjuaga con agua tibia y seca de inmediato con un paño — nunca al aire, deja manchas.',
+        'Mezcla agua tibia con unas gotas de jabón neutro (nunca detergente de trastes, es demasiado agresivo).',
+        'Sumerge la pieza entre 2 y 3 minutos.',
+        'Talla suavemente las hendiduras con un cepillo de cerdas muy suaves — uno de dientes que ya no uses funciona bien.',
+        'Enjuaga con agua tibia y seca de inmediato con un paño; nunca dejes que se seque al aire, porque el agua deja marcas más difíciles de quitar que la opacidad original.',
       ]),
-      h2('Qué NO usar'),
-      p('Evita pasta de dientes, bicarbonato en piezas con piedra, y cualquier líquido con cloro (incluida el agua de la alberca) — opacan o dañan permanentemente el acabado y, si la pieza tiene piedra engastada, pueden aflojar el engaste.'),
-      h2('Para piezas con piedra'),
-      p('Limpia solo el metal con el paño seco y evita sumergirlas — algunas piedras (perla, esmeralda, ópalo) son porosas o sensibles al agua y al jabón.'),
+      h2('Qué productos nunca usar'),
+      p('Evita la pasta de dientes (mucha gente la recomienda, pero es abrasiva y raya el metal con el uso repetido), el bicarbonato en piezas con piedra (puede opacar la piedra o aflojar el engaste), y cualquier líquido con cloro — incluida el agua de la alberca o del mar. El cloro reacciona con la plata de forma mucho más agresiva que el aire normal y puede dañar el acabado de forma permanente, no solo opacarlo.'),
+      h2('Cómo limpiar piezas con piedra'),
+      p('Si tu pieza tiene piedra — cualquiera, no solo las delicadas — la regla más segura es limpiar solo el metal con el paño húmedo, sin sumergir la pieza completa. Algunas piedras como la perla, la esmeralda o el ópalo son porosas y absorben agua y jabón, lo que las opaca o decolora con el tiempo. Si no estás segura de qué piedra tiene tu pieza, trata siempre con el método más cuidadoso.'),
+      h2('Cada cuánto limpiar tu plata 925'),
+      p('No hay una regla única — depende de qué tanto la uses. Una pieza que usas todos los días (un anillo, una cadena que nunca te quitas) se beneficia de la limpieza rápida cada semana y la profunda cada 3 o 4 semanas. Una pieza que usas ocasionalmente puede quedarse guardada meses sin opacarse mucho, y basta con limpiarla antes de la próxima vez que te la pongas.'),
+      h2('Cómo guardarla para que dure más'),
+      p('El aire y la humedad son los principales causantes de la opacidad, así que guardar bien tu plata retrasa el problema antes de que empiece. Guárdala en una bolsa cerrada o un joyero forrado de tela, lejos de la humedad del baño, y separada de otras piezas para que no se rayen entre sí. Si vives en una zona muy húmeda, una bolsita de gel de sílice — la misma que viene en cajas de zapatos — dentro del joyero ayuda bastante a mantenerla brillante por más tiempo. Quitártela antes de dormir, bañarte o hacer ejercicio también reduce el contacto con sudor y productos que aceleran la opacidad.'),
+      h2('Cuándo mejor llevarla con un profesional'),
+      p('La limpieza en casa resuelve la gran mayoría de los casos, pero hay excepciones donde vale la pena llevar la pieza con un joyero de confianza en vez de arriesgarla tú misma: piezas con grabados muy finos o filigrana (donde un cepillo puede dañar el detalle), piezas antiguas o de mucho valor sentimental, y cualquier pieza donde la piedra se sienta floja al tacto — eso necesita reparación antes de cualquier limpieza, no después. Si tu pieza pasó por un accidente (se cayó, se dobló) en vez de opacarse por uso normal, también es mejor que la revise alguien antes de limpiarla, para no esconder un daño que ya existía.'),
     ],
   },
   {
-    titulo: 'Cómo limpiar cadenas y anillos de oro sin dañarlos',
+    // Keyword: "cómo limpiar cadenas de oro" — 260/mes (la mejor del grupo
+    // "limpiar oro"; "cómo limpiar anillos de oro" queda como sub-tema).
+    titulo: 'Cómo limpiar cadenas de oro en casa sin dañarlas',
     slug: 'como-limpiar-cadenas-de-oro',
     categoria_blog: 'cuidado-de-joyas',
-    resumen: 'El oro no se opaca como la plata, pero acumula grasa y residuos de crema o perfume que le quitan brillo. Así se limpia en casa de forma segura.',
-    seo_titulo: 'Cómo limpiar cadenas y anillos de oro',
-    seo_descripcion: 'Cómo limpiar cadenas, anillos y esclavas de oro en casa sin productos agresivos, y qué evitar si la pieza tiene piedra.',
+    resumen: 'El oro no se opaca como la plata, pero acumula grasa y residuos de crema o perfume que le quitan brillo. Así se limpian cadenas y anillos de oro en casa.',
+    seo_titulo: 'Cómo limpiar cadenas de oro en casa',
+    seo_descripcion: 'Guía completa para limpiar cadenas y anillos de oro en casa: paso a paso, cuidado con piedra engastada, qué evitar y cada cuánto hacerlo.',
     seo_keywords: 'como limpiar cadenas de oro, como limpiar anillos de oro, limpiar oro en casa',
     contenido: [
-      p('A diferencia de la plata, el oro no se oxida ni se opaca por el aire — lo que le quita brillo es la acumulación de grasa natural de la piel, crema, perfume y jabón.'),
-      h2('Paso a paso'),
+      p('A diferencia de la plata, el oro no se oxida ni se opaca por el aire — pero pierde brillo igual, por una razón distinta. Esto es todo lo que necesitas para limpiar cadenas de oro (y anillos, esclavas o cualquier pieza de oro) en casa, sin dañarlas.'),
+      toc(['Por qué el oro pierde brillo', 'Limpieza paso a paso en casa', 'Cuidado especial en cadenas: broches y eslabones', 'Anillos y esclavas: las zonas que más se ensucian', 'Oro laminado o de baño: cuidado distinto', 'Piezas con piedra engastada', 'Qué NO hacer nunca', 'Cada cuánto limpiarlo']),
+      h2('Por qué el oro pierde brillo'),
+      p('El oro es un metal muy estable — no reacciona con el aire ni con el sudor como lo hace la plata. Lo que le quita brillo es mucho más simple: la acumulación de grasa natural de la piel, residuos de crema, perfume, protector solar y jabón que no se enjuaga del todo. Esa capa fina opaca el brillo del oro aunque el metal en sí esté perfecto — por eso una limpieza sencilla suele devolverle el brillo original de inmediato, sin necesidad de productos especiales ni de llevar la pieza a ningún lado.'),
+      h2('Limpieza paso a paso en casa'),
       ul([
-        'Agua tibia con unas gotas de jabón neutro, remojar 5–10 minutos.',
-        'Cepillo de cerdas suaves para llegar a eslabones y hendiduras (en cadenas, cierres y broches).',
-        'Enjuagar bien — el jabón que queda opaca el brillo casi tanto como la grasa.',
-        'Secar con un paño de microfibra, sin frotar fuerte.',
+        'Prepara agua tibia con unas gotas de jabón neutro y remoja la pieza entre 5 y 10 minutos.',
+        'Usa un cepillo de cerdas suaves para llegar a eslabones y hendiduras — en cadenas, presta atención especial a cierres y broches, donde se acumula más grasa.',
+        'Enjuaga muy bien: el jabón que queda opaca el brillo casi tanto como la grasa que estabas quitando.',
+        'Seca con un paño de microfibra, sin frotar fuerte, y deja que termine de secar al aire antes de guardarla.',
       ]),
-      h2('Con piedra engastada'),
-      p('Evita remojar piezas con piedras pegadas (no engastadas a presión) o con relleno/resina — limpia solo el metal con el paño húmedo y evita productos abrasivos.'),
-      h2('Cada cuánto limpiarla'),
-      p('Una pieza de uso diario (cadena, anillo de todos los días) se beneficia de esta limpieza cada 2–4 semanas; una que usas ocasionalmente, antes de cada uso especial.'),
+      h2('Cuidado especial en cadenas: broches y eslabones'),
+      p('Las cadenas acumulan grasa y residuos en dos puntos que se limpian con más trabajo: el broche (donde el roce constante con la piel del cuello concentra grasa) y los eslabones muy cerrados, donde el cepillo no siempre entra bien. Para esos puntos, después del remojo, pasa un hilo dental sin sabor entre los eslabones más apretados — arrastra la grasa que el cepillo no alcanza sin rayar el metal. Revisa también el broche en sí: si se siente duro o cuesta trabajo cerrarlo, un poco de esta misma limpieza suele destrabarlo sin necesidad de forzarlo.'),
+      h2('Anillos y esclavas: las zonas que más se ensucian'),
+      p('En anillos, la parte interna (la que toca la piel todo el día) acumula más grasa que la parte visible — no te saltes esa zona aunque parezca limpia por fuera. En esclavas y pulseras, revisa el cierre y las zonas donde la pieza se dobla, porque ahí se atrapa más suciedad que en el resto de la superficie lisa.'),
+      h2('Oro laminado o de baño: cuidado distinto'),
+      p('Todo lo anterior aplica a oro real (10k, 14k, etc.), pero si tu pieza es de oro laminado o chapado (una capa delgada de oro sobre otro metal base, no oro de principio a fin), el cuidado cambia: evita remojarla por tiempos largos y nunca uses cepillo, porque la capa de oro es muy fina y se desgasta con el roce repetido, dejando ver el metal de abajo. Un paño seco y limpieza ocasional es más seguro para ese tipo de piezas que el proceso completo de remojo que sí es seguro para oro real.'),
+      h2('Piezas con piedra engastada'),
+      p('Evita remojar piezas con piedras pegadas con resina o relleno (no engastadas a presión con garras de metal) — el agua puede aflojar el pegamento con el tiempo. En esos casos, limpia solo el metal con el paño húmedo y evita productos abrasivos cerca de la piedra, incluso si la piedra en sí parece resistente.'),
+      h2('Qué NO hacer nunca'),
+      p('No uses cloro ni productos de limpieza del hogar (multiusos, limpiavidrios) — muchos contienen amoniaco, que puede debilitar aleaciones de oro con el tiempo. Tampoco uses cepillos de cerdas duras ni estropajos: el oro es más suave de lo que parece y se raya con facilidad, sobre todo el oro 10k con más aleación en su composición. Guardar varias piezas de oro sueltas en el mismo cajón, sin separarlas, también causa rayones acumulados que a la larga opacan el brillo tanto como la grasa.'),
+      h2('Cada cuánto limpiarlo'),
+      p('Una pieza de uso diario — la cadena o el anillo que nunca te quitas — se beneficia de esta limpieza cada 2 a 4 semanas. Una pieza que usas ocasionalmente aguanta perfectamente bien limpiarse solo antes de cada uso especial, sin perder brillo entre una vez y otra si la guardas bien guardada mientras tanto. Guardarla en una bolsa cerrada, separada de otras piezas, también reduce cuánto se ensucia entre limpiezas — el oro que respira aire libre y roza otras piezas acumula polvo y se raya más rápido que el que está bien resguardado.'),
     ],
   },
   {
-    titulo: 'Qué es la plata 925 y por qué es tan popular',
-    slug: 'que-es-plata-925',
+    // Keyword retargeteada 28-sep-2026: "plata 925 que significa" (2,400/mes)
+    // supera por mucho a "qué es plata 925" (1,000/mes) que se usaba antes —
+    // se suma también "es buena" (390) y "precio gramo" (880) como subtemas
+    // reales de la misma búsqueda.
+    titulo: 'Plata 925: qué significa el sello y si es de buena calidad',
+    slug: 'plata-925-que-significa',
     categoria_blog: 'tips-de-joyeria',
-    resumen: 'El "925" en una pieza de plata no es un capricho de marketing — es el estándar internacional de calidad. Esto es lo que significa y qué revisar antes de comprar.',
-    seo_titulo: 'Qué es la plata 925',
-    seo_descripcion: 'Qué significa el sello 925 en la plata, por qué se usa en joyería, y cómo distinguirla de la plata de baja ley.',
-    seo_keywords: 'que es plata 925, plata ley 925, plata 925 significado',
+    resumen: 'El "925" en una pieza de plata no es un capricho de marketing — es el estándar internacional de calidad. Esto es lo que significa, y por qué sí es una buena elección.',
+    seo_titulo: 'Plata 925: qué significa y si es buena calidad',
+    seo_descripcion: 'Qué significa el sello 925 en la plata, si es de buena calidad, cómo identificarla, qué determina su precio y cuánto dura con cuidado básico.',
+    seo_keywords: 'plata 925 que significa, plata 925 es buena, plata 925 precio, que es plata 925',
     contenido: [
-      p('"925" significa que la pieza contiene 92.5% plata pura y 7.5% de otro metal (casi siempre cobre) — la plata pura al 100% es demasiado blanda para joyería de uso diario, así que esta aleación es el estándar mundial de calidad, no un relleno barato.'),
-      h2('Por qué se usa cobre'),
-      p('El cobre le da dureza y resistencia sin cambiar el color ni el brillo característico de la plata. Es la misma proporción que usan las principales casas de joyería del mundo.'),
-      h2('Cómo identificarla'),
-      p('Busca el sello "925" o ".925" grabado en la pieza, generalmente cerca del cierre (en cadenas y pulseras) o en la parte interna del aro (en anillos). Si una pieza se vende como "plata" sin ese sello ni especificar la ley, vale la pena preguntar.'),
-      h2('Cuánto dura'),
-      p('Con el cuidado básico (ver nuestra guía de limpieza), una pieza de plata 925 dura años sin perder su acabado — lo que se opaca con el tiempo es normal y se revierte limpiando, no significa que la pieza se esté "gastando".'),
+      p('"925" es, con mucha diferencia, la duda más buscada sobre este material — miles de personas al mes preguntan qué significa el número y si vale la pena. Esto es lo que de verdad hay detrás del sello.'),
+      toc(['Qué significa el número 925', 'Por qué se le agrega cobre', '¿Es la plata 925 de buena calidad?', 'Cómo identificarla (el sello real)', 'Qué determina el precio de la plata 925', 'Plata 925 vs. plata de fantasía o alpaca', 'Plata 925 y piel sensible', 'Cuánto dura con cuidado básico']),
+      h2('Qué significa el número 925'),
+      p('"925" significa que la pieza contiene 92.5% plata pura y 7.5% de otro metal — casi siempre cobre. La plata pura al 100% (también llamada plata fina) es demasiado blanda para joyería de uso diario: se doblaría y rayaría con facilidad. Esta aleación es el estándar mundial de calidad en joyería de plata, no un relleno barato ni una forma de "estirar" el metal — es, literalmente, la forma en que se hace bien la plata para que dure.'),
+      h2('Por qué se le agrega cobre'),
+      p('El cobre le da dureza y resistencia a la plata sin cambiar su color ni su brillo característico — a simple vista, plata 925 y plata pura se ven prácticamente igual. Es la misma proporción que usan las principales casas de joyería del mundo desde hace siglos; no es una fórmula exclusiva de ningún fabricante, es un estándar internacional documentado y reconocido en cualquier país, no solo en México.'),
+      h2('¿Es la plata 925 de buena calidad?'),
+      p('Sí, sin reservas — es el estándar de calidad real en joyería de plata, el mismo que usan joyerías de lujo en cualquier país. La confusión viene de que existe joyería de "plata" muy barata que en realidad es plata bañada sobre otro metal (o directamente alpaca, que no tiene plata) — esas piezas pierden el baño con el uso y muestran el metal de abajo. La plata 925 real es plata de principio a fin, solo que reforzada; por eso se opaca y se limpia, pero nunca "se le quita lo plateado", sin importar cuántos años la uses.'),
+      h2('Cómo identificarla (el sello real)'),
+      p('Busca el sello "925" o ".925" grabado directamente en la pieza — generalmente cerca del cierre en cadenas y pulseras, o en la parte interna del aro en anillos. Es un grabado permanente, no una etiqueta que se despega o que desaparece con el tiempo. Si una pieza se vende como "plata" sin ese sello ni especificar la ley en ningún lado, vale la pena preguntar directamente qué material es antes de comprar — un vendedor confiable siempre puede confirmarte esto sin problema.'),
+      h2('Qué determina el precio de la plata 925'),
+      p('El precio de una pieza no depende solo del gramaje de plata — también pesa el diseño (piezas más elaboradas cuestan más mano de obra), si lleva piedra, y el acabado. Por eso dos piezas del mismo peso en plata pueden tener precios distintos sin que ninguna esté "mal cobrada". El gramaje sí es la base del cálculo, pero nunca es el único factor — dos anillos del mismo peso, uno liso y otro con filigrana detallada, van a costar distinto aunque lleven exactamente la misma cantidad de plata 925.'),
+      h2('Plata 925 vs. plata de fantasía o alpaca'),
+      p('La "plata de fantasía" o alpaca no contiene plata real — es una aleación de otros metales (generalmente cobre, níquel y zinc) que imita el color plateado. Es más barata, pero no tiene el brillo característico de la plata real a largo plazo, puede oxidarse de forma distinta, y en algunas personas causa reacciones en la piel por el níquel. La plata 925, al ser plata real, no tiene ese problema — es una diferencia real de material, no solo de precio o de marketing.'),
+      h2('Plata 925 y piel sensible'),
+      p('A diferencia de la alpaca o los metales base que suelen causar reacciones alérgicas (por el níquel que contienen), la plata 925 real es una de las opciones más seguras para piel sensible — el cobre de la aleación rara vez causa reacciones, y la plata en sí tiene además propiedades naturalmente antibacterianas. Si alguna vez te ha salido un anillo verdoso o te ha irritado la piel con joyería "de plata" barata, es una señal casi segura de que esa pieza no era plata 925 real, sino una aleación distinta con níquel.'),
+      h2('Cuánto dura con cuidado básico'),
+      {
+        type: 'paragraph',
+        children: [
+          { type: 'text', text: 'Con el cuidado correcto (revisa nuestra ' },
+          link('guía completa de cómo limpiar plata 925', 'https://medalladeoro.com.mx/blog/como-limpiar-plata-925'),
+          { type: 'text', text: '), una pieza de plata 925 dura años sin perder su acabado real. Lo que se opaca con el tiempo es completamente normal y se revierte limpiando — no significa que la pieza se esté "gastando" ni que esté perdiendo material. Es plata real del principio al fin de su vida útil, con cuidado mínimo.' },
+        ],
+      },
     ],
   },
   {
-    titulo: 'Oro de 10k vs 14k: cuál te conviene más',
-    slug: 'oro-10k-vs-14k-diferencias',
+    // Keyword retargeteada 28-sep-2026: "oro 10k precio" (9,900/mes) tiene
+    // muchísimo más volumen real que la comparación exacta "oro 10k vs 14k"
+    // (~30/mes) — se conserva la comparación como sección, no como eje.
+    titulo: 'Precio del oro 10k en México: qué lo determina',
+    slug: 'precio-oro-10k',
     categoria_blog: 'tips-de-joyeria',
-    resumen: 'La diferencia entre oro 10k y 14k no es "cuál es mejor" sino para qué la vas a usar — cada uno tiene ventajas reales.',
-    seo_titulo: 'Oro 10k vs 14k: diferencias',
-    seo_descripcion: 'Diferencia real entre oro de 10k y 14k: pureza, durabilidad, color y para qué tipo de pieza conviene cada uno.',
-    seo_keywords: 'oro 10k vs 14k, diferencia oro 10k y 14k, que es oro 10k',
+    resumen: 'El precio del oro 10k no tiene un promedio único — depende del peso, el diseño y el precio del oro del día. Esto es lo que de verdad influye, y por qué el 10k suele costar menos que el 14k.',
+    seo_titulo: 'Precio del oro 10k en México: qué lo determina',
+    seo_descripcion: 'Qué determina el precio del oro 10k: peso, diseño, mano de obra y precio del oro del día. Incluye la diferencia real entre oro 10k y 14k.',
+    seo_keywords: 'oro 10k precio, precio oro 10k, oro 10k vs 14k, que es oro 10k',
     contenido: [
-      p('El número (10k, 14k) indica cuántas partes de 24 son oro puro: el oro 10k tiene 10/24 partes de oro puro (41.7%) y el 14k tiene 14/24 (58.5%). El resto es aleación de otros metales que le dan cuerpo a la pieza.'),
-      h2('Oro 10k: más resistente, más accesible'),
-      p('Al tener más aleación, el oro 10k es más duro y resistente a rayones y golpes — ideal para piezas de uso diario (anillos que no te quitas, cadenas de trabajo) y para quien busca el color y el prestigio del oro a un precio más accesible.'),
-      h2('Oro 14k: más pureza, tono más intenso'),
-      p('Tiene un color más profundo y mayor proporción de oro puro, pero es más suave — se raya con más facilidad y conviene más en piezas que se usan con cuidado (aretes, dijes) que en las de contacto constante.'),
-      h2('¿Cuál es "mejor"?'),
-      p('Ninguno es superior en general — depende del uso. Para una pieza que se usa todos los días y tiene que aguantar el trote diario, el 10k suele ser la decisión más práctica; ambos son oro real, con el sello de kilataje correspondiente.'),
+      p('"Oro 10k precio" es una de las búsquedas más frecuentes en joyería en México — y la respuesta honesta es que no existe un precio fijo, porque depende de varias cosas concretas. Esto es exactamente lo que determina cuánto cuesta una pieza de oro 10k.'),
+      toc(['Qué es el oro 10k (el número explicado)', 'Qué determina el precio real', 'Oro 10k vs 14k: la diferencia real', 'Por qué el 10k suele costar menos', 'Por qué el 10k es más resistente', 'Oro laminado: por qué no es lo mismo', 'Cómo saber que es oro real', 'Dónde ver precios reales, no promedios']),
+      h2('Qué es el oro 10k (el número explicado)'),
+      p('El número indica cuántas partes de 24 son oro puro: el oro 10k tiene 10 de 24 partes de oro puro, es decir 41.7% de oro real. El resto (58.3%) es aleación de otros metales — casi siempre cobre, plata o zinc — que le dan cuerpo, color y, sobre todo, dureza a la pieza. Sigue siendo oro real y se vende con su sello de kilataje correspondiente; no es una imitación ni un baño.'),
+      h2('Qué determina el precio real'),
+      p('Cuatro cosas concretas, no una: el peso en gramos de la pieza (a más gramos, más oro real, más precio), el precio internacional del oro ese día (fluctúa constantemente, como cualquier metal precioso), el diseño y la mano de obra (una pieza más elaborada cuesta más trabajo que una lisa), y si lleva piedra o no. Cualquier cifra de "precio del oro 10k" que no considere estas cuatro variables es, en el mejor de los casos, un punto de partida — nunca el precio real de una pieza específica.'),
+      h2('Oro 10k vs 14k: la diferencia real'),
+      p('El oro 14k tiene 14 de 24 partes de oro puro (58.5%), casi 17 puntos porcentuales más que el 10k. Eso significa más oro real por gramo — y por eso, a igual peso, una pieza de 14k casi siempre cuesta más que una de 10k. La diferencia no es de "calidad" en el sentido de que uno sea falso y el otro no: ambos son oro real, solo con distinta proporción de aleación.'),
+      h2('Por qué el 10k suele costar menos'),
+      p('Al tener menos oro puro y más aleación, el oro 10k es intrínsecamente más económico de producir que el 14k al mismo peso — es matemática simple de cuánto oro real lleva cada pieza. Eso lo hace la opción más accesible para tener oro real (no chapado, no laminado) sin pagar el precio del 14k o el 18k, ideal para quien empieza su colección de joyería fina o busca piezas de uso diario sin comprometer tanto presupuesto.'),
+      h2('Por qué el 10k es más resistente'),
+      p('Al tener más aleación, el oro 10k es también más duro y resistente a rayones y golpes que el 14k o el 18k — la misma razón que lo hace más accesible lo hace más práctico. Es la elección más común para anillos que no te quitas nunca, cadenas de uso diario, y cualquier pieza que va a estar en contacto constante con actividades del día a día.'),
+      h2('Oro laminado: por qué no es lo mismo'),
+      p('El oro laminado (o chapado) es un metal base — casi siempre bronce o cobre — con una capa delgada de oro real encima, no oro de principio a fin. Es más barato precisamente porque lleva muchísimo menos oro real por pieza, y esa capa se desgasta con el uso: después de meses o años, empieza a verse el metal de abajo, sobre todo en zonas de roce constante. El oro 10k, en cambio, es sólido — la misma aleación de principio a fin de la pieza, por eso no "se le quita el oro" con el tiempo, solo pierde brillo temporal que se recupera limpiando.'),
+      h2('Cómo saber que es oro real'),
+      p('Busca el sello de kilataje grabado en la pieza — "10k" o "10kt" — generalmente en la parte interna en anillos, o cerca del broche en cadenas y pulseras. Ese sello es un grabado permanente y es tu garantía de que estás comprando oro real con una ley específica, no una pieza chapada o laminada que perderá el color con el uso. Si tienes dudas sobre una pieza que ya tienes, revisa primero ese sello antes que cualquier otra prueba casera — es la fuente más confiable que existe.'),
+      h2('Dónde ver precios reales, no promedios'),
+      p('Con las cuatro variables claras (peso, precio del oro del día, diseño y si lleva piedra), lo más honesto es ver precio por pieza específica en vez de buscar un número único para "el oro 10k" en general. Cada pieza del catálogo tiene su propio precio, calculado con esas mismas variables — así comparas manzanas con manzanas, no un promedio contra una pieza real.'),
+      {
+        type: 'paragraph',
+        children: [
+          { type: 'text', text: 'Puedes ver piezas reales en oro 10k, con precio exacto por pieza (no un promedio), en el catálogo de ' },
+          link('Oro 10k', 'https://medalladeoro.com.mx/material/oro-10k'),
+          { type: 'text', text: '.' },
+        ],
+      },
     ],
   },
   {
-    titulo: 'Cómo elegir el anillo de compromiso perfecto',
-    slug: 'como-elegir-anillo-de-compromiso',
+    // Keyword retargeteada 28-sep-2026: "anillos de compromiso de oro"
+    // (14,800/mes) es la sub-keyword real más grande del post — "cómo elegir
+    // anillo de compromiso" no tiene volumen propio medible.
+    titulo: 'Anillos de compromiso de oro: cómo elegir el tuyo',
+    slug: 'anillos-de-compromiso-de-oro',
     categoria_blog: 'guias-de-regalo',
-    resumen: 'Antes de comprar un anillo de compromiso, estas son las preguntas que de verdad importan — de estilo, piedra y talla.',
-    seo_titulo: 'Cómo elegir un anillo de compromiso',
-    seo_descripcion: 'Guía para elegir anillo de compromiso: solitario vs churumbela, con piedra o sin piedra, y cómo acertar la talla sin arruinar la sorpresa.',
-    seo_keywords: 'como elegir anillo de compromiso, anillo de compromiso solitario, anillo de compromiso sin piedra',
+    resumen: 'Los anillos de compromiso de oro son la elección más buscada en México. Estas son las decisiones reales que importan — material, estilo, piedra y talla.',
+    seo_titulo: 'Anillos de compromiso de oro: cómo elegir',
+    seo_descripcion: 'Guía completa para elegir un anillo de compromiso de oro: oro 10k o plata 925, solitario vs churumbela, con piedra o sin piedra, y cómo acertar la talla.',
+    seo_keywords: 'anillos de compromiso de oro, anillos de compromiso de oro para mujer, como elegir anillo de compromiso',
     contenido: [
-      p('No existe un anillo de compromiso "correcto" — existe el correcto para la persona que lo va a usar todos los días. Estas son las decisiones reales, no las de catálogo.'),
+      p('No existe un anillo de compromiso de oro "correcto" — existe el correcto para la persona que lo va a usar todos los días por el resto de su vida. Estas son las decisiones reales que importan, no las de catálogo.'),
+      toc(['Por qué el oro es la elección más buscada', 'Oro 10k o plata 925 para tu anillo', 'Solitario, churumbela u otro estilo', '¿Con piedra o sin piedra?', 'Qué piedra elegir si quieres una', 'La talla, sin arruinar la sorpresa', 'Cómo cuidarlo una vez que lo tienes', 'Presupuesto real']),
+      h2('Por qué el oro es la elección más buscada'),
+      p('Entre quienes buscan anillo de compromiso, el oro es, por mucho, el material más buscado — muy por encima de la plata o del oro blanco específicamente. Tiene sentido: es el material tradicionalmente asociado al compromiso en la mayoría de las culturas, envejece bien con el uso diario, y su color cálido combina con casi cualquier tono de piel. Eso no significa que sea la única opción correcta — solo que, si no tienes preferencia previa, el oro sigue siendo la apuesta más segura hoy en día.'),
+      h2('Oro 10k o plata 925 para tu anillo'),
+      p('El oro 10k es la opción más resistente y accesible dentro del oro real — ideal si buscas un anillo que se use todos los días sin cuidados especiales. La plata 925 es una alternativa igual de real y válida, más económica, con un brillo distinto (más frío, más claro) que también tiene muchísimos seguidores. Ninguna es "menos" anillo de compromiso que la otra; la decisión es de gusto y presupuesto, no de jerarquía.'),
       h2('Solitario, churumbela u otro estilo'),
-      p('El solitario (una sola piedra central, casi siempre diamante) es el más asociado a "anillo de compromiso" en el imaginario general. La churumbela — un anillo liso, tradicional en México — es una alternativa igual de válida, más discreta, y suele combinarse con la argolla de matrimonio después.'),
+      p('El solitario — una sola piedra central, casi siempre diamante — es el estilo más asociado a "anillo de compromiso" en el imaginario general. La churumbela, el anillo liso tradicional mexicano, es una alternativa igual de válida y muy buscada en México específicamente: más discreta, más resistente al no tener piedra que enganchar, y que suele combinarse con la argolla de matrimonio después de la boda, dejando un solo anillo continuo entre compromiso y matrimonio.'),
       h2('¿Con piedra o sin piedra?'),
-      p('Un anillo sin piedra no es "menos" anillo de compromiso — muchas parejas lo prefieren precisamente porque no estorba en el día a día y es más resistente. Si sí quieres piedra, diamante es la opción clásica, y esmeralda, zafiro o rubí dan un resultado igual de serio con más color.'),
+      p('Un anillo sin piedra no es "menos" anillo de compromiso — muchas parejas lo prefieren precisamente porque no estorba en el día a día, no se engancha en la ropa o el cabello, y es más resistente a golpes. Es una preferencia de estilo de vida real, no una limitación de presupuesto, aunque también suele costar menos que un anillo con piedra del mismo material y el mismo peso.'),
+      h2('Qué piedra elegir si quieres una'),
+      p('Si sí quieres piedra, el diamante es la opción clásica y la más buscada, por su dureza y su brillo característico. La esmeralda y el zafiro dan un resultado igual de serio con mucho más color, a un volumen de búsqueda parecido entre sí — ninguna es "la alternativa" de la otra, ambas tienen seguidores propios y personalidad distinta. El rubí, aunque menos buscado que las anteriores, es una tercera opción real para quien quiere algo distinto y con más color todavía.'),
       h2('La talla, sin arruinar la sorpresa'),
-      p('Pide prestado (con discreción) un anillo que la persona ya use en el dedo correspondiente y llévalo como referencia, o pregunta a alguien de su confianza. Casi todos los anillos se pueden ajustar una talla arriba o abajo después de la compra, así que no tiene que ser perfecto al primer intento.'),
-      h2('Presupuesto'),
-      p('El precio de un anillo de compromiso varía muchísimo según el material y si lleva piedra o no — define primero cuánto quieres invertir, y a partir de ahí elige entre oro 10k o plata 925, y con o sin piedra.'),
+      p('Pide prestado, con discreción, un anillo que la persona ya use en el dedo correspondiente y llévalo como referencia — o pregunta a alguien de su confianza que pueda ayudarte sin arruinar la sorpresa. Casi todos los anillos se pueden ajustar una talla arriba o abajo después de la compra, así que no tiene que ser perfecto al primer intento; es más importante acertar el estilo que la talla exacta. Otra opción menos riesgosa: elegir el anillo juntos después de la propuesta, y usar algo simbólico (un anillo temporal, un dije) para el momento mismo.'),
+      h2('Cómo cuidarlo una vez que lo tienes'),
+      {
+        type: 'paragraph',
+        children: [
+          { type: 'text', text: 'Un anillo de compromiso se usa todos los días, así que va a necesitar limpieza básica de vez en cuando — la buena noticia es que es sencillo. Si es de oro, sigue nuestra ' },
+          link('guía de cómo limpiar cadenas y anillos de oro', 'https://medalladeoro.com.mx/blog/como-limpiar-cadenas-de-oro'),
+          { type: 'text', text: '; si es de plata 925, la ' },
+          link('guía de cómo limpiar plata 925', 'https://medalladeoro.com.mx/blog/como-limpiar-plata-925'),
+          { type: 'text', text: ' te cubre igual de bien. Quitártelo antes de hacer ejercicio, nadar o usar productos de limpieza del hogar alarga muchísimo su vida — sobre todo si lleva piedra, que suele ser la parte más delicada de la pieza.' },
+        ],
+      },
+      h2('Presupuesto real'),
+      p('El precio de un anillo de compromiso varía muchísimo según el material y si lleva piedra o no — define primero cuánto quieres invertir, y a partir de ahí elige entre oro 10k o plata 925, y con o sin piedra. Ninguna combinación es "la correcta"; la correcta es la que puedas dar de corazón, sin que el presupuesto sea motivo de estrés en un momento que debería ser solo felicidad.'),
+      {
+        type: 'paragraph',
+        children: [
+          { type: 'text', text: 'Ve el catálogo completo, con precio real de cada pieza, en ' },
+          link('Anillos de Compromiso', 'https://medalladeoro.com.mx/category/anillos-de-compromiso'),
+          { type: 'text', text: ' y en ' },
+          link('Churumbela', 'https://medalladeoro.com.mx/category/churumbela'),
+          { type: 'text', text: '.' },
+        ],
+      },
     ],
   },
   {
@@ -1112,27 +1230,38 @@ const BLOG_POSTS_SEED = [
     // Google Ads Keyword Planner, 26-sep-2026) en vez de inventar precios de
     // mercado que nadie puede verificar. El precio real de cada pieza vive
     // en el catálogo, no en este post.
-    titulo: 'Qué buscan los mexicanos antes de comprar un anillo de compromiso (datos reales de búsqueda)',
-    slug: 'que-buscan-antes-de-comprar-anillo-de-compromiso',
+    // Keyword: "precio anillo de compromiso" — 3,600/mes (vía "anillos de
+    // compromiso precios"), ajustado 28-sep-2026 (slug/título originales no
+    // contenían la keyword real).
+    titulo: 'Precio de un anillo de compromiso en México: qué lo determina',
+    slug: 'precio-anillo-de-compromiso',
     categoria_blog: 'tips-de-joyeria',
-    resumen: 'Analizamos el comportamiento real de búsqueda en México: cuánta gente busca cada estilo, qué preguntan antes de comprar, y qué determina el precio real de un anillo de compromiso.',
-    seo_titulo: 'Qué buscan los mexicanos antes de comprar un anillo de compromiso',
-    seo_descripcion: 'Datos reales de búsqueda en México sobre anillos de compromiso: estilos más buscados, qué preguntan los compradores, y qué determina el precio real.',
-    seo_keywords: 'cuanto cuesta un anillo de compromiso, anillos de compromiso mexico, precio anillo de compromiso',
+    resumen: 'Qué determina el precio real de un anillo de compromiso en México — con datos reales de búsqueda: estilos más buscados y qué preguntan los compradores antes de comprar.',
+    seo_titulo: 'Precio de un anillo de compromiso en México',
+    seo_descripcion: 'Qué determina el precio real de un anillo de compromiso en México, con datos reales de búsqueda: estilos más buscados y qué preguntan los compradores.',
+    seo_keywords: 'precio anillo de compromiso, cuanto cuesta un anillo de compromiso, anillos de compromiso mexico',
     contenido: [
-      p('"Anillos de compromiso" es, con mucha diferencia, el término de joyería más buscado en México: alrededor de 165,000 búsquedas al mes — más que todas las demás categorías de joyería juntas. Esto es lo que revela ese volumen sobre cómo compra la gente.'),
+      p('Antes de preguntar el precio de un anillo de compromiso, vale la pena ver el dato completo: "anillos de compromiso" es, con mucha diferencia, el término de joyería más buscado en México — alrededor de 165,000 búsquedas al mes, más que todas las demás categorías de joyería juntas. Esto es lo que revela ese volumen sobre cómo compra la gente, y qué determina de verdad el precio.'),
+      toc(['El término más buscado de todo el catálogo', 'El estilo que nadie esperaba: la churumbela', 'Con piedra, sin piedra, y qué piedra', 'Lo que de verdad preguntan antes de comprar', 'Qué determina el precio real', 'Por qué no existe un "precio promedio" honesto', 'Cómo comparar precios sin comprar a ciegas']),
+      h2('El término más buscado de todo el catálogo'),
+      p('Ningún otro tipo de joyería se acerca al volumen de búsqueda de "anillos de compromiso" en México — ni cadenas, ni argollas de matrimonio, ni ningún otro estilo de anillo. Eso significa que es, con diferencia, la decisión de compra de joyería más investigada antes de tomarse: la gente compara, pregunta precio, y busca antes de decidir, mucho más que con cualquier otra pieza — lo cual tiene sentido, dado lo que representa esta compra para quien la hace.'),
       h2('El estilo que nadie esperaba: la churumbela'),
-      p('El solitario (una sola piedra, casi siempre diamante) es el estilo más asociado a "anillo de compromiso", pero la churumbela — el anillo liso tradicional mexicano — tiene un volumen de búsqueda propio comparable al de una categoría de joyería completa. No es un estilo "de segunda": es una decisión real de miles de personas al mes.'),
+      p('El solitario — una sola piedra, casi siempre diamante — es el estilo más asociado a "anillo de compromiso" en el imaginario general. Pero la churumbela, el anillo liso tradicional mexicano, tiene un volumen de búsqueda propio comparable al de una categoría de joyería completa. No es un estilo "de segunda" ni una alternativa barata: es una decisión de estilo real de miles de personas al mes, y suele costar distinto al solitario precisamente por no llevar piedra.'),
       h2('Con piedra, sin piedra, y qué piedra'),
-      p('Entre quienes buscan piedra específica, diamante domina, seguido de esmeralda y zafiro a un volumen parecido entre sí, y rubí más atrás. Pero también hay búsqueda real de "sin piedra" — confirma que saltarse la piedra es una preferencia válida, no una limitación de presupuesto.'),
+      p('Entre quienes buscan piedra específica, el diamante domina la búsqueda, seguido de esmeralda y zafiro a un volumen parecido entre sí, y rubí más atrás. Pero también hay búsqueda real de "sin piedra" — confirma que saltarse la piedra es una preferencia de estilo tanto como de presupuesto. Cada una de estas decisiones (piedra o no, y cuál piedra) es, junto con el material, lo que más mueve el precio final de la pieza.'),
       h2('Lo que de verdad preguntan antes de comprar'),
       ul([
-        '"Cuánto cuesta" — la pregunta de precio más común, antes de cualquier otra.',
-        '"Dónde comprar" — validación de dónde confiar, no solo cuánto pagar.',
-        '"Con diamante" / "de oro" — el material y la piedra pesan más que la marca en la búsqueda inicial.',
+        '"Cuánto cuesta" — la pregunta de precio más común, antes de cualquier otra, confirma que el presupuesto es la primera duda real.',
+        '"Dónde comprar" — validación de dónde confiar la compra, no solo cuánto pagar por ella.',
+        '"Con diamante" / "de oro" — el material y la piedra pesan más en la búsqueda inicial que cualquier nombre de marca específico.',
       ]),
-      h2('Qué determina el precio real (no un promedio inventado)'),
-      p('El precio de un anillo de compromiso no tiene un "promedio nacional" honesto — depende de tres decisiones concretas: el material (oro 10k o plata 925), si lleva piedra y de qué tipo (diamante, esmeralda, zafiro, rubí, o ninguna), y el estilo (solitario, churumbela u otro). Cualquier cifra que no desglose esas tres variables es, en el mejor de los casos, una aproximación.'),
+      h2('Qué determina el precio real'),
+      p('El precio de un anillo de compromiso no tiene un "promedio nacional" honesto — depende de tres decisiones concretas: el material (oro 10k o plata 925), si lleva piedra y de qué tipo (diamante, esmeralda, zafiro, rubí, o ninguna), y el estilo (solitario, churumbela u otro). Cualquier cifra que no desglose esas tres variables es, en el mejor de los casos, una aproximación sin mucho valor real para decidir tu compra. El peso de la pieza y el nivel de detalle del diseño también pesan en el cálculo final, igual que en cualquier otra pieza de joyería fina.'),
+      h2('Por qué no existe un "precio promedio" honesto'),
+      p('Un promedio nacional mezclaría anillos de plata sin piedra con solitarios de oro y diamante grande — números tan distintos entre sí que el promedio no describe a ninguno de los dos con precisión. Es como preguntar "cuánto cuesta un coche": la respuesta honesta siempre es "depende de cuál", no una sola cifra. Cualquier sitio que te dé un solo número sin preguntarte material, piedra y estilo te está dando una aproximación, no un precio real.'),
+      h2('Cómo comparar precios sin comprar a ciegas'),
+      p('La forma correcta de comparar es fijar primero las tres variables (material, piedra, estilo) y después comparar precios de piezas equivalentes entre sí — no comparar el precio de una churumbela de plata contra un solitario de oro con diamante, porque no son la misma decisión de compra. Una vez que sabes qué combinación buscas, el precio real de esa combinación específica es mucho más fácil de evaluar, y mucho más justa que cualquier promedio genérico que hayas visto en otro lado antes de empezar a comparar en serio.'),
+      p('Si todavía no tienes claro qué combinación buscas, empieza por lo más fácil de decidir: el presupuesto máximo que quieres invertir. A partir de ahí, el material (oro 10k suele rendir más presupuesto que plata con piedra grande, por ejemplo) y el estilo se acomodan solos — es más fácil elegir entre pocas opciones ya filtradas por precio que comparar el catálogo completo sin ningún filtro de partida.'),
       {
         type: 'paragraph',
         children: [
@@ -1146,6 +1275,39 @@ const BLOG_POSTS_SEED = [
     ],
   },
 ];
+
+// Slugs/título/contenido reescritos 28-sep-2026 (reglas de contenido:
+// keyword real → título → 800+ palabras → tabla de contenido). Migra las
+// filas existentes por su slug viejo hacia los datos nuevos de
+// BLOG_POSTS_SEED en vez de crear un post duplicado — mismo cuidado que
+// renombrarPulsosAPulseras() con las filas de borrador/publicado.
+const POST_SLUGS_RENOMBRADOS = {
+  'que-es-plata-925': 'plata-925-que-significa',
+  'oro-10k-vs-14k-diferencias': 'precio-oro-10k',
+  'como-elegir-anillo-de-compromiso': 'anillos-de-compromiso-de-oro',
+  'que-buscan-antes-de-comprar-anillo-de-compromiso': 'precio-anillo-de-compromiso',
+};
+
+async function actualizarPostsRenombradosSiFaltan(strapi) {
+  let cambios = 0;
+  for (const [oldSlug, newSlug] of Object.entries(POST_SLUGS_RENOMBRADOS)) {
+    const nuevo = BLOG_POSTS_SEED.find((post) => post.slug === newSlug);
+    if (!nuevo) continue;
+    const filas = await strapi.db.query('api::blog-post.blog-post').findMany({ where: { slug: oldSlug } });
+    for (const fila of filas) {
+      await strapi.db.query('api::blog-post.blog-post').update({
+        where: { id: fila.id },
+        data: {
+          titulo: nuevo.titulo, slug: nuevo.slug, categoria_blog: nuevo.categoria_blog,
+          resumen: nuevo.resumen, seo_titulo: nuevo.seo_titulo, seo_descripcion: nuevo.seo_descripcion,
+          seo_keywords: nuevo.seo_keywords, contenido: nuevo.contenido,
+        },
+      });
+      cambios++;
+    }
+  }
+  if (cambios) strapi.log.info(`[bootstrap] ${cambios} post(s) de blog actualizados a las reglas de contenido de 800+ palabras / keyword real`);
+}
 
 async function sembrarBlogPostsSiFaltan(strapi) {
   let creados = 0;
@@ -1691,6 +1853,7 @@ module.exports = {
     await run('sembrarCategorias',           () => sembrarCategoriasSiVacio(strapi));
     await run('sembrarCategoriasProducto',  () => sembrarCategoriasProductoSiFaltan(strapi));
     await run('renombrarPulsosAPulseras',   () => renombrarPulsosAPulseras(strapi));
+    await run('actualizarPostsRenombrados', () => actualizarPostsRenombradosSiFaltan(strapi));
     await run('sembrarBlogPosts',           () => sembrarBlogPostsSiFaltan(strapi));
     await run('backfillColoresCategorias',  () => backfillColoresCategorias(strapi));
     await run('normalizarCategorias',       () => normalizarCategorias(strapi));
