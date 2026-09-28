@@ -11,6 +11,9 @@ export interface JoyeriaAtributosJoya extends Struct.ComponentSchema {
     conPiedra: Schema.Attribute.Boolean;
     kilates: Schema.Attribute.String;
     largoCm: Schema.Attribute.Decimal;
+    tipoAnillo: Schema.Attribute.Enumeration<
+      ['Compromiso', 'Solitario', 'Churumbela', 'Otro']
+    >;
     tipoPiedra: Schema.Attribute.String;
   };
 }

@@ -5,7 +5,7 @@ import {
   Home, Landmark, Building2, Flag, Briefcase, ListChecks,
   Megaphone, Contact, ShoppingBag, Boxes, DollarSign, Globe,
   FolderKanban, FileText, Palette, Layers, Link2, ChevronDown, Settings, Brain,
-  UserCog, Users, Workflow, Network,
+  UserCog, Users, Workflow, Network, BookOpen,
 } from "lucide-react"
 import { PortalMDOConfigModal } from "./PortalMDOConfigModal"
 
@@ -55,6 +55,7 @@ export const GRUPOS: NavGroup[] = [
       { id: "inventario", label: "Inventario", icon: Boxes },
       { id: "finanzas",   label: "Finanzas",   icon: DollarSign },
       { id: "sitio-web",  label: "Sitio web",  icon: Globe },
+      { id: "blog",       label: "Blog",       icon: BookOpen },
       { id: "arquitectura-sitio", label: "Arquitectura del sitio", icon: Network },
     ],
   },

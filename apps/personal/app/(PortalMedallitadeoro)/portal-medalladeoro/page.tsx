@@ -15,6 +15,7 @@ import { SeccionCRM } from "@/components/Empresa/PortalMDO/SeccionCRM"
 import { SeccionInventario } from "@/components/Empresa/PortalMDO/SeccionInventario"
 import { SeccionCampanas } from "@/components/Empresa/PortalMDO/SeccionCampanas"
 import { SeccionSitioWeb } from "@/components/Empresa/PortalMDO/SeccionSitioWeb"
+import { SeccionBlog } from "@/components/Empresa/PortalMDO/SeccionBlog"
 import { SeccionFinanzas } from "@/components/Empresa/PortalMDO/SeccionFinanzas"
 import { SeccionDocumentos } from "@/components/Empresa/PortalMDO/SeccionDocumentos"
 import { SeccionGestionMarca } from "@/components/Empresa/PortalMDO/SeccionGestionMarca"
@@ -26,7 +27,7 @@ import { NotasMejora } from "@/components/Empresa/PortalMDO/NotasMejora"
 
 const SECCIONES_VALIDAS = [
   "portal", "conoce", "mision",
-  "tareas", "campanas", "contactos", "ventas", "crm", "inventario", "finanzas", "sitio-web",
+  "tareas", "campanas", "contactos", "ventas", "crm", "inventario", "finanzas", "sitio-web", "blog",
   "arquitectura-sitio",
   "documentos", "marca", "enlaces", "usuarios",
 ]
@@ -75,6 +76,7 @@ export default function PortalMedalladeoroPage() {
       case "inventario":   return <SeccionInventario />
       case "finanzas":     return <SeccionFinanzas />
       case "sitio-web":    return <SeccionSitioWeb />
+      case "blog":         return <SeccionBlog />
       case "arquitectura-sitio": return <SeccionArquitecturaSitio />
       case "documentos":   return <SeccionDocumentos />
       case "marca":        return <SeccionGestionMarca />
@@ -124,6 +126,7 @@ export default function PortalMedalladeoroPage() {
           {seccion === "conoce" && <HeroFondoExterno campo="portada_conoce" />}
           {seccion === "mision" && <HeroFondoExterno campo="portada_depto_mision" />}
           {seccion === "sitio-web" && <HeroFondoExterno campo="portada_sitio_web" />}
+          {seccion === "blog" && <HeroFondoExterno campo="portada_blog" />}
           {/* ─── LAYOUT RULE: Boxed/Contained ─────────────────────────────────
               Todo el contenido del portal vive dentro de este container.
               max-w-7xl = 1280px máximo, centrado con mx-auto.

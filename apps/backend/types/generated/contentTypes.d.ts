@@ -736,6 +736,45 @@ export interface ApiCampanaCampana extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCancionCancion extends Struct.CollectionTypeSchema {
+  collectionName: 'canciones';
+  info: {
+    displayName: 'Canci\u00F3n';
+    pluralName: 'canciones';
+    singularName: 'cancion';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    estado: Schema.Attribute.Enumeration<
+      ['idea', 'en_proceso', 'terminada', 'publicada']
+    > &
+      Schema.Attribute.DefaultTo<'en_proceso'>;
+    estilo: Schema.Attribute.String;
+    hookPrincipal: Schema.Attribute.Text;
+    letra: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::cancion.cancion'
+    > &
+      Schema.Attribute.Private;
+    notasProceso: Schema.Attribute.Text;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    referencias: Schema.Attribute.Text;
+    slogan: Schema.Attribute.String;
+    titulo: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCatalogoJoyeriaCatalogoJoyeria
   extends Struct.SingleTypeSchema {
   collectionName: 'catalogo_joyeria';
@@ -1621,6 +1660,7 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    descripcion_blog: Schema.Attribute.Text;
     descripcion_campanas: Schema.Attribute.Text;
     descripcion_conoce: Schema.Attribute.Text;
     descripcion_contactos: Schema.Attribute.Text;
@@ -1670,6 +1710,8 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     mision: Schema.Attribute.Text;
     nombre: Schema.Attribute.String;
     notas: Schema.Attribute.Text;
+    portada_blog: Schema.Attribute.Media<'images'>;
+    portada_blog_original: Schema.Attribute.Media<'images'>;
     portada_campanas: Schema.Attribute.Media<'images'>;
     portada_campanas_original: Schema.Attribute.Media<'images'>;
     portada_conoce: Schema.Attribute.Media<'images'>;
@@ -1818,6 +1860,7 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    atribucion: Schema.Attribute.JSON;
     calificado: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     campanaOrigen: Schema.Attribute.String;
     canal: Schema.Attribute.Enumeration<
@@ -1836,6 +1879,7 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
     >;
     canalContacto: Schema.Attribute.String;
     cliente: Schema.Attribute.Relation<'manyToOne', 'api::cliente.cliente'>;
+    comoNosConocio: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1845,6 +1889,8 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
     fechaOferta: Schema.Attribute.DateTime;
     fechaPedido: Schema.Attribute.DateTime;
     fechaRechazada: Schema.Attribute.DateTime;
+    ftCampana: Schema.Attribute.String;
+    ftFuente: Schema.Attribute.String;
     Funnel: Schema.Attribute.Enumeration<
       ['Lead', 'Oferta', 'Pedido', 'Entrega', 'Rechazada']
     > &
@@ -1852,6 +1898,8 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::lead.lead'> &
       Schema.Attribute.Private;
+    ltCampana: Schema.Attribute.String;
+    ltFuente: Schema.Attribute.String;
     notas: Schema.Attribute.Text;
     numero: Schema.Attribute.String;
     origen: Schema.Attribute.Enumeration<
@@ -1881,9 +1929,11 @@ export interface ApiLeadLead extends Struct.CollectionTypeSchema {
     segmento: Schema.Attribute.Enumeration<
       ['Pareja', 'Matrimonio', 'Familiar', 'Personalizado']
     >;
+    sesion: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    visitante: Schema.Attribute.String;
   };
 }
 
@@ -2630,6 +2680,7 @@ export interface ApiProductCategoryProductCategory
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    descripcionSeo: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -3739,12 +3790,22 @@ export interface ApiVisitaVisita extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    canal: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    detalle: Schema.Attribute.String;
     fecha: Schema.Attribute.Date;
     fuente: Schema.Attribute.Enumeration<
-      ['directo', 'busqueda', 'social', 'referido', 'email', 'otro']
+      [
+        'directo',
+        'busqueda',
+        'social',
+        'referido',
+        'email',
+        'mensajeria',
+        'otro',
+      ]
     >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -3753,11 +3814,19 @@ export interface ApiVisitaVisita extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     pagina: Schema.Attribute.String;
+    producto: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    sesion: Schema.Attribute.UID;
+    referrer: Schema.Attribute.String;
+    sesion: Schema.Attribute.String;
+    tipo: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    utmCampaign: Schema.Attribute.String;
+    utmContent: Schema.Attribute.String;
+    utmMedium: Schema.Attribute.String;
+    utmSource: Schema.Attribute.String;
+    visitante: Schema.Attribute.String;
   };
 }
 
@@ -4279,6 +4348,7 @@ declare module '@strapi/strapi' {
       'api::boxscore-semana.boxscore-semana': ApiBoxscoreSemanaBoxscoreSemana;
       'api::campana-meta.campana-meta': ApiCampanaMetaCampanaMeta;
       'api::campana.campana': ApiCampanaCampana;
+      'api::cancion.cancion': ApiCancionCancion;
       'api::catalogo-joyeria.catalogo-joyeria': ApiCatalogoJoyeriaCatalogoJoyeria;
       'api::categoria-pago.categoria-pago': ApiCategoriaPagoCategoriaPago;
       'api::categoria.categoria': ApiCategoriaCategoria;

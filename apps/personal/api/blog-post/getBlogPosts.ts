@@ -11,7 +11,12 @@ export function useGetBlogPosts() {
   useEffect(() => {
     ;(async () => {
       try {
-        const res  = await authFetch(`${BASE}/api/blog-posts?pagination[pageSize]=200&sort=fecha_publicacion:desc&status=draft,published`)
+        // "status=draft,published" no es sintaxis válida en Strapi 5 (el
+        // parámetro solo acepta un único valor) — devolvía casi todo vacío
+        // en silencio. Sin status, la API ya regresa el documento completo
+        // por slug (draft o published, el que exista), que es lo que esta
+        // lista necesita mostrar.
+        const res  = await authFetch(`${BASE}/api/blog-posts?pagination[pageSize]=200&sort=fecha_publicacion:desc&populate=imagen_portada`)
         const json = await res.json()
         setPosts(json.data ?? [])
       } finally { setLoading(false) }
@@ -22,7 +27,7 @@ export function useGetBlogPosts() {
 }
 
 export async function createBlogPost(payload: Record<string, unknown>): Promise<BlogPostType> {
-  const res = await authFetch(`${BASE}/api/blog-posts`, {
+  const res = await authFetch(`${BASE}/api/blog-posts?populate=imagen_portada`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })
@@ -30,7 +35,7 @@ export async function createBlogPost(payload: Record<string, unknown>): Promise<
 }
 
 export async function updateBlogPost(documentId: string, payload: Record<string, unknown>): Promise<BlogPostType> {
-  const res = await authFetch(`${BASE}/api/blog-posts/${documentId}`, {
+  const res = await authFetch(`${BASE}/api/blog-posts/${documentId}?populate=imagen_portada`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   })

@@ -1,24 +1,39 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Plus, X, Pencil, Loader2, BookOpen, Eye, EyeOff } from "lucide-react"
+import { Plus, X, Pencil, Loader2, BookOpen, Eye, EyeOff, ImagePlus, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { useGetBlogPosts, createBlogPost, updateBlogPost, publishBlogPost, unpublishBlogPost, deleteBlogPost } from "@/api/blog-post/getBlogPosts"
-import { BlogPostType, CATEGORIA_BLOG_LABELS } from "@/types/blog-post"
+import { BlogPostType, BlockNode, CATEGORIA_BLOG_LABELS } from "@/types/blog-post"
 import { cn } from "@/lib/utils"
+import { uploadMedia } from "@/lib/upload"
+import { BlogContenidoEditor } from "./BlogContenidoEditor"
 
 const inp  = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
 const area = "w-full rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
 
 const CATEGORIAS = Object.keys(CATEGORIA_BLOG_LABELS) as (keyof typeof CATEGORIA_BLOG_LABELS)[]
 
+// Igual de simple que slugHeading() en BlogContenidoEditor.tsx, pero para el
+// título completo del post (no un subtítulo dentro del contenido).
+function slugify(texto: string): string {
+  return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+}
+
 type Form = {
-  titulo: string; resumen: string; fecha_publicacion: string
+  titulo: string; slug: string; resumen: string; fecha_publicacion: string
   categoria_blog: string; seo_titulo: string; seo_descripcion: string; seo_keywords: string
+  contenido: BlockNode[]
+  imagen_portada: { id: number; url: string } | null
 }
 
 function emptyForm(): Form {
-  return { titulo: "", resumen: "", fecha_publicacion: new Date().toISOString().split("T")[0], categoria_blog: "", seo_titulo: "", seo_descripcion: "", seo_keywords: "" }
+  return {
+    titulo: "", slug: "", resumen: "", fecha_publicacion: new Date().toISOString().split("T")[0],
+    categoria_blog: "", seo_titulo: "", seo_descripcion: "", seo_keywords: "",
+    contenido: [], imagen_portada: null,
+  }
 }
 
 export function BlogView() {
@@ -29,6 +44,9 @@ export function BlogView() {
   const [form,      setForm]      = useState<Form>(emptyForm())
   const [saving,    setSaving]    = useState(false)
   const [delId,     setDelId]     = useState<string | null>(null)
+  const [tab,       setTab]       = useState<"general" | "contenido" | "seo">("general")
+  const [slugTocado, setSlugTocado] = useState(false)
+  const [subiendoPortada, setSubiendoPortada] = useState(false)
 
   const filtrados = useMemo(() => {
     if (filtro === "publicado") return posts.filter(p => p.publishedAt)
@@ -42,46 +60,68 @@ export function BlogView() {
     borrador:  posts.filter(p => !p.publishedAt).length,
   }), [posts])
 
-  function openNuevo() { setEditing(null); setForm(emptyForm()); setModalOpen(true) }
+  function openNuevo() { setEditing(null); setForm(emptyForm()); setSlugTocado(false); setTab("general"); setModalOpen(true) }
   function openEditar(p: BlogPostType) {
     setEditing(p)
     setForm({
       titulo:            p.titulo,
+      slug:              p.slug,
       resumen:           p.resumen ?? "",
       fecha_publicacion: p.fecha_publicacion ?? new Date().toISOString().split("T")[0],
       categoria_blog:    p.categoria_blog ?? "",
       seo_titulo:        p.seo_titulo ?? "",
       seo_descripcion:   p.seo_descripcion ?? "",
       seo_keywords:      p.seo_keywords ?? "",
+      contenido:         p.contenido ?? [],
+      imagen_portada:    p.imagen_portada ? { id: p.imagen_portada.id, url: p.imagen_portada.url } : null,
     })
+    setSlugTocado(true) // editando un post existente: nunca autotocar el slug desde el título
+    setTab("general")
     setModalOpen(true)
+  }
+
+  function onTituloChange(titulo: string) {
+    setForm(f => ({ ...f, titulo, slug: !editing && !slugTocado ? slugify(titulo) : f.slug }))
   }
 
   async function handleSave() {
     if (!form.titulo.trim()) { toast.error("El título es obligatorio"); return }
+    if (!form.slug.trim()) { toast.error("El slug es obligatorio"); return }
     setSaving(true)
     try {
       const payload = {
         titulo:            form.titulo,
+        slug:              form.slug,
         resumen:           form.resumen || null,
         fecha_publicacion: form.fecha_publicacion || null,
         categoria_blog:    form.categoria_blog || null,
         seo_titulo:        form.seo_titulo || null,
         seo_descripcion:   form.seo_descripcion || null,
         seo_keywords:      form.seo_keywords || null,
+        contenido:         form.contenido,
+        imagen_portada:    form.imagen_portada?.id ?? null,
       }
       if (editing) {
         const updated = await updateBlogPost(editing.documentId, payload)
         setPosts(prev => prev.map(p => p.documentId === editing.documentId ? updated : p))
-        toast.success("Post actualizado")
+        toast.success("Post actualizado — se verá en el sitio en unos minutos")
       } else {
         const nuevo = await createBlogPost(payload)
         setPosts(prev => [nuevo, ...prev])
-        toast.success("Post creado")
+        toast.success("Post creado — se verá en el sitio en unos minutos")
       }
       setModalOpen(false)
     } catch { toast.error("Error al guardar") }
     finally { setSaving(false) }
+  }
+
+  async function cambiarPortada(file: File) {
+    setSubiendoPortada(true)
+    try {
+      const { id, url } = await uploadMedia(file)
+      setForm(f => ({ ...f, imagen_portada: { id, url } }))
+    } catch { toast.error("Error al subir la imagen") }
+    finally { setSubiendoPortada(false) }
   }
 
   async function togglePublish(p: BlogPostType) {
@@ -194,41 +234,96 @@ export function BlogView() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-          <div className="w-full max-w-lg bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-4xl bg-[#2a1b3d] border border-slate-700 rounded-xl shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0">
               <h2 className="text-sm font-semibold text-slate-100">{editing ? "Editar post" : "Nuevo post"}</h2>
               <button type="button" onClick={() => setModalOpen(false)}
                 className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-[#2a1b3d]"><X size={16} /></button>
             </div>
+
+            <div className="flex items-center gap-1 px-5 pt-3 border-b border-slate-800 shrink-0">
+              {([["general", "General"], ["contenido", "Contenido"], ["seo", "SEO"]] as const).map(([id, label]) => (
+                <button key={id} type="button" onClick={() => setTab(id)}
+                  className={cn("px-3 h-8 text-xs font-medium rounded-t-lg border-b-2 transition-colors",
+                    tab === id ? "border-violet-500 text-violet-300" : "border-transparent text-slate-500 hover:text-slate-300"
+                  )}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
             <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
-              <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Título <span className="text-red-400">*</span></label>
-                <input type="text" value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} className={inp} placeholder="Título del post…" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha publicación</label>
-                  <input type="date" value={form.fecha_publicacion} onChange={e => setForm(f => ({ ...f, fecha_publicacion: e.target.value }))} className={inp} />
+              {tab === "general" && (
+                <>
+                  <div>
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Título <span className="text-red-400">*</span></label>
+                    <input type="text" value={form.titulo} onChange={e => onTituloChange(e.target.value)} className={inp} placeholder="Título del post…" />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Slug (URL) <span className="text-red-400">*</span></label>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-slate-600 shrink-0">/blog/</span>
+                      <input type="text" value={form.slug} onChange={e => { setSlugTocado(true); setForm(f => ({ ...f, slug: e.target.value })) }} className={inp} placeholder="slug-del-post" />
+                    </div>
+                    {editing && (
+                      <p className="flex items-start gap-1.5 text-[10px] text-amber-400/80 mt-1.5">
+                        <AlertTriangle size={11} className="mt-0.5 shrink-0" />
+                        Cambiar el slug de un post ya publicado rompe su enlace — hay que agregar una redirección a mano en apps/personal/public/_redirects.
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Fecha publicación</label>
+                      <input type="date" value={form.fecha_publicacion} onChange={e => setForm(f => ({ ...f, fecha_publicacion: e.target.value }))} className={inp} />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
+                      <select value={form.categoria_blog} onChange={e => setForm(f => ({ ...f, categoria_blog: e.target.value }))} className={inp + " cursor-pointer"}>
+                        <option value="">Sin categoría</option>
+                        {CATEGORIAS.map(c => <option key={c} value={c}>{CATEGORIA_BLOG_LABELS[c]}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Portada</label>
+                    <div className="flex items-center gap-3">
+                      {subiendoPortada ? (
+                        <div className="w-24 h-16 rounded-lg bg-slate-800 flex items-center justify-center shrink-0"><Loader2 size={16} className="animate-spin text-violet-400" /></div>
+                      ) : form.imagen_portada ? (
+                        <img src={form.imagen_portada.url} alt="" className="w-24 h-16 rounded-lg object-cover border border-slate-700 shrink-0" />
+                      ) : (
+                        <div className="w-24 h-16 rounded-lg border border-dashed border-slate-700 flex items-center justify-center shrink-0"><ImagePlus size={16} className="text-slate-600" /></div>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <label className="text-[11px] text-violet-400 hover:text-violet-300 cursor-pointer">
+                          {form.imagen_portada ? "Cambiar" : "Subir imagen"}
+                          <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) cambiarPortada(f) }} />
+                        </label>
+                        {form.imagen_portada && (
+                          <button type="button" onClick={() => setForm(f => ({ ...f, imagen_portada: null }))} className="text-[11px] text-slate-500 hover:text-red-400">Quitar</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Resumen</label>
+                    <textarea rows={2} value={form.resumen} onChange={e => setForm(f => ({ ...f, resumen: e.target.value }))} className={area} placeholder="Descripción breve del post…" />
+                  </div>
+                </>
+              )}
+
+              {tab === "contenido" && (
+                <BlogContenidoEditor value={form.contenido} slug={form.slug} onChange={contenido => setForm(f => ({ ...f, contenido }))} />
+              )}
+
+              {tab === "seo" && (
+                <div className="space-y-2">
+                  <input type="text" placeholder="SEO título" value={form.seo_titulo} onChange={e => setForm(f => ({ ...f, seo_titulo: e.target.value }))} className={inp} />
+                  <input type="text" placeholder="SEO descripción" value={form.seo_descripcion} onChange={e => setForm(f => ({ ...f, seo_descripcion: e.target.value }))} className={inp} />
+                  <input type="text" placeholder="Keywords (separadas por coma)" value={form.seo_keywords} onChange={e => setForm(f => ({ ...f, seo_keywords: e.target.value }))} className={inp} />
                 </div>
-                <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Categoría</label>
-                  <select value={form.categoria_blog} onChange={e => setForm(f => ({ ...f, categoria_blog: e.target.value }))} className={inp + " cursor-pointer"}>
-                    <option value="">Sin categoría</option>
-                    {CATEGORIAS.map(c => <option key={c} value={c}>{CATEGORIA_BLOG_LABELS[c]}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Resumen</label>
-                <textarea rows={2} value={form.resumen} onChange={e => setForm(f => ({ ...f, resumen: e.target.value }))} className={area} placeholder="Descripción breve del post…" />
-              </div>
-              <p className="text-[10px] text-slate-600">El contenido detallado se edita desde el panel de Strapi.</p>
-              <div className="border-t border-slate-800 pt-3 space-y-2">
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SEO</p>
-                <input type="text" placeholder="SEO título" value={form.seo_titulo} onChange={e => setForm(f => ({ ...f, seo_titulo: e.target.value }))} className={inp} />
-                <input type="text" placeholder="SEO descripción" value={form.seo_descripcion} onChange={e => setForm(f => ({ ...f, seo_descripcion: e.target.value }))} className={inp} />
-                <input type="text" placeholder="Keywords (separadas por coma)" value={form.seo_keywords} onChange={e => setForm(f => ({ ...f, seo_keywords: e.target.value }))} className={inp} />
-              </div>
+              )}
             </div>
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-800 shrink-0">
               <button type="button" onClick={() => setModalOpen(false)} disabled={saving}
