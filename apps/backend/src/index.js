@@ -1309,6 +1309,37 @@ async function actualizarPostsRenombradosSiFaltan(strapi) {
   if (cambios) strapi.log.info(`[bootstrap] ${cambios} post(s) de blog actualizados a las reglas de contenido de 800+ palabras / keyword real`);
 }
 
+// Mantiene sincronizada la base de datos con BLOG_POSTS_SEED para posts que
+// YA existen y no cambiaron de slug (edición de tono/contenido, no rename).
+// actualizarPostsRenombradosSiFaltan() de arriba solo dispara una vez por
+// cada slug viejo → después de esa migración ya no encuentra nada que
+// actualizar, así que un cambio de contenido posterior sin cambio de slug
+// nunca llegaba a producción (bug real: el post "precio-anillo-de-compromiso"
+// se editó dos veces en código pero solo se sembró la primera versión).
+async function actualizarContenidoBlogPostsSiCambio(strapi) {
+  // Postgres reordena las llaves de un JSONB al guardarlo, así que comparar
+  // fila.contenido contra post.contenido con JSON.stringify da falsos
+  // positivos aunque el contenido sea idéntico. En vez de perseguir esa
+  // comparación, se sincroniza sin condición — código sigue siendo la única
+  // fuente de verdad, y sobreescribir con el mismo valor es inofensivo.
+  let cambios = 0;
+  for (const post of BLOG_POSTS_SEED) {
+    const filas = await strapi.db.query('api::blog-post.blog-post').findMany({ where: { slug: post.slug } });
+    for (const fila of filas) {
+      await strapi.db.query('api::blog-post.blog-post').update({
+        where: { id: fila.id },
+        data: {
+          titulo: post.titulo, categoria_blog: post.categoria_blog,
+          resumen: post.resumen, seo_titulo: post.seo_titulo, seo_descripcion: post.seo_descripcion,
+          seo_keywords: post.seo_keywords, contenido: post.contenido,
+        },
+      });
+      cambios++;
+    }
+  }
+  if (cambios) strapi.log.info(`[bootstrap] ${cambios} post(s) de blog sincronizados con BLOG_POSTS_SEED`);
+}
+
 async function sembrarBlogPostsSiFaltan(strapi) {
   let creados = 0;
   for (const post of BLOG_POSTS_SEED) {
@@ -1854,6 +1885,7 @@ module.exports = {
     await run('sembrarCategoriasProducto',  () => sembrarCategoriasProductoSiFaltan(strapi));
     await run('renombrarPulsosAPulseras',   () => renombrarPulsosAPulseras(strapi));
     await run('actualizarPostsRenombrados', () => actualizarPostsRenombradosSiFaltan(strapi));
+    await run('actualizarContenidoBlogPosts', () => actualizarContenidoBlogPostsSiCambio(strapi));
     await run('sembrarBlogPosts',           () => sembrarBlogPostsSiFaltan(strapi));
     await run('backfillColoresCategorias',  () => backfillColoresCategorias(strapi));
     await run('normalizarCategorias',       () => normalizarCategorias(strapi));
