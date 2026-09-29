@@ -51,6 +51,7 @@ export type BlogPostType = {
   seo_descripcion: string | null
   seo_titulo: string | null
   seo_keywords: string | null
+  palabra_clave_objetivo: string | null
   publishedAt: string | null
 }
 

@@ -52,6 +52,9 @@
     },
     "seo_keywords": {
       "type": "string"
+    },
+    "palabra_clave_objetivo": {
+      "type": "string"
     }
   }
 }

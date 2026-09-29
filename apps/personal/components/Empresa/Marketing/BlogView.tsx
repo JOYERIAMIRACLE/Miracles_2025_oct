@@ -22,7 +22,7 @@ function slugify(texto: string): string {
 }
 
 type Form = {
-  titulo: string; slug: string; resumen: string; fecha_publicacion: string
+  titulo: string; slug: string; palabra_clave_objetivo: string; resumen: string; fecha_publicacion: string
   categoria_blog: string; seo_titulo: string; seo_descripcion: string; seo_keywords: string
   contenido: BlockNode[]
   imagen_portada: { id: number; url: string } | null
@@ -30,7 +30,7 @@ type Form = {
 
 function emptyForm(): Form {
   return {
-    titulo: "", slug: "", resumen: "", fecha_publicacion: new Date().toISOString().split("T")[0],
+    titulo: "", slug: "", palabra_clave_objetivo: "", resumen: "", fecha_publicacion: new Date().toISOString().split("T")[0],
     categoria_blog: "", seo_titulo: "", seo_descripcion: "", seo_keywords: "",
     contenido: [], imagen_portada: null,
   }
@@ -66,6 +66,7 @@ export function BlogView() {
     setForm({
       titulo:            p.titulo,
       slug:              p.slug,
+      palabra_clave_objetivo: p.palabra_clave_objetivo ?? "",
       resumen:           p.resumen ?? "",
       fecha_publicacion: p.fecha_publicacion ?? new Date().toISOString().split("T")[0],
       categoria_blog:    p.categoria_blog ?? "",
@@ -92,6 +93,7 @@ export function BlogView() {
       const payload = {
         titulo:            form.titulo,
         slug:              form.slug,
+        palabra_clave_objetivo: form.palabra_clave_objetivo || null,
         resumen:           form.resumen || null,
         fecha_publicacion: form.fecha_publicacion || null,
         categoria_blog:    form.categoria_blog || null,
@@ -272,6 +274,11 @@ export function BlogView() {
                         Cambiar el slug de un post ya publicado rompe su enlace — hay que agregar una redirección a mano en apps/personal/public/_redirects.
                       </p>
                     )}
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Palabra clave objetivo</label>
+                    <input type="text" value={form.palabra_clave_objetivo} onChange={e => setForm(f => ({ ...f, palabra_clave_objetivo: e.target.value }))} className={inp} placeholder="La keyword que este post debe posicionar…" />
+                    <p className="text-[10px] text-slate-600 mt-1">No la lee Google directamente — es tu referencia para confirmar que aparece en título, slug, meta descripción y contenido.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
