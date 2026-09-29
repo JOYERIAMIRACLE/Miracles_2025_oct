@@ -445,6 +445,22 @@ const AUTHENTICATED_ACTIONS_NOTA_MEJORA = [
   'api::nota-mejora.nota-mejora.delete',
 ];
 
+// Arquitectura del sitio editable (Portal → Operación) — páginas y reglas
+// que antes vivían hardcodeadas en SeccionArquitecturaSitio.tsx, ahora
+// editables desde el Portal, igual de internas que las notas de mejora.
+const AUTHENTICATED_ACTIONS_ARQUITECTURA_SITIO = [
+  'api::pagina-arquitectura.pagina-arquitectura.find',
+  'api::pagina-arquitectura.pagina-arquitectura.findOne',
+  'api::pagina-arquitectura.pagina-arquitectura.create',
+  'api::pagina-arquitectura.pagina-arquitectura.update',
+  'api::pagina-arquitectura.pagina-arquitectura.delete',
+  'api::regla-arquitectura.regla-arquitectura.find',
+  'api::regla-arquitectura.regla-arquitectura.findOne',
+  'api::regla-arquitectura.regla-arquitectura.create',
+  'api::regla-arquitectura.regla-arquitectura.update',
+  'api::regla-arquitectura.regla-arquitectura.delete',
+];
+
 // Mapa "Segundo Cerebro" (juego de exploración en /segundo-cerebro) — sin
 // login propio, así que solo necesita permisos de Public.
 const PUBLIC_ACTIONS_MAPA_IDENTIDAD = [
@@ -700,6 +716,7 @@ async function aplicarPermisosPublic(strapi) {
   await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_CRM);
   await otorgarPermisos(strapi, 'authenticated', PUBLIC_ACTIONS_PORTAL_MDO);
   await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_NOTA_MEJORA);
+  await otorgarPermisos(strapi, 'authenticated', AUTHENTICATED_ACTIONS_ARQUITECTURA_SITIO);
   const nuevos = await concederAStaffTodaLaApi(strapi);
   if (cerrar) {
     const quitados = await cerrarApiPublica(strapi);
@@ -885,6 +902,51 @@ async function sembrarCategoriasSiVacio(strapi) {
     await strapi.db.query('api::categoria.categoria').create({ data: c });
   }
   strapi.log.info(`[bootstrap] ${CATEGORIAS_SEED.length} categorías sembradas`);
+}
+
+// Semilla inicial de Arquitectura del sitio (Portal → Operación). Antes vivía
+// hardcodeada en SeccionArquitecturaSitio.tsx — a partir de este seed único,
+// el contenido se edita desde el Portal, no desde código (mismo criterio que
+// sembrarBlogPostsSiFaltan: crea solo si la colección está vacía).
+const PAGINAS_ARQUITECTURA_SEED = [
+  { grupo: 'landing', orden: 0, ruta: '/', nota: 'Portada — antes tenía un hero separado, ahora ES la tienda' },
+  { grupo: 'landing', orden: 1, ruta: '/nosotros', nota: '' },
+  { grupo: 'landing', orden: 2, ruta: '/contacto', nota: '' },
+  { grupo: 'landing', orden: 3, ruta: '/distribuidor', nota: 'Mayoreo/B2B' },
+  { grupo: 'landing', orden: 4, ruta: '/blog', nota: 'Motor de contenido — hub del blog' },
+  { grupo: 'landing', orden: 5, ruta: '/blog/[slug]', nota: '6 posts reales ya publicados' },
+  { grupo: 'landing', orden: 6, ruta: '/producto/[slug]', nota: 'Doble función: Landing si llega frío de Google, App si viene navegando el catálogo' },
+  { grupo: 'landing', orden: 7, ruta: '/regalos/[ocasion]', nota: 'Doble función: se construyeron para atrapar búsqueda fría ("regalo día de la madre" 2,900/mes), aunque también se llega desde las tarjetas del home' },
+  { grupo: 'landing', orden: 8, ruta: '/terminos, /privacidad, /envios, /devoluciones', nota: 'Confianza/legal — bajo esfuerzo de autoridad' },
+  { grupo: 'app', orden: 0, ruta: '/category, /category/[slug]', nota: '9 categorías + anillos-de-compromiso + churumbela' },
+  { grupo: 'app', orden: 1, ruta: '/material/oro-10k, /material/plata-925', nota: 'Hub por material' },
+  { grupo: 'app', orden: 2, ruta: '/carrito, /productos-favoritos', nota: 'Ya bloqueadas en robots.txt — correcto, sin cambios' },
+  { grupo: 'cuenta', orden: 0, ruta: '/cuenta/login, /registro, /olvide-password', nota: '' },
+  { grupo: 'cuenta', orden: 1, ruta: '/cuenta, /pedidos, /cotizaciones, /favoritos, /direcciones, /pagos, /perfil', nota: 'Requieren sesión de cliente' },
+];
+
+const REGLAS_ARQUITECTURA_SEED = [
+  { orden: 0, texto: 'Landing manda la autoridad hacia abajo — el blog y "Nosotros" enlazan hacia categoría/material con texto descriptivo, nunca "ver más".' },
+  { orden: 1, texto: 'App hereda autoridad, no la genera — breadcrumb consistente y canonical limpio por página (los filtros son del navegador, no generan URLs duplicadas).' },
+  { orden: 2, texto: 'Cuenta nunca se indexa — noindex + robots.txt en las 9 rutas (corregido 26-sep-2026, antes eran 100% indexables sin ningún valor de búsqueda).' },
+];
+
+async function sembrarPaginasArquitecturaSiVacio(strapi) {
+  const count = await strapi.db.query('api::pagina-arquitectura.pagina-arquitectura').count({});
+  if (count > 0) { strapi.log.info('[bootstrap] Páginas de arquitectura ya existen — skip seed'); return; }
+  for (const p of PAGINAS_ARQUITECTURA_SEED) {
+    await strapi.db.query('api::pagina-arquitectura.pagina-arquitectura').create({ data: p });
+  }
+  strapi.log.info(`[bootstrap] ${PAGINAS_ARQUITECTURA_SEED.length} página(s) de arquitectura sembrada(s)`);
+}
+
+async function sembrarReglasArquitecturaSiVacio(strapi) {
+  const count = await strapi.db.query('api::regla-arquitectura.regla-arquitectura').count({});
+  if (count > 0) { strapi.log.info('[bootstrap] Reglas de arquitectura ya existen — skip seed'); return; }
+  for (const r of REGLAS_ARQUITECTURA_SEED) {
+    await strapi.db.query('api::regla-arquitectura.regla-arquitectura').create({ data: r });
+  }
+  strapi.log.info(`[bootstrap] ${REGLAS_ARQUITECTURA_SEED.length} regla(s) de arquitectura sembrada(s)`);
 }
 
 // Backfill: si una categoría coincide por nombre con un seed default y NO tiene color,
@@ -1826,6 +1888,8 @@ module.exports = {
     await run('cerrarPermisosSinUso',       () => cerrarPermisosSinUso(strapi));
     await run('cerrarRegistroNativo',       () => cerrarRegistroNativo(strapi));
     await run('sembrarCategorias',           () => sembrarCategoriasSiVacio(strapi));
+    await run('sembrarPaginasArquitectura',  () => sembrarPaginasArquitecturaSiVacio(strapi));
+    await run('sembrarReglasArquitectura',   () => sembrarReglasArquitecturaSiVacio(strapi));
     await run('sembrarCategoriasProducto',  () => sembrarCategoriasProductoSiFaltan(strapi));
     await run('renombrarPulsosAPulseras',   () => renombrarPulsosAPulseras(strapi));
     await run('sembrarBlogPosts',           () => sembrarBlogPostsSiFaltan(strapi));

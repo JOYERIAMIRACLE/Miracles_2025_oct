@@ -1,113 +1,242 @@
 "use client"
 
-import { Compass, LayoutGrid, UserCircle2, ShieldCheck } from "lucide-react"
+import { useState } from "react"
+import { Compass, LayoutGrid, UserCircle2, ShieldCheck, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react"
+import { toast } from "sonner"
 import { SeccionVitrina, SeccionHeroContenido } from "./shared"
+import { useGetPaginasArquitectura, useGetReglasArquitectura } from "@/api/pagina-arquitectura/getPaginasArquitectura"
+import {
+  createPaginaArquitectura, updatePaginaArquitectura, deletePaginaArquitectura,
+  createReglaArquitectura, updateReglaArquitectura, deleteReglaArquitectura,
+} from "@/api/pagina-arquitectura/mutatePaginaArquitectura"
+import { GrupoArquitectura, PaginaArquitecturaType, ReglaArquitecturaType } from "@/types/pagina-arquitectura"
 
-// Documentación técnica de la Tienda pública (medalladeoro.com.mx), escrita a
-// mano — mismo criterio que los paneles de Segundo Cerebro (Arquitectura,
-// Aparador): es referencia para el equipo, no contenido editable del negocio,
-// así que no vive en Strapi. Se actualiza aquí cuando cambie la estructura
-// real del sitio (nuevas rutas, cambios de función). Última actualización:
-// 26-sep-2026, junto con el plan de SEO de anillos-de-compromiso/churumbela.
+// Arquitectura del sitio (Portal → Operación) — antes era una página de
+// documentación 100% hardcodeada en este archivo; ahora las filas viven en
+// Strapi (pagina-arquitectura / regla-arquitectura) y se editan aquí mismo,
+// agregar/quitar/reordenar, sin tocar código. Los 3 grupos (Landing/App/
+// Cuenta) siguen siendo una taxonomía fija — eso no se edita, solo las
+// páginas y reglas dentro de cada uno.
 
-type Pagina = { ruta: string; nota?: string }
-type Grupo = { titulo: string; icono: typeof Compass; resumen: string; paginas: Pagina[] }
+const inp  = "w-full h-8 rounded-lg border border-slate-700 bg-[#2a1b3d] px-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+const area = "w-full rounded-lg border border-slate-700 bg-[#2a1b3d] px-2.5 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 resize-none transition-all"
 
-const GRUPOS: Grupo[] = [
-  {
-    titulo: "Landing — convencer a quien no te conoce",
-    icono: Compass,
-    resumen: "De aquí sale el tráfico nuevo y la confianza. El blog y la portada mandan autoridad hacia el catálogo, nunca al revés.",
-    paginas: [
-      { ruta: "/", nota: "Portada — antes tenía un hero separado, ahora ES la tienda" },
-      { ruta: "/nosotros" }, { ruta: "/contacto" }, { ruta: "/distribuidor", nota: "Mayoreo/B2B" },
-      { ruta: "/blog", nota: "Motor de contenido — hub del blog" },
-      { ruta: "/blog/[slug]", nota: "5 posts reales ya publicados" },
-      { ruta: "/producto/[slug]", nota: "Doble función: Landing si llega frío de Google, App si viene navegando el catálogo" },
-      { ruta: "/regalos/[ocasion]", nota: "Doble función: se construyeron para atrapar búsqueda fría (\"regalo día de la madre\" 2,900/mes), aunque también se llega desde las tarjetas del home" },
-      { ruta: "/terminos, /privacidad, /envios, /devoluciones", nota: "Confianza/legal — bajo esfuerzo de autoridad" },
-    ],
-  },
-  {
-    titulo: "App — convertir a quien ya quiere comprar",
-    icono: LayoutGrid,
-    resumen: "Catálogo, filtros y cards de producto. No compiten por las mismas palabras que el blog — su trabajo es convertir, no atraer.",
-    paginas: [
-      { ruta: "/category, /category/[slug]", nota: "9 categorías + anillos-de-compromiso + churumbela" },
-      { ruta: "/material/oro-10k, /material/plata-925", nota: "Hub por material" },
-      { ruta: "/carrito, /productos-favoritos", nota: "Ya bloqueadas en robots.txt — correcto, sin cambios" },
-    ],
-  },
-  {
-    titulo: "Cuenta — sesión del cliente",
-    icono: UserCircle2,
-    resumen: "Cero valor de búsqueda. Nunca debe indexarse — son páginas privadas o de entrada de sesión, no contenido para atraer visitas.",
-    paginas: [
-      { ruta: "/cuenta/login, /registro, /olvide-password" },
-      { ruta: "/cuenta, /pedidos, /cotizaciones, /favoritos, /direcciones, /pagos, /perfil", nota: "Requieren sesión de cliente" },
-    ],
-  },
+type GrupoMeta = { grupo: GrupoArquitectura; titulo: string; icono: typeof Compass; resumen: string }
+
+const GRUPOS_META: GrupoMeta[] = [
+  { grupo: "landing", icono: Compass, titulo: "Landing — convencer a quien no te conoce", resumen: "De aquí sale el tráfico nuevo y la confianza. El blog y la portada mandan autoridad hacia el catálogo, nunca al revés." },
+  { grupo: "app", icono: LayoutGrid, titulo: "App — convertir a quien ya quiere comprar", resumen: "Catálogo, filtros y cards de producto. No compiten por las mismas palabras que el blog — su trabajo es convertir, no atraer." },
+  { grupo: "cuenta", icono: UserCircle2, titulo: "Cuenta — sesión del cliente", resumen: "Cero valor de búsqueda. Nunca debe indexarse — son páginas privadas o de entrada de sesión, no contenido para atraer visitas." },
 ]
 
-const REGLAS = [
-  "Landing manda la autoridad hacia abajo — el blog y \"Nosotros\" enlazan hacia categoría/material con texto descriptivo, nunca \"ver más\".",
-  "App hereda autoridad, no la genera — breadcrumb consistente y canonical limpio por página (los filtros son del navegador, no generan URLs duplicadas).",
-  "Cuenta nunca se indexa — noindex + robots.txt en las 9 rutas (corregido 26-sep-2026, antes eran 100% indexables sin ningún valor de búsqueda).",
-]
+function FilaPagina({ pagina, index, total, onMover, onGuardar, onBorrar }: {
+  pagina: PaginaArquitecturaType; index: number; total: number
+  onMover: (dir: -1 | 1) => void
+  onGuardar: (campo: "ruta" | "nota", valor: string) => void
+  onBorrar: () => void
+}) {
+  const [ruta, setRuta] = useState(pagina.ruta)
+  const [nota, setNota] = useState(pagina.nota ?? "")
+  const [confirmando, setConfirmando] = useState(false)
 
-function TablaGrupo({ grupo }: { grupo: Grupo }) {
-  const Icono = grupo.icono
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+    <div className="flex items-start gap-2 px-4 py-2.5">
+      <div className="flex flex-col gap-0.5 pt-0.5 shrink-0">
+        <button type="button" onClick={() => onMover(-1)} disabled={index === 0} className="p-0.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:pointer-events-none"><ChevronUp size={12} /></button>
+        <button type="button" onClick={() => onMover(1)} disabled={index === total - 1} className="p-0.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:pointer-events-none"><ChevronDown size={12} /></button>
+      </div>
+      <div className="flex-1 min-w-0 grid sm:grid-cols-[280px_1fr] gap-1.5">
+        <input value={ruta} onChange={e => setRuta(e.target.value)}
+          onBlur={() => { if (ruta !== pagina.ruta) onGuardar("ruta", ruta) }}
+          className={inp + " font-mono"} placeholder="/ruta" />
+        <input value={nota} onChange={e => setNota(e.target.value)}
+          onBlur={() => { if (nota !== (pagina.nota ?? "")) onGuardar("nota", nota) }}
+          className={inp} placeholder="Nota (opcional)…" />
+      </div>
+      {confirmando ? (
+        <div className="flex items-center gap-1 shrink-0 pt-1.5">
+          <button type="button" onClick={onBorrar} className="text-[11px] text-red-400 hover:text-red-300 font-medium">Sí</button>
+          <button type="button" onClick={() => setConfirmando(false)} className="text-[11px] text-slate-500">No</button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setConfirmando(true)} className="p-1 mt-0.5 text-slate-600 hover:text-red-400 shrink-0"><Trash2 size={13} /></button>
+      )}
+    </div>
+  )
+}
+
+function TablaGrupoEditable({ meta, paginas, onReload }: {
+  meta: GrupoMeta; paginas: PaginaArquitecturaType[]; onReload: () => void
+}) {
+  const Icono = meta.icono
+
+  async function mover(index: number, dir: -1 | 1) {
+    const j = index + dir
+    if (j < 0 || j >= paginas.length) return
+    const reordenadas = [...paginas]
+    ;[reordenadas[index], reordenadas[j]] = [reordenadas[j], reordenadas[index]]
+    try {
+      await Promise.all(reordenadas.map((p, i) => updatePaginaArquitectura(p.documentId, { orden: i })))
+      onReload()
+    } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo reordenar") }
+  }
+
+  async function guardar(p: PaginaArquitecturaType, campo: "ruta" | "nota", valor: string) {
+    try { await updatePaginaArquitectura(p.documentId, { [campo]: valor }) }
+    catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo guardar"); onReload() }
+  }
+
+  async function borrar(p: PaginaArquitecturaType) {
+    try { await deletePaginaArquitectura(p.documentId); onReload() }
+    catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo eliminar") }
+  }
+
+  async function agregar() {
+    try { await createPaginaArquitectura(meta.grupo, paginas.length); onReload() }
+    catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo agregar") }
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-800 overflow-hidden bg-[#2a1b3d]/60">
+      <div className="flex items-start gap-3 p-4 bg-slate-800/30 border-b border-slate-800">
         <div className="h-9 w-9 rounded-lg bg-violet-400/10 border border-violet-400/30 flex items-center justify-center shrink-0">
-          <Icono size={18} className="text-violet-500" />
+          <Icono size={18} className="text-violet-400" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{grupo.titulo}</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{grupo.resumen}</p>
+          <h3 className="text-sm font-bold text-slate-100">{meta.titulo}</h3>
+          <p className="text-xs text-slate-500 mt-0.5">{meta.resumen}</p>
         </div>
       </div>
-      <div className="divide-y divide-slate-100 dark:divide-slate-800">
-        {grupo.paginas.map((p) => (
-          <div key={p.ruta} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 px-4 py-2.5">
-            <code className="text-[12px] font-mono text-slate-700 dark:text-slate-300 shrink-0 sm:w-[340px]">{p.ruta}</code>
-            {p.nota && <p className="text-xs text-slate-400">{p.nota}</p>}
-          </div>
+      <div className="divide-y divide-slate-800">
+        {paginas.map((p, i) => (
+          <FilaPagina key={p.documentId} pagina={p} index={i} total={paginas.length}
+            onMover={dir => mover(i, dir)}
+            onGuardar={(campo, valor) => guardar(p, campo, valor)}
+            onBorrar={() => borrar(p)} />
         ))}
+        {paginas.length === 0 && <p className="px-4 py-3 text-xs text-slate-600">Sin páginas en este grupo.</p>}
+      </div>
+      <div className="p-3 border-t border-slate-800">
+        <button type="button" onClick={agregar}
+          className="flex items-center gap-1.5 h-7 px-3 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors">
+          <Plus size={12} /> Agregar página
+        </button>
       </div>
     </div>
   )
 }
 
+function FilaRegla({ regla, index, total, onMover, onGuardar, onBorrar }: {
+  regla: ReglaArquitecturaType; index: number; total: number
+  onMover: (dir: -1 | 1) => void
+  onGuardar: (texto: string) => void
+  onBorrar: () => void
+}) {
+  const [texto, setTexto] = useState(regla.texto)
+  const [confirmando, setConfirmando] = useState(false)
+
+  return (
+    <div className="flex items-start gap-2 py-1.5">
+      <div className="flex flex-col gap-0.5 pt-1.5 shrink-0">
+        <button type="button" onClick={() => onMover(-1)} disabled={index === 0} className="p-0.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:pointer-events-none"><ChevronUp size={12} /></button>
+        <button type="button" onClick={() => onMover(1)} disabled={index === total - 1} className="p-0.5 text-slate-600 hover:text-slate-300 disabled:opacity-20 disabled:pointer-events-none"><ChevronDown size={12} /></button>
+      </div>
+      <textarea rows={2} value={texto} onChange={e => setTexto(e.target.value)}
+        onBlur={() => { if (texto !== regla.texto) onGuardar(texto) }}
+        className={area + " flex-1"} />
+      {confirmando ? (
+        <div className="flex items-center gap-1 shrink-0 pt-1.5">
+          <button type="button" onClick={onBorrar} className="text-[11px] text-red-400 hover:text-red-300 font-medium">Sí</button>
+          <button type="button" onClick={() => setConfirmando(false)} className="text-[11px] text-slate-500">No</button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setConfirmando(true)} className="p-1 mt-1 text-slate-600 hover:text-red-400 shrink-0"><Trash2 size={13} /></button>
+      )}
+    </div>
+  )
+}
+
+function ListaReglasEditable({ reglas, onReload }: { reglas: ReglaArquitecturaType[]; onReload: () => void }) {
+  async function mover(index: number, dir: -1 | 1) {
+    const j = index + dir
+    if (j < 0 || j >= reglas.length) return
+    const reordenadas = [...reglas]
+    ;[reordenadas[index], reordenadas[j]] = [reordenadas[j], reordenadas[index]]
+    try {
+      await Promise.all(reordenadas.map((r, i) => updateReglaArquitectura(r.documentId, { orden: i })))
+      onReload()
+    } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo reordenar") }
+  }
+
+  async function guardar(r: ReglaArquitecturaType, texto: string) {
+    try { await updateReglaArquitectura(r.documentId, { texto }) }
+    catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo guardar"); onReload() }
+  }
+
+  async function borrar(r: ReglaArquitecturaType) {
+    try { await deleteReglaArquitectura(r.documentId); onReload() }
+    catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo eliminar") }
+  }
+
+  async function agregar() {
+    try { await createReglaArquitectura(reglas.length); onReload() }
+    catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo agregar") }
+  }
+
+  return (
+    <div className="space-y-1">
+      {reglas.map((r, i) => (
+        <FilaRegla key={r.documentId} regla={r} index={i} total={reglas.length}
+          onMover={dir => mover(i, dir)} onGuardar={texto => guardar(r, texto)} onBorrar={() => borrar(r)} />
+      ))}
+      {reglas.length === 0 && <p className="text-xs text-slate-600">Sin reglas todavía.</p>}
+      <button type="button" onClick={agregar}
+        className="flex items-center gap-1.5 h-7 px-3 rounded-lg border border-slate-700 text-xs text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-colors mt-2">
+        <Plus size={12} /> Agregar regla
+      </button>
+    </div>
+  )
+}
+
 export function SeccionArquitecturaSitio() {
+  const { paginas, loading: loadingPaginas, reload: reloadPaginas } = useGetPaginasArquitectura()
+  const { reglas, loading: loadingReglas, reload: reloadReglas } = useGetReglasArquitectura()
+
   return (
     <SeccionVitrina>
       <SeccionHeroContenido
         breadcrumb={["Operación", "Arquitectura del sitio"]}
         titulo="Arquitectura del sitio"
-        descripcion="Cada página pública de medalladeoro.com.mx clasificada por función — de dónde sale el tráfico nuevo, dónde se convierte, y qué nunca debe salir en Google. Referencia técnica del equipo, se actualiza cuando cambia la estructura real del sitio."
+        descripcion="Cada página pública de medalladeoro.com.mx clasificada por función — de dónde sale el tráfico nuevo, dónde se convierte, y qué nunca debe salir en Google. Se edita desde aquí, sin tocar código."
       />
 
-      <div className="grid gap-4">
-        {GRUPOS.map((g) => <TablaGrupo key={g.titulo} grupo={g} />)}
-      </div>
-
-      <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <ShieldCheck size={16} className="text-violet-500" />
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Reglas de autoridad por nivel</h3>
+      {loadingPaginas ? (
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-40 rounded-xl bg-[#2a1b3d]/60 border border-slate-800 animate-pulse" />)}
         </div>
-        <ul className="space-y-2">
-          {REGLAS.map((r, i) => (
-            <li key={i} className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex gap-2">
-              <span className="text-violet-500 shrink-0">›</span>{r}
-            </li>
+      ) : (
+        <div className="grid gap-4">
+          {GRUPOS_META.map(meta => (
+            <TablaGrupoEditable key={meta.grupo} meta={meta}
+              paginas={paginas.filter(p => p.grupo === meta.grupo)}
+              onReload={reloadPaginas} />
           ))}
-        </ul>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-slate-800 p-4 bg-[#2a1b3d]/60">
+        <div className="flex items-center gap-2 mb-3">
+          <ShieldCheck size={16} className="text-violet-400" />
+          <h3 className="text-sm font-bold text-slate-100">Reglas de autoridad por nivel</h3>
+        </div>
+        {loadingReglas ? (
+          <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-8 rounded bg-slate-800 animate-pulse" />)}</div>
+        ) : (
+          <ListaReglasEditable reglas={reglas} onReload={reloadReglas} />
+        )}
       </div>
 
-      <p className="text-[11px] text-slate-400">
+      <p className="text-[11px] text-slate-500">
         Basado en la investigación real de búsqueda (Google Suggest + Google Ads Keyword Planner, México, 26-sep-2026):
         "anillos de compromiso" — 165,000 búsquedas/mes — es el término de mayor volumen de todo el catálogo, seguido de
         "argollas de matrimonio" (22,200) y "churumbela de oro" (6,600). Ver los posts del blog y las páginas de

@@ -553,6 +553,7 @@ export interface ApiBlogPostBlogPost extends Struct.CollectionTypeSchema {
       'api::blog-post.blog-post'
     > &
       Schema.Attribute.Private;
+    palabra_clave_objetivo: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     resumen: Schema.Attribute.Text;
     seo_descripcion: Schema.Attribute.Text;
@@ -1710,6 +1711,8 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     mision: Schema.Attribute.Text;
     nombre: Schema.Attribute.String;
     notas: Schema.Attribute.Text;
+    portada_arquitectura_sitio: Schema.Attribute.Media<'images'>;
+    portada_arquitectura_sitio_original: Schema.Attribute.Media<'images'>;
     portada_blog: Schema.Attribute.Media<'images'>;
     portada_blog_original: Schema.Attribute.Media<'images'>;
     portada_campanas: Schema.Attribute.Media<'images'>;
@@ -2299,6 +2302,39 @@ export interface ApiOrdenCompraOrdenCompra extends Struct.CollectionTypeSchema {
     >;
     publishedAt: Schema.Attribute.DateTime;
     totalEstimado: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPaginaArquitecturaPaginaArquitectura
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'paginas_arquitectura';
+  info: {
+    displayName: 'Portal - P\u00E1gina de Arquitectura del Sitio';
+    pluralName: 'paginas-arquitectura';
+    singularName: 'pagina-arquitectura';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    grupo: Schema.Attribute.Enumeration<['landing', 'app', 'cuenta']> &
+      Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::pagina-arquitectura.pagina-arquitectura'
+    > &
+      Schema.Attribute.Private;
+    nota: Schema.Attribute.Text;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    ruta: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -3079,6 +3115,36 @@ export interface ApiRegistroMensualRegistroMensual
     tipo: Schema.Attribute.Enumeration<
       ['ingreso_variable', 'gasto_extra', 'ahorro_real']
     >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReglaArquitecturaReglaArquitectura
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'reglas_arquitectura';
+  info: {
+    displayName: 'Portal - Regla de Arquitectura del Sitio';
+    pluralName: 'reglas-arquitectura';
+    singularName: 'regla-arquitectura';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::regla-arquitectura.regla-arquitectura'
+    > &
+      Schema.Attribute.Private;
+    orden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    publishedAt: Schema.Attribute.DateTime;
+    texto: Schema.Attribute.Text & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -4384,6 +4450,7 @@ declare module '@strapi/strapi' {
       'api::movimiento-material.movimiento-material': ApiMovimientoMaterialMovimientoMaterial;
       'api::nota-mejora.nota-mejora': ApiNotaMejoraNotaMejora;
       'api::orden-compra.orden-compra': ApiOrdenCompraOrdenCompra;
+      'api::pagina-arquitectura.pagina-arquitectura': ApiPaginaArquitecturaPaginaArquitectura;
       'api::pago-programado.pago-programado': ApiPagoProgramadoPagoProgramado;
       'api::pago-trabajo.pago-trabajo': ApiPagoTrabajoPagoTrabajo;
       'api::partida-presupuesto.partida-presupuesto': ApiPartidaPresupuestoPartidaPresupuesto;
@@ -4402,6 +4469,7 @@ declare module '@strapi/strapi' {
       'api::recurso-categoria.recurso-categoria': ApiRecursoCategoriaRecursoCategoria;
       'api::recurso.recurso': ApiRecursoRecurso;
       'api::registro-mensual.registro-mensual': ApiRegistroMensualRegistroMensual;
+      'api::regla-arquitectura.regla-arquitectura': ApiReglaArquitecturaReglaArquitectura;
       'api::reunion.reunion': ApiReunionReunion;
       'api::rh-item.rh-item': ApiRhItemRhItem;
       'api::rutina.rutina': ApiRutinaRutina;

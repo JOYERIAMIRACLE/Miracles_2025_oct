@@ -1,0 +1,17 @@
+{
+  "kind": "collectionType",
+  "collectionName": "paginas_arquitectura",
+  "info": {
+    "singularName": "pagina-arquitectura",
+    "pluralName": "paginas-arquitectura",
+    "displayName": "Portal - Página de Arquitectura del Sitio"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "ruta":  { "type": "string", "required": true },
+    "nota":  { "type": "text" },
+    "grupo": { "type": "enumeration", "enum": ["landing", "app", "cuenta"], "required": true },
+    "orden": { "type": "integer", "default": 0 }
+  }
+}

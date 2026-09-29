@@ -1,0 +1,15 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reglas_arquitectura",
+  "info": {
+    "singularName": "regla-arquitectura",
+    "pluralName": "reglas-arquitectura",
+    "displayName": "Portal - Regla de Arquitectura del Sitio"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "texto": { "type": "text", "required": true },
+    "orden": { "type": "integer", "default": 0 }
+  }
+}
