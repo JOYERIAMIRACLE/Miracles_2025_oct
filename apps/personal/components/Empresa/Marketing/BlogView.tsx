@@ -188,7 +188,8 @@ export function BlogView() {
           </div>
         )}
         {!loading && filtrados.map(p => (
-          <div key={p.documentId} className="group flex items-center gap-3 bg-[#2a1b3d]/60 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-700 transition-colors">
+          <div key={p.documentId} onClick={() => openEditar(p)}
+            className="group flex items-center gap-3 bg-[#2a1b3d]/60 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-700 transition-colors cursor-pointer">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-sm font-medium text-slate-200 truncate">{p.titulo}</p>
@@ -206,21 +207,21 @@ export function BlogView() {
               <p className="text-xs text-slate-600 mt-0.5">{p.fecha_publicacion ?? "Sin fecha"}{p.resumen ? ` · ${p.resumen.slice(0, 60)}…` : ""}</p>
             </div>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-              <button type="button" onClick={() => togglePublish(p)} title={p.publishedAt ? "Despublicar" : "Publicar"}
+              <button type="button" onClick={e => { e.stopPropagation(); togglePublish(p) }} title={p.publishedAt ? "Despublicar" : "Publicar"}
                 className="p-1.5 text-slate-600 hover:text-violet-400 hover:bg-[#2a1b3d] rounded transition">
                 {p.publishedAt ? <EyeOff size={13} /> : <Eye size={13} />}
               </button>
-              <button type="button" onClick={() => openEditar(p)}
+              <button type="button" onClick={e => { e.stopPropagation(); openEditar(p) }}
                 className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition">
                 <Pencil size={13} />
               </button>
               {delId === p.documentId ? (
-                <div className="flex items-center gap-1 px-1">
+                <div className="flex items-center gap-1 px-1" onClick={e => e.stopPropagation()}>
                   <button type="button" onClick={() => handleDelete(p.documentId)} className="text-[11px] text-red-400 hover:text-red-300 font-medium">Sí</button>
                   <button type="button" onClick={() => setDelId(null)} className="text-[11px] text-slate-500">No</button>
                 </div>
               ) : (
-                <button type="button" onClick={() => setDelId(p.documentId)}
+                <button type="button" onClick={e => { e.stopPropagation(); setDelId(p.documentId) }}
                   className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition">
                   <X size={13} />
                 </button>
@@ -242,7 +243,7 @@ export function BlogView() {
             </div>
 
             <div className="flex items-center gap-1 px-5 pt-3 border-b border-slate-800 shrink-0">
-              {([["general", "General"], ["contenido", "Contenido"], ["seo", "SEO"]] as const).map(([id, label]) => (
+              {([["general", "General"], ["contenido", "Contenido"], ["seo", "Metadatos"]] as const).map(([id, label]) => (
                 <button key={id} type="button" onClick={() => setTab(id)}
                   className={cn("px-3 h-8 text-xs font-medium rounded-t-lg border-b-2 transition-colors",
                     tab === id ? "border-violet-500 text-violet-300" : "border-transparent text-slate-500 hover:text-slate-300"
@@ -306,10 +307,6 @@ export function BlogView() {
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Resumen</label>
-                    <textarea rows={2} value={form.resumen} onChange={e => setForm(f => ({ ...f, resumen: e.target.value }))} className={area} placeholder="Descripción breve del post…" />
-                  </div>
                 </>
               )}
 
@@ -318,10 +315,17 @@ export function BlogView() {
               )}
 
               {tab === "seo" && (
-                <div className="space-y-2">
-                  <input type="text" placeholder="SEO título" value={form.seo_titulo} onChange={e => setForm(f => ({ ...f, seo_titulo: e.target.value }))} className={inp} />
-                  <input type="text" placeholder="SEO descripción" value={form.seo_descripcion} onChange={e => setForm(f => ({ ...f, seo_descripcion: e.target.value }))} className={inp} />
-                  <input type="text" placeholder="Keywords (separadas por coma)" value={form.seo_keywords} onChange={e => setForm(f => ({ ...f, seo_keywords: e.target.value }))} className={inp} />
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-medium text-slate-400 mb-1.5 block">Resumen</label>
+                    <textarea rows={2} value={form.resumen} onChange={e => setForm(f => ({ ...f, resumen: e.target.value }))} className={area} placeholder="Adelanto del post — se ve en las tarjetas del blog, no en Google" />
+                  </div>
+                  <div className="border-t border-slate-800 pt-3 space-y-2">
+                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">SEO</p>
+                    <input type="text" placeholder="SEO título" value={form.seo_titulo} onChange={e => setForm(f => ({ ...f, seo_titulo: e.target.value }))} className={inp} />
+                    <input type="text" placeholder="SEO descripción — el snippet que se ve en Google" value={form.seo_descripcion} onChange={e => setForm(f => ({ ...f, seo_descripcion: e.target.value }))} className={inp} />
+                    <input type="text" placeholder="Keywords (separadas por coma)" value={form.seo_keywords} onChange={e => setForm(f => ({ ...f, seo_keywords: e.target.value }))} className={inp} />
+                  </div>
                 </div>
               )}
             </div>
