@@ -94,6 +94,8 @@ export type IdentidadEmpresa = {
   descripcion_blog:      string | null
   portada_blog:          IdentidadImagen
   portada_blog_original: IdentidadImagen
+  portada_arquitectura_sitio:          IdentidadImagen
+  portada_arquitectura_sitio_original: IdentidadImagen
   indicador_objetivo_mensual: number | null
   indicador_producto:        number | null
   indicador_servicios:       number | null

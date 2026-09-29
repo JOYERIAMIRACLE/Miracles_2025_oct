@@ -95,6 +95,8 @@
     "descripcion_blog":      { "type": "text" },
     "portada_blog":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "portada_blog_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_arquitectura_sitio":          { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "portada_arquitectura_sitio_original": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
     "indicador_objetivo_mensual": { "type": "decimal" },
     "indicador_producto":         { "type": "decimal" },
     "indicador_servicios":        { "type": "decimal" },

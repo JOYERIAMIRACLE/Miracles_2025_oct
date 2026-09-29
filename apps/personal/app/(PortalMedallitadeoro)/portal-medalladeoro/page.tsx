@@ -127,6 +127,7 @@ export default function PortalMedalladeoroPage() {
           {seccion === "mision" && <HeroFondoExterno campo="portada_depto_mision" />}
           {seccion === "sitio-web" && <HeroFondoExterno campo="portada_sitio_web" />}
           {seccion === "blog" && <HeroFondoExterno campo="portada_blog" />}
+          {seccion === "arquitectura-sitio" && <HeroFondoExterno campo="portada_arquitectura_sitio" />}
           {/* ─── LAYOUT RULE: Boxed/Contained ─────────────────────────────────
               Todo el contenido del portal vive dentro de este container.
               max-w-7xl = 1280px máximo, centrado con mx-auto.
