@@ -14,6 +14,7 @@ module.exports = [
         'https://www.medalladeoro.com.mx',
         // Dev local
         'http://localhost:3000',
+        'http://localhost:3001',
         'http://localhost:1337',
       ],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],

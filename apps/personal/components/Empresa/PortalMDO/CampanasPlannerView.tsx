@@ -4,12 +4,12 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import {
   Plus, Pencil, Trash2, X, Check, ChevronDown,
   CalendarDays, ChevronLeft, ChevronRight,
-  Paperclip, Search, Camera, SlidersHorizontal, Link2,
+  Paperclip, Search, Camera, SlidersHorizontal, Link2, Tag, Image as ImageIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useGetCampanas } from "@/api/campana/getCampanas"
 import { createCampana, updateCampana, deleteCampana } from "@/api/campana/mutateCampana"
-import { CampanaType, CampanaPayload, MESES, MesCampana, PublicacionData, RedPublicacionKey } from "@/types/campana"
+import { CampanaType, CampanaPayload, MESES, MesCampana, PublicacionData, RedPublicacionKey, EstadoEtapa } from "@/types/campana"
 import { uploadMedia } from "@/lib/upload"
 import { CalendarioPicker } from "@/components/Shared/CalendarioPicker"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
@@ -177,15 +177,12 @@ function parsePublicacion(raw: string | null): PublicacionData {
 
 const ETAPAS = ["Planeación", "Producto", "Contenido", "Publicación"] as const
 
-function computeEtapas(form: CampanaPayload, manualPublicado: boolean): Set<number> {
+function computeEtapas(form: CampanaPayload): Set<number> {
   const set = new Set<number>()
   if (form.categoria && (form.notas || form.semana1Fecha)) set.add(0)
   if (form.atributos) set.add(1)
-  if (form.semana1Archivo && form.multimedia) set.add(2)
-  const pub = parsePublicacion(form.publicacion)
-  const anyConHora = Object.values(pub).some(r => !!r.hora)
-  if (anyConHora) { if (manualPublicado) set.add(3) }
-  else if ((pub.linkedin.publicado || pub.facebook.publicado) && pub.mailing.publicado && pub.blog.publicado) set.add(3)
+  if (form.estadoContenido === "completado") set.add(2)
+  if (form.estadoPublicacion === "completado") set.add(3)
   return set
 }
 function etapasFromString(raw: string | null): Set<number> {
@@ -212,65 +209,98 @@ const ESTADOS_CAMPANA: { key: FiltroStatus; label: string; dot: string }[] = [
   { key: "completadas", label: "Completadas", dot: "bg-violet-500" },
 ]
 
-const CAT_CHIP: Record<string, { letter: string; bg: string; text: string }> = {
-  MHS:   { letter: "M", bg: "bg-violet-500/15",   text: "text-violet-600 dark:text-violet-300"   },
-  Store: { letter: "S", bg: "bg-violet-500/15", text: "text-violet-600 dark:text-violet-300" },
-  Extra: { letter: "E", bg: "bg-violet-500/15",  text: "text-violet-600 dark:text-violet-300"  },
+// ─── Etapa actual (pastilla de estado de la card) ────────────────────────────
+
+function etapaActualInfo(c: CampanaType): { label: string; dot: string; text: string; bg: string } {
+  const gris   = { dot: "bg-slate-400",  text: "text-slate-600 dark:text-slate-300",   bg: "bg-slate-100 dark:bg-slate-800" }
+  const claro  = { dot: "bg-violet-400", text: "text-violet-600 dark:text-violet-300", bg: "bg-violet-500/10" }
+  const fuerte = { dot: "bg-violet-500", text: "text-violet-700 dark:text-violet-200", bg: "bg-violet-500/25" }
+  if (!(c.categoria && (c.notas || c.semana1Fecha))) return { label: "Planeación", ...gris }
+  if (!c.atributos)                                   return { label: "Producto",   ...gris }
+  if (c.estadoContenido === "en_proceso")             return { label: "Crafting...", ...claro }
+  if (c.estadoContenido !== "completado")             return { label: "Producto",   ...gris }
+  if (c.estadoPublicacion !== "completado")           return { label: "Publicado",  ...claro }
+  return { label: "Publicado", ...fuerte }
 }
 
-function CampanaChip({ titulo, categoria, keyword, notas, fullWidth, archivos, multimediaUrl, progreso, onClick, onDelete }: {
-  titulo: string; categoria: string | null; keyword?: string | null; notas?: string | null
-  fullWidth?: boolean; archivos?: string[]; multimediaUrl?: string | null; progreso?: number
-  onClick: () => void; onDelete?: () => void
+function formatHora12(hora: string): string {
+  const [hStr, mStr] = hora.split(":")
+  const h = Number(hStr)
+  if (Number.isNaN(h)) return hora
+  const ampm = h >= 12 ? "PM" : "AM"
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${h12}:${mStr ?? "00"} ${ampm}`
+}
+
+function primeraHoraProgramada(raw: string | null): string | null {
+  const pub = parsePublicacion(raw)
+  for (const { key } of REDES_PUBLICACION) {
+    if (pub[key].hora) return formatHora12(pub[key].hora)
+  }
+  return null
+}
+
+function tipoMultimedia(mime?: string | null): string | null {
+  if (!mime) return null
+  if (mime.startsWith("image/")) return "Imagen"
+  if (mime.startsWith("video/")) return "Video"
+  return "Archivo"
+}
+
+function CampanaChip({ c, fecha, fullWidth, onClick }: {
+  c: CampanaType; fecha?: string | null; fullWidth?: boolean; onClick: () => void
 }) {
-  const cfg = (categoria && CAT_CHIP[categoria]) ?? { letter: "·", bg: "bg-slate-100 dark:bg-slate-700", text: "text-slate-500 dark:text-slate-400" }
-  const primerArchivo = archivos?.[0]
-  const progressPct = progreso !== undefined ? Math.round((progreso / 4) * 100) : 0
-  const riverColor = progressPct >= 100 ? "bg-violet-500" : "bg-violet-400"
+  const info = etapaActualInfo(c)
+  const hora = primeraHoraProgramada(c.publicacion)
+  const archivos = [c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo, c.semana5Archivo].filter(Boolean) as string[]
+  const primerArchivo = archivos[0]
+  const mediaLabel = tipoMultimedia(c.multimedia?.mime)
+
   return (
     <div onClick={onClick}
-      className={`group/chip relative flex items-stretch rounded-xl bg-white dark:bg-[#2a1b3d] hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[210px]"}`}>
-      <span className={`flex items-start justify-center pt-2.5 w-7 shrink-0 text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>{cfg.letter}</span>
-      <div className="flex-1 min-w-0 px-2.5 py-2 space-y-0.5">
-        {notas && <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-snug truncate">{notas}</p>}
-        {keyword && <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug truncate">{keyword}</p>}
-        {titulo && <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug line-clamp-2">{titulo}</p>}
+      className={`flex flex-col rounded-xl bg-white dark:bg-[#2a1b3d] hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm transition-colors overflow-hidden shrink-0 cursor-pointer ${fullWidth ? "w-full" : "w-[280px]"}`}>
+      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700/60">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className={`flex items-center gap-1 shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${info.bg} ${info.text}`}>
+            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${info.dot}`} />
+            {info.label.toUpperCase()}
+          </span>
+          <CategoriaBadge cat={c.categoria} />
+        </div>
+        {fecha && (
+          <span className="shrink-0 text-[9px] text-slate-400 dark:text-slate-500 font-medium tabular-nums">
+            {fmtFecha(fecha)}{hora && ` · ${hora}`}
+          </span>
+        )}
       </div>
-      {(primerArchivo || multimediaUrl || onDelete) && (
-        <div className="flex flex-col items-center justify-center gap-1 w-6 shrink-0 bg-slate-50 dark:bg-[#2a1b3d]/60 border-l border-slate-100 dark:border-slate-700/60">
+
+      <div className="px-3 py-2 min-w-0">
+        <p className="text-xs text-slate-700 dark:text-slate-200 truncate">{c.notas || "Sin categoría objetivo"}</p>
+      </div>
+
+      {(c.keyword || primerArchivo || mediaLabel) && (
+        <div className="flex items-center gap-3 px-3 py-1.5 border-t border-slate-100 dark:border-slate-700/60 bg-slate-50/60 dark:bg-slate-900/30">
+          {c.keyword && (
+            <span className="flex items-center gap-1 text-[9px] text-slate-500 dark:text-slate-400 min-w-0 truncate">
+              <Tag size={9} className="shrink-0" /> <span className="truncate">{c.keyword}</span>
+            </span>
+          )}
           {primerArchivo && (
             <a href={primerArchivo} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-              title={`Abrir link${archivos && archivos.length > 1 ? ` (${archivos.length})` : ""}`}
-              className="flex items-center justify-center h-5 w-5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition">
-              <Link2 size={11} />
+              title={archivos.length > 1 ? `Abrir recursos (${archivos.length})` : "Abrir recurso"}
+              className="flex items-center gap-1 text-[9px] text-slate-500 dark:text-slate-400 hover:text-violet-500 shrink-0 transition">
+              <Link2 size={9} /> Kit de Recursos{archivos.length > 1 ? ` (${archivos.length})` : ""}
             </a>
           )}
-          {multimediaUrl && (
-            <a href={multimediaUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-              title="Abrir archivo subido"
-              className="flex items-center justify-center h-5 w-5 text-slate-400 dark:text-slate-500 hover:text-violet-500 transition">
-              <Paperclip size={11} />
-            </a>
-          )}
-          {onDelete && (
-            <span role="button" onClick={e => { e.stopPropagation(); onDelete() }} title="Eliminar campaña"
-              className="flex items-center justify-center h-5 w-5 text-slate-300 dark:text-slate-600 hover:text-red-500 opacity-0 group-hover/chip:opacity-100 transition">
-              <Trash2 size={10} />
+          {mediaLabel && (
+            <span className="flex items-center gap-1 text-[9px] text-slate-500 dark:text-slate-400 shrink-0">
+              <ImageIcon size={9} /> 1 {mediaLabel}
             </span>
           )}
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-100 dark:bg-slate-700">
-        {progressPct > 0 && <div className={`h-full ${riverColor} transition-all duration-500`} style={{ width: `${progressPct}%` }} />}
-      </div>
     </div>
   )
-}
-
-// ─── Campaign progress helper for chips ──────────────────────────────────────
-
-function progresoDe(c: CampanaType): number {
-  return etapasFromString(c.etapas).size
 }
 
 // ─── Payload helpers ──────────────────────────────────────────────────────────
@@ -285,6 +315,7 @@ function emptyPayload(mes: MesCampana, anio: number, categoria: string | null): 
     semana4Fecha: null, semana4Titulo: null, semana4Partes: null, semana4Archivo: null,
     semana5Fecha: null, semana5Titulo: null, semana5Partes: null, semana5Archivo: null,
     etapas: null, multimedia: null, publicacion: null,
+    estadoContenido: "sin_procesar", estadoPublicacion: "sin_procesar",
   }
 }
 function payloadDe(c: CampanaType): CampanaPayload {
@@ -297,26 +328,46 @@ function payloadDe(c: CampanaType): CampanaPayload {
     semana4Fecha: c.semana4Fecha, semana4Titulo: c.semana4Titulo, semana4Partes: c.semana4Partes, semana4Archivo: c.semana4Archivo,
     semana5Fecha: c.semana5Fecha, semana5Titulo: c.semana5Titulo, semana5Partes: c.semana5Partes, semana5Archivo: c.semana5Archivo,
     etapas: c.etapas, multimedia: c.multimedia?.id ?? null, publicacion: c.publicacion,
+    estadoContenido: c.estadoContenido ?? "sin_procesar", estadoPublicacion: c.estadoPublicacion ?? "sin_procesar",
   }
 }
 
 // ─── Sección colapsable del modal ─────────────────────────────────────────────
 
-function Section({ id, abierto, titulo, badge, onToggle, children }: {
-  id: string; abierto: boolean; titulo: string; badge?: string; onToggle: () => void; children: React.ReactNode
+function Section({ id, abierto, titulo, badge, control, onToggle, children }: {
+  id: string; abierto: boolean; titulo: string; badge?: string; control?: React.ReactNode; onToggle: () => void; children: React.ReactNode
 }) {
   return (
     <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-      <button type="button" onClick={onToggle}
-        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left bg-slate-50 dark:bg-[#2a1b3d]/60 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition-colors">
-        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-          {titulo}
-          {badge && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400">{badge}</span>}
-        </span>
-        <ChevronDown className={`h-3.5 w-3.5 text-slate-400 shrink-0 transition-transform ${abierto ? "rotate-180" : ""}`} />
-      </button>
+      <div className="w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-slate-50 dark:bg-[#2a1b3d]/60 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition-colors">
+        <button type="button" onClick={onToggle} className="flex-1 flex items-center justify-between gap-2 text-left min-w-0">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2 min-w-0">
+            {titulo}
+            {badge && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 shrink-0">{badge}</span>}
+          </span>
+          <ChevronDown className={`h-3.5 w-3.5 text-slate-400 shrink-0 transition-transform ${abierto ? "rotate-180" : ""}`} />
+        </button>
+        {control && <div className="shrink-0">{control}</div>}
+      </div>
       {abierto && <div className="p-4 space-y-3 bg-white dark:bg-[#2a1b3d]">{children}</div>}
     </div>
+  )
+}
+
+function EstadoEtapaButton({ value, onChange }: { value: EstadoEtapa; onChange: (v: EstadoEtapa) => void }) {
+  const cfg: Record<EstadoEtapa, { label: string; dot: string; text: string; bg: string; border: string }> = {
+    sin_procesar: { label: "Sin iniciar", dot: "bg-slate-400",  text: "text-slate-500 dark:text-slate-400",   bg: "bg-slate-50 dark:bg-[#2a1b3d]",     border: "border-slate-200 dark:border-slate-700" },
+    en_proceso:   { label: "En proceso",  dot: "bg-violet-400", text: "text-violet-600 dark:text-violet-300", bg: "bg-violet-50 dark:bg-violet-950/20", border: "border-violet-200 dark:border-violet-800" },
+    completado:   { label: "Completado",  dot: "bg-violet-500", text: "text-violet-700 dark:text-violet-200", bg: "bg-violet-100 dark:bg-violet-900/30", border: "border-violet-300 dark:border-violet-700" },
+  }
+  const siguiente: Record<EstadoEtapa, EstadoEtapa> = { sin_procesar: "en_proceso", en_proceso: "completado", completado: "sin_procesar" }
+  const c = cfg[value]
+  return (
+    <button type="button" onClick={e => { e.stopPropagation(); onChange(siguiente[value]) }}
+      className={`flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-full border transition-colors ${c.bg} ${c.text} ${c.border}`}>
+      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${c.dot}`} />
+      {c.label}
+    </button>
   )
 }
 
@@ -336,7 +387,6 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
     return base
   })
   const [pub, setPub] = useState<PublicacionData>(() => parsePublicacion(editando?.publicacion ?? null))
-  const [manualPublicado, setManualPublicado] = useState(() => etapasFromString(editando?.etapas ?? null).has(3))
   const [abierta, setAbierta] = useState<string>("campana")
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -345,8 +395,7 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
   const [mediaPreview, setMediaPreview] = useState<string | null>(editando?.multimedia?.url ?? null)
   const mediaRef = useRef<HTMLInputElement>(null)
 
-  const etapasSet = computeEtapas({ ...form, publicacion: JSON.stringify(pub) }, manualPublicado)
-  const anyConHora = Object.values(pub).some(r => !!r.hora)
+  const etapasSet = computeEtapas({ ...form, publicacion: JSON.stringify(pub) })
 
   async function handleMedia(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -442,7 +491,9 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
             </div>
           </Section>
 
-          <Section id="contenido" abierto={abierta === "contenido"} titulo="Detalles de contenido" badge={contenidoBadge} onToggle={() => setAbierta(a => a === "contenido" ? "" : "contenido")}>
+          <Section id="contenido" abierto={abierta === "contenido"} titulo="Detalles de contenido" badge={contenidoBadge}
+            control={<EstadoEtapaButton value={form.estadoContenido} onChange={v => setForm(f => ({ ...f, estadoContenido: v }))} />}
+            onToggle={() => setAbierta(a => a === "contenido" ? "" : "contenido")}>
             <div>
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Categoría objetivo</label>
               <input value={form.notas ?? ""} onChange={e => setForm(f => ({ ...f, notas: e.target.value || null }))}
@@ -476,7 +527,9 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
             </div>
           </Section>
 
-          <Section id="publicacion" abierto={abierta === "publicacion"} titulo="Detalle de publicación" badge={publicacionBadge} onToggle={() => setAbierta(a => a === "publicacion" ? "" : "publicacion")}>
+          <Section id="publicacion" abierto={abierta === "publicacion"} titulo="Detalle de publicación" badge={publicacionBadge}
+            control={<EstadoEtapaButton value={form.estadoPublicacion} onChange={v => setForm(f => ({ ...f, estadoPublicacion: v }))} />}
+            onToggle={() => setAbierta(a => a === "publicacion" ? "" : "publicacion")}>
             <div className="space-y-2">
               {REDES_PUBLICACION.map(({ key, label }) => (
                 <div key={key} className="flex items-center gap-2">
@@ -497,12 +550,6 @@ function ModalCampana({ editando, defaultCategoria, defaultMes, defaultAnio, def
                     className="h-6 text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-slate-600 dark:text-slate-300 px-1 outline-none ml-auto" />
                 </div>
               ))}
-              {anyConHora && (
-                <button type="button" onClick={() => setManualPublicado(m => !m)}
-                  className={`w-full mt-1 h-8 rounded-lg text-xs font-semibold border transition-colors ${manualPublicado ? "bg-violet-50 dark:bg-violet-950/30 border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"}`}>
-                  {manualPublicado ? "✓ Marcado como publicado" : "Marcar como publicado"}
-                </button>
-              )}
             </div>
           </Section>
         </div>
@@ -695,14 +742,8 @@ function MesGroup({ mes, anio, campanas, onEdit, onDelete, onNueva }: {
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-none">{dateRange}{esPasada && " · pasada"}</span>
                   </div>
                   <div className="flex-1 flex flex-wrap items-start gap-2 px-4 py-3">
-                    {items.map(({ c, titulo, fecha }) => (
-                      <div key={`${c.documentId}-${n}`} className="flex items-start gap-1">
-                        {fecha && <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium shrink-0 tabular-nums mt-2.5">{fmtFecha(fecha)}</span>}
-                        <CampanaChip titulo={titulo} categoria={c.categoria} keyword={c.keyword} notas={c.notas} progreso={progresoDe(c)}
-                          archivos={[c.semana1Archivo, c.semana2Archivo, c.semana3Archivo, c.semana4Archivo, c.semana5Archivo].filter(Boolean) as string[]}
-                          multimediaUrl={c.multimedia?.url ?? null}
-                          onClick={() => onEdit(c)} onDelete={() => onDelete(c)} />
-                      </div>
+                    {items.map(({ c, fecha }, i) => (
+                      <CampanaChip key={`${c.documentId}-${n}-${i}`} c={c} fecha={fecha} onClick={() => onEdit(c)} />
                     ))}
                   </div>
                   <div className="flex items-center pr-4">
@@ -904,11 +945,8 @@ function VistaPlaneador({ campanas, onEdit, onDelete, onAgregar, onAsignarExiste
                 const items = getDiaItems(campanas, dayStr, fila.label)
                 return (
                   <div key={di} className={`border-l border-slate-200 dark:border-slate-700 p-1.5 flex flex-col gap-1 min-h-[88px] ${isHoy(day) ? "bg-violet-50 dark:bg-violet-500/5" : ""}`}>
-                    {items.map(({ campana, n, titulo }) => (
-                      <CampanaChip key={`${campana.documentId}-${n}`} titulo={titulo} categoria={campana.categoria} keyword={campana.keyword} notas={campana.notas} fullWidth progreso={progresoDe(campana)}
-                        archivos={[campana.semana1Archivo, campana.semana2Archivo, campana.semana3Archivo, campana.semana4Archivo, campana.semana5Archivo].filter(Boolean) as string[]}
-                        multimediaUrl={campana.multimedia?.url ?? null}
-                        onClick={() => onEdit(campana)} onDelete={() => onDelete(campana)} />
+                    {items.map(({ campana, n }) => (
+                      <CampanaChip key={`${campana.documentId}-${n}`} c={campana} fullWidth onClick={() => onEdit(campana)} />
                     ))}
                     <button type="button" onClick={() => setPicker({ dayStr: toYMD(day), categoria: fila.label })}
                       className="w-full py-0.5 rounded border border-dashed border-slate-200 dark:border-slate-800 hover:border-violet-400 text-slate-300 dark:text-slate-700 hover:text-violet-500 text-[9px] flex items-center justify-center gap-0.5 transition-colors mt-auto shrink-0">

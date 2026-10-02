@@ -77,6 +77,8 @@
       "type": "string"
     },
     "multimedia": { "type": "media", "multiple": false, "allowedTypes": ["images", "videos", "files"] },
-    "publicacion": { "type": "text" }
+    "publicacion": { "type": "text" },
+    "estadoContenido":   { "type": "enumeration", "enum": ["sin_procesar", "en_proceso", "completado"], "default": "sin_procesar" },
+    "estadoPublicacion": { "type": "enumeration", "enum": ["sin_procesar", "en_proceso", "completado"], "default": "sin_procesar" }
   }
 }

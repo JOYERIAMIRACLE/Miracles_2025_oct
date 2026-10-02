@@ -12,6 +12,8 @@ export type PublicacionData = Record<RedPublicacionKey, { publicado: boolean; ho
 
 export type StrapiMedia = { id: number; url: string; mime: string; name: string }
 
+export type EstadoEtapa = "sin_procesar" | "en_proceso" | "completado"
+
 export type CampanaType = {
   id:              number
   documentId:      string
@@ -48,6 +50,8 @@ export type CampanaType = {
   etapas:          string | null
   multimedia:      StrapiMedia | null
   publicacion:     string | null
+  estadoContenido:   EstadoEtapa
+  estadoPublicacion: EstadoEtapa
   createdAt?:      string
   updatedAt?:      string
 }
