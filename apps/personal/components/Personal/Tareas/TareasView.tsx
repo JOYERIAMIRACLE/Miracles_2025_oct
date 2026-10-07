@@ -39,8 +39,11 @@ function useAutoScrollPanel(open: boolean) {
   return ref
 }
 
-const ESTADOS: { key: EstadoTarea | "todas"; label: string }[] = [
+type FiltroEstado = EstadoTarea | "todas" | "abiertas"
+
+const ESTADOS: { key: FiltroEstado; label: string }[] = [
   { key: "todas",        label: "Todas" },
+  { key: "abiertas",     label: "Abiertas" },
   { key: "sin_iniciar",  label: "Sin iniciar" },
   { key: "en_progreso",  label: "En progreso" },
   { key: "en_pausa",     label: "En pausa" },
@@ -115,7 +118,7 @@ const isoHoy = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
-// Default de "Fecha límite" al crear: una semana después de hoy.
+// Default de "Fecha límite" al crear fuera del Portal: una semana después de hoy.
 const unaSemanaDespues = (iso: string): string => {
   const d = new Date(iso + "T00:00:00")
   d.setDate(d.getDate() + 7)
@@ -168,7 +171,7 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
   const documentIdIdentidad = identidad?.documentId ?? null
   const hero = useHeroImagen("portada_tareas", documentIdIdentidad, reloadIdentidad)
   const [vista, setVista] = useState<Vista>("lista")
-  const [filtro, setFiltro] = useState<EstadoTarea | "todas">("en_progreso")
+  const [filtro, setFiltro] = useState<FiltroEstado>(esEmpresa ? "abiertas" : "en_progreso")
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>("")
   const [filtroPrioridad, setFiltroPrioridad] = useState<PrioridadTarea | "">("")
   const [filtroRango, setFiltroRango] = useState<RangoFecha>("todas")
@@ -355,7 +358,7 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
     const busq = busqueda.trim().toLowerCase()
 
     return tareas
-      .filter(t => filtro === "todas" || t.estado === filtro)
+      .filter(t => filtro === "todas" || (filtro === "abiertas" ? t.estado !== "completada" : t.estado === filtro))
       .filter(t => !filtroEtiqueta || t.etiqueta === filtroEtiqueta)
       .filter(t => !filtroPrioridad || t.prioridad === filtroPrioridad)
       .filter(t => !filtroResponsable || t.responsable === filtroResponsable)
@@ -386,7 +389,7 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
         return true
       })
       .sort((a, b) => {
-        const orden: Record<string, number> = { sin_iniciar: 0, en_progreso: 1, en_pausa: 2, completada: 3 }
+        const orden: Record<string, number> = { en_progreso: 0, sin_iniciar: 1, en_pausa: 2, completada: 3 }
         if (orden[a.estado] !== orden[b.estado]) return orden[a.estado] - orden[b.estado]
         const aVenc = a.fechaVencimiento ? new Date(a.fechaVencimiento).getTime() : Infinity
         const bVenc = b.fechaVencimiento ? new Date(b.fechaVencimiento).getTime() : Infinity
@@ -506,6 +509,7 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
 
   const stats = {
     total:       tareas.length,
+    abiertas:    tareas.filter(t => t.estado !== "completada").length,
     sinIniciar:  tareas.filter(t => t.estado === "sin_iniciar").length,
     enProgreso:  tareas.filter(t => t.estado === "en_progreso").length,
     enPausa:     tareas.filter(t => t.estado === "en_pausa").length,
@@ -515,10 +519,11 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
   const abrirCrear = (fechaVencimiento: string | null = null, proyectoPreseleccionado: ProyectoRef | null = null, etiquetaPreseleccionada: string | null = null) => {
     const hoy = isoHoy()
     setEditando(null)
+    // En el Portal una tarea nueva entra al backlog: "en progreso" y la fecha límite se ponen a propósito, no por default
     setForm({
       titulo: "", descripcion: "", ambito,
-      estado: "en_progreso", prioridad: "media",
-      etiqueta: etiquetaPreseleccionada, fechaVencimiento: fechaVencimiento ?? unaSemanaDespues(hoy), notas: null, links: null,
+      estado: esEmpresa ? "sin_iniciar" : "en_progreso", prioridad: "media",
+      etiqueta: etiquetaPreseleccionada, fechaVencimiento: fechaVencimiento ?? (esEmpresa ? null : unaSemanaDespues(hoy)), notas: null, links: null,
       responsable: user?.username ?? null, area: null, fechaInicio: hoy, esTicket: false,
     })
     setProyectoForm(proyectoPreseleccionado ? { tipo: "existente", proyecto: proyectoPreseleccionado } : null)
@@ -557,6 +562,8 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
         payload.fechaCompletada = null
       }
       if (!editando) {
+        payload.fechaInicio = form.estado === "en_progreso" ? new Date().toISOString() : null
+      } else if (form.estado === "en_progreso" && !editando.fechaInicio) {
         payload.fechaInicio = new Date().toISOString()
       }
       if (proyectoRef) {
@@ -1045,7 +1052,7 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
                 <Ticket size={9} /> Ticket
               </span>
             )}
-            {filtro === "todas" && (
+            {(filtro === "todas" || filtro === "abiertas") && (
               <span className={`text-[10px] px-1.5 py-0.5 rounded border ${ESTADO_COLORS[t.estado]}`}>
                 {ESTADO_LABEL[t.estado]}
               </span>
@@ -1249,6 +1256,7 @@ export function TareasView({ ambito, titulo, breadcrumb, heroExterno }: { ambito
               <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl z-30 min-w-[190px] py-1 overflow-hidden">
                 {ESTADOS.map(e => {
                   const count = e.key === "todas" ? tareas.length
+                    : e.key === "abiertas"     ? stats.abiertas
                     : e.key === "sin_iniciar"  ? stats.sinIniciar
                     : e.key === "en_progreso"  ? stats.enProgreso
                     : e.key === "en_pausa"     ? stats.enPausa
