@@ -749,7 +749,7 @@ async function cerrarRegistroNativo(strapi) {
 
 // Campos que la Tienda nunca necesita y que no deben salir a un anónimo.
 const CAMPOS_PRIVADOS_PRODUCTO = ['costoProduccion', 'costoManoObra', 'pesoGramos', 'materialInsumo', 'puntoVenta'];
-const CAMPOS_PUBLICOS_IDENTIDAD = ['id', 'documentId', 'nombre', 'slogan', 'logo'];
+const CAMPOS_PUBLICOS_IDENTIDAD = ['id', 'documentId', 'nombre', 'slogan', 'logo', 'proposito', 'valores'];
 
 function limpiarProductosPublicos(nodo) {
   if (Array.isArray(nodo)) {

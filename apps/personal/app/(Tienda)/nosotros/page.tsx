@@ -1,27 +1,51 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { separarValores } from "@/lib/identidad"
 import { buttonVariants } from "@/components/ui/button"
 import Container from "../1tiendacomponentes/container"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://medalladeoro.com.mx"
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? ""
+const DESCRIPCION =
+  "Medalla de Oro: joyería en oro 10k y plata 925 para reconocer cada logro, cada amistad y cada amor. Envíos a todo México."
+
+type IdentidadPublica = { slogan: string | null; proposito: string | null; valores: string | null }
+
+// Se lee al construir el sitio: lo que se edita en ¿Quiénes somos? del Portal
+// llega aquí en la siguiente reconstrucción de la Tienda.
+async function fetchIdentidad(): Promise<IdentidadPublica | null> {
+  try {
+    const res = await fetch(`${BACKEND}/api/identidad-empresas?pagination[pageSize]=1`, {
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return null
+    const json = await res.json()
+    return (json.data?.[0] as IdentidadPublica) ?? null
+  } catch {
+    return null
+  }
+}
 
 export const metadata: Metadata = {
   title: "Nosotros | Medalla de Oro",
-  description:
-    "Conoce Medalla de Oro: un negocio familiar dedicado a la joyería fina en oro 10k y plata 925, hecha con cuidado y enviada a todo México.",
+  description: DESCRIPCION,
   alternates: { canonical: `${SITE_URL}/nosotros` },
   openGraph: {
     title: "Nosotros | Medalla de Oro",
-    description:
-      "Conoce Medalla de Oro: un negocio familiar dedicado a la joyería fina en oro 10k y plata 925, hecha con cuidado y enviada a todo México.",
+    description: DESCRIPCION,
     url: `${SITE_URL}/nosotros`,
     siteName: "Medalla de Oro",
     type: "website",
   },
 }
 
-export default function NosotrosPage() {
+export default async function NosotrosPage() {
+  const identidad = await fetchIdentidad()
+  const slogan = identidad?.slogan?.trim()
+  const proposito = identidad?.proposito?.trim()
+  const valores = separarValores(identidad?.valores)
+
   return (
     <Container as="article" size="narrow" className="py-12">
 
@@ -37,22 +61,59 @@ export default function NosotrosPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">
           Sobre nosotros
         </p>
-        <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight">
-          Joyería que se hace con cuidado, pieza por pieza
+        <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight text-balance">
+          Cada logro, cada amistad y cada amor merecen su medalla
         </h1>
         <p className="mt-5 text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
-          Somos Joyería Miracles — un negocio familiar dedicado a la joyería fina, con la marca
-          registrada como Medalla de oro. No somos una cadena grande ni una fábrica anónima: somos
-          un equipo pequeño que revisa cada pieza antes de que salga por la puerta, porque sabemos
-          que lo que vendemos no es solo un accesorio, es algo que alguien va a usar todos los días
-          o va a regalar en un momento importante.
+          Todos alguna vez hemos recibido una medalla: por un logro o una meta cumplida, como
+          reconocimiento a una amistad increíble o como regalo de un amor inmenso. Medalla de Oro
+          existe para esos momentos únicos, con joyería que reconoce lo que vale la pena y acerca a
+          quien la regala y a quien la recibe.
         </p>
         <p className="mt-4 text-base text-gray-600 dark:text-gray-400 leading-relaxed">
-          Trabajamos con oro 10k y plata 925, y enviamos a todo México. Ese es el compromiso simple
-          detrás de todo lo que hacemos: materiales reales, buen trabajo, y que la pieza llegue en
-          las mismas condiciones en las que la elegiste.
+          Trabajamos con oro 10k y plata 925 y enviamos a todo México: materiales reales, piezas
+          bien hechas y que lleguen tal como las elegiste.
         </p>
       </header>
+
+      {/* Propósito — sale del Portal (¿Quiénes somos?) */}
+      {(slogan || proposito) && (
+        <section
+          aria-labelledby="nosotros-proposito"
+          className="mb-12 rounded-2xl bg-[#2a1b3d] px-6 py-10 sm:px-10 sm:py-12 dark:ring-1 dark:ring-white/10"
+        >
+          <h2 id="nosotros-proposito" className="text-xl font-bold text-white">
+            Nuestro propósito
+          </h2>
+          {proposito && (
+            <p className="mt-3 text-lg leading-relaxed text-white/85 text-pretty">{proposito}</p>
+          )}
+          {slogan && (
+            <p className="mt-8 text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight text-violet-300 text-balance">
+              {slogan}
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Valores — salen del Portal (¿Quiénes somos?) */}
+      {valores.length > 0 && (
+        <section aria-labelledby="nosotros-valores" className="mb-12">
+          <h2 id="nosotros-valores" className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            Nuestros valores
+          </h2>
+          <ul className="flex flex-wrap gap-2.5">
+            {valores.map(v => (
+              <li
+                key={v}
+                className="rounded-full border border-violet-200 dark:border-violet-800/60 px-4 py-2 text-base font-semibold text-violet-800 dark:text-violet-200"
+              >
+                {v}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Materiales y cuidado */}
       <section className="mb-12">
@@ -95,9 +156,9 @@ export default function NosotrosPage() {
           Nuestro compromiso contigo
         </h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-          Preferimos ser honestos a prometer de más. Somos un negocio pequeño en crecimiento, y
-          eso significa que respondemos directamente cuando nos escribes, empacamos cada pedido a
-          mano, y nos tomamos en serio cualquier duda o problema que tengas con tu compra.
+          Preferimos ser honestos a prometer de más: respondemos directamente cuando nos escribes,
+          empacamos cada pedido a mano y nos tomamos en serio cualquier duda o problema con tu
+          compra.
         </p>
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
           Si buscas una pieza en particular, un tamaño específico o simplemente quieres asesoría

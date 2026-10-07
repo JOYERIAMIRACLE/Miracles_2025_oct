@@ -12,6 +12,7 @@ export type IdentidadEmpresa = {
   slogan:         string | null
   mision:         string | null
   vision:         string | null
+  proposito:      string | null
   valores:        string | null
   colores:        string | null
   tipografia:     string | null

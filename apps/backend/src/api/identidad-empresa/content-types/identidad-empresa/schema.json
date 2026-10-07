@@ -13,6 +13,7 @@
     "slogan":      { "type": "string" },
     "mision":      { "type": "text" },
     "vision":      { "type": "text" },
+    "proposito":   { "type": "text" },
     "valores":     { "type": "text" },
     "colores":     { "type": "text" },
     "tipografia":  { "type": "string" },

@@ -678,6 +678,14 @@ export interface ApiCampanaCampana extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    estadoContenido: Schema.Attribute.Enumeration<
+      ['sin_procesar', 'en_proceso', 'completado']
+    > &
+      Schema.Attribute.DefaultTo<'sin_procesar'>;
+    estadoPublicacion: Schema.Attribute.Enumeration<
+      ['sin_procesar', 'en_proceso', 'completado']
+    > &
+      Schema.Attribute.DefaultTo<'sin_procesar'>;
     etapas: Schema.Attribute.String;
     keyword: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -1750,6 +1758,7 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     portada_tareas_original: Schema.Attribute.Media<'images'>;
     portada_ventas: Schema.Attribute.Media<'images'>;
     portada_ventas_original: Schema.Attribute.Media<'images'>;
+    proposito: Schema.Attribute.Text;
     publishedAt: Schema.Attribute.DateTime;
     redesSociales: Schema.Attribute.Text;
     sitioWeb: Schema.Attribute.String;

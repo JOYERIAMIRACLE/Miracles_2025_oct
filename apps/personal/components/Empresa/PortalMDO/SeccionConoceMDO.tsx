@@ -5,6 +5,7 @@ import { Loader2, Camera, MapPin, Phone, Mail, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { Card, SeccionVitrina, SeccionHeroContenido, useHeroImagen, useUploadImagen, boldify } from "./shared"
 import { useGetIdentidad, saveIdentidad } from "@/api/identidad-empresa/getIdentidad"
+import { separarValores } from "@/lib/identidad"
 
 // ── Bloque "¿Quiénes somos?" — nombre + slogan en un mismo mini-formulario,
 // mismo patrón de lápiz-al-hover que ya usa SeccionHero para su descripción.
@@ -65,9 +66,9 @@ function BloqueQuienesSomos({ nombre, slogan, documentId, reload }: {
   )
 }
 
-// ── Bloque Misión / Visión — un solo textarea, mismo patrón.
+// ── Bloque Propósito / Misión / Visión — un solo textarea, mismo patrón.
 function BloqueMisionVision({ titulo, valor, campo, documentId, reload }: {
-  titulo: string; valor: string; campo: "mision" | "vision"; documentId: string | null; reload: () => void
+  titulo: string; valor: string; campo: "proposito" | "mision" | "vision"; documentId: string | null; reload: () => void
 }) {
   const [editando, setEditando] = useState(false)
   const [borrador, setBorrador] = useState(valor)
@@ -120,6 +121,66 @@ function BloqueMisionVision({ titulo, valor, campo, documentId, reload }: {
   )
 }
 
+// ── Bloque Valores — se edita como una lista separada por comas y se muestra
+// como etiquetas; es el mismo texto que pinta /nosotros en la Tienda.
+function BloqueValores({ valor, documentId, reload }: { valor: string; documentId: string | null; reload: () => void }) {
+  const [editando, setEditando] = useState(false)
+  const [borrador, setBorrador] = useState(valor)
+  const [guardando, setGuardando] = useState(false)
+  const valores = separarValores(valor)
+
+  function entrar() { setBorrador(valor); setEditando(true) }
+  async function guardar() {
+    setGuardando(true)
+    try {
+      await saveIdentidad(documentId, { valores: separarValores(borrador).join(", ") || null })
+      setEditando(false)
+      reload()
+    } catch (e) {
+      toast.error(`Error · ${(e as Error).message}`)
+    } finally { setGuardando(false) }
+  }
+
+  return (
+    <div className="border-t border-slate-100 dark:border-slate-800 pt-3 mt-1 group/bloque">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <h3 className="text-xl font-bold text-violet-600 dark:text-violet-400">Valores</h3>
+        {!editando && (
+          <button type="button" title="Editar Valores" onClick={entrar}
+            className="opacity-0 group-hover/bloque:opacity-100 text-slate-400 hover:text-violet-500 transition">
+            <Pencil size={13} />
+          </button>
+        )}
+      </div>
+      {editando ? (
+        <div className="space-y-2">
+          <input autoFocus value={borrador} onChange={e => setBorrador(e.target.value)} placeholder="Confianza, Cercanía, Calidad…"
+            className="w-full h-8 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] px-2 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-violet-400" />
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">Sepáralos con comas.</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setEditando(false)}
+              className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-[#2a1b3d] transition">
+              Cancelar
+            </button>
+            <button type="button" onClick={guardar} disabled={guardando}
+              className="px-2.5 py-1 text-xs rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-40 text-white font-semibold transition">
+              {guardando ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      ) : valores.length ? (
+        <ul className="flex flex-wrap gap-1.5">
+          {valores.map(v => (
+            <li key={v} className="px-2.5 py-1 rounded-full bg-violet-500/10 text-xs font-medium text-violet-700 dark:text-violet-300">{v}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-slate-400 dark:text-slate-500 italic">Pendiente de definir</p>
+      )}
+    </div>
+  )
+}
+
 function TabQuienesSomos() {
   const { identidad, loading, reload } = useGetIdentidad()
   const documentId = identidad?.documentId ?? null
@@ -140,10 +201,13 @@ function TabQuienesSomos() {
           <BloqueQuienesSomos
             nombre={identidad?.nombre ?? "Medalla de oro"} slogan={identidad?.slogan ?? ""}
             documentId={documentId} reload={reload} />
+          <BloqueMisionVision titulo="Propósito" campo="proposito" valor={identidad?.proposito ?? ""}
+            documentId={documentId} reload={reload} />
           <BloqueMisionVision titulo="Misión" campo="mision" valor={identidad?.mision ?? ""}
             documentId={documentId} reload={reload} />
           <BloqueMisionVision titulo="Visión" campo="vision" valor={identidad?.vision ?? ""}
             documentId={documentId} reload={reload} />
+          <BloqueValores valor={identidad?.valores ?? ""} documentId={documentId} reload={reload} />
         </div>
 
         <div className="relative min-h-[260px] rounded-xl overflow-hidden group cursor-pointer bg-violet-600"
@@ -261,7 +325,7 @@ export function SeccionConoceMDO() {
       <SeccionHeroContenido
         breadcrumb={["Conoce a Medalla de oro", "¿Quiénes somos?"]}
         titulo="Conoce a Medalla de oro"
-        descripcion={identidad?.descripcion_conoce || "Historia, propósito, visión y equipo de Joyería Miracles — todo lo que necesitas saber sobre medalla de oro."}
+        descripcion={identidad?.descripcion_conoce || "Historia, propósito, visión y equipo: todo lo que necesitas saber sobre Medalla de Oro."}
         campoDescripcion="descripcion_conoce"
         onDescripcionGuardada={reload}
         documentId={identidad?.documentId ?? null}

@@ -9,6 +9,9 @@ const MODELOS = {
   'api::product.product':                   { publicable: false },
   'api::product-category.product-category': { publicable: true },
   'api::blog-post.blog-post':               { publicable: true },
+  // De la identidad la Tienda solo pinta estos textos (/nosotros); portadas y
+  // descripciones del Portal viven en el mismo registro y no deben reconstruir.
+  'api::identidad-empresa.identidad-empresa': { publicable: false, campos: new Set(['nombre', 'slogan', 'proposito', 'valores', 'logo']) },
 };
 const MODELOS_REBUILD = Object.keys(MODELOS);
 
@@ -70,6 +73,7 @@ function crearDisparadorRebuild({
       if (cfg.publicable && !event.result?.publishedAt) return;
       if (event.action === 'afterUpdate') {
         const claves = Object.keys(event.params?.data ?? {});
+        if (cfg.campos && !claves.some((k) => cfg.campos.has(k))) return;
         if (claves.length > 0 && claves.every((k) => CAMPOS_SIN_EFECTO.has(k))) return;
       }
       motivos.add(event.model.uid.replace(/^api::[^.]+\./, ''));
