@@ -2001,7 +2001,9 @@ export function emptyCliente(etapa: FunnelEtapa = "Lead"): ClientePayload {
   }
 }
 
-export function PipelineView() {
+/** `onAbrirLead`: si viene, las tarjetas de la columna Lead llaman aquí en vez
+    de abrir la ficha del cliente (CRM las lleva a su fila en la pestaña Leads). */
+export function PipelineView({ onAbrirLead }: { onAbrirLead?: (lead: Lead) => void } = {}) {
   const {
     clientes, leads, loading,
     totalVentas,
@@ -2085,6 +2087,7 @@ export function PipelineView() {
     const clienteId = lead.cliente?.documentId
     const c = clienteId ? clientes.find(x => x.documentId === clienteId) ?? null : null
     const etapa = lead.Funnel ?? "Lead"
+    if (etapa === "Lead" && onAbrirLead) { onAbrirLead(lead); return }
     if (c && etapa === "Oferta") {
       const cots = (cotizacionesPorCliente.get(c.documentId) ?? [])
         .slice()

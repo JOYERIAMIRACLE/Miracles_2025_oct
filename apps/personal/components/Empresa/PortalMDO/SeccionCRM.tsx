@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Workflow, UserSearch, Bell } from "lucide-react"
 import { useSectionTab, SeccionVitrina, ContenidoTabs, SeccionHeroContenido } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
@@ -20,6 +21,8 @@ export function SeccionCRM() {
   const { tab, setTab } = useSectionTab("crm", "pipeline")
   const activo = TABS.find(t => t.id === tab) ?? TABS[0]
   const { identidad, loading, reload } = useGetIdentidad()
+  // Lead de una tarjeta del Pipeline que la pestaña Leads debe mostrar resaltado.
+  const [leadFoco, setLeadFoco] = useState<string | null>(null)
 
   return (
     <SeccionVitrina>
@@ -34,8 +37,8 @@ export function SeccionCRM() {
       >
         <ContenidoTabs tabs={TABS} active={tab} onChange={setTab} />
       </SeccionHeroContenido>
-      {tab === "pipeline"     && <PipelineView />}
-      {tab === "leads"        && <LeadsPortalView />}
+      {tab === "pipeline"     && <PipelineView onAbrirLead={l => { setLeadFoco(l.documentId); setTab("leads") }} />}
+      {tab === "leads"        && <LeadsPortalView leadFoco={leadFoco} onFocoConsumido={() => setLeadFoco(null)} />}
       {tab === "disparadores" && <DisparadoresView />}
     </SeccionVitrina>
   )

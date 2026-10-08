@@ -691,7 +691,7 @@ export function ActionBtn({title,onClick,tone="default",children}:{title:string;
 }
 
 /* ─── Tabla ─────────────────────────────────────────────────────────── */
-export function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, renderActions }:{
+export function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, renderActions, rowId, rowClassName }:{
   headers:string[]; rows:string[][]
   colors:(((r:string[])=>string)|null)[]
   onRowClick?:(r:string[],i:number)=>void
@@ -699,6 +699,8 @@ export function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, r
   /** Columna extra de acciones (editar/borrar/etc.) al final de cada fila —
       opcional, para que las vistas de solo-lectura no cambien. */
   renderActions?:(i:number)=>React.ReactNode
+  rowId?:(i:number)=>string|undefined
+  rowClassName?:(i:number)=>string
 }) {
   const cols = renderActions ? [...headers, ""] : headers
   return (
@@ -721,7 +723,7 @@ export function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, r
               </td>
             </tr>
           ):rows.map((r,i)=>(
-            <tr key={i} className={`border-b border-slate-100 dark:border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40":""}`}
+            <tr key={i} id={rowId?.(i)} className={`border-b border-slate-100 dark:border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40":""} ${rowClassName?.(i)??""}`}
               onClick={()=>onRowClick?.(r,i)}>
               {r.map((cell,j)=>{
                 const fn=colors[j]

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { Plus, Pencil, Trash2, CheckCircle2, Eye } from "lucide-react"
+import { toast } from "sonner"
 import { useGetLeads, updateLead, deleteLead } from "@/api/lead/getLead"
 import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
 import { useGetVentas } from "@/api/ventaEmpresa/getVentas"
@@ -25,8 +26,9 @@ const primeroDelMes = () => { const d = new Date(); d.setDate(1); return d.toISO
 const hoy = () => new Date().toISOString().slice(0, 10)
 
 /** Pestaña Leads de CRM — la misma que vivía en Ventas, con estado propio:
-    rango, demo y filtros ya no se comparten con las otras pestañas de Ventas. */
-export function LeadsPortalView() {
+    rango, demo y filtros ya no se comparten con las otras pestañas de Ventas.
+    `leadFoco`: documentId de un lead (tarjeta del Pipeline) a mostrar resaltado. */
+export function LeadsPortalView({ leadFoco = null, onFocoConsumido }: { leadFoco?: string | null; onFocoConsumido?: () => void } = {}) {
   // Cuando se llega desde Ventas, el modo, rango y filtros viajan en sessionStorage.
   const [preset] = useState(leerPresetLeads)
   useEffect(() => { borrarPresetLeads() }, [])
@@ -36,7 +38,7 @@ export function LeadsPortalView() {
   const { ventas: _rV, setVentas: setRawVentasFetch, loading: lV } = useGetVentas()
   const { clientes: clientesReales, setClientes: setClientesReales } = useGetClientes()
 
-  const [demo, setDemo] = useState(preset?.demo ?? USE_DEMO)
+  const [demo, setDemo] = useState(leadFoco ? false : (preset?.demo ?? USE_DEMO))
   const rawLeads  = demo ? DEMO_DATA.leads  : _rL
   const rawCots   = demo ? DEMO_DATA.cots   : _rC
   const rawVentas = demo ? DEMO_DATA.ventas : _rV
@@ -60,6 +62,43 @@ export function LeadsPortalView() {
   const [clienteForm,      setClienteForm]      = useState<ClientePayload>(emptyCliente())
   const [guardandoCliente, setGuardandoCliente] = useState(false)
   const [delLeadId,        setDelLeadId]        = useState<string | null>(null)
+  const [filaResaltada,    setFilaResaltada]    = useState<string | null>(null)
+
+  // Llegar desde una tarjeta del Pipeline: el lead es real, así que se sale del
+  // demo y se quitan los filtros y el rango que lo puedan esconder.
+  useEffect(() => {
+    if (!leadFoco) return
+    if (demo) { setDemo(false); setDf(primeroDelMes()); setDt(hoy()); setBucketFilter(""); return }
+    if (lL) return
+    onFocoConsumido?.()
+    const lead = _rL.find(l => l.documentId === leadFoco)
+    if (!lead) { toast.error("No encontré ese lead en la lista"); return }
+    setLCanal(""); setLFunnel(""); setLOrigen(""); setBucketFilter(""); setCliFilter(null)
+    const f = (lead.fechaLead ?? lead.createdAt).slice(0, 10)
+    if (f < df) setDf(`${f.slice(0, 8)}01`)
+    if (f > dt) setDt(f)
+    setFilaResaltada(leadFoco)
+  }, [leadFoco, demo, lL, _rL, df, dt, onFocoConsumido])
+
+  // Misma receta que NotasMejora: esperar a que la fila exista, centrarla y resaltarla un momento.
+  useEffect(() => {
+    if (!filaResaltada) return
+    let cancelado = false
+    const inicio = performance.now()
+    const buscar = () => {
+      if (cancelado) return
+      const fila = document.getElementById(`lead-fila-${filaResaltada}`)
+      if (fila) {
+        fila.scrollIntoView({ behavior: "smooth", block: "center" })
+        setTimeout(() => { if (!cancelado) setFilaResaltada(null) }, 2200)
+        return
+      }
+      if (performance.now() - inicio < 5000) requestAnimationFrame(buscar)
+      else setFilaResaltada(null)
+    }
+    requestAnimationFrame(buscar)
+    return () => { cancelado = true }
+  }, [filaResaltada])
 
   async function guardarClienteLocal(editando: ClienteEmpresa | null, form: ClientePayload): Promise<ClienteEmpresa> {
     if (editando) {
@@ -175,6 +214,9 @@ export function LeadsPortalView() {
   const hayOrigenMedido=ftSegs.length>0||ltSegs.length>0||comoSegs.length>0
   const pctCot=fLeads.length?Math.round(fLeads.filter(l=>allCots.some(c=>c.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
   const pctPed=fLeads.length?Math.round(fLeads.filter(l=>allVentas.some(v=>v.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
+  // La tabla muestra 100 filas; si el lead resaltado queda más abajo, se amplía hasta incluirlo.
+  const idxResaltada = filaResaltada ? fLeads.findIndex(l => l.documentId === filaResaltada) : -1
+  const filas = fLeads.slice(0, Math.max(100, idxResaltada + 1))
 
   if (clienteDetalle) return (
     <ClientePanel
@@ -283,12 +325,14 @@ export function LeadsPortalView() {
           </div>
           <SimpleTable
             headers={["Fecha","Cliente","Canal","Origen","Funnel"]}
-            rows={fLeads.slice(0,100).map(l=>[dd(l.fechaLead??l.createdAt),l.cliente?.nombre??"—",l.canal??"—",l.origen??"—",l.Funnel])}
+            rows={filas.map(l=>[dd(l.fechaLead??l.createdAt),l.cliente?.nombre??"—",l.canal??"—",l.origen??"—",l.Funnel])}
+            rowId={i=>`lead-fila-${filas[i].documentId}`}
+            rowClassName={i=>filas[i].documentId===filaResaltada?"bg-violet-500/15 dark:bg-violet-500/20":""}
             colors={[null,null,null,null,(r)=>r[4]==="Entrega"?T.em:r[4]==="Rechazada"?T.rose:T.amber]}
             onRowClick={r=>{const cli=fLeads.find(l=>l.cliente?.nombre===r[1]);if(cli?.cliente)setCliFilter({docId:cli.cliente.documentId,nombre:cli.cliente.nombre})}}
             highlightCol={1}
             renderActions={puedeEditar ? (i)=>{
-              const lead = fLeads.slice(0,100)[i]
+              const lead = filas[i]
               const c = lead.cliente ? clientesReales.find(x=>x.documentId===lead.cliente!.documentId) : null
               return delLeadId===lead.documentId ? (
                 <span className="flex items-center gap-1.5 whitespace-nowrap" onClick={e=>e.stopPropagation()}>
