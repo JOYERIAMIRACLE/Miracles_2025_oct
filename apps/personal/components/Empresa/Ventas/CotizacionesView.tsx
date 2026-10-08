@@ -17,7 +17,7 @@ import { ProductType } from "@/types/product"
 import {
   Cotizacion, ItemCotizacion, EstadoCotizacion, ESTADOS_COT, ESTADO_COT_COLOR,
 } from "@/types/cotizacion"
-import { ClienteEmpresa, FUNNEL_COLOR, FUNNEL_LABEL } from "@/types/clienteEmpresa"
+import { ClienteEmpresa } from "@/types/clienteEmpresa"
 import { CotizacionModal } from "./CotizacionModal"
 import { ListToolbar } from "./ListToolbar"
 import { confirmDialog } from "../ConfirmDialog"
@@ -268,7 +268,9 @@ export function SeleccionarClienteModal({ clientes, onClose, onSelect }: {
                 <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{c.nombre}</p>
                 {c.telefono && <p className="text-[10px] text-slate-400 dark:text-slate-600">{c.telefono}</p>}
               </div>
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold shrink-0 ${FUNNEL_COLOR[c.Funnel ?? "Lead"]}`}>{FUNNEL_LABEL[c.Funnel ?? "Lead"]}</span>
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold shrink-0 ${c.tipo === "prospecto"
+                ? "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                : "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300"}`}>{c.tipo === "prospecto" ? "Prospecto" : "Contacto"}</span>
             </button>
           ))}
         </div>

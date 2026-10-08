@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
-import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
+import { useGetClientes, createCliente, updateCliente, deleteCliente, fusionarProspecto } from "@/api/clienteEmpresa/getClientes"
 import { ClienteEmpresa, ClientePayload, FUNNEL_ETAPAS, FunnelEtapa } from "@/types/clienteEmpresa"
 import { Cotizacion } from "@/types/cotizacion"
 import { useGetAllCotizaciones } from "@/api/cotizacion/getCotizaciones"
@@ -32,6 +32,8 @@ export function useClientesPipeline() {
   const { cotizaciones: todasCotizaciones, setCotizaciones: setTodasCotizaciones } = useGetAllCotizaciones()
   const [pedidoGateFor,  setPedidoGateFor]  = useState<Lead | null>(null)
   const [ofertaGateFor,  setOfertaGateFor]  = useState<Lead | null>(null)
+  // Lead cuyo cliente sigue siendo prospecto: antes de cotizarle se confirman sus datos.
+  const [contactoGateFor, setContactoGateFor] = useState<Lead | null>(null)
 
   const ventasPorCliente = useMemo(() => {
     const m = new Map<string, VentaEmpresa[]>()
@@ -89,6 +91,10 @@ export function useClientesPipeline() {
     if (!destino) {
       if (etapa === "Oferta") {
         const clienteId = lead.cliente?.documentId
+        if (clientes.find(c => c.documentId === clienteId)?.tipo === "prospecto") {
+          setContactoGateFor(lead)
+          return null
+        }
         const cots = clienteId ? (cotizacionesPorCliente.get(clienteId) ?? []) : []
         if (cots.length === 0) {
           setOfertaGateFor(lead)
@@ -170,6 +176,35 @@ export function useClientesPipeline() {
     if (pedidoGateFor && !yaEnPedidoOMas) updated = await avanzarLead(pedidoGateFor, "Pedido")
     setPedidoGateFor(null)
     return updated
+  }
+
+  // ─── Prospecto → contacto (paso previo a la primera cotización) ───────────
+  // En ambos caminos después siempre se abre la cotización; el backend vuelve
+  // contacto al cliente cuando esa cotización se guarda. Si se cancela, sigue
+  // siendo prospecto y el lead se queda en Lead.
+
+  const confirmarProspecto = async (lead: Lead, datos: Partial<ClientePayload>) => {
+    const prospecto = clientes.find(c => c.documentId === lead.cliente?.documentId)
+    if (!prospecto) return
+    const updated = await updateCliente(prospecto.documentId, datos)
+    setClientes(prev => prev.map(c => c.documentId === updated.documentId ? updated : c))
+    setContactoGateFor(null)
+    setOfertaGateFor(lead)
+  }
+
+  const usarContactoExistente = async (lead: Lead, contacto: ClienteEmpresa, datos: Partial<ClientePayload>) => {
+    const prospecto = clientes.find(c => c.documentId === lead.cliente?.documentId)
+    if (!prospecto) return
+    // Lo que se corrigió en el prospecto no se pierde: la fusión copia al contacto lo que le falte.
+    await updateCliente(prospecto.documentId, datos)
+    const fusionado = await fusionarProspecto(prospecto.documentId, contacto.documentId)
+    const clienteDelLead = { documentId: fusionado.documentId, nombre: fusionado.nombre, telefono: fusionado.telefono }
+    setClientes(prev => prev
+      .filter(c => c.documentId !== prospecto.documentId)
+      .map(c => c.documentId === fusionado.documentId ? { ...c, ...fusionado } : c))
+    setLeads(prev => prev.map(l => l.cliente?.documentId === prospecto.documentId ? { ...l, cliente: clienteDelLead } : l))
+    setContactoGateFor(null)
+    setOfertaGateFor({ ...lead, cliente: clienteDelLead })
   }
 
   // ─── Operaciones sobre ClienteEmpresa (contactos) ─────────────────────────
@@ -258,6 +293,9 @@ export function useClientesPipeline() {
         ? prev.map(c => c.documentId === updated.documentId ? updated : c)
         : [updated, ...prev]
     })
+    // El backend ya lo marcó como contacto al guardar la cotización; se refleja aquí sin recargar.
+    const clienteId = updated.cliente?.documentId
+    if (clienteId) setClientes(prev => prev.map(c => c.documentId === clienteId && c.tipo !== "contacto" ? { ...c, tipo: "contacto" } : c))
   }
 
   function syncSelected(updated: ClienteEmpresa, selected: ClienteEmpresa | null, setSelected: (c: ClienteEmpresa) => void) {
@@ -273,6 +311,7 @@ export function useClientesPipeline() {
     // Lead operations (pipeline board)
     avanzarLead, rechazarLead, recuperarLead, toggleCalificadoLead, borrarLead, agregarLead,
     ofertaGateFor, setOfertaGateFor,
+    contactoGateFor, setContactoGateFor, confirmarProspecto, usarContactoExistente,
     // ClienteEmpresa operations (contact directory / legacy views)
     avanzar, retroceder, rechazar, recuperar, toggleCalificado, borrar,
     guardarCliente, borrarCliente,

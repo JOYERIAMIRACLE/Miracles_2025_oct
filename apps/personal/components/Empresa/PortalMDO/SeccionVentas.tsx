@@ -939,7 +939,7 @@ export function SeccionVentas() {
 
   function abrirNuevoContacto() {
     setClienteEditando(null)
-    setClienteForm(emptyCliente())
+    setClienteForm({ ...emptyCliente(), tipo: "contacto" })
     setClienteModalOpen(true)
   }
   function abrirEditarCliente(c: ClienteEmpresa) {
@@ -1365,7 +1365,7 @@ export function SeccionVentas() {
           const tiles:[string|number,string,string,string|null][]=[
             [clientesMap.length,                                                              "Total contactos",        T.sky,    "todos"],
             [clientesMap.filter(c=>c.ventas>0).length,                                        "Clientes (compraron)",   T.em,     "cliente"],
-            [clientesMap.filter(c=>c.ventas===0).length,                                       "Prospectos (sin compra)",T.amber,  "prospecto"],
+            [clientesMap.filter(c=>c.ventas===0).length,                                       "Sin compra",             T.amber,  "prospecto"],
             [clientesMap.filter(c=>c.formulario).length,                                       "Usuarios web",           T.violet, "usuario"],
             [$m(clientesMap.length?Math.round(clientesMap.reduce((s,c)=>s+c.total,0)/(clientesMap.filter(c=>c.total>0).length||1)):0),"Ticket prom.",T.gold,null],
             [$m(clientesMap.reduce((s,c)=>s+c.total,0)),                                      "Total facturado",        T.gold,   null],
@@ -1415,14 +1415,14 @@ export function SeccionVentas() {
 
       <SimpleTable
         headers={["Contacto","Leads","Cotiz.","Pedidos","Total MXN","Tipo"]}
-        rows={cliFiltered.map(c=>[c.nombre,String(c.leads),String(c.cots),String(c.ventas),$m(c.total),c.ventas>0?(c.formulario?"Cliente web":"Cliente"):c.formulario?"Usuario web":c.cots>0?"Prospecto":"Solo lead"])}
+        rows={cliFiltered.map(c=>[c.nombre,String(c.leads),String(c.cots),String(c.ventas),$m(c.total),c.ventas>0?(c.formulario?"Cliente web":"Cliente"):c.formulario?"Usuario web":c.cots>0?"Cotizado":"Solo lead"])}
         colors={[
           null,
           (r)=>+r[1]>0?T.violet:T.muted,
           (r)=>+r[2]>0?T.amber:T.muted,
           (r)=>+r[3]>0?T.em:T.muted,
           ()=>T.gold,
-          (r)=>r[5]==="Cliente"||r[5]==="Cliente web"?T.em:r[5]==="Usuario web"?T.violet:r[5]==="Prospecto"?T.amber:T.muted,
+          (r)=>r[5]==="Cliente"||r[5]==="Cliente web"?T.em:r[5]==="Usuario web"?T.violet:r[5]==="Cotizado"?T.amber:T.muted,
         ]}
         onRowClick={r=>selectCli(cliFiltered.find(c=>c.nombre===r[0])?.docId??"",r[0])}
         highlightCol={0}

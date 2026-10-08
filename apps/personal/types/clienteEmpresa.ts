@@ -33,10 +33,15 @@ export const SEGMENTOS:      SegmentoCliente[] = ["Pareja", "Matrimonio", "Famil
 export const ESTADOS_CIVILES: EstadoCivil[]    = ["Soltero(a)", "En una relación", "Comprometido(a)", "Casado(a)", "Otro"]
 export const SEXOS:           Sexo[]           = ["Masculino", "Femenino", "Otro", "Sin especificar"]
 
+/** Prospecto: llegó (formulario, WhatsApp…) y aún no se le cotiza. Contacto: ya tiene cotización o pedido. */
+export type TipoCliente = "prospecto" | "contacto"
+
 export type ClienteEmpresa = {
   id:               number
   documentId:       string
   nombre:           string
+  tipo?:            TipoCliente | null
+  fechaContacto?:   string | null
   email:            string | null
   telefono:         string | null
   direccion:        string | null
@@ -65,6 +70,8 @@ export type ClienteEmpresa = {
 
 export type ClientePayload = {
   nombre:            string
+  /** Solo al crear; al editar no se manda, para no deshacer una promoción a contacto. */
+  tipo?:             TipoCliente
   email?:            string | null
   telefono?:         string | null
   direccion?:        string | null

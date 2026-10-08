@@ -9,6 +9,7 @@ import {
 } from "@/types/clienteEmpresa"
 import { useClientesPipeline } from "./useClientesPipeline"
 import { ClientePanel, ClienteModal, numDisplay, emptyCliente, fmtMoney } from "./PipelineView"
+import { buscarContactosDuplicados } from "@/lib/contactos"
 import { ListToolbar } from "./ListToolbar"
 
 export function ClientesView() {
@@ -28,11 +29,15 @@ export function ClientesView() {
   const [search,          setSearch]          = useState("")
   const [delId,           setDelId]           = useState<string | null>(null)
 
-  // Directorio completo — todo contacto que alguna vez entró al embudo,
-  // desde Lead hasta Entrega (o Rechazada). Antes se excluían Lead/Rechazada.
+  // Solo contactos: los prospectos (aún sin cotización) viven en CRM › Leads.
   const todos = useMemo(() =>
-    clientes.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    clientes.filter(c => c.tipo !== "prospecto")
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [clientes]
+  )
+  const duplicados = useMemo(
+    () => modalOpen ? buscarContactosDuplicados(clientes, form, editando?.documentId) : [],
+    [modalOpen, clientes, form, editando]
   )
 
   const clientesFiltrados = useMemo(() => {
@@ -71,7 +76,7 @@ export function ClientesView() {
     entrega:   todos.filter(c => c.Funnel === "Entrega").length,
   }), [todos])
 
-  const abrirCrear  = () => { setEditando(null); setForm(emptyCliente("Lead")); setModalOpen(true) }
+  const abrirCrear  = () => { setEditando(null); setForm({ ...emptyCliente("Lead"), tipo: "contacto" }); setModalOpen(true) }
   const abrirEditar = (c: ClienteEmpresa) => {
     setEditando(c)
     setForm({
@@ -137,7 +142,7 @@ export function ClientesView() {
 
         {modalOpen && (
           <ClienteModal editando={editando} form={form} setForm={setForm}
-            onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
+            onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} duplicados={duplicados} />
         )}
 
       </div>
@@ -282,7 +287,7 @@ export function ClientesView() {
 
       {modalOpen && (
         <ClienteModal editando={editando} form={form} setForm={setForm}
-          onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} />
+          onGuardar={guardar} onCerrar={() => setModalOpen(false)} guardando={guardando} duplicados={duplicados} />
       )}
 
     </div>

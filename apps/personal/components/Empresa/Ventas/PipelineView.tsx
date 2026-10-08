@@ -38,6 +38,7 @@ import { DropdownPicker } from "../../Shared/DropdownPicker"
 import { CalendarioPicker } from "../../Shared/CalendarioPicker"
 import { NuevoLeadWizard } from "./NuevoLeadWizard"
 import { SeleccionarClienteModal } from "./CotizacionesView"
+import { ConfirmarContactoModal } from "./ConfirmarContactoModal"
 import { useGetLeadsByCliente } from "@/api/lead/getLead"
 import { Lead, LEAD_COLOR } from "@/types/lead"
 import { LeadDetalleModal } from "./LeadDetalleModal"
@@ -1790,12 +1791,16 @@ function ClienteModalSection({ title, open, onToggle, children }: {
   )
 }
 
-export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando }: {
+export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, guardando, duplicados = [] }: {
   editando: ClienteEmpresa | null; form: ClientePayload
   setForm: React.Dispatch<React.SetStateAction<ClientePayload>>
   onGuardar: () => void; onCerrar: () => void; guardando: boolean
+  /** Contactos con el mismo teléfono o correo: solo se avisa, no bloquea. */
+  duplicados?: ClienteEmpresa[]
 }) {
   const etapa = form.Funnel ?? "Lead"
+  const tipo = editando ? editando.tipo : form.tipo
+  const titulo = `${editando ? "Editar" : "Nuevo"} ${tipo === "contacto" ? "contacto" : tipo === "prospecto" && editando ? "prospecto" : FUNNEL_LABEL[etapa]}`
   const inp   = "w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#2a1b3d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500"
   const lbl   = "block text-[11px] text-slate-500 dark:text-slate-500 mb-1"
   const [openSec, setOpenSec] = useState<"contacto" | "detalles" | "clasificacion" | null>(null)
@@ -1807,7 +1812,7 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
       <div className="bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{editando ? "Editar" : "Nuevo"} {FUNNEL_LABEL[etapa]}</h2>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{titulo}</h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">{STAGE_META[etapa].desc}</p>
           </div>
           <button type="button" title="Cerrar" onClick={onCerrar}
@@ -1864,6 +1869,12 @@ export function ClienteModal({ editando, form, setForm, onGuardar, onCerrar, gua
               placeholder="Calle, número, colonia, ciudad…" className={inp} />
           </div>
         </ClienteModalSection>
+
+        {duplicados.length > 0 && (
+          <p className="text-[11px] text-violet-700 dark:text-violet-300 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
+            Ya existe un contacto con este teléfono o correo: {duplicados.map(c => c.nombre).join(", ")}
+          </p>
+        )}
 
         <ClienteModalSection title="Detalles personales" open={openSec === "detalles"} onToggle={() => toggle("detalles")}>
           <div className="grid grid-cols-2 gap-3">
@@ -2011,6 +2022,7 @@ export function PipelineView({ onAbrirLead }: { onAbrirLead?: (lead: Lead) => vo
     actualizarVenta, actualizarCotizacion,
     avanzarLead, rechazarLead, recuperarLead, toggleCalificadoLead, borrarLead, agregarLead,
     ofertaGateFor, setOfertaGateFor,
+    contactoGateFor, setContactoGateFor, confirmarProspecto, usarContactoExistente,
     guardarCliente, borrarCliente,
     pedidoGateFor, setPedidoGateFor, handlePedidoCreado,
   } = useClientesPipeline()
@@ -2175,6 +2187,20 @@ export function PipelineView({ onAbrirLead }: { onAbrirLead?: (lead: Lead) => vo
           )
         })()}
 
+        {contactoGateFor && (() => {
+          const prospecto = clientes.find(c => c.documentId === contactoGateFor.cliente?.documentId)
+          if (!prospecto) return null
+          return (
+            <ConfirmarContactoModal
+              prospecto={prospecto}
+              clientes={clientes}
+              onConfirmar={datos => confirmarProspecto(contactoGateFor, datos)}
+              onUsarExistente={(contacto, datos) => usarContactoExistente(contactoGateFor, contacto, datos)}
+              onCerrar={() => setContactoGateFor(null)}
+            />
+          )
+        })()}
+
         {ofertaGateFor && (() => {
           const clienteEmpresa = clientes.find(c => c.documentId === ofertaGateFor.cliente?.documentId)
           if (!clienteEmpresa) return null
@@ -2310,6 +2336,20 @@ export function PipelineView({ onAbrirLead }: { onAbrirLead?: (lead: Lead) => vo
             totalVentas={totalVentas}
             onClose={() => setPedidoGateFor(null)}
             onCreated={onPedidoCreado}
+          />
+        )
+      })()}
+
+      {contactoGateFor && (() => {
+        const prospecto = clientes.find(c => c.documentId === contactoGateFor.cliente?.documentId)
+        if (!prospecto) return null
+        return (
+          <ConfirmarContactoModal
+            prospecto={prospecto}
+            clientes={clientes}
+            onConfirmar={datos => confirmarProspecto(contactoGateFor, datos)}
+            onUsarExistente={(contacto, datos) => usarContactoExistente(contactoGateFor, contacto, datos)}
+            onCerrar={() => setContactoGateFor(null)}
           />
         )
       })()}
