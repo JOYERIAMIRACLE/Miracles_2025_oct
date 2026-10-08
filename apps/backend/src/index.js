@@ -888,6 +888,109 @@ async function corregirRemitenteEmailTemplates(strapi) {
   }
 }
 
+// ─── Prospectos y contactos ────────────────────────────────────────────────
+// Todo el que llega (formulario, WhatsApp, registro…) es prospecto; se vuelve
+// contacto cuando ya tiene una cotización, un pedido o un pago. Así la sección
+// Contactos del Portal no se llena de leads.
+
+// Clientes que existían antes del campo `tipo` (quedan en NULL). Idempotente:
+// solo toca los que no tienen tipo, así que en los arranques siguientes no hace nada.
+async function clasificarClientes(strapi) {
+  const q = strapi.db.query('api::cliente.cliente');
+  const pendientes = await q.findMany({
+    where: { tipo: { $null: true } },
+    select: ['id', 'documentId'],
+    populate: { cotizaciones: { select: ['id'] }, ventas: { select: ['id'] } },
+  });
+  if (!pendientes.length) return;
+  const conPago = new Set();
+  const transacciones = await strapi.db.query('api::transaccion.transaccion').findMany({
+    select: ['clienteDocumentId'],
+    populate: { cliente: { select: ['id'] } },
+  });
+  for (const t of transacciones) {
+    if (t.cliente?.id) conPago.add(t.cliente.id);
+    if (t.clienteDocumentId) conPago.add(t.clienteDocumentId);
+  }
+  const contactos = [];
+  const prospectos = [];
+  for (const c of pendientes) {
+    const esContacto = (c.cotizaciones?.length ?? 0) > 0 || (c.ventas?.length ?? 0) > 0 || conPago.has(c.id) || conPago.has(c.documentId);
+    (esContacto ? contactos : prospectos).push(c.id);
+  }
+  if (contactos.length) await q.updateMany({ where: { id: { $in: contactos } }, data: { tipo: 'contacto' } });
+  if (prospectos.length) await q.updateMany({ where: { id: { $in: prospectos } }, data: { tipo: 'prospecto' } });
+  strapi.log.info(`[bootstrap] clientes clasificados: ${contactos.length} contacto(s), ${prospectos.length} prospecto(s)`);
+}
+
+// Al guardar una cotización o un pedido con cliente, ese cliente es contacto.
+// Nunca debe tumbar el guardado: cualquier error solo se registra.
+async function promoverClienteAContacto(strapi, event) {
+  try {
+    const data = event.params?.data ?? {};
+    if (event.action === 'afterUpdate' && !('cliente' in data)) return;
+    const registro = await strapi.db.query(event.model.uid).findOne({
+      where: { id: event.result?.id },
+      populate: { cliente: { select: ['id', 'tipo'] } },
+    });
+    const cliente = registro?.cliente;
+    if (!cliente || cliente.tipo === 'contacto') return;
+    await strapi.db.query('api::cliente.cliente').update({
+      where: { id: cliente.id },
+      data: { tipo: 'contacto', fechaContacto: new Date() },
+    });
+  } catch (err) {
+    strapi.log.warn(`[contactos] no se pudo marcar al cliente como contacto: ${err.message}`);
+  }
+}
+
+function errorConEstado(status, message) {
+  return Object.assign(new Error(message), { status });
+}
+
+// Un prospecto resultó ser alguien que ya es contacto: todo lo suyo (leads,
+// cotizaciones, pedidos, pagos) pasa al contacto, se copian los datos que al
+// contacto le falten y el prospecto se borra. Todo o nada.
+const CAMPOS_COPIABLES_CLIENTE = ['email', 'telefono', 'direccion', 'segmento', 'notas', 'tallaAnillo', 'ocasionFrecuente', 'estadoCivil', 'sexo', 'fechaNacimiento', 'redesSociales'];
+async function fusionarProspecto(strapi, prospectoDocId, contactoDocId) {
+  const qc = strapi.db.query('api::cliente.cliente');
+  const prospecto = await qc.findOne({ where: { documentId: prospectoDocId } });
+  const contacto = await qc.findOne({ where: { documentId: contactoDocId } });
+  if (!prospecto || !contacto) throw errorConEstado(404, 'No existe el prospecto o el contacto');
+  if (prospecto.tipo === 'contacto') throw errorConEstado(400, 'El registro a fusionar ya es contacto');
+  if (contacto.tipo !== 'contacto') throw errorConEstado(400, 'El destino de la fusión debe ser un contacto');
+  // El portal de la Tienda encuentra la cuenta del cliente por su correo:
+  // si el prospecto tiene cuenta, el contacto debe conservar ese correo.
+  if (prospecto.email) {
+    const cuenta = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: { $eqi: prospecto.email } } });
+    if (cuenta && (contacto.email ?? '').toLowerCase() !== prospecto.email.toLowerCase()) {
+      throw errorConEstado(409, 'El prospecto tiene cuenta en la Tienda con otro correo; edita el correo del contacto primero');
+    }
+  }
+  await strapi.db.transaction(async () => {
+    const relaciones = [
+      ['api::lead.lead', 'cliente'],
+      ['api::lead.lead', 'referidorCliente'],
+      ['api::cotizacion.cotizacion', 'cliente'],
+      ['api::venta.venta', 'cliente'],
+      ['api::transaccion.transaccion', 'cliente'],
+    ];
+    for (const [uid, campo] of relaciones) {
+      const filas = await strapi.db.query(uid).findMany({ where: { [campo]: { id: prospecto.id } }, select: ['id'] });
+      for (const f of filas) await strapi.db.query(uid).update({ where: { id: f.id }, data: { [campo]: contacto.id } });
+    }
+    await strapi.db.query('api::transaccion.transaccion').updateMany({
+      where: { clienteDocumentId: prospecto.documentId },
+      data: { clienteDocumentId: contacto.documentId },
+    });
+    const faltantes = {};
+    for (const k of CAMPOS_COPIABLES_CLIENTE) if (!contacto[k] && prospecto[k]) faltantes[k] = prospecto[k];
+    if (Object.keys(faltantes).length) await qc.update({ where: { id: contacto.id }, data: faltantes });
+    await qc.delete({ where: { id: prospecto.id } });
+  });
+  return qc.findOne({ where: { id: contacto.id } });
+}
+
 async function sembrarCategoriasSiVacio(strapi) {
   if (!strapi.db.metadata.get('api::categoria.categoria')) {
     strapi.log.warn('[bootstrap] Modelo api::categoria.categoria no registrado — skip seed');
@@ -1876,6 +1979,26 @@ module.exports = {
         },
         config: { auth: false },
       },
+      // Une un prospecto con un contacto existente (ver fusionarProspecto).
+      {
+        method: 'POST',
+        path: '/api/portal/clientes/fusionar',
+        handler: async (ctx) => {
+          const staff = await requireStaffRole(ctx);
+          if (!staff) { ctx.status = 401; ctx.body = { error: { message: 'No autenticado' } }; return; }
+          const { prospecto, contacto } = ctx.request.body ?? {};
+          if (!prospecto || !contacto || prospecto === contacto) {
+            ctx.status = 400; ctx.body = { error: { message: 'Faltan el prospecto y el contacto (distintos)' } }; return;
+          }
+          try {
+            ctx.body = { data: await fusionarProspecto(strapi, prospecto, contacto) };
+          } catch (e) {
+            if (!e.status) strapi.log.error('[clientes-fusionar] ' + e.message);
+            ctx.status = e.status ?? 500; ctx.body = { error: { message: e.status ? e.message : 'No se pudo fusionar' } };
+          }
+        },
+        config: { auth: false },
+      },
     ])
   },
 
@@ -1900,6 +2023,7 @@ module.exports = {
     await run('sembrarMapaIdentidades',     () => sembrarMapaIdentidadesSiVacio(strapi));
     await run('crearRolClienteTienda',      () => crearRolClienteTienda(strapi));
     await run('corregirRemitenteEmailTemplates', () => corregirRemitenteEmailTemplates(strapi));
+    await run('clasificarClientes',         () => clasificarClientes(strapi));
 
     // Al final, para que las siembras de arriba no disparen una reconstrucción
     // en cada arranque de Railway.
@@ -1914,6 +2038,11 @@ module.exports = {
       afterCreate: alCambiarCatalogo,
       afterUpdate: alCambiarCatalogo,
       afterDelete: alCambiarCatalogo,
+    });
+    strapi.db.lifecycles.subscribe({
+      models: ['api::cotizacion.cotizacion', 'api::venta.venta'],
+      afterCreate: (event) => promoverClienteAContacto(strapi, event),
+      afterUpdate: (event) => promoverClienteAContacto(strapi, event),
     });
   },
 };

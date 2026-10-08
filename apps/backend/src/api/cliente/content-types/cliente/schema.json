@@ -15,6 +15,17 @@
       "type": "string",
       "required": true
     },
+    "tipo": {
+      "type": "enumeration",
+      "enum": [
+        "prospecto",
+        "contacto"
+      ],
+      "default": "prospecto"
+    },
+    "fechaContacto": {
+      "type": "datetime"
+    },
     "email": {
       "type": "email"
     },

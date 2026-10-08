@@ -1072,6 +1072,7 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
       ]
     >;
     fechaCalificado: Schema.Attribute.DateTime;
+    fechaContacto: Schema.Attribute.DateTime;
     fechaEntrega: Schema.Attribute.DateTime;
     fechaLead: Schema.Attribute.DateTime;
     fechaNacimiento: Schema.Attribute.Date;
@@ -1102,6 +1103,8 @@ export interface ApiClienteCliente extends Struct.CollectionTypeSchema {
     >;
     tallaAnillo: Schema.Attribute.String;
     telefono: Schema.Attribute.String;
+    tipo: Schema.Attribute.Enumeration<['prospecto', 'contacto']> &
+      Schema.Attribute.DefaultTo<'prospecto'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
