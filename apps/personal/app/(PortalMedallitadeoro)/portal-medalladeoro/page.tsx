@@ -118,6 +118,7 @@ export default function PortalMedalladeoroPage() {
           {seccion === "campanas" && <HeroFondoExterno campo="portada_campanas" />}
           {seccion === "contactos" && <HeroFondoExterno campo="portada_contactos" />}
           {seccion === "ventas" && <HeroFondoExterno campo="portada_ventas" />}
+          {seccion === "crm" && <HeroFondoExterno campo="portada_crm" />}
           {seccion === "inventario" && <HeroFondoExterno campo="portada_inventario" />}
           {seccion === "finanzas" && <HeroFondoExterno campo="portada_depto_administracion" />}
           {seccion === "documentos" && <HeroFondoExterno campo="portada_documentos" />}

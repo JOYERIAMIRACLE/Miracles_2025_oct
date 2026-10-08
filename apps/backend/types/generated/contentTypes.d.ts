@@ -1673,6 +1673,7 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     descripcion_campanas: Schema.Attribute.Text;
     descripcion_conoce: Schema.Attribute.Text;
     descripcion_contactos: Schema.Attribute.Text;
+    descripcion_crm: Schema.Attribute.Text;
     descripcion_depto_administracion: Schema.Attribute.Text;
     descripcion_depto_cadena: Schema.Attribute.Text;
     descripcion_depto_comercial: Schema.Attribute.Text;
@@ -1729,6 +1730,8 @@ export interface ApiIdentidadEmpresaIdentidadEmpresa
     portada_conoce_original: Schema.Attribute.Media<'images'>;
     portada_contactos: Schema.Attribute.Media<'images'>;
     portada_contactos_original: Schema.Attribute.Media<'images'>;
+    portada_crm: Schema.Attribute.Media<'images'>;
+    portada_crm_original: Schema.Attribute.Media<'images'>;
     portada_depto_administracion: Schema.Attribute.Media<'images'>;
     portada_depto_administracion_original: Schema.Attribute.Media<'images'>;
     portada_depto_cadena: Schema.Attribute.Media<'images'>;

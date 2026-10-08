@@ -2,6 +2,7 @@
 
 import { Workflow, Bell } from "lucide-react"
 import { useSectionTab, SeccionVitrina, ContenidoTabs, SeccionHeroContenido } from "./shared"
+import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
 import { DisparadoresView } from "@/components/Empresa/Ventas/DisparadoresView"
 
@@ -17,13 +18,18 @@ const TABS = [
 export function SeccionCRM() {
   const { tab, setTab } = useSectionTab("crm", "pipeline")
   const activo = TABS.find(t => t.id === tab) ?? TABS[0]
+  const { identidad, loading, reload } = useGetIdentidad()
 
   return (
     <SeccionVitrina>
       <SeccionHeroContenido
         breadcrumb={["Operación", activo.label]}
         titulo="CRM"
-        descripcion="Pipeline visual y acciones pendientes con tus clientes, en un solo lugar."
+        descripcion={identidad?.descripcion_crm || "Pipeline visual y acciones pendientes con tus clientes, en un solo lugar."}
+        campoDescripcion="descripcion_crm"
+        onDescripcionGuardada={reload}
+        documentId={identidad?.documentId ?? null}
+        puedeEditar={!loading}
       >
         <ContenidoTabs tabs={TABS} active={tab} onChange={setTab} />
       </SeccionHeroContenido>
