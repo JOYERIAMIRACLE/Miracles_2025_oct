@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Pencil, Trash2, CheckCircle2, Ban, Eye } from "lucide-react"
+import { Plus, Pencil, Trash2, Ban, Eye } from "lucide-react"
 import { SeccionVitrina, SeccionHeroContenido, ContenidoTabs, useHeroImagen } from "./shared"
 import type { TabItem } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
-import { useGetLeads, updateLead, deleteLead } from "@/api/lead/getLead"
+import { useGetLeads } from "@/api/lead/getLead"
 import { useGetAllCotizaciones, deleteCotizacion } from "@/api/cotizacion/getCotizaciones"
 import { useGetVentas, updateVenta, deleteVenta } from "@/api/ventaEmpresa/getVentas"
 import { useGetClientes, createCliente, updateCliente, deleteCliente } from "@/api/clienteEmpresa/getClientes"
@@ -15,7 +15,6 @@ import type { Cotizacion, EstadoCotizacion, OrigenCotizacion } from "@/types/cot
 import type { VentaEmpresa, EstadoVenta } from "@/types/ventaEmpresa"
 import type { ClienteEmpresa, ClientePayload, FunnelEtapa } from "@/types/clienteEmpresa"
 import { FUNNEL_ALL } from "@/types/clienteEmpresa"
-import { NuevoLeadWizard } from "@/components/Empresa/Ventas/NuevoLeadWizard"
 import { SeleccionarClienteModal } from "@/components/Empresa/Ventas/CotizacionesView"
 import { CotizacionModal } from "@/components/Empresa/Ventas/CotizacionModal"
 import { ClienteModal, emptyCliente, ClientePanel, numDisplay } from "@/components/Empresa/Ventas/PipelineView"
@@ -123,17 +122,17 @@ function buildDemoData(): { leads: Lead[]; cots: Cotizacion[]; ventas: VentaEmpr
 export const DEMO_DATA = buildDemoData()
 
 /* ─── Tokens ────────────────────────────────────────────────────────── */
-const T = { gold:"#c8922e",em:"#34c77b",sky:"#4aaed4",rose:"#e05555",violet:"#9b82d4",amber:"#f0a830",muted:"#4a5a7a",text:"#dde3f0",surface:"#0e1530",surf2:"#131a3a",border:"#1c2545",border2:"#283060",bg:"#080d1e" }
+export const T = { gold:"#c8922e",em:"#34c77b",sky:"#4aaed4",rose:"#e05555",violet:"#9b82d4",amber:"#f0a830",muted:"#4a5a7a",text:"#dde3f0",surface:"#0e1530",surf2:"#131a3a",border:"#1c2545",border2:"#283060",bg:"#080d1e" }
 const $m = (n:number) => `$${Math.round(n).toLocaleString("es-MX")}`
-const dd  = (s:string) => s?s.slice(5,10):"—"
+export const dd  = (s:string) => s?s.slice(5,10):"—"
 const getMonth = (iso:string) => iso?.slice(5,7)??""
-const CANAL_COLOR:Record<string,string> = { WhatsApp:"#25d366",Instagram:"#e1306c",Facebook:"#1877f2",Formulario:T.sky,Mostrador:T.gold,Vendedor:T.violet,Teléfono:T.muted,Correo:T.muted,Distribuidor:T.amber }
+export const CANAL_COLOR:Record<string,string> = { WhatsApp:"#25d366",Instagram:"#e1306c",Facebook:"#1877f2",Formulario:T.sky,Mostrador:T.gold,Vendedor:T.violet,Teléfono:T.muted,Correo:T.muted,Distribuidor:T.amber }
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]
 const MESES_LARGO = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 
 /* ─── Agrupación de gráficas: día / semana / mes / año ──────────────── */
-type Agrupacion = "dia"|"semana"|"mes"|"anio"
-const AGRUPACION_LABEL:Record<Agrupacion,string> = { dia:"Día", semana:"Semana", mes:"Mes", anio:"Año" }
+export type Agrupacion = "dia"|"semana"|"mes"|"anio"
+export const AGRUPACION_LABEL:Record<Agrupacion,string> = { dia:"Día", semana:"Semana", mes:"Mes", anio:"Año" }
 const pad2 = (n:number) => String(n).padStart(2,"0")
 function lastDayOfMonth(year: number, monthIdx0: number) { return new Date(year, monthIdx0 + 1, 0).getDate() }
 function inicioSemana(iso:string):string {
@@ -143,7 +142,7 @@ function inicioSemana(iso:string):string {
   return d.toISOString().slice(0,10)
 }
 /** Clave única del bucket al que pertenece una fecha, según la agrupación activa. */
-function claveBucket(iso:string, ag:Agrupacion):string {
+export function claveBucket(iso:string, ag:Agrupacion):string {
   if (ag==="dia")    return iso.slice(0,10)
   if (ag==="semana") return inicioSemana(iso)
   if (ag==="anio")   return iso.slice(0,4)
@@ -164,7 +163,7 @@ function isoWeekNumber(iso:string):number {
     número de semana ISO del año (1-53); día → número de día del mes. El
     mes/año de contexto ya NO va pegado a esta etiqueta — vive en las filas
     de grupo (ver GrupoNivel) que se dibujan aparte, como en Power BI. */
-function nivelBase(key:string, ag:Agrupacion):string {
+export function nivelBase(key:string, ag:Agrupacion):string {
   if (ag==="anio")   return key
   if (ag==="mes")    return MESES[+key.slice(5,7)-1]
   if (ag==="semana") return String(isoWeekNumber(key))
@@ -189,7 +188,7 @@ function calcularGrupos(buckets:string[], claveDe:(k:string)=>string, etiquetaDe
 }
 /** Niveles de grupo por encima de la etiqueta base, según la agrupación:
     año → ninguno; mes → [año]; semana/día → [mes abreviado, año]. */
-function calcularGrupoNiveles(buckets:string[], ag:Agrupacion): GrupoNivel[][] {
+export function calcularGrupoNiveles(buckets:string[], ag:Agrupacion): GrupoNivel[][] {
   if (ag==="anio") return []
   if (ag==="mes")  return [calcularGrupos(buckets, k=>k.slice(0,4), k=>k.slice(0,4))]
   return [
@@ -201,7 +200,7 @@ function calcularGrupoNiveles(buckets:string[], ag:Agrupacion): GrupoNivel[][] {
     filtro activo y el tooltip, donde sí hace falta el contexto porque no
     hay filas de grupo vecinas que lo den. Semana muestra el rango completo
     tipo "19 - 25 abr", igual que el tooltip de GA/Power BI. */
-function etiquetaBucketCompleta(key:string, ag:Agrupacion):string {
+export function etiquetaBucketCompleta(key:string, ag:Agrupacion):string {
   if (ag==="anio") return key
   if (ag==="mes")  return `${MESES_LARGO[+key.slice(5,7)-1]} ${key.slice(0,4)}`
   if (ag==="semana") {
@@ -214,7 +213,7 @@ function etiquetaBucketCompleta(key:string, ag:Agrupacion):string {
   return `${+key.slice(8,10)} ${MESES[+key.slice(5,7)-1]}`
 }
 /** Rango [desde,hasta] que cubre un bucket — para fijar el filtro de fecha al hacer clic en una barra. */
-function rangoDeBucket(key:string, ag:Agrupacion):[string,string] {
+export function rangoDeBucket(key:string, ag:Agrupacion):[string,string] {
   if (ag==="dia")    return [key,key]
   if (ag==="semana") { const d=new Date(key+"T12:00:00"); d.setDate(d.getDate()+6); return [key,d.toISOString().slice(0,10)] }
   if (ag==="anio")   return [`${key}-01-01`,`${key}-12-31`]
@@ -223,7 +222,7 @@ function rangoDeBucket(key:string, ag:Agrupacion):[string,string] {
 }
 /** Lista ordenada de buckets entre dos fechas — largo variable, a diferencia
     del arreglo fijo de 12 meses que usaba la versión anterior. */
-function generarBuckets(df:string, dt:string, ag:Agrupacion):string[] {
+export function generarBuckets(df:string, dt:string, ag:Agrupacion):string[] {
   const keys:string[] = []
   if (!df || !dt || df > dt) return keys
   if (ag==="anio") {
@@ -244,10 +243,10 @@ function generarBuckets(df:string, dt:string, ag:Agrupacion):string[] {
 }
 /** Puente entre el string ISO ("YYYY-MM-DD") que usa toda la lógica de
     filtrado y los Date (UTC) que espera CalendarioPicker/CalendarioRango. */
-function isoToDateUTC(iso:string):Date {
+export function isoToDateUTC(iso:string):Date {
   return new Date(Date.UTC(+iso.slice(0,4), +iso.slice(5,7)-1, +iso.slice(8,10)))
 }
-function dateToIso(d:Date):string {
+export function dateToIso(d:Date):string {
   return d.toISOString().slice(0,10)
 }
 
@@ -364,7 +363,7 @@ function GroupAxisLabels({levels,PL,bW,rowY}:{levels:GrupoNivel[][];PL:number;bW
     </>
   )
 }
-function SvgStackedBars({ months, tipLabels, data, colors, labels, onBarClick, activeBar, groupLevels }:{
+export function SvgStackedBars({ months, tipLabels, data, colors, labels, onBarClick, activeBar, groupLevels }:{
   months:string[]; tipLabels?:string[]; data:[number,number][]; colors:[string,string]; labels?:[string,string]; onBarClick?:(i:number)=>void; activeBar?:number; groupLevels?:GrupoNivel[][]
 }) {
   const ref=useRef<HTMLDivElement>(null)
@@ -430,7 +429,7 @@ function SvgStackedBars({ months, tipLabels, data, colors, labels, onBarClick, a
   )
 }
 
-function SvgDonut({ segs, onSegmentClick, active }:{
+export function SvgDonut({ segs, onSegmentClick, active }:{
   segs:{l:string;v:number;c:string}[]; onSegmentClick?:(label:string)=>void; active?:string
 }) {
   const ref=useRef<HTMLDivElement>(null)
@@ -484,7 +483,7 @@ function SvgDonut({ segs, onSegmentClick, active }:{
   )
 }
 
-function SvgHBars({ items, onBarClick, active }:{
+export function SvgHBars({ items, onBarClick, active }:{
   items:{l:string;v:number;c:string}[]; onBarClick?:(label:string)=>void; active?:string
 }) {
   const ref=useRef<HTMLDivElement>(null)
@@ -585,10 +584,10 @@ function SvgRevBars({ data, target, months, tipLabels, onBarClick, activeBar, gr
 }
 
 /* ─── UI primitives ────────────────────────────────────────────────── */
-function ChartLabel({children}:{children:string}){
+export function ChartLabel({children}:{children:string}){
   return <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">{children}</p>
 }
-function SecLabel({children}:{children:string}){
+export function SecLabel({children}:{children:string}){
   return (
     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
       <span className="text-[11px] font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">{children}</span>
@@ -596,7 +595,7 @@ function SecLabel({children}:{children:string}){
     </div>
   )
 }
-function LegendDot({color,label,val,active,dimmed,onClick}:{color:string;label:string;val:number;active?:boolean;dimmed?:boolean;onClick?:()=>void}){
+export function LegendDot({color,label,val,active,dimmed,onClick}:{color:string;label:string;val:number;active?:boolean;dimmed?:boolean;onClick?:()=>void}){
   const empty=val===0
   return (
     <div onClick={onClick} className={`flex items-center gap-2 mb-1.5 rounded-md px-1.5 py-0.5 transition-all ${onClick?"cursor-pointer":""} ${active?"ring-1 ring-inset ring-violet-400/50":"hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/40"}`}
@@ -607,7 +606,7 @@ function LegendDot({color,label,val,active,dimmed,onClick}:{color:string;label:s
     </div>
   )
 }
-function MetricTile({val,label,color,onClick,formatter}:{val:string|number;label:string;color?:string;onClick?:()=>void;formatter?:(n:number)=>string}){
+export function MetricTile({val,label,color,onClick,formatter}:{val:string|number;label:string;color?:string;onClick?:()=>void;formatter?:(n:number)=>string}){
   const c = color||T.violet
   const isNum = typeof val === "number"
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -632,7 +631,7 @@ function Chip({active,label,onClick}:{active:boolean;label:string;onClick:()=>vo
     </button>
   )
 }
-function Card({children,className=""}:{children:React.ReactNode;className?:string}){
+export function Card({children,className=""}:{children:React.ReactNode;className?:string}){
   return <div className={`rounded-xl p-5 ${className}`}>{children}</div>
 }
 function KpiCard({title,value,subBadge,subLabel,color,onClick,formatter,badgeFormatter}:{title:string;value:string|number;subBadge:string|number;subLabel:string;color:string;onClick?:()=>void;formatter?:(n:number)=>string;badgeFormatter?:(n:number)=>string}){
@@ -672,7 +671,7 @@ function PipelineBar({e,n,c,go,pct,idx}:{e:string;n:number;c:string;go:()=>void;
     </div>
   )
 }
-function FilterRow({label,options,active,onToggle}:{label:string;options:string[];active:string;onToggle:(v:string)=>void}){
+export function FilterRow({label,options,active,onToggle}:{label:string;options:string[];active:string;onToggle:(v:string)=>void}){
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 shrink-0 min-w-13">{label}</span>
@@ -680,7 +679,7 @@ function FilterRow({label,options,active,onToggle}:{label:string;options:string[
     </div>
   )
 }
-function ActionBtn({title,onClick,tone="default",children}:{title:string;onClick:()=>void;tone?:"default"|"danger";children:React.ReactNode}){
+export function ActionBtn({title,onClick,tone="default",children}:{title:string;onClick:()=>void;tone?:"default"|"danger";children:React.ReactNode}){
   return (
     <button type="button" title={title} onClick={e=>{e.stopPropagation();onClick()}}
       className={`p-1.5 rounded transition ${tone==="danger"
@@ -692,7 +691,7 @@ function ActionBtn({title,onClick,tone="default",children}:{title:string;onClick
 }
 
 /* ─── Tabla ─────────────────────────────────────────────────────────── */
-function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, renderActions }:{
+export function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, renderActions }:{
   headers:string[]; rows:string[][]
   colors:(((r:string[])=>string)|null)[]
   onRowClick?:(r:string[],i:number)=>void
@@ -755,7 +754,7 @@ function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, renderAc
 /** Forma que abrirEditarCliente() arma a partir de un ClienteEmpresa —
     idéntica a la que usan LeadsView/ClientesView, para no divergir del
     resto de la suite de Ventas. */
-function formDesdeCliente(c: ClienteEmpresa): ClientePayload {
+export function formDesdeCliente(c: ClienteEmpresa): ClientePayload {
   return {
     nombre: c.nombre, email: c.email, telefono: c.telefono, direccion: c.direccion,
     segmento: c.segmento, Funnel: c.Funnel ?? "Lead", calificado: c.calificado,
@@ -768,17 +767,97 @@ function formDesdeCliente(c: ClienteEmpresa): ClientePayload {
   }
 }
 
+/* ─── Barra de filtros (Ventas y CRM › Leads) ──────────────────────── */
+export function BarraFiltrosPanel({ demo, onToggleDemo, df, dt, onDesde, onHasta, onReset, agrupacion, onAgrupacion, mostrarAgrupacion=true, cliFilter, onClearCli, bucketFilter, onClearBucket }:{
+  demo:boolean; onToggleDemo:()=>void
+  df:string; dt:string; onDesde:(d:Date)=>void; onHasta:(d:Date)=>void; onReset:()=>void
+  agrupacion:Agrupacion; onAgrupacion:(a:Agrupacion)=>void; mostrarAgrupacion?:boolean
+  cliFilter:CliFilter; onClearCli:()=>void
+  bucketFilter:string; onClearBucket:()=>void
+}) {
+  return (
+    <div className="flex items-center justify-end gap-2 flex-wrap rounded-xl px-4 py-2.5">
+      <button onClick={onToggleDemo}
+        className="px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all shrink-0"
+        style={demo?{background:`${T.gold}18`,color:T.gold,border:`1px solid ${T.gold}35`}:{background:"transparent",color:"#94a3b8",border:"1px solid #e2e8f0"}}>
+        {demo?"▶ DEMO":"REAL"}
+      </button>
+      <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
+      <CalendarioRango
+        desde={df?isoToDateUTC(df):null}
+        hasta={dt?isoToDateUTC(dt):null}
+        onDesde={onDesde}
+        onHasta={onHasta}
+        onReset={onReset}
+      />
+      {mostrarAgrupacion && (
+        <>
+          <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
+          <DropdownPicker
+            label="Agrupar por"
+            value={agrupacion}
+            onChange={v=>onAgrupacion(v as Agrupacion)}
+            options={(Object.keys(AGRUPACION_LABEL) as Agrupacion[]).map(k=>({value:k,label:AGRUPACION_LABEL[k]}))}
+            className="w-28"
+          />
+        </>
+      )}
+      {cliFilter&&(
+        <>
+          <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
+          <span className="flex items-center gap-1 h-9 px-3 rounded-xl text-sm shrink-0 border"
+            style={{background:"#0f172a",borderColor:"#334155",color:T.violet}}>
+            {cliFilter.nombre}
+            <button onClick={onClearCli} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5">×</button>
+          </span>
+        </>
+      )}
+      {bucketFilter&&(
+        <>
+          <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
+          <span className="flex items-center gap-1 h-9 px-3 rounded-xl text-sm shrink-0 border"
+            style={{background:"#0f172a",borderColor:"#334155",color:T.sky}}>
+            {etiquetaBucketCompleta(bucketFilter,agrupacion)}
+            <button onClick={onClearBucket} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5" style={{color:T.sky}}>×</button>
+          </span>
+        </>
+      )}
+    </div>
+  )
+}
+
+/* ─── Navegación entre Ventas y CRM › Leads ────────────────────────── */
+// Son secciones distintas del Portal: el modo, rango y filtros con que se
+// llega a Leads viajan por sessionStorage, y Ventas recuerda su pestaña en
+// localStorage ("panel_view") en vez de en el hash.
+export type PresetLeads = { demo:boolean; df:string; dt:string; cli:CliFilter; lCanal?:string }
+const PRESET_LEADS_KEY = "crm_leads_preset"
+export function irACrmLeads(preset: PresetLeads) {
+  try { sessionStorage.setItem(PRESET_LEADS_KEY, JSON.stringify(preset)) } catch {}
+  window.location.hash = "crm/leads"
+}
+export function leerPresetLeads(): PresetLeads | null {
+  try { const s = sessionStorage.getItem(PRESET_LEADS_KEY); return s ? JSON.parse(s) as PresetLeads : null } catch { return null }
+}
+export function borrarPresetLeads() {
+  try { sessionStorage.removeItem(PRESET_LEADS_KEY) } catch {}
+}
+export function irAVentas(view: "cotizaciones"|"pedidos") {
+  try { localStorage.setItem("panel_view", view) } catch {}
+  window.location.hash = "ventas"
+}
+
 /* ─── Component ─────────────────────────────────────────────────────── */
-type View = "dashboard"|"trafico"|"leads"|"cotizaciones"|"pedidos"|"clientes"
-const VIEWS_CON_FILTROS: View[] = ["dashboard","trafico","leads","cotizaciones","pedidos","clientes"]
-type CliFilter = { docId:string; nombre:string } | null
+type View = "dashboard"|"trafico"|"cotizaciones"|"pedidos"|"clientes"
+const VIEWS_CON_FILTROS: View[] = ["dashboard","trafico","cotizaciones","pedidos","clientes"]
+export type CliFilter = { docId:string; nombre:string } | null
 
 export function SeccionVentas() {
   const { identidad, loading: loadingId, reload } = useGetIdentidad()
   const documentId = identidad?.documentId ?? null
   const heroImg = useHeroImagen("portada_ventas", documentId, reload)
 
-  const {leads:_rL,setLeads:setRawLeadsFetch,loading:lL}    = useGetLeads()
+  const {leads:_rL,loading:lL}    = useGetLeads()
   const {cotizaciones:_rC,setCotizaciones:setRawCotsFetch,loading:lC} = useGetAllCotizaciones()
   const {ventas:_rV,setVentas:setRawVentasFetch,loading:lV}   = useGetVentas()
   const {clientes:clientesReales,setClientes:setClientesReales} = useGetClientes()
@@ -796,7 +875,7 @@ export function SeccionVentas() {
   const nowLast  = ()=>new Date().toISOString().slice(0,10)
 
   const [view,setView]       = useState<View>(()=>{
-    try{const v=localStorage.getItem("panel_view");return(["dashboard","trafico","leads","cotizaciones","pedidos","clientes"].includes(v??"")?v as View:"dashboard")}catch{return"dashboard"}
+    try{const v=localStorage.getItem("panel_view");return(["dashboard","trafico","cotizaciones","pedidos","clientes"].includes(v??"")?v as View:"dashboard")}catch{return"dashboard"}
   })
   const [df,setDf]           = useState(demo?"2026-01-01":nowFirst)
   const [dt,setDt]           = useState(demo?"2026-09-30":nowLast)
@@ -820,10 +899,6 @@ export function SeccionVentas() {
     ? rawLeads.filter(l=>l.canal==="Formulario").length * 15
     : (visitasReales ?? 0)
 
-  // Leads filters
-  const [lCanal,setLCanal]   = useState("")
-  const [lFunnel,setLFunnel] = useState("")
-  const [lOrigen,setLOrigen] = useState("")
   // Cotizaciones filters
   const [cEstado,setCEstado] = useState("")
   const [cOrigen,setCOrigen] = useState("")
@@ -833,12 +908,10 @@ export function SeccionVentas() {
   const [vCanal,setVCanal]   = useState("")
 
   // ── Estado de creación/edición (solo activo fuera de demo) ──────────
-  const [wizardOpen,      setWizardOpen]      = useState(false)
   const [clienteModalOpen,setClienteModalOpen]= useState(false)
   const [clienteEditando, setClienteEditando] = useState<ClienteEmpresa | null>(null)
   const [clienteForm,     setClienteForm]     = useState<ClientePayload>(emptyCliente())
   const [guardandoCliente,setGuardandoCliente]= useState(false)
-  const [delLeadId,       setDelLeadId]       = useState<string | null>(null)
   const [delClienteId,    setDelClienteId]    = useState<string | null>(null)
 
   const [cotSeleccionarOpen, setCotSeleccionarOpen] = useState(false)
@@ -877,23 +950,6 @@ export function SeccionVentas() {
     setGuardandoCliente(true)
     try { await guardarClienteLocal(clienteEditando, clienteForm); setClienteModalOpen(false) }
     finally { setGuardandoCliente(false) }
-  }
-
-  async function toggleCalificarLead(lead: Lead) {
-    const nuevoValor = !lead.calificado
-    const extra = nuevoValor && !lead.fechaCalificado ? { fechaCalificado: new Date().toISOString() } : {}
-    const updated = await updateLead(lead.documentId, { calificado: nuevoValor, ...extra })
-    setRawLeadsFetch(prev => prev.map(l => l.documentId === updated.documentId ? updated : l))
-  }
-  async function borrarLeadRow(lead: Lead) {
-    await deleteLead(lead.documentId)
-    setRawLeadsFetch(prev => prev.filter(l => l.documentId !== lead.documentId))
-    setDelLeadId(null)
-  }
-  function abrirEditarLead(lead: Lead) {
-    const c = clientesReales.find(c => c.documentId === lead.cliente?.documentId)
-    if (!c) return
-    abrirEditarCliente(c)
   }
 
   async function borrarCotRow(cot: Cotizacion) {
@@ -973,10 +1029,6 @@ export function SeccionVentas() {
   ),[rawVentas,df,dt,cliFilter])
 
   // Filtros por vista + filtro de período (día/semana/mes/año)
-  const fLeads = useMemo(()=>allLeads.filter(l=>
-    (!lCanal||l.canal===lCanal)&&(!lFunnel||l.Funnel===lFunnel)&&(!lOrigen||l.origen===lOrigen)&&inBucket(l.fechaLead??l.createdAt)
-  ),[allLeads,lCanal,lFunnel,lOrigen,bucketFilter,agrupacion])
-
   const fCots = useMemo(()=>allCots.filter(c=>
     (!cEstado||c.estado===cEstado)&&
     (!cOrigen||c.origenCotizacion===cOrigen)&&
@@ -988,10 +1040,9 @@ export function SeccionVentas() {
     (!vEstado||v.estado===vEstado)&&(!vCanal||v.centro_venta?.nombre===vCanal)&&inBucket(v.fecha??v.createdAt)
   ),[allVentas,vEstado,vCanal,bucketFilter,agrupacion])
 
-  function goView(v:View,extra?:{lCanal?:string;lFunnel?:string;cEstado?:string;cTipo?:string;vEstado?:string}){
+  function goView(v:View,extra?:{cEstado?:string;cTipo?:string;vEstado?:string}){
     setView(v)
     try{localStorage.setItem("panel_view",v)}catch{}
-    setLCanal(extra?.lCanal??""); setLFunnel(extra?.lFunnel??""); setLOrigen("")
     setCEstado(extra?.cEstado??""); setCOrigen(""); setCTipo(extra?.cTipo??"")
     setVEstado(extra?.vEstado??""); setVCanal("")
     setBucketFilter("")
@@ -1108,27 +1159,6 @@ export function SeccionVentas() {
   const META_MES = 45000
   const metaBucket = agrupacion==="dia" ? META_MES/30 : agrupacion==="semana" ? META_MES*7/30 : agrupacion==="anio" ? META_MES*12 : META_MES
 
-  /* ── Leads analysis ── */
-  const ALL_CANALES=["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]
-  // Activos (Lead/Oferta/Pedido) vs Cerrados (Entrega/Rechazada) — antes
-  // solo contaba Entregado/Rechazada, así que un cliente con leads aún en
-  // proceso (el caso más común al filtrar por cliente) veía la gráfica
-  // vacía aunque sí tuviera actividad real. Así cuenta TODO lead, sin
-  // importar su etapa.
-  const leadsStk:[number,number][]=buckets.map(()=>[0,0])
-  fLeads.forEach(l=>{const idx=bucketIdxMap.get(claveBucket(l.fechaLead??l.createdAt,agrupacion));if(idx!==undefined){if(l.Funnel==="Entrega"||l.Funnel==="Rechazada")leadsStk[idx][1]++;else leadsStk[idx][0]++}})
-  const _canalBase=allLeads.filter(l=>(!lFunnel||l.Funnel===lFunnel)&&inBucket(l.fechaLead??l.createdAt))
-  const canalCounts=_canalBase.reduce((a,l)=>{const k=l.canal??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)
-  const canalSegs=ALL_CANALES.map(l=>({l,v:canalCounts[l]||0,c:CANAL_COLOR[l]||T.muted})).sort((a,b)=>b.v-a.v)
-  const _origenBase=allLeads.filter(l=>(!lCanal||l.canal===lCanal)&&(!lFunnel||l.Funnel===lFunnel)&&inBucket(l.fechaLead??l.createdAt))
-  const origenSegs=Object.entries(_origenBase.reduce((a,l)=>{const k=l.origen??"—";a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([l,v])=>({l,v,c:T.sky}))
-  // Origen medido de los leads: primer y último contacto (de la Tienda) y lo que la persona declaró.
-  const contarOrigen=(campo:(l:typeof fLeads[number])=>string|null|undefined)=>Object.entries(fLeads.reduce((a,l)=>{const k=campo(l);if(k)a[k]=(a[k]||0)+1;return a},{}as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([l,v])=>({l:l.slice(0,14),v,c:T.violet}))
-  const ftSegs=contarOrigen(l=>l.ftFuente), ltSegs=contarOrigen(l=>l.ltFuente), comoSegs=contarOrigen(l=>l.comoNosConocio)
-  const hayOrigenMedido=ftSegs.length>0||ltSegs.length>0||comoSegs.length>0
-  const pctCot=fLeads.length?Math.round(fLeads.filter(l=>allCots.some(c=>c.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
-  const pctPed=fLeads.length?Math.round(fLeads.filter(l=>allVentas.some(v=>v.cliente?.documentId===l.cliente?.documentId)).length/fLeads.length*100):0
-
   /* ── Cotizaciones analysis ── */
   const ORIGEN_LABEL:Record<string,string>={COT:"Mostrador",WEB:"Formulario web",CART:"Carrito",ANU:"Anuncio",EML:"Email"}
   const cotsStk:[number,number][]=buckets.map(()=>[0,0])
@@ -1157,7 +1187,6 @@ export function SeccionVentas() {
   const TABS:TabItem[] = [
     {id:"dashboard",    label:"Dashboard"},
     {id:"trafico",      label:"Tráfico"},
-    {id:"leads",        label:"Leads"},
     {id:"cotizaciones", label:"Cotizaciones"},
     {id:"pedidos",      label:"Pedidos"},
     {id:"clientes",     label:"Clientes"},
@@ -1182,57 +1211,20 @@ export function SeccionVentas() {
       {VIEWS_CON_FILTROS.includes(view) && (
         <>
         {/* Barra de filtros — siempre visible debajo del hero */}
-        <div className="flex items-center justify-end gap-2 flex-wrap rounded-xl px-4 py-2.5">
-          <button onClick={toggleDemo}
-            className="px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-all shrink-0"
-            style={demo?{background:`${T.gold}18`,color:T.gold,border:`1px solid ${T.gold}35`}:{background:"transparent",color:"#94a3b8",border:"1px solid #e2e8f0"}}>
-            {demo?"▶ DEMO":"REAL"}
-          </button>
-          <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
-          <CalendarioRango
-            desde={df?isoToDateUTC(df):null}
-            hasta={dt?isoToDateUTC(dt):null}
-            onDesde={d=>{setDf(dateToIso(d));setBucketFilter("")}}
-            onHasta={d=>{setDt(dateToIso(d));setBucketFilter("")}}
-            onReset={()=>{
-              setBucketFilter("")
-              if (demo) { setDf("2026-01-01"); setDt("2026-09-30") }
-              else { const d=new Date(); setDf(`${d.getFullYear()}-01-01`); setDt(d.toISOString().slice(0,10)) }
-            }}
-          />
-          {view!=="clientes" && (
-            <>
-              <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
-              <DropdownPicker
-                label="Agrupar por"
-                value={agrupacion}
-                onChange={v=>{setAgrupacion(v as Agrupacion);setBucketFilter("")}}
-                options={(Object.keys(AGRUPACION_LABEL) as Agrupacion[]).map(k=>({value:k,label:AGRUPACION_LABEL[k]}))}
-                className="w-28"
-              />
-            </>
-          )}
-          {cliFilter&&(
-            <>
-              <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
-              <span className="flex items-center gap-1 h-9 px-3 rounded-xl text-sm shrink-0 border"
-                style={{background:"#0f172a",borderColor:"#334155",color:T.violet}}>
-                {cliFilter.nombre}
-                <button onClick={clearCli} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5">×</button>
-              </span>
-            </>
-          )}
-          {bucketFilter&&(
-            <>
-              <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 shrink-0"/>
-              <span className="flex items-center gap-1 h-9 px-3 rounded-xl text-sm shrink-0 border"
-                style={{background:"#0f172a",borderColor:"#334155",color:T.sky}}>
-                {etiquetaBucketCompleta(bucketFilter,agrupacion)}
-                <button onClick={clearBucketFilter} className="cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 ml-0.5" style={{color:T.sky}}>×</button>
-              </span>
-            </>
-          )}
-        </div>
+        <BarraFiltrosPanel
+          demo={demo} onToggleDemo={toggleDemo}
+          df={df} dt={dt}
+          onDesde={d=>{setDf(dateToIso(d));setBucketFilter("")}}
+          onHasta={d=>{setDt(dateToIso(d));setBucketFilter("")}}
+          onReset={()=>{
+            setBucketFilter("")
+            if (demo) { setDf("2026-01-01"); setDt("2026-09-30") }
+            else { const d=new Date(); setDf(`${d.getFullYear()}-01-01`); setDt(d.toISOString().slice(0,10)) }
+          }}
+          agrupacion={agrupacion} onAgrupacion={v=>{setAgrupacion(v);setBucketFilter("")}} mostrarAgrupacion={view!=="clientes"}
+          cliFilter={cliFilter} onClearCli={clearCli}
+          bucketFilter={bucketFilter} onClearBucket={clearBucketFilter}
+        />
         {loading?(
           <div className="flex items-center justify-center py-20 text-slate-500 font-mono text-sm">Cargando datos…</div>
         ):content}
@@ -1270,7 +1262,7 @@ export function SeccionVentas() {
     <>
       {/* KPI — 5 cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <KpiCard title="Leads capturados" value={allLeads.length} subBadge={`${leadsConvPct}%`} subLabel="conv. a cotización" color={T.violet} onClick={()=>goView("leads")}/>
+        <KpiCard title="Leads capturados" value={allLeads.length} subBadge={`${leadsConvPct}%`} subLabel="conv. a cotización" color={T.violet} onClick={()=>irACrmLeads({demo,df,dt,cli:cliFilter})}/>
         <KpiCard title="Cotizaciones" value={allCots.length} subBadge={`${cotConvPct}%`} subLabel="convertidas" color={T.amber} onClick={()=>goView("cotizaciones")}/>
         <KpiCard title="Pedidos" value={allVentas.length} subBadge={`${pedEntPct}%`} subLabel="entregados" color={T.sky} onClick={()=>goView("pedidos")}/>
         <KpiCard title="Ingresos MXN" value={ingresos} formatter={$m} subBadge={tick} badgeFormatter={$m} subLabel="ticket promedio" color={T.gold} onClick={()=>goView("pedidos")}/>
@@ -1284,7 +1276,7 @@ export function SeccionVentas() {
             const leadsForm=allLeads.filter(l=>l.canal==="Formulario").length
             const steps=[
               {l:"Visitantes",n:visitasWeb,  c:T.muted, go:()=>{}, tip:"Sesiones anónimas en el sitio web"},
-              {l:"Formulario", n:leadsForm,   c:T.violet,go:()=>goView("leads",{lCanal:"Formulario"}), tip:"Enviaron el formulario de contacto"},
+              {l:"Formulario", n:leadsForm,   c:T.violet,go:()=>irACrmLeads({demo,df,dt,cli:cliFilter,lCanal:"Formulario"}), tip:"Enviaron el formulario de contacto"},
               {l:"Cot. web",   n:allCots.filter(c=>c.origenCotizacion==="WEB"||c.origenCotizacion==="CART").length,c:T.amber,go:()=>goView("cotizaciones",{cTipo:"web"}),tip:"Recibieron cotización web"},
               {l:"Pedidos",    n:allVentas.length,c:T.sky,  go:()=>goView("pedidos"), tip:"Realizaron un pedido"},
               {l:"Entregado",  n:entregados.length,c:T.em,  go:()=>goView("pedidos",{vEstado:"Entregado"}),tip:"Pedido entregado"},
@@ -1316,7 +1308,7 @@ export function SeccionVentas() {
           <SecLabel>Pipeline de ventas</SecLabel>
           <div className="space-y-2.5">
             {([
-              {e:"Lead",       n:allLeads.length,                                      c:T.violet, go:()=>goView("leads")},
+              {e:"Lead",       n:allLeads.length,                                      c:T.violet, go:()=>irACrmLeads({demo,df,dt,cli:cliFilter})},
               {e:"Cotizado",   n:allCots.length,                                       c:T.muted,  go:()=>goView("cotizaciones")},
               {e:"Pagado",     n:allVentas.filter(v=>v.estado==="Pagado").length,      c:T.violet, go:()=>{goView("pedidos");setVEstado("Pagado")}},
               {e:"Preparando", n:allVentas.filter(v=>v.estado==="Preparando").length,  c:T.amber,  go:()=>{goView("pedidos");setVEstado("Preparando")}},
@@ -1538,118 +1530,6 @@ export function SeccionVentas() {
             </Card>
           </div>
         </>
-      )}
-    </>
-  )
-
-  /* ═══ LEADS ═══════════════════════════════════════════════════════ */
-  if(view==="leads") return shell(
-    <>
-      <Card>
-        <SecLabel>Resumen de Leads · período seleccionado</SecLabel>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
-          <div className="md:col-span-2">
-            <ChartLabel>{`Por ${AGRUPACION_LABEL[agrupacion].toLowerCase()} · clic para filtrar`}</ChartLabel>
-            <SvgStackedBars months={bucketLabelsRaw} tipLabels={bucketTipLabels} data={leadsStk} colors={[T.violet,T.muted]} labels={["Activos","Cerrados"]} activeBar={bucketIdxActivo} groupLevels={bucketGroupLevels} onBarClick={i=>selectBucket(buckets[i])}/>
-            <div className="flex gap-4 mt-2">
-              <LegendDot color={T.em} label="Entregado" val={fLeads.filter(l=>l.Funnel==="Entrega").length} active={lFunnel==="Entrega"} onClick={()=>setLFunnel(lFunnel==="Entrega"?"":"Entrega")}/>
-              <LegendDot color={T.rose} label="Rechazada" val={fLeads.filter(l=>l.Funnel==="Rechazada").length} active={lFunnel==="Rechazada"} onClick={()=>setLFunnel(lFunnel==="Rechazada"?"":"Rechazada")}/>
-            </div>
-          </div>
-          <div>
-            <ChartLabel>Por canal · clic para filtrar</ChartLabel>
-            <div className="flex items-center gap-3">
-              <SvgDonut segs={canalSegs} active={lCanal||undefined} onSegmentClick={v=>setLCanal(lCanal===v?"":v)}/>
-              <div className="flex-1">{canalSegs.map(s=><LegendDot key={s.l} color={s.c} label={s.l} val={s.v} active={lCanal===s.l} dimmed={!!lCanal&&lCanal!==s.l} onClick={()=>setLCanal(lCanal===s.l?"":s.l)}/>)}</div>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <ChartLabel>Por origen · clic para filtrar</ChartLabel>
-            <SvgHBars items={origenSegs.length?origenSegs:[{l:"Sin datos",v:0,c:T.muted}]} active={lOrigen||undefined} onBarClick={l=>setLOrigen(lOrigen===l?"":l)}/>
-          </div>
-          <div>
-            <ChartLabel>Métricas de conversión</ChartLabel>
-            <div className="grid grid-cols-2 gap-2">
-              <MetricTile val={`${pctCot}%`} label="c/ cotización" color={T.amber} onClick={()=>goView("cotizaciones")}/>
-              <MetricTile val={`${pctPed}%`} label="c/ pedido" color={T.em} onClick={()=>goView("pedidos")}/>
-              <MetricTile val={fLeads.length} label="Leads total" color={T.violet}/>
-              <MetricTile val={fLeads.filter(l=>l.Funnel==="Entrega").length} label="Convertidos" color={T.em} onClick={()=>goView("leads",{lFunnel:"Entrega"})}/>
-            </div>
-          </div>
-        </div>
-        {!demo && (
-          <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800">
-            <ChartLabel>Origen medido de la Tienda</ChartLabel>
-            {hayOrigenMedido ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {([["Primer contacto",ftSegs],["Último contacto",ltSegs],["Cómo nos conoció",comoSegs]] as const).map(([titulo,segs])=>(
-                  <div key={titulo}>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">{titulo}</p>
-                    <SvgHBars items={segs.length?[...segs]:[{l:"Sin datos",v:0,c:T.muted}]}/>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Aún no hay leads con origen medido: aparecerán cuando alguien deje sus datos en la Tienda o los captures con «¿Cómo nos conoció?».</p>
-            )}
-          </div>
-        )}
-      </Card>
-      <Card className="flex flex-col gap-3">
-        <FilterRow label="CANAL"  options={["WhatsApp","Instagram","Formulario","Mostrador","Vendedor","Teléfono"]} active={lCanal} onToggle={v=>setLCanal(lCanal===v?"":v)}/>
-        <FilterRow label="FUNNEL" options={["Lead","Oferta","Pedido","Entrega","Rechazada"]} active={lFunnel} onToggle={v=>setLFunnel(lFunnel===v?"":v)}/>
-        {lOrigen&&<FilterRow label="ORIGEN" options={[lOrigen]} active={lOrigen} onToggle={()=>setLOrigen("")}/>}
-      </Card>
-      <div className="flex items-center justify-between -mt-2 px-1">
-        <p className="text-[11px] font-mono text-slate-500">{fLeads.length} leads en vista · {allLeads.length} en rango</p>
-        {puedeEditar && (
-          <button type="button" onClick={()=>setWizardOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition">
-            <Plus size={13}/> Nuevo lead
-          </button>
-        )}
-      </div>
-      <SimpleTable
-        headers={["Fecha","Cliente","Canal","Origen","Funnel"]}
-        rows={fLeads.slice(0,100).map(l=>[dd(l.fechaLead??l.createdAt),l.cliente?.nombre??"—",l.canal??"—",l.origen??"—",l.Funnel])}
-        colors={[null,null,null,null,(r)=>r[4]==="Entrega"?T.em:r[4]==="Rechazada"?T.rose:T.amber]}
-        onRowClick={r=>{const cli=fLeads.find(l=>l.cliente?.nombre===r[1]);if(cli?.cliente)setCliFilter({docId:cli.cliente.documentId,nombre:cli.cliente.nombre})}}
-        highlightCol={1}
-        renderActions={puedeEditar ? (i)=>{
-          const lead = fLeads.slice(0,100)[i]
-          const c = lead.cliente ? clientesReales.find(x=>x.documentId===lead.cliente!.documentId) : null
-          return delLeadId===lead.documentId ? (
-            <span className="flex items-center gap-1.5 whitespace-nowrap" onClick={e=>e.stopPropagation()}>
-              <span className="text-[10px] text-slate-500">¿Borrar?</span>
-              <button className="text-[10px] text-red-600 dark:text-red-400 font-medium" onClick={()=>borrarLeadRow(lead)}>Sí</button>
-              <button className="text-[10px] text-slate-500" onClick={()=>setDelLeadId(null)}>No</button>
-            </span>
-          ) : (
-            <>
-              {c && <ActionBtn title="Ver cliente" onClick={()=>setClienteDetalle(c)}><Eye size={13}/></ActionBtn>}
-              <ActionBtn title={lead.calificado?"Quitar calificación":"Calificar"} onClick={()=>toggleCalificarLead(lead)}>
-                <CheckCircle2 size={13} className={lead.calificado?"text-violet-600 dark:text-violet-400":undefined}/>
-              </ActionBtn>
-              <ActionBtn title="Editar contacto" onClick={()=>abrirEditarLead(lead)}><Pencil size={13}/></ActionBtn>
-              <ActionBtn title="Eliminar lead" tone="danger" onClick={()=>setDelLeadId(lead.documentId)}><Trash2 size={13}/></ActionBtn>
-            </>
-          )
-        } : undefined}
-      />
-      {wizardOpen && (
-        <NuevoLeadWizard
-          clientes={clientesReales}
-          guardarCliente={guardarClienteLocal}
-          onCreado={(lead)=>{ setRawLeadsFetch(prev=>[lead,...prev]) }}
-          onCerrar={()=>setWizardOpen(false)}
-        />
-      )}
-      {clienteModalOpen && (
-        <ClienteModal editando={clienteEditando} form={clienteForm} setForm={setClienteForm}
-          onGuardar={guardarClienteModal} onCerrar={()=>setClienteModalOpen(false)} guardando={guardandoCliente}
-        />
       )}
     </>
   )

@@ -1,17 +1,18 @@
 "use client"
 
-import { Workflow, Bell } from "lucide-react"
+import { Workflow, UserSearch, Bell } from "lucide-react"
 import { useSectionTab, SeccionVitrina, ContenidoTabs, SeccionHeroContenido } from "./shared"
 import { useGetIdentidad } from "@/api/identidad-empresa/getIdentidad"
 import { PipelineView } from "@/components/Empresa/Ventas/PipelineView"
 import { DisparadoresView } from "@/components/Empresa/Ventas/DisparadoresView"
+import { LeadsPortalView } from "./LeadsPortalView"
 
-// Casa provisional para Pipeline y Disparadores, sacados de Ventas — antes
-// vivían ahí como tabs, pero se sentían perdidos entre las gráficas del
-// dashboard. Por mientras no se arma un CRM más completo, esto les da
-// identidad propia en el sidebar sin duplicar nada.
+// Pipeline, Leads y Disparadores se sacaron de Ventas — se sentían perdidos
+// entre las gráficas del dashboard. Ventas queda para el embudo y los
+// números; el seguimiento de prospectos vive aquí.
 const TABS = [
   { id: "pipeline",     label: "Pipeline",     icon: Workflow },
+  { id: "leads",        label: "Leads",        icon: UserSearch },
   { id: "disparadores", label: "Disparadores", icon: Bell },
 ]
 
@@ -34,6 +35,7 @@ export function SeccionCRM() {
         <ContenidoTabs tabs={TABS} active={tab} onChange={setTab} />
       </SeccionHeroContenido>
       {tab === "pipeline"     && <PipelineView />}
+      {tab === "leads"        && <LeadsPortalView />}
       {tab === "disparadores" && <DisparadoresView />}
     </SeccionVitrina>
   )
