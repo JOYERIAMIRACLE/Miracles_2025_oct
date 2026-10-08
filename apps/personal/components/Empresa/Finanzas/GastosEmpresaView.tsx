@@ -17,7 +17,7 @@ import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { CalendarioPicker } from "@/components/Shared/CalendarioPicker"
 import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
-import { fieldCls } from "@/lib/styles"
+import { fieldCls, tablaCls } from "@/lib/styles"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -262,25 +262,25 @@ export function GastosEmpresaView({ ambito = "empresa" }: { ambito?: "trabajo" |
 
       {/* ═══ TABLA ════════════════════════════════════════════════════════════ */}
       {tab === "tabla" && (
-        <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
+        <div className={tablaCls.marco}>
+          <div className={tablaCls.scroll}>
+            <table className={tablaCls.tabla}>
+              <thead className={tablaCls.thead}>
                 <tr>
                   {["Fecha", "Categoría", "Concepto", "Cuenta", "Proveedor", "Monto", ""].map(h => (
-                    <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    <th key={h} className={tablaCls.th}>{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className={tablaCls.tbody}>
                 {loading && Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td>
+                    <td key={j} className={tablaCls.td}><div className={tablaCls.skeleton} /></td>
                   ))}</tr>
                 ))}
                 {!loading && filtrados.map(g => (
                   <tr key={g.documentId}
-                    className="hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer"
+                    className={`${tablaCls.fila} group cursor-pointer`}
                     onClick={() => delId !== g.documentId && openEditar(g)}>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">{fmtFecha(g.fecha)}</td>
                     <td className="px-4 py-3">

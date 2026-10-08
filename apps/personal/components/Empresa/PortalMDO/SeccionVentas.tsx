@@ -21,6 +21,7 @@ import { ClienteModal, emptyCliente, ClientePanel, numDisplay } from "@/componen
 import { PedidoFormModal } from "@/components/Empresa/Ventas/PedidosView"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { CalendarioRango } from "@/components/Shared/CalendarioPicker"
+import { tablaCls } from "@/lib/styles"
 
 /* ─── Demo mode ────────────────────────────────────────────────────────
    USE_DEMO = true  → datos ficticios (ene-sep 2026, meta 45k MXN/mes)
@@ -691,10 +692,20 @@ export function ActionBtn({title,onClick,tone="default",children}:{title:string;
 }
 
 /* ─── Tabla ─────────────────────────────────────────────────────────── */
-export function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, renderActions, rowId, rowClassName }:{
+/** Cómo se lee una celda: "acento" (dorado, lo ganado o cerrado), "fuerte"
+    (montos), "normal". Sin tono queda como texto secundario. Un solo color
+    de acento: los estados no llevan un color cada uno. */
+export type TonoCelda = "acento"|"fuerte"|"normal"|null
+const TONO_CLS:Record<Exclude<TonoCelda,null>,string> = {
+  acento:"font-medium text-violet-700 dark:text-violet-300",
+  fuerte:"font-semibold text-slate-900 dark:text-slate-100",
+  normal:"text-slate-700 dark:text-slate-300",
+}
+export function SimpleTable({ headers, rows, tonos, onRowClick, highlightCol, renderActions, rowId, rowClassName }:{
   headers:string[]; rows:string[][]
-  colors:(((r:string[])=>string)|null)[]
+  tonos?:(((r:string[])=>TonoCelda)|null)[]
   onRowClick?:(r:string[],i:number)=>void
+  /** Columna principal (el nombre): texto oscuro y de peso medio. */
   highlightCol?:number
   /** Columna extra de acciones (editar/borrar/etc.) al final de cada fila —
       opcional, para que las vistas de solo-lectura no cambien. */
@@ -704,51 +715,40 @@ export function SimpleTable({ headers, rows, colors, onRowClick, highlightCol, r
 }) {
   const cols = renderActions ? [...headers, ""] : headers
   return (
-    <div className="overflow-x-auto rounded-xl mt-1">
-      <table className="w-full border-collapse text-[12px]">
-        <thead>
-          <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/60">
-            {cols.map((h,i)=>(
-              <th key={i} className="text-left px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 whitespace-nowrap">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length===0?(
+    <div className={tablaCls.marco}>
+      <div className={tablaCls.scroll}>
+        <table className={tablaCls.tabla}>
+          <thead className={tablaCls.thead}>
             <tr>
-              <td colSpan={cols.length} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500 italic text-[12px]">
-                Sin resultados.
-              </td>
+              {cols.map((h,i)=><th key={i} className={tablaCls.th}>{h}</th>)}
             </tr>
-          ):rows.map((r,i)=>(
-            <tr key={i} id={rowId?.(i)} className={`border-b border-slate-100 dark:border-slate-800/60 transition-colors ${onRowClick?"cursor-pointer hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40":""} ${rowClassName?.(i)??""}`}
-              onClick={()=>onRowClick?.(r,i)}>
-              {r.map((cell,j)=>{
-                const fn=colors[j]
-                const color=typeof fn==="function"?fn(r):undefined
-                return (
-                  <td key={j} className="px-4 py-2.5 align-middle">
-                    <span style={{
-                      fontFamily:j===4||j===0?"var(--font-geist-mono),monospace":undefined,
-                      fontSize:j===0?10:j===4?12:undefined,
-                      fontWeight:j===4?600:undefined,
-                      color:color??(j===highlightCol?T.gold:undefined),
-                      textDecoration:j===highlightCol&&onRowClick?"underline":undefined,
-                    }}>{cell}</span>
-                  </td>
-                )
-              })}
-              {renderActions && (
-                <td className="px-4 py-2.5 align-middle">
-                  <div className="flex items-center gap-0.5">{renderActions(i)}</div>
+          </thead>
+          <tbody className={tablaCls.tbody}>
+            {rows.length===0?(
+              <tr>
+                <td colSpan={cols.length} className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                  Sin resultados.
                 </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </tr>
+            ):rows.map((r,i)=>(
+              <tr key={i} id={rowId?.(i)} className={`${onRowClick?`cursor-pointer ${tablaCls.fila}`:""} ${rowClassName?.(i)??""}`}
+                onClick={()=>onRowClick?.(r,i)}>
+                {r.map((cell,j)=>{
+                  const tono = tonos?.[j]?.(r) ?? null
+                  const cls = j===highlightCol ? "font-medium text-slate-800 dark:text-slate-200"
+                    : tono ? TONO_CLS[tono] : "text-slate-500 dark:text-slate-400"
+                  return <td key={j} className={`${tablaCls.td} text-xs ${cls}`}>{cell}</td>
+                })}
+                {renderActions && (
+                  <td className={tablaCls.td}>
+                    <div className="flex items-center justify-end gap-0.5">{renderActions(i)}</div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
@@ -1344,7 +1344,7 @@ export function SeccionVentas() {
         <SimpleTable
           headers={["Contacto","Leads","Cotiz.","Pedidos","Total MXN"]}
           rows={clientesDash.slice(0,5).map(c=>[c.nombre,String(c.leads),String(c.cots),String(c.ventas),$m(c.total)])}
-          colors={[null,null,null,null,()=>T.gold]}
+          tonos={[null,null,null,null,()=>"fuerte"]}
           onRowClick={r=>selectCli(clientesDash.find(c=>c.nombre===r[0])?.docId??"",r[0])}
           highlightCol={0}
           renderActions={!demo ? (i)=>{
@@ -1416,13 +1416,13 @@ export function SeccionVentas() {
       <SimpleTable
         headers={["Contacto","Leads","Cotiz.","Pedidos","Total MXN","Tipo"]}
         rows={cliFiltered.map(c=>[c.nombre,String(c.leads),String(c.cots),String(c.ventas),$m(c.total),c.ventas>0?(c.formulario?"Cliente web":"Cliente"):c.formulario?"Usuario web":c.cots>0?"Cotizado":"Solo lead"])}
-        colors={[
+        tonos={[
           null,
-          (r)=>+r[1]>0?T.violet:T.muted,
-          (r)=>+r[2]>0?T.amber:T.muted,
-          (r)=>+r[3]>0?T.em:T.muted,
-          ()=>T.gold,
-          (r)=>r[5]==="Cliente"||r[5]==="Cliente web"?T.em:r[5]==="Usuario web"?T.violet:r[5]==="Cotizado"?T.amber:T.muted,
+          (r)=>+r[1]>0?"normal":null,
+          (r)=>+r[2]>0?"normal":null,
+          (r)=>+r[3]>0?"normal":null,
+          ()=>"fuerte",
+          (r)=>r[5]==="Cliente"||r[5]==="Cliente web"?"acento":r[5]==="Solo lead"?null:"normal",
         ]}
         onRowClick={r=>selectCli(cliFiltered.find(c=>c.nombre===r[0])?.docId??"",r[0])}
         highlightCol={0}
@@ -1514,21 +1514,21 @@ export function SeccionVentas() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <SecLabel>Páginas más vistas</SecLabel>
-              <SimpleTable headers={["Página","Vistas","Sesiones"]} rows={trafico.paginas.map(p=>[p.pagina,String(p.vistas),String(p.sesiones)])} colors={[null,null,null]}/>
+              <SimpleTable headers={["Página","Vistas","Sesiones"]} rows={trafico.paginas.map(p=>[p.pagina,String(p.vistas),String(p.sesiones)])} highlightCol={0}/>
             </Card>
             <Card>
               <SecLabel>Productos que miran y agregan</SecLabel>
-              <SimpleTable headers={["Producto","Vistas","Al carrito"]} rows={trafico.productos.map(p=>[p.producto,String(p.vistas),String(p.carritos)])} colors={[null,null,null]}/>
+              <SimpleTable headers={["Producto","Vistas","Al carrito"]} rows={trafico.productos.map(p=>[p.producto,String(p.vistas),String(p.carritos)])} highlightCol={0}/>
             </Card>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <SecLabel>Campañas</SecLabel>
-              <SimpleTable headers={["Campaña","Sesiones"]} rows={trafico.campanas.map(c=>[c.campana,String(c.sesiones)])} colors={[null,null]}/>
+              <SimpleTable headers={["Campaña","Sesiones"]} rows={trafico.campanas.map(c=>[c.campana,String(c.sesiones)])} highlightCol={0}/>
             </Card>
             <Card>
               <SecLabel>Búsquedas en el sitio</SecLabel>
-              <SimpleTable headers={["Término","Veces"]} rows={trafico.busquedas.map(b=>[b.q,String(b.veces)])} colors={[null,null]}/>
+              <SimpleTable headers={["Término","Veces"]} rows={trafico.busquedas.map(b=>[b.q,String(b.veces)])} highlightCol={0}/>
             </Card>
           </div>
         </>
@@ -1591,7 +1591,7 @@ export function SeccionVentas() {
       <SimpleTable
         headers={["Folio","Fecha","Cliente","Origen","Total","Estado"]}
         rows={fCots.slice(0,100).map(c=>[c.numero??"—",dd(c.fecha??c.createdAt),c.cliente?.nombre??"—",ORIGEN_LABEL[c.origenCotizacion??""]??c.origenCotizacion??"—",$m(c.total),c.estado??"—"])}
-        colors={[null,null,null,null,()=>T.gold,(r)=>r[5]==="Convertida"?T.em:r[5]==="Rechazada"?T.rose:T.amber]}
+        tonos={[null,null,null,null,()=>"fuerte",(r)=>r[5]==="Convertida"?"acento":r[5]==="Rechazada"?null:"normal"]}
         onRowClick={r=>{const c=fCots.find(c=>c.cliente?.nombre===r[2]);if(c?.cliente)setCliFilter({docId:c.cliente.documentId,nombre:c.cliente.nombre})}}
         highlightCol={2}
         renderActions={puedeEditar ? (i)=>{
@@ -1679,7 +1679,7 @@ export function SeccionVentas() {
       <SimpleTable
         headers={["Folio","Fecha","Cliente","Concepto","Monto","Estado"]}
         rows={fVentas.slice(0,100).map(v=>[v.numero??"—",dd(v.fecha??v.createdAt),v.cliente?.nombre??"—",v.concepto??"—",$m(v.monto),v.estado??"—"])}
-        colors={[null,null,null,null,()=>T.gold,(r)=>r[5]==="Entregado"?T.em:r[5]==="Cancelado"?T.rose:T.amber]}
+        tonos={[null,null,null,null,()=>"fuerte",(r)=>r[5]==="Entregado"?"acento":r[5]==="Cancelado"?null:"normal"]}
         onRowClick={r=>{const v=fVentas.find(v=>v.cliente?.nombre===r[2]);if(v?.cliente)setCliFilter({docId:v.cliente.documentId,nombre:v.cliente.nombre})}}
         highlightCol={2}
         renderActions={puedeEditar ? (i)=>{

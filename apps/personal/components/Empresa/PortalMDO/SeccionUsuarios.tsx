@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Plus, X, Loader2, Users, Search, Mail, CheckCircle, XCircle, Lock, Unlock } from "lucide-react"
 import { toast } from "sonner"
 import { useGetUsuariosPortal, invitarUsuario, bloquearUsuario, desbloquearUsuario } from "@/api/portalUsuarios/getUsuarios"
+import { tablaCls } from "@/lib/styles"
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
 
@@ -63,17 +64,17 @@ export function SeccionUsuarios() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5">
-          <Users size={18} className="text-violet-400" />
+          <Users size={18} className="text-violet-500" />
           <div>
-            <h1 className="text-xl font-bold text-slate-100">Usuarios del Portal</h1>
-            <p className="text-[11px] text-slate-500">{usuarios.length} registrados · {usuarios.filter(u => !u.blocked).length} activos</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Usuarios del Portal</h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{usuarios.length} registrados · {usuarios.filter(u => !u.blocked).length} activos</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..."
-              className="pl-8 pr-3 h-8 rounded-lg border border-slate-700 bg-[#2a1b3d] text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44" />
+              className="pl-8 pr-3 h-8 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-xs text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-violet-500/40 w-44" />
           </div>
           <button type="button" onClick={openNuevo}
             className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition">
@@ -83,38 +84,38 @@ export function SeccionUsuarios() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
+      <div className={tablaCls.marco}>
+        <div className={tablaCls.scroll}>
+          <table className={tablaCls.tabla}>
+            <thead className={tablaCls.thead}>
               <tr>
                 {["Nombre", "Email", "Estado", ""].map(h => (
-                  <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{h}</th>
+                  <th key={h} className={tablaCls.th}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className={tablaCls.tbody}>
               {loading && Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>{Array.from({ length: 4 }).map((_, j) => (
-                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4" /></td>
+                  <td key={j} className={tablaCls.td}><div className={tablaCls.skeleton} /></td>
                 ))}</tr>
               ))}
               {!loading && filtrados.map(u => (
-                <tr key={u.id} className="hover:bg-[#2a1b3d]/40 transition-colors group">
+                <tr key={u.id} className={`${tablaCls.fila} group`}>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-200">{u.username}</p>
+                    <p className="font-medium text-slate-800 dark:text-slate-200">{u.username}</p>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">
-                    <a href={`mailto:${u.email}`} className="flex items-center gap-1 hover:text-violet-400 transition"><Mail size={11}/>{u.email}</a>
+                  <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+                    <a href={`mailto:${u.email}`} className="flex items-center gap-1 hover:text-violet-600 dark:hover:text-violet-400 transition"><Mail size={11}/>{u.email}</a>
                   </td>
                   <td className="px-4 py-3">
                     {!u.blocked
-                      ? <span className="flex items-center gap-1 text-[11px] text-violet-400"><CheckCircle size={11}/>Activo</span>
-                      : <span className="flex items-center gap-1 text-[11px] text-slate-600"><XCircle size={11}/>Bloqueado</span>}
+                      ? <span className="flex items-center gap-1 text-[11px] text-violet-600 dark:text-violet-400"><CheckCircle size={11}/>Activo</span>
+                      : <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400"><XCircle size={11}/>Bloqueado</span>}
                   </td>
                   <td className="px-4 py-3">
                     <button type="button" onClick={() => handleToggle(u)} disabled={toggling === u.id}
-                      className="flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-slate-700 text-[11px] text-slate-400 hover:text-slate-200 hover:border-slate-600 transition disabled:opacity-50 opacity-0 group-hover:opacity-100">
+                      className="flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-600 transition disabled:opacity-50 opacity-0 group-hover:opacity-100">
                       {toggling === u.id
                         ? <Loader2 size={11} className="animate-spin"/>
                         : u.blocked ? <Unlock size={11}/> : <Lock size={11}/>}
@@ -127,8 +128,8 @@ export function SeccionUsuarios() {
           </table>
           {!loading && filtrados.length === 0 && (
             <div className="py-12 text-center">
-              <Users size={28} className="mx-auto mb-2 text-slate-700" />
-              <p className="text-slate-600 text-sm">{search ? "Sin resultados." : "Sin usuarios registrados."}</p>
+              <Users size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{search ? "Sin resultados." : "Sin usuarios registrados."}</p>
             </div>
           )}
         </div>

@@ -12,7 +12,7 @@ import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { CalendarioPicker } from "@/components/Shared/CalendarioPicker"
 import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
-import { fieldCls } from "@/lib/styles"
+import { fieldCls, tablaCls } from "@/lib/styles"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n: number) =>
@@ -252,7 +252,7 @@ export function IngresosEmpresaView() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+      <div className={tablaCls.marco}>
         {loading ? (
           <p className="text-sm text-slate-400 text-center py-16">Cargando...</p>
         ) : filtrados.length === 0 ? (
@@ -264,22 +264,22 @@ export function IngresosEmpresaView() {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800">
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Concepto</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Cliente</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Cuenta</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Fecha</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Método</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Monto</th>
-                  <th className="px-4 py-3 w-10" />
+          <div className={tablaCls.scroll}>
+            <table className={tablaCls.tabla}>
+              <thead className={tablaCls.thead}>
+                <tr>
+                  <th className={tablaCls.th}>Concepto</th>
+                  <th className={tablaCls.th}>Cliente</th>
+                  <th className={tablaCls.th}>Cuenta</th>
+                  <th className={tablaCls.th}>Fecha</th>
+                  <th className={tablaCls.th}>Método</th>
+                  <th className={tablaCls.thDer}>Monto</th>
+                  <th className="h-10 px-4 w-10" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className={tablaCls.tbody}>
                 {filtrados.map(ing => (
-                  <tr key={ing.documentId} className="hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40 transition group">
+                  <tr key={ing.documentId} className={`${tablaCls.fila} group`}>
                     <td className="px-4 py-3">
                       <p className="text-slate-800 dark:text-slate-200 font-medium">{ing.descripcion}</p>
                       {ing.notas && <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[200px]">{ing.notas}</p>}
@@ -293,7 +293,7 @@ export function IngresosEmpresaView() {
                         : <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-slate-900 dark:text-slate-100 font-bold font-mono">{fmt(ing.monto ?? 0)}</span>
+                      <span className="text-slate-900 dark:text-slate-100 font-semibold tabular-nums whitespace-nowrap">{fmt(ing.monto ?? 0)}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       {delId === ing.documentId ? (
@@ -317,7 +317,7 @@ export function IngresosEmpresaView() {
                 <tr className="border-t border-slate-200 dark:border-slate-700">
                   <td colSpan={5} className="px-4 py-3 text-xs text-slate-400 dark:text-slate-500">{filtrados.length} registro{filtrados.length !== 1 ? "s" : ""}</td>
                   <td className="px-4 py-3 text-right">
-                    <span className="text-violet-600 dark:text-violet-400 font-bold font-mono text-sm">{fmt(totalFiltrado)}</span>
+                    <span className="text-violet-600 dark:text-violet-400 font-bold tabular-nums whitespace-nowrap text-sm">{fmt(totalFiltrado)}</span>
                   </td>
                   <td />
                 </tr>

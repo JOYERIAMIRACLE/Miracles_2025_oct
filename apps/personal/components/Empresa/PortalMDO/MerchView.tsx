@@ -12,7 +12,7 @@ import { createMaterialTrabajo, updateMaterialTrabajo, deleteMaterialTrabajo } f
 import { MaterialTrabajoType, CategoriaMaterial, MaterialTrabajoPayload } from "@/types/material-trabajo"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
-import { fieldCls } from "@/lib/styles"
+import { fieldCls, tablaCls } from "@/lib/styles"
 
 const AMBITO = "empresa" as const
 const labelCls = "block text-[11px] text-slate-500 dark:text-slate-400 mb-1"
@@ -323,15 +323,15 @@ export function MerchView() {
               <p className="text-sm">{hayFiltrosLista ? "Sin resultados para esos filtros." : "Sin items registrados."}</p>
             </div>
           ) : (
-            <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className={tablaCls.marco}>
               <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-700">
-                    <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nombre</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Categoría</th>
-                    <th className="text-center px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Cantidad</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Notas</th>
-                    <th className="px-2 py-3 w-10"><span className="sr-only">Acciones</span></th>
+                <thead className={tablaCls.thead}>
+                  <tr>
+                    <th className={tablaCls.th}>Nombre</th>
+                    <th className={`${tablaCls.th} hidden sm:table-cell`}>Categoría</th>
+                    <th className={tablaCls.thCentro}>Cantidad</th>
+                    <th className={`${tablaCls.th} hidden md:table-cell`}>Notas</th>
+                    <th className="h-10 px-2 w-10"><span className="sr-only">Acciones</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -341,7 +341,7 @@ export function MerchView() {
                       return (
                         <motion.tr key={m.documentId} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                           onClick={() => setFormMode({ type: "edit", item: m })}
-                          className="border-b border-slate-200 dark:border-slate-700 last:border-0 group hover:bg-slate-50 dark:hover:bg-[#2a1b3d] transition-colors cursor-pointer">
+                          className={`border-b border-slate-100 dark:border-slate-800/60 last:border-0 group cursor-pointer ${tablaCls.fila}`}>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               {bajo && <AlertTriangle className="h-3.5 w-3.5 text-violet-400 shrink-0" aria-label="Stock bajo mínimo" />}

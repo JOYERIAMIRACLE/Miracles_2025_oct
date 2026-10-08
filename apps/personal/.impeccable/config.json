@@ -116,6 +116,60 @@
         "rule": "design-system-font-size",
         "value": "9px",
         "createdAt": "2026-09-19T04:34:42.641Z"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Empresa/Almacen/InventarioEmpresaView.tsx"
+        ],
+        "createdAt": "2026-10-08T20:35:16.237Z",
+        "reason": "Agent: estados inactivos en gris que al pasar el cursor cambian texto y fondo juntos a dorado; mismo patrón ya aceptado para este archivo en la config de la raíz (3-sep-2026)"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Empresa/Finanzas/IngresosEmpresaView.tsx"
+        ],
+        "createdAt": "2026-10-08T20:35:52.434Z",
+        "reason": "Agent: píldora activo/inactivo en un ternario; el gris solo va en el estado inactivo sin fondo y el activo es texto blanco sobre dorado"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Empresa/Finanzas/GastosEmpresaView.tsx"
+        ],
+        "createdAt": "2026-10-08T20:36:27.997Z",
+        "reason": "Agent: botón activo/inactivo en un ternario; el gris solo va en el estado inactivo sin fondo y el activo es texto blanco sobre dorado"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Empresa/Finanzas/PresupuestosEmpresaView.tsx"
+        ],
+        "createdAt": "2026-10-08T20:36:28.116Z",
+        "reason": "Agent: botón activo/inactivo en un ternario; el gris solo va en el estado inactivo sin fondo y el activo es texto blanco sobre dorado"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#cbd5e1",
+        "files": [
+          "components/Empresa/PortalMDO/MerchView.tsx"
+        ],
+        "createdAt": "2026-10-08T20:36:58.360Z",
+        "reason": "Agent: texto de los tooltips de Recharts (exige color literal); es slate-300 de Tailwind sobre el fondo oscuro del tooltip, código previo"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "components/Empresa/Compras/MateriaPrimaView.tsx"
+        ],
+        "createdAt": "2026-10-08T20:37:42.932Z",
+        "reason": "Agent: píldoras y opciones activo/inactivo en ternarios; el gris solo va en el estado inactivo sin fondo; ya aceptado para este archivo en la config de la raíz"
       }
     ]
   }

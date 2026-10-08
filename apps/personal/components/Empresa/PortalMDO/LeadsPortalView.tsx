@@ -328,7 +328,7 @@ export function LeadsPortalView({ leadFoco = null, onFocoConsumido }: { leadFoco
             rows={filas.map(l=>[dd(l.fechaLead??l.createdAt),l.cliente?.nombre??"—",l.canal??"—",l.origen??"—",l.Funnel])}
             rowId={i=>`lead-fila-${filas[i].documentId}`}
             rowClassName={i=>filas[i].documentId===filaResaltada?"bg-violet-500/15 dark:bg-violet-500/20":""}
-            colors={[null,null,null,null,(r)=>r[4]==="Entrega"?T.em:r[4]==="Rechazada"?T.rose:T.amber]}
+            tonos={[null,null,null,null,(r)=>r[4]==="Entrega"?"acento":r[4]==="Rechazada"?null:"normal"]}
             onRowClick={r=>{const cli=fLeads.find(l=>l.cliente?.nombre===r[1]);if(cli?.cliente)setCliFilter({docId:cli.cliente.documentId,nombre:cli.cliente.nombre})}}
             highlightCol={1}
             renderActions={puedeEditar ? (i)=>{

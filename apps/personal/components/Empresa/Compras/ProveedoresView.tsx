@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, X, Loader2, Building2, Search, Phone, Mail, Check
 import { toast } from "sonner"
 import { useGetProveedores, createProveedor, updateProveedor, deleteProveedor } from "@/api/proveedor/getProveedores"
 import { Proveedor, ProveedorPayload } from "@/types/proveedor"
+import { tablaCls } from "@/lib/styles"
 
 const inp = "w-full h-9 rounded-lg border border-slate-700 bg-[#2a1b3d] px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
 
@@ -68,17 +69,17 @@ export function ProveedoresView() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5">
-          <Building2 size={18} className="text-violet-400" />
+          <Building2 size={18} className="text-violet-500" />
           <div>
-            <h1 className="text-xl font-bold text-slate-100">Proveedores</h1>
-            <p className="text-[11px] text-slate-500">{proveedores.length} registrados · {proveedores.filter(p => p?.activo).length} activos</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Proveedores</h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{proveedores.length} registrados · {proveedores.filter(p => p?.activo).length} activos</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..."
-              className="pl-8 pr-3 h-8 rounded-lg border border-slate-700 bg-[#2a1b3d] text-xs text-slate-300 placeholder:text-slate-600 outline-none focus:border-violet-500/40 w-44" />
+              className="pl-8 pr-3 h-8 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#2a1b3d] text-xs text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-violet-500/40 w-44" />
           </div>
           <button type="button" onClick={openNuevo}
             className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium transition">
@@ -88,51 +89,51 @@ export function ProveedoresView() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
+      <div className={tablaCls.marco}>
+        <div className={tablaCls.scroll}>
+          <table className={tablaCls.tabla}>
+            <thead className={tablaCls.thead}>
               <tr>
                 {["Nombre / Contacto", "Teléfono", "Email", "RFC", "Estado", ""].map(h => (
-                  <th key={h} className="h-9 px-4 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{h}</th>
+                  <th key={h} className={tablaCls.th}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className={tablaCls.tbody}>
               {loading && Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
-                  <td key={j} className="px-4 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4" /></td>
+                  <td key={j} className={tablaCls.td}><div className={tablaCls.skeleton} /></td>
                 ))}</tr>
               ))}
               {!loading && filtrados.map(p => (
-                <tr key={p.documentId} className="hover:bg-[#2a1b3d]/40 transition-colors group">
+                <tr key={p.documentId} className={`${tablaCls.fila} group`}>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-200">{p.nombre}</p>
-                    {p.contacto && <p className="text-[11px] text-slate-500 mt-0.5">{p.contacto}</p>}
+                    <p className="font-medium text-slate-800 dark:text-slate-200">{p.nombre}</p>
+                    {p.contacto && <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{p.contacto}</p>}
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">
-                    {p.telefono ? <a href={`tel:${p.telefono}`} className="flex items-center gap-1 hover:text-violet-400 transition"><Phone size={11}/>{p.telefono}</a> : <span className="text-slate-700">—</span>}
+                  <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+                    {p.telefono ? <a href={`tel:${p.telefono}`} className="flex items-center gap-1 hover:text-violet-600 dark:hover:text-violet-400 transition"><Phone size={11}/>{p.telefono}</a> : <span className="text-slate-300 dark:text-slate-600">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">
-                    {p.email ? <a href={`mailto:${p.email}`} className="flex items-center gap-1 hover:text-violet-400 transition"><Mail size={11}/>{p.email}</a> : <span className="text-slate-700">—</span>}
+                  <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+                    {p.email ? <a href={`mailto:${p.email}`} className="flex items-center gap-1 hover:text-violet-600 dark:hover:text-violet-400 transition"><Mail size={11}/>{p.email}</a> : <span className="text-slate-300 dark:text-slate-600">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-xs font-mono text-slate-500">{p.rfc || <span className="text-slate-700">—</span>}</td>
+                  <td className="px-4 py-3 text-xs font-mono text-slate-500 dark:text-slate-400">{p.rfc || <span className="text-slate-300 dark:text-slate-600">—</span>}</td>
                   <td className="px-4 py-3">
                     {p.activo
-                      ? <span className="flex items-center gap-1 text-[11px] text-violet-400"><CheckCircle size={11}/>Activo</span>
-                      : <span className="flex items-center gap-1 text-[11px] text-slate-600"><XCircle size={11}/>Inactivo</span>}
+                      ? <span className="flex items-center gap-1 text-[11px] text-violet-600 dark:text-violet-400"><CheckCircle size={11}/>Activo</span>
+                      : <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400"><XCircle size={11}/>Inactivo</span>}
                   </td>
                   <td className="px-4 py-3">
                     {delId === p.documentId ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-slate-500">¿Eliminar?</span>
-                        <button type="button" onClick={() => handleDelete(p.documentId)} className="text-[10px] text-red-400 px-1">Sí</button>
-                        <button type="button" onClick={() => setDelId(null)} className="text-[10px] text-slate-500 px-1">No</button>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">¿Eliminar?</span>
+                        <button type="button" onClick={() => handleDelete(p.documentId)} className="text-[10px] text-red-600 dark:text-red-400 font-medium px-1">Sí</button>
+                        <button type="button" onClick={() => setDelId(null)} className="text-[10px] text-slate-500 dark:text-slate-400 px-1">No</button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => openEditar(p)} className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition"><Pencil size={12}/></button>
-                        <button type="button" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition"><Trash2 size={12}/></button>
+                        <button type="button" title="Editar" onClick={() => openEditar(p)} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/6 rounded transition"><Pencil size={12}/></button>
+                        <button type="button" title="Eliminar" onClick={() => setDelId(p.documentId)} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-white/6 rounded transition"><Trash2 size={12}/></button>
                       </div>
                     )}
                   </td>
@@ -142,8 +143,8 @@ export function ProveedoresView() {
           </table>
           {!loading && filtrados.length === 0 && (
             <div className="py-12 text-center">
-              <Building2 size={28} className="mx-auto mb-2 text-slate-700" />
-              <p className="text-slate-600 text-sm">{search ? "Sin resultados." : "Sin proveedores registrados."}</p>
+              <Building2 size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{search ? "Sin resultados." : "Sin proveedores registrados."}</p>
             </div>
           )}
         </div>

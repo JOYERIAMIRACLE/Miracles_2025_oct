@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, Search, X, Pencil, Loader2, Package, TrendingUp, RefreshCw, ImagePlus, Star, Eye, EyeOff, BookOpen, Percent, MoreVertical, ChevronDown, Store, Heart, ShoppingBag, Copy, ExternalLink, Settings2, Archive } from "lucide-react"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
-import { fieldCls } from "@/lib/styles"
+import { fieldCls, tablaCls } from "@/lib/styles"
 import { toast } from "sonner"
 import { useGetInventario, createProducto, updateProducto, deleteProducto, patchStock, uploadFoto, publishToTienda, toggleActivoTienda, toggleIsFeatured, resolverCategoriaId } from "@/api/inventarioEmpresa/getInventario"
 import { ProductType, CATEGORIAS_JOYA, MATERIALES, CategoriaJoya, MaterialProducto, MaterialItem, TipoAnillo, TIPOS_ANILLO } from "@/types/product"
@@ -75,7 +75,7 @@ function buildSku(cat: CategoriaJoya | "", mat: MaterialProducto | "", figura: s
 
 // Un solo acento (violeta) para las 9 categorías — sin arcoíris decorativo,
 // la categoría ya se distingue por el texto de la etiqueta.
-const CAT_BADGE = "bg-violet-500/10 text-violet-300 border-violet-500/20"
+const CAT_BADGE = "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/20"
 export const CAT_COLOR: Record<CategoriaJoya, string> = {
   "Anillos":CAT_BADGE, "Cadenas":CAT_BADGE, "Esclavas":CAT_BADGE, "Dijes":CAT_BADGE,
   "Broqueles":CAT_BADGE, "Aretes":CAT_BADGE, "Pulsos":CAT_BADGE, "Rosarios":CAT_BADGE, "Argollas":CAT_BADGE,
@@ -878,20 +878,20 @@ export function InventarioEmpresaView() {
       </div>
 
       {/* Tabla — desktop */}
-      <div className="hidden md:block bg-[#2a1b3d] border border-slate-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-slate-800 bg-[#2a1b3d]/50">
+      <div className={`hidden md:block ${tablaCls.marco}`}>
+        <div className={tablaCls.scroll}>
+          <table className={tablaCls.tabla}>
+            <thead className={tablaCls.thead}>
               <tr>
                 {["","Producto / SKU","Categoría","Material","Talla / Figura","Costo","P. Venta","Margen","Stock","Tienda","⭐",""].map((h,i) => (
-                  <th key={i} className="h-10 px-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  <th key={i} className={`${tablaCls.th} px-3`}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className={tablaCls.tbody}>
               {loading && Array.from({length:5}).map((_,i) => (
                 <tr key={i}>{Array.from({length:11}).map((_,j) => (
-                  <td key={j} className="px-3 py-3"><div className="h-4 rounded bg-[#2a1b3d] animate-pulse w-3/4"/></td>
+                  <td key={j} className="px-3 py-3"><div className={tablaCls.skeleton}/></td>
                 ))}</tr>
               ))}
               {!loading && filtrados.map(it => {
@@ -900,15 +900,15 @@ export function InventarioEmpresaView() {
                 const isPublishing = publishing===it.documentId
                 const isFeaturing  = featuring===it.documentId
                 return (
-                  <tr key={it.documentId} onClick={() => openEditar(it)} className="hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer">
+                  <tr key={it.documentId} onClick={() => openEditar(it)} className={`${tablaCls.fila} group cursor-pointer`}>
 
                     {/* Thumbnail */}
                     <td className="px-2 py-2 w-10">
                       {thumb?.url ? (
                         <img src={imgUrl(thumb.url)} alt={it.nombreProducto}
-                          className="w-9 h-9 rounded-lg object-cover border border-slate-700"/>
+                          className="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700"/>
                       ) : (
-                        <div className="w-9 h-9 rounded-lg bg-[#2a1b3d] border border-slate-700 flex items-center justify-center text-slate-600">
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-white/6 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500">
                           <Package size={13}/>
                         </div>
                       )}
@@ -918,12 +918,12 @@ export function InventarioEmpresaView() {
                     <td className="px-3 py-3">
                       <div className="flex items-start gap-1.5">
                         <div>
-                          <p className="font-medium text-slate-200 leading-snug">{it.nombreProducto}</p>
+                          <p className="font-medium text-slate-800 dark:text-slate-200 leading-snug">{it.nombreProducto}</p>
                           {it.sku && (
-                            <span className="text-[10px] font-mono text-violet-500 bg-violet-500/10 px-1.5 py-0.5 rounded mt-0.5 inline-block">{it.sku}</span>
+                            <span className="text-[10px] font-mono text-violet-700 dark:text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded mt-0.5 inline-block">{it.sku}</span>
                           )}
                           {it.descripcion && (
-                            <p className="text-[10px] text-slate-600 max-w-[160px] truncate mt-0.5" title={it.descripcion}>{it.descripcion}</p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-40 truncate mt-0.5" title={it.descripcion}>{it.descripcion}</p>
                           )}
                         </div>
                       </div>
@@ -933,42 +933,42 @@ export function InventarioEmpresaView() {
                     <td className="px-3 py-3">
                       {it.categoriaJoya
                         ? <span className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${CAT_COLOR[it.categoriaJoya]}`}>{it.categoriaJoya}</span>
-                        : <span className="text-slate-700 text-xs">—</span>}
+                        : <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>}
                     </td>
 
                     {/* Material */}
-                    <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">{it.materialProducto ?? <span className="text-slate-700">—</span>}</td>
+                    <td className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">{it.materialProducto ?? <span className="text-slate-300 dark:text-slate-600">—</span>}</td>
 
                     {/* Talla / Figura */}
-                    <td className="px-3 py-3 text-xs text-slate-400">
+                    <td className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400">
                       {it.talla && <span className="block">{it.talla}</span>}
-                      {it.figura && <span className="block text-slate-600 italic">{it.figura}</span>}
-                      {!it.talla && !it.figura && <span className="text-slate-700">—</span>}
+                      {it.figura && <span className="block text-slate-400 dark:text-slate-500 italic">{it.figura}</span>}
+                      {!it.talla && !it.figura && <span className="text-slate-300 dark:text-slate-600">—</span>}
                     </td>
 
                     {/* Costo */}
-                    <td className="px-3 py-3 text-slate-400 tabular-nums text-xs">{fmt(it.costoProduccion)}</td>
+                    <td className="px-3 py-3 text-slate-500 dark:text-slate-400 tabular-nums text-xs">{fmt(it.costoProduccion)}</td>
 
                     {/* Precio venta */}
-                    <td className="px-3 py-3 text-violet-400 font-medium tabular-nums text-xs">{fmt(it.costo)}</td>
+                    <td className="px-3 py-3 text-violet-700 dark:text-violet-400 font-medium tabular-nums text-xs">{fmt(it.costo)}</td>
 
                     {/* Margen */}
                     <td className="px-3 py-3">
                       {m!=null
-                        ? <span className={`flex items-center gap-0.5 text-xs font-medium ${m>=30?"text-violet-400":"text-red-400"}`}>
+                        ? <span className={`flex items-center gap-0.5 text-xs font-medium tabular-nums ${m>=30?"text-violet-700 dark:text-violet-400":"text-red-600 dark:text-red-400"}`}>
                             <TrendingUp size={10}/> {m}%
                           </span>
-                        : <span className="text-slate-700 text-xs">—</span>}
+                        : <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>}
                     </td>
 
                     {/* Stock */}
                     <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
                         <button type="button" onClick={() => handleStock(it,-1)}
-                          className="h-5 w-5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">−</button>
-                        <span className="w-6 text-center font-bold tabular-nums text-sm text-slate-200">{it.stock??0}</span>
+                          className="h-5 w-5 rounded bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">−</button>
+                        <span className="w-6 text-center font-bold tabular-nums text-sm text-slate-800 dark:text-slate-200">{it.stock??0}</span>
                         <button type="button" onClick={() => handleStock(it,+1)}
-                          className="h-5 w-5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">+</button>
+                          className="h-5 w-5 rounded bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs transition-colors">+</button>
                       </div>
                     </td>
 
@@ -979,8 +979,8 @@ export function InventarioEmpresaView() {
                         title={it.activo ? "Visible en tienda — clic para ocultar" : "Oculto — clic para publicar"}
                         className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border font-medium transition-all ${
                           it.activo
-                            ? "border-violet-500/30 text-violet-400 bg-violet-500/10 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
-                            : "border-slate-700 text-slate-600 hover:text-violet-400 hover:border-violet-500/30 hover:bg-violet-500/10"
+                            ? "border-violet-500/30 text-violet-700 dark:text-violet-400 bg-violet-500/10 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 hover:border-red-500/30"
+                            : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-violet-700 dark:hover:text-violet-400 hover:border-violet-500/30 hover:bg-violet-500/10"
                         }`}>
                         {isPublishing
                           ? <Loader2 size={10} className="animate-spin"/>
@@ -993,7 +993,7 @@ export function InventarioEmpresaView() {
                       <button type="button" onClick={() => handleToggleFeatured(it)}
                         disabled={isFeaturing}
                         title={it.isFeatured ? "Destacado — clic para quitar" : "No destacado — clic para marcar"}
-                        className={`p-1.5 rounded-lg transition-all ${it.isFeatured ? "text-violet-400 hover:text-violet-300" : "text-slate-700 hover:text-violet-500"}`}>
+                        className={`p-1.5 rounded-lg transition-all ${it.isFeatured ? "text-violet-500 hover:text-violet-600 dark:text-violet-400 dark:hover:text-violet-300" : "text-slate-300 dark:text-slate-600 hover:text-violet-500"}`}>
                         {isFeaturing ? <Loader2 size={14} className="animate-spin"/> : <Star size={14} fill={it.isFeatured ? "currentColor" : "none"}/>}
                       </button>
                     </td>
@@ -1002,20 +1002,20 @@ export function InventarioEmpresaView() {
                     <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                       {delId===it.documentId ? (
                         <div className="flex items-center gap-1">
-                          <span className="text-[10px] text-slate-500">¿Eliminar?</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">¿Eliminar?</span>
                           <button type="button" onClick={() => handleDelete(it.documentId)}
-                            className="text-[10px] text-red-400 hover:text-red-300 font-medium px-1">Sí</button>
+                            className="text-[10px] text-red-600 dark:text-red-400 font-medium px-1">Sí</button>
                           <button type="button" onClick={() => setDelId(null)}
-                            className="text-[10px] text-slate-500 px-1">No</button>
+                            className="text-[10px] text-slate-500 dark:text-slate-400 px-1">No</button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1">
                           <button type="button" onClick={() => openEditar(it)} title="Editar"
-                            className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-[#2a1b3d] rounded transition">
+                            className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/6 rounded transition">
                             <Pencil size={12}/>
                           </button>
                           <button type="button" onClick={() => setDelId(it.documentId)} title="Eliminar"
-                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-[#2a1b3d] rounded transition">
+                            className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-white/6 rounded transition">
                             <X size={12}/>
                           </button>
                         </div>
@@ -1027,7 +1027,7 @@ export function InventarioEmpresaView() {
             </tbody>
           </table>
           {!loading && filtrados.length===0 && (
-            <div className="py-14 text-center text-slate-600">
+            <div className="py-14 text-center text-slate-500 dark:text-slate-400">
               <Package size={32} className="mx-auto mb-3 opacity-30"/>
               <p className="text-sm">{search||filtroCat?"Sin resultados.":"Sin productos registrados."}</p>
             </div>

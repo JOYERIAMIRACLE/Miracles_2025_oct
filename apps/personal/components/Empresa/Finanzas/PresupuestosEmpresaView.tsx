@@ -16,7 +16,7 @@ import { useGetTransacciones } from "@/api/transaccion/getTransacciones"
 import { PartidaPresupuestoType } from "@/types/partida-presupuesto"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
-import { fieldCls } from "@/lib/styles"
+import { fieldCls, tablaCls } from "@/lib/styles"
 
 const CATEGORIAS_EMPRESA = ["Operaciones", "Marketing", "Ventas", "Administración", "Producción", "IT", "Otro"]
 const FRECUENCIAS = ["mensual", "trimestral", "anual", "único"] as const
@@ -432,17 +432,17 @@ export function PresupuestosEmpresaView() {
       {tab === "resumen" && (
       <>
       {/* Tabla de partidas con proyecciones */}
-      <div className="rounded-xl bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[700px]">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/60">
+      <div className={tablaCls.marco}>
+        <div className={tablaCls.scroll}>
+          <table className={`${tablaCls.tabla} min-w-175`}>
+            <thead className={tablaCls.thead}>
               <tr>
-                <th className="h-10 px-4 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Área / Tipo</th>
-                <th className="h-10 px-4 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Descripción</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Semana</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Mensual</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Trimestral</th>
-                <th className="h-10 px-4 text-right text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Anual</th>
+                <th className={tablaCls.th}>Área / Tipo</th>
+                <th className={tablaCls.th}>Descripción</th>
+                <th className={tablaCls.thDer}>Semana</th>
+                <th className={tablaCls.thDer}>Mensual</th>
+                <th className={tablaCls.thDer}>Trimestral</th>
+                <th className={tablaCls.thDer}>Anual</th>
                 <th className="h-10 px-4"><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>

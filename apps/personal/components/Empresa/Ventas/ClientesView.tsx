@@ -10,6 +10,7 @@ import {
 import { useClientesPipeline } from "./useClientesPipeline"
 import { ClientePanel, ClienteModal, numDisplay, emptyCliente, fmtMoney } from "./PipelineView"
 import { buscarContactosDuplicados } from "@/lib/contactos"
+import { tablaCls } from "@/lib/styles"
 import { ListToolbar } from "./ListToolbar"
 
 export function ClientesView() {
@@ -185,22 +186,22 @@ export function ClientesView() {
       />
 
       {/* Tabla */}
-      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
+      <div className={tablaCls.marco}>
+        <div className={tablaCls.scroll}>
+          <table className={tablaCls.tabla}>
+            <thead className={tablaCls.thead}>
               <tr>
                 {["Contacto", "Etapa", "Valor", "Cotizaciones", "Datos de contacto", ""].map(h => (
-                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  <th key={h} className={tablaCls.th}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
+            <tbody className={tablaCls.tbody}>
               {loading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" />
+                    <td key={j} className={tablaCls.td}>
+                      <div className={tablaCls.skeleton} />
                     </td>
                   ))}
                 </tr>
@@ -211,7 +212,7 @@ export function ClientesView() {
                 const valor  = valorPorCliente.get(c.documentId) ?? null
                 return (
                   <tr key={c.documentId}
-                    className="hover:bg-slate-100 dark:hover:bg-[#2a1b3d]/40 transition-colors group cursor-pointer"
+                    className={`${tablaCls.fila} group cursor-pointer`}
                     onClick={() => setSelectedCliente(c)}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -231,7 +232,7 @@ export function ClientesView() {
                     </td>
                     <td className="px-4 py-3">
                       {valor != null ? (
-                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-400 font-mono">
+                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-400 tabular-nums">
                           <DollarSign size={10} />{fmtMoney(valor)}
                         </span>
                       ) : (
