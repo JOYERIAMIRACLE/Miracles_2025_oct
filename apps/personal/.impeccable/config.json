@@ -161,15 +161,6 @@
         ],
         "createdAt": "2026-10-08T20:36:58.360Z",
         "reason": "Agent: texto de los tooltips de Recharts (exige color literal); es slate-300 de Tailwind sobre el fondo oscuro del tooltip, código previo"
-      },
-      {
-        "rule": "gray-on-color",
-        "value": "*",
-        "files": [
-          "components/Empresa/Compras/MateriaPrimaView.tsx"
-        ],
-        "createdAt": "2026-10-08T20:37:42.932Z",
-        "reason": "Agent: píldoras y opciones activo/inactivo en ternarios; el gris solo va en el estado inactivo sin fondo; ya aceptado para este archivo en la config de la raíz"
       }
     ]
   }

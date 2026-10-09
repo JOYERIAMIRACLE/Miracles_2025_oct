@@ -28,7 +28,7 @@ import { useGetCuentas } from "@/api/cuenta/getCuentas"
 import { DropdownPicker } from "@/components/Shared/DropdownPicker"
 import { CalendarioPicker } from "@/components/Shared/CalendarioPicker"
 import { useModalBackdropClose } from "@/components/Shared/useModalBackdropClose"
-import { fieldCls, tablaCls } from "@/lib/styles"
+import { fieldCls } from "@/lib/styles"
 
 const fmt = (n: number | null) => n != null ? `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : "—"
 const fmtG = (n: number | null) => n != null ? `${n.toLocaleString("es-MX", { maximumFractionDigits: 2 })} g` : "—"
@@ -141,22 +141,22 @@ function MaterialesTab({ triggerNuevo }: { triggerNuevo: number }) {
 
   return (
     <div className="space-y-4">
-      <div className={tablaCls.marco}>
-        <div className={tablaCls.scroll}>
-          <table className={tablaCls.tabla}>
-            <thead className={tablaCls.thead}>
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Material", "Precio/gramo", "Stock disponible", "Estado", ""].map(h => (
-                  <th key={h} className={tablaCls.th}>{h}</th>
+                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className={tablaCls.tbody}>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {loading && Array.from({ length: 3 }).map((_, i) => (
-                <tr key={i}><td colSpan={5} className={tablaCls.td}><div className={tablaCls.skeleton} /></td></tr>
+                <tr key={i}><td colSpan={5} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td></tr>
               ))}
               {!loading && materiales.length === 0 && (
-                <tr><td colSpan={5} className="py-12 text-center text-slate-500 dark:text-slate-400">
+                <tr><td colSpan={5} className="py-12 text-center text-slate-400 dark:text-slate-600">
                   <Boxes size={28} className="mx-auto mb-2 opacity-30" /><p className="text-sm">Sin materiales registrados.</p>
                 </td></tr>
               )}
@@ -166,7 +166,7 @@ function MaterialesTab({ triggerNuevo }: { triggerNuevo: number }) {
                   className={`cursor-pointer transition-colors group ${
                     modalOpen && editando?.documentId === m.documentId
                       ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
-                      : tablaCls.fila
+                      : "hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40"
                   }`}>
                   <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{m.nombre}</td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{fmt(m.precioReferenciaGramo)}</td>
@@ -1226,22 +1226,22 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
 
   return (
     <div className="space-y-4">
-      <div className={tablaCls.marco}>
-        <div className={tablaCls.scroll}>
-          <table className={tablaCls.tabla}>
-            <thead className={tablaCls.thead}>
+      <div className="bg-white dark:bg-[#2a1b3d] border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#2a1b3d]/50">
               <tr>
                 {["Fecha", "Concepto", "Material", "Gramos", "Precio/g", "Total", ""].map(h => (
-                  <th key={h} className={tablaCls.th}>{h}</th>
+                  <th key={h} className="h-10 px-4 text-left text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className={tablaCls.tbody}>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {loading && Array.from({ length: 3 }).map((_, i) => (
-                <tr key={i}><td colSpan={7} className={tablaCls.td}><div className={tablaCls.skeleton} /></td></tr>
+                <tr key={i}><td colSpan={7} className="px-4 py-3"><div className="h-4 rounded bg-slate-100 dark:bg-[#2a1b3d] animate-pulse w-3/4" /></td></tr>
               ))}
               {!loading && compras.length === 0 && (
-                <tr><td colSpan={7} className="py-12 text-center text-slate-500 dark:text-slate-400">
+                <tr><td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-600">
                   <Package size={28} className="mx-auto mb-2 opacity-30" /><p className="text-sm">Sin compras registradas.</p>
                 </td></tr>
               )}
@@ -1253,7 +1253,7 @@ function ComprasTab({ triggerNuevo }: { triggerNuevo: number }) {
                     className={`cursor-pointer transition-colors group ${
                       activa
                         ? "bg-violet-50 dark:bg-violet-500/10 border-l-2 border-l-violet-500"
-                        : tablaCls.fila
+                        : "hover:bg-slate-50 dark:hover:bg-[#2a1b3d]/40"
                     }`}>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">{c.fecha}</td>
                     <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">
